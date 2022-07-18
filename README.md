@@ -1,11 +1,8 @@
-# hmpps-template-kotlin
+# Approved Premises API
 
-This is a skeleton project from which to create new kotlin projects from.
+This is the backend for the Approved Premises service. Its API is consumed by the corresponding "UI" codebase ([approved-premises-ui](https://github.com/ministryofjustice/approved-premises-ui)). 
 
-# Instructions
-
-If this is a HMPPS project then the project will be created as part of bootstrapping - 
-see https://github.com/ministryofjustice/dps-project-bootstrap.
+---
 
 ## Creating a CloudPlatform namespace
 
@@ -28,13 +25,3 @@ enabled by default on newly created repos. There is no way to enable Actions oth
 If this situation changes we will update this project so that the workflow is triggered during the bootstrap project.
 Further reading: <https://github.community/t/workflow-isnt-enabled-in-repos-generated-from-template/136421>
 
-## Manually renaming from HMPPS Template Kotlin
-
-Run the `rename-project.bash` and create a PR.
-
-The `rename-project.bash` script takes a single argument - the name of the project and calculates from it:
-* The main class name (project name converted to pascal case) 
-* The project description (class name with spaces between the words)
-* The main package name (project name with hyphens removed)
-
-It then performs a search and replace and directory renames so the project is ready to be used.
