@@ -7,8 +7,14 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
+val springDocVersion = "1.6.9"
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springdoc:springdoc-openapi-webmvc-core:$springDocVersion")
+  implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
+  implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
+  implementation("org.springdoc:springdoc-openapi-data-rest:$springDocVersion")
 }
 
 java {
