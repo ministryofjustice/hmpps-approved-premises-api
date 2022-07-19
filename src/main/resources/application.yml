@@ -18,6 +18,10 @@ spring:
       test:
         - "stdout"
 
+springdoc:
+  swagger-ui:
+    url: "mini-manage-api-stubs.yml"
+
 server:
   port: 8080
   servlet:
