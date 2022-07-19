@@ -2,6 +2,13 @@
 
 This is the backend for the Approved Premises service. Its API is consumed by the corresponding "UI" codebase ([approved-premises-ui](https://github.com/ministryofjustice/approved-premises-ui)). 
 
+## OpenAPI documentation
+
+The API which is offered to front-end UI apps is documented using Swagger/OpenAPI.
+The initial contract covers the migration of certain bed-management functions from Delius into the new service.
+
+This is available in development at [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
 ---
 
 ## Creating a CloudPlatform namespace
