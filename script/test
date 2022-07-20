@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# script/test: Run the test suite for the application.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "==> Running ktlint..."
+./gradlew ktlintCheck
+
+echo "==> Running tests..."
+./gradlew test
+
+
