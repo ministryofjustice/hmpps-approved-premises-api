@@ -1,6 +1,42 @@
 # Approved Premises API
 
-This is the backend for the Approved Premises service. Its API is consumed by the corresponding "UI" codebase ([approved-premises-ui](https://github.com/ministryofjustice/approved-premises-ui)). 
+This is the backend for the Approved Premises service. Its API is consumed by the corresponding "UI" codebase ([approved-premises-ui](https://github.com/ministryofjustice/approved-premises-ui)).
+
+## Prerequisites
+
+TBC
+
+## Setup
+
+When running the application for the first time, run the following command:
+
+```bash
+script/setup # TODO - this script is currently a stub
+```
+
+If you're coming back to the application after a certain amount of time, you can run:
+
+```bash
+script/bootstrap # TODO - this script is currently a stub
+```
+
+## Running the application
+
+To run the server, from the root directory, run:
+
+```bash
+script/server
+```
+
+This runs the project as a Spring Boot application on `localhost:8080`
+
+## Running the tests
+
+To run linting and tests, from the root directory, run:
+
+```bash
+script/test
+```
 
 ## OpenAPI documentation
 
