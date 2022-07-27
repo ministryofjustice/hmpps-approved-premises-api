@@ -1,399 +1,519 @@
-swagger: "2.0"
+openapi: 3.0.1
 info:
-  title: "Approved Premises ('mini-manage' stubs)"
-  version: "1.0.0"
+  title: Approved Premises ('mini-manage' stubs)
+  version: 1.0.0
+servers:
+- url: /
 paths:
   /premises:
     get:
-      summary: "Lists all approved premises"
+      summary: Lists all approved premises
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Premises"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "500":
-          description: "unexpected error"
-
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Premises'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
   /premises/{premisesID}:
     get:
-      summary: "Returns an approved premises"
+      summary: Returns an approved premises
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises to return"
-          required: true
-          type: "integer"
-          format: "uuid"
+      - name: premisesID
+        in: path
+        description: ID of the premises to return
+        required: true
+        schema:
+          type: integer
+          format: uuid
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Premises"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premises ID"
-        "500":
-          description: "unexpected error"
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Premises'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premises ID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
   /premises/{premisesID}/residents:
     get:
-      summary: "Returns all the residents in an approved premise with the given ID"
+      summary: Returns all the residents in an approved premise with the given ID
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises to get residents for"
-          required: true
-          type: "integer"
-          format: "uuid"
+      - name: premisesID
+        in: path
+        description: ID of the premises to get residents for
+        required: true
+        schema:
+          type: integer
+          format: uuid
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Person"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premises ID"
-        "500":
-          description: "unexpected error"
-
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premises ID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
   /premises/{premisesID}/bookings:
     get:
-      summary: "Returns all bookings for an approved premises"
+      summary: Returns all bookings for an approved premises
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises to get bookings for"
-          required: true
-          type: "integer"
-          format: "uuid"
+      - name: premisesID
+        in: path
+        description: ID of the premises to get bookings for
+        required: true
+        schema:
+          type: integer
+          format: uuid
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Booking"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premises ID"
-        "500":
-          description: "unexpected error"
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premises ID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
     post:
-      summary: "Adds a new booking for an approved premises"
+      summary: Adds a new booking for an approved premises
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises to get bookings for"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - name: "body"
-          in: "body"
-          required: false
-          schema:
-            $ref: "#/definitions/Booking"
+      - name: premisesID
+        in: path
+        description: ID of the premises to get bookings for
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: false
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Booking"
-        "400":
-          description: "invalid params"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premises ID"
-        "500":
-          description: "unexpected error"
-
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Booking'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premises ID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
+      x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/arrivals:
     post:
-      summary: "Posts an arrival to a specified approved premise booking"
+      summary: Posts an arrival to a specified approved premise booking
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises the booking is related to"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - name: "bookingID"
-          in: "path"
-          description: "ID of the booking"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - in: "body"
-          name: "body"
-          description: "details of the arrival"
-          required: true
-          schema:
-            $ref: "#/definitions/Arrival"
+      - name: premisesID
+        in: path
+        description: ID of the premises the booking is related to
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      - name: bookingID
+        in: path
+        description: ID of the booking
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      requestBody:
+        description: details of the arrival
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Arrival'
+        required: true
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Arrival"
-        "400":
-          description: "invalid params"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premisesID or bookingID"
-        "500":
-          description: "unexpected error"
-
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Arrival'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premisesID or bookingID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
+      x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/departure:
     post:
-      summary: "Posts a departure to a specified approved premise booking"
+      summary: Posts a departure to a specified approved premise booking
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises the booking is related to"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - name: "bookingID"
-          in: "path"
-          description: "ID of the booking"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - in: "body"
-          name: "body"
-          description: "details of the departure"
-          required: true
-          schema:
-            $ref: "#/definitions/Departure"
+      - name: premisesID
+        in: path
+        description: ID of the premises the booking is related to
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      - name: bookingID
+        in: path
+        description: ID of the booking
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      requestBody:
+        description: details of the departure
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Departure'
+        required: true
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Departure"
-        "400":
-          description: "invalid params"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premisesID or bookingID"
-        "500":
-          description: "unexpected error"
-
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Departure'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premisesID or bookingID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
+      x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/non-arrival:
     post:
-      summary: "Posts an non-arrival to a specified approved premise booking"
+      summary: Posts an non-arrival to a specified approved premise booking
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises the booking is related to"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - name: "bookingID"
-          in: "path"
-          description: "ID of the booking"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - in: "body"
-          name: "body"
-          description: "details of the non-arrival"
-          required: true
-          schema:
-            $ref: "#/definitions/Nonarrival"
+      - name: premisesID
+        in: path
+        description: ID of the premises the booking is related to
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      - name: bookingID
+        in: path
+        description: ID of the booking
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      requestBody:
+        description: details of the non-arrival
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Nonarrival'
+        required: true
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Nonarrival"
-        "400":
-          description: "invalid params"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premisesID or bookingID"
-        "500":
-          description: "unexpected error"
-
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Nonarrival'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premisesID or bookingID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
+      x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/lost-beds:
     post:
-      summary: "Posts a lost bed to a specified approved premise booking"
+      summary: Posts a lost bed to a specified approved premise booking
       parameters:
-        - name: "premisesID"
-          in: "path"
-          description: "ID of the premises the booking is related to"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - name: "bookingID"
-          in: "path"
-          description: "ID of the booking"
-          required: true
-          type: "integer"
-          format: "uuid"
-        - name: "body"
-          in: "body"
-          description: "details of the lost bed"
-          required: true
-          schema:
-            $ref: "#/definitions/LostBed"
+      - name: premisesID
+        in: path
+        description: ID of the premises the booking is related to
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      - name: bookingID
+        in: path
+        description: ID of the booking
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      requestBody:
+        description: details of the lost bed
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/LostBed'
+        required: true
       responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/LostBed"
-        "400":
-          description: "invalid params"
-        "401":
-          description: "not authenticated"
-        "403":
-          description: "unauthorised"
-        "404":
-          description: "invalid premisesID or bookingID"
-        "500":
-          description: "unexpected error"
-
-definitions:
-  Premises:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      name:
-        type: "string"
-      apCode:
-        type: "string"
-      probationRegionId:
-        type: "string"
-      postcode:
-        type: "string"
-      bedCount:
-        type: "integer"
-      apAreaId:
-        type: "string"
-      localAuthorityArea:
-        type: "string"
-  Booking:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      CRN:
-        type: "string"
-      arrivalDate:
-        type: "string"
-        format: "date"
-      departureDate:
-        type: "string"
-        format: "date"
-      keyWorker:
-        type: "string"
-  Person:
-    type: "object"
-    properties:
-      CRN:
-        type: "string"
-      name:
-        type: "string"
-  Arrival:
-    type: "object"
-    properties:
-      bookingID:
-        type: "string"
-        format: "uuid"
-      dateTime:
-        type: "string"
-        format: "date"
-      expectedDepartureDate:
-        type: "string"
-        format: "date"
-      notes:
-        type: "string"
-  Nonarrival:
-    type: "object"
-    properties:
-      bookingID:
-        type: "string"
-        format: "uuid"
-      date:
-        type: "string"
-        format: "date"
-      reason:
-        type: "string"
-      notes:
-        type: "string"
-  Departure:
-    type: "object"
-    properties:
-      bookingID:
-        type: "string"
-        format: "uuid"
-      dateTime:
-        type: "string"
-        format: "date"
-      reason:
-        type: "string"
-        enum:
-          - "Absconded"
-          - "Planned move"
-          - "Recalled"
-      notes:
-        type: "string"
-      moveOnCategory:
-        type: "string"
-        enum:
-          - "Private house"
-          - "Custody"
-          - "Deported"
-      destinationProvider:
-        type: "string"
-        enum:
-          - "Example destination provider"
-  LostBed:
-    type: "object"
-    properties:
-      startDate:
-        type: "string"
-        format: "date"
-      endDate:
-        type: "string"
-        format: "date"
-      numberOfBeds:
-        type: "integer"
-      reason:
-        type: "string"
-        enum:
-          - "Fire"
-          - "Damaged"
-          - "refurbishment"
-          - "Staff shortage"
-      referenceNumber:
-        type: "string"
-        format: "uuid"
-      notes:
-        type: "string"
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/LostBed'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          description: not authenticated
+          content: {}
+        403:
+          description: unauthorised
+          content: {}
+        404:
+          description: invalid premisesID or bookingID
+          content: {}
+        500:
+          description: unexpected error
+          content: {}
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    Premises:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        apCode:
+          type: string
+        probationRegionId:
+          type: string
+        postcode:
+          type: string
+        bedCount:
+          type: integer
+        apAreaId:
+          type: string
+        localAuthorityArea:
+          type: string
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        CRN:
+          type: string
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        keyWorker:
+          type: string
+    Person:
+      type: object
+      properties:
+        CRN:
+          type: string
+        name:
+          type: string
+    Arrival:
+      type: object
+      properties:
+        bookingID:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date
+        expectedDepartureDate:
+          type: string
+          format: date
+        notes:
+          type: string
+    Nonarrival:
+      type: object
+      properties:
+        bookingID:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        reason:
+          type: string
+        notes:
+          type: string
+    Departure:
+      type: object
+      properties:
+        bookingID:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date
+        reason:
+          type: string
+          enum:
+          - Absconded
+          - Planned move
+          - Recalled
+        notes:
+          type: string
+        moveOnCategory:
+          type: string
+          enum:
+          - Private house
+          - Custody
+          - Deported
+        destinationProvider:
+          type: string
+          enum:
+          - Example destination provider
+    ValidationError:
+      type: object
+      properties:
+        type:
+          type: string
+          example: https://example.net/validation-error
+        title:
+          type: string
+          example: Invalid request parameters
+        code:
+          type: number
+          example: 400.0
+        invalid-params:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvalidParam'
+    InvalidParam:
+      type: object
+      properties:
+        propertyName:
+          type: string
+          example: arrivalDate
+        errorType:
+          type: string
+          enum:
+          - blank
+          - invalid
+          - mustBePast
+          - mustBeFuture
+    LostBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        numberOfBeds:
+          type: integer
+        reason:
+          type: string
+          enum:
+          - Fire
+          - Damaged
+          - refurbishment
+          - Staff shortage
+        referenceNumber:
+          type: string
+          format: uuid
+        notes:
+          type: string
