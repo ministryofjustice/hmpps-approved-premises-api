@@ -58,7 +58,7 @@ paths:
           content: {}
   /premises/{premisesID}/residents:
     get:
-      summary: Returns all the residents in an approved premise with the given ID
+      summary: Returns all the residents in an approved premises with the given ID
       parameters:
       - name: premisesID
         in: path
@@ -164,7 +164,7 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/arrivals:
     post:
-      summary: Posts an arrival to a specified approved premise booking
+      summary: Posts an arrival to a specified approved premises booking
       parameters:
       - name: premisesID
         in: path
@@ -215,7 +215,7 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/departures:
     post:
-      summary: Posts a departure to a specified approved premise booking
+      summary: Posts a departure to a specified approved premises booking
       parameters:
       - name: premisesID
         in: path
@@ -266,7 +266,7 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/non-arrivals:
     post:
-      summary: Posts an non-arrival to a specified approved premise booking
+      summary: Posts an non-arrival to a specified approved premises booking
       parameters:
       - name: premisesID
         in: path
@@ -317,7 +317,7 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesID}/bookings/{bookingID}/lost-beds:
     post:
-      summary: Posts a lost bed to a specified approved premise booking
+      summary: Posts a lost bed to a specified approved premises booking
       parameters:
       - name: premisesID
         in: path
