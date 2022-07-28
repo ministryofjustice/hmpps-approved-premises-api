@@ -448,7 +448,7 @@ components:
           format: uuid
         person: 
           $ref: '#/components/schemas/Person'
-        dateTime:
+        arrivalDate:
           type: string
           format: date
         expectedDepartureDate:
