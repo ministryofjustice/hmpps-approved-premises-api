@@ -134,7 +134,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Booking'
+              $ref: '#/components/schemas/BookingBody'
         required: false
       responses:
         200:
@@ -388,7 +388,7 @@ components:
           type: string
         localAuthorityArea:
           type: string
-    Booking:
+    BookingBody:
       type: object
       properties:
         id:
@@ -404,6 +404,35 @@ components:
           format: date
         keyWorker:
           type: string
+    Booking:
+      allOf:
+        - $ref: '#/components/schemas/BookingBody'
+        - type: object
+          properties:
+            status:
+              type: string
+              enum:
+              - arrived
+              - awaiting-arrival
+              - not-arrived
+              - departed
+              - cancelled
+            arrival:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Arrival'
+            departure:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Departure'
+            nonArrival:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Nonarrival'
+            cancellation:
+              nullable: true
+              allOf:
+              - $ref: '#/components/schemas/Cancellation'
     Person:
       type: object
       properties:
@@ -426,6 +455,19 @@ components:
         notes:
           type: string
     Nonarrival:
+      type: object
+      properties:
+        bookingID:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        reason:
+          type: string
+        notes:
+          type: string
+    Cancellation:
       type: object
       properties:
         bookingID:
