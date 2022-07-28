@@ -394,8 +394,8 @@ components:
         id:
           type: string
           format: uuid
-        CRN:
-          type: string
+        person: 
+          $ref: '#/components/schemas/Person'
         arrivalDate:
           type: string
           format: date
@@ -446,6 +446,8 @@ components:
         bookingID:
           type: string
           format: uuid
+        person: 
+          $ref: '#/components/schemas/Person'
         dateTime:
           type: string
           format: date
