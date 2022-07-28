@@ -213,7 +213,7 @@ paths:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
-  /premises/{premisesID}/bookings/{bookingID}/departure:
+  /premises/{premisesID}/bookings/{bookingID}/departures:
     post:
       summary: Posts a departure to a specified approved premise booking
       parameters:
@@ -264,7 +264,7 @@ paths:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
-  /premises/{premisesID}/bookings/{bookingID}/non-arrival:
+  /premises/{premisesID}/bookings/{bookingID}/non-arrivals:
     post:
       summary: Posts an non-arrival to a specified approved premise booking
       parameters:
