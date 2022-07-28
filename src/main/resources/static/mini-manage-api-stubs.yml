@@ -134,7 +134,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/BookingBody'
+              $ref: '#/components/schemas/NewBooking'
         required: false
       responses:
         200:
@@ -403,6 +403,25 @@ components:
           type: string
           format: date
         keyWorker:
+          type: string
+    NewBooking:
+      type: object
+      properties:
+        crn:
+          type: string
+          example: A123456
+        expectedArrivalDate:
+          type: string
+          format: date
+          example: 2022-07-28
+        expectedDepartureDate:
+          type: string
+          format: date
+          example: 2022-09-30
+        apCode:
+          type: string
+          example: NELEH
+        keyWorkerId:
           type: string
     Booking:
       allOf:
