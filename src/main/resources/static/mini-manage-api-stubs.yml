@@ -376,12 +376,16 @@ components:
           format: uuid
         name:
           type: string
+          example: Hope House
         apCode:
           type: string
+          example: NEHOPE1
         postcode:
           type: string
+          example: LS1 3AD
         bedCount:
           type: integer
+          example: 22
         probationRegion:
           $ref: '#/components/schemas/ProbationRegion'
         apArea:
