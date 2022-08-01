@@ -26,11 +26,11 @@ paths:
         500:
           description: unexpected error
           content: {}
-  /premises/{premisesID}:
+  /premises/{premisesId}:
     get:
       summary: Returns an approved premises
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises to return
         required: true
@@ -56,11 +56,11 @@ paths:
         500:
           description: unexpected error
           content: {}
-  /premises/{premisesID}/residents:
+  /premises/{premisesId}/residents:
     get:
-      summary: Returns all the residents in an approved premise with the given ID
+      summary: Returns all the residents in an approved premises with the given ID
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises to get residents for
         required: true
@@ -88,11 +88,11 @@ paths:
         500:
           description: unexpected error
           content: {}
-  /premises/{premisesID}/bookings:
+  /premises/{premisesId}/bookings:
     get:
       summary: Returns all bookings for an approved premises
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises to get bookings for
         required: true
@@ -123,7 +123,7 @@ paths:
     post:
       summary: Adds a new booking for an approved premises
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises to get bookings for
         required: true
@@ -134,7 +134,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/BookingBody'
+              $ref: '#/components/schemas/NewBooking'
         required: false
       responses:
         200:
@@ -162,18 +162,18 @@ paths:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
-  /premises/{premisesID}/bookings/{bookingID}/arrivals:
+  /premises/{premisesId}/bookings/{bookingId}/arrivals:
     post:
-      summary: Posts an arrival to a specified approved premise booking
+      summary: Posts an arrival to a specified approved premises booking
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises the booking is related to
         required: true
         schema:
           type: integer
           format: uuid
-      - name: bookingID
+      - name: bookingId
         in: path
         description: ID of the booking
         required: true
@@ -207,24 +207,24 @@ paths:
           description: unauthorised
           content: {}
         404:
-          description: invalid premisesID or bookingID
+          description: invalid premisesId or bookingId
           content: {}
         500:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
-  /premises/{premisesID}/bookings/{bookingID}/departure:
+  /premises/{premisesId}/bookings/{bookingId}/departures:
     post:
-      summary: Posts a departure to a specified approved premise booking
+      summary: Posts a departure to a specified approved premises booking
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises the booking is related to
         required: true
         schema:
           type: integer
           format: uuid
-      - name: bookingID
+      - name: bookingId
         in: path
         description: ID of the booking
         required: true
@@ -258,24 +258,24 @@ paths:
           description: unauthorised
           content: {}
         404:
-          description: invalid premisesID or bookingID
+          description: invalid premisesId or bookingId
           content: {}
         500:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
-  /premises/{premisesID}/bookings/{bookingID}/non-arrival:
+  /premises/{premisesId}/bookings/{bookingId}/non-arrivals:
     post:
-      summary: Posts an non-arrival to a specified approved premise booking
+      summary: Posts an non-arrival to a specified approved premises booking
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises the booking is related to
         required: true
         schema:
           type: integer
           format: uuid
-      - name: bookingID
+      - name: bookingId
         in: path
         description: ID of the booking
         required: true
@@ -309,24 +309,24 @@ paths:
           description: unauthorised
           content: {}
         404:
-          description: invalid premisesID or bookingID
+          description: invalid premisesId or bookingId
           content: {}
         500:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
-  /premises/{premisesID}/bookings/{bookingID}/lost-beds:
+  /premises/{premisesId}/bookings/{bookingId}/lost-beds:
     post:
-      summary: Posts a lost bed to a specified approved premise booking
+      summary: Posts a lost bed to a specified approved premises booking
       parameters:
-      - name: premisesID
+      - name: premisesId
         in: path
         description: ID of the premises the booking is related to
         required: true
         schema:
           type: integer
           format: uuid
-      - name: bookingID
+      - name: bookingId
         in: path
         description: ID of the booking
         required: true
@@ -360,7 +360,7 @@ paths:
           description: unauthorised
           content: {}
         404:
-          description: invalid premisesID or bookingID
+          description: invalid premisesId or bookingId
           content: {}
         500:
           description: unexpected error
@@ -404,6 +404,25 @@ components:
           format: date
         keyWorker:
           type: string
+    NewBooking:
+      type: object
+      properties:
+        crn:
+          type: string
+          example: A123456
+        expectedArrivalDate:
+          type: string
+          format: date
+          example: 2022-07-28
+        expectedDepartureDate:
+          type: string
+          format: date
+          example: 2022-09-30
+        apCode:
+          type: string
+          example: NELEH
+        keyWorkerId:
+          type: string
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -436,19 +455,19 @@ components:
     Person:
       type: object
       properties:
-        CRN:
+        crn:
           type: string
         name:
           type: string
     Arrival:
       type: object
       properties:
-        bookingID:
+        bookingId:
           type: string
           format: uuid
         person: 
           $ref: '#/components/schemas/Person'
-        dateTime:
+        arrivalDate:
           type: string
           format: date
         expectedDepartureDate:
@@ -459,7 +478,7 @@ components:
     Nonarrival:
       type: object
       properties:
-        bookingID:
+        bookingId:
           type: string
           format: uuid
         date:
@@ -472,7 +491,7 @@ components:
     Cancellation:
       type: object
       properties:
-        bookingID:
+        bookingId:
           type: string
           format: uuid
         date:
@@ -485,7 +504,7 @@ components:
     Departure:
       type: object
       properties:
-        bookingID:
+        bookingId:
           type: string
           format: uuid
         dateTime:
