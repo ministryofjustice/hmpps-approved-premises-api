@@ -376,18 +376,49 @@ components:
           format: uuid
         name:
           type: string
+          example: Hope House
         apCode:
           type: string
-        probationRegionId:
-          type: string
+          example: NEHOPE1
         postcode:
           type: string
+          example: LS1 3AD
         bedCount:
           type: integer
-        apAreaId:
-          type: string
+          example: 22
+        probationRegion:
+          $ref: '#/components/schemas/ProbationRegion'
+        apArea:
+          $ref: '#/components/schemas/ApArea'
         localAuthorityArea:
+          $ref: '#/components/schemas/LocalAuthorityArea'
+    LocalAuthorityArea:
+      type: object
+      properties:
+        id:
           type: string
+          example: LEEDS
+        name:
+          type: string
+          example: Leeds City Council
+    ApArea:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1500001234
+        name:
+          type: string
+          example: Yorkshire & The Humber
+    ProbationRegion:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1500123456
+        name:
+          type: string
+          example: NPS North East Central Referrals
     BookingBody:
       type: object
       properties:
