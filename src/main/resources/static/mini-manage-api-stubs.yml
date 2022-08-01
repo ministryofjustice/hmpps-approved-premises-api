@@ -378,16 +378,43 @@ components:
           type: string
         apCode:
           type: string
-        probationRegionId:
-          type: string
         postcode:
           type: string
         bedCount:
           type: integer
-        apAreaId:
-          type: string
+        probationRegion:
+          $ref: '#/components/schemas/ProbationRegion'
+        apArea:
+          $ref: '#/components/schemas/ApArea'
         localAuthorityArea:
+          $ref: '#/components/schemas/LocalAuthorityArea'
+    LocalAuthorityArea:
+      type: object
+      properties:
+        id:
           type: string
+          example: LEEDS
+        name:
+          type: string
+          example: Leeds City Council
+    ApArea:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1500001234
+        name:
+          type: string
+          example: Yorkshire & The Humber
+    ProbationRegion:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1500123456
+        name:
+          type: string
+          example: NPS North East Central Referrals
     BookingBody:
       type: object
       properties:
