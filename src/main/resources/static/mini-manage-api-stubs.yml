@@ -315,20 +315,13 @@ paths:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
-  /premises/{premisesId}/bookings/{bookingId}/lost-beds:
+  /premises/{premisesId}/lost-beds:
     post:
-      summary: Posts a lost bed to a specified approved premises booking
+      summary: Posts a lost bed to a specified approved premises
       parameters:
       - name: premisesId
         in: path
-        description: ID of the premises the booking is related to
-        required: true
-        schema:
-          type: integer
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
+        description: ID of the premises the lost bed is related to
         required: true
         schema:
           type: integer
