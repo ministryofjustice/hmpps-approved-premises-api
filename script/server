@@ -7,5 +7,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+./script/database
+
 echo "==> Starting server..."
-./gradlew bootRun
+./gradlew bootRunLocal

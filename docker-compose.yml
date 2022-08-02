@@ -1,17 +1,15 @@
 version: "3"
 services:
-  approved-premises-api:
-    build:
-      context: .
-    network_mode: "host"
-    container_name: approved-premises-api
-    ports:
-      - "8081:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
+  database:
+    image: "postgres"
     environment:
-      - SERVER_PORT=8080
-      - SPRING_PROFILES_ACTIVE=dev
+      - POSTGRES_USER=localdev
+      - POSTGRES_PASSWORD=localdev_password
+      - POSTGRES_DB=approved_premises_localdev
+    volumes:
+      - database-data-development:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
 
-networks:
-  hmpps:
+volumes:
+  database-data-development:
