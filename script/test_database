@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# script/database: Launch the integration test development database
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "==> Starting integration test database..."
+docker-compose -f docker-compose.test.yml up -d
