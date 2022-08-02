@@ -21,6 +21,10 @@ spring:
   flyway:
     sql-migration-prefix: ""
 
+  jpa:
+    hibernate:
+      ddl-auto: none
+
 springdoc:
   swagger-ui:
     url: "mini-manage-api-stubs.yml"
