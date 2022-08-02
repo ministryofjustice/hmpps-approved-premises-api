@@ -451,6 +451,29 @@ paths:
         500:
           description: unexpected error
           content: { }
+  /reference-data/supervising-teams:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all supervising teams for arrivals
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupervisingTeam'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
 components:
   schemas:
     Premises:
@@ -738,5 +761,16 @@ components:
         name:
           type: string
           example: North East Region
+        isActive:
+          type: boolean
+    SupervisingTeam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: CP - Sheffield
         isActive:
           type: boolean
