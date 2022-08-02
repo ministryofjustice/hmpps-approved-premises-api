@@ -538,6 +538,29 @@ paths:
         500:
           description: unexpected error
           content: { }
+  /reference-data/lost-bed-reasons:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all reasons for losing beds
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LostBedReason'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
 components:
   schemas:
     Premises:
@@ -858,5 +881,16 @@ components:
         name:
           type: string
           example: Brown, James (PS - PSO)
+        isActive:
+          type: boolean
+    LostBedReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Double Room with Single Occupancy - Other (Non-FM)
         isActive:
           type: boolean
