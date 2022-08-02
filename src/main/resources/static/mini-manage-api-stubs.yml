@@ -497,6 +497,29 @@ paths:
         500:
           description: unexpected error
           content: { }
+  /reference-data/key-workers:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all key workers for arrivals
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeyWorker'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
 components:
   schemas:
     Premises:
@@ -806,5 +829,16 @@ components:
         name:
           type: string
           example: Smith, John (PS - PO)
+        isActive:
+          type: boolean
+    KeyWorker:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Brown, James (PS - PSO)
         isActive:
           type: boolean
