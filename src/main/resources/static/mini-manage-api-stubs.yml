@@ -359,6 +359,29 @@ paths:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
+  /reference-data/departure-reasons:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all departure reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartureReason'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
 components:
   schemas:
     Premises:
@@ -604,3 +627,14 @@ components:
           format: uuid
         notes:
           type: string
+    DepartureReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Admitted to Hospital
+        isActive:
+          type: boolean
