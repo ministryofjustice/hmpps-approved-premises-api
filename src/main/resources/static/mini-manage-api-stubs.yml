@@ -382,6 +382,29 @@ paths:
         500:
           description: unexpected error
           content: { }
+  /reference-data/move-on-categories:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all move-on categories for departures
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MoveOnCategory'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
 components:
   schemas:
     Premises:
@@ -636,5 +659,16 @@ components:
         name:
           type: string
           example: Admitted to Hospital
+        isActive:
+          type: boolean
+    MoveOnCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Housing Association - Rented
         isActive:
           type: boolean
