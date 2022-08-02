@@ -7,6 +7,8 @@ servers:
 paths:
   /premises:
     get:
+      tags:
+        - Premises
       summary: Lists all approved premises
       responses:
         200:
@@ -28,6 +30,8 @@ paths:
           content: {}
   /premises/{premisesId}:
     get:
+      tags:
+        - Premises
       summary: Returns an approved premises
       parameters:
       - name: premisesId
@@ -58,6 +62,8 @@ paths:
           content: {}
   /premises/{premisesId}/residents:
     get:
+      tags:
+        - Operations on premises
       summary: Returns all the residents in an approved premises with the given ID
       parameters:
       - name: premisesId
@@ -90,6 +96,8 @@ paths:
           content: {}
   /premises/{premisesId}/bookings:
     get:
+      tags:
+        - Operations on premises
       summary: Returns all bookings for an approved premises
       parameters:
       - name: premisesId
@@ -121,6 +129,8 @@ paths:
           description: unexpected error
           content: {}
     post:
+      tags:
+        - Operations on premises
       summary: Adds a new booking for an approved premises
       parameters:
       - name: premisesId
@@ -164,6 +174,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/arrivals:
     post:
+      tags:
+        - Operations on bookings
       summary: Posts an arrival to a specified approved premises booking
       parameters:
       - name: premisesId
@@ -215,6 +227,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/departures:
     post:
+      tags:
+        - Operations on bookings
       summary: Posts a departure to a specified approved premises booking
       parameters:
       - name: premisesId
@@ -266,6 +280,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/non-arrivals:
     post:
+      tags:
+        - Operations on bookings
       summary: Posts an non-arrival to a specified approved premises booking
       parameters:
       - name: premisesId
@@ -317,6 +333,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/lost-beds:
     post:
+      tags:
+        - Operations on premises
       summary: Posts a lost bed to a specified approved premises
       parameters:
       - name: premisesId
