@@ -393,13 +393,10 @@ paths:
                   $ref: '#/components/schemas/DepartureReason'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
   /reference-data/move-on-categories:
     get:
       tags:
@@ -416,13 +413,10 @@ paths:
                   $ref: '#/components/schemas/MoveOnCategory'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
   /reference-data/destination-providers:
     get:
       tags:
@@ -439,13 +433,10 @@ paths:
                   $ref: '#/components/schemas/DestinationProvider'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
   /reference-data/supervising-providers:
     get:
       tags:
@@ -462,13 +453,10 @@ paths:
                   $ref: '#/components/schemas/SupervisingProvider'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
   /reference-data/supervising-teams:
     get:
       tags:
@@ -485,13 +473,10 @@ paths:
                   $ref: '#/components/schemas/SupervisingTeam'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
   /reference-data/supervising-officers:
     get:
       tags:
@@ -508,13 +493,10 @@ paths:
                   $ref: '#/components/schemas/SupervisingOfficer'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
   /reference-data/key-workers:
     get:
       tags:
@@ -531,13 +513,10 @@ paths:
                   $ref: '#/components/schemas/KeyWorker'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
   /reference-data/lost-bed-reasons:
     get:
       tags:
@@ -554,13 +533,10 @@ paths:
                   $ref: '#/components/schemas/LostBedReason'
         401:
           description: not authenticated
-          content: { }
         403:
           description: unauthorised
-          content: { }
         500:
           description: unexpected error
-          content: { }
 components:
   schemas:
     Premises:
