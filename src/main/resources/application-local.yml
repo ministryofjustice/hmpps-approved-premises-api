@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    username: localdev
+    password: localdev_password
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/approved_premises_localdev
+  jpa:
+    database: postgresql
