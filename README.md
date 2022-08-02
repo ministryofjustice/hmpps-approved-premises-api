@@ -30,6 +30,17 @@ script/server
 
 This runs the project as a Spring Boot application on `localhost:8080`
 
+### Running/Debugging from IntelliJ
+
+To run from IntelliJ, first start the database:
+
+```bash
+script/database
+```
+
+Then in the "Gradle" panel (`View->Tool Windows->Gradle` if not visible), expand `approved-premises-api`, `Tasks`, 
+`application` and right click on `bootRunLocal` and select either Run or Debug.
+
 ## Running the tests
 
 To run linting and tests, from the root directory, run:

@@ -28,3 +28,14 @@ tasks {
     }
   }
 }
+
+tasks.register("bootRunLocal") {
+  group = "application"
+  description = "Runs this project as a Spring Boot application with the local profile"
+  doFirst {
+    tasks.bootRun.configure {
+      systemProperty("spring.profiles.active", "local")
+    }
+  }
+  finalizedBy("bootRun")
+}
