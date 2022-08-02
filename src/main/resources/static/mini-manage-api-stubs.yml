@@ -7,6 +7,8 @@ servers:
 paths:
   /premises:
     get:
+      tags:
+        - Premises
       summary: Lists all approved premises
       responses:
         200:
@@ -28,6 +30,8 @@ paths:
           content: {}
   /premises/{premisesId}:
     get:
+      tags:
+        - Premises
       summary: Returns an approved premises
       parameters:
       - name: premisesId
@@ -58,6 +62,8 @@ paths:
           content: {}
   /premises/{premisesId}/residents:
     get:
+      tags:
+        - Operations on premises
       summary: Returns all the residents in an approved premises with the given ID
       parameters:
       - name: premisesId
@@ -90,6 +96,8 @@ paths:
           content: {}
   /premises/{premisesId}/bookings:
     get:
+      tags:
+        - Operations on premises
       summary: Returns all bookings for an approved premises
       parameters:
       - name: premisesId
@@ -121,6 +129,8 @@ paths:
           description: unexpected error
           content: {}
     post:
+      tags:
+        - Operations on premises
       summary: Adds a new booking for an approved premises
       parameters:
       - name: premisesId
@@ -164,6 +174,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/arrivals:
     post:
+      tags:
+        - Operations on bookings
       summary: Posts an arrival to a specified approved premises booking
       parameters:
       - name: premisesId
@@ -215,6 +227,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/departures:
     post:
+      tags:
+        - Operations on bookings
       summary: Posts a departure to a specified approved premises booking
       parameters:
       - name: premisesId
@@ -266,6 +280,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/non-arrivals:
     post:
+      tags:
+        - Operations on bookings
       summary: Posts an non-arrival to a specified approved premises booking
       parameters:
       - name: premisesId
@@ -317,6 +333,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/lost-beds:
     post:
+      tags:
+        - Operations on premises
       summary: Posts a lost bed to a specified approved premises
       parameters:
       - name: premisesId
@@ -359,6 +377,190 @@ paths:
           description: unexpected error
           content: {}
       x-codegen-request-body-name: body
+  /reference-data/departure-reasons:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all departure reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartureReason'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
+  /reference-data/move-on-categories:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all move-on categories for departures
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MoveOnCategory'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
+  /reference-data/destination-providers:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all destination providers for departures
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DestinationProvider'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
+  /reference-data/supervising-providers:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all supervising providers for arrivals
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupervisingProvider'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
+  /reference-data/supervising-teams:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all supervising teams for arrivals
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupervisingTeam'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
+  /reference-data/supervising-officers:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all supervising officers for arrivals
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupervisingOfficer'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
+  /reference-data/key-workers:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all key workers for arrivals
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeyWorker'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
+  /reference-data/lost-bed-reasons:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all reasons for losing beds
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LostBedReason'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
 components:
   schemas:
     Premises:
@@ -604,3 +806,91 @@ components:
           format: uuid
         notes:
           type: string
+    DepartureReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Admitted to Hospital
+        isActive:
+          type: boolean
+    MoveOnCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Housing Association - Rented
+        isActive:
+          type: boolean
+    DestinationProvider:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Ext - North East Region
+        isActive:
+          type: boolean
+    SupervisingProvider:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: North East Region
+        isActive:
+          type: boolean
+    SupervisingTeam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: CP - Sheffield
+        isActive:
+          type: boolean
+    SupervisingOfficer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Smith, John (PS - PO)
+        isActive:
+          type: boolean
+    KeyWorker:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Brown, James (PS - PSO)
+        isActive:
+          type: boolean
+    LostBedReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Double Room with Single Occupancy - Other (Non-FM)
+        isActive:
+          type: boolean
