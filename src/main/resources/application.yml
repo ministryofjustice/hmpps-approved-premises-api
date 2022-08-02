@@ -18,6 +18,9 @@ spring:
       test:
         - "stdout"
 
+  flyway:
+    sql-migration-prefix: ""
+
 springdoc:
   swagger-ui:
     url: "mini-manage-api-stubs.yml"
