@@ -405,6 +405,29 @@ paths:
         500:
           description: unexpected error
           content: { }
+  /reference-data/destination-providers:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all destination providers for departures
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DestinationProvider'
+        401:
+          description: not authenticated
+          content: { }
+        403:
+          description: unauthorised
+          content: { }
+        500:
+          description: unexpected error
+          content: { }
 components:
   schemas:
     Premises:
@@ -670,5 +693,16 @@ components:
         name:
           type: string
           example: Housing Association - Rented
+        isActive:
+          type: boolean
+    DestinationProvider:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Ext - North East Region
         isActive:
           type: boolean
