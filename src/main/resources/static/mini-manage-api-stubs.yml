@@ -20,14 +20,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/Premises'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}:
     get:
       tags:
@@ -49,17 +46,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/Premises'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID
-          content: {}
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/residents:
     get:
       tags:
@@ -83,17 +80,17 @@ paths:
                 items:
                   $ref: '#/components/schemas/Person'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID
-          content: {}
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/bookings:
     get:
       tags:
@@ -117,17 +114,17 @@ paths:
                 items:
                   $ref: '#/components/schemas/Booking'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID
-          content: {}
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
     post:
       tags:
         - Operations on premises
@@ -160,17 +157,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID
-          content: {}
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/arrivals:
     post:
@@ -213,17 +210,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
-          description: invalid premisesId or bookingId
-          content: {}
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/departures:
     post:
@@ -266,17 +263,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
-          description: invalid premisesId or bookingId
-          content: {}
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/non-arrivals:
     post:
@@ -319,17 +316,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
-          description: invalid premisesId or bookingId
-          content: {}
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/lost-beds:
     post:
@@ -365,17 +362,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
         401:
-          description: not authenticated
-          content: {}
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: {}
+          $ref: '#/components/responses/403Response'
         404:
-          description: invalid premisesId or bookingId
-          content: {}
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
-          description: unexpected error
-          content: {}
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /reference-data/departure-reasons:
     get:
@@ -392,14 +389,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/DepartureReason'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
   /reference-data/move-on-categories:
     get:
       tags:
@@ -415,14 +409,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/MoveOnCategory'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
   /reference-data/destination-providers:
     get:
       tags:
@@ -438,14 +429,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/DestinationProvider'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
   /reference-data/supervising-providers:
     get:
       tags:
@@ -461,14 +449,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/SupervisingProvider'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
   /reference-data/supervising-teams:
     get:
       tags:
@@ -484,14 +469,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/SupervisingTeam'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
   /reference-data/supervising-officers:
     get:
       tags:
@@ -507,14 +489,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/SupervisingOfficer'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
   /reference-data/key-workers:
     get:
       tags:
@@ -530,14 +509,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/KeyWorker'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
   /reference-data/lost-bed-reasons:
     get:
       tags:
@@ -553,15 +529,31 @@ paths:
                 items:
                   $ref: '#/components/schemas/LostBedReason'
         401:
-          description: not authenticated
-          content: { }
+          $ref: '#/components/responses/401Response'
         403:
-          description: unauthorised
-          content: { }
+          $ref: '#/components/responses/403Response'
         500:
-          description: unexpected error
-          content: { }
+          $ref: '#/components/responses/500Response'
 components:
+  responses:
+    401Response:
+      description: not authenticated
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
+    403Response:
+      description: unauthorised
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
+    500Response:
+      description: unexpected error
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
   schemas:
     Premises:
       type: object
@@ -754,7 +746,7 @@ components:
           type: string
           enum:
           - Example destination provider
-    ValidationError:
+    Problem:
       type: object
       properties:
         type:
@@ -763,13 +755,25 @@ components:
         title:
           type: string
           example: Invalid request parameters
-        code:
+        status:
           type: number
-          example: 400.0
-        invalid-params:
-          type: array
-          items:
-            $ref: '#/components/schemas/InvalidParam'
+          format: integer
+          example: 400
+        detail:
+          type: string
+          example: You provided invalid request parameters
+        instance:
+          type: string
+          example: f7493e12-546d-42c3-b838-06c12671ab5b
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            invalid-params:
+              type: array
+              items:
+                $ref: '#/components/schemas/InvalidParam'
     InvalidParam:
       type: object
       properties:
