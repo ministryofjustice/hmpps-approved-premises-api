@@ -1,0 +1,15 @@
+version: "3"
+services:
+  integration_test_database:
+    image: "postgres"
+    environment:
+      - POSTGRES_USER=integration_test
+      - POSTGRES_PASSWORD=integration_test_password
+      - POSTGRES_DB=approved_premises_integration_test
+    volumes:
+      - database-data-integration-test:/var/lib/postgresql/data/
+    ports:
+      - "5433:5432"
+
+volumes:
+  database-data-integration-test:

@@ -30,6 +30,17 @@ script/server
 
 This runs the project as a Spring Boot application on `localhost:8080`
 
+### Running/Debugging from IntelliJ
+
+To run from IntelliJ, first start the database:
+
+```bash
+script/development_database
+```
+
+Then in the "Gradle" panel (`View->Tool Windows->Gradle` if not visible), expand `approved-premises-api`, `Tasks`, 
+`application` and right click on `bootRunLocal` and select either Run or Debug.
+
 ## Running the tests
 
 To run linting and tests, from the root directory, run:
@@ -37,6 +48,18 @@ To run linting and tests, from the root directory, run:
 ```bash
 script/test
 ```
+
+### Running/Debugging from IntelliJ
+
+To run from IntelliJ, first start the database:
+
+```bash
+script/test_database
+```
+
+Then either:
+ - Run or Debug the `verification`, `test` Task from the "Gradle" panel
+ - Open an individual test class and click the green play icon in the gutter at the class level or on a specific test method
 
 ## OpenAPI documentation
 

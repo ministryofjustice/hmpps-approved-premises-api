@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.flywaydb.core.Flyway
+import org.junit.jupiter.api.AfterEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
@@ -13,4 +15,13 @@ abstract class IntegrationTestBase {
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
   lateinit var webTestClient: WebTestClient
+
+  @Autowired
+  private lateinit var flyway: Flyway
+
+  @AfterEach
+  fun afterEach() {
+    flyway.clean()
+    flyway.migrate()
+  }
 }
