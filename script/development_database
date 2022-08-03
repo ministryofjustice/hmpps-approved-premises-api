@@ -6,5 +6,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+script/utils/launch-docker.sh
+
 echo "==> Starting database..."
 docker-compose -f docker-compose.yml up -d
