@@ -3,6 +3,7 @@ plugins {
   kotlin("plugin.spring") version "1.6.21"
 
   id("org.openapi.generator") version "5.4.0"
+  id("org.jetbrains.kotlin.plugin.jpa") version "1.7.10"
 }
 
 configurations {
@@ -69,4 +70,8 @@ ktlint {
   filter {
     exclude("**/generated/**")
   }
+}
+
+allOpen {
+  annotations("javax.persistence.Entity")
 }
