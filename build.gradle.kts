@@ -1,6 +1,8 @@
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.3.3"
   kotlin("plugin.spring") version "1.6.21"
+
+  id("org.openapi.generator") version "5.4.0"
 }
 
 configurations {
@@ -31,6 +33,9 @@ tasks {
     kotlinOptions {
       jvmTarget = "17"
     }
+
+    kotlin.sourceSets["main"].kotlin.srcDir("$buildDir/generated/src/main")
+    dependsOn("openApiGenerate")
   }
 }
 
@@ -43,4 +48,25 @@ tasks.register("bootRunLocal") {
     }
   }
   finalizedBy("bootRun")
+}
+
+openApiGenerate {
+  generatorName.set("kotlin-spring")
+  inputSpec.set("$rootDir/src/main/resources/static/mini-manage-api-stubs.yml")
+  outputDir.set("$buildDir/generated")
+  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
+  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model")
+  configOptions.apply {
+    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
+    put("delegatePattern", "true")
+    put("gradleBuildFile", "false")
+    put("exceptionHandler", "false")
+    put("useBeanValidation", "false")
+  }
+}
+
+ktlint {
+  filter {
+    exclude("**/generated/**")
+  }
 }
