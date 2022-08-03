@@ -584,6 +584,10 @@ components:
       properties:
         id:
           type: string
+          format: uuid
+          example: 6abb5fa3-e93f-4445-887b-30d081688f44
+        identifier:
+          type: string
           example: LEEDS
         name:
           type: string
@@ -593,7 +597,8 @@ components:
       properties:
         id:
           type: string
-          example: 1500001234
+          format: uuid
+          example: cd1c2d43-0b0b-4438-b0e3-d4424e61fb6a
         name:
           type: string
           example: Yorkshire & The Humber
@@ -602,7 +607,11 @@ components:
       properties:
         id:
           type: string
-          example: 1500123456
+          format: uuid
+          example: 952790c0-21d7-4fd6-a7e1-9018f08d8bb0
+        identifier:
+          type: string
+          example: NPSNE
         name:
           type: string
           example: NPS North East Central Referrals
