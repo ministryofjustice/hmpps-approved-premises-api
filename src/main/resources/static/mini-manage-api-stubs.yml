@@ -821,8 +821,7 @@ components:
           type: string
           example: Invalid request parameters
         status:
-          type: number
-          format: integer
+          type: integer
           example: 400
         detail:
           type: string
