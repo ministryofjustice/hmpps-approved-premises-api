@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
+import java.util.UUID
 
 class PremisesTest : IntegrationTestBase() {
   @Autowired
@@ -64,6 +65,42 @@ class PremisesTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Premises by ID returns OK with correct body`() {
+    val premises = premisesEntityFactory
+      .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+      .produceAndPersistMultiple(5)
+
+    val premisesToGet = premises[2]
+    val expectedJson = objectMapper.writeValueAsString(premisesEntityToExpectedApiResponse(premises[2]))
+
+    webTestClient.get()
+      .uri("/premises/${premisesToGet.id}")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Premises by ID returns Not Found with correct body`() {
+    val idToRequest = UUID.randomUUID().toString()
+
+    webTestClient.get()
+      .uri("/premises/$idToRequest")
+      .exchange()
+      .expectHeader().contentType("application/problem+json")
+      .expectStatus()
+      .isNotFound
+      .expectBody()
+      .jsonPath("title").isEqualTo("Not Found")
+      .jsonPath("status").isEqualTo(404)
+      .jsonPath("detail").isEqualTo("No Premises with an ID of $idToRequest could be found")
   }
 
   private fun premisesEntityToExpectedApiResponse(premises: PremisesEntity) = Premises(
