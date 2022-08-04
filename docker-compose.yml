@@ -9,7 +9,7 @@ services:
     volumes:
       - database-data-development:/var/lib/postgresql/data/
     ports:
-      - "5432:5432"
+      - "5431:5432"
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
