@@ -23,6 +23,8 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-data-rest:$springDocVersion")
+
+  testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
 }
 
 java {
