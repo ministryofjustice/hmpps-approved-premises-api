@@ -10,4 +10,4 @@ cd "$(dirname "$0")/.."
 ./script/development_database
 
 echo "==> Starting server..."
-./gradlew bootRunLocal
+./gradlew bootRunDev
