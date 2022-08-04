@@ -3,6 +3,7 @@ plugins {
   kotlin("plugin.spring") version "1.6.21"
 
   id("org.openapi.generator") version "5.4.0"
+  id("org.jetbrains.kotlin.plugin.jpa") version "1.7.10"
 }
 
 configurations {
@@ -22,6 +23,8 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-data-rest:$springDocVersion")
+
+  testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
 }
 
 java {
@@ -69,4 +72,8 @@ ktlint {
   filter {
     exclude("**/generated/**")
   }
+}
+
+allOpen {
+  annotations("javax.persistence.Entity")
 }
