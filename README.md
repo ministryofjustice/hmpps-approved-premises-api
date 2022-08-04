@@ -41,6 +41,23 @@ script/development_database
 Then in the "Gradle" panel (`View->Tool Windows->Gradle` if not visible), expand `approved-premises-api`, `Tasks`, 
 `application` and right click on `bootRunDev` and select either Run or Debug.
 
+## Making requests to the application
+
+Most endpoints require a JWT from HMPPS Auth - an instance of this runs in Docker locally (started alongside the database) 
+on port 9091.  You can get a JWT by running:
+
+```
+script/get_client_credentials_jwt
+```
+
+The `access_token` value in the output is the JWT.  These are valid for 20 minutes.
+
+This value is then included in the Authorization header on requests to the API, as a bearer token, e.g.
+
+```
+Authorization: Bearer {the JWT}
+```
+
 ## Running the tests
 
 To run linting and tests, from the root directory, run:
