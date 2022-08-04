@@ -579,6 +579,15 @@ components:
           $ref: '#/components/schemas/ApArea'
         localAuthorityArea:
           $ref: '#/components/schemas/LocalAuthorityArea'
+      required:
+        - id
+        - name
+        - apCode
+        - postcode
+        - bedCount
+        - probationRegion
+        - apArea
+        - localAuthorityArea
     LocalAuthorityArea:
       type: object
       properties:
@@ -592,6 +601,10 @@ components:
         name:
           type: string
           example: Leeds City Council
+      required:
+        - id
+        - identifier
+        - name
     ApArea:
       type: object
       properties:
@@ -602,6 +615,9 @@ components:
         name:
           type: string
           example: Yorkshire & The Humber
+      required:
+        - id
+        - name
     ProbationRegion:
       type: object
       properties:
@@ -615,6 +631,10 @@ components:
         name:
           type: string
           example: NPS North East Central Referrals
+      required:
+        - id
+        - identifier
+        - name
     BookingBody:
       type: object
       properties:
@@ -631,6 +651,12 @@ components:
           format: date
         keyWorker:
           type: string
+      required:
+        - id
+        - person
+        - arrivalDate
+        - departureDate
+        - keyWorker
     NewBooking:
       type: object
       properties:
@@ -650,6 +676,12 @@ components:
           example: NELEH
         keyWorkerId:
           type: string
+      required:
+        - crn
+        - expectedArrivalDate
+        - expectedDepartureDate
+        - apCode
+        - keyWorkerId
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -679,6 +711,8 @@ components:
               nullable: true
               allOf:
               - $ref: '#/components/schemas/Cancellation'
+          required:
+            - status
     Person:
       type: object
       properties:
@@ -686,6 +720,9 @@ components:
           type: string
         name:
           type: string
+      required:
+        - crn
+        - name
     Arrival:
       type: object
       properties:
@@ -702,6 +739,11 @@ components:
           format: date
         notes:
           type: string
+      required:
+        - bookingId
+        - person
+        - arrivalDate
+        - expectedDepartureDate
     Nonarrival:
       type: object
       properties:
@@ -715,6 +757,10 @@ components:
           type: string
         notes:
           type: string
+      required:
+        - bookingId
+        - date
+        - reason
     Cancellation:
       type: object
       properties:
@@ -728,6 +774,10 @@ components:
           type: string
         notes:
           type: string
+      required:
+        - bookingId
+        - date
+        - reason
     Departure:
       type: object
       properties:
@@ -755,6 +805,12 @@ components:
           type: string
           enum:
           - Example destination provider
+      required:
+        - bookingId
+        - dateTime
+        - reason
+        - moveOnCategory
+        - destinationProvider
     Problem:
       type: object
       properties:
@@ -819,6 +875,12 @@ components:
           format: uuid
         notes:
           type: string
+      required:
+        - startDate
+        - endDate
+        - numberOfBeds
+        - reason
+        - referenceNumber
     DepartureReason:
       type: object
       properties:
@@ -830,6 +892,10 @@ components:
           example: Admitted to Hospital
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
     MoveOnCategory:
       type: object
       properties:
@@ -841,6 +907,10 @@ components:
           example: Housing Association - Rented
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
     DestinationProvider:
       type: object
       properties:
@@ -852,6 +922,10 @@ components:
           example: Ext - North East Region
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
     SupervisingProvider:
       type: object
       properties:
@@ -863,6 +937,10 @@ components:
           example: North East Region
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
     SupervisingTeam:
       type: object
       properties:
@@ -874,6 +952,10 @@ components:
           example: CP - Sheffield
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
     SupervisingOfficer:
       type: object
       properties:
@@ -885,6 +967,10 @@ components:
           example: Smith, John (PS - PO)
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
     KeyWorker:
       type: object
       properties:
@@ -896,6 +982,10 @@ components:
           example: Brown, James (PS - PSO)
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
     LostBedReason:
       type: object
       properties:
@@ -907,3 +997,7 @@ components:
           example: Double Room with Single Occupancy - Other (Non-FM)
         isActive:
           type: boolean
+      required:
+        - id
+        - name
+        - isActive
