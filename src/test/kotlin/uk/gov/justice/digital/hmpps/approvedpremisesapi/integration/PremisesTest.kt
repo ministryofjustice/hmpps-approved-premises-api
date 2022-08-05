@@ -17,11 +17,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import java.time.Duration
 import java.util.UUID
 
 class PremisesTest : IntegrationTestBase() {
   @Autowired
   lateinit var objectMapper: ObjectMapper
+
+  @Autowired
+  lateinit var jwtAuthHelper: JwtAuthHelper
 
   @Autowired
   lateinit var probationRegionRepository: ProbationRegionTestRepository
@@ -58,8 +63,14 @@ class PremisesTest : IntegrationTestBase() {
 
     val expectedJson = objectMapper.writeValueAsString(premises.map(::premisesEntityToExpectedApiResponse))
 
+    val jwt = jwtAuthHelper.createJwt(
+      subject = "some-api",
+      expiryTime = Duration.ofMinutes(2)
+    )
+
     webTestClient.get()
       .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
       .isOk
@@ -78,8 +89,14 @@ class PremisesTest : IntegrationTestBase() {
     val premisesToGet = premises[2]
     val expectedJson = objectMapper.writeValueAsString(premisesEntityToExpectedApiResponse(premises[2]))
 
+    val jwt = jwtAuthHelper.createJwt(
+      subject = "some-api",
+      expiryTime = Duration.ofMinutes(2)
+    )
+
     webTestClient.get()
       .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
       .isOk
@@ -91,8 +108,14 @@ class PremisesTest : IntegrationTestBase() {
   fun `Get Premises by ID returns Not Found with correct body`() {
     val idToRequest = UUID.randomUUID().toString()
 
+    val jwt = jwtAuthHelper.createJwt(
+      subject = "some-api",
+      expiryTime = Duration.ofMinutes(2)
+    )
+
     webTestClient.get()
       .uri("/premises/$idToRequest")
+      .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectHeader().contentType("application/problem+json")
       .expectStatus()

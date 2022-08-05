@@ -21,6 +21,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
+      - SPRING_H2_CONSOLE_SETTINGS_WEBALLOWOTHERS=true
 
 volumes:
   database-data-development:

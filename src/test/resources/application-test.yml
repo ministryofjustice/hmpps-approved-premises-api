@@ -13,3 +13,7 @@ spring:
     url: jdbc:postgresql://localhost:5433/approved_premises_integration_test
   jpa:
     database: postgresql
+
+hmpps:
+  auth:
+    url: http://localhost:9092/auth
