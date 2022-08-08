@@ -784,25 +784,15 @@ components:
           format: uuid
         dateTime:
           type: string
-          format: date
+          format: date-time
         reason:
-          type: string
-          enum:
-          - Absconded
-          - Planned move
-          - Recalled
+          $ref: '#/components/schemas/DepartureReason'
         notes:
           type: string
         moveOnCategory:
-          type: string
-          enum:
-          - Private house
-          - Custody
-          - Deported
+          $ref: '#/components/schemas/MoveOnCategory'
         destinationProvider:
-          type: string
-          enum:
-          - Example destination provider
+          $ref: '#/components/schemas/DestinationProvider'
       required:
         - bookingId
         - dateTime
