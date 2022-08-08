@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.3.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.4.1"
   kotlin("plugin.spring") version "1.6.21"
 
   id("org.openapi.generator") version "5.4.0"
@@ -78,7 +78,7 @@ openApiGenerate {
 
 ktlint {
   filter {
-    exclude("**/generated/**")
+    exclude { it.file.path.contains("$buildDir${File.separator}generated${File.separator}") }
   }
 }
 
