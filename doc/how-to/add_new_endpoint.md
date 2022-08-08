@@ -34,3 +34,19 @@ To create a new endpoint on a top-level path:
    with your implement, e.g.
     
    ![](./images/implement-delegate-method.png)
+
+ - You will then need to add a security configuration entry for your endpoint
+
+   In `src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/config/OAuth2ResourceServerSecurityConfiguration.kt::securityFilterChain` add a new entry:
+   
+   ```
+   .mvcMatchers(HttpMethod.GET, "/premises").permitAll() //Allows any client to access the endpoint (even without a JWT)
+   .mvcMatchers(HttpMethod.GET, "/premises").authenticated() //Allows any client presenting a valid HMPPS JWT to acess the endpoint
+   .mvcMatchers(HttpMethod.GET, "/premises").hasAuthority("ROLE_interventions") //Allows only clients presenting a valid HMPPS JWT with the ROLE_interventions authority to access the endpoint
+   ```
+
+   If you need to access information about the requester from within the endpoint code, you can do so via the following:
+
+   ```
+   val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
+   ```

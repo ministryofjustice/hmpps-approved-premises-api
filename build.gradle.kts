@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.3.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.4.1"
   kotlin("plugin.spring") version "1.6.21"
 
   id("org.openapi.generator") version "5.4.0"
@@ -26,7 +26,13 @@ dependencies {
 
   implementation("org.zalando:problem-spring-web-starter:0.27.0")
 
+  implementation("org.springframework.boot:spring-boot-starter-security")
+  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
+  testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 }
 
 java {
@@ -72,7 +78,7 @@ openApiGenerate {
 
 ktlint {
   filter {
-    exclude("**/generated/**")
+    exclude { it.file.path.contains("$buildDir${File.separator}generated${File.separator}") }
   }
 }
 

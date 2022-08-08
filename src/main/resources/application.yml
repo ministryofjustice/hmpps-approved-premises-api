@@ -25,6 +25,12 @@ spring:
     hibernate:
       ddl-auto: none
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
+
 springdoc:
   swagger-ui:
     url: "mini-manage-api-stubs.yml"
