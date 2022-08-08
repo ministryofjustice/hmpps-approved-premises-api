@@ -102,7 +102,7 @@ paths:
         description: ID of the premises to get bookings for
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       responses:
         200:
@@ -135,7 +135,7 @@ paths:
         description: ID of the premises to get bookings for
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       requestBody:
         content:
@@ -729,8 +729,6 @@ components:
         bookingId:
           type: string
           format: uuid
-        person: 
-          $ref: '#/components/schemas/Person'
         arrivalDate:
           type: string
           format: date
