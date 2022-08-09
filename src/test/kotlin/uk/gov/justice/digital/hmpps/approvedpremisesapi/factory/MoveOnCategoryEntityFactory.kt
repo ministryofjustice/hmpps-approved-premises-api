@@ -1,14 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureReasonTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategoryTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
 class MoveOnCategoryEntityFactory(
-  departureReasonTestRepository: DepartureReasonTestRepository
-) : PersistedFactory<DepartureReasonEntity, UUID>(departureReasonTestRepository) {
+  moveOnCategoryTestRepository: MoveOnCategoryTestRepository
+) : PersistedFactory<MoveOnCategoryEntity, UUID>(moveOnCategoryTestRepository) {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var isActive: Yielded<Boolean> = { true }
@@ -25,7 +25,7 @@ class MoveOnCategoryEntityFactory(
     this.isActive = { isActive }
   }
 
-  override fun produce(): DepartureReasonEntity = DepartureReasonEntity(
+  override fun produce(): MoveOnCategoryEntity = MoveOnCategoryEntity(
     id = this.id(),
     name = this.name(),
     isActive = this.isActive()
