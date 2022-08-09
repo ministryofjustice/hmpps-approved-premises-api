@@ -1,58 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import java.time.Duration
 import java.util.UUID
 
 class PremisesTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var objectMapper: ObjectMapper
-
-  @Autowired
-  lateinit var jwtAuthHelper: JwtAuthHelper
-
-  @Autowired
-  lateinit var probationRegionRepository: ProbationRegionTestRepository
-
-  @Autowired
-  lateinit var apAreaRepository: ApAreaTestRepository
-
-  @Autowired
-  lateinit var localAuthorityAreaRepository: LocalAuthorityAreaTestRepository
-
-  @Autowired
-  lateinit var premisesRepository: PremisesTestRepository
-
-  private lateinit var probationRegionEntityFactory: ProbationRegionEntityFactory
-  private lateinit var apAreaEntityFactory: ApAreaEntityFactory
-  private lateinit var localAuthorityEntityFactory: LocalAuthorityEntityFactory
-  private lateinit var premisesEntityFactory: PremisesEntityFactory
-
-  @BeforeEach
-  fun setupFactories() {
-    probationRegionEntityFactory = ProbationRegionEntityFactory(probationRegionRepository)
-    apAreaEntityFactory = ApAreaEntityFactory(apAreaRepository)
-    localAuthorityEntityFactory = LocalAuthorityEntityFactory(localAuthorityAreaRepository)
-    premisesEntityFactory = PremisesEntityFactory(premisesRepository)
-  }
-
   @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory

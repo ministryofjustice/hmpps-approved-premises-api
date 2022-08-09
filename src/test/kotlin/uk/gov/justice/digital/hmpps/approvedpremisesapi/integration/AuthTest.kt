@@ -1,14 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import java.time.Duration
 
 class AuthTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var jwtAuthHelper: JwtAuthHelper
-
   @Test
   fun `Providing no JWT to a secured endpoint returns 401`() {
     webTestClient.get()
