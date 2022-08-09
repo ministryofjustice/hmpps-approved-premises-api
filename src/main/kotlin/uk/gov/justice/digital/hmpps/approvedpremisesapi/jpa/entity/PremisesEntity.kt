@@ -5,6 +5,7 @@ import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Entity
@@ -24,5 +25,7 @@ data class PremisesEntity(
   var apArea: ApAreaEntity,
   @ManyToOne
   @JoinColumn(name = "local_authority_area_id")
-  var localAuthorityArea: LocalAuthorityAreaEntity
+  var localAuthorityArea: LocalAuthorityAreaEntity,
+  @OneToMany(mappedBy = "premises")
+  var bookings: MutableList<BookingEntity>
 )
