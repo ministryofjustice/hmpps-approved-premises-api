@@ -24,6 +24,7 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
     SPRING_JPA_DATABASE: postgresql
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://$(DB_HOST)/$(DB_NAME)"
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
@@ -35,6 +36,10 @@ generic-service:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
     rds-postgresql-instance-output:
       SPRING_DATASOURCE_URL: "url"
+      SPRING_DATASOURCE_USERNAME: "database_username"
+      SPRING_DATASOURCE_PASSWORD: "database_password"
+      DB_HOST: "rds_instance_endpoint"
+      DB_NAME: "database_name"
 
   allowlist:
     office: "217.33.148.210/32"
