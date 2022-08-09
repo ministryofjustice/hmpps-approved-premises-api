@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 class AuthTest : IntegrationTestBase() {
   @Test
@@ -19,10 +18,7 @@ class AuthTest : IntegrationTestBase() {
 
   @Test
   fun `Providing expired JWT to a secured endpoint returns 401`() {
-    val jwt = jwtAuthHelper.createJwt(
-      subject = "some-api",
-      expiryTime = Duration.ofMinutes(-2)
-    )
+    val jwt = jwtAuthHelper.createExpiredJwt()
 
     webTestClient.get()
       .uri("/premises")

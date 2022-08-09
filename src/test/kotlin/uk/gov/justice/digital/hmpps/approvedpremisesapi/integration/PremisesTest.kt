@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LocalAu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
-import java.time.Duration
 import java.util.UUID
 
 class PremisesTest : IntegrationTestBase() {
@@ -20,10 +19,7 @@ class PremisesTest : IntegrationTestBase() {
 
     val expectedJson = objectMapper.writeValueAsString(premises.map(::premisesEntityToExpectedApiResponse))
 
-    val jwt = jwtAuthHelper.createJwt(
-      subject = "some-api",
-      expiryTime = Duration.ofMinutes(2)
-    )
+    val jwt = jwtAuthHelper.createValidJwt()
 
     webTestClient.get()
       .uri("/premises")
@@ -46,10 +42,7 @@ class PremisesTest : IntegrationTestBase() {
     val premisesToGet = premises[2]
     val expectedJson = objectMapper.writeValueAsString(premisesEntityToExpectedApiResponse(premises[2]))
 
-    val jwt = jwtAuthHelper.createJwt(
-      subject = "some-api",
-      expiryTime = Duration.ofMinutes(2)
-    )
+    val jwt = jwtAuthHelper.createValidJwt()
 
     webTestClient.get()
       .uri("/premises/${premisesToGet.id}")
@@ -65,10 +58,7 @@ class PremisesTest : IntegrationTestBase() {
   fun `Get Premises by ID returns Not Found with correct body`() {
     val idToRequest = UUID.randomUUID().toString()
 
-    val jwt = jwtAuthHelper.createJwt(
-      subject = "some-api",
-      expiryTime = Duration.ofMinutes(2)
-    )
+    val jwt = jwtAuthHelper.createValidJwt()
 
     webTestClient.get()
       .uri("/premises/$idToRequest")
