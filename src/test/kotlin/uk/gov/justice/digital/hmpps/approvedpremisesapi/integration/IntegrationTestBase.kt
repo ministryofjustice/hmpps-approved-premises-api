@@ -13,8 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
@@ -23,9 +25,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategoryTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PersonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
@@ -82,6 +86,12 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var cancellationRepository: CancellationTestRepository
 
+  @Autowired
+  lateinit var departureReasonRepository: DepartureReasonTestRepository
+
+  @Autowired
+  lateinit var moveOnCategoryRepository: MoveOnCategoryTestRepository
+
   lateinit var probationRegionEntityFactory: ProbationRegionEntityFactory
   lateinit var apAreaEntityFactory: ApAreaEntityFactory
   lateinit var localAuthorityEntityFactory: LocalAuthorityEntityFactory
@@ -91,6 +101,8 @@ abstract class IntegrationTestBase {
   lateinit var arrivalEntityFactory: ArrivalEntityFactory
   lateinit var departureEntityFactory: DepartureEntityFactory
   lateinit var destinationProviderEntityFactory: DestinationProviderEntityFactory
+  lateinit var departureReasonEntityFactory: DepartureReasonEntityFactory
+  lateinit var moveOnCategoryEntityFactory: MoveOnCategoryEntityFactory
   lateinit var nonArrivalEntityFactory: NonArrivalEntityFactory
   lateinit var cancellationEntityFactory: CancellationEntityFactory
 
@@ -111,6 +123,8 @@ abstract class IntegrationTestBase {
     arrivalEntityFactory = ArrivalEntityFactory(arrivalRepository)
     departureEntityFactory = DepartureEntityFactory(departureRepository)
     destinationProviderEntityFactory = DestinationProviderEntityFactory(destinationProviderRepository)
+    departureReasonEntityFactory = DepartureReasonEntityFactory(departureReasonRepository)
+    moveOnCategoryEntityFactory = MoveOnCategoryEntityFactory(moveOnCategoryRepository)
     nonArrivalEntityFactory = NonArrivalEntityFactory(nonArrivalRepository)
     cancellationEntityFactory = CancellationEntityFactory(cancellationRepository)
   }
