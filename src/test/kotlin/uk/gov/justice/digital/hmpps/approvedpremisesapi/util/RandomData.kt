@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
+import kotlin.math.max
 import kotlin.random.Random
 
 private val charPoolMultiCaseNumbers = ('a'..'z') + ('A'..'Z') + ('0'..'9')
@@ -21,3 +25,9 @@ fun randomPostCode() = randomStringUpperCase(2) + randomNumberChars(1) + " " +
   randomStringUpperCase(2) + randomNumberChars(1)
 
 fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
+
+fun LocalDate.randomDateAfter(maxDays: Int = 14): LocalDate = this.plusDays(randomInt(1, maxDays).toLong())
+fun LocalDate.randomDateBefore(maxDays: Int = 14): LocalDate = this.minusDays(randomInt(1, maxDays).toLong())
+
+fun OffsetDateTime.randomDateTimeAfter(maxDays: Int = 14): OffsetDateTime = this.plusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
+fun OffsetDateTime.randomDateTimeBefore(maxDays: Int = 14): OffsetDateTime = this.minusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)

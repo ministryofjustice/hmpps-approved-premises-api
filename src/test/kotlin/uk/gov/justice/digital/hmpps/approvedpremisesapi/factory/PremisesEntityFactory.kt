@@ -77,6 +77,7 @@ class PremisesEntityFactory(
     totalBeds = this.totalBeds(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     apArea = this.apArea?.invoke() ?: throw RuntimeException("Must provide an ApArea"),
-    localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area")
+    localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
+    bookings = mutableListOf()
   )
 }
