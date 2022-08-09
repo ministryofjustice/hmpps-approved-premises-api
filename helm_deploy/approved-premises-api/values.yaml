@@ -35,7 +35,6 @@ generic-service:
     approved-premises-api:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
     rds-postgresql-instance-output:
-      SPRING_DATASOURCE_URL: "url"
       SPRING_DATASOURCE_USERNAME: "database_username"
       SPRING_DATASOURCE_PASSWORD: "database_password"
       DB_HOST: "rds_instance_endpoint"
