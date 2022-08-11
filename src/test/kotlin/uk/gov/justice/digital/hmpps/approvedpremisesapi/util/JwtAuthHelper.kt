@@ -41,6 +41,16 @@ class JwtAuthHelper {
     return { it.set(HttpHeaders.AUTHORIZATION, "Bearer $token") }
   }
 
+  internal fun createValidJwt() = createJwt(
+    subject = "some-api",
+    expiryTime = Duration.ofMinutes(2)
+  )
+
+  internal fun createExpiredJwt() = createJwt(
+    subject = "some-api",
+    expiryTime = Duration.ofMinutes(-2)
+  )
+
   internal fun createJwt(
     subject: String?,
     scope: List<String>? = listOf(),

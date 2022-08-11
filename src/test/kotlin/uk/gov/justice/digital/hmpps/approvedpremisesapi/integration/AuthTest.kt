@@ -1,14 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
-import java.time.Duration
 
 class AuthTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var jwtAuthHelper: JwtAuthHelper
-
   @Test
   fun `Providing no JWT to a secured endpoint returns 401`() {
     webTestClient.get()
@@ -24,10 +18,7 @@ class AuthTest : IntegrationTestBase() {
 
   @Test
   fun `Providing expired JWT to a secured endpoint returns 401`() {
-    val jwt = jwtAuthHelper.createJwt(
-      subject = "some-api",
-      expiryTime = Duration.ofMinutes(-2)
-    )
+    val jwt = jwtAuthHelper.createExpiredJwt()
 
     webTestClient.get()
       .uri("/premises")
