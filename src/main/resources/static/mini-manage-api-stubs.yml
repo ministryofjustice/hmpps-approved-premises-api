@@ -612,11 +612,15 @@ components:
           type: string
           format: uuid
           example: cd1c2d43-0b0b-4438-b0e3-d4424e61fb6a
+        identifier:
+          type: string
+          example: LON
         name:
           type: string
           example: Yorkshire & The Humber
       required:
         - id
+        - identifier
         - name
     ProbationRegion:
       type: object
@@ -625,15 +629,11 @@ components:
           type: string
           format: uuid
           example: 952790c0-21d7-4fd6-a7e1-9018f08d8bb0
-        identifier:
-          type: string
-          example: NPSNE
         name:
           type: string
           example: NPS North East Central Referrals
       required:
         - id
-        - identifier
         - name
     BookingBody:
       type: object

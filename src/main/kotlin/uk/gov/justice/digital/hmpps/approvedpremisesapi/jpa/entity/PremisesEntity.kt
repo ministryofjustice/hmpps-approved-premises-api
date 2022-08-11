@@ -17,20 +17,17 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID>
 @Table(name = "premises")
 data class PremisesEntity(
   @Id
-  var id: UUID,
-  var name: String,
-  var apCode: String,
+  val id: UUID,
+  val name: String,
+  val apCode: String,
   var postcode: String,
   var totalBeds: Int,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
-  var probationRegion: ProbationRegionEntity,
-  @ManyToOne
-  @JoinColumn(name = "ap_area_id")
-  var apArea: ApAreaEntity,
+  val probationRegion: ProbationRegionEntity,
   @ManyToOne
   @JoinColumn(name = "local_authority_area_id")
-  var localAuthorityArea: LocalAuthorityAreaEntity,
+  val localAuthorityArea: LocalAuthorityAreaEntity,
   @OneToMany(mappedBy = "premises")
-  var bookings: MutableList<BookingEntity>
+  val bookings: MutableList<BookingEntity>
 )

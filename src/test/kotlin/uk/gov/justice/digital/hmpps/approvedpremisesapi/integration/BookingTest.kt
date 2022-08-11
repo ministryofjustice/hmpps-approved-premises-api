@@ -33,9 +33,8 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Get all Bookings on Premises without any Bookings returns empty list`() {
     val premises = premisesEntityFactory
-      .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
       .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+      .withYieldedProbationRegion { probationRegionEntityFactory.withYieldedApArea { apAreaEntityFactory.produceAndPersist() }.produceAndPersist() }
       .produceAndPersist()
 
     val jwt = jwtAuthHelper.createValidJwt()
@@ -53,9 +52,8 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Get all Bookings returns OK with correct body`() {
     val premises = premisesEntityFactory
-      .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
       .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+      .withYieldedProbationRegion { probationRegionEntityFactory.withYieldedApArea { apAreaEntityFactory.produceAndPersist() }.produceAndPersist() }
       .produceAndPersist()
 
     val bookings = bookingEntityFactory

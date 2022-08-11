@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -17,7 +16,6 @@ class PremisesEntityFactory(
   premisesTestRepository: PremisesTestRepository
 ) : PersistedFactory<PremisesEntity, UUID>(premisesTestRepository) {
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
-  private var apArea: Yielded<ApAreaEntity>? = null
   private var localAuthorityArea: Yielded<LocalAuthorityAreaEntity>? = null
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
@@ -53,14 +51,6 @@ class PremisesEntityFactory(
     this.probationRegion = probationRegion
   }
 
-  fun withApArea(apAreaEntity: ApAreaEntity) = apply {
-    this.apArea = { apAreaEntity }
-  }
-
-  fun withYieldedApArea(apAreaEntity: Yielded<ApAreaEntity>) = apply {
-    this.apArea = apAreaEntity
-  }
-
   fun withLocalAuthorityArea(localAuthorityAreaEntity: LocalAuthorityAreaEntity) = apply {
     this.localAuthorityArea = { localAuthorityAreaEntity }
   }
@@ -76,7 +66,6 @@ class PremisesEntityFactory(
     postcode = this.postcode(),
     totalBeds = this.totalBeds(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
-    apArea = this.apArea?.invoke() ?: throw RuntimeException("Must provide an ApArea"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
     bookings = mutableListOf()
   )

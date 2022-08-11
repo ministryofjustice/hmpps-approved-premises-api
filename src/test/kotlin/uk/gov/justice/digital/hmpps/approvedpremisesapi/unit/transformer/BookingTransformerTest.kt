@@ -53,18 +53,21 @@ class BookingTransformerTest {
 
   private val premisesEntity = PremisesEntity(
     id = UUID.fromString("9703eaaf-164f-4f35-b038-f4de79e4847b"),
-    name = "AP", apCode = "APCODE", postcode = "ST8ST8", totalBeds = 50,
+    name = "AP",
+    apCode = "APCODE",
+    postcode = "ST8ST8",
+    totalBeds = 50,
     probationRegion = ProbationRegionEntity(
       id = UUID.fromString("4eae0059-af28-4436-a4d8-7106523866d9"),
-      identifier = "PR",
       name = "region",
-      premises = mutableListOf()
-    ),
-    apArea = ApAreaEntity(
-      id = UUID.fromString("a005f122-a0e9-4d93-b5bb-f7c5bd82a015"),
-      name = "Ap Area",
-      premises = mutableListOf()
-    ),
+      premises = mutableListOf(),
+      apArea = ApAreaEntity(
+        id = UUID.fromString("a005f122-a0e9-4d93-b5bb-f7c5bd82a015"),
+        identifier = "APA",
+        name = "Ap Area",
+        probationRegions = mutableListOf()
+      )
+    ).apply { apArea.probationRegions.add(this) },
     localAuthorityArea = LocalAuthorityAreaEntity(
       id = UUID.fromString("ee39d3bc-e9ad-4408-a21d-cf763aa1d981"),
       identifier = "AUTHORITY",
