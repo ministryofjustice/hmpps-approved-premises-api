@@ -10,16 +10,14 @@ class PremisesTransformer(
   private val apAreaTransformer: ApAreaTransformer,
   private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
 ) {
-  fun transformJpaToApi(jpa: PremisesEntity): Premises {
-    return Premises(
-      id = jpa.id,
-      name = jpa.name,
-      apCode = jpa.apCode,
-      postcode = jpa.postcode,
-      bedCount = jpa.totalBeds,
-      probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
-      apArea = apAreaTransformer.transformJpaToApi(jpa.apArea),
-      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea)
-    )
-  }
+  fun transformJpaToApi(jpa: PremisesEntity) = Premises(
+    id = jpa.id,
+    name = jpa.name,
+    apCode = jpa.apCode,
+    postcode = jpa.postcode,
+    bedCount = jpa.totalBeds,
+    probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
+    apArea = apAreaTransformer.transformJpaToApi(jpa.apArea),
+    localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea)
+  )
 }
