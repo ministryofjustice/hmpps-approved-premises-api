@@ -6,7 +6,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Entity
-@Table(name = "move_on_category")
+@Table(name = "move_on_categories")
 data class MoveOnCategoryEntity(
   @Id
   val id: UUID,

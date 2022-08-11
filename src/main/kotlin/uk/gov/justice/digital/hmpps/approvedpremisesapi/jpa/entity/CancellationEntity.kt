@@ -10,7 +10,7 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Entity
-@Table(name = "cancellation")
+@Table(name = "cancellations")
 data class CancellationEntity(
   @Id
   val id: UUID,

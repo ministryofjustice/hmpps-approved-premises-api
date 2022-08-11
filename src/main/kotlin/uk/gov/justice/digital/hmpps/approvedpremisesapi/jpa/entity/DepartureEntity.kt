@@ -11,7 +11,7 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Entity
-@Table(name = "departure")
+@Table(name = "departures")
 data class DepartureEntity(
   @Id
   val id: UUID,

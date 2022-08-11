@@ -9,7 +9,7 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Entity
-@Table(name = "person")
+@Table(name = "people")
 data class PersonEntity(
   @Id
   val id: UUID,

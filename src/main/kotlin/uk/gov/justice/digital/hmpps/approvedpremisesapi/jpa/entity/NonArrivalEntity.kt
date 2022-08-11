@@ -10,7 +10,7 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Entity
-@Table(name = "non_arrival")
+@Table(name = "non_arrivals")
 data class NonArrivalEntity(
   @Id
   val id: UUID,

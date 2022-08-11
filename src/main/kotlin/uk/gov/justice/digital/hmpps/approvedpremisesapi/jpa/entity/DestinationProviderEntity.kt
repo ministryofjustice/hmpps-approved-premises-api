@@ -6,7 +6,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Entity
-@Table(name = "destination_provider")
+@Table(name = "destination_providers")
 data class DestinationProviderEntity(
   @Id
   val id: UUID,
