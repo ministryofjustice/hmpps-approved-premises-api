@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
@@ -8,8 +10,11 @@ import javax.persistence.JoinColumn
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
+@Repository
+interface PersonRepository : JpaRepository<PersonEntity, UUID>
+
 @Entity
-@Table(name = "person")
+@Table(name = "people")
 data class PersonEntity(
   @Id
   val id: UUID,

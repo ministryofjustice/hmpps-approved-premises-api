@@ -6,7 +6,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Entity
-@Table(name = "departure_reason")
+@Table(name = "departure_reasons")
 data class DepartureReasonEntity(
   @Id
   val id: UUID,

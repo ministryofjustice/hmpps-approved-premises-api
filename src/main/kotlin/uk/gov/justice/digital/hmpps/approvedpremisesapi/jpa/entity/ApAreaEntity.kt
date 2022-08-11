@@ -7,7 +7,7 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Entity
-@Table(name = "ap_area")
+@Table(name = "ap_areas")
 data class ApAreaEntity(
   @Id
   var id: UUID,
