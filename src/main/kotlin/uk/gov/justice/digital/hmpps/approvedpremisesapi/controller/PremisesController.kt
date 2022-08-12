@@ -3,9 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -14,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.KeyWorkerService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import java.util.UUID
@@ -25,7 +29,8 @@ class PremisesController(
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
   private val premisesTransformer: PremisesTransformer,
-  private val bookingTransformer: BookingTransformer
+  private val bookingTransformer: BookingTransformer,
+  private val arrivalTransformer: ArrivalTransformer
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
     return ResponseEntity.ok(
@@ -87,5 +92,41 @@ class PremisesController(
     )
 
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, person))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewArrival
+  ): ResponseEntity<Arrival> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val booking = bookingService.getBooking(bookingId)
+      ?: throw NotFoundProblem(bookingId, "Booking")
+
+    if (booking.premises.id != premises.id) {
+      throw NotFoundProblem(bookingId, "Booking")
+    }
+
+    if (booking.arrival != null) {
+      throw BadRequestProblem(errorDetail = "This Booking already has an Arrival set")
+    }
+
+    if (body.expectedDepartureDate.isBefore(body.arrivalDate)) {
+      throw BadRequestProblem(mapOf("expectedDepartureDate" to "Cannot be before arrivalDate"))
+    }
+
+    val arrival = bookingService.createArrival(
+      ArrivalEntity(
+        id = UUID.randomUUID(),
+        arrivalDate = body.arrivalDate,
+        expectedDepartureDate = body.expectedDepartureDate,
+        notes = body.notes,
+        booking = booking
+      )
+    )
+
+    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
   }
 }
