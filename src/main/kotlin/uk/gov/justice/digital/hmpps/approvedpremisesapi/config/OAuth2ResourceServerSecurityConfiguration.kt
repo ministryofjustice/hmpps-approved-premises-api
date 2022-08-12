@@ -24,6 +24,8 @@ class OAuth2ResourceServerSecurityConfiguration {
   @Throws(Exception::class)
   fun securityFilterChain(http: HttpSecurity, @Autowired objectMapper: ObjectMapper): SecurityFilterChain {
     http {
+      csrf { disable() }
+
       authorizeHttpRequests {
         authorize(HttpMethod.GET, "/health/**", permitAll)
         authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
