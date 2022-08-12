@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -212,5 +213,138 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".departure").isEqualTo(null)
       .jsonPath(".nonArrival").isEqualTo(null)
       .jsonPath(".cancellation").isEqualTo(null)
+  }
+
+  @Test
+  fun `Create Arrival without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/arrivals")
+      .bodyValue(
+        NewArrival(
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-14"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create Arrival on non existent Premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewArrival(
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-14"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Create Arrival on Booking with existing Arrival returns 400`() {
+    val booking = bookingEntityFactory
+      .withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      .withYieldedPremises {
+        premisesEntityFactory
+          .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+          .produceAndPersist()
+      }.produceAndPersist()
+
+    arrivalEntityFactory.withBooking(booking).produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewArrival(
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-14"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".detail").isEqualTo("This Booking already has an Arrival set")
+  }
+
+  @Test
+  fun `Create Arrival on Booking with expected departure before arrival date returns 400`() {
+    val booking = bookingEntityFactory
+      .withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      .withYieldedPremises {
+        premisesEntityFactory
+          .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+          .produceAndPersist()
+      }.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewArrival(
+          arrivalDate = LocalDate.parse("2022-08-16"),
+          expectedDepartureDate = LocalDate.parse("2022-08-14"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".invalid-params").isEqualTo(mapOf("expectedDepartureDate" to "Cannot be before arrivalDate"))
+  }
+
+  @Test
+  fun `Create Arrival on Booking returns 200 with correct body`() {
+    val booking = bookingEntityFactory
+      .withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      .withYieldedPremises {
+        premisesEntityFactory
+          .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+          .produceAndPersist()
+      }.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewArrival(
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-14"),
+          notes = "Hello"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+      .jsonPath(".arrivalDate").isEqualTo("2022-08-12")
+      .jsonPath(".expectedDepartureDate").isEqualTo("2022-08-14")
+      .jsonPath(".notes").isEqualTo("Hello")
   }
 }
