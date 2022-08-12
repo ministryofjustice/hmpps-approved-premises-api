@@ -132,7 +132,7 @@ paths:
       parameters:
       - name: premisesId
         in: path
-        description: ID of the premises to get bookings for
+        description: ID of the premises to create a booking for
         required: true
         schema:
           type: string
@@ -650,7 +650,7 @@ components:
           type: string
           format: date
         keyWorker:
-          type: string
+          $ref: '#/components/schemas/KeyWorker'
       required:
         - id
         - person
@@ -671,16 +671,13 @@ components:
           type: string
           format: date
           example: 2022-09-30
-        apCode:
-          type: string
-          example: NELEH
         keyWorkerId:
           type: string
+          format: uuid
       required:
         - crn
         - expectedArrivalDate
         - expectedDepartureDate
-        - apCode
         - keyWorkerId
     Booking:
       allOf:
