@@ -3,8 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import java.time.LocalDate
+import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
   @Autowired
@@ -92,5 +95,120 @@ class BookingTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .json(expectedJson)
+  }
+
+  @Test
+  fun `Create Booking without JWT returns 401`() {
+    val premises = premisesEntityFactory
+      .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+      .produceAndPersist()
+
+    val keyWorker = keyWorkerEntityFactory.produceAndPersist()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings")
+      .bodyValue(
+        NewBooking(
+          crn = "a crn",
+          expectedArrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-30"),
+          keyWorkerId = keyWorker.id
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create booking on non existent Premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    val keyWorker = keyWorkerEntityFactory.produceAndPersist()
+
+    webTestClient.post()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewBooking(
+          crn = "a crn",
+          expectedArrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-30"),
+          keyWorkerId = keyWorker.id
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Create booking with non existent Key Worker returns Bad Request with correct body`() {
+    val premises = premisesEntityFactory
+      .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+      .produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewBooking(
+          crn = "a crn",
+          expectedArrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-30"),
+          keyWorkerId = UUID.randomUUID()
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".invalid-params.keyWorkerId").isEqualTo("Invalid keyWorkerId")
+  }
+
+  @Test
+  fun `Create Booking returns OK with correct body`() {
+    val premises = premisesEntityFactory
+      .withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      .withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist() }
+      .produceAndPersist()
+
+    val keyWorker = keyWorkerEntityFactory.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewBooking(
+          crn = "a crn",
+          expectedArrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-30"),
+          keyWorkerId = keyWorker.id
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath(".person.crn").isEqualTo("a crn")
+      .jsonPath(".person.name").isEqualTo("Mock Person")
+      .jsonPath(".arrivalDate").isEqualTo("2022-08-12")
+      .jsonPath(".departureDate").isEqualTo("2022-08-30")
+      .jsonPath(".keyWorker.id").isEqualTo(keyWorker.id.toString())
+      .jsonPath(".keyWorker.name").isEqualTo(keyWorker.name)
+      .jsonPath(".status").isEqualTo("awaiting-arrival")
+      .jsonPath(".arrival").isEqualTo(null)
+      .jsonPath(".departure").isEqualTo(null)
+      .jsonPath(".nonArrival").isEqualTo(null)
+      .jsonPath(".cancellation").isEqualTo(null)
   }
 }
