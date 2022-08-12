@@ -142,7 +142,7 @@ paths:
           'application/json':
             schema:
               $ref: '#/components/schemas/NewBooking'
-        required: false
+        required: true
       responses:
         200:
           description: successful operation
