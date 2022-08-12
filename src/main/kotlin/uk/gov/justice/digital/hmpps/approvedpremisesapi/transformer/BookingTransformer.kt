@@ -3,22 +3,24 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import java.lang.RuntimeException
 
 @Component
 class BookingTransformer(
   private val personTransformer: PersonTransformer,
+  private val keyWorkerTransformer: KeyWorkerTransformer,
   private val arrivalTransformer: ArrivalTransformer,
   private val departureTransformer: DepartureTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer
 ) {
-  fun transformJpaToApi(jpa: BookingEntity) = Booking(
+  fun transformJpaToApi(jpa: BookingEntity, person: Person) = Booking(
     id = jpa.id,
-    person = personTransformer.transformJpaToApi(jpa.person!!),
+    person = personTransformer.transformModelToApi(person),
     arrivalDate = jpa.arrivalDate,
     departureDate = jpa.departureDate,
-    keyWorker = jpa.keyWorker,
+    keyWorker = keyWorkerTransformer.transformJpaToApi(jpa.keyWorker),
     status = determineStatus(jpa),
     arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
     departure = departureTransformer.transformJpaToApi(jpa.departure),

@@ -1,0 +1,2 @@
+DROP TABLE people;
+ALTER TABLE bookings ADD COLUMN crn TEXT NOT NULL;
