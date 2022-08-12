@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 
 class ReferenceDataTest : IntegrationTestBase() {
@@ -11,6 +12,9 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var moveOnCategoryTransformer: MoveOnCategoryTransformer
+
+  @Autowired
+  lateinit var destinationProviderTransformer: DestinationProviderTransformer
 
   @Test
   fun `Get Departure Reasons returns 200 with correct body`() {
@@ -46,6 +50,27 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/move-on-categories")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Destination Providers returns 200 with correct body`() {
+    destinationProviderRepository.deleteAll()
+
+    val destinationProviders = destinationProviderEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      destinationProviders.map(destinationProviderTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/destination-providers")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
