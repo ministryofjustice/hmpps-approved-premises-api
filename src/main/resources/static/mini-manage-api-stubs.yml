@@ -142,7 +142,7 @@ paths:
           'application/json':
             schema:
               $ref: '#/components/schemas/NewBooking'
-        required: false
+        required: true
       responses:
         200:
           description: successful operation
@@ -180,21 +180,21 @@ paths:
         description: ID of the premises the booking is related to
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       - name: bookingId
         in: path
         description: ID of the booking
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       requestBody:
         description: details of the arrival
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Arrival'
+              $ref: '#/components/schemas/NewArrival'
         required: true
       responses:
         200:
@@ -736,7 +736,20 @@ components:
           type: string
       required:
         - bookingId
-        - person
+        - arrivalDate
+        - expectedDepartureDate
+    NewArrival:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+        expectedDepartureDate:
+          type: string
+          format: date
+        notes:
+          type: string
+      required:
         - arrivalDate
         - expectedDepartureDate
     Nonarrival:
