@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 
 class BookingTest : IntegrationTestBase() {
@@ -58,8 +59,8 @@ class BookingTest : IntegrationTestBase() {
 
     val bookings = bookingEntityFactory
       .withPremises(premises)
+      .withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       .produceAndPersistMultiple(5)
-      .onEach { it.person = personEntityFactory.withBooking(it).produceAndPersist() }
 
     bookings[1].let { it.arrival = arrivalEntityFactory.withBooking(it).produceAndPersist() }
     bookings[2].let {
@@ -74,7 +75,12 @@ class BookingTest : IntegrationTestBase() {
     bookings[3].let { it.cancellation = cancellationEntityFactory.withBooking(it).produceAndPersist() }
     bookings[4].let { it.nonArrival = nonArrivalEntityFactory.withBooking(it).produceAndPersist() }
 
-    val expectedJson = objectMapper.writeValueAsString(bookings.map(bookingTransformer::transformJpaToApi))
+    val expectedJson = objectMapper.writeValueAsString(
+      bookings.map {
+        // TODO: Once client to Community API is in place, replace the Person with an entityFactory connected to a mock client
+        bookingTransformer.transformJpaToApi(it, Person(crn = it.crn, name = "Mock Person", isActive = true))
+      }
+    )
 
     val jwt = jwtAuthHelper.createValidJwt()
 

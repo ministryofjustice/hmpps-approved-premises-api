@@ -5,8 +5,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PersonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -20,10 +20,10 @@ class BookingEntityFactory(
   bookingTestRepository: BookingTestRepository
 ) : PersistedFactory<BookingEntity, UUID>(bookingTestRepository) {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var person: Yielded<PersonEntity>? = null
+  private var crn: Yielded<String> = { randomStringUpperCase(6) }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
-  private var keyWorker: Yielded<String> = { randomStringUpperCase(10) }
+  private var keyWorker: Yielded<KeyWorkerEntity>? = null
   private var arrival: Yielded<ArrivalEntity>? = null
   private var departure: Yielded<DepartureEntity>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
@@ -34,12 +34,8 @@ class BookingEntityFactory(
     this.id = { id }
   }
 
-  fun withYieldedPerson(person: Yielded<PersonEntity>) = apply {
-    this.person = person
-  }
-
-  fun withPerson(person: PersonEntity) = apply {
-    this.person = { person }
+  fun withCrn(crn: String) = apply {
+    this.crn = { crn }
   }
 
   fun withArrivalDate(arrivalDate: LocalDate) = apply {
@@ -50,7 +46,11 @@ class BookingEntityFactory(
     this.departureDate = { departureDate }
   }
 
-  fun withKeyWorker(keyWorker: String) = apply {
+  fun withYieldedKeyWorker(keyWorker: Yielded<KeyWorkerEntity>) = apply {
+    this.keyWorker = keyWorker
+  }
+
+  fun withKeyWorker(keyWorker: KeyWorkerEntity) = apply {
     this.keyWorker = { keyWorker }
   }
 
@@ -96,10 +96,10 @@ class BookingEntityFactory(
 
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
-    person = this.person?.invoke(),
+    crn = this.crn(),
     arrivalDate = this.arrivalDate(),
     departureDate = this.departureDate(),
-    keyWorker = this.keyWorker(),
+    keyWorker = this.keyWorker?.invoke() ?: throw RuntimeException("Must provide a KeyWorker"),
     arrival = this.arrival?.invoke(),
     departure = this.departure?.invoke(),
     nonArrival = this.nonArrival?.invoke(),

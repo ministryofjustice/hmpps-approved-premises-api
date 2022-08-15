@@ -20,11 +20,12 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID>
 data class BookingEntity(
   @Id
   val id: UUID,
-  @OneToOne(mappedBy = "booking")
-  var person: PersonEntity?,
+  var crn: String,
   val arrivalDate: LocalDate,
   val departureDate: LocalDate,
-  val keyWorker: String,
+  @ManyToOne
+  @JoinColumn(name = "key_worker_id")
+  var keyWorker: KeyWorkerEntity,
   @OneToOne(mappedBy = "booking")
   var arrival: ArrivalEntity?,
   @OneToOne(mappedBy = "booking")
@@ -42,7 +43,7 @@ data class BookingEntity(
     if (other !is BookingEntity) return false
 
     if (id != other.id) return false
-    if (person != other.person) return false
+    if (crn != other.crn) return false
     if (arrivalDate != other.arrivalDate) return false
     if (departureDate != other.departureDate) return false
     if (keyWorker != other.keyWorker) return false
@@ -54,7 +55,7 @@ data class BookingEntity(
     return true
   }
 
-  override fun hashCode() = Objects.hash(person, arrivalDate, departureDate, keyWorker, arrival, departure, nonArrival, cancellation)
+  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorker, arrival, departure, nonArrival, cancellation)
 
   override fun toString() = "BookingEntity:$id"
 }

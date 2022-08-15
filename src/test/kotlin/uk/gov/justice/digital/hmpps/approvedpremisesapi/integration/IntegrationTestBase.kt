@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
@@ -28,10 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.KeyWorkerTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategoryTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PersonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
@@ -69,7 +69,7 @@ abstract class IntegrationTestBase {
   lateinit var bookingRepository: BookingTestRepository
 
   @Autowired
-  lateinit var personRepository: PersonTestRepository
+  lateinit var keyWorkerRepository: KeyWorkerTestRepository
 
   @Autowired
   lateinit var arrivalRepository: ArrivalTestRepository
@@ -97,7 +97,7 @@ abstract class IntegrationTestBase {
   lateinit var localAuthorityEntityFactory: LocalAuthorityEntityFactory
   lateinit var premisesEntityFactory: PremisesEntityFactory
   lateinit var bookingEntityFactory: BookingEntityFactory
-  lateinit var personEntityFactory: PersonEntityFactory
+  lateinit var keyWorkerEntityFactory: KeyWorkerEntityFactory
   lateinit var arrivalEntityFactory: ArrivalEntityFactory
   lateinit var departureEntityFactory: DepartureEntityFactory
   lateinit var destinationProviderEntityFactory: DestinationProviderEntityFactory
@@ -119,7 +119,7 @@ abstract class IntegrationTestBase {
     localAuthorityEntityFactory = LocalAuthorityEntityFactory(localAuthorityAreaRepository)
     premisesEntityFactory = PremisesEntityFactory(premisesRepository)
     bookingEntityFactory = BookingEntityFactory(bookingRepository)
-    personEntityFactory = PersonEntityFactory(personRepository)
+    keyWorkerEntityFactory = KeyWorkerEntityFactory(keyWorkerRepository)
     arrivalEntityFactory = ArrivalEntityFactory(arrivalRepository)
     departureEntityFactory = DepartureEntityFactory(departureRepository)
     destinationProviderEntityFactory = DestinationProviderEntityFactory(destinationProviderRepository)
