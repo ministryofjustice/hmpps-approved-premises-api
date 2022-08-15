@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.Objects
 import java.util.UUID
@@ -8,6 +10,9 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.OneToOne
 import javax.persistence.Table
+
+@Repository
+interface ArrivalRepository : JpaRepository<ArrivalEntity, UUID>
 
 @Entity
 @Table(name = "arrivals")

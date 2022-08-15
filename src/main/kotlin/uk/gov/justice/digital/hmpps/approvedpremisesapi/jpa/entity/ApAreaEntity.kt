@@ -10,8 +10,9 @@ import javax.persistence.Table
 @Table(name = "ap_areas")
 data class ApAreaEntity(
   @Id
-  var id: UUID,
-  var name: String,
+  val id: UUID,
+  val name: String,
+  val identifier: String,
   @OneToMany(mappedBy = "apArea")
-  var premises: MutableList<PremisesEntity>
+  val probationRegions: MutableList<ProbationRegionEntity>
 )

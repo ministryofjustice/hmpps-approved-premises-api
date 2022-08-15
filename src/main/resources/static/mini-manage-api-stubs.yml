@@ -132,7 +132,7 @@ paths:
       parameters:
       - name: premisesId
         in: path
-        description: ID of the premises to get bookings for
+        description: ID of the premises to create a booking for
         required: true
         schema:
           type: string
@@ -142,7 +142,7 @@ paths:
           'application/json':
             schema:
               $ref: '#/components/schemas/NewBooking'
-        required: false
+        required: true
       responses:
         200:
           description: successful operation
@@ -180,21 +180,21 @@ paths:
         description: ID of the premises the booking is related to
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       - name: bookingId
         in: path
         description: ID of the booking
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       requestBody:
         description: details of the arrival
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Arrival'
+              $ref: '#/components/schemas/NewArrival'
         required: true
       responses:
         200:
@@ -612,11 +612,15 @@ components:
           type: string
           format: uuid
           example: cd1c2d43-0b0b-4438-b0e3-d4424e61fb6a
+        identifier:
+          type: string
+          example: LON
         name:
           type: string
           example: Yorkshire & The Humber
       required:
         - id
+        - identifier
         - name
     ProbationRegion:
       type: object
@@ -625,15 +629,11 @@ components:
           type: string
           format: uuid
           example: 952790c0-21d7-4fd6-a7e1-9018f08d8bb0
-        identifier:
-          type: string
-          example: NPSNE
         name:
           type: string
           example: NPS North East Central Referrals
       required:
         - id
-        - identifier
         - name
     BookingBody:
       type: object
@@ -650,7 +650,7 @@ components:
           type: string
           format: date
         keyWorker:
-          type: string
+          $ref: '#/components/schemas/KeyWorker'
       required:
         - id
         - person
@@ -671,16 +671,13 @@ components:
           type: string
           format: date
           example: 2022-09-30
-        apCode:
-          type: string
-          example: NELEH
         keyWorkerId:
           type: string
+          format: uuid
       required:
         - crn
         - expectedArrivalDate
         - expectedDepartureDate
-        - apCode
         - keyWorkerId
     Booking:
       allOf:
@@ -739,7 +736,20 @@ components:
           type: string
       required:
         - bookingId
-        - person
+        - arrivalDate
+        - expectedDepartureDate
+    NewArrival:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+        expectedDepartureDate:
+          type: string
+          format: date
+        notes:
+          type: string
+      required:
         - arrivalDate
         - expectedDepartureDate
     Nonarrival:

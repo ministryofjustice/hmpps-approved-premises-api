@@ -6,5 +6,5 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 
 @Component
 class ApAreaTransformer {
-  fun transformJpaToApi(jpa: ApAreaEntity) = ApArea(id = jpa.id, name = jpa.name)
+  fun transformJpaToApi(jpa: ApAreaEntity) = ApArea(id = jpa.id, name = jpa.name, identifier = jpa.identifier)
 }
