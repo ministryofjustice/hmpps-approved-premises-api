@@ -29,5 +29,7 @@ data class PremisesEntity(
   @JoinColumn(name = "local_authority_area_id")
   val localAuthorityArea: LocalAuthorityAreaEntity,
   @OneToMany(mappedBy = "premises")
-  val bookings: MutableList<BookingEntity>
+  val bookings: MutableList<BookingEntity>,
+  @OneToMany(mappedBy = "premises")
+  var lostBeds: MutableList<LostBedsEntity>
 )
