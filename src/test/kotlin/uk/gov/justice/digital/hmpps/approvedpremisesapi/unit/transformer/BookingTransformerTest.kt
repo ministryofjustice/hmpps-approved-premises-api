@@ -78,7 +78,8 @@ class BookingTransformerTest {
       name = "Local Authority Area",
       premises = mutableListOf()
     ),
-    bookings = mutableListOf()
+    bookings = mutableListOf(),
+    lostBeds = mutableListOf()
   )
 
   private val baseBookingEntity = BookingEntity(

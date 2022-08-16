@@ -339,14 +339,14 @@ paths:
         description: ID of the premises the lost bed is related to
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       requestBody:
         description: details of the lost bed
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/LostBed'
+              $ref: '#/components/schemas/NewLostBed'
         required: true
       responses:
         200:
@@ -872,6 +872,9 @@ components:
     LostBed:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         startDate:
           type: string
           format: date
@@ -881,15 +884,32 @@ components:
         numberOfBeds:
           type: integer
         reason:
-          type: string
-          enum:
-          - Fire
-          - Damaged
-          - refurbishment
-          - Staff shortage
+          $ref: '#/components/schemas/LostBedReasons'
         referenceNumber:
           type: string
-          format: uuid
+        notes:
+          type: string
+      required:
+        - id
+        - startDate
+        - endDate
+        - numberOfBeds
+        - reason
+    NewLostBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        numberOfBeds:
+          type: integer
+        reason:
+          $ref: '#/components/schemas/LostBedReasons'
+        referenceNumber:
+          type: string
         notes:
           type: string
       required:
@@ -897,7 +917,13 @@ components:
         - endDate
         - numberOfBeds
         - reason
-        - referenceNumber
+    LostBedReasons:
+      type: string
+      enum:
+        - Fire
+        - Damaged
+        - refurbishment
+        - Staff shortage
     DepartureReason:
       type: object
       properties:
