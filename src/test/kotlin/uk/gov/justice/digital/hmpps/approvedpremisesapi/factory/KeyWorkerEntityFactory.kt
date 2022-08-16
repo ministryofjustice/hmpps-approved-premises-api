@@ -1,14 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.KeyWorkerTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class KeyWorkerEntityFactory(
-  keyWorkerTestRepository: KeyWorkerTestRepository
-) : PersistedFactory<KeyWorkerEntity, UUID>(keyWorkerTestRepository) {
+class KeyWorkerEntityFactory : Factory<KeyWorkerEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringUpperCase(12) }
   private var isActive: Yielded<Boolean> = { true }

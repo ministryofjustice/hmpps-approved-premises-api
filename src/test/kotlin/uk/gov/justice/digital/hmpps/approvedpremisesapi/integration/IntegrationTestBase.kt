@@ -20,8 +20,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersistedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
@@ -37,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import java.util.UUID
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -97,20 +113,20 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var cancellationReasonRepository: CancellationReasonTestRepository
 
-  lateinit var probationRegionEntityFactory: ProbationRegionEntityFactory
-  lateinit var apAreaEntityFactory: ApAreaEntityFactory
-  lateinit var localAuthorityEntityFactory: LocalAuthorityEntityFactory
-  lateinit var premisesEntityFactory: PremisesEntityFactory
-  lateinit var bookingEntityFactory: BookingEntityFactory
-  lateinit var keyWorkerEntityFactory: KeyWorkerEntityFactory
-  lateinit var arrivalEntityFactory: ArrivalEntityFactory
-  lateinit var departureEntityFactory: DepartureEntityFactory
-  lateinit var destinationProviderEntityFactory: DestinationProviderEntityFactory
-  lateinit var departureReasonEntityFactory: DepartureReasonEntityFactory
-  lateinit var moveOnCategoryEntityFactory: MoveOnCategoryEntityFactory
-  lateinit var nonArrivalEntityFactory: NonArrivalEntityFactory
-  lateinit var cancellationEntityFactory: CancellationEntityFactory
-  lateinit var cancellationReasonEntityFactory: CancellationReasonEntityFactory
+  lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
+  lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
+  lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
+  lateinit var premisesEntityFactory: PersistedFactory<PremisesEntity, UUID, PremisesEntityFactory>
+  lateinit var bookingEntityFactory: PersistedFactory<BookingEntity, UUID, BookingEntityFactory>
+  lateinit var keyWorkerEntityFactory: PersistedFactory<KeyWorkerEntity, UUID, KeyWorkerEntityFactory>
+  lateinit var arrivalEntityFactory: PersistedFactory<ArrivalEntity, UUID, ArrivalEntityFactory>
+  lateinit var departureEntityFactory: PersistedFactory<DepartureEntity, UUID, DepartureEntityFactory>
+  lateinit var destinationProviderEntityFactory: PersistedFactory<DestinationProviderEntity, UUID, DestinationProviderEntityFactory>
+  lateinit var departureReasonEntityFactory: PersistedFactory<DepartureReasonEntity, UUID, DepartureReasonEntityFactory>
+  lateinit var moveOnCategoryEntityFactory: PersistedFactory<MoveOnCategoryEntity, UUID, MoveOnCategoryEntityFactory>
+  lateinit var nonArrivalEntityFactory: PersistedFactory<NonArrivalEntity, UUID, NonArrivalEntityFactory>
+  lateinit var cancellationEntityFactory: PersistedFactory<CancellationEntity, UUID, CancellationEntityFactory>
+  lateinit var cancellationReasonEntityFactory: PersistedFactory<CancellationReasonEntity, UUID, CancellationReasonEntityFactory>
 
   @BeforeEach
   fun beforeEach() {
@@ -120,19 +136,19 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setupFactories() {
-    probationRegionEntityFactory = ProbationRegionEntityFactory(probationRegionRepository)
-    apAreaEntityFactory = ApAreaEntityFactory(apAreaRepository)
-    localAuthorityEntityFactory = LocalAuthorityEntityFactory(localAuthorityAreaRepository)
-    premisesEntityFactory = PremisesEntityFactory(premisesRepository)
-    bookingEntityFactory = BookingEntityFactory(bookingRepository)
-    keyWorkerEntityFactory = KeyWorkerEntityFactory(keyWorkerRepository)
-    arrivalEntityFactory = ArrivalEntityFactory(arrivalRepository)
-    departureEntityFactory = DepartureEntityFactory(departureRepository)
-    destinationProviderEntityFactory = DestinationProviderEntityFactory(destinationProviderRepository)
-    departureReasonEntityFactory = DepartureReasonEntityFactory(departureReasonRepository)
-    moveOnCategoryEntityFactory = MoveOnCategoryEntityFactory(moveOnCategoryRepository)
-    nonArrivalEntityFactory = NonArrivalEntityFactory(nonArrivalRepository)
-    cancellationEntityFactory = CancellationEntityFactory(cancellationRepository)
-    cancellationReasonEntityFactory = CancellationReasonEntityFactory(cancellationReasonRepository)
+    probationRegionEntityFactory = PersistedFactory(ProbationRegionEntityFactory(), probationRegionRepository)
+    apAreaEntityFactory = PersistedFactory(ApAreaEntityFactory(), apAreaRepository)
+    localAuthorityEntityFactory = PersistedFactory(LocalAuthorityEntityFactory(), localAuthorityAreaRepository)
+    premisesEntityFactory = PersistedFactory(PremisesEntityFactory(), premisesRepository)
+    bookingEntityFactory = PersistedFactory(BookingEntityFactory(), bookingRepository)
+    keyWorkerEntityFactory = PersistedFactory(KeyWorkerEntityFactory(), keyWorkerRepository)
+    arrivalEntityFactory = PersistedFactory(ArrivalEntityFactory(), arrivalRepository)
+    departureEntityFactory = PersistedFactory(DepartureEntityFactory(), departureRepository)
+    destinationProviderEntityFactory = PersistedFactory(DestinationProviderEntityFactory(), destinationProviderRepository)
+    departureReasonEntityFactory = PersistedFactory(DepartureReasonEntityFactory(), departureReasonRepository)
+    moveOnCategoryEntityFactory = PersistedFactory(MoveOnCategoryEntityFactory(), moveOnCategoryRepository)
+    nonArrivalEntityFactory = PersistedFactory(NonArrivalEntityFactory(), nonArrivalRepository)
+    cancellationEntityFactory = PersistedFactory(CancellationEntityFactory(), cancellationRepository)
+    cancellationReasonEntityFactory = PersistedFactory(CancellationReasonEntityFactory(), cancellationReasonRepository)
   }
 }

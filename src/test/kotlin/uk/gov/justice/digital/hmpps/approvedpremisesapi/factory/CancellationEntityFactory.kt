@@ -1,18 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.util.UUID
 
-class CancellationEntityFactory(
-  cancellationTestRepository: CancellationTestRepository
-) : PersistedFactory<CancellationEntity, UUID>(cancellationTestRepository) {
+class CancellationEntityFactory : Factory<CancellationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var reason: Yielded<String> = { randomStringUpperCase(8) }
