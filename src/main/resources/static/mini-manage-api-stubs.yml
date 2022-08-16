@@ -408,6 +408,33 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+    get:
+      tags:
+        - Operations on premises
+      summary: Lists all Lost Beds entries for the Premises
+      parameters:
+      - name: premisesId
+        in: path
+        description: ID of the premises to show lost beds for
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LostBed'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/departure-reasons:
     get:
       tags:
