@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import java.util.UUID
 
@@ -30,6 +33,7 @@ class PremisesController(
   private val bookingService: BookingService,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
+  private val lostBedsTransformer: LostBedsTransformer,
   private val arrivalTransformer: ArrivalTransformer
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
@@ -128,5 +132,22 @@ class PremisesController(
     )
 
     return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
+  }
+
+  override fun premisesPremisesIdLostBedsPost(premisesId: UUID, body: NewLostBed): ResponseEntity<LostBed> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (body.endDate.isBefore(body.startDate)) {
+      throw BadRequestProblem(mapOf("endDate" to "Cannot be before startDate"))
+    }
+
+    if (body.numberOfBeds <= 0) {
+      throw BadRequestProblem(mapOf("numberOfBeds" to "Must be greater than 0"))
+    }
+
+    val lostBed = premisesService.createLostBeds(lostBedsTransformer.transformApiToJpa(body, premises))
+
+    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
   }
 }
