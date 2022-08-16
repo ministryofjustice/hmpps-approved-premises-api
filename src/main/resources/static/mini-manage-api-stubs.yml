@@ -854,7 +854,7 @@ components:
         - bookingId
         - date
         - reason
-    Cancellation:
+    NewCancellation:
       type: object
       properties:
         bookingId:
@@ -865,12 +865,26 @@ components:
           format: date
         reason:
           type: string
+          format: uuid
         notes:
           type: string
       required:
         - bookingId
         - date
         - reason
+    Cancellation:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        reason:
+          $ref: '#/components/schemas/CancellationReason'
+        notes:
+          type: string
     Departure:
       type: object
       properties:
