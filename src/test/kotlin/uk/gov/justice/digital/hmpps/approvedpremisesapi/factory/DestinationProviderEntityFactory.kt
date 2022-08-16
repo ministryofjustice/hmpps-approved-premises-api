@@ -1,14 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
-class DestinationProviderEntityFactory(
-  destinationProviderTestRepository: DestinationProviderTestRepository
-) : PersistedFactory<DestinationProviderEntity, UUID>(destinationProviderTestRepository) {
+class DestinationProviderEntityFactory : Factory<DestinationProviderEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var isActive: Yielded<Boolean> = { true }

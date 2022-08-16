@@ -11,10 +11,12 @@ import java.util.UUID
 class PremisesTest : IntegrationTestBase() {
   @Test
   fun `Get all Premises returns OK with correct body`() {
-    val premises = premisesEntityFactory
-      .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      .withYieldedProbationRegion { probationRegionEntityFactory.withYieldedApArea { apAreaEntityFactory.produceAndPersist() }.produceAndPersist() }
-      .produceAndPersistMultiple(10)
+    val premises = premisesEntityFactory.configure {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+      }
+    }.produceAndPersistMultiple(10)
 
     val expectedJson = objectMapper.writeValueAsString(premises.map(::premisesEntityToExpectedApiResponse))
 
@@ -32,10 +34,12 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get Premises by ID returns OK with correct body`() {
-    val premises = premisesEntityFactory
-      .withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      .withYieldedProbationRegion { probationRegionEntityFactory.withYieldedApArea { apAreaEntityFactory.produceAndPersist() }.produceAndPersist() }
-      .produceAndPersistMultiple(5)
+    val premises = premisesEntityFactory.configure {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+      }
+    }.produceAndPersistMultiple(5)
 
     val premisesToGet = premises[2]
     val expectedJson = objectMapper.writeValueAsString(premisesEntityToExpectedApiResponse(premises[2]))

@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LostBedsTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -12,9 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.util.UUID
 
-class LostBedsEntityFactory(
-  lostBedsTestRepository: LostBedsTestRepository
-) : PersistedFactory<LostBedsEntity, UUID>(lostBedsTestRepository) {
+class LostBedsEntityFactory : Factory<LostBedsEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
   private var endDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(6) }

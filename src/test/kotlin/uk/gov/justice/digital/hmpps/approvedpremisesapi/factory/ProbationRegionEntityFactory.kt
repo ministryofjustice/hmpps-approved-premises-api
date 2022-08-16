@@ -1,15 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
-class ProbationRegionEntityFactory(
-  probationRegionTestRepository: ProbationRegionTestRepository
-) : PersistedFactory<ProbationRegionEntity, UUID>(probationRegionTestRepository) {
+class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var apArea: Yielded<ApAreaEntity>? = null

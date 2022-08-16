@@ -1,20 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class DepartureEntityFactory(
-  departureTestRepository: DepartureTestRepository
-) : PersistedFactory<DepartureEntity, UUID>(departureTestRepository) {
+class DepartureEntityFactory : Factory<DepartureEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeAfter() }
   private var reason: Yielded<DepartureReasonEntity>? = null
