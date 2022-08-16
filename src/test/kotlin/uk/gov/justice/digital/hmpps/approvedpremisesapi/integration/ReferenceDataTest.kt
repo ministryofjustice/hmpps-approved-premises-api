@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
@@ -15,6 +16,9 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var destinationProviderTransformer: DestinationProviderTransformer
+
+  @Autowired
+  lateinit var cancellationReasonTransformer: CancellationReasonTransformer
 
   @Test
   fun `Get Departure Reasons returns 200 with correct body`() {
@@ -71,6 +75,27 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/destination-providers")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Cancellation Reasons returns 200 with correct body`() {
+    cancellationReasonRepository.deleteAll()
+
+    val departureReasons = cancellationReasonEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      departureReasons.map(cancellationReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/cancellation-reasons")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()

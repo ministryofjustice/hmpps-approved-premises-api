@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTestRepository
@@ -92,6 +94,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var moveOnCategoryRepository: MoveOnCategoryTestRepository
 
+  @Autowired
+  lateinit var cancellationReasonRepository: CancellationReasonTestRepository
+
   lateinit var probationRegionEntityFactory: ProbationRegionEntityFactory
   lateinit var apAreaEntityFactory: ApAreaEntityFactory
   lateinit var localAuthorityEntityFactory: LocalAuthorityEntityFactory
@@ -105,6 +110,7 @@ abstract class IntegrationTestBase {
   lateinit var moveOnCategoryEntityFactory: MoveOnCategoryEntityFactory
   lateinit var nonArrivalEntityFactory: NonArrivalEntityFactory
   lateinit var cancellationEntityFactory: CancellationEntityFactory
+  lateinit var cancellationReasonEntityFactory: CancellationReasonEntityFactory
 
   @BeforeEach
   fun beforeEach() {
@@ -127,5 +133,6 @@ abstract class IntegrationTestBase {
     moveOnCategoryEntityFactory = MoveOnCategoryEntityFactory(moveOnCategoryRepository)
     nonArrivalEntityFactory = NonArrivalEntityFactory(nonArrivalRepository)
     cancellationEntityFactory = CancellationEntityFactory(cancellationRepository)
+    cancellationReasonEntityFactory = CancellationReasonEntityFactory(cancellationReasonRepository)
   }
 }
