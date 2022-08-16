@@ -13,8 +13,10 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class DepartureEntityFactory(
-  departureTestRepository: DepartureTestRepository
+  departureTestRepository: DepartureTestRepository?
 ) : PersistedFactory<DepartureEntity, UUID>(departureTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeAfter() }
   private var reason: Yielded<DepartureReasonEntity>? = null

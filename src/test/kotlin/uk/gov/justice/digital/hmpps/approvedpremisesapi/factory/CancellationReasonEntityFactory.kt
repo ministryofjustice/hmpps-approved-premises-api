@@ -7,8 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.util.UUID
 
 class CancellationReasonEntityFactory(
-  cancellationReasonTestRepository: CancellationReasonTestRepository
+  cancellationReasonTestRepository: CancellationReasonTestRepository?
 ) : PersistedFactory<CancellationReasonEntity, UUID>(cancellationReasonTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var isActive: Yielded<Boolean> = { true }

@@ -8,8 +8,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.util.UUID
 
 class ApAreaEntityFactory(
-  apAreaTestRepository: ApAreaTestRepository
+  apAreaTestRepository: ApAreaTestRepository?
 ) : PersistedFactory<ApAreaEntity, UUID>(apAreaTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var identifier: Yielded<String> = { randomStringUpperCase(3) }

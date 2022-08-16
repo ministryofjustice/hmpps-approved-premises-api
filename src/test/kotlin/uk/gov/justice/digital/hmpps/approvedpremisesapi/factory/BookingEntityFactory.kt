@@ -17,8 +17,10 @@ import java.util.UUID
 import kotlin.RuntimeException
 
 class BookingEntityFactory(
-  bookingTestRepository: BookingTestRepository
+  bookingTestRepository: BookingTestRepository?
 ) : PersistedFactory<BookingEntity, UUID>(bookingTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }

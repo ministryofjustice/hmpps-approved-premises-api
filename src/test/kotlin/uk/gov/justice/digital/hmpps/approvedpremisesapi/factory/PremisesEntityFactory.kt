@@ -13,8 +13,10 @@ import java.lang.RuntimeException
 import java.util.UUID
 
 class PremisesEntityFactory(
-  premisesTestRepository: PremisesTestRepository
+  premisesTestRepository: PremisesTestRepository?
 ) : PersistedFactory<PremisesEntity, UUID>(premisesTestRepository) {
+  constructor() : this(null)
+
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var localAuthorityArea: Yielded<LocalAuthorityAreaEntity>? = null
   private var id: Yielded<UUID> = { UUID.randomUUID() }

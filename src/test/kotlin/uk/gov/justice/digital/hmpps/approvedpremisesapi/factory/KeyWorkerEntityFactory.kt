@@ -7,8 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.util.UUID
 
 class KeyWorkerEntityFactory(
-  keyWorkerTestRepository: KeyWorkerTestRepository
+  keyWorkerTestRepository: KeyWorkerTestRepository?
 ) : PersistedFactory<KeyWorkerEntity, UUID>(keyWorkerTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringUpperCase(12) }
   private var isActive: Yielded<Boolean> = { true }

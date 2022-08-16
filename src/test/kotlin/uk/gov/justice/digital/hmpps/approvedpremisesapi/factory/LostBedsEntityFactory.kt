@@ -13,8 +13,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 class LostBedsEntityFactory(
-  lostBedsTestRepository: LostBedsTestRepository
+  lostBedsTestRepository: LostBedsTestRepository?
 ) : PersistedFactory<LostBedsEntity, UUID>(lostBedsTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
   private var endDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(6) }

@@ -7,8 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.util.UUID
 
 class MoveOnCategoryEntityFactory(
-  moveOnCategoryTestRepository: MoveOnCategoryTestRepository
+  moveOnCategoryTestRepository: MoveOnCategoryTestRepository?
 ) : PersistedFactory<MoveOnCategoryEntity, UUID>(moveOnCategoryTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var isActive: Yielded<Boolean> = { true }

@@ -11,8 +11,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 class ArrivalEntityFactory(
-  arrivalTestRepository: ArrivalTestRepository
+  arrivalTestRepository: ArrivalTestRepository?
 ) : PersistedFactory<ArrivalEntity, UUID>(arrivalTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }

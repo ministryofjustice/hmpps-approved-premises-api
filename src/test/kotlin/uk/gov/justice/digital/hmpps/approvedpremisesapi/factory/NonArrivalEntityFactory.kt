@@ -10,8 +10,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 class NonArrivalEntityFactory(
-  nonArrivalTestRepository: NonArrivalTestRepository
+  nonArrivalTestRepository: NonArrivalTestRepository?
 ) : PersistedFactory<NonArrivalEntity, UUID>(nonArrivalTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var reason: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }

@@ -11,8 +11,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 class CancellationEntityFactory(
-  cancellationTestRepository: CancellationTestRepository
+  cancellationTestRepository: CancellationTestRepository?
 ) : PersistedFactory<CancellationEntity, UUID>(cancellationTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var reason: Yielded<String> = { randomStringUpperCase(8) }

@@ -8,8 +8,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.util.UUID
 
 class ProbationRegionEntityFactory(
-  probationRegionTestRepository: ProbationRegionTestRepository
+  probationRegionTestRepository: ProbationRegionTestRepository?
 ) : PersistedFactory<ProbationRegionEntity, UUID>(probationRegionTestRepository) {
+  constructor() : this(null)
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var apArea: Yielded<ApAreaEntity>? = null
