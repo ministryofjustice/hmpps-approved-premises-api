@@ -17,7 +17,10 @@ import javax.persistence.Table
 @Repository
 interface LostBedsRepository : JpaRepository<LostBedsEntity, UUID> {
   @Query("SELECT lb FROM LostBedsEntity lb WHERE lb.premises.id = :premisesId AND lb.startDate <= :endDate AND lb.endDate >= :startDate")
-  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): MutableList<LostBedsEntity>
+  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<LostBedsEntity>
+
+  @Query("SELECT MAX(lb.endDate) FROM LostBedsEntity lb WHERE lb.premises.id = :premisesId")
+  fun getHighestBookingDate(premisesId: UUID): LocalDate?
 }
 
 @Entity

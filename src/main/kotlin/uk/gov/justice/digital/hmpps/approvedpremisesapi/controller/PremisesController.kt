@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
@@ -149,5 +151,32 @@ class PremisesController(
     val lostBed = premisesService.createLostBeds(lostBedsTransformer.transformApiToJpa(body, premises))
 
     return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
+  }
+
+  override fun premisesPremisesIdCapacityGet(premisesId: UUID): ResponseEntity<List<DateCapacity>> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val lastBookingDate = premisesService.getLastBookingDate(premises)
+    val lastLostBedsDate = premisesService.getLastLostBedsDate(premises)
+
+    val capacityForPeriod = premisesService.getAvailabilityForRange(
+      premises,
+      LocalDate.now(),
+      maxOf(
+        LocalDate.now(),
+        lastBookingDate ?: LocalDate.now(),
+        lastLostBedsDate ?: LocalDate.now()
+      )
+    )
+
+    return ResponseEntity.ok(
+      capacityForPeriod.map {
+        DateCapacity(
+          date = it.key,
+          availableBeds = it.value.getFreeCapacity(premises.totalBeds)
+        )
+      }
+    )
   }
 }

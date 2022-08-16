@@ -22,6 +22,9 @@ class PremisesService(
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
   fun createLostBeds(lostBed: LostBedsEntity): LostBedsEntity = lostBedsRepository.save(lostBed)
 
+  fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)
+  fun getLastLostBedsDate(premises: PremisesEntity) = lostBedsRepository.getHighestBookingDate(premises.id)
+
   fun getAvailabilityForRange(premises: PremisesEntity, startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Availability> {
     if (endDate.isBefore(startDate)) throw RuntimeException("startDate must be before endDate when calculating availability for range")
 
@@ -29,8 +32,8 @@ class PremisesService(
     val lostBeds = lostBedsRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
 
     return startDate.getDaysUntilExclusiveEnd(endDate).map { date ->
-      val bookingsOnDay = bookings.filter { booking -> booking.arrivalDate <= date && booking.departureDate >= date }
-      val lostBedsOnDay = lostBeds.filter { lostBed -> lostBed.startDate <= date && lostBed.endDate >= date }
+      val bookingsOnDay = bookings.filter { booking -> booking.arrivalDate <= date && booking.departureDate > date }
+      val lostBedsOnDay = lostBeds.filter { lostBed -> lostBed.startDate <= date && lostBed.endDate > date }
 
       Availability(
         date = date,
