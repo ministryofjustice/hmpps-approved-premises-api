@@ -43,8 +43,9 @@ class ExceptionHandling : ProblemHandling, MessageNotReadableAdviceTrait {
         .withDetail("There is a problem with your request")
         .with(
           "invalid-params",
-          mapOf(
-            invalidFormatException.path.map { it.fieldName }.joinToString(".") to (invalidFormatException.cause?.message ?: "Unknown problem")
+          ParamError(
+            propertyName = invalidFormatException.path.joinToString(".") { it.fieldName },
+            errorType = invalidFormatException.cause?.message ?: "Unknown problem"
           )
         )
     } else {

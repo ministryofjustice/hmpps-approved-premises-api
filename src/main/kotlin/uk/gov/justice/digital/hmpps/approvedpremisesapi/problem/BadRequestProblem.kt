@@ -12,7 +12,19 @@ class BadRequestProblem(private val invalidParams: Map<String, String>? = null, 
 
   override fun getParameters(): MutableMap<String, Any> {
     return mutableMapOf(
-      "invalid-params" to (invalidParams ?: emptyMap<String, Any>())
+      "invalid-params" to (
+        invalidParams?.map {
+          ParamError(
+            propertyName = it.key,
+            errorType = it.value
+          )
+        } ?: emptyList()
+        )
     )
   }
 }
+
+data class ParamError(
+  val propertyName: String,
+  val errorType: String
+)

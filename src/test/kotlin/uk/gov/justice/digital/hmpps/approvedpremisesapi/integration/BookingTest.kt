@@ -168,7 +168,12 @@ class BookingTest : IntegrationTestBase() {
       .expectStatus()
       .isBadRequest
       .expectBody()
-      .jsonPath(".invalid-params.keyWorkerId").isEqualTo("Invalid keyWorkerId")
+      .jsonPath(".invalid-params[0]").isEqualTo(
+        mapOf(
+          "propertyName" to "keyWorkerId",
+          "errorType" to "Invalid keyWorkerId"
+        )
+      )
   }
 
   @Test
@@ -304,7 +309,12 @@ class BookingTest : IntegrationTestBase() {
       .expectStatus()
       .isBadRequest
       .expectBody()
-      .jsonPath(".invalid-params").isEqualTo(mapOf("expectedDepartureDate" to "Cannot be before arrivalDate"))
+      .jsonPath(".invalid-params[0]").isEqualTo(
+        mapOf(
+          "propertyName" to "expectedDepartureDate",
+          "errorType" to "Cannot be before arrivalDate"
+        )
+      )
   }
 
   @Test
