@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.Objects
@@ -14,7 +15,10 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
-interface LostBedsRepository : JpaRepository<LostBedsEntity, UUID>
+interface LostBedsRepository : JpaRepository<LostBedsEntity, UUID> {
+  @Query("SELECT lb FROM LostBedsEntity lb WHERE lb.premises.id = :premisesId AND lb.startDate <= :endDate AND lb.endDate >= :startDate")
+  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): MutableList<LostBedsEntity>
+}
 
 @Entity
 @Table(name = "lost_beds")
