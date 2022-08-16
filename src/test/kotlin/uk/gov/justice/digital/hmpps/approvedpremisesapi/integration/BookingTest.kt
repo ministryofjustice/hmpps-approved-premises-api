@@ -37,10 +37,10 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings on Premises without any Bookings returns empty list`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist() }
-    }.produceAndPersist()
+      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+    }
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -56,30 +56,30 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings returns OK with correct body`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
-    val bookings = bookingEntityFactory.configure {
+    val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
       withPremises(premises)
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-    }.produceAndPersistMultiple(5)
+    }
 
-    bookings[1].let { it.arrival = arrivalEntityFactory.configure { withBooking(it) }.produceAndPersist() }
+    bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
     bookings[2].let {
-      it.arrival = arrivalEntityFactory.configure { withBooking(it) }.produceAndPersist()
-      it.departure = departureEntityFactory.configure {
+      it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+      it.departure = departureEntityFactory.produceAndPersist {
         withBooking(it)
         withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
         withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
         withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-      }.produceAndPersist()
+      }
     }
-    bookings[3].let { it.cancellation = cancellationEntityFactory.configure { withBooking(it) }.produceAndPersist() }
-    bookings[4].let { it.nonArrival = nonArrivalEntityFactory.configure { withBooking(it) }.produceAndPersist() }
+    bookings[3].let { it.cancellation = cancellationEntityFactory.produceAndPersist { withBooking(it) } }
+    bookings[4].let { it.nonArrival = nonArrivalEntityFactory.produceAndPersist { withBooking(it) } }
 
     val expectedJson = objectMapper.writeValueAsString(
       bookings.map {
@@ -102,12 +102,12 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking without JWT returns 401`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
     val keyWorker = keyWorkerEntityFactory.produceAndPersist()
 
@@ -150,12 +150,12 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create booking with non existent Key Worker returns Bad Request with correct body`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -184,12 +184,12 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking returns OK with correct body`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
     val keyWorker = keyWorkerEntityFactory.produceAndPersist()
 
@@ -260,19 +260,19 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival on Booking with existing Arrival returns 400`() {
-    val booking = bookingEntityFactory.configure {
+    val booking = bookingEntityFactory.produceAndPersist {
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       withYieldedPremises {
-        premisesEntityFactory.configure {
+        premisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
           }
-        }.produceAndPersist()
+        }
       }
-    }.produceAndPersist()
+    }
 
-    arrivalEntityFactory.configure { withBooking(booking) }.produceAndPersist()
+    arrivalEntityFactory.produceAndPersist { withBooking(booking) }
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -295,19 +295,19 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival on Booking with expected departure before arrival date returns 400`() {
-    val booking = bookingEntityFactory.configure {
+    val booking = bookingEntityFactory.produceAndPersist {
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       withYieldedPremises {
-        premisesEntityFactory.configure {
+        premisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.configure {
+            probationRegionEntityFactory.produceAndPersist {
               withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }.produceAndPersist()
+            }
           }
-        }.produceAndPersist()
+        }
       }
-    }.produceAndPersist()
+    }
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -335,19 +335,19 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival on Booking returns 200 with correct body`() {
-    val booking = bookingEntityFactory.configure {
+    val booking = bookingEntityFactory.produceAndPersist {
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       withYieldedPremises {
-        premisesEntityFactory.configure {
+        premisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.configure {
+            probationRegionEntityFactory.produceAndPersist {
               withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }.produceAndPersist()
+            }
           }
-        }.produceAndPersist()
+        }
       }
-    }.produceAndPersist()
+    }
 
     val jwt = jwtAuthHelper.createValidJwt()
 

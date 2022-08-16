@@ -13,12 +13,12 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds without JWT returns 401`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
     webTestClient.post()
       .uri("/premises/${premises.id}/lost-beds")
@@ -61,12 +61,12 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds with endDate before startDate returns Bad Request with correct body`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -97,12 +97,12 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds with less than 1 bed returns Bad Request with correct body`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -133,13 +133,13 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds returns OK with correct body`() {
-    val premises = premisesEntityFactory.configure {
+    val premises = premisesEntityFactory.produceAndPersist {
       withTotalBeds(3)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.configure { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }.produceAndPersist()
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-    }.produceAndPersist()
+    }
 
     val jwt = jwtAuthHelper.createValidJwt()
 
