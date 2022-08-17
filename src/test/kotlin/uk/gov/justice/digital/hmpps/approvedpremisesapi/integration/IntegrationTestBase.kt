@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersistedFactory
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -47,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.KeyWorkerTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LostBedsTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategoryTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
@@ -113,6 +116,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var cancellationReasonRepository: CancellationReasonTestRepository
 
+  @Autowired
+  lateinit var lostBedsRepository: LostBedsTestRepository
+
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
@@ -127,6 +133,7 @@ abstract class IntegrationTestBase {
   lateinit var nonArrivalEntityFactory: PersistedFactory<NonArrivalEntity, UUID, NonArrivalEntityFactory>
   lateinit var cancellationEntityFactory: PersistedFactory<CancellationEntity, UUID, CancellationEntityFactory>
   lateinit var cancellationReasonEntityFactory: PersistedFactory<CancellationReasonEntity, UUID, CancellationReasonEntityFactory>
+  lateinit var lostBedsEntityFactory: PersistedFactory<LostBedsEntity, UUID, LostBedsEntityFactory>
 
   @BeforeEach
   fun beforeEach() {
@@ -150,5 +157,6 @@ abstract class IntegrationTestBase {
     nonArrivalEntityFactory = PersistedFactory(NonArrivalEntityFactory(), nonArrivalRepository)
     cancellationEntityFactory = PersistedFactory(CancellationEntityFactory(), cancellationRepository)
     cancellationReasonEntityFactory = PersistedFactory(CancellationReasonEntityFactory(), cancellationReasonRepository)
+    lostBedsEntityFactory = PersistedFactory(LostBedsEntityFactory(), lostBedsRepository)
   }
 }

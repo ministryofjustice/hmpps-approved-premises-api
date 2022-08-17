@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.Objects
@@ -13,7 +14,13 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
-interface BookingRepository : JpaRepository<BookingEntity, UUID>
+interface BookingRepository : JpaRepository<BookingEntity, UUID> {
+  @Query("SELECT b FROM BookingEntity b WHERE b.premises.id = :premisesId AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate")
+  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
+
+  @Query("SELECT MAX(b.departureDate) FROM BookingEntity b WHERE b.premises.id = :premisesId")
+  fun getHighestBookingDate(premisesId: UUID): LocalDate?
+}
 
 @Entity
 @Table(name = "bookings")
