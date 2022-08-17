@@ -161,6 +161,13 @@ class PremisesController(
     return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
   }
 
+  override fun premisesPremisesIdLostBedsGet(premisesId: UUID): ResponseEntity<List<LostBed>> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    return ResponseEntity.ok(premises.lostBeds.map(lostBedsTransformer::transformJpaToApi))
+  }
+
   override fun premisesPremisesIdCapacityGet(premisesId: UUID): ResponseEntity<List<DateCapacity>> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
