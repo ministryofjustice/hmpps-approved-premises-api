@@ -362,6 +362,59 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /premises/{premisesId}/bookings/{bookingId}/cancellations:
+    post:
+      tags:
+        - Operations on bookings
+      summary: Posts a cancellation to a specified approved premises booking
+      parameters:
+      - name: premisesId
+        in: path
+        description: ID of the premises the cancellation is related to
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      - name: bookingId
+        in: path
+        description: ID of the booking
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      requestBody:
+        description: details of the cancellation
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewCancellation'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cancellation'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -726,7 +779,7 @@ components:
         id:
           type: string
           format: uuid
-        person: 
+        person:
           $ref: '#/components/schemas/Person'
         arrivalDate:
           type: string
@@ -854,7 +907,7 @@ components:
         - bookingId
         - date
         - reason
-    Cancellation:
+    NewCancellation:
       type: object
       properties:
         bookingId:
@@ -865,12 +918,26 @@ components:
           format: date
         reason:
           type: string
+          format: uuid
         notes:
           type: string
       required:
         - bookingId
         - date
         - reason
+    Cancellation:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        reason:
+          $ref: '#/components/schemas/CancellationReason'
+        notes:
+          type: string
     Departure:
       type: object
       properties:

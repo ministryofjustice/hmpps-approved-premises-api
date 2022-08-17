@@ -4,16 +4,16 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.util.UUID
 
 class CancellationEntityFactory : Factory<CancellationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
-  private var reason: Yielded<String> = { randomStringUpperCase(8) }
+  private var reason: Yielded<CancellationReasonEntity>? = null
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
 
@@ -25,7 +25,11 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
     this.date = { date }
   }
 
-  fun withReason(reason: String) = apply {
+  fun withYieldedReason(reason: Yielded<CancellationReasonEntity>) = apply {
+    this.reason = reason
+  }
+
+  fun withReason(reason: CancellationReasonEntity) = apply {
     this.reason = { reason }
   }
 
@@ -45,7 +49,7 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
     id = this.id(),
     notes = this.notes(),
     date = this.date(),
-    reason = this.reason(),
+    reason = this.reason?.invoke() ?: throw RuntimeException("Reason must be provided"),
     booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided")
   )
 }

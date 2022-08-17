@@ -5,12 +5,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Cancell
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 
 @Component
-class CancellationTransformer(private val destinationProviderTransformer: DestinationProviderTransformer) {
+class CancellationTransformer(private val cancellationReasonTransformer: CancellationReasonTransformer) {
   fun transformJpaToApi(jpa: CancellationEntity?) = jpa?.let {
     Cancellation(
       bookingId = jpa.booking.id,
       date = jpa.date,
-      reason = jpa.reason,
+      reason = cancellationReasonTransformer.transformJpaToApi(jpa.reason),
       notes = jpa.notes
     )
   }
