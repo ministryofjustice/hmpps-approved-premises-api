@@ -10,12 +10,13 @@ class PremisesTransformer(
   private val apAreaTransformer: ApAreaTransformer,
   private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
 ) {
-  fun transformJpaToApi(jpa: PremisesEntity) = Premises(
+  fun transformJpaToApi(jpa: PremisesEntity, availableBedsForToday: Int) = Premises(
     id = jpa.id,
     name = jpa.name,
     apCode = jpa.apCode,
     postcode = jpa.postcode,
     bedCount = jpa.totalBeds,
+    availableBedsForToday = availableBedsForToday,
     probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
     apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
     localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea)

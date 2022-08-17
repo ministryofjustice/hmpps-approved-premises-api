@@ -40,7 +40,12 @@ class PremisesController(
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
     return ResponseEntity.ok(
-      premisesService.getAllPremises().map(premisesTransformer::transformJpaToApi)
+      premisesService.getAllPremises().map {
+        val availableBedsForToday = premisesService.getAvailabilityForRange(it, LocalDate.now(), LocalDate.now().plusDays(1))
+          .values.first().getFreeCapacity(it.totalBeds)
+
+        premisesTransformer.transformJpaToApi(it, availableBedsForToday)
+      }
     )
   }
 
@@ -48,7 +53,10 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises))
+    val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+      .values.first().getFreeCapacity(premises.totalBeds)
+
+    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises, availableBedsForToday))
   }
 
   override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Booking>> {
