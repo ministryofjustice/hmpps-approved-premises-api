@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import java.time.LocalDate
@@ -46,7 +48,8 @@ class PremisesController(
   private val bookingTransformer: BookingTransformer,
   private val lostBedsTransformer: LostBedsTransformer,
   private val arrivalTransformer: ArrivalTransformer,
-  private val cancellationTransformer: CancellationTransformer
+  private val cancellationTransformer: CancellationTransformer,
+  private val extensionTransformer: ExtensionTransformer
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
     return ResponseEntity.ok(
@@ -195,7 +198,32 @@ class PremisesController(
     bookingId: UUID,
     body: NewExtension
   ): ResponseEntity<Extension> {
-    return super.premisesPremisesIdBookingsBookingIdExtensionsPost(premisesId, bookingId, body)
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val booking = bookingService.getBooking(bookingId)
+      ?: throw NotFoundProblem(bookingId, "Booking")
+
+    if (booking.premises.id != premises.id) {
+      throw NotFoundProblem(bookingId, "Booking")
+    }
+
+    if (booking.departureDate.isAfter(body.newDepartureDate)) {
+      throw BadRequestProblem(mapOf("newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
+    }
+
+    val extension = bookingService.createExtension(
+      booking,
+      ExtensionEntity(
+        id = UUID.randomUUID(),
+        previousDepartureDate = booking.departureDate,
+        newDepartureDate = body.newDepartureDate,
+        notes = body.notes,
+        booking = booking
+      )
+    )
+
+    return ResponseEntity.ok(extensionTransformer.transformJpaToApi(extension))
   }
 
   override fun premisesPremisesIdLostBedsPost(premisesId: UUID, body: NewLostBed): ResponseEntity<LostBed> {

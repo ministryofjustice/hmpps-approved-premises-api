@@ -30,7 +30,7 @@ data class BookingEntity(
   val id: UUID,
   var crn: String,
   val arrivalDate: LocalDate,
-  val departureDate: LocalDate,
+  var departureDate: LocalDate,
   @ManyToOne
   @JoinColumn(name = "key_worker_id")
   var keyWorker: KeyWorkerEntity,
