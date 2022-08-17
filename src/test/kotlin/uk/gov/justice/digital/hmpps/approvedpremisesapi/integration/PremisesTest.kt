@@ -1,14 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.ApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LocalAuthorityArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.ProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
+import java.time.LocalDate
 import java.util.UUID
 
 class PremisesTest : IntegrationTestBase() {
+  @Autowired
+  lateinit var premisesTransformer: PremisesTransformer
+
   @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory.produceAndPersistMultiple(10) {
@@ -16,9 +17,14 @@ class PremisesTest : IntegrationTestBase() {
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
+      withTotalBeds(20)
     }
 
-    val expectedJson = objectMapper.writeValueAsString(premises.map(::premisesEntityToExpectedApiResponse))
+    val expectedJson = objectMapper.writeValueAsString(
+      premises.map {
+        premisesTransformer.transformJpaToApi(it, 20)
+      }
+    )
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -39,10 +45,43 @@ class PremisesTest : IntegrationTestBase() {
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
+      withTotalBeds(20)
     }
 
     val premisesToGet = premises[2]
-    val expectedJson = objectMapper.writeValueAsString(premisesEntityToExpectedApiResponse(premises[2]))
+    val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 20))
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Premises by ID returns OK with correct body when capacity is used`() {
+    val premises = premisesEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    bookingEntityFactory.produceAndPersist {
+      withPremises(premises[2])
+      withArrivalDate(LocalDate.now().minusDays(2))
+      withDepartureDate(LocalDate.now().plusDays(4))
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+    }
+
+    val premisesToGet = premises[2]
+    val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 19))
 
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -74,15 +113,4 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("status").isEqualTo(404)
       .jsonPath("detail").isEqualTo("No Premises with an ID of $idToRequest could be found")
   }
-
-  private fun premisesEntityToExpectedApiResponse(premises: PremisesEntity) = Premises(
-    id = premises.id,
-    name = premises.name,
-    apCode = premises.apCode,
-    postcode = premises.postcode,
-    bedCount = premises.totalBeds,
-    probationRegion = ProbationRegion(id = premises.probationRegion.id, name = premises.probationRegion.name),
-    apArea = ApArea(id = premises.probationRegion.apArea.id, name = premises.probationRegion.apArea.name, identifier = premises.probationRegion.apArea.identifier),
-    localAuthorityArea = LocalAuthorityArea(id = premises.localAuthorityArea.id, identifier = premises.localAuthorityArea.identifier, name = premises.localAuthorityArea.name)
-  )
 }
