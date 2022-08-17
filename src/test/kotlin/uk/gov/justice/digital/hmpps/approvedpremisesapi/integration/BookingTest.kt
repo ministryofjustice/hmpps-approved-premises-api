@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
@@ -374,5 +375,158 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".arrivalDate").isEqualTo("2022-08-12")
       .jsonPath(".expectedDepartureDate").isEqualTo("2022-08-14")
       .jsonPath(".notes").isEqualTo("Hello")
+  }
+
+  @Test
+  fun `Create Cancellation without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/cancellations")
+      .bodyValue(
+        NewCancellation(
+          date = LocalDate.parse("2022-08-17"),
+          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create Cancellation on non existent Premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewCancellation(
+          date = LocalDate.parse("2022-08-17"),
+          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Create Cancellation on Booking with non-existent Cancellation Reason 400`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewCancellation(
+          date = LocalDate.parse("2022-08-17"),
+          reason = UUID.fromString("31374d05-203f-45a2-a6c8-3bed24f1fa2f"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".invalid-params[0]").isEqualTo(
+        mapOf(
+          "propertyName" to "reason",
+          "errorType" to "This reason does not exist"
+        )
+      )
+  }
+
+  @Test
+  fun `Create Cancellation on Booking with existing Cancellation returns 400`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
+
+    cancellationEntityFactory.produceAndPersist {
+      withBooking(booking)
+      withReason(cancellationReason)
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewCancellation(
+          date = LocalDate.parse("2022-08-17"),
+          reason = cancellationReason.id,
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".detail").isEqualTo("This Booking already has a Cancellation set")
+  }
+
+  @Test
+  fun `Create Cancellation on Booking returns OK with correct body`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewCancellation(
+          date = LocalDate.parse("2022-08-17"),
+          reason = cancellationReason.id,
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+      .jsonPath(".date").isEqualTo("2022-08-17")
+      .jsonPath(".notes").isEqualTo(null)
+      .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+      .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+      .jsonPath(".reason.isActive").isEqualTo(true)
   }
 }

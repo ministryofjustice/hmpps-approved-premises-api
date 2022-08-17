@@ -1,18 +1,23 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -22,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import java.time.LocalDate
@@ -33,10 +39,12 @@ class PremisesController(
   private val personService: PersonService,
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
+  private val cancellationReasonRepository: CancellationReasonRepository,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
   private val lostBedsTransformer: LostBedsTransformer,
-  private val arrivalTransformer: ArrivalTransformer
+  private val arrivalTransformer: ArrivalTransformer,
+  private val cancellationTransformer: CancellationTransformer
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
     return ResponseEntity.ok(
@@ -142,6 +150,41 @@ class PremisesController(
     )
 
     return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdCancellationsPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewCancellation
+  ): ResponseEntity<Cancellation> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val booking = bookingService.getBooking(bookingId)
+      ?: throw NotFoundProblem(bookingId, "Booking")
+
+    if (booking.premises.id != premises.id) {
+      throw NotFoundProblem(bookingId, "Booking")
+    }
+
+    if (booking.cancellation != null) {
+      throw BadRequestProblem(errorDetail = "This Booking already has a Cancellation set")
+    }
+
+    val cancellationReason = cancellationReasonRepository.findByIdOrNull(body.reason)
+      ?: throw BadRequestProblem(mapOf("reason" to "This reason does not exist"))
+
+    val cancellation = bookingService.createCancellation(
+      CancellationEntity(
+        id = UUID.randomUUID(),
+        date = body.date,
+        reason = cancellationReason,
+        notes = body.notes,
+        booking = booking
+      )
+    )
+
+    return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
   }
 
   override fun premisesPremisesIdLostBedsPost(premisesId: UUID, body: NewLostBed): ResponseEntity<LostBed> {
