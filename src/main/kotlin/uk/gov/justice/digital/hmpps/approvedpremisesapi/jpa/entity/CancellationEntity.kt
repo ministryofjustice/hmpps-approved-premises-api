@@ -6,6 +6,7 @@ import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -15,7 +16,9 @@ data class CancellationEntity(
   @Id
   val id: UUID,
   val date: LocalDate,
-  val reason: String,
+  @ManyToOne
+  @JoinColumn(name = "cancellation_reason_id")
+  val reason: CancellationReasonEntity,
   val notes: String?,
   @OneToOne
   @JoinColumn(name = "booking_id")

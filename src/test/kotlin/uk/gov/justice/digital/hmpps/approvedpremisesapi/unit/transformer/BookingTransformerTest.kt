@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Cancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DestinationProvider
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
@@ -235,7 +237,7 @@ class BookingTransformerTest {
       cancellation = CancellationEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         date = LocalDate.parse("2022-08-10"),
-        reason = "No longer required",
+        reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true),
         notes = null,
         booking = this
       )
@@ -245,7 +247,7 @@ class BookingTransformerTest {
       bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
       notes = null,
       date = LocalDate.parse("2022-08-10"),
-      reason = "No longer required"
+      reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true)
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, person)
@@ -265,7 +267,7 @@ class BookingTransformerTest {
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           date = LocalDate.parse("2022-08-10"),
-          reason = "No longer required",
+          reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true),
           notes = null
         )
       )

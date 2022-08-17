@@ -78,7 +78,12 @@ class BookingTest : IntegrationTestBase() {
         withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
       }
     }
-    bookings[3].let { it.cancellation = cancellationEntityFactory.produceAndPersist { withBooking(it) } }
+    bookings[3].let {
+      it.cancellation = cancellationEntityFactory.produceAndPersist {
+        withBooking(it)
+        withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+      }
+    }
     bookings[4].let { it.nonArrival = nonArrivalEntityFactory.produceAndPersist { withBooking(it) } }
 
     val expectedJson = objectMapper.writeValueAsString(
