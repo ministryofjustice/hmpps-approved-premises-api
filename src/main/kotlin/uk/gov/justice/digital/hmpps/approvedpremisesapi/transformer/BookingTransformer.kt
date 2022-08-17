@@ -13,7 +13,8 @@ class BookingTransformer(
   private val arrivalTransformer: ArrivalTransformer,
   private val departureTransformer: DepartureTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
-  private val cancellationTransformer: CancellationTransformer
+  private val cancellationTransformer: CancellationTransformer,
+  private val extensionTransformer: ExtensionTransformer
 ) {
   fun transformJpaToApi(jpa: BookingEntity, person: Person) = Booking(
     id = jpa.id,
@@ -25,7 +26,8 @@ class BookingTransformer(
     arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
     departure = departureTransformer.transformJpaToApi(jpa.departure),
     nonArrival = nonArrivalTransformer.transformJpaToApi(jpa.nonArrival),
-    cancellation = cancellationTransformer.transformJpaToApi(jpa.cancellation)
+    cancellation = cancellationTransformer.transformJpaToApi(jpa.cancellation),
+    extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi)
   )
 
   private fun determineStatus(jpa: BookingEntity) = when {

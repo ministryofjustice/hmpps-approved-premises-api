@@ -72,6 +72,7 @@ class BookingTest : IntegrationTestBase() {
     bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
     bookings[2].let {
       it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+      it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
       it.departure = departureEntityFactory.produceAndPersist {
         withBooking(it)
         withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }

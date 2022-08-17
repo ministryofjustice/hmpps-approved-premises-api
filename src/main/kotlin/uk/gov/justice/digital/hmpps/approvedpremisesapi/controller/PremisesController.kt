@@ -8,10 +8,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DateCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -109,6 +111,7 @@ class PremisesController(
         departure = null,
         nonArrival = null,
         cancellation = null,
+        extensions = mutableListOf(),
         premises = premises
       )
     )
@@ -185,6 +188,14 @@ class PremisesController(
     )
 
     return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdExtensionsPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewExtension
+  ): ResponseEntity<Extension> {
+    return super.premisesPremisesIdBookingsBookingIdExtensionsPost(premisesId, bookingId, body)
   }
 
   override fun premisesPremisesIdLostBedsPost(premisesId: UUID, body: NewLostBed): ResponseEntity<LostBed> {
