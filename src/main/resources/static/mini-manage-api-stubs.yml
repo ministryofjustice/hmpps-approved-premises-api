@@ -373,14 +373,14 @@ paths:
         description: ID of the premises the cancellation is related to
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       - name: bookingId
         in: path
         description: ID of the booking
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       requestBody:
         description: details of the cancellation
@@ -910,9 +910,6 @@ components:
     NewCancellation:
       type: object
       properties:
-        bookingId:
-          type: string
-          format: uuid
         date:
           type: string
           format: date
@@ -928,6 +925,9 @@ components:
     Cancellation:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         bookingId:
           type: string
           format: uuid
@@ -938,6 +938,10 @@ components:
           $ref: '#/components/schemas/CancellationReason'
         notes:
           type: string
+      required:
+        - bookingId
+        - date
+        - reason
     Departure:
       type: object
       properties:
