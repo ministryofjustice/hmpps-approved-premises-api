@@ -12,6 +12,64 @@ class LostBedsTest : IntegrationTestBase() {
   lateinit var lostBedsTransformer: LostBedsTransformer
 
   @Test
+  fun `List Lost Beds without JWT returns 401`() {
+    val premises = premisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/lost-beds")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `List Lost Beds on non existent Premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.get()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/lost-beds")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `List Lost Beds returns OK with correct body`() {
+    val premises = premisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      withStartDate(LocalDate.now().plusDays(2))
+      withEndDate(LocalDate.now().plusDays(4))
+      withNumberOfBeds(5)
+      withPremises(premises)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(listOf(lostBedsTransformer.transformJpaToApi(lostBeds)))
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/lost-beds")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
   fun `Create Lost Beds without JWT returns 401`() {
     val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
