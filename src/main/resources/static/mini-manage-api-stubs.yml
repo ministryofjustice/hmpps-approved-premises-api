@@ -415,6 +415,35 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /crn/search:
+    post:
+      summary: Retrieves a Person's name from their CRN
+      requestBody:
+        description: The details with which to search for the Person
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CrnSearch'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/CrnSearchResult'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -1206,3 +1235,23 @@ components:
       required:
         - date
         - availableBeds
+    CrnSearch:
+      type: object
+      properties:
+        crn:
+          type: string
+          example: X320741
+      required:
+        - crn
+    CrnSearchResult:
+      type: object
+      properties:
+        crn:
+          type: string
+          example: X320741
+        name:
+          type: string
+          example: John Smith
+      required:
+        - crn
+        - name
