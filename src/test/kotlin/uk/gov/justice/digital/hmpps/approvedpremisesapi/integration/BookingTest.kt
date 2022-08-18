@@ -19,6 +19,82 @@ class BookingTest : IntegrationTestBase() {
   lateinit var bookingTransformer: BookingTransformer
 
   @Test
+  fun `Get a booking for a premises without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get a booking for a premises on a non existent booking returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.get()
+      .uri("/premises/213b17bd-68a8-40dc-9d91-1af58fc01f0d/bookings/f1d3a0df-546d-40a7-b80a-57502e090e45")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Get a booking for a premises when a booking does not belong to that premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    val premises = premisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+    }
+
+    val otherPremises = premisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+    }
+
+    val booking = bookingEntityFactory.produceAndPersist() {
+      withPremises(otherPremises)
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+    }
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/bookings/${booking.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Get a booking for a premises returns OK with the correct body`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    val premises = premisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+    }
+
+    val booking = bookingEntityFactory.produceAndPersist() {
+      withPremises(premises)
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+    }
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/bookings/${booking.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(
+        objectMapper.writeValueAsString(
+          bookingTransformer.transformJpaToApi(booking, Person(crn = booking.crn, name = "Mock Person", isActive = true))
+        )
+      )
+  }
+
+  @Test
   fun `Get all Bookings without JWT returns 401`() {
     webTestClient.get()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings")
