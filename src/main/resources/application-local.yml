@@ -10,3 +10,5 @@ spring:
 hmpps:
   auth:
     url: http://localhost:9091/auth
+    client-id: approved-premises-api
+    client-secret: clientsecret

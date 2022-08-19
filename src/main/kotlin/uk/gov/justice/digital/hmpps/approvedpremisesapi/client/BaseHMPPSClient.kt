@@ -11,38 +11,43 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import java.net.URI
 
-abstract class BaseHMPPSClient(private val restTemplate: RestTemplate, private val objectMapper: ObjectMapper, private val baseUrl: String) {
-  protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType?> =
+abstract class BaseHMPPSClient(
+  private val restTemplate: RestTemplate,
+  private val objectMapper: ObjectMapper,
+  private val hmppsAuthClient: HMPPSAuthClient,
+  private val baseUrl: String
+) {
+  protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.GET, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> postRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType?> =
+  protected inline fun <reified ResponseType : Any> postRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.POST, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> putRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType?> =
+  protected inline fun <reified ResponseType : Any> putRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.PUT, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> deleteRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType?> =
+  protected inline fun <reified ResponseType : Any> deleteRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.DELETE, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType?> =
+  protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.PATCH, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> request(method: HttpMethod, noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType?> {
+  protected inline fun <reified ResponseType : Any> request(method: HttpMethod, noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> {
     val clazz = if (ResponseType::class.java.typeParameters.any()) null else ResponseType::class.java
     val typeReference = if (ResponseType::class.java.typeParameters.any()) object : TypeReference<ResponseType>() {} else null
 
     return doRequest(clazz, typeReference, method, requestBuilderConfiguration)
   }
 
-  fun <ResponseType : Any> doRequest(clazz: Class<ResponseType>?, typeReference: TypeReference<ResponseType>?, method: HttpMethod, requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType?> {
+  fun <ResponseType : Any> doRequest(clazz: Class<ResponseType>?, typeReference: TypeReference<ResponseType>?, method: HttpMethod, requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> {
     val requestBuilder = HMPPSRequestConfiguration()
     requestBuilderConfiguration(requestBuilder)
 
     when (requestBuilder.authType) {
       HMPPSAuthType.None -> null
       HMPPSAuthType.PassThroughJwtFromRequest -> getPassThroughJwt()
-      HMPPSAuthType.ClientCredentials -> getClientCredentialsJwt()
-      HMPPSAuthType.ClientCredentialsWithUsernameFromRequestJwt -> getClientCredentialsWithUsernameJwt()
+      HMPPSAuthType.ClientCredentials -> hmppsAuthClient.getClientCredentialsJwt()
+      HMPPSAuthType.ClientCredentialsWithUsernameFromRequestJwt -> hmppsAuthClient.getClientCredentialsWithUsernameJwt()
     }?.let { requestBuilder.withHeader("Authorization", "Bearer $it") }
 
     val requestEntity = if (requestBuilder.body == null) {
@@ -55,9 +60,7 @@ abstract class BaseHMPPSClient(private val restTemplate: RestTemplate, private v
       val result = restTemplate.exchange(requestEntity, String::class.java)
 
       if (result.statusCode.is2xxSuccessful) {
-        val deserialized = if (result.body.isNullOrEmpty()) {
-          null
-        } else if (typeReference != null) {
+        val deserialized = if (typeReference != null) {
           objectMapper.readValue(result.body, typeReference)
         } else {
           objectMapper.readValue(result.body, clazz)
@@ -74,14 +77,6 @@ abstract class BaseHMPPSClient(private val restTemplate: RestTemplate, private v
 
   private fun getPassThroughJwt() = (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)?.request?.getHeader("Authorization")?.replace("Bearer ", "")
     ?: throw RuntimeException("Could not get Authorization header from request")
-
-  private fun getClientCredentialsJwt(): String {
-    TODO()
-  }
-
-  private fun getClientCredentialsWithUsernameJwt(): String {
-    TODO()
-  }
 
   class HMPPSRequestConfiguration {
     internal var path: String? = null
