@@ -31,7 +31,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
-        authorize(anyRequest, authenticated)
+        authorize(anyRequest, hasAuthority("ROLE_COMMUNITY"))
       }
 
       anonymous { disable() }

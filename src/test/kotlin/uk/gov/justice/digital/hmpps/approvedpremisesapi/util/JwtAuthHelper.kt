@@ -27,11 +27,13 @@ class JwtAuthHelper {
   fun jwtDecoder(): JwtDecoder = NimbusJwtDecoder.withPublicKey(keyPair.public as RSAPublicKey).build()
 
   internal fun createValidClientCredentialsJwt() = createClientCredentialsJwt(
-    expiryTime = Duration.ofMinutes(2)
+    expiryTime = Duration.ofMinutes(2),
+    roles = listOf("ROLE_COMMUNITY")
   )
 
   internal fun createExpiredClientCredentialsJwt() = createClientCredentialsJwt(
-    expiryTime = Duration.ofMinutes(-2)
+    expiryTime = Duration.ofMinutes(-2),
+    roles = listOf("ROLE_COMMUNITY")
   )
 
   internal fun createClientCredentialsJwt(
