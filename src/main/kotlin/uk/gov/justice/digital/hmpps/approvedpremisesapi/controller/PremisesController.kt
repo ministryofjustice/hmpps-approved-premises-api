@@ -85,6 +85,23 @@ class PremisesController(
     )
   }
 
+  override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val booking = bookingService.getBooking(bookingId)
+      ?: throw NotFoundProblem(bookingId, "Booking")
+
+    if (booking.premises.id != premises.id) {
+      throw NotFoundProblem(bookingId, "Booking")
+    }
+
+    val person = personService.getPerson(booking.crn)
+      ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
+
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, person))
+  }
+
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
