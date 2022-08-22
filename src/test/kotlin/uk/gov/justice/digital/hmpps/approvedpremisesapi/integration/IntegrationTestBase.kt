@@ -6,8 +6,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.web.client.ExpectedCount
+import org.springframework.test.web.client.MockRestServiceServer
+import org.springframework.test.web.client.match.MockRestRequestMatchers
+import org.springframework.test.web.client.response.MockRestResponseCreators
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.web.client.RestTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -43,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
@@ -61,11 +70,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import java.time.Duration
 import java.util.UUID
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
+  @Autowired
+  lateinit var restTemplate: RestTemplate
+
+  lateinit var mockServer: MockRestServiceServer
 
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
@@ -151,6 +165,10 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun beforeEach() {
+    mockServer = MockRestServiceServer.bindTo(restTemplate)
+      .ignoreExpectOrder(true)
+      .build()
+
     flyway.clean()
     flyway.migrate()
   }
@@ -174,5 +192,39 @@ abstract class IntegrationTestBase {
     lostBedsEntityFactory = PersistedFactory(LostBedsEntityFactory(), lostBedsRepository)
     extensionEntityFactory = PersistedFactory(ExtensionEntityFactory(), extensionRepository)
     nonArrivalReasonEntityFactory = PersistedFactory(NonArrivalReasonEntityFactory(), nonArrivalReasonRepository)
+  }
+
+  fun mockClientCredentialsJwtRequest(
+    username: String? = null,
+    roles: List<String> = listOf(),
+    authSource: String = "none"
+  ) {
+    mockServer.expect(
+      ExpectedCount.min(1),
+      MockRestRequestMatchers.requestTo("http://localhost:9092/auth/oauth/token?grant_type=client_credentials")
+    )
+      .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+      .andRespond(
+        MockRestResponseCreators.withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            objectMapper.writeValueAsString(
+              GetTokenResponse(
+                accessToken = jwtAuthHelper.createClientCredentialsJwt(
+                  username = username,
+                  roles = roles,
+                  authSource = authSource
+                ),
+                tokenType = "client_credentials",
+                expiresIn = Duration.ofHours(1).toSeconds().toInt(),
+                scope = "read",
+                sub = username?.uppercase() ?: "integration-test-client-id",
+                authSource = authSource,
+                jti = UUID.randomUUID().toString(),
+                iss = "http://localhost:9092/auth/issuer"
+              )
+            )
+          )
+      )
   }
 }
