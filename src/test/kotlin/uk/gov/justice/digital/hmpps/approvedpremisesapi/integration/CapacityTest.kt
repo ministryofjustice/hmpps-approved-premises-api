@@ -24,7 +24,7 @@ class CapacityTest : IntegrationTestBase() {
 
   @Test
   fun `Get Capacity on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/capacity")
@@ -46,7 +46,7 @@ class CapacityTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/capacity")
@@ -74,7 +74,7 @@ class CapacityTest : IntegrationTestBase() {
         .withPremises(premises)
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/capacity")
@@ -103,7 +103,7 @@ class CapacityTest : IntegrationTestBase() {
       withPremises(premises)
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/capacity")

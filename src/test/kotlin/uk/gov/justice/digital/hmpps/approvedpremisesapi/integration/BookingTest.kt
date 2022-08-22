@@ -26,7 +26,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings")
@@ -43,7 +43,7 @@ class BookingTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/bookings")
@@ -94,7 +94,7 @@ class BookingTest : IntegrationTestBase() {
       }
     )
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/bookings")
@@ -134,7 +134,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create booking on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     val keyWorker = keyWorkerEntityFactory.produceAndPersist()
 
@@ -163,7 +163,7 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
@@ -199,7 +199,7 @@ class BookingTest : IntegrationTestBase() {
 
     val keyWorker = keyWorkerEntityFactory.produceAndPersist()
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
@@ -247,7 +247,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/arrivals")
@@ -280,7 +280,7 @@ class BookingTest : IntegrationTestBase() {
 
     arrivalEntityFactory.produceAndPersist { withBooking(booking) }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
@@ -315,7 +315,7 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
@@ -355,7 +355,7 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
@@ -395,7 +395,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/cancellations")
@@ -426,7 +426,7 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
@@ -471,7 +471,7 @@ class BookingTest : IntegrationTestBase() {
       withReason(cancellationReason)
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
@@ -506,7 +506,7 @@ class BookingTest : IntegrationTestBase() {
 
     val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")

@@ -29,7 +29,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `List Lost Beds on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/lost-beds")
@@ -57,7 +57,7 @@ class LostBedsTest : IntegrationTestBase() {
 
     val expectedJson = objectMapper.writeValueAsString(listOf(lostBedsTransformer.transformJpaToApi(lostBeds)))
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/lost-beds")
@@ -97,7 +97,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/lost-beds")
@@ -126,7 +126,7 @@ class LostBedsTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${premises.id}/lost-beds")
@@ -162,7 +162,7 @@ class LostBedsTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${premises.id}/lost-beds")
@@ -199,7 +199,7 @@ class LostBedsTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidClientCredentialsJwt()
 
     webTestClient.post()
       .uri("/premises/${premises.id}/lost-beds")
