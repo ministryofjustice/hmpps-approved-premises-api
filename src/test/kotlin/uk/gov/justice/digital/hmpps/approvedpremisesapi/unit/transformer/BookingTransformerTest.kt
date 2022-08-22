@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.KeyWorkerTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -47,6 +48,7 @@ class BookingTransformerTest {
   private val mockNonArrivalTransformer = mockk<NonArrivalTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
+  private val mockExtensionTransformer = mockk<ExtensionTransformer>()
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
@@ -54,7 +56,8 @@ class BookingTransformerTest {
     mockArrivalTransformer,
     mockDepartureTransformer,
     mockNonArrivalTransformer,
-    mockCancellationTransformer
+    mockCancellationTransformer,
+    mockExtensionTransformer
   )
 
   private val premisesEntity = PremisesEntity(
@@ -99,6 +102,7 @@ class BookingTransformerTest {
     departure = null,
     nonArrival = null,
     cancellation = null,
+    extensions = mutableListOf(),
     premises = premisesEntity
   )
 
@@ -140,7 +144,8 @@ class BookingTransformerTest {
           name = "name",
           isActive = true
         ),
-        status = Booking.Status.awaitingMinusArrival
+        status = Booking.Status.awaitingMinusArrival,
+        extensions = listOf()
       )
     )
   }
@@ -183,7 +188,8 @@ class BookingTransformerTest {
           date = LocalDate.parse("2022-08-10"),
           reason = "Unknown",
           notes = null
-        )
+        ),
+        extensions = listOf()
       )
     )
   }
@@ -226,7 +232,8 @@ class BookingTransformerTest {
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null
-        )
+        ),
+        extensions = listOf()
       )
     )
   }
@@ -269,7 +276,8 @@ class BookingTransformerTest {
           date = LocalDate.parse("2022-08-10"),
           reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true),
           notes = null
-        )
+        ),
+        extensions = listOf()
       )
     )
   }
@@ -375,7 +383,8 @@ class BookingTransformerTest {
             isActive = true
           ),
           notes = null
-        )
+        ),
+        extensions = listOf()
       )
     )
   }

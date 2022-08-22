@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
@@ -72,6 +75,7 @@ class BookingTest : IntegrationTestBase() {
     bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
     bookings[2].let {
       it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+      it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
       it.departure = departureEntityFactory.produceAndPersist {
         withBooking(it)
         withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
@@ -528,5 +532,114 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
       .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
       .jsonPath(".reason.isActive").isEqualTo(true)
+  }
+
+  @Test
+  fun `Create Extension without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/extensions")
+      .bodyValue(
+        NewExtension(
+          newDepartureDate = LocalDate.parse("2022-08-20"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create Extension on non existent Premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/extensions")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewExtension(
+          newDepartureDate = LocalDate.parse("2022-08-20"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Create Extension on Booking with newDepartureDate behind current departureDate of Booking returns 400`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withDepartureDate(LocalDate.parse("2022-08-20"))
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewExtension(
+          newDepartureDate = LocalDate.parse("2022-08-19"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".invalid-params[0]").isEqualTo(
+        mapOf(
+          "propertyName" to "newDepartureDate",
+          "errorType" to "Must be after the Booking's current departure date (${booking.departureDate})"
+        )
+      )
+  }
+
+  @Test
+  fun `Create Extension on Booking returns OK with expected body, updates departureDate on Booking entity`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withDepartureDate(LocalDate.parse("2022-08-20"))
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewExtension(
+          newDepartureDate = LocalDate.parse("2022-08-22"),
+          notes = "notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+      .jsonPath(".previousDepartureDate").isEqualTo("2022-08-20")
+      .jsonPath(".newDepartureDate").isEqualTo("2022-08-22")
+      .jsonPath(".notes").isEqualTo("notes")
+
+    assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
   }
 }

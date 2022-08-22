@@ -10,6 +10,7 @@ import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -29,7 +30,7 @@ data class BookingEntity(
   val id: UUID,
   var crn: String,
   val arrivalDate: LocalDate,
-  val departureDate: LocalDate,
+  var departureDate: LocalDate,
   @ManyToOne
   @JoinColumn(name = "key_worker_id")
   var keyWorker: KeyWorkerEntity,
@@ -41,6 +42,8 @@ data class BookingEntity(
   var nonArrival: NonArrivalEntity?,
   @OneToOne(mappedBy = "booking")
   var cancellation: CancellationEntity?,
+  @OneToMany(mappedBy = "booking")
+  var extensions: MutableList<ExtensionEntity>,
   @ManyToOne
   @JoinColumn(name = "premises_id")
   var premises: PremisesEntity

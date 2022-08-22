@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -26,6 +27,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var departure: Yielded<DepartureEntity>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
   private var cancellation: Yielded<CancellationEntity>? = null
+  private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
 
   fun withId(id: UUID) = apply {
@@ -84,6 +86,14 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.cancellation = { cancellation }
   }
 
+  fun withYieldedExtensions(extensions: Yielded<MutableList<ExtensionEntity>>) = apply {
+    this.extensions = extensions
+  }
+
+  fun withExtensions(extensions: MutableList<ExtensionEntity>) = apply {
+    this.extensions = { extensions }
+  }
+
   fun withYieldedPremises(premises: Yielded<PremisesEntity>) = apply {
     this.premises = premises
   }
@@ -102,6 +112,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     departure = this.departure?.invoke(),
     nonArrival = this.nonArrival?.invoke(),
     cancellation = this.cancellation?.invoke(),
+    extensions = this.extensions?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises")
   )
 }

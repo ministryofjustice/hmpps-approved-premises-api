@@ -256,6 +256,59 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /premises/{premisesId}/bookings/{bookingId}/extensions:
+    post:
+      tags:
+        - Operations on bookings
+      summary: Posts an extension to a specified approved premises booking
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the extension
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewExtension'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Extension'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/departures:
     post:
       tags:
@@ -830,6 +883,10 @@ components:
               - not-arrived
               - departed
               - cancelled
+            extensions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Extension'
             arrival:
               nullable: true
               allOf:
@@ -848,6 +905,7 @@ components:
               - $ref: '#/components/schemas/Cancellation'
           required:
             - status
+            - extensions
     Person:
       type: object
       properties:
@@ -942,6 +1000,38 @@ components:
         - bookingId
         - date
         - reason
+    Extension:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        previousDepartureDate:
+          type: string
+          format: date
+        newDepartureDate:
+          type: string
+          format: date
+        notes:
+          type: string
+      required:
+        - id
+        - bookingId
+        - previousDepartureDate
+        - newDepartureDate
+    NewExtension:
+      type: object
+      properties:
+        newDepartureDate:
+          type: string
+          format: date
+        notes:
+          type: string
+      required:
+        - newDepartureDate
     Departure:
       type: object
       properties:

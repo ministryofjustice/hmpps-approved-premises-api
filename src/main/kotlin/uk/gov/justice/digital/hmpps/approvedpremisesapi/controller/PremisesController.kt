@@ -8,16 +8,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DateCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -28,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import java.time.LocalDate
@@ -44,7 +48,8 @@ class PremisesController(
   private val bookingTransformer: BookingTransformer,
   private val lostBedsTransformer: LostBedsTransformer,
   private val arrivalTransformer: ArrivalTransformer,
-  private val cancellationTransformer: CancellationTransformer
+  private val cancellationTransformer: CancellationTransformer,
+  private val extensionTransformer: ExtensionTransformer
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
     return ResponseEntity.ok(
@@ -109,6 +114,7 @@ class PremisesController(
         departure = null,
         nonArrival = null,
         cancellation = null,
+        extensions = mutableListOf(),
         premises = premises
       )
     )
@@ -185,6 +191,39 @@ class PremisesController(
     )
 
     return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdExtensionsPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewExtension
+  ): ResponseEntity<Extension> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val booking = bookingService.getBooking(bookingId)
+      ?: throw NotFoundProblem(bookingId, "Booking")
+
+    if (booking.premises.id != premises.id) {
+      throw NotFoundProblem(bookingId, "Booking")
+    }
+
+    if (booking.departureDate.isAfter(body.newDepartureDate)) {
+      throw BadRequestProblem(mapOf("newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
+    }
+
+    val extension = bookingService.createExtension(
+      booking,
+      ExtensionEntity(
+        id = UUID.randomUUID(),
+        previousDepartureDate = booking.departureDate,
+        newDepartureDate = body.newDepartureDate,
+        notes = body.notes,
+        booking = booking
+      )
+    )
+
+    return ResponseEntity.ok(extensionTransformer.transformJpaToApi(extension))
   }
 
   override fun premisesPremisesIdLostBedsPost(premisesId: UUID, body: NewLostBed): ResponseEntity<LostBed> {
