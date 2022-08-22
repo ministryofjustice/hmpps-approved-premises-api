@@ -17,3 +17,9 @@ spring:
 hmpps:
   auth:
     url: http://localhost:9092/auth
+    client-id: integration-test-client-id
+    client-secret: secret
+
+services:
+  community-api:
+    base-url: http://community-api
