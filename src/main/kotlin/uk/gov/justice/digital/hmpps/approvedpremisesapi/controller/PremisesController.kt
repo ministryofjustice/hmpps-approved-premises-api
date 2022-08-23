@@ -8,11 +8,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DateCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewNonarrival
@@ -22,7 +24,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -35,10 +41,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
 
@@ -49,6 +57,9 @@ class PremisesController(
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
   private val cancellationReasonRepository: CancellationReasonRepository,
+  private val departureReasonRepository: DepartureReasonRepository,
+  private val moveOnCategoryRepository: MoveOnCategoryRepository,
+  private val destinationProviderRepository: DestinationProviderRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
@@ -56,6 +67,7 @@ class PremisesController(
   private val arrivalTransformer: ArrivalTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
+  private val departureTransformer: DepartureTransformer,
   private val extensionTransformer: ExtensionTransformer
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
@@ -254,6 +266,65 @@ class PremisesController(
     )
 
     return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdDeparturesPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewDeparture
+  ): ResponseEntity<Departure> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val booking = bookingService.getBooking(bookingId)
+      ?: throw NotFoundProblem(bookingId, "Booking")
+
+    if (booking.premises.id != premises.id) {
+      throw NotFoundProblem(bookingId, "Booking")
+    }
+
+    if (booking.arrivalDate.toLocalDateTime().isAfter(body.dateTime)) {
+      throw BadRequestProblem(mapOf("dateTime" to "Must be after the Booking's arrival date (${booking.arrivalDate})"))
+    }
+
+    if (booking.departure != null) {
+      throw BadRequestProblem(errorDetail = "This Booking already has a Departure set")
+    }
+
+    val validationIssues = mutableMapOf<String, String>()
+
+    val reason = departureReasonRepository.findByIdOrNull(body.reasonId)
+    if (reason == null) {
+      validationIssues["reasonId"] = "Reason does not exist"
+    }
+
+    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(body.moveOnCategoryId)
+    if (reason == null) {
+      validationIssues["moveOnCategoryId"] = "Move on Category does not exist"
+    }
+
+    val destinationProvider = destinationProviderRepository.findByIdOrNull(body.destinationProviderId)
+    if (destinationProvider == null) {
+      validationIssues["destinationProviderId"] = "Destination Provider does not exist"
+    }
+
+    if (validationIssues.any()) {
+      throw BadRequestProblem(validationIssues)
+    }
+
+    val departure = bookingService.createDeparture(
+      DepartureEntity(
+        id = UUID.randomUUID(),
+        dateTime = body.dateTime,
+        reason = reason!!,
+        moveOnCategory = moveOnCategory!!,
+        destinationProvider = destinationProvider!!,
+        notes = body.notes,
+        booking = booking
+      )
+    )
+
+    return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
   }
 
   override fun premisesPremisesIdBookingsBookingIdExtensionsPost(

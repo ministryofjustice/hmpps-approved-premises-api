@@ -328,6 +328,7 @@ class BookingTransformerTest {
     )
 
     every { mockDepartureTransformer.transformJpaToApi(departedBooking.departure) } returns Departure(
+      id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
       bookingId = bookingId,
       dateTime = OffsetDateTime.parse("2022-08-30T15:30:15+01:00"),
       reason = DepartureReason(
@@ -369,6 +370,7 @@ class BookingTransformerTest {
           notes = null
         ),
         departure = Departure(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
           bookingId = bookingId,
           dateTime = OffsetDateTime.parse("2022-08-30T15:30:15+01:00"),
           reason = DepartureReason(
