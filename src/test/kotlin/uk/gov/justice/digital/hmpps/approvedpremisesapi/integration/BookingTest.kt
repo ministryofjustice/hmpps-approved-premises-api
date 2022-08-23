@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
@@ -165,7 +166,12 @@ class BookingTest : IntegrationTestBase() {
         withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
       }
     }
-    bookings[4].let { it.nonArrival = nonArrivalEntityFactory.produceAndPersist { withBooking(it) } }
+    bookings[4].let {
+      it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+        withBooking(it)
+        withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+      }
+    }
 
     val expectedJson = objectMapper.writeValueAsString(
       bookings.map {
@@ -717,5 +723,160 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".notes").isEqualTo("notes")
 
     assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
+  }
+
+  @Test
+  fun `Create Non Arrival without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/non-arrivals")
+      .bodyValue(
+        NewNonarrival(
+          date = LocalDate.parse("2022-08-17"),
+          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create Non Arrival on non existent Premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/non-arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewNonarrival(
+          date = LocalDate.parse("2022-08-17"),
+          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Create Non Arrival on Booking with non-existent Non Arrival Reason returns 400`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withArrivalDate(LocalDate.parse("2022-08-20"))
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewNonarrival(
+          date = LocalDate.parse("2022-08-23"),
+          reason = UUID.fromString("31374d05-203f-45a2-a6c8-3bed24f1fa2f"),
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".invalid-params[0]").isEqualTo(
+        mapOf(
+          "propertyName" to "reason",
+          "errorType" to "This reason does not exist"
+        )
+      )
+  }
+
+  @Test
+  fun `Create Non Arrival on Booking with existing Non Arrival returns 400`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
+
+    nonArrivalEntityFactory.produceAndPersist {
+      withBooking(booking)
+      withReason(nonArrivalReason)
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewNonarrival(
+          date = LocalDate.parse("2022-08-17"),
+          reason = nonArrivalReason.id,
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".detail").isEqualTo("This Booking already has a Non Arrival set")
+  }
+
+  @Test
+  fun `Create Non Arrival on Booking returns OK with correct body`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withArrivalDate(LocalDate.parse("2022-08-20"))
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewNonarrival(
+          date = LocalDate.parse("2022-08-23"),
+          reason = nonArrivalReason.id,
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+      .jsonPath(".date").isEqualTo("2022-08-23")
+      .jsonPath(".notes").isEqualTo(null)
+      .jsonPath(".reason.id").isEqualTo(nonArrivalReason.id.toString())
+      .jsonPath(".reason.name").isEqualTo(nonArrivalReason.name)
+      .jsonPath(".reason.isActive").isEqualTo(true)
   }
 }

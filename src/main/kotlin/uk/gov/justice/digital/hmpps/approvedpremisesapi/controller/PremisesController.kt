@@ -15,12 +15,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewNonarrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -33,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -44,10 +49,12 @@ class PremisesController(
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
   private val cancellationReasonRepository: CancellationReasonRepository,
+  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
   private val lostBedsTransformer: LostBedsTransformer,
   private val arrivalTransformer: ArrivalTransformer,
+  private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
   private val extensionTransformer: ExtensionTransformer
 ) : PremisesApiDelegate {
@@ -173,6 +180,45 @@ class PremisesController(
     )
 
     return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdNonArrivalsPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewNonarrival
+  ): ResponseEntity<Nonarrival> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val booking = bookingService.getBooking(bookingId)
+      ?: throw NotFoundProblem(bookingId, "Booking")
+
+    if (booking.premises.id != premises.id) {
+      throw NotFoundProblem(bookingId, "Booking")
+    }
+
+    if (booking.nonArrival != null) {
+      throw BadRequestProblem(errorDetail = "This Booking already has a Non Arrival set")
+    }
+
+    if (booking.arrivalDate.isAfter(body.date)) {
+      throw BadRequestProblem(mapOf("date" to "Cannot be before Booking's arrivalDate"))
+    }
+
+    val reason = nonArrivalReasonRepository.findByIdOrNull(body.reason)
+      ?: throw BadRequestProblem(mapOf("reason" to "This reason does not exist"))
+
+    val arrival = bookingService.createNonArrival(
+      NonArrivalEntity(
+        id = UUID.randomUUID(),
+        date = body.date,
+        notes = body.notes,
+        reason = reason,
+        booking = booking
+      )
+    )
+
+    return ResponseEntity.ok(nonArrivalTransformer.transformJpaToApi(arrival))
   }
 
   override fun premisesPremisesIdBookingsBookingIdCancellationsPost(

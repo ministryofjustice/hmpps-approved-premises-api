@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Departu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DestinationProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.KeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.MoveOnCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
@@ -156,7 +158,7 @@ class BookingTransformerTest {
       nonArrival = NonArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         date = LocalDate.parse("2022-08-10"),
-        reason = "Unknown",
+        reason = NonArrivalReasonEntity(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
         notes = null,
         booking = this
       )
@@ -166,7 +168,7 @@ class BookingTransformerTest {
       id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
       bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
       date = LocalDate.parse("2022-08-10"),
-      reason = "Unknown",
+      reason = NonArrivalReason(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
       notes = null
     )
 
@@ -188,7 +190,7 @@ class BookingTransformerTest {
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
           bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
           date = LocalDate.parse("2022-08-10"),
-          reason = "Unknown",
+          reason = NonArrivalReason(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
           notes = null
         ),
         extensions = listOf()
