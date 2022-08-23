@@ -31,6 +31,16 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
+      client:
+        registration:
+          community-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
+        provider:
+          hmpps-auth:
+            token-uri: ${hmpps.auth.url}/oauth/token
 
 springdoc:
   swagger-ui:
@@ -71,3 +81,7 @@ management:
 services:
   community-api:
     base-url: http://localhost:9590
+
+hmpps:
+  auth:
+    url: http://localhost:9091/auth
