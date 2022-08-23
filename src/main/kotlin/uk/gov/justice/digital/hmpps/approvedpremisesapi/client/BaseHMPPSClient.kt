@@ -5,17 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.http.RequestEntity
-import org.springframework.web.client.RestTemplate
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
-import java.net.URI
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
 
 abstract class BaseHMPPSClient(
-  private val restTemplate: RestTemplate,
-  private val objectMapper: ObjectMapper,
-  private val hmppsAuthClient: HMPPSAuthClient,
-  private val baseUrl: String
+  private val webClient: WebClient,
+  private val objectMapper: ObjectMapper
 ) {
   protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.GET, requestBuilderConfiguration)
@@ -43,55 +38,37 @@ abstract class BaseHMPPSClient(
     val requestBuilder = HMPPSRequestConfiguration()
     requestBuilderConfiguration(requestBuilder)
 
-    when (requestBuilder.authType) {
-      HMPPSAuthType.None -> null
-      HMPPSAuthType.PassThroughJwtFromRequest -> getPassThroughJwt()
-      HMPPSAuthType.ClientCredentials -> hmppsAuthClient.getClientCredentialsJwt()
-      HMPPSAuthType.ClientCredentialsWithUsernameFromRequestJwt -> hmppsAuthClient.getClientCredentialsWithUsernameJwt()
-    }?.let { requestBuilder.withHeader("Authorization", "Bearer $it") }
-
-    val requestEntity = if (requestBuilder.body == null) {
-      RequestEntity<Unit>(requestBuilder.headers, method, URI.create("$baseUrl${requestBuilder.path ?: ""}"))
-    } else {
-      RequestEntity<Any?>(requestBuilder.body, requestBuilder.headers, method, URI.create("$baseUrl/${requestBuilder.path ?: ""}"))
-    }
-
     try {
-      val result = restTemplate.exchange(requestEntity, String::class.java)
+      val request = webClient.method(method)
+        .uri(requestBuilder.path ?: "")
+        .headers { it.addAll(requestBuilder.headers) }
 
-      if (result.statusCode.is2xxSuccessful) {
-        val deserialized = if (typeReference != null) {
-          objectMapper.readValue(result.body, typeReference)
-        } else {
-          objectMapper.readValue(result.body, clazz)
-        }
-
-        return ClientResult.Success(result.statusCode, deserialized)
+      if (requestBuilder.body != null) {
+        request.bodyValue(requestBuilder.body!!)
       }
 
-      return ClientResult.StatusCodeFailure(result.statusCode, result.body)
+      val result = request.retrieve().toEntity(String::class.java).block()!!
+
+      val deserialized = if (typeReference != null) {
+        objectMapper.readValue(result.body, typeReference)
+      } else {
+        objectMapper.readValue(result.body, clazz)
+      }
+
+      return ClientResult.Success(result.statusCode, deserialized)
+    } catch (exception: WebClientResponseException) {
+      return ClientResult.StatusCodeFailure(exception.statusCode, exception.responseBodyAsString)
     } catch (exception: Exception) {
       return ClientResult.OtherFailure(exception)
     }
   }
 
-  private fun getPassThroughJwt() = (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)?.request?.getHeader("Authorization")?.replace("Bearer ", "")
-    ?: throw RuntimeException("Could not get Authorization header from request")
-
   class HMPPSRequestConfiguration {
     internal var path: String? = null
     internal var body: Any? = null
-    internal var authType: HMPPSAuthType = HMPPSAuthType.None
     internal var headers = HttpHeaders()
 
     fun withHeader(key: String, value: String) = headers.add(key, value)
-  }
-
-  internal enum class HMPPSAuthType {
-    None,
-    PassThroughJwtFromRequest,
-    ClientCredentials,
-    ClientCredentialsWithUsernameFromRequestJwt
   }
 }
 

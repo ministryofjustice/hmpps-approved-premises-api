@@ -13,13 +13,22 @@ spring:
     url: jdbc:postgresql://localhost:5433/approved_premises_integration_test
   jpa:
     database: postgresql
+  security:
+    oauth2:
+      client:
+        registration:
+          community-api:
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            client-authentication-method: client_secret_jwt
+            authorization-grant-type: client_credentials
 
 hmpps:
   auth:
-    url: http://localhost:9092/auth
+    url: http://localhost:57839/auth
     client-id: integration-test-client-id
     client-secret: secret
 
 services:
   community-api:
-    base-url: http://community-api
+    base-url: http://localhost:57839
