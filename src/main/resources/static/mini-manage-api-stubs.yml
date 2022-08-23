@@ -1173,11 +1173,6 @@ components:
           example: arrivalDate
         errorType:
           type: string
-          enum:
-          - blank
-          - invalid
-          - mustBePast
-          - mustBeFuture
     LostBed:
       type: object
       properties:
