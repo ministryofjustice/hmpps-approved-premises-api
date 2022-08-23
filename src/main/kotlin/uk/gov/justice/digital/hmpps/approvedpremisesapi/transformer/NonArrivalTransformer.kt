@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 class NonArrivalTransformer() {
   fun transformJpaToApi(jpa: NonArrivalEntity?) = jpa?.let {
     Nonarrival(
+      id = jpa.id,
       bookingId = jpa.booking.id,
       date = jpa.date,
       reason = jpa.reason,

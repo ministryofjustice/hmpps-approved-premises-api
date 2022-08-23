@@ -163,6 +163,7 @@ class BookingTransformerTest {
     }
 
     every { mockNonArrivalTransformer.transformJpaToApi(nonArrivalBooking.nonArrival) } returns Nonarrival(
+      id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
       bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
       date = LocalDate.parse("2022-08-10"),
       reason = "Unknown",
@@ -184,6 +185,7 @@ class BookingTransformerTest {
         ),
         status = Booking.Status.notMinusArrived,
         nonArrival = Nonarrival(
+          id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
           bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
           date = LocalDate.parse("2022-08-10"),
           reason = "Unknown",
