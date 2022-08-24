@@ -34,45 +34,6 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get a booking for a premises on a non existent booking returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.get()
-      .uri("/premises/213b17bd-68a8-40dc-9d91-1af58fc01f0d/bookings/f1d3a0df-546d-40a7-b80a-57502e090e45")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
-  }
-
-  @Test
-  fun `Get a booking for a premises when a booking does not belong to that premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    val premises = premisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-    }
-
-    val otherPremises = premisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-    }
-
-    val booking = bookingEntityFactory.produceAndPersist() {
-      withPremises(otherPremises)
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-    }
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/bookings/${booking.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
-  }
-
-  @Test
   fun `Get a booking for a premises returns OK with the correct body`() {
     val jwt = jwtAuthHelper.createValidJwt()
 
@@ -224,28 +185,6 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create booking on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    val keyWorker = keyWorkerEntityFactory.produceAndPersist()
-
-    webTestClient.post()
-      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewBooking(
-          crn = "a crn",
-          expectedArrivalDate = LocalDate.parse("2022-08-12"),
-          expectedDepartureDate = LocalDate.parse("2022-08-30"),
-          keyWorkerId = keyWorker.id
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isNotFound
-  }
-
-  @Test
   fun `Create booking with non existent Key Worker returns Bad Request with correct body`() {
     val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -334,25 +273,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create Arrival on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewArrival(
-          arrivalDate = LocalDate.parse("2022-08-12"),
-          expectedDepartureDate = LocalDate.parse("2022-08-14"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isNotFound
   }
 
   @Test
@@ -482,25 +402,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create Cancellation on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/cancellations")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewCancellation(
-          date = LocalDate.parse("2022-08-17"),
-          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isNotFound
   }
 
   @Test
@@ -637,24 +538,6 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Extension on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/extensions")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewExtension(
-          newDepartureDate = LocalDate.parse("2022-08-20"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isNotFound
-  }
-
-  @Test
   fun `Create Extension on Booking with newDepartureDate behind current departureDate of Booking returns 400`() {
     val booking = bookingEntityFactory.produceAndPersist {
       withDepartureDate(LocalDate.parse("2022-08-20"))
@@ -746,27 +629,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create Departure on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/departures")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewDeparture(
-          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
-          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
-          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
-          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
-          notes = "some notes"
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isNotFound
   }
 
   @Test
@@ -919,25 +781,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create Non Arrival on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/non-arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewNonarrival(
-          date = LocalDate.parse("2022-08-17"),
-          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isNotFound
   }
 
   @Test

@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.KeyWorkerService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -105,15 +106,7 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
-    }
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     val person = personService.getPerson(booking.crn)
       ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
@@ -163,15 +156,7 @@ class PremisesController(
     bookingId: UUID,
     body: NewArrival
   ): ResponseEntity<Arrival> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
-    }
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     if (booking.arrival != null) {
       throw BadRequestProblem(errorDetail = "This Booking already has an Arrival set")
@@ -199,15 +184,7 @@ class PremisesController(
     bookingId: UUID,
     body: NewNonarrival
   ): ResponseEntity<Nonarrival> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
-    }
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     if (booking.nonArrival != null) {
       throw BadRequestProblem(errorDetail = "This Booking already has a Non Arrival set")
@@ -238,15 +215,7 @@ class PremisesController(
     bookingId: UUID,
     body: NewCancellation
   ): ResponseEntity<Cancellation> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
-    }
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     if (booking.cancellation != null) {
       throw BadRequestProblem(errorDetail = "This Booking already has a Cancellation set")
@@ -273,15 +242,7 @@ class PremisesController(
     bookingId: UUID,
     body: NewDeparture
   ): ResponseEntity<Departure> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
-    }
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     if (booking.arrivalDate.toLocalDateTime().isAfter(body.dateTime)) {
       throw BadRequestProblem(mapOf("dateTime" to "Must be after the Booking's arrival date (${booking.arrivalDate})"))
@@ -332,15 +293,7 @@ class PremisesController(
     bookingId: UUID,
     body: NewExtension
   ): ResponseEntity<Extension> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
-    }
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     if (booking.departureDate.isAfter(body.newDepartureDate)) {
       throw BadRequestProblem(mapOf("newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
@@ -409,5 +362,11 @@ class PremisesController(
         )
       }
     )
+  }
+
+  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+    is GetBookingForPremisesResult.Success -> result.booking
+    is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+    is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
   }
 }
