@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.KeyWorkerService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -105,14 +106,10 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
+    val booking = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+      is GetBookingForPremisesResult.Success -> result.booking
+      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
     }
 
     val person = personService.getPerson(booking.crn)
@@ -163,14 +160,10 @@ class PremisesController(
     bookingId: UUID,
     body: NewArrival
   ): ResponseEntity<Arrival> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
+    val booking = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+      is GetBookingForPremisesResult.Success -> result.booking
+      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
     }
 
     if (booking.arrival != null) {
@@ -199,14 +192,10 @@ class PremisesController(
     bookingId: UUID,
     body: NewNonarrival
   ): ResponseEntity<Nonarrival> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
+    val booking = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+      is GetBookingForPremisesResult.Success -> result.booking
+      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
     }
 
     if (booking.nonArrival != null) {
@@ -238,14 +227,10 @@ class PremisesController(
     bookingId: UUID,
     body: NewCancellation
   ): ResponseEntity<Cancellation> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
+    val booking = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+      is GetBookingForPremisesResult.Success -> result.booking
+      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
     }
 
     if (booking.cancellation != null) {
@@ -273,14 +258,10 @@ class PremisesController(
     bookingId: UUID,
     body: NewDeparture
   ): ResponseEntity<Departure> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
+    val booking = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+      is GetBookingForPremisesResult.Success -> result.booking
+      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
     }
 
     if (booking.arrivalDate.toLocalDateTime().isAfter(body.dateTime)) {
@@ -332,14 +313,10 @@ class PremisesController(
     bookingId: UUID,
     body: NewExtension
   ): ResponseEntity<Extension> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val booking = bookingService.getBooking(bookingId)
-      ?: throw NotFoundProblem(bookingId, "Booking")
-
-    if (booking.premises.id != premises.id) {
-      throw NotFoundProblem(bookingId, "Booking")
+    val booking = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+      is GetBookingForPremisesResult.Success -> result.booking
+      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
     }
 
     if (booking.departureDate.isAfter(body.newDepartureDate)) {

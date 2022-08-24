@@ -19,6 +19,7 @@ import javax.transaction.Transactional
 
 @Service
 class BookingService(
+  private val premisesService: PremisesService,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
   private val cancellationRepository: CancellationRepository,
@@ -43,4 +44,24 @@ class BookingService(
 
     return extensionEntity
   }
+
+  fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {
+    val premises = premisesService.getPremises(premisesId)
+      ?: return GetBookingForPremisesResult.PremisesNotFound
+
+    val booking = getBooking(bookingId)
+      ?: return GetBookingForPremisesResult.BookingNotFound
+
+    if (booking.premises.id != premises.id) {
+      return GetBookingForPremisesResult.BookingNotFound
+    }
+
+    return GetBookingForPremisesResult.Success(booking)
+  }
+}
+
+sealed interface GetBookingForPremisesResult {
+  data class Success(val booking: BookingEntity) : GetBookingForPremisesResult
+  object PremisesNotFound : GetBookingForPremisesResult
+  object BookingNotFound : GetBookingForPremisesResult
 }
