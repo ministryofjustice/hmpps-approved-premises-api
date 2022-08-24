@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReferenceDataApiDelegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.CancellationReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DepartureReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DestinationProvider
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.MoveOnCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository

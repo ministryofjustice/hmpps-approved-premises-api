@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 
 @Component
 class PersonTransformer() {
