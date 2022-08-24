@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -18,13 +20,15 @@ class BookingService(
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
   private val cancellationRepository: CancellationRepository,
-  private val extensionRepository: ExtensionRepository
+  private val extensionRepository: ExtensionRepository,
+  private val nonArrivalRepository: NonArrivalRepository
 ) {
   fun createBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
   fun createArrival(arrivalEntity: ArrivalEntity): ArrivalEntity = arrivalRepository.save(arrivalEntity)
   fun createCancellation(cancellationEntity: CancellationEntity): CancellationEntity = cancellationRepository.save(cancellationEntity)
+  fun createNonArrival(nonArrivalEntity: NonArrivalEntity): NonArrivalEntity = nonArrivalRepository.save(nonArrivalEntity)
 
   @Transactional
   fun createExtension(bookingEntity: BookingEntity, extensionEntity: ExtensionEntity): ExtensionEntity {

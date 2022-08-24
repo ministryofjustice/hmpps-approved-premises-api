@@ -412,21 +412,21 @@ paths:
         description: ID of the premises the booking is related to
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       - name: bookingId
         in: path
         description: ID of the booking
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       requestBody:
         description: details of the non-arrival
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Nonarrival'
+              $ref: '#/components/schemas/NewNonarrival'
         required: true
       responses:
         200:
@@ -990,6 +990,9 @@ components:
     Nonarrival:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         bookingId:
           type: string
           format: uuid
@@ -997,11 +1000,26 @@ components:
           type: string
           format: date
         reason:
-          type: string
+          $ref: '#/components/schemas/NonArrivalReason'
         notes:
           type: string
       required:
+        - id
         - bookingId
+        - date
+        - reason
+    NewNonarrival:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        notes:
+          type: string
+      required:
         - date
         - reason
     NewCancellation:
@@ -1310,6 +1328,21 @@ components:
         - name
         - isActive
     CancellationReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Recall
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - isActive
+    NonArrivalReason:
       type: object
       properties:
         id:

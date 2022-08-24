@@ -1,13 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
 import javax.persistence.OneToOne
 import javax.persistence.Table
+
+@Repository
+interface NonArrivalRepository : JpaRepository<NonArrivalEntity, UUID>
 
 @Entity
 @Table(name = "non_arrivals")
@@ -15,7 +21,9 @@ data class NonArrivalEntity(
   @Id
   val id: UUID,
   val date: LocalDate,
-  val reason: String,
+  @ManyToOne
+  @JoinColumn(name = "non_arrival_reason_id")
+  val reason: NonArrivalReasonEntity,
   val notes: String?,
   @OneToOne
   @JoinColumn(name = "booking_id")
@@ -33,7 +41,7 @@ data class NonArrivalEntity(
     return true
   }
 
-  override fun hashCode() = Objects.hash(date, reason, notes)
+  override fun hashCode() = Objects.hash(id, date, reason, notes)
 
   override fun toString() = "NonArrivalEntity:$id"
 }

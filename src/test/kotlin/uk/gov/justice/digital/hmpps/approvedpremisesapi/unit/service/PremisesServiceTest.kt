@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -105,6 +106,7 @@ class PremisesServiceTest {
 
     val nonArrivalEntity = NonArrivalEntityFactory()
       .withBooking(nonArrivedBookingEntity)
+      .withYieldedReason { NonArrivalReasonEntityFactory().produce() }
       .produce()
 
     nonArrivedBookingEntity.nonArrival = nonArrivalEntity
