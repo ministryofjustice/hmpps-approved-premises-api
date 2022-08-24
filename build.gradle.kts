@@ -67,7 +67,7 @@ openApiGenerate {
   inputSpec.set("$rootDir/src/main/resources/static/mini-manage-api-stubs.yml")
   outputDir.set("$buildDir/generated")
   apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model")
+  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
   configOptions.apply {
     put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
     put("delegatePattern", "true")

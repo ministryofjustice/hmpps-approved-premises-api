@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBedReasons
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReasons
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import java.time.LocalDate
 

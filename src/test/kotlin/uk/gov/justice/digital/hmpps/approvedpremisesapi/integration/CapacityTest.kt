@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBodyList
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.DateCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import java.time.LocalDate
 
 class CapacityTest : IntegrationTestBase() {

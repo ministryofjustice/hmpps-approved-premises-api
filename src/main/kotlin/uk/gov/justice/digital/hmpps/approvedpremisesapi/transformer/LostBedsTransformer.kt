@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.LostBedReasons
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReasons
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
