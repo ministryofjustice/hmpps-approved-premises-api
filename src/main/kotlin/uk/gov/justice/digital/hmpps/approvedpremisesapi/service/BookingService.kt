@@ -9,11 +9,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -25,6 +31,9 @@ class BookingService(
   private val cancellationRepository: CancellationRepository,
   private val extensionRepository: ExtensionRepository,
   private val departureRepository: DepartureRepository,
+  private val departureReasonRepository: DepartureReasonRepository,
+  private val moveOnCategoryRepository: MoveOnCategoryRepository,
+  private val destinationProviderRepository: DestinationProviderRepository,
   private val nonArrivalRepository: NonArrivalRepository
 ) {
   fun createBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
@@ -32,8 +41,59 @@ class BookingService(
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
   fun createArrival(arrivalEntity: ArrivalEntity): ArrivalEntity = arrivalRepository.save(arrivalEntity)
   fun createCancellation(cancellationEntity: CancellationEntity): CancellationEntity = cancellationRepository.save(cancellationEntity)
-  fun createDeparture(departureEntity: DepartureEntity): DepartureEntity = departureRepository.save(departureEntity)
   fun createNonArrival(nonArrivalEntity: NonArrivalEntity): NonArrivalEntity = nonArrivalRepository.save(nonArrivalEntity)
+
+  fun createDeparture(
+    booking: BookingEntity,
+    dateTime: OffsetDateTime,
+    reasonId: UUID,
+    moveOnCategoryId: UUID,
+    destinationProviderId: UUID,
+    notes: String?
+  ): ValidatableActionResult<DepartureEntity> {
+    if (booking.departure != null) {
+      return ValidatableActionResult.GeneralValidationError("This Booking already has a Departure set")
+    }
+
+    val validationIssues = mutableMapOf<String, String>()
+
+    if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
+      validationIssues["dateTime"] = "Must be after the Booking's arrival date (${booking.arrivalDate})"
+    }
+
+    val reason = departureReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      validationIssues["reasonId"] = "Reason does not exist"
+    }
+
+    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
+    if (reason == null) {
+      validationIssues["moveOnCategoryId"] = "Move on Category does not exist"
+    }
+
+    val destinationProvider = destinationProviderRepository.findByIdOrNull(destinationProviderId)
+    if (destinationProvider == null) {
+      validationIssues["destinationProviderId"] = "Destination Provider does not exist"
+    }
+
+    if (validationIssues.any()) {
+      return ValidatableActionResult.FieldValidationError(validationIssues)
+    }
+
+    val departureEntity = departureRepository.save(
+      DepartureEntity(
+        id = UUID.randomUUID(),
+        dateTime = dateTime,
+        reason = reason!!,
+        moveOnCategory = moveOnCategory!!,
+        destinationProvider = destinationProvider!!,
+        notes = notes,
+        booking = booking
+      )
+    )
+
+    return ValidatableActionResult.Success(departureEntity)
+  }
 
   @Transactional
   fun createExtension(bookingEntity: BookingEntity, extensionEntity: ExtensionEntity): ExtensionEntity {

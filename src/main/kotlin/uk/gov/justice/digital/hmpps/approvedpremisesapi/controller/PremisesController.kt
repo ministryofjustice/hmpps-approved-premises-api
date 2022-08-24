@@ -24,13 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -47,7 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
 
@@ -58,9 +54,6 @@ class PremisesController(
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
   private val cancellationReasonRepository: CancellationReasonRepository,
-  private val departureReasonRepository: DepartureReasonRepository,
-  private val moveOnCategoryRepository: MoveOnCategoryRepository,
-  private val destinationProviderRepository: DestinationProviderRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
@@ -244,46 +237,20 @@ class PremisesController(
   ): ResponseEntity<Departure> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.arrivalDate.toLocalDateTime().isAfter(body.dateTime)) {
-      throw BadRequestProblem(mapOf("dateTime" to "Must be after the Booking's arrival date (${booking.arrivalDate})"))
-    }
-
-    if (booking.departure != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has a Departure set")
-    }
-
-    val validationIssues = mutableMapOf<String, String>()
-
-    val reason = departureReasonRepository.findByIdOrNull(body.reasonId)
-    if (reason == null) {
-      validationIssues["reasonId"] = "Reason does not exist"
-    }
-
-    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(body.moveOnCategoryId)
-    if (reason == null) {
-      validationIssues["moveOnCategoryId"] = "Move on Category does not exist"
-    }
-
-    val destinationProvider = destinationProviderRepository.findByIdOrNull(body.destinationProviderId)
-    if (destinationProvider == null) {
-      validationIssues["destinationProviderId"] = "Destination Provider does not exist"
-    }
-
-    if (validationIssues.any()) {
-      throw BadRequestProblem(validationIssues)
-    }
-
-    val departure = bookingService.createDeparture(
-      DepartureEntity(
-        id = UUID.randomUUID(),
-        dateTime = body.dateTime,
-        reason = reason!!,
-        moveOnCategory = moveOnCategory!!,
-        destinationProvider = destinationProvider!!,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createDeparture(
+      booking = booking,
+      dateTime = body.dateTime,
+      reasonId = body.reasonId,
+      moveOnCategoryId = body.moveOnCategoryId,
+      destinationProviderId = body.destinationProviderId,
+      notes = body.notes
     )
+
+    val departure = when (result) {
+      is ValidatableActionResult.Success -> result.entity
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+    }
 
     return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
   }
