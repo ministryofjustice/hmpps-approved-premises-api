@@ -12,6 +12,7 @@ class DepartureTransformer(
 ) {
   fun transformJpaToApi(jpa: DepartureEntity?) = jpa?.let {
     Departure(
+      id = jpa.id,
       bookingId = jpa.booking.id,
       dateTime = jpa.dateTime,
       reason = departureReasonTransformer.transformJpaToApi(jpa.reason),

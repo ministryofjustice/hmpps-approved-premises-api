@@ -359,21 +359,21 @@ paths:
         description: ID of the premises the booking is related to
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       - name: bookingId
         in: path
         description: ID of the booking
         required: true
         schema:
-          type: integer
+          type: string
           format: uuid
       requestBody:
         description: details of the departure
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Departure'
+              $ref: '#/components/schemas/NewDeparture'
         required: true
       responses:
         200:
@@ -1089,9 +1089,34 @@ components:
           type: string
       required:
         - newDepartureDate
+    NewDeparture:
+      type: object
+      properties:
+        dateTime:
+          type: string
+          format: date-time
+        reasonId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+        moveOnCategoryId:
+          type: string
+          format: uuid
+        destinationProviderId:
+          type: string
+          format: uuid
+      required:
+        - dateTime
+        - reasonId
+        - moveOnCategoryId
+        - destinationProviderId
     Departure:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         bookingId:
           type: string
           format: uuid
@@ -1107,6 +1132,7 @@ components:
         destinationProvider:
           $ref: '#/components/schemas/DestinationProvider'
       required:
+        - id
         - bookingId
         - dateTime
         - reason
@@ -1147,11 +1173,6 @@ components:
           example: arrivalDate
         errorType:
           type: string
-          enum:
-          - blank
-          - invalid
-          - mustBePast
-          - mustBeFuture
     LostBed:
       type: object
       properties:

@@ -4,15 +4,20 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.NewNonarrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.health.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
@@ -723,6 +728,181 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".notes").isEqualTo("notes")
 
     assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
+  }
+
+  @Test
+  fun `Create Departure without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/departures")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
+          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
+          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
+          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
+          notes = "some notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create Departure on non existent Premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings/e00efccb-5551-42fb-afff-2de7cb8277ff/departures")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
+          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
+          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
+          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
+          notes = "some notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Create Departures on Booking with existing Departure returns 400`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+    }
+
+    departureEntityFactory.produceAndPersist {
+      withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+      withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+      withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+      withBooking(booking)
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
+          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
+          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
+          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
+          notes = "some notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath(".detail").isEqualTo("This Booking already has a Departure set")
+  }
+
+  @Test
+  fun `Create Departure on Booking with invalid Ids for Departure Reason, Move on Category, Destination Provider returns 400`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withArrivalDate(LocalDate.parse("2022-08-20"))
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    val validationResponse = webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
+          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
+          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
+          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
+          notes = "some notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody<ValidationError>()
+      .returnResult()
+      .responseBody!!
+
+    assertThat(validationResponse.invalidParams).containsExactlyInAnyOrder(
+      InvalidParam(propertyName = "reasonId", errorType = "Reason does not exist"),
+      InvalidParam(propertyName = "moveOnCategoryId", errorType = "Move on Category does not exist"),
+      InvalidParam(propertyName = "destinationProviderId", errorType = "Destination Provider does not exist")
+    )
+  }
+
+  @Test
+  fun `Create Departure on Booking returns 200 with correct body`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withYieldedPremises {
+        premisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+      }
+    }
+
+    val reason = departureReasonEntityFactory.produceAndPersist()
+    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist()
+    val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
+          reasonId = reason.id,
+          moveOnCategoryId = moveOnCategory.id,
+          destinationProviderId = destinationProvider.id,
+          notes = "some notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+      .jsonPath(".dateTime").isEqualTo("2022-08-22T15:00:00Z")
+      .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+      .jsonPath(".reason.name").isEqualTo(reason.name)
+      .jsonPath(".moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
+      .jsonPath(".moveOnCategory.name").isEqualTo(moveOnCategory.name)
+      .jsonPath(".destinationProvider.id").isEqualTo(destinationProvider.id.toString())
+      .jsonPath(".destinationProvider.name").isEqualTo(destinationProvider.name)
+      .jsonPath(".notes").isEqualTo("some notes")
   }
 
   @Test
