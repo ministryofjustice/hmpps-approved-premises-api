@@ -39,7 +39,7 @@ script/development_database
 ```
 
 Then in the "Gradle" panel (`View->Tool Windows->Gradle` if not visible), expand `approved-premises-api`, `Tasks`, 
-`application` and right click on `bootRunDev` and select either Run or Debug.
+`application` and right click on `bootRunLocal` and select either Run or Debug.
 
 ## Making requests to the application
 

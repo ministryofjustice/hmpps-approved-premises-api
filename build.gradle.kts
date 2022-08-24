@@ -51,12 +51,12 @@ tasks {
   }
 }
 
-tasks.register("bootRunDev") {
+tasks.register("bootRunLocal") {
   group = "application"
-  description = "Runs this project as a Spring Boot application with the dev profile"
+  description = "Runs this project as a Spring Boot application with the local profile"
   doFirst {
     tasks.bootRun.configure {
-      systemProperty("spring.profiles.active", "dev")
+      systemProperty("spring.profiles.active", "local")
     }
   }
   finalizedBy("bootRun")
