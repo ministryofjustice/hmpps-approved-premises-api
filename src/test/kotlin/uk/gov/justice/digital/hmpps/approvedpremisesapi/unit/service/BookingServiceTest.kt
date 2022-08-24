@@ -67,6 +67,8 @@ class BookingServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
+    every { mockBookingRepository.findByIdOrNull(bookingId) } returns null
+
     assertThat(bookingService.getBookingForPremises(premisesId, bookingId))
       .isEqualTo(GetBookingForPremisesResult.BookingNotFound)
   }
