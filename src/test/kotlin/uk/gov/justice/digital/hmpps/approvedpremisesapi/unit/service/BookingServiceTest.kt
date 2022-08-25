@@ -9,6 +9,8 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
@@ -22,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
@@ -52,6 +56,7 @@ class BookingServiceTest {
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
   private val mockDestinationProviderRepository = mockk<DestinationProviderRepository>()
   private val mockNonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
+  private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
 
   private val bookingService = BookingService(
     premisesService = mockPremisesService,
@@ -64,7 +69,8 @@ class BookingServiceTest {
     departureReasonRepository = mockDepartureReasonRepository,
     moveOnCategoryRepository = mockMoveOnCategoryRepository,
     destinationProviderRepository = mockDestinationProviderRepository,
-    nonArrivalReasonRepository = mockNonArrivalReasonRepository
+    nonArrivalReasonRepository = mockNonArrivalReasonRepository,
+    cancellationReasonRepository = mockCancellationReasonRepository
   )
 
   @Test
@@ -474,6 +480,111 @@ class BookingServiceTest {
     every { mockNonArrivalRepository.save(any()) } answers { it.invocation.args[0] as NonArrivalEntity }
 
     val result = bookingService.createNonArrival(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createCancellation returns GeneralValidationError with correct message when Booking already has a Cancellation`() {
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    val cancellationEntity = CancellationEntityFactory()
+      .withBooking(bookingEntity)
+      .withYieldedReason { CancellationReasonEntityFactory().produce() }
+      .produce()
+
+    bookingEntity.cancellation = cancellationEntity
+
+    val result = bookingService.createCancellation(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = UUID.randomUUID(),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+    assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Cancellation set")
+  }
+
+  @Test
+  fun `createCancellation returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-26"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns null
+
+    val result = bookingService.createCancellation(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("reason", "This reason does not exist")
+    )
+  }
+
+  @Test
+  fun `createCancellation returns Success with correct result when validation passed`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    val reasonEntity = CancellationReasonEntityFactory().produce()
+
+    every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+
+    val result = bookingService.createCancellation(
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
@@ -21,10 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -51,8 +47,6 @@ class PremisesController(
   private val personService: PersonService,
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
-  private val cancellationReasonRepository: CancellationReasonRepository,
-  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
   private val lostBedsTransformer: LostBedsTransformer,
@@ -187,22 +181,14 @@ class PremisesController(
   ): ResponseEntity<Cancellation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.cancellation != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has a Cancellation set")
-    }
-
-    val cancellationReason = cancellationReasonRepository.findByIdOrNull(body.reason)
-      ?: throw BadRequestProblem(mapOf("reason" to "This reason does not exist"))
-
-    val cancellation = bookingService.createCancellation(
-      CancellationEntity(
-        id = UUID.randomUUID(),
-        date = body.date,
-        reason = cancellationReason,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createCancellation(
+      booking = booking,
+      date = body.date,
+      reasonId = body.reason,
+      notes = body.notes
     )
+
+    val cancellation = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
   }

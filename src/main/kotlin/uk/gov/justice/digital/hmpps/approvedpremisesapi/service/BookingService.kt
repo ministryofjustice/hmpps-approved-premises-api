@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
@@ -37,12 +38,12 @@ class BookingService(
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val destinationProviderRepository: DestinationProviderRepository,
   private val nonArrivalRepository: NonArrivalRepository,
-  private val nonArrivalReasonRepository: NonArrivalReasonRepository
+  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
+  private val cancellationReasonRepository: CancellationReasonRepository
 ) {
   fun createBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
-  fun createCancellation(cancellationEntity: CancellationEntity): CancellationEntity = cancellationRepository.save(cancellationEntity)
 
   fun createArrival(
     booking: BookingEntity,
@@ -107,6 +108,40 @@ class BookingService(
     )
 
     return ValidatableActionResult.Success(nonArrivalEntity)
+  }
+
+  fun createCancellation(
+    booking: BookingEntity,
+    date: LocalDate,
+    reasonId: UUID,
+    notes: String?
+  ): ValidatableActionResult<CancellationEntity> {
+    if (booking.cancellation != null) {
+      return ValidatableActionResult.GeneralValidationError("This Booking already has a Cancellation set")
+    }
+
+    val validationIssues = mutableMapOf<String, String>()
+
+    val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      validationIssues["reason"] = "This reason does not exist"
+    }
+
+    if (validationIssues.any()) {
+      return ValidatableActionResult.FieldValidationError(validationIssues)
+    }
+
+    val cancellationEntity = cancellationRepository.save(
+      CancellationEntity(
+        id = UUID.randomUUID(),
+        date = date,
+        reason = reason!!,
+        notes = notes,
+        booking = booking
+      )
+    )
+
+    return ValidatableActionResult.Success(cancellationEntity)
   }
 
   fun createDeparture(
