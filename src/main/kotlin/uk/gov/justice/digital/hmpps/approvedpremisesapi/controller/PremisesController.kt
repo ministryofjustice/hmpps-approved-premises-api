@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
@@ -19,15 +20,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.KeyWorkerService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -43,7 +46,7 @@ import java.util.UUID
 @Service
 class PremisesController(
   private val premisesService: PremisesService,
-  private val personService: PersonService,
+  private val offenderService: OffenderService,
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
   private val premisesTransformer: PremisesTransformer,
@@ -82,9 +85,9 @@ class PremisesController(
 
     return ResponseEntity.ok(
       premises.bookings.map {
-        val person = personService.getPerson(it.crn)
+        val offender = offenderService.getOffenderByCrn(it.crn, getDeliusPrincipalNameOrThrow())
           ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
-        bookingTransformer.transformJpaToApi(it, person)
+        bookingTransformer.transformJpaToApi(it, offender)
       }
     )
   }
@@ -92,10 +95,10 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val person = personService.getPerson(booking.crn)
+    val offender = offenderService.getOffenderByCrn(booking.crn, getDeliusPrincipalNameOrThrow())
       ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, person))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offender))
   }
 
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
@@ -104,8 +107,8 @@ class PremisesController(
 
     val validationErrors = mutableMapOf<String, String>()
 
-    val person = personService.getPerson(body.crn)
-    if (person == null) validationErrors["crn"] = "Invalid crn"
+    val offender = offenderService.getOffenderByCrn(body.crn, getDeliusPrincipalNameOrThrow())
+    if (offender == null) validationErrors["crn"] = "Invalid crn"
 
     // TODO: We will potentially need to check that if the JWT belongs to a person rather than a service account
     //       that the requester is the key worker and 403 otherwise?
@@ -119,7 +122,7 @@ class PremisesController(
     val booking = bookingService.createBooking(
       BookingEntity(
         id = UUID.randomUUID(),
-        crn = person!!.crn,
+        crn = offender!!.otherIds.crn,
         arrivalDate = body.expectedArrivalDate,
         departureDate = body.expectedDepartureDate,
         keyWorker = keyWorker!!,
@@ -132,7 +135,7 @@ class PremisesController(
       )
     )
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, person))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offender))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
@@ -282,6 +285,16 @@ class PremisesController(
         )
       }
     )
+  }
+
+  private fun getDeliusPrincipalNameOrThrow(): String {
+    val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
+
+    if (principal.token.claims["auth_source"] != "delius") {
+      throw ForbiddenProblem()
+    }
+
+    return principal.name
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
