@@ -20,6 +20,7 @@ spring:
 
   flyway:
     sql-migration-prefix: ""
+    outOfOrder: true
 
   jpa:
     hibernate:
