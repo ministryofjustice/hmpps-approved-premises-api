@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,7 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -31,6 +33,8 @@ class BookingTest : IntegrationTestBase() {
   fun `Get a booking for a premises returns OK with the correct body`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
     val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
@@ -39,7 +43,14 @@ class BookingTest : IntegrationTestBase() {
     val booking = bookingEntityFactory.produceAndPersist() {
       withPremises(premises)
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withCrn("CRN123")
     }
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
 
     webTestClient.get()
       .uri("/premises/${premises.id}/bookings/${booking.id}")
@@ -50,7 +61,7 @@ class BookingTest : IntegrationTestBase() {
       .expectBody()
       .json(
         objectMapper.writeValueAsString(
-          bookingTransformer.transformJpaToApi(booking, Person(crn = booking.crn, name = "Mock Person", isActive = true))
+          bookingTransformer.transformJpaToApi(booking, offenderDetails)
         )
       )
   }
@@ -107,6 +118,7 @@ class BookingTest : IntegrationTestBase() {
     val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
       withPremises(premises)
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withCrn("CRN123")
     }
 
     bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
@@ -133,10 +145,17 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
     val expectedJson = objectMapper.writeValueAsString(
       bookings.map {
-        // TODO: Once client to Community API is in place, replace the Person with an entityFactory connected to a mock client
-        bookingTransformer.transformJpaToApi(it, Person(crn = it.crn, name = "Mock Person", isActive = true))
+        bookingTransformer.transformJpaToApi(it, offenderDetails)
       }
     )
 
@@ -189,12 +208,20 @@ class BookingTest : IntegrationTestBase() {
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewBooking(
-          crn = "a crn",
+          crn = "CRN321",
           expectedArrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-30"),
           keyWorkerId = UUID.randomUUID()
@@ -225,12 +252,22 @@ class BookingTest : IntegrationTestBase() {
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewBooking(
-          crn = "a crn",
+          crn = "CRN321",
           expectedArrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-30"),
           keyWorkerId = keyWorker.id
@@ -240,7 +277,7 @@ class BookingTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath(".person.crn").isEqualTo("a crn")
+      .jsonPath(".person.crn").isEqualTo("CRN321")
       .jsonPath(".person.name").isEqualTo("Mock Person")
       .jsonPath(".arrivalDate").isEqualTo("2022-08-12")
       .jsonPath(".departureDate").isEqualTo("2022-08-30")
@@ -415,4 +452,16 @@ class BookingTest : IntegrationTestBase() {
 
     assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
   }
+
+  private fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            objectMapper.writeValueAsString(offenderDetails)
+          )
+      )
+  )
 }

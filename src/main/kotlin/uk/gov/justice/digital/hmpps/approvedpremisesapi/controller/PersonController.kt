@@ -9,9 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 @Service
-class PersonController(private val offenderService: OffenderService) : PersonApiDelegate {
+class PersonController(
+  private val offenderService: OffenderService,
+  private val personTransformer: PersonTransformer
+) : PersonApiDelegate {
   override fun personSearchGet(crn: String): ResponseEntity<Person> {
     val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
 
@@ -22,11 +26,6 @@ class PersonController(private val offenderService: OffenderService) : PersonApi
     val offender = offenderService.getOffenderByCrn(crn, principal.name)
       ?: throw NotFoundProblem(crn, "Person")
 
-    return ResponseEntity.ok(
-      Person(
-        crn = crn,
-        name = "${offender.firstName} ${offender.surname}"
-      )
-    )
+    return ResponseEntity.ok(personTransformer.transformModelToApi(offender))
   }
 }

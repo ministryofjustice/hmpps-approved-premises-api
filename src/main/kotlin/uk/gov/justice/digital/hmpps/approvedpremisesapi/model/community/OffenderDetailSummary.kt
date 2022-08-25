@@ -12,7 +12,7 @@ data class OffenderDetailSummary(
   val preferredName: String?,
   val dateOfBirth: LocalDate?,
   val gender: String?,
-  val otherIds: OffenderIds?,
+  val otherIds: OffenderIds,
   val offenderProfile: OffenderProfile,
   val softDeleted: Boolean?,
   val currentDisposal: String,

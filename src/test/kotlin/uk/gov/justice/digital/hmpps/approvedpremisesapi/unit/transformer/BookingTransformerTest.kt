@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -108,11 +109,11 @@ class BookingTransformerTest {
     premises = premisesEntity
   )
 
-  private val person = uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person(
-    crn = "crn",
-    name = "name",
-    isActive = true
-  )
+  private val offenderDetails = OffenderDetailsSummaryFactory()
+    .withCrn("crn")
+    .withFirstName("first")
+    .withLastName("last")
+    .produce()
 
   init {
     every { mockArrivalTransformer.transformJpaToApi(null) } returns null
@@ -122,28 +123,28 @@ class BookingTransformerTest {
 
     every { mockKeyWorkerTransformer.transformJpaToApi(baseBookingEntity.keyWorker) } returns KeyWorker(
       id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-      name = "name",
+      name = "first last",
       isActive = true
     )
 
-    every { mockPersonTransformer.transformModelToApi(person) } returns Person(crn = "crn", "name")
+    every { mockPersonTransformer.transformModelToApi(offenderDetails) } returns Person(crn = "crn", "first last")
   }
 
   @Test
   fun `Awaiting Arrival entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"))
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, person)
+    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = Person(crn = "crn", name = "name"),
+        person = Person(crn = "crn", name = "first last"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = KeyWorker(
           id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "name",
+          name = "first last",
           isActive = true
         ),
         status = Booking.Status.awaitingMinusArrival,
@@ -172,17 +173,17 @@ class BookingTransformerTest {
       notes = null
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(nonArrivalBooking, person)
+    val transformedBooking = bookingTransformer.transformJpaToApi(nonArrivalBooking, offenderDetails)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
-        person = Person(crn = "crn", name = "name"),
+        person = Person(crn = "crn", name = "first last"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = KeyWorker(
           id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "name",
+          name = "first last",
           isActive = true
         ),
         status = Booking.Status.notMinusArrived,
@@ -217,17 +218,17 @@ class BookingTransformerTest {
       notes = null
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(arrivalBooking, person)
+    val transformedBooking = bookingTransformer.transformJpaToApi(arrivalBooking, offenderDetails)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
-        person = Person(crn = "crn", name = "name"),
+        person = Person(crn = "crn", name = "first last"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = KeyWorker(
           id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "name",
+          name = "first last",
           isActive = true
         ),
         status = Booking.Status.arrived,
@@ -261,17 +262,17 @@ class BookingTransformerTest {
       reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true)
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, person)
+    val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
-        person = Person(crn = "crn", name = "name"),
+        person = Person(crn = "crn", name = "first last"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = KeyWorker(
           id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "name",
+          name = "first last",
           isActive = true
         ),
         status = Booking.Status.cancelled,
@@ -349,17 +350,17 @@ class BookingTransformerTest {
       notes = null
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, person)
+    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = Person(crn = "crn", name = "name"),
+        person = Person(crn = "crn", name = "first last"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = KeyWorker(
           id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "name",
+          name = "first last",
           isActive = true
         ),
         status = Booking.Status.departed,
