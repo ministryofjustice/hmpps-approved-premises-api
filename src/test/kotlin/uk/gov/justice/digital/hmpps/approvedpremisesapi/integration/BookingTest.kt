@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
@@ -440,7 +441,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Departure on Booking returns 200 with correct body`() {
     val booking = bookingEntityFactory.produceAndPersist {
-      withArrivalDate(LocalDate.parse("2022-08-21"))
+      withArrivalDate(LocalDate.parse("2022-08-20"))
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       withYieldedPremises {
         premisesEntityFactory.produceAndPersist {
