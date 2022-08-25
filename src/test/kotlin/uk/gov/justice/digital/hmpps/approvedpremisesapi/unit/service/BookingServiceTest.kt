@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
@@ -14,8 +15,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProvi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
@@ -25,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
@@ -45,6 +51,7 @@ class BookingServiceTest {
   private val mockDepartureReasonRepository = mockk<DepartureReasonRepository>()
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
   private val mockDestinationProviderRepository = mockk<DestinationProviderRepository>()
+  private val mockNonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
 
   private val bookingService = BookingService(
     premisesService = mockPremisesService,
@@ -56,7 +63,8 @@ class BookingServiceTest {
     nonArrivalRepository = mockNonArrivalRepository,
     departureReasonRepository = mockDepartureReasonRepository,
     moveOnCategoryRepository = mockMoveOnCategoryRepository,
-    destinationProviderRepository = mockDestinationProviderRepository
+    destinationProviderRepository = mockDestinationProviderRepository,
+    nonArrivalReasonRepository = mockNonArrivalReasonRepository
   )
 
   @Test
@@ -274,6 +282,207 @@ class BookingServiceTest {
     assertThat(result.entity.reason).isEqualTo(reasonEntity)
     assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
     assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createArrival returns GeneralValidationError with correct message when Booking already has an Arrival`() {
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    val arrivalEntity = ArrivalEntityFactory()
+      .withBooking(bookingEntity)
+      .produce()
+
+    bookingEntity.arrival = arrivalEntity
+
+    val result = bookingService.createArrival(
+      booking = bookingEntity,
+      arrivalDate = LocalDate.parse("2022-08-25"),
+      expectedDepartureDate = LocalDate.parse("2022-08-26"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+    assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has an Arrival set")
+  }
+
+  @Test
+  fun `createArrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    val result = bookingService.createArrival(
+      booking = bookingEntity,
+      arrivalDate = LocalDate.parse("2022-08-27"),
+      expectedDepartureDate = LocalDate.parse("2022-08-26"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("expectedDepartureDate", "Cannot be before arrivalDate")
+    )
+  }
+
+  @Test
+  fun `createArrival returns Success with correct result when validation passed`() {
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+
+    val result = bookingService.createArrival(
+      booking = bookingEntity,
+      arrivalDate = LocalDate.parse("2022-08-27"),
+      expectedDepartureDate = LocalDate.parse("2022-08-29"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
+    assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createNonArrival returns GeneralValidationError with correct message when Booking already has a NonArrival`() {
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    val nonArrivalEntity = NonArrivalEntityFactory()
+      .withBooking(bookingEntity)
+      .withYieldedReason { NonArrivalReasonEntityFactory().produce() }
+      .produce()
+
+    bookingEntity.nonArrival = nonArrivalEntity
+
+    val result = bookingService.createNonArrival(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = UUID.randomUUID(),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+    assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Non Arrival set")
+  }
+
+  @Test
+  fun `createNonArrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-26"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns null
+
+    val result = bookingService.createNonArrival(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("date", "Cannot be before Booking's arrivalDate"),
+      entry("reason", "This reason does not exist")
+    )
+  }
+
+  @Test
+  fun `createNonArrival returns Success with correct result when validation passed`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-24"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    val reasonEntity = NonArrivalReasonEntityFactory().produce()
+
+    every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockNonArrivalRepository.save(any()) } answers { it.invocation.args[0] as NonArrivalEntity }
+
+    val result = bookingService.createNonArrival(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
     assertThat(result.entity.reason).isEqualTo(reasonEntity)
     assertThat(result.entity.notes).isEqualTo("notes")
   }

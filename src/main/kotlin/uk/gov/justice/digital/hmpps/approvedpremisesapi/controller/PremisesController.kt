@@ -20,12 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -151,25 +149,16 @@ class PremisesController(
   ): ResponseEntity<Arrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.arrival != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has an Arrival set")
-    }
-
-    if (body.expectedDepartureDate.isBefore(body.arrivalDate)) {
-      throw BadRequestProblem(mapOf("expectedDepartureDate" to "Cannot be before arrivalDate"))
-    }
-
-    val arrival = bookingService.createArrival(
-      ArrivalEntity(
-        id = UUID.randomUUID(),
-        arrivalDate = body.arrivalDate,
-        expectedDepartureDate = body.expectedDepartureDate,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createArrival(
+      booking = booking,
+      arrivalDate = body.arrivalDate,
+      expectedDepartureDate = body.expectedDepartureDate,
+      notes = body.notes
     )
 
-    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
+    val departure = extractResultEntityOrThrow(result)
+
+    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(departure))
   }
 
   override fun premisesPremisesIdBookingsBookingIdNonArrivalsPost(
@@ -179,28 +168,16 @@ class PremisesController(
   ): ResponseEntity<Nonarrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.nonArrival != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has a Non Arrival set")
-    }
-
-    if (booking.arrivalDate.isAfter(body.date)) {
-      throw BadRequestProblem(mapOf("date" to "Cannot be before Booking's arrivalDate"))
-    }
-
-    val reason = nonArrivalReasonRepository.findByIdOrNull(body.reason)
-      ?: throw BadRequestProblem(mapOf("reason" to "This reason does not exist"))
-
-    val arrival = bookingService.createNonArrival(
-      NonArrivalEntity(
-        id = UUID.randomUUID(),
-        date = body.date,
-        notes = body.notes,
-        reason = reason,
-        booking = booking
-      )
+    val result = bookingService.createNonArrival(
+      booking = booking,
+      date = body.date,
+      reasonId = body.reason,
+      notes = body.notes
     )
 
-    return ResponseEntity.ok(nonArrivalTransformer.transformJpaToApi(arrival))
+    val nonArrivalEntity = extractResultEntityOrThrow(result)
+
+    return ResponseEntity.ok(nonArrivalTransformer.transformJpaToApi(nonArrivalEntity))
   }
 
   override fun premisesPremisesIdBookingsBookingIdCancellationsPost(
@@ -246,11 +223,7 @@ class PremisesController(
       notes = body.notes
     )
 
-    val departure = when (result) {
-      is ValidatableActionResult.Success -> result.entity
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
-    }
+    val departure = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
   }
@@ -335,5 +308,11 @@ class PremisesController(
     is GetBookingForPremisesResult.Success -> result.booking
     is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
     is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+  }
+
+  private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
+    is ValidatableActionResult.Success -> result.entity
+    is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
+    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
   }
 }
