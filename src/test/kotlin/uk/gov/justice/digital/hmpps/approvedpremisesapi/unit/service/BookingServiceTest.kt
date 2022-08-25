@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
@@ -595,6 +597,68 @@ class BookingServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
     assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createExtension returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    val bookingEntity = BookingEntityFactory()
+      .withDepartureDate(LocalDate.parse("2022-08-26"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    val result = bookingService.createExtension(
+      booking = bookingEntity,
+      newDepartureDate = LocalDate.parse("2022-08-25"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("newDepartureDate", "Must be after the Booking's current departure date (2022-08-26)")
+    )
+  }
+
+  @Test
+  fun `createExtension returns Success with correct result when validation passed`() {
+    val bookingEntity = BookingEntityFactory()
+      .withDepartureDate(LocalDate.parse("2022-08-24"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .produce()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
+
+    val result = bookingService.createExtension(
+      booking = bookingEntity,
+      newDepartureDate = LocalDate.parse("2022-08-25"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
     assertThat(result.entity.notes).isEqualTo("notes")
   }
 }

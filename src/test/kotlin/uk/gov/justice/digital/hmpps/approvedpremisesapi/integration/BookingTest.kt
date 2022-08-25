@@ -382,44 +382,6 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Extension on Booking with newDepartureDate behind current departureDate of Booking returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withDepartureDate(LocalDate.parse("2022-08-20"))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewExtension(
-          newDepartureDate = LocalDate.parse("2022-08-19"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".invalid-params[0]").isEqualTo(
-        mapOf(
-          "propertyName" to "newDepartureDate",
-          "errorType" to "Must be after the Booking's current departure date (${booking.departureDate})"
-        )
-      )
-  }
-
-  @Test
   fun `Create Extension on Booking returns OK with expected body, updates departureDate on Booking entity`() {
     val booking = bookingEntityFactory.produceAndPersist {
       withDepartureDate(LocalDate.parse("2022-08-20"))

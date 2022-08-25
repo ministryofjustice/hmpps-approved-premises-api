@@ -3,11 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.util.UUID
@@ -20,7 +22,6 @@ class PremisesService(
 ) {
   fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
-  fun createLostBeds(lostBed: LostBedsEntity): LostBedsEntity = lostBedsRepository.save(lostBed)
 
   fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)
   fun getLastLostBedsDate(premises: PremisesEntity) = lostBedsRepository.getHighestBookingDate(premises.id)
@@ -44,5 +45,43 @@ class PremisesService(
         lostBeds = lostBedsOnDay.sumOf { it.numberOfBeds }
       )
     }.associateBy { it.date }
+  }
+
+  fun createLostBeds(
+    premises: PremisesEntity,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    numberOfBeds: Int,
+    reason: LostBedReason,
+    referenceNumber: String?,
+    notes: String?
+  ): ValidatableActionResult<LostBedsEntity> {
+    val validationIssues = mutableMapOf<String, String>()
+    if (endDate.isBefore(startDate)) {
+      validationIssues["endDate"] = "Cannot be before startDate"
+    }
+
+    if (numberOfBeds <= 0) {
+      validationIssues["numberOfBeds"] = "Must be greater than 0"
+    }
+
+    if (validationIssues.any()) {
+      return ValidatableActionResult.FieldValidationError(validationIssues)
+    }
+
+    val lostBedsEntity = lostBedsRepository.save(
+      LostBedsEntity(
+        id = UUID.randomUUID(),
+        premises = premises,
+        startDate = startDate,
+        endDate = endDate,
+        numberOfBeds = numberOfBeds,
+        reason = reason,
+        referenceNumber = referenceNumber,
+        notes = notes
+      )
+    )
+
+    return ValidatableActionResult.Success(lostBedsEntity)
   }
 }

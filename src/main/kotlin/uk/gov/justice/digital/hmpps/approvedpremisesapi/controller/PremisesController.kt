@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -221,20 +220,13 @@ class PremisesController(
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.departureDate.isAfter(body.newDepartureDate)) {
-      throw BadRequestProblem(mapOf("newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
-    }
-
-    val extension = bookingService.createExtension(
-      booking,
-      ExtensionEntity(
-        id = UUID.randomUUID(),
-        previousDepartureDate = booking.departureDate,
-        newDepartureDate = body.newDepartureDate,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createExtension(
+      booking = booking,
+      newDepartureDate = body.newDepartureDate,
+      notes = body.notes
     )
+
+    val extension = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(extensionTransformer.transformJpaToApi(extension))
   }
@@ -243,17 +235,19 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    if (body.endDate.isBefore(body.startDate)) {
-      throw BadRequestProblem(mapOf("endDate" to "Cannot be before startDate"))
-    }
+    val result = premisesService.createLostBeds(
+      premises = premises,
+      startDate = body.startDate,
+      endDate = body.endDate,
+      numberOfBeds = body.numberOfBeds,
+      reason = lostBedsTransformer.transformReasonFromApiToJpa(body.reason),
+      referenceNumber = body.referenceNumber,
+      notes = body.notes
+    )
 
-    if (body.numberOfBeds <= 0) {
-      throw BadRequestProblem(mapOf("numberOfBeds" to "Must be greater than 0"))
-    }
+    val lostBeds = extractResultEntityOrThrow(result)
 
-    val lostBed = premisesService.createLostBeds(lostBedsTransformer.transformApiToJpa(body, premises))
-
-    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
+    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBeds))
   }
 
   override fun premisesPremisesIdLostBedsGet(premisesId: UUID): ResponseEntity<List<LostBed>> {

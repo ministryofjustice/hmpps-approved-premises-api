@@ -197,13 +197,29 @@ class BookingService(
   }
 
   @Transactional
-  fun createExtension(bookingEntity: BookingEntity, extensionEntity: ExtensionEntity): ExtensionEntity {
-    val extension = extensionRepository.save(extensionEntity)
-    bookingEntity.departureDate = extensionEntity.newDepartureDate
-    bookingEntity.extensions.add(extension)
-    updateBooking(bookingEntity)
+  fun createExtension(
+    booking: BookingEntity,
+    newDepartureDate: LocalDate,
+    notes: String?
+  ): ValidatableActionResult<ExtensionEntity> {
+    if (booking.departureDate.isAfter(newDepartureDate)) {
+      return ValidatableActionResult.FieldValidationError(mapOf("newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
+    }
 
-    return extensionEntity
+    val extensionEntity = ExtensionEntity(
+      id = UUID.randomUUID(),
+      previousDepartureDate = booking.departureDate,
+      newDepartureDate = newDepartureDate,
+      notes = notes,
+      booking = booking
+    )
+
+    val extension = extensionRepository.save(extensionEntity)
+    booking.departureDate = extensionEntity.newDepartureDate
+    booking.extensions.add(extension)
+    updateBooking(booking)
+
+    return ValidatableActionResult.Success(extensionEntity)
   }
 
   fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {

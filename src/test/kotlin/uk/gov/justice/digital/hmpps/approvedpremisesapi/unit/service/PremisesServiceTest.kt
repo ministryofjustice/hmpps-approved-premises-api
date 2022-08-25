@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
@@ -17,9 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import java.time.LocalDate
 
@@ -145,5 +149,67 @@ class PremisesServiceTest {
       Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
       Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0)
     )
+  }
+
+  @Test
+  fun `createLostBeds returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    val premisesEntity = PremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val result = premisesService.createLostBeds(
+      premises = premisesEntity,
+      startDate = LocalDate.parse("2022-08-28"),
+      endDate = LocalDate.parse("2022-08-25"),
+      numberOfBeds = 0,
+      reason = LostBedReason.StaffShortage,
+      referenceNumber = "12345",
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("endDate", "Cannot be before startDate"),
+      entry("numberOfBeds", "Must be greater than 0")
+    )
+  }
+
+  @Test
+  fun `createLostBeds returns Success with correct result when validation passed`() {
+    val premisesEntity = PremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    every { lostBedsRepositoryMock.save(any()) } answers { it.invocation.args[0] as LostBedsEntity }
+
+    val result = premisesService.createLostBeds(
+      premises = premisesEntity,
+      startDate = LocalDate.parse("2022-08-25"),
+      endDate = LocalDate.parse("2022-08-28"),
+      numberOfBeds = 5,
+      reason = LostBedReason.StaffShortage,
+      referenceNumber = "12345",
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.premises).isEqualTo(premisesEntity)
+    assertThat(result.entity.reason).isEqualTo(LostBedReason.StaffShortage)
+    assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+    assertThat(result.entity.numberOfBeds).isEqualTo(5)
+    assertThat(result.entity.referenceNumber).isEqualTo("12345")
+    assertThat(result.entity.notes).isEqualTo("notes")
   }
 }
