@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
@@ -20,17 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -47,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
 
@@ -57,11 +46,6 @@ class PremisesController(
   private val personService: PersonService,
   private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
-  private val cancellationReasonRepository: CancellationReasonRepository,
-  private val departureReasonRepository: DepartureReasonRepository,
-  private val moveOnCategoryRepository: MoveOnCategoryRepository,
-  private val destinationProviderRepository: DestinationProviderRepository,
-  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
   private val lostBedsTransformer: LostBedsTransformer,
@@ -158,25 +142,16 @@ class PremisesController(
   ): ResponseEntity<Arrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.arrival != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has an Arrival set")
-    }
-
-    if (body.expectedDepartureDate.isBefore(body.arrivalDate)) {
-      throw BadRequestProblem(mapOf("expectedDepartureDate" to "Cannot be before arrivalDate"))
-    }
-
-    val arrival = bookingService.createArrival(
-      ArrivalEntity(
-        id = UUID.randomUUID(),
-        arrivalDate = body.arrivalDate,
-        expectedDepartureDate = body.expectedDepartureDate,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createArrival(
+      booking = booking,
+      arrivalDate = body.arrivalDate,
+      expectedDepartureDate = body.expectedDepartureDate,
+      notes = body.notes
     )
 
-    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
+    val departure = extractResultEntityOrThrow(result)
+
+    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(departure))
   }
 
   override fun premisesPremisesIdBookingsBookingIdNonArrivalsPost(
@@ -186,28 +161,16 @@ class PremisesController(
   ): ResponseEntity<Nonarrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.nonArrival != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has a Non Arrival set")
-    }
-
-    if (booking.arrivalDate.isAfter(body.date)) {
-      throw BadRequestProblem(mapOf("date" to "Cannot be before Booking's arrivalDate"))
-    }
-
-    val reason = nonArrivalReasonRepository.findByIdOrNull(body.reason)
-      ?: throw BadRequestProblem(mapOf("reason" to "This reason does not exist"))
-
-    val arrival = bookingService.createNonArrival(
-      NonArrivalEntity(
-        id = UUID.randomUUID(),
-        date = body.date,
-        notes = body.notes,
-        reason = reason,
-        booking = booking
-      )
+    val result = bookingService.createNonArrival(
+      booking = booking,
+      date = body.date,
+      reasonId = body.reason,
+      notes = body.notes
     )
 
-    return ResponseEntity.ok(nonArrivalTransformer.transformJpaToApi(arrival))
+    val nonArrivalEntity = extractResultEntityOrThrow(result)
+
+    return ResponseEntity.ok(nonArrivalTransformer.transformJpaToApi(nonArrivalEntity))
   }
 
   override fun premisesPremisesIdBookingsBookingIdCancellationsPost(
@@ -217,22 +180,14 @@ class PremisesController(
   ): ResponseEntity<Cancellation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.cancellation != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has a Cancellation set")
-    }
-
-    val cancellationReason = cancellationReasonRepository.findByIdOrNull(body.reason)
-      ?: throw BadRequestProblem(mapOf("reason" to "This reason does not exist"))
-
-    val cancellation = bookingService.createCancellation(
-      CancellationEntity(
-        id = UUID.randomUUID(),
-        date = body.date,
-        reason = cancellationReason,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createCancellation(
+      booking = booking,
+      date = body.date,
+      reasonId = body.reason,
+      notes = body.notes
     )
+
+    val cancellation = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
   }
@@ -244,46 +199,16 @@ class PremisesController(
   ): ResponseEntity<Departure> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.arrivalDate.toLocalDateTime().isAfter(body.dateTime)) {
-      throw BadRequestProblem(mapOf("dateTime" to "Must be after the Booking's arrival date (${booking.arrivalDate})"))
-    }
-
-    if (booking.departure != null) {
-      throw BadRequestProblem(errorDetail = "This Booking already has a Departure set")
-    }
-
-    val validationIssues = mutableMapOf<String, String>()
-
-    val reason = departureReasonRepository.findByIdOrNull(body.reasonId)
-    if (reason == null) {
-      validationIssues["reasonId"] = "Reason does not exist"
-    }
-
-    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(body.moveOnCategoryId)
-    if (reason == null) {
-      validationIssues["moveOnCategoryId"] = "Move on Category does not exist"
-    }
-
-    val destinationProvider = destinationProviderRepository.findByIdOrNull(body.destinationProviderId)
-    if (destinationProvider == null) {
-      validationIssues["destinationProviderId"] = "Destination Provider does not exist"
-    }
-
-    if (validationIssues.any()) {
-      throw BadRequestProblem(validationIssues)
-    }
-
-    val departure = bookingService.createDeparture(
-      DepartureEntity(
-        id = UUID.randomUUID(),
-        dateTime = body.dateTime,
-        reason = reason!!,
-        moveOnCategory = moveOnCategory!!,
-        destinationProvider = destinationProvider!!,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createDeparture(
+      booking = booking,
+      dateTime = body.dateTime,
+      reasonId = body.reasonId,
+      moveOnCategoryId = body.moveOnCategoryId,
+      destinationProviderId = body.destinationProviderId,
+      notes = body.notes
     )
+
+    val departure = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
   }
@@ -295,20 +220,13 @@ class PremisesController(
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (booking.departureDate.isAfter(body.newDepartureDate)) {
-      throw BadRequestProblem(mapOf("newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
-    }
-
-    val extension = bookingService.createExtension(
-      booking,
-      ExtensionEntity(
-        id = UUID.randomUUID(),
-        previousDepartureDate = booking.departureDate,
-        newDepartureDate = body.newDepartureDate,
-        notes = body.notes,
-        booking = booking
-      )
+    val result = bookingService.createExtension(
+      booking = booking,
+      newDepartureDate = body.newDepartureDate,
+      notes = body.notes
     )
+
+    val extension = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(extensionTransformer.transformJpaToApi(extension))
   }
@@ -317,17 +235,19 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    if (body.endDate.isBefore(body.startDate)) {
-      throw BadRequestProblem(mapOf("endDate" to "Cannot be before startDate"))
-    }
+    val result = premisesService.createLostBeds(
+      premises = premises,
+      startDate = body.startDate,
+      endDate = body.endDate,
+      numberOfBeds = body.numberOfBeds,
+      reason = lostBedsTransformer.transformReasonFromApiToJpa(body.reason),
+      referenceNumber = body.referenceNumber,
+      notes = body.notes
+    )
 
-    if (body.numberOfBeds <= 0) {
-      throw BadRequestProblem(mapOf("numberOfBeds" to "Must be greater than 0"))
-    }
+    val lostBeds = extractResultEntityOrThrow(result)
 
-    val lostBed = premisesService.createLostBeds(lostBedsTransformer.transformApiToJpa(body, premises))
-
-    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
+    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBeds))
   }
 
   override fun premisesPremisesIdLostBedsGet(premisesId: UUID): ResponseEntity<List<LostBed>> {
@@ -368,5 +288,11 @@ class PremisesController(
     is GetBookingForPremisesResult.Success -> result.booking
     is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
     is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+  }
+
+  private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
+    is ValidatableActionResult.Success -> result.entity
+    is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
+    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
   }
 }

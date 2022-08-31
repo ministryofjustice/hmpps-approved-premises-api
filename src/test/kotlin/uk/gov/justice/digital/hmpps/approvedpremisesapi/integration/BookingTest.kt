@@ -6,14 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
@@ -276,81 +274,6 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Arrival on Booking with existing Arrival returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    arrivalEntityFactory.produceAndPersist { withBooking(booking) }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewArrival(
-          arrivalDate = LocalDate.parse("2022-08-12"),
-          expectedDepartureDate = LocalDate.parse("2022-08-14"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".detail").isEqualTo("This Booking already has an Arrival set")
-  }
-
-  @Test
-  fun `Create Arrival on Booking with expected departure before arrival date returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
-        }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewArrival(
-          arrivalDate = LocalDate.parse("2022-08-16"),
-          expectedDepartureDate = LocalDate.parse("2022-08-14"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".invalid-params[0]").isEqualTo(
-        mapOf(
-          "propertyName" to "expectedDepartureDate",
-          "errorType" to "Cannot be before arrivalDate"
-        )
-      )
-  }
-
-  @Test
   fun `Create Arrival on Booking returns 200 with correct body`() {
     val booking = bookingEntityFactory.produceAndPersist {
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
@@ -402,84 +325,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create Cancellation on Booking with non-existent Cancellation Reason 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewCancellation(
-          date = LocalDate.parse("2022-08-17"),
-          reason = UUID.fromString("31374d05-203f-45a2-a6c8-3bed24f1fa2f"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".invalid-params[0]").isEqualTo(
-        mapOf(
-          "propertyName" to "reason",
-          "errorType" to "This reason does not exist"
-        )
-      )
-  }
-
-  @Test
-  fun `Create Cancellation on Booking with existing Cancellation returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
-
-    cancellationEntityFactory.produceAndPersist {
-      withBooking(booking)
-      withReason(cancellationReason)
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewCancellation(
-          date = LocalDate.parse("2022-08-17"),
-          reason = cancellationReason.id,
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".detail").isEqualTo("This Booking already has a Cancellation set")
   }
 
   @Test
@@ -535,44 +380,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create Extension on Booking with newDepartureDate behind current departureDate of Booking returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withDepartureDate(LocalDate.parse("2022-08-20"))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewExtension(
-          newDepartureDate = LocalDate.parse("2022-08-19"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".invalid-params[0]").isEqualTo(
-        mapOf(
-          "propertyName" to "newDepartureDate",
-          "errorType" to "Must be after the Booking's current departure date (${booking.departureDate})"
-        )
-      )
   }
 
   @Test
@@ -632,95 +439,9 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Departures on Booking with existing Departure returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    departureEntityFactory.produceAndPersist {
-      withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
-      withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-      withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
-      withBooking(booking)
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewDeparture(
-          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
-          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
-          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
-          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
-          notes = "some notes"
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".detail").isEqualTo("This Booking already has a Departure set")
-  }
-
-  @Test
-  fun `Create Departure on Booking with invalid Ids for Departure Reason, Move on Category, Destination Provider returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withArrivalDate(LocalDate.parse("2022-08-20"))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
-        }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    val validationResponse = webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewDeparture(
-          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
-          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
-          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
-          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
-          notes = "some notes"
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody<ValidationError>()
-      .returnResult()
-      .responseBody!!
-
-    assertThat(validationResponse.invalidParams).containsExactlyInAnyOrder(
-      InvalidParam(propertyName = "reasonId", errorType = "Reason does not exist"),
-      InvalidParam(propertyName = "moveOnCategoryId", errorType = "Move on Category does not exist"),
-      InvalidParam(propertyName = "destinationProviderId", errorType = "Destination Provider does not exist")
-    )
-  }
-
-  @Test
   fun `Create Departure on Booking returns 200 with correct body`() {
     val booking = bookingEntityFactory.produceAndPersist {
+      withArrivalDate(LocalDate.parse("2022-08-20"))
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       withYieldedPremises {
         premisesEntityFactory.produceAndPersist {
@@ -781,85 +502,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create Non Arrival on Booking with non-existent Non Arrival Reason returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withArrivalDate(LocalDate.parse("2022-08-20"))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewNonarrival(
-          date = LocalDate.parse("2022-08-23"),
-          reason = UUID.fromString("31374d05-203f-45a2-a6c8-3bed24f1fa2f"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".invalid-params[0]").isEqualTo(
-        mapOf(
-          "propertyName" to "reason",
-          "errorType" to "This reason does not exist"
-        )
-      )
-  }
-
-  @Test
-  fun `Create Non Arrival on Booking with existing Non Arrival returns 400`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
-
-    nonArrivalEntityFactory.produceAndPersist {
-      withBooking(booking)
-      withReason(nonArrivalReason)
-    }
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewNonarrival(
-          date = LocalDate.parse("2022-08-17"),
-          reason = nonArrivalReason.id,
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".detail").isEqualTo("This Booking already has a Non Arrival set")
   }
 
   @Test
