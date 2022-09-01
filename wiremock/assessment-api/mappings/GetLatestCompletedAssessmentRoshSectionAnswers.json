@@ -1,0 +1,317 @@
+{
+  "id": "3e862519-78b0-4449-b2b5-535ee1b81213",
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/assessments/crn/(.*)/sections/answers*"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "assessmentId": 9479348,
+      "sections": {
+        "ROSH": [
+          {
+            "refQuestionCode": "R2.1",
+            "questionText": "Is the offender, now or on release, likely to live with, or have frequent contact with, any child who is on the child protection register or is being looked after by the local authority.",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R2.2",
+            "questionText": "Are there any concerns in relation to children",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R2.2.1",
+            "questionText": "Should contact be made with social services",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R3.1",
+            "questionText": "Risk of suicide",
+            "refAnswerCode": "NO",
+            "staticText": "No"
+          },
+          {
+            "refQuestionCode": "R3.2",
+            "questionText": "Risk of self-harm",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R3.3",
+            "questionText": "Coping in custody / hostel setting",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R3.4",
+            "questionText": "Vulnerability",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R4.1",
+            "questionText": "Escape / abscond",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R4.2",
+            "questionText": "Control issues / disruptive behaviour",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "R4.3",
+            "questionText": "Concerns in respect of breach of trust",
+            "refAnswerCode": "DK",
+            "staticText": "Don't know"
+          },
+          {
+            "refQuestionCode": "R4.4",
+            "questionText": "Risks to other prisoners",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          }
+        ],
+        "ROSHFULL": [
+          {
+            "refQuestionCode": "FA1",
+            "questionText": "Offence details",
+            "freeFormText": "shjkhsdjhkjshfkjshdkfjhskjdhkjhkjhkj"
+          },
+          {
+            "refQuestionCode": "FA16",
+            "questionText": "b) is involved in a situation where there are identifiable children who are considered to be at risk from others",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA2",
+            "questionText": "Where and when did s/he do it",
+            "freeFormText": "klsdjkljlksd"
+          },
+          {
+            "refQuestionCode": "FA3",
+            "questionText": "How did s/he do it (was there any pre planning, use of weapon, tool etc)",
+            "freeFormText": "sdlljsd;ljf;lds"
+          },
+          {
+            "refQuestionCode": "FA31",
+            "questionText": "Are there any current concerns about suicide",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA32",
+            "questionText": "Are there any current concerns about self-harm",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA33",
+            "questionText": "Describe circumstances, relevant issues and needs regarding current concerns (refer to sections 1-12 for indicators, particularly Section 10)",
+            "freeFormText": "Suicide and/or Self-harm current concerns"
+          },
+          {
+            "refQuestionCode": "FA34",
+            "questionText": "Is there a current ACCT (Assessment, Care in Custody and Teamwork?)",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA36",
+            "questionText": "Have there been any concerns about suicide in the past",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA37",
+            "questionText": "Have there been any concerns about self-harm in the past",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA39",
+            "questionText": "Are there any current concerns about coping in custody",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA4",
+            "questionText": "Who were the victims (are there concerns about targeting, type, age, race of vulnerability or victim)",
+            "freeFormText": "sdflkl;sdkjf;l"
+          },
+          {
+            "refQuestionCode": "FA40",
+            "questionText": "Are there any current concerns about coping in hostel settings",
+            "refAnswerCode": "NO",
+            "staticText": "No"
+          },
+          {
+            "refQuestionCode": "FA41",
+            "questionText": "Describe circumstances, relevant issues and needs",
+            "freeFormText": "Coping in custody / hostel setting current concerns"
+          },
+          {
+            "refQuestionCode": "FA42",
+            "questionText": "Are there any previous concerns about coping in custody",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA43",
+            "questionText": "Are there any previous concerns about coping in hostel settings",
+            "refAnswerCode": "NO",
+            "staticText": "No"
+          },
+          {
+            "refQuestionCode": "FA44",
+            "questionText": "Describe circumstances, relevant issues and needs",
+            "freeFormText": "Coping in custody / hostel setting previous concerns"
+          },
+          {
+            "refQuestionCode": "FA45",
+            "questionText": "Are there any current concerns about vulnerability (eg victimisation, being bullied, assaulted, exploited)",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA45.t",
+            "questionText": "Describe circumstances, relevant issues and needs",
+            "freeFormText": "Vulnerability current concerns free text"
+          },
+          {
+            "refQuestionCode": "FA47",
+            "questionText": "Have there been any previous concerns about vulnerability (eg victimisation, being bullied, assaulted, exploited)",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA47.t",
+            "questionText": "Describe circumstances, relevant issues and needs",
+            "freeFormText": "Vulnerability previous concerns free text"
+          },
+          {
+            "refQuestionCode": "FA49",
+            "questionText": " Do any of the above (R8.1 - 8.3) indicate a risk of serious harm to others.  If YES complete the risk of serious harm analysis, R6",
+            "refAnswerCode": "YES",
+            "staticText": "Yes"
+          },
+          {
+            "refQuestionCode": "FA49.t",
+            "questionText": "Describe circumstances, relevant issues and needs",
+            "freeFormText": "Risk of serious harm free text"
+          },
+          {
+            "refQuestionCode": "FA5",
+            "questionText": "Was anyone else present / involved",
+            "freeFormText": "sflk;ljkf;lds"
+          },
+          {
+            "refQuestionCode": "FA6",
+            "questionText": "Why did s/he do it (motivation and triggers)",
+            "freeFormText": "sfkjlj"
+          },
+          {
+            "refQuestionCode": "FA7",
+            "questionText": "Sources of information",
+            "freeFormText": "fshjkjhk"
+          }
+        ],
+        "ROSHSUM": [
+          {
+            "refQuestionCode": "SUM1",
+            "questionText": "Who is at risk",
+            "freeFormText": "whoisAtRisk"
+          },
+          {
+            "refQuestionCode": "SUM2",
+            "questionText": "What is the nature of the risk",
+            "freeFormText": "natureOfRisk"
+          },
+          {
+            "refQuestionCode": "SUM3",
+            "questionText": "When is the risk likely to be greatest\nConsider the timescale and indicate whether risk is immediate or not.  Consider the risks in custody as well as on release.\n",
+            "freeFormText": "riskImminence"
+          },
+          {
+            "refQuestionCode": "SUM4",
+            "questionText": "What circumstances are likely to increase risk\nDescribe factors, actions, events which might increase level of risk, now and in the future\n",
+            "freeFormText": "riskIncreaseFactors"
+          },
+          {
+            "refQuestionCode": "SUM5",
+            "questionText": "What factors are likely to reduce the risk\nDescribe factors, actions, and events which may reduce or contain the level of risk. What has previously stopped him / her?  ",
+            "freeFormText": "riskMitigationFactors"
+          },
+          {
+            "refQuestionCode": "SUM6.1.1",
+            "questionText": "Risk in Community",
+            "refAnswerCode": "L",
+            "staticText": "Low"
+          },
+          {
+            "refQuestionCode": "SUM6.1.2",
+            "questionText": "Risk in Custody",
+            "refAnswerCode": "L",
+            "staticText": "Low"
+          },
+          {
+            "refQuestionCode": "SUM6.2.1",
+            "questionText": "Risk in Community",
+            "refAnswerCode": "M",
+            "staticText": "Medium"
+          },
+          {
+            "refQuestionCode": "SUM6.2.2",
+            "questionText": "Risk in Custody",
+            "refAnswerCode": "L",
+            "staticText": "Low"
+          },
+          {
+            "refQuestionCode": "SUM6.3.1",
+            "questionText": "Risk in Community",
+            "refAnswerCode": "L",
+            "staticText": "Low"
+          },
+          {
+            "refQuestionCode": "SUM6.3.2",
+            "questionText": "Risk in Custody",
+            "refAnswerCode": "L",
+            "staticText": "Low"
+          },
+          {
+            "refQuestionCode": "SUM6.4.1",
+            "questionText": "Risk in Community",
+            "refAnswerCode": "H",
+            "staticText": "High"
+          },
+          {
+            "refQuestionCode": "SUM6.4.2",
+            "questionText": "Risk in Custody",
+            "refAnswerCode": "V",
+            "staticText": "Very High"
+          },
+          {
+            "refQuestionCode": "SUM6.5.2",
+            "questionText": "Risk in Custody",
+            "refAnswerCode": "H",
+            "staticText": "High"
+          },
+          {
+            "refQuestionCode": "SUM8",
+            "questionText": "If necessary record the details of any key documents or reports used in this analysis:",
+            "freeFormText": "zccx"
+          }
+        ]
+      }
+    }
+  }
+}
