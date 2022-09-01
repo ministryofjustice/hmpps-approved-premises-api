@@ -81,6 +81,8 @@ management:
 services:
   community-api:
     base-url: http://localhost:9590
+  assess-risks-and-needs-api:
+    base-url: http://localhost:9580
 
 hmpps:
   auth:
