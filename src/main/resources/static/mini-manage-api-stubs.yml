@@ -536,6 +536,41 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /person/{crn}/risks:
+    get:
+      summary: Returns the risks for a Person
+      parameters:
+      - name: crn
+        in: path
+        description: CRN of the Person to fetch risks for
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PersonRisks'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -1418,3 +1453,66 @@ components:
       required:
         - date
         - availableBeds
+    PersonRisks:
+      type: object
+      properties:
+        crn:
+          type: string
+        roshRisks:
+          $ref: '#/components/schemas/RoshRisks'
+        mappa:
+          $ref: '#/components/schemas/Mappa'
+        tier:
+          $ref: '#/components/schemas/RiskTier'
+      required:
+        - crn
+        - roshRisks
+        - mappa
+        - tier
+    RoshRisks:
+      type: object
+      properties:
+        overallRisk:
+          type: string
+        riskToChildren:
+          type: string
+        riskToPublic:
+          type: string
+        riskToKnownAdult:
+          type: string
+        riskToStaff:
+          type: string
+        lastUpdated:
+          type: string
+          format: date
+      required:
+        - overallRisk
+        - riskToChildren
+        - riskToPublic
+        - riskToKnownAdult
+        - riskToStaff
+    Mappa:
+      type: object
+      properties:
+        level:
+          type: string
+        isNominal:
+          type: boolean
+        lastUpdated:
+          type: string
+          format: date
+      required:
+        - level
+        - isNominal
+        - lastUpdated
+    RiskTier:
+      type: object
+      properties:
+        level:
+          type: string
+        lastUpdated:
+          type: string
+          format: date
+      required:
+        - level
+        - lastUpdated
