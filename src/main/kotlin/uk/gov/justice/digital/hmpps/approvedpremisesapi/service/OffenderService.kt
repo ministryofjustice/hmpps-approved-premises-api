@@ -10,11 +10,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.shouldNotBeReache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 
 @Service
 class OffenderService(
@@ -22,32 +23,7 @@ class OffenderService(
   private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient
 ) {
-  fun getOffenderByCrn(crn: String, userDistinguishedName: String): OffenderDetailSummary? {
-    val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
-      is ClientResult.Success -> offenderResponse.body
-      is ClientResult.StatusCodeFailure -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return null else offenderResponse.throwException()
-      is ClientResult.Failure -> offenderResponse.throwException()
-      else -> shouldNotBeReached()
-    }
-
-    if (offender.currentExclusion || offender.currentRestriction) {
-      val access =
-        when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
-          is ClientResult.Success -> accessResponse.body
-          is ClientResult.Failure -> accessResponse.throwException()
-          else -> shouldNotBeReached()
-        }
-
-      if (access.userExcluded || access.userRestricted) {
-        throw ForbiddenProblem()
-      }
-    }
-
-    return offender
-  }
-
-  fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> {
-    // TODO: Move this into another function maybe?   Not sure if it'll be possible to do nicely with all the wheres
+  fun getOffenderByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<OffenderDetailSummary> {
     val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
       is ClientResult.Success -> offenderResponse.body
       is ClientResult.StatusCodeFailure -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
@@ -67,66 +43,108 @@ class OffenderService(
         return AuthorisableActionResult.Unauthorised()
       }
     }
-    // End TODO
 
-    // TODO: Don't just fail if we can't get one of the responses
+    return AuthorisableActionResult.Success(offender)
+  }
 
-    val roshRisks = when (val roshRisksResponse = assessRisksAndNeedsApiClient.getRoshRisks(crn, jwt)) {
-      is ClientResult.Success -> roshRisksResponse.body
-      is ClientResult.StatusCodeFailure -> if (roshRisksResponse.status == HttpStatus.FORBIDDEN) {
-        return AuthorisableActionResult.Unauthorised()
-      } else {
-        roshRisksResponse.throwException()
-      }
-      is ClientResult.Failure -> roshRisksResponse.throwException()
-      else -> shouldNotBeReached()
-    }
-
-    val tier = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
-      is ClientResult.Success -> tierResponse.body
-      is ClientResult.StatusCodeFailure -> if (tierResponse.status == HttpStatus.FORBIDDEN) {
-        return AuthorisableActionResult.Unauthorised()
-      } else {
-        tierResponse.throwException()
-      }
-      is ClientResult.Failure -> tierResponse.throwException()
-      else -> shouldNotBeReached()
-    }
-
-    val registrations = when (val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)) {
-      is ClientResult.Success -> registrationsResponse.body
-      is ClientResult.StatusCodeFailure -> if (registrationsResponse.status == HttpStatus.FORBIDDEN) {
-        return AuthorisableActionResult.Unauthorised()
-      } else {
-        registrationsResponse.throwException()
-      }
-      is ClientResult.Failure -> registrationsResponse.throwException()
-      else -> shouldNotBeReached()
-    }
-
-    return AuthorisableActionResult.Success(
-      PersonRisks(
-        crn = crn,
-        roshRisks = RoshRisks(
-          overallRisk = getOrThrow("overallRiskLevel") { roshRisks.summary.overallRiskLevel?.value },
-          riskToChildren = getRiskOrThrow("Children", roshRisks.summary.riskInCommunity),
-          riskToPublic = getRiskOrThrow("Public", roshRisks.summary.riskInCommunity),
-          riskToKnownAdult = getRiskOrThrow("Known Adult", roshRisks.summary.riskInCommunity),
-          riskToStaff = getRiskOrThrow("Staff", roshRisks.summary.riskInCommunity),
-          lastUpdated = roshRisks.summary.assessedOn?.toLocalDate()
-        ),
-        mappa = registrations.registrations.firstOrNull { it.type.code == "MAPP" }?.let { registration ->
-          Mappa(
-            level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
-            lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOf { it.reviewDate } ?: registration.startDate
+  fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> {
+    return when (getOffenderByCrn(crn, userDistinguishedName)) {
+      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.Success -> {
+        AuthorisableActionResult.Success(
+          PersonRisks(
+            crn = crn,
+            roshRisks = getRoshRisksEnvelope(crn, jwt),
+            mappa = getMappaEnvelope(crn),
+            tier = getRiskTierEnvelope(crn)
+            // TODO: Need the other thing from registrations too
           )
-        },
-        tier = RiskTier(
-          level = tier.tierScore,
-          lastUpdated = tier.calculationDate.toLocalDate()
         )
+      }
+    }
+  }
+
+  private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
+    when (val roshRisksResponse = assessRisksAndNeedsApiClient.getRoshRisks(crn, jwt)) {
+      is ClientResult.Success -> {
+        val summary = roshRisksResponse.body.summary
+        return RiskWithStatus(
+          status = RiskStatus.Retrieved,
+          value = RoshRisks(
+            overallRisk = getOrThrow("overallRiskLevel") { summary.overallRiskLevel?.value },
+            riskToChildren = getRiskOrThrow("Children", summary.riskInCommunity),
+            riskToPublic = getRiskOrThrow("Public", summary.riskInCommunity),
+            riskToKnownAdult = getRiskOrThrow("Known Adult", summary.riskInCommunity),
+            riskToStaff = getRiskOrThrow("Staff", summary.riskInCommunity),
+            lastUpdated = summary.assessedOn?.toLocalDate()
+          )
+        )
+      }
+      is ClientResult.StatusCodeFailure -> return if (roshRisksResponse.status == HttpStatus.NOT_FOUND) {
+        RiskWithStatus(
+          status = RiskStatus.NotFound,
+          value = null
+        )
+      } else {
+        RiskWithStatus(
+          status = RiskStatus.Error,
+          value = null
+        )
+      }
+      is ClientResult.Failure -> return RiskWithStatus(
+        status = RiskStatus.Error,
+        value = null
       )
-    )
+      else -> shouldNotBeReached()
+    }
+  }
+
+  private fun getMappaEnvelope(crn: String): RiskWithStatus<Mappa> {
+    when (val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)) {
+      is ClientResult.Success -> {
+        return RiskWithStatus(
+          value = registrationsResponse.body.registrations.firstOrNull { it.type.code == "MAPP" }?.let { registration ->
+            Mappa(
+              level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
+              lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOf { it.reviewDate } ?: registration.startDate
+            )
+          }
+        )
+      }
+      is ClientResult.StatusCodeFailure -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
+        RiskWithStatus(status = RiskStatus.NotFound)
+      } else {
+        RiskWithStatus(status = RiskStatus.Error)
+      }
+      is ClientResult.Failure -> {
+        return RiskWithStatus(status = RiskStatus.Error)
+      }
+      else -> shouldNotBeReached()
+    }
+  }
+
+  private fun getRiskTierEnvelope(crn: String): RiskWithStatus<RiskTier> {
+    when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
+      is ClientResult.Success -> {
+        return RiskWithStatus(
+          status = RiskStatus.Retrieved,
+          value = RiskTier(
+            level = tierResponse.body.tierScore,
+            lastUpdated = tierResponse.body.calculationDate.toLocalDate()
+          )
+        )
+      }
+      is ClientResult.StatusCodeFailure -> return if (tierResponse.status == HttpStatus.NOT_FOUND) {
+        RiskWithStatus(status = RiskStatus.NotFound)
+      } else {
+        RiskWithStatus(status = RiskStatus.Error)
+      }
+      is ClientResult.Failure -> {
+        return RiskWithStatus(status = RiskStatus.Error)
+      }
+      else -> shouldNotBeReached()
+    }
   }
 
   private fun <T> getOrThrow(thing: String, getter: () -> T?): T {

@@ -2,11 +2,21 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
 import java.time.LocalDate
 
+data class RiskWithStatus<T>(val status: RiskStatus, val value: T? = null) {
+  constructor(value: T?) : this(RiskStatus.Retrieved, value)
+}
+
+enum class RiskStatus {
+  Retrieved,
+  NotFound,
+  Error
+}
+
 data class PersonRisks(
   val crn: String,
-  val roshRisks: RoshRisks,
-  val mappa: Mappa?,
-  val tier: RiskTier
+  val roshRisks: RiskWithStatus<RoshRisks>,
+  val mappa: RiskWithStatus<Mappa>,
+  val tier: RiskWithStatus<RiskTier>
 )
 
 data class RoshRisks(

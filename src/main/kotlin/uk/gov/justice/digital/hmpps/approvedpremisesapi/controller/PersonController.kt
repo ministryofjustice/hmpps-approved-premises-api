@@ -21,15 +21,16 @@ class PersonController(
   override fun personSearchGet(crn: String): ResponseEntity<Person> {
     val principal = getDeliusPrincipalOrThrow()
 
-    val offender = offenderService.getOffenderByCrn(crn, principal.name)
-      ?: throw NotFoundProblem(crn, "Person")
-
-    return ResponseEntity.ok(
-      Person(
-        crn = crn,
-        name = "${offender.firstName} ${offender.surname}"
+    return when (val offenderResult = offenderService.getOffenderByCrn(crn, principal.name)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> return ResponseEntity.ok(
+        Person(
+          crn = crn,
+          name = "${offenderResult.entity.firstName} ${offenderResult.entity.surname}"
+        )
       )
-    )
+    }
   }
 
   override fun personCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
