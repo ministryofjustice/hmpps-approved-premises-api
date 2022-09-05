@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.shouldNotBeReached
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -19,7 +20,8 @@ import java.time.LocalDate
 @Service
 class OffenderService(
   private val communityApiClient: CommunityApiClient,
-  private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient
+  private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
+  private val hmppsTierApiClient: HMPPSTierApiClient
 ) {
   fun getOffenderByCrn(crn: String, userDistinguishedName: String): OffenderDetailSummary? {
     val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
@@ -45,13 +47,30 @@ class OffenderService(
     return offender
   }
 
-  fun getRiskByCrn(crn: String, jwt: String): AuthorisableActionResult<PersonRisks> {
-    when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
+  fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> {
+    // TODO: Move this into another function maybe?   Not sure if it'll be possible to do nicely with all the wheres
+    val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
       is ClientResult.Success -> offenderResponse.body
       is ClientResult.StatusCodeFailure -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
       is ClientResult.Failure -> offenderResponse.throwException()
       else -> shouldNotBeReached()
     }
+
+    if (offender.currentExclusion || offender.currentRestriction) {
+      val access =
+        when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
+          is ClientResult.Success -> accessResponse.body
+          is ClientResult.Failure -> accessResponse.throwException()
+          else -> shouldNotBeReached()
+        }
+
+      if (access.userExcluded || access.userRestricted) {
+        return AuthorisableActionResult.Unauthorised()
+      }
+    }
+    // End TODO
+
+    // TODO: Don't just fail if we can't get one of the responses
 
     val roshRisks = when (val roshRisksResponse = assessRisksAndNeedsApiClient.getRoshRisks(crn, jwt)) {
       is ClientResult.Success -> roshRisksResponse.body
@@ -64,7 +83,18 @@ class OffenderService(
       else -> shouldNotBeReached()
     }
 
-    // TODO: Get MAPPA and Tier from respective services
+    val tier = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
+      is ClientResult.Success -> tierResponse.body
+      is ClientResult.StatusCodeFailure -> if (tierResponse.status == HttpStatus.FORBIDDEN) {
+        return AuthorisableActionResult.Unauthorised()
+      } else {
+        tierResponse.throwException()
+      }
+      is ClientResult.Failure -> tierResponse.throwException()
+      else -> shouldNotBeReached()
+    }
+
+    // TODO: Get MAPPA from respective service
 
     return AuthorisableActionResult.Success(
       PersonRisks(
@@ -83,8 +113,8 @@ class OffenderService(
           lastUpdated = LocalDate.now() // TODO: Actually get from MAPPA
         ),
         tier = RiskTier(
-          level = "",
-          lastUpdated = LocalDate.now() // TODO: Actually get from tier-service
+          level = tier.tierScore,
+          lastUpdated = tier.calculationDate.toLocalDate()
         )
       )
     )
