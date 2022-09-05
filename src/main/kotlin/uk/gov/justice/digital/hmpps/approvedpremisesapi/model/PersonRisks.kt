@@ -5,7 +5,7 @@ import java.time.LocalDate
 data class PersonRisks(
   val crn: String,
   val roshRisks: RoshRisks,
-  val mappa: Mappa,
+  val mappa: Mappa?,
   val tier: RiskTier
 )
 
@@ -20,7 +20,6 @@ data class RoshRisks(
 
 data class Mappa(
   val level: String,
-  val isNominal: Boolean,
   val lastUpdated: LocalDate
 )
 

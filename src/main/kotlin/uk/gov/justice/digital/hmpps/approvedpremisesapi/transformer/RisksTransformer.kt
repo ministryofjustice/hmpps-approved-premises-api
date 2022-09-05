@@ -15,11 +15,12 @@ class RisksTransformer {
       riskToStaff = domain.roshRisks.riskToStaff,
       lastUpdated = domain.roshRisks.lastUpdated
     ),
-    mappa = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Mappa(
-      level = domain.mappa.level,
-      isNominal = domain.mappa.isNominal,
-      lastUpdated = domain.mappa.lastUpdated
-    ),
+    mappa = domain.mappa?.let {
+      uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Mappa(
+        level = domain.mappa.level,
+        lastUpdated = domain.mappa.lastUpdated
+      )
+    },
     tier = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTier(
       level = domain.tier.level,
       lastUpdated = domain.tier.lastUpdated

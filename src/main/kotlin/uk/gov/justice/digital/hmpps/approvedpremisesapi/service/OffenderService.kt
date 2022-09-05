@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import java.time.LocalDate
 
 @Service
 class OffenderService(
@@ -94,7 +93,16 @@ class OffenderService(
       else -> shouldNotBeReached()
     }
 
-    // TODO: Get MAPPA from respective service
+    val registrations = when (val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)) {
+      is ClientResult.Success -> registrationsResponse.body
+      is ClientResult.StatusCodeFailure -> if (registrationsResponse.status == HttpStatus.FORBIDDEN) {
+        return AuthorisableActionResult.Unauthorised()
+      } else {
+        registrationsResponse.throwException()
+      }
+      is ClientResult.Failure -> registrationsResponse.throwException()
+      else -> shouldNotBeReached()
+    }
 
     return AuthorisableActionResult.Success(
       PersonRisks(
@@ -107,11 +115,12 @@ class OffenderService(
           riskToStaff = getRiskOrThrow("Staff", roshRisks.summary.riskInCommunity),
           lastUpdated = roshRisks.summary.assessedOn?.toLocalDate()
         ),
-        mappa = Mappa(
-          level = "",
-          isNominal = false,
-          lastUpdated = LocalDate.now() // TODO: Actually get from MAPPA
-        ),
+        mappa = registrations.registrations.firstOrNull { it.type.code == "MAPP" }?.let { registration ->
+          Mappa(
+            level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
+            lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOf { it.reviewDate } ?: registration.startDate
+          )
+        },
         tier = RiskTier(
           level = tier.tierScore,
           lastUpdated = tier.calculationDate.toLocalDate()

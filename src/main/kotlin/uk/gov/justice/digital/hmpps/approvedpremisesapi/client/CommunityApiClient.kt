@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
 @Component
@@ -18,5 +19,9 @@ class CommunityApiClient(
 
   fun getUserAccessForOffenderCrn(userDistinguishedName: String, crn: String) = getRequest<UserOffenderAccess> {
     path = "/secure/offenders/crn/$crn/user/$userDistinguishedName/userAccess"
+  }
+
+  fun getRegistrationsForOffenderCrn(crn: String) = getRequest<Registrations> {
+    path = "/secure/offenders/crn/$crn/registrations?activeOnly=true"
   }
 }

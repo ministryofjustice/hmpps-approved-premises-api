@@ -1467,7 +1467,6 @@ components:
       required:
         - crn
         - roshRisks
-        - mappa
         - tier
     RoshRisks:
       type: object
@@ -1496,14 +1495,11 @@ components:
       properties:
         level:
           type: string
-        isNominal:
-          type: boolean
         lastUpdated:
           type: string
           format: date
       required:
         - level
-        - isNominal
         - lastUpdated
     RiskTier:
       type: object
