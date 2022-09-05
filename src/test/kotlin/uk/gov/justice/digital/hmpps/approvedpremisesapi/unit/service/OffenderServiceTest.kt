@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -16,8 +17,9 @@ import java.lang.RuntimeException
 
 class OffenderServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
+  private val mockAssessRisksAndNeedsApiClient = mockk<AssessRisksAndNeedsApiClient>()
 
-  private val offenderService = OffenderService(mockCommunityApiClient)
+  private val offenderService = OffenderService(mockCommunityApiClient, mockAssessRisksAndNeedsApiClient)
 
   @Test
   fun `getOffenderByCrn returns null when Client returns 404`() {
