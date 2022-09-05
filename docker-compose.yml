@@ -48,16 +48,16 @@ services:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=oasys-rsr,dev
       - OAUTH_ENDPOINT_URL=http://hmpps-auth:8080/auth
-      - ASSESSMENT-API_BASE-URL=http://assessment-api-wiremock:8080
+      - ASSESSMENT-API_BASE-URL=http://wiremock:8080
       - COMMUNITY-API_BASE-URL=http://community-api:8080
 
-  assessment-api-wiremock:
+  wiremock:
     image: rodolpheche/wiremock
-    container_name: assessment-api-wiremock
+    container_name: wiremock
     ports:
       - "9004:8080"
     volumes:
-      - ./wiremock/assessment-api:/home/wiremock
+      - ./wiremock:/home/wiremock
 
 volumes:
   database-data-development:
