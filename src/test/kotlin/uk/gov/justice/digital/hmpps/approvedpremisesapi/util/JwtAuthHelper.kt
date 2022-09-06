@@ -61,6 +61,12 @@ class JwtAuthHelper {
           .compact()
       }
 
+  internal fun createValidAuthorizationCodeJwt() = createAuthorizationCodeJwt(
+    subject = "username",
+    authSource = "delius",
+    roles = listOf("ROLE_PROBATION")
+  )
+
   internal fun createAuthorizationCodeJwt(
     subject: String,
     scope: List<String>? = listOf(),
