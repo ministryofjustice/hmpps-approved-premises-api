@@ -39,6 +39,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          hmpps-tier:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token
@@ -84,6 +89,8 @@ services:
     base-url: http://localhost:9590
   assess-risks-and-needs-api:
     base-url: http://localhost:9580
+  hmpps-tier:
+    base-url: http://localhost:9004
 
 hmpps:
   auth:
