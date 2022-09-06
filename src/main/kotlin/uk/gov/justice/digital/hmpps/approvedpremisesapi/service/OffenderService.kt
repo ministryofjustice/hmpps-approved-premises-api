@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 
 @Service
 class OffenderService(
@@ -23,6 +24,8 @@ class OffenderService(
   private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient
 ) {
+  private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
+
   fun getOffenderByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<OffenderDetailSummary> {
     val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
       is ClientResult.Success -> offenderResponse.body
@@ -52,13 +55,15 @@ class OffenderService(
       is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
       is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
       is AuthorisableActionResult.Success -> {
+        val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)
+
         AuthorisableActionResult.Success(
           PersonRisks(
             crn = crn,
             roshRisks = getRoshRisksEnvelope(crn, jwt),
-            mappa = getMappaEnvelope(crn),
-            tier = getRiskTierEnvelope(crn)
-            // TODO: Need the other thing from registrations too
+            mappa = getMappaEnvelope(registrationsResponse),
+            tier = getRiskTierEnvelope(crn),
+            flags = getFlagsEnvelope(registrationsResponse)
           )
         )
       }
@@ -100,8 +105,8 @@ class OffenderService(
     }
   }
 
-  private fun getMappaEnvelope(crn: String): RiskWithStatus<Mappa> {
-    when (val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)) {
+  private fun getMappaEnvelope(registrationsResponse: ClientResult<Registrations>): RiskWithStatus<Mappa> {
+    when (registrationsResponse) {
       is ClientResult.Success -> {
         return RiskWithStatus(
           value = registrationsResponse.body.registrations.firstOrNull { it.type.code == "MAPP" }?.let { registration ->
@@ -110,6 +115,25 @@ class OffenderService(
               lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOf { it.reviewDate } ?: registration.startDate
             )
           }
+        )
+      }
+      is ClientResult.StatusCodeFailure -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
+        RiskWithStatus(status = RiskStatus.NotFound)
+      } else {
+        RiskWithStatus(status = RiskStatus.Error)
+      }
+      is ClientResult.Failure -> {
+        return RiskWithStatus(status = RiskStatus.Error)
+      }
+      else -> shouldNotBeReached()
+    }
+  }
+
+  private fun getFlagsEnvelope(registrationsResponse: ClientResult<Registrations>): RiskWithStatus<List<String>> {
+    when (registrationsResponse) {
+      is ClientResult.Success -> {
+        return RiskWithStatus(
+          value = registrationsResponse.body.registrations.filter { !ignoredRegisterTypesForFlags.contains(it.type.code) }.map { it.type.description }
         )
       }
       is ClientResult.StatusCodeFailure -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {

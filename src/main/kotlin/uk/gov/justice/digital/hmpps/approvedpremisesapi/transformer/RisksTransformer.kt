@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
@@ -42,6 +43,10 @@ class RisksTransformer {
           lastUpdated = it.lastUpdated
         )
       }
+    ),
+    flags = FlagsEnvelope(
+      status = transformDomainToApi(domain.flags.status),
+      value = domain.flags.value
     )
   )
 

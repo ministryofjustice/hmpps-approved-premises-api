@@ -16,7 +16,8 @@ data class PersonRisks(
   val crn: String,
   val roshRisks: RiskWithStatus<RoshRisks>,
   val mappa: RiskWithStatus<Mappa>,
-  val tier: RiskWithStatus<RiskTier>
+  val tier: RiskWithStatus<RiskTier>,
+  val flags: RiskWithStatus<List<String>>
 )
 
 data class RoshRisks(

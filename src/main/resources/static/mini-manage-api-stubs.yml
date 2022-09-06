@@ -1464,10 +1464,13 @@ components:
           $ref: '#/components/schemas/MappaEnvelope'
         tier:
           $ref: '#/components/schemas/RiskTierEnvelope'
+        flags:
+          $ref: '#/components/schemas/FlagsEnvelope'
       required:
         - crn
         - roshRisks
         - tier
+        - flags
     RoshRisksEnvelope:
       type: object
       properties:
@@ -1539,6 +1542,17 @@ components:
       required:
         - level
         - lastUpdated
+    FlagsEnvelope:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/RiskEnvelopeStatus'
+        value:
+          type: array
+          items:
+            type: string
+      required:
+        - status
     RiskEnvelopeStatus:
       type: string
       enum:
