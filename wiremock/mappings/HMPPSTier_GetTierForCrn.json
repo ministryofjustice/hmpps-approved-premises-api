@@ -1,0 +1,18 @@
+{
+  "id": "05c36ca3-f66c-4ffe-917e-65aff9567af1",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/crn/(.*)/tier"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "tierScore": "D2",
+      "calculationId": "734996bc-ae5f-44a5-8925-3428492846c3",
+      "calculationDate": "2022-09-05T10:19:00"
+    }
+  }
+}
