@@ -33,7 +33,7 @@ class PersonSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for a CRN without ROLE_COMMUNITY returns 403`() {
+  fun `Searching for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius"
@@ -63,7 +63,7 @@ class PersonSearchTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
-      roles = listOf("ROLE_COMMUNITY")
+      roles = listOf("ROLE_PROBATION")
     )
 
     webTestClient.get()
@@ -99,7 +99,7 @@ class PersonSearchTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
-      roles = listOf("ROLE_COMMUNITY")
+      roles = listOf("ROLE_PROBATION")
     )
 
     webTestClient.get()
