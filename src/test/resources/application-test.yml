@@ -22,6 +22,12 @@ spring:
             client-secret: clientsecret
             client-authentication-method: client_secret_jwt
             authorization-grant-type: client_credentials
+          hmpps-tier:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            client-authentication-method: client_secret_jwt
+            authorization-grant-type: client_credentials
 
 hmpps:
   auth:
@@ -33,4 +39,6 @@ services:
   community-api:
     base-url: http://localhost:57839
   assess-risks-and-needs-api:
+    base-url: http://localhost:57839
+  hmpps-tier:
     base-url: http://localhost:57839
