@@ -1,0 +1,106 @@
+{
+  "id": "3e862519-78b0-4449-b2b5-535ee1b81213",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/assessments/crn/X123456/needs/latest?period=YEAR&periodUnits=1"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody":
+    {
+      "needs": [
+        {
+          "section": "ACCOMMODATION",
+          "name": "Accommodation",
+          "overThreshold": false,
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "flaggedAsNeed": false,
+          "severity": "SEVERE",
+          "identifiedAsNeed": true,
+          "needScore" : 2
+        },
+        {
+          "section": "EDUCATION_TRAINING_AND_EMPLOYABILITY",
+          "name": "4 - Education, Training and Employability",
+          "overThreshold": false,
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "flaggedAsNeed": false,
+          "severity": "SEVERE",
+          "identifiedAsNeed": true,
+          "needScore" : 2
+        },
+        {
+          "section": "FINANCIAL_MANAGEMENT_AND_INCOME",
+          "name": "Financial Management and Income",
+          "overThreshold": false,
+          "riskOfHarm": false,
+          "riskOfReoffending": false,
+          "flaggedAsNeed": false,
+          "severity": "NO_NEED",
+          "identifiedAsNeed": false
+        },
+        {
+          "section": "RELATIONSHIPS",
+          "name": "Relationships",
+          "overThreshold": false,
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "flaggedAsNeed": false,
+          "severity": "SEVERE",
+          "identifiedAsNeed": true,
+          "needScore" : 2
+        },
+        {
+          "section": "LIFESTYLE_AND_ASSOCIATES",
+          "name": "Lifestyle and Associates",
+          "overThreshold": false,
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "flaggedAsNeed": false,
+          "severity": "SEVERE",
+          "identifiedAsNeed": true,
+          "needScore" : 2
+        },
+        {
+          "section": "DRUG_MISUSE",
+          "name": "Drug Misuse",
+          "overThreshold": false,
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "flaggedAsNeed": false,
+          "severity": "SEVERE",
+          "identifiedAsNeed": true,
+          "needScore" : 2
+        },
+        {
+          "section": "ALCOHOL_MISUSE",
+          "name": "Alcohol Misuse",
+          "overThreshold": false,
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "flaggedAsNeed": false,
+          "severity": "SEVERE",
+          "identifiedAsNeed": true,
+          "needScore" : 2
+        },
+        {
+          "section": "EMOTIONAL_WELL_BEING",
+          "name": "Emotional Well-Being",
+          "overThreshold": false,
+          "riskOfHarm": false,
+          "riskOfReoffending": false,
+          "flaggedAsNeed": false,
+          "severity": "NO_NEED",
+          "identifiedAsNeed": false
+        }
+      ],
+      "assessedOn": "2021-06-21T15:55:04",
+      "historicStatus": "CURRENT"
+    }
+  }
+}
