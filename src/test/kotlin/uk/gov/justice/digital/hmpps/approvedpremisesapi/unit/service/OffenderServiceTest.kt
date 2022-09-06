@@ -9,8 +9,8 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.lang.RuntimeException
 
@@ -20,10 +20,10 @@ class OffenderServiceTest {
   private val offenderService = OffenderService(mockCommunityApiClient)
 
   @Test
-  fun `getOffenderByCrn returns null when Client returns 404`() {
+  fun `getOffenderByCrn returns NotFound result when Client returns 404`() {
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.StatusCodeFailure(HttpStatus.NOT_FOUND, null)
 
-    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name")).isNull()
+    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
@@ -46,13 +46,15 @@ class OffenderServiceTest {
 
     val result = offenderService.getOffenderByCrn("a-crn", "distinguished.name")
 
-    assertThat(result!!.otherIds!!.crn).isEqualTo("a-crn")
-    assertThat(result.firstName).isEqualTo("Bob")
-    assertThat(result.surname).isEqualTo("Doe")
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity.otherIds.crn).isEqualTo("a-crn")
+    assertThat(result.entity.firstName).isEqualTo("Bob")
+    assertThat(result.entity.surname).isEqualTo("Doe")
   }
 
   @Test
-  fun `getOffenderByCrn throws a ForbiddenProblem when distinguished name is excluded from viewing`() {
+  fun `getOffenderByCrn returns Unauthorised result when distinguished name is excluded from viewing`() {
     val resultBody = OffenderDetailsSummaryFactory()
       .withCrn("a-crn")
       .withFirstName("Bob")
@@ -65,11 +67,11 @@ class OffenderServiceTest {
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    assertThrows<ForbiddenProblem> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
+    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `getOffenderByCrn throws a ForbiddenProblem when distinguished name is not explicitly allowed to view`() {
+  fun `getOffenderByCrn returns Unauthorised result when distinguished name is not explicitly allowed to view`() {
     val resultBody = OffenderDetailsSummaryFactory()
       .withCrn("a-crn")
       .withFirstName("Bob")
@@ -82,7 +84,7 @@ class OffenderServiceTest {
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    assertThrows<ForbiddenProblem> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
+    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
@@ -103,8 +105,10 @@ class OffenderServiceTest {
 
     val result = offenderService.getOffenderByCrn("a-crn", "distinguished.name")
 
-    assertThat(result!!.otherIds!!.crn).isEqualTo("a-crn")
-    assertThat(result.firstName).isEqualTo("Bob")
-    assertThat(result.surname).isEqualTo("Doe")
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity.otherIds.crn).isEqualTo("a-crn")
+    assertThat(result.entity.firstName).isEqualTo("Bob")
+    assertThat(result.entity.surname).isEqualTo("Doe")
   }
 }
