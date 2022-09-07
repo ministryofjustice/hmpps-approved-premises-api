@@ -1022,9 +1022,32 @@ components:
           type: string
         name:
           type: string
+        dateOfBirth:
+          type: string
+          format: date
+        nomsNumber:
+          type: string
+        nationality:
+          type: string
+        religionOrBelief:
+          type: string
+        sex:
+          type: string
+        genderIdentity:
+          type: string
+        status:
+          type: string
+          enum:
+            - InCustody
+            - InCommunity
+        prisonName:
+          type: string
       required:
         - crn
         - name
+        - dateOfBirth
+        - sex
+        - status
     Arrival:
       type: object
       properties:
