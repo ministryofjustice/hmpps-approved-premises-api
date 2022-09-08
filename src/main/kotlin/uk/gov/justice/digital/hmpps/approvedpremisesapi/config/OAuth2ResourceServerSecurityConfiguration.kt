@@ -31,7 +31,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
-        authorize(anyRequest, authenticated)
+        authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
       }
 
       anonymous { disable() }
@@ -82,8 +82,10 @@ class AuthAwareTokenConverter : Converter<Jwt, AbstractAuthenticationToken> {
       claims[CLAIM_USERNAME] as String
     } else if (claims.containsKey(CLAIM_USER_ID)) {
       claims[CLAIM_USER_ID] as String
-    } else {
+    } else if (claims.containsKey(CLAIM_CLIENT_ID)) {
       claims[CLAIM_CLIENT_ID] as String
+    } else {
+      throw RuntimeException("Unable to find a claim to identify Subject by")
     }
   }
 

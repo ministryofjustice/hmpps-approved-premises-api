@@ -31,3 +31,5 @@ fun LocalDate.randomDateBefore(maxDays: Int = 14): LocalDate = this.minusDays(ra
 
 fun OffsetDateTime.randomDateTimeAfter(maxDays: Int = 14): OffsetDateTime = this.plusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
 fun OffsetDateTime.randomDateTimeBefore(maxDays: Int = 14): OffsetDateTime = this.minusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
+
+fun <T> randomOf(options: List<T>) = options[randomInt(0, options.size - 1)]

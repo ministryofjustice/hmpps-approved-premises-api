@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.context.annotation.Bean
-import org.springframework.http.HttpHeaders
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.stereotype.Component
@@ -27,40 +26,58 @@ class JwtAuthHelper {
   @Bean
   fun jwtDecoder(): JwtDecoder = NimbusJwtDecoder.withPublicKey(keyPair.public as RSAPublicKey).build()
 
-  fun setAuthorisation(
-    user: String = "AUTH_ADM",
-    roles: List<String> = listOf(),
-    scopes: List<String> = listOf()
-  ): (HttpHeaders) -> Unit {
-    val token = createJwt(
-      subject = user,
-      scope = scopes,
-      expiryTime = Duration.ofHours(1L),
-      roles = roles
-    )
-    return { it.set(HttpHeaders.AUTHORIZATION, "Bearer $token") }
-  }
-
-  internal fun createValidJwt() = createJwt(
-    subject = "some-api",
-    expiryTime = Duration.ofMinutes(2)
+  internal fun createValidClientCredentialsJwt() = createClientCredentialsJwt(
+    expiryTime = Duration.ofMinutes(2),
+    roles = listOf("ROLE_COMMUNITY")
   )
 
-  internal fun createExpiredJwt() = createJwt(
-    subject = "some-api",
-    expiryTime = Duration.ofMinutes(-2)
+  internal fun createExpiredClientCredentialsJwt() = createClientCredentialsJwt(
+    expiryTime = Duration.ofMinutes(-2),
+    roles = listOf("ROLE_COMMUNITY")
   )
 
-  internal fun createJwt(
-    subject: String?,
+  internal fun createClientCredentialsJwt(
+    username: String? = null,
     scope: List<String>? = listOf(),
     roles: List<String>? = listOf(),
+    authSource: String = if (username == null) "none" else "delius",
     expiryTime: Duration = Duration.ofHours(1),
     jwtId: String = UUID.randomUUID().toString()
   ): String =
     mutableMapOf<String, Any>()
-      .also { subject?.let { subject -> it["user_name"] = subject } }
-      .also { it["client_id"] = "nomis-prisoner" }
+      .also { it["user_name"] = username ?: "integration-test-client-id" }
+      .also { it["client_id"] = "integration-test-client-id" }
+      .also { it["grant_type"] = "client_credentials" }
+      .also { it["auth_source"] = authSource }
+      .also { roles?.let { roles -> it["authorities"] = roles } }
+      .also { scope?.let { scope -> it["scope"] = scope } }
+      .let {
+        Jwts.builder()
+          .setId(jwtId)
+          .setSubject(username ?: "integration-test-client-id")
+          .addClaims(it.toMap())
+          .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+          .signWith(SignatureAlgorithm.RS256, keyPair.private)
+          .compact()
+      }
+
+  internal fun createValidAuthorizationCodeJwt() = createAuthorizationCodeJwt(
+    subject = "username",
+    authSource = "delius",
+    roles = listOf("ROLE_PROBATION")
+  )
+
+  internal fun createAuthorizationCodeJwt(
+    subject: String,
+    scope: List<String>? = listOf(),
+    roles: List<String>? = listOf(),
+    authSource: String = "delius",
+    expiryTime: Duration = Duration.ofHours(1),
+    jwtId: String = UUID.randomUUID().toString()
+  ): String =
+    mutableMapOf<String, Any>()
+      .also { it["auth_source"] = authSource }
+      .also { it["user_id"] = UUID.randomUUID().toString() }
       .also { roles?.let { roles -> it["authorities"] = roles } }
       .also { scope?.let { scope -> it["scope"] = scope } }
       .let {

@@ -23,5 +23,18 @@ services:
       - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
       - SPRING_H2_CONSOLE_SETTINGS_WEBALLOWOTHERS=true
 
+  community-api:
+    image: quay.io/hmpps/community-api:latest
+    container_name: community-api
+    ports:
+      - "9590:8080"
+      - "9592:9592"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_H2_CONSOLE_SETTINGS_WEBALLOWOTHERS=true
+
 volumes:
   database-data-development:

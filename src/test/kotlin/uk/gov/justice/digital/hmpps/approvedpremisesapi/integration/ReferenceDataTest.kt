@@ -29,7 +29,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       departureReasons.map(departureReasonTransformer::transformJpaToApi)
     )
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/reference-data/departure-reasons")
@@ -50,7 +50,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
     )
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/reference-data/move-on-categories")
@@ -71,7 +71,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       destinationProviders.map(destinationProviderTransformer::transformJpaToApi)
     )
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/reference-data/destination-providers")
@@ -92,7 +92,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       departureReasons.map(cancellationReasonTransformer::transformJpaToApi)
     )
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/reference-data/cancellation-reasons")

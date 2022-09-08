@@ -18,7 +18,7 @@ class AuthTest : IntegrationTestBase() {
 
   @Test
   fun `Providing expired JWT to a secured endpoint returns 401`() {
-    val jwt = jwtAuthHelper.createExpiredJwt()
+    val jwt = jwtAuthHelper.createExpiredClientCredentialsJwt()
 
     webTestClient.get()
       .uri("/premises")

@@ -1,7 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.flywaydb.core.Flyway
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -43,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
@@ -61,11 +68,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import java.time.Duration
 import java.util.UUID
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
+  lateinit var wiremockServer: WireMockServer
 
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
@@ -151,8 +160,16 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun beforeEach() {
+    wiremockServer = WireMockServer(57839)
+    wiremockServer.start()
+
     flyway.clean()
     flyway.migrate()
+  }
+
+  @AfterEach
+  fun stopMockServer() {
+    wiremockServer.stop()
   }
 
   @BeforeEach
@@ -174,5 +191,38 @@ abstract class IntegrationTestBase {
     lostBedsEntityFactory = PersistedFactory(LostBedsEntityFactory(), lostBedsRepository)
     extensionEntityFactory = PersistedFactory(ExtensionEntityFactory(), extensionRepository)
     nonArrivalReasonEntityFactory = PersistedFactory(NonArrivalReasonEntityFactory(), nonArrivalReasonRepository)
+  }
+
+  fun mockClientCredentialsJwtRequest(
+    username: String? = null,
+    roles: List<String> = listOf(),
+    authSource: String = "none"
+  ) {
+    wiremockServer.stubFor(
+      post(urlEqualTo("/auth/oauth/token"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              objectMapper.writeValueAsString(
+                GetTokenResponse(
+                  accessToken = jwtAuthHelper.createClientCredentialsJwt(
+                    username = username,
+                    roles = roles,
+                    authSource = authSource
+                  ),
+                  tokenType = "bearer",
+                  expiresIn = Duration.ofHours(1).toSeconds().toInt(),
+                  scope = "read",
+                  sub = username?.uppercase() ?: "integration-test-client-id",
+                  authSource = authSource,
+                  jti = UUID.randomUUID().toString(),
+                  iss = "http://localhost:9092/auth/issuer"
+                )
+              )
+            )
+        )
+    )
   }
 }

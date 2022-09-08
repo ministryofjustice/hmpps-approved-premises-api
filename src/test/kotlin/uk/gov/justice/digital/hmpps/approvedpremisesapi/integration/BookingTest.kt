@@ -1,21 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
@@ -33,7 +31,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get a booking for a premises returns OK with the correct body`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
 
     val premises = premisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -43,7 +43,14 @@ class BookingTest : IntegrationTestBase() {
     val booking = bookingEntityFactory.produceAndPersist() {
       withPremises(premises)
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withCrn("CRN123")
     }
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
 
     webTestClient.get()
       .uri("/premises/${premises.id}/bookings/${booking.id}")
@@ -54,7 +61,7 @@ class BookingTest : IntegrationTestBase() {
       .expectBody()
       .json(
         objectMapper.writeValueAsString(
-          bookingTransformer.transformJpaToApi(booking, Person(crn = booking.crn, name = "Mock Person", isActive = true))
+          bookingTransformer.transformJpaToApi(booking, offenderDetails)
         )
       )
   }
@@ -70,7 +77,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings on non existent Premises returns 404`() {
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings")
@@ -87,7 +94,7 @@ class BookingTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/bookings")
@@ -111,6 +118,7 @@ class BookingTest : IntegrationTestBase() {
     val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
       withPremises(premises)
       withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withCrn("CRN123")
     }
 
     bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
@@ -137,14 +145,21 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
     val expectedJson = objectMapper.writeValueAsString(
       bookings.map {
-        // TODO: Once client to Community API is in place, replace the Person with an entityFactory connected to a mock client
-        bookingTransformer.transformJpaToApi(it, Person(crn = it.crn, name = "Mock Person", isActive = true))
+        bookingTransformer.transformJpaToApi(it, offenderDetails)
       }
     )
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/bookings")
@@ -191,14 +206,22 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewBooking(
-          crn = "a crn",
+          crn = "CRN321",
           expectedArrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-30"),
           keyWorkerId = UUID.randomUUID()
@@ -227,14 +250,24 @@ class BookingTest : IntegrationTestBase() {
 
     val keyWorker = keyWorkerEntityFactory.produceAndPersist()
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewBooking(
-          crn = "a crn",
+          crn = "CRN321",
           expectedArrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-30"),
           keyWorkerId = keyWorker.id
@@ -244,7 +277,7 @@ class BookingTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath(".person.crn").isEqualTo("a crn")
+      .jsonPath(".person.crn").isEqualTo("CRN321")
       .jsonPath(".person.name").isEqualTo("Mock Person")
       .jsonPath(".arrivalDate").isEqualTo("2022-08-12")
       .jsonPath(".departureDate").isEqualTo("2022-08-30")
@@ -289,7 +322,7 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
@@ -343,7 +376,7 @@ class BookingTest : IntegrationTestBase() {
 
     val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
@@ -397,7 +430,7 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
@@ -420,128 +453,15 @@ class BookingTest : IntegrationTestBase() {
     assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
   }
 
-  @Test
-  fun `Create Departure without JWT returns 401`() {
-    webTestClient.post()
-      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/departures")
-      .bodyValue(
-        NewDeparture(
-          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
-          reasonId = UUID.fromString("9137bdc9-7b0f-4d4a-86a5-8661dd1a6d24"),
-          moveOnCategoryId = UUID.fromString("c40e3c73-5735-40b9-9b77-b7a784bafde5"),
-          destinationProviderId = UUID.fromString("4c0b37a3-33be-445d-bb0f-65ffd41f1706"),
-          notes = "some notes"
-        )
+  private fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            objectMapper.writeValueAsString(offenderDetails)
+          )
       )
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `Create Departure on Booking returns 200 with correct body`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withArrivalDate(LocalDate.parse("2022-08-20"))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
-        }
-      }
-    }
-
-    val reason = departureReasonEntityFactory.produceAndPersist()
-    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist()
-    val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewDeparture(
-          dateTime = OffsetDateTime.parse("2022-08-22T16:00:00+01:00"),
-          reasonId = reason.id,
-          moveOnCategoryId = moveOnCategory.id,
-          destinationProviderId = destinationProvider.id,
-          notes = "some notes"
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-      .jsonPath(".dateTime").isEqualTo("2022-08-22T15:00:00Z")
-      .jsonPath(".reason.id").isEqualTo(reason.id.toString())
-      .jsonPath(".reason.name").isEqualTo(reason.name)
-      .jsonPath(".moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
-      .jsonPath(".moveOnCategory.name").isEqualTo(moveOnCategory.name)
-      .jsonPath(".destinationProvider.id").isEqualTo(destinationProvider.id.toString())
-      .jsonPath(".destinationProvider.name").isEqualTo(destinationProvider.name)
-      .jsonPath(".notes").isEqualTo("some notes")
-  }
-
-  @Test
-  fun `Create Non Arrival without JWT returns 401`() {
-    webTestClient.post()
-      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/non-arrivals")
-      .bodyValue(
-        NewNonarrival(
-          date = LocalDate.parse("2022-08-17"),
-          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `Create Non Arrival on Booking returns OK with correct body`() {
-    val booking = bookingEntityFactory.produceAndPersist {
-      withArrivalDate(LocalDate.parse("2022-08-20"))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
-      withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-      }
-    }
-
-    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
-
-    val jwt = jwtAuthHelper.createValidJwt()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewNonarrival(
-          date = LocalDate.parse("2022-08-23"),
-          reason = nonArrivalReason.id,
-          notes = null
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-      .jsonPath(".date").isEqualTo("2022-08-23")
-      .jsonPath(".notes").isEqualTo(null)
-      .jsonPath(".reason.id").isEqualTo(nonArrivalReason.id.toString())
-      .jsonPath(".reason.name").isEqualTo(nonArrivalReason.name)
-      .jsonPath(".reason.isActive").isEqualTo(true)
-  }
+  )
 }

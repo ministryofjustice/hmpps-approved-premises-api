@@ -26,7 +26,7 @@ class PremisesTest : IntegrationTestBase() {
       }
     )
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/premises")
@@ -51,7 +51,7 @@ class PremisesTest : IntegrationTestBase() {
     val premisesToGet = premises[2]
     val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 20))
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/premises/${premisesToGet.id}")
@@ -83,7 +83,7 @@ class PremisesTest : IntegrationTestBase() {
     val premisesToGet = premises[2]
     val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 19))
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/premises/${premisesToGet.id}")
@@ -99,7 +99,7 @@ class PremisesTest : IntegrationTestBase() {
   fun `Get Premises by ID returns Not Found with correct body`() {
     val idToRequest = UUID.randomUUID().toString()
 
-    val jwt = jwtAuthHelper.createValidJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
       .uri("/premises/$idToRequest")
