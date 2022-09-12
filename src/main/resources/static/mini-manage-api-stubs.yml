@@ -3,7 +3,7 @@ info:
   title: Approved Premises ('mini-manage' stubs)
   version: 1.0.0
 servers:
-- url: /
+  - url: /
 paths:
   /premises:
     get:
@@ -14,160 +14,160 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Premises'
+                  $ref: "#/components/schemas/Premises"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /premises/{premisesId}:
     get:
       tags:
         - Premises
       summary: Returns an approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to return
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to return
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Premises'
+                $ref: "#/components/schemas/Premises"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /premises/{premisesId}/residents:
     get:
       tags:
         - Operations on premises
       summary: Returns all the residents in an approved premises with the given ID
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to get residents for
-        required: true
-        schema:
-          type: integer
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to get residents for
+          required: true
+          schema:
+            type: integer
+            format: uuid
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Person'
+                  $ref: "#/components/schemas/Person"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /premises/{premisesId}/bookings:
     get:
       tags:
         - Operations on premises
       summary: Returns all bookings for an approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to get bookings for
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to get bookings for
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Booking'
+                  $ref: "#/components/schemas/Booking"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
     post:
       tags:
         - Operations on premises
       summary: Adds a new booking for an approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to create a booking for
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to create a booking for
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
-          'application/json':
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NewBooking'
+              $ref: "#/components/schemas/NewBooking"
         required: true
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Booking'
+                $ref: "#/components/schemas/Booking"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
       x-codegen-request-body-name: body
   /premises/{premisesId}/capacity:
     get:
@@ -186,23 +186,23 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DateCapacity'
+                  $ref: "#/components/schemas/DateCapacity"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /premises/{premisesId}/bookings/{bookingId}:
     get:
       tags:
@@ -227,73 +227,73 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Booking'
+                $ref: "#/components/schemas/Booking"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /premises/{premisesId}/bookings/{bookingId}/arrivals:
     post:
       tags:
         - Operations on bookings
       summary: Posts an arrival to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the booking is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the arrival
         content:
-          'application/json':
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NewArrival'
+              $ref: "#/components/schemas/NewArrival"
         required: true
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Arrival'
+                $ref: "#/components/schemas/Arrival"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID or booking ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/extensions:
     post:
@@ -318,35 +318,35 @@ paths:
       requestBody:
         description: details of the extension
         content:
-          'application/json':
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NewExtension'
+              $ref: "#/components/schemas/NewExtension"
         required: true
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Extension'
+                $ref: "#/components/schemas/Extension"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID or booking ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/departures:
     post:
@@ -354,52 +354,52 @@ paths:
         - Operations on bookings
       summary: Posts a departure to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the booking is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the departure
         content:
-          'application/json':
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NewDeparture'
+              $ref: "#/components/schemas/NewDeparture"
         required: true
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Departure'
+                $ref: "#/components/schemas/Departure"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID or booking ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/non-arrivals:
     post:
@@ -407,52 +407,52 @@ paths:
         - Operations on bookings
       summary: Posts an non-arrival to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the booking is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the non-arrival
         content:
-          'application/json':
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NewNonarrival'
+              $ref: "#/components/schemas/NewNonarrival"
         required: true
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Nonarrival'
+                $ref: "#/components/schemas/Nonarrival"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID or booking ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/cancellations:
     post:
@@ -460,52 +460,52 @@ paths:
         - Operations on bookings
       summary: Posts a cancellation to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the cancellation is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the cancellation is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the cancellation
         content:
-          'application/json':
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NewCancellation'
+              $ref: "#/components/schemas/NewCancellation"
         required: true
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Cancellation'
+                $ref: "#/components/schemas/Cancellation"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID or booking ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
       x-codegen-request-body-name: body
   /person/search:
     get:
@@ -521,27 +521,27 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: "#/components/schemas/Person"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         404:
           description: invalid CRN
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /person/{crn}/risks:
     get:
       summary: Returns the risks for a Person
@@ -556,100 +556,100 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/PersonRisks'
+                $ref: "#/components/schemas/PersonRisks"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid CRN
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /premises/{premisesId}/lost-beds:
     post:
       tags:
         - Operations on premises
       summary: Posts a lost bed to a specified approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the lost bed is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the lost bed is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the lost bed
         content:
-          'application/json':
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NewLostBed'
+              $ref: "#/components/schemas/NewLostBed"
         required: true
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/LostBed'
+                $ref: "#/components/schemas/LostBed"
         400:
           description: invalid params
           content:
-            'application/problem+json':
+            "application/problem+json":
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         404:
           description: invalid premises ID or booking ID
           content:
-            'application/json':
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
       x-codegen-request-body-name: body
     get:
       tags:
         - Operations on premises
       summary: Lists all Lost Beds entries for the Premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to show lost beds for
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to show lost beds for
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LostBed'
+                  $ref: "#/components/schemas/LostBed"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/departure-reasons:
     get:
       tags:
@@ -659,17 +659,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DepartureReason'
+                  $ref: "#/components/schemas/DepartureReason"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/move-on-categories:
     get:
       tags:
@@ -679,17 +679,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MoveOnCategory'
+                  $ref: "#/components/schemas/MoveOnCategory"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/destination-providers:
     get:
       tags:
@@ -699,17 +699,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DestinationProvider'
+                  $ref: "#/components/schemas/DestinationProvider"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/supervising-providers:
     get:
       tags:
@@ -719,17 +719,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SupervisingProvider'
+                  $ref: "#/components/schemas/SupervisingProvider"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/supervising-teams:
     get:
       tags:
@@ -739,17 +739,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SupervisingTeam'
+                  $ref: "#/components/schemas/SupervisingTeam"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/supervising-officers:
     get:
       tags:
@@ -759,17 +759,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SupervisingOfficer'
+                  $ref: "#/components/schemas/SupervisingOfficer"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/key-workers:
     get:
       tags:
@@ -779,17 +779,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/KeyWorker'
+                  $ref: "#/components/schemas/KeyWorker"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/lost-bed-reasons:
     get:
       tags:
@@ -799,17 +799,17 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LostBedReason'
+                  $ref: "#/components/schemas/LostBedReason"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
   /reference-data/cancellation-reasons:
     get:
       tags:
@@ -819,37 +819,37 @@ paths:
         200:
           description: successful operation
           content:
-            'application/json':
+            "application/json":
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CancellationReason'
+                  $ref: "#/components/schemas/CancellationReason"
         401:
-          $ref: '#/components/responses/401Response'
+          $ref: "#/components/responses/401Response"
         403:
-          $ref: '#/components/responses/403Response'
+          $ref: "#/components/responses/403Response"
         500:
-          $ref: '#/components/responses/500Response'
+          $ref: "#/components/responses/500Response"
 components:
   responses:
     401Response:
       description: not authenticated
       content:
-        'application/json':
+        "application/json":
           schema:
-            $ref: '#/components/schemas/Problem'
+            $ref: "#/components/schemas/Problem"
     403Response:
       description: unauthorised
       content:
-        'application/json':
+        "application/json":
           schema:
-            $ref: '#/components/schemas/Problem'
+            $ref: "#/components/schemas/Problem"
     500Response:
       description: unexpected error
       content:
-        'application/json':
+        "application/json":
           schema:
-            $ref: '#/components/schemas/Problem'
+            $ref: "#/components/schemas/Problem"
   schemas:
     Premises:
       type: object
@@ -873,11 +873,11 @@ components:
           type: integer
           example: 20
         probationRegion:
-          $ref: '#/components/schemas/ProbationRegion'
+          $ref: "#/components/schemas/ProbationRegion"
         apArea:
-          $ref: '#/components/schemas/ApArea'
+          $ref: "#/components/schemas/ApArea"
         localAuthorityArea:
-          $ref: '#/components/schemas/LocalAuthorityArea'
+          $ref: "#/components/schemas/LocalAuthorityArea"
       required:
         - id
         - name
@@ -942,7 +942,7 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/Person'
+          $ref: "#/components/schemas/Person"
         arrivalDate:
           type: string
           format: date
@@ -950,7 +950,7 @@ components:
           type: string
           format: date
         keyWorker:
-          $ref: '#/components/schemas/KeyWorker'
+          $ref: "#/components/schemas/KeyWorker"
       required:
         - id
         - person
@@ -981,37 +981,37 @@ components:
         - keyWorkerId
     Booking:
       allOf:
-        - $ref: '#/components/schemas/BookingBody'
+        - $ref: "#/components/schemas/BookingBody"
         - type: object
           properties:
             status:
               type: string
               enum:
-              - arrived
-              - awaiting-arrival
-              - not-arrived
-              - departed
-              - cancelled
+                - arrived
+                - awaiting-arrival
+                - not-arrived
+                - departed
+                - cancelled
             extensions:
               type: array
               items:
-                $ref: '#/components/schemas/Extension'
+                $ref: "#/components/schemas/Extension"
             arrival:
               nullable: true
               allOf:
-                - $ref: '#/components/schemas/Arrival'
+                - $ref: "#/components/schemas/Arrival"
             departure:
               nullable: true
               allOf:
-                - $ref: '#/components/schemas/Departure'
+                - $ref: "#/components/schemas/Departure"
             nonArrival:
               nullable: true
               allOf:
-                - $ref: '#/components/schemas/Nonarrival'
+                - $ref: "#/components/schemas/Nonarrival"
             cancellation:
               nullable: true
               allOf:
-              - $ref: '#/components/schemas/Cancellation'
+                - $ref: "#/components/schemas/Cancellation"
           required:
             - status
             - extensions
@@ -1070,7 +1070,7 @@ components:
           type: string
           format: date
         reason:
-          $ref: '#/components/schemas/NonArrivalReason'
+          $ref: "#/components/schemas/NonArrivalReason"
         notes:
           type: string
       required:
@@ -1120,7 +1120,7 @@ components:
           type: string
           format: date
         reason:
-          $ref: '#/components/schemas/CancellationReason'
+          $ref: "#/components/schemas/CancellationReason"
         notes:
           type: string
       required:
@@ -1194,13 +1194,13 @@ components:
           type: string
           format: date-time
         reason:
-          $ref: '#/components/schemas/DepartureReason'
+          $ref: "#/components/schemas/DepartureReason"
         notes:
           type: string
         moveOnCategory:
-          $ref: '#/components/schemas/MoveOnCategory'
+          $ref: "#/components/schemas/MoveOnCategory"
         destinationProvider:
-          $ref: '#/components/schemas/DestinationProvider'
+          $ref: "#/components/schemas/DestinationProvider"
       required:
         - id
         - bookingId
@@ -1228,13 +1228,13 @@ components:
           example: f7493e12-546d-42c3-b838-06c12671ab5b
     ValidationError:
       allOf:
-        - $ref: '#/components/schemas/Problem'
+        - $ref: "#/components/schemas/Problem"
         - type: object
           properties:
             invalid-params:
               type: array
               items:
-                $ref: '#/components/schemas/InvalidParam'
+                $ref: "#/components/schemas/InvalidParam"
     InvalidParam:
       type: object
       properties:
@@ -1258,7 +1258,7 @@ components:
         numberOfBeds:
           type: integer
         reason:
-          $ref: '#/components/schemas/LostBedReasons'
+          $ref: "#/components/schemas/LostBedReasons"
         referenceNumber:
           type: string
         notes:
@@ -1281,7 +1281,7 @@ components:
         numberOfBeds:
           type: integer
         reason:
-          $ref: '#/components/schemas/LostBedReasons'
+          $ref: "#/components/schemas/LostBedReasons"
         referenceNumber:
           type: string
         notes:
@@ -1465,13 +1465,13 @@ components:
         crn:
           type: string
         roshRisks:
-          $ref: '#/components/schemas/RoshRisksEnvelope'
+          $ref: "#/components/schemas/RoshRisksEnvelope"
         mappa:
-          $ref: '#/components/schemas/MappaEnvelope'
+          $ref: "#/components/schemas/MappaEnvelope"
         tier:
-          $ref: '#/components/schemas/RiskTierEnvelope'
+          $ref: "#/components/schemas/RiskTierEnvelope"
         flags:
-          $ref: '#/components/schemas/FlagsEnvelope'
+          $ref: "#/components/schemas/FlagsEnvelope"
       required:
         - crn
         - roshRisks
@@ -1481,9 +1481,9 @@ components:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/RiskEnvelopeStatus'
+          $ref: "#/components/schemas/RiskEnvelopeStatus"
         value:
-          $ref: '#/components/schemas/RoshRisks'
+          $ref: "#/components/schemas/RoshRisks"
       required:
         - status
     RoshRisks:
@@ -1512,9 +1512,9 @@ components:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/RiskEnvelopeStatus'
+          $ref: "#/components/schemas/RiskEnvelopeStatus"
         value:
-          $ref: '#/components/schemas/Mappa'
+          $ref: "#/components/schemas/Mappa"
       required:
         - status
     Mappa:
@@ -1532,9 +1532,9 @@ components:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/RiskEnvelopeStatus'
+          $ref: "#/components/schemas/RiskEnvelopeStatus"
         value:
-          $ref: '#/components/schemas/RiskTier'
+          $ref: "#/components/schemas/RiskTier"
       required:
         - status
     RiskTier:
@@ -1552,7 +1552,7 @@ components:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/RiskEnvelopeStatus'
+          $ref: "#/components/schemas/RiskEnvelopeStatus"
         value:
           type: array
           items:
@@ -1565,3 +1565,32 @@ components:
         - retrieved
         - not_found
         - error
+    ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "#/components/schemas/Person"
+        tier:
+          $ref: "#/components/schemas/RiskTier"
+        currentLocation:
+          type: string
+          description: the location of the Service User
+          example: HMP Hewell
+        arrivalDate:
+          type: string
+          format: date
+        daysSinceApplicationRecieved:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - in-progress
+            - submitted
+            - further-information-requested
+            - not-submitted
+            - rejected
+            - withdrawn
