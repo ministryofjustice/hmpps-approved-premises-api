@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -23,13 +24,25 @@ class PersonController(
   override fun personSearchGet(crn: String): ResponseEntity<Person> {
     val principal = getDeliusPrincipalOrThrow()
 
-    return when (val offenderResult = offenderService.getOffenderByCrn(crn, principal.name)) {
+    val offenderDetails = when (val offenderResult = offenderService.getOffenderByCrn(crn, principal.name)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> ResponseEntity.ok(
-        personTransformer.transformModelToApi(offenderResult.entity)
-      )
+      is AuthorisableActionResult.Success -> offenderResult.entity
     }
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw InternalServerErrorProblem("No nomsNumber present for CRN")
+    }
+
+    val inmateDetail = when (val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(offenderDetails.otherIds.nomsNumber, "Inmate")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> inmateDetailResult.entity
+    }
+
+    return ResponseEntity.ok(
+      personTransformer.transformModelToApi(offenderDetails, inmateDetail)
+    )
   }
 
   override fun personCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {

@@ -92,7 +92,17 @@ class PremisesController(
           throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
         }
 
-        bookingTransformer.transformJpaToApi(it, offenderResult.entity)
+        if (offenderResult.entity.otherIds.nomsNumber == null) {
+          throw InternalServerErrorProblem("No nomsNumber present for CRN")
+        }
+
+        val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
+
+        if (inmateDetailResult !is AuthorisableActionResult.Success) {
+          throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${it.crn}")
+        }
+
+        bookingTransformer.transformJpaToApi(it, offenderResult.entity, inmateDetailResult.entity)
       }
     )
   }
@@ -106,7 +116,17 @@ class PremisesController(
       throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity))
+    if (offenderResult.entity.otherIds.nomsNumber == null) {
+      throw InternalServerErrorProblem("No nomsNumber present for CRN")
+    }
+
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
+
+    if (inmateDetailResult !is AuthorisableActionResult.Success) {
+      throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${booking.crn}")
+    }
+
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity))
   }
 
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
@@ -119,6 +139,15 @@ class PremisesController(
     if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
     if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
     offenderResult as AuthorisableActionResult.Success
+
+    if (offenderResult.entity.otherIds.nomsNumber == null) {
+      throw InternalServerErrorProblem("No nomsNumber present for CRN")
+    }
+
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
+    if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
+    if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
+    inmateDetailResult as AuthorisableActionResult.Success
 
     val keyWorker = keyWorkerService.getKeyWorker(body.keyWorkerId)
     if (keyWorker == null) validationErrors["keyWorkerId"] = "Invalid keyWorkerId"
@@ -143,7 +172,7 @@ class PremisesController(
       )
     )
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
