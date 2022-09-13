@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNee
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.shouldNotBeReached
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -17,12 +18,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 
 @Service
 class OffenderService(
   private val communityApiClient: CommunityApiClient,
   private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
-  private val hmppsTierApiClient: HMPPSTierApiClient
+  private val hmppsTierApiClient: HMPPSTierApiClient,
+  private val prisonsApiClient: PrisonsApiClient
 ) {
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
 
@@ -48,6 +51,21 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(offender)
+  }
+
+  fun getInmateDetailByNomsNumber(nomsNumber: String): AuthorisableActionResult<InmateDetail> {
+    val inmateDetail = when (val offenderResponse = prisonsApiClient.getInmateDetails(nomsNumber)) {
+      is ClientResult.Success -> offenderResponse.body
+      is ClientResult.StatusCodeFailure -> when (offenderResponse.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> offenderResponse.throwException()
+      }
+      is ClientResult.Failure -> offenderResponse.throwException()
+      else -> shouldNotBeReached()
+    }
+
+    return AuthorisableActionResult.Success(inmateDetail)
   }
 
   fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> {

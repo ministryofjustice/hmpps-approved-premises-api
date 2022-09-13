@@ -72,3 +72,5 @@ sonar-project.properties
 **/Chart.lock
 
 .trivyignore
+
+nomis-db/

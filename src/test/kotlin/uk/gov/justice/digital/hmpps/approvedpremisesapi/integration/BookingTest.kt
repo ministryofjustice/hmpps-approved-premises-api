@@ -10,8 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -48,9 +50,15 @@ class BookingTest : IntegrationTestBase() {
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN123")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
       .produce()
 
     mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
 
     webTestClient.get()
       .uri("/premises/${premises.id}/bookings/${booking.id}")
@@ -61,7 +69,7 @@ class BookingTest : IntegrationTestBase() {
       .expectBody()
       .json(
         objectMapper.writeValueAsString(
-          bookingTransformer.transformJpaToApi(booking, offenderDetails)
+          bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetail)
         )
       )
   }
@@ -147,15 +155,21 @@ class BookingTest : IntegrationTestBase() {
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN123")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
       .produce()
 
     mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
 
     val expectedJson = objectMapper.writeValueAsString(
       bookings.map {
-        bookingTransformer.transformJpaToApi(it, offenderDetails)
+        bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetail)
       }
     )
 
@@ -212,9 +226,15 @@ class BookingTest : IntegrationTestBase() {
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN321")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
       .produce()
 
     mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
@@ -258,9 +278,15 @@ class BookingTest : IntegrationTestBase() {
       .withCrn("CRN321")
       .withFirstName("Mock")
       .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
       .produce()
 
     mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
@@ -277,17 +303,17 @@ class BookingTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath(".person.crn").isEqualTo("CRN321")
-      .jsonPath(".person.name").isEqualTo("Mock Person")
-      .jsonPath(".arrivalDate").isEqualTo("2022-08-12")
-      .jsonPath(".departureDate").isEqualTo("2022-08-30")
-      .jsonPath(".keyWorker.id").isEqualTo(keyWorker.id.toString())
-      .jsonPath(".keyWorker.name").isEqualTo(keyWorker.name)
-      .jsonPath(".status").isEqualTo("awaiting-arrival")
-      .jsonPath(".arrival").isEqualTo(null)
-      .jsonPath(".departure").isEqualTo(null)
-      .jsonPath(".nonArrival").isEqualTo(null)
-      .jsonPath(".cancellation").isEqualTo(null)
+      .jsonPath("$.person.crn").isEqualTo("CRN321")
+      .jsonPath("$.person.name").isEqualTo("Mock Person")
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+      .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.keyWorker.id").isEqualTo(keyWorker.id.toString())
+      .jsonPath("$.keyWorker.name").isEqualTo(keyWorker.name)
+      .jsonPath("$.status").isEqualTo("awaiting-arrival")
+      .jsonPath("$.arrival").isEqualTo(null)
+      .jsonPath("$.departure").isEqualTo(null)
+      .jsonPath("$.nonArrival").isEqualTo(null)
+      .jsonPath("$.cancellation").isEqualTo(null)
   }
 
   @Test
@@ -461,6 +487,18 @@ class BookingTest : IntegrationTestBase() {
           .withStatus(200)
           .withBody(
             objectMapper.writeValueAsString(offenderDetails)
+          )
+      )
+  )
+
+  private fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            objectMapper.writeValueAsString(inmateDetail)
           )
       )
   )

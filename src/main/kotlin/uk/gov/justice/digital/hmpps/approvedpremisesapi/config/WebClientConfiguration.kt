@@ -50,4 +50,20 @@ class WebClientConfiguration {
       .filter(oauth2Client)
       .build()
   }
+
+  @Bean(name = ["prisonsApiWebClient"])
+  fun prisonsApiWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("prisons-api")
+
+    return WebClient.builder()
+      .baseUrl(prisonsApiBaseUrl)
+      .filter(oauth2Client)
+      .build()
+  }
 }

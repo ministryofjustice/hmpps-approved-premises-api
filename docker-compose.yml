@@ -59,5 +59,21 @@ services:
     volumes:
       - ./wiremock:/home/wiremock
 
+  prison-api:
+    image: quay.io/hmpps/prison-api:latest
+    container_name: prison-api
+    ports:
+      - "9570:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=nomis-hsqldb
+      - SPRING_DATASOURCE_URL=jdbc:hsqldb:file:/nomis-db/nomisdb;sql.syntax_ora=true;get_column_name=false;shutdown=false;sql.nulls_first=false;sql.nulls_order=false;hsqldb.lock_file=false
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+    volumes:
+      - ./nomis-db:/nomis-db
+
 volumes:
   database-data-development:

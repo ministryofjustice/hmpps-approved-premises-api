@@ -17,10 +17,15 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
   private var firstName: Yielded<String> = { randomStringUpperCase(6) }
   private var lastName: Yielded<String> = { randomStringUpperCase(10) }
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
+  private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
   private var gender: Yielded<String> = { randomOf(listOf("Male", "Female", "Other")) }
   private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore() }
   private var currentRestriction: Yielded<Boolean> = { false }
   private var currentExclusion: Yielded<Boolean> = { false }
+  private var nationality: Yielded<String> = { randomStringUpperCase(6) }
+  private var religionOrBelief: Yielded<String?> = { randomStringUpperCase(12) }
+  private var genderIdentity: Yielded<String?> = { null }
+  private var selfDescribedGenderIdentity: Yielded<String?> = { null }
 
   fun withOffenderId(id: Long) = apply {
     this.offenderId = { id }
@@ -42,6 +47,10 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
     this.crn = { crn }
   }
 
+  fun withNomsNumber(nomsNumber: String) = apply {
+    this.nomsNumber = { nomsNumber }
+  }
+
   fun withGender(gender: String) = apply {
     this.gender = { gender }
   }
@@ -56,6 +65,22 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
 
   fun withCurrentExclusion(currentExclusion: Boolean) = apply {
     this.currentExclusion = { currentExclusion }
+  }
+
+  fun withNationality(nationality: String) = apply {
+    this.nationality = { nationality }
+  }
+
+  fun withReligionOrBelief(religionOrBelief: String?) = apply {
+    this.religionOrBelief = { religionOrBelief }
+  }
+
+  fun withGenderIdentity(genderIdentity: String?) = apply {
+    this.genderIdentity = { genderIdentity }
+  }
+
+  fun withSelfDescribedGenderIdentity(selfDescribedGenderIdentity: String?) = apply {
+    this.selfDescribedGenderIdentity = { selfDescribedGenderIdentity }
   }
 
   override fun produce() = OffenderDetailSummary(
@@ -74,25 +99,25 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       immigrationNumber = null,
       mostRecentPrisonNumber = null,
       niNumber = null,
-      nomsNumber = null,
+      nomsNumber = this.nomsNumber(),
       pncNumber = null
     ),
     offenderProfile = OffenderProfile(
       ethnicity = null,
-      nationality = null,
+      nationality = this.nationality(),
       secondaryNationality = null,
       notes = null,
       immigrationStatus = null,
       offenderLanguages = null,
-      religion = null,
+      religion = this.religionOrBelief(),
       sexualOrientation = null,
       offenderDetails = null,
       remandStatus = null,
       previousConviction = null,
       riskColour = null,
       disabilities = listOf(),
-      genderIdentity = null,
-      selfDescribedGender = null
+      genderIdentity = this.genderIdentity(),
+      selfDescribedGender = this.selfDescribedGenderIdentity()
     ),
     softDeleted = null,
     currentDisposal = "",
