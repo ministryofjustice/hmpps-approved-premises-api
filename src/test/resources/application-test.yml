@@ -11,6 +11,8 @@ spring:
     password: integration_test_password
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5433/approved_premises_integration_test
+  flyway:
+    locations: classpath:db/migration/all
   jpa:
     database: postgresql
   security:
