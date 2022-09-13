@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PersonApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
@@ -16,12 +16,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 
 @Service
-class PersonController(
+class PeopleController(
   private val offenderService: OffenderService,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer
-) : PersonApiDelegate {
-  override fun personSearchGet(crn: String): ResponseEntity<Person> {
+) : PeopleApiDelegate {
+  override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val principal = getDeliusPrincipalOrThrow()
 
     val offenderDetails = when (val offenderResult = offenderService.getOffenderByCrn(crn, principal.name)) {
@@ -45,7 +45,7 @@ class PersonController(
     )
   }
 
-  override fun personCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
+  override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
     val principal = getDeliusPrincipalOrThrow()
 
     val risks = when (val risksResult = offenderService.getRiskByCrn(crn, principal.token.tokenValue, principal.name)) {

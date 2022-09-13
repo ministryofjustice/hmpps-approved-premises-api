@@ -17,7 +17,7 @@ class PersonSearchTest : IntegrationTestBase() {
   @Test
   fun `Searching by CRN without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/person/search?crn=CRN")
+      .uri("/people/search?crn=CRN")
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -31,7 +31,7 @@ class PersonSearchTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/search?crn=CRN")
+      .uri("/people/search?crn=CRN")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -46,7 +46,7 @@ class PersonSearchTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/search?crn=CRN")
+      .uri("/people/search?crn=CRN")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -73,7 +73,7 @@ class PersonSearchTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/search?crn=CRN")
+      .uri("/people/search?crn=CRN")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -119,7 +119,7 @@ class PersonSearchTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/search?crn=CRN")
+      .uri("/people/search?crn=CRN")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()

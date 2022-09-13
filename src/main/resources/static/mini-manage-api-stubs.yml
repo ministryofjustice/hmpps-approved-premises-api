@@ -507,7 +507,7 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /person/search:
+  /people/search:
     get:
       summary: Searches for a Person by their CRN
       parameters:
@@ -542,7 +542,7 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /person/{crn}/risks:
+  /people/{crn}/risks:
     get:
       summary: Returns the risks for a Person
       parameters:
