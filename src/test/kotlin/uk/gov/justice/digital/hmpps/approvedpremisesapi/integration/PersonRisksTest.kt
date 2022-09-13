@@ -29,7 +29,7 @@ class PersonRisksTest : IntegrationTestBase() {
   @Test
   fun `Getting risks by CRN without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/person/CRN/risks")
+      .uri("/people/CRN/risks")
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -43,7 +43,7 @@ class PersonRisksTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/CRN/risks")
+      .uri("/people/CRN/risks")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -58,7 +58,7 @@ class PersonRisksTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/CRN/risks")
+      .uri("/people/CRN/risks")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -85,7 +85,7 @@ class PersonRisksTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/CRN/risks")
+      .uri("/people/CRN/risks")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -196,7 +196,7 @@ class PersonRisksTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/person/CRN/risks")
+      .uri("/people/CRN/risks")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
