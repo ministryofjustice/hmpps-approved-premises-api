@@ -1,12 +1,22 @@
 #!/bin/sh
 
 # script/generate_migration: Create an empty database migration, e.g.
-#                            script/generate_migration "my migration"
+#                            script/generate_migration all "my migration" - creates a migration that applies to all profiles
+#                            script/generate_migration local+dev "my migration" - creates a migration that applies only to the local & dev profiles
 
 set -e
 
+if [ $1 == "local+dev" ]; then
+    dir="local+dev"
+elif [ $1 == "all" ]; then
+    dir="all"
+else
+    echo "Unrecognised option: $1 - must be either 'all' or 'local+dev'"
+    exit 1
+fi
+
 timestamp=`date "+%Y%m%d%H%M%S"`
-migration_name=`echo "$1" | awk '{print tolower($0)}' | tr ' ' '_'`
+migration_name=`echo "$2" | awk '{print tolower($0)}' | tr ' ' '_'`
 filename="$(echo ${timestamp}__${migration_name}).sql"
 echo "Creating migration: $filename"
-touch "src/main/resources/db/migration/$filename"
+touch "src/main/resources/db/migration/$dir/$filename"
