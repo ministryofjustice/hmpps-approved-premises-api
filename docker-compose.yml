@@ -2,6 +2,7 @@ version: "3"
 services:
   database:
     image: "postgres"
+    container_name: approved-premises-postgres-dev
     environment:
       - POSTGRES_USER=localdev
       - POSTGRES_PASSWORD=localdev_password
@@ -13,6 +14,7 @@ services:
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
+    container_name: hmpps-auth
     ports:
       - "9091:8080"
     healthcheck:
@@ -28,13 +30,34 @@ services:
     container_name: community-api
     ports:
       - "9590:8080"
-      - "9592:9592"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_H2_CONSOLE_SETTINGS_WEBALLOWOTHERS=true
+
+  hmpps-assess-risks-and-needs:
+    image: quay.io/hmpps/hmpps-assess-risks-and-needs
+    container_name: assess-risks-and-needs
+    ports:
+      - "9580:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=oasys-rsr,dev
+      - OAUTH_ENDPOINT_URL=http://hmpps-auth:8080/auth
+      - ASSESSMENT-API_BASE-URL=http://wiremock:8080
+      - COMMUNITY-API_BASE-URL=http://community-api:8080
+
+  wiremock:
+    image: rodolpheche/wiremock
+    container_name: wiremock
+    ports:
+      - "9004:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
 
 volumes:
   database-data-development:

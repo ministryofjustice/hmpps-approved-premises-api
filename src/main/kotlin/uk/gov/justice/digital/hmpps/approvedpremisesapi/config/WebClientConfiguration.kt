@@ -25,4 +25,29 @@ class WebClientConfiguration {
       .filter(oauth2Client)
       .build()
   }
+
+  @Bean(name = ["assessRisksAndNeedsApiWebClient"])
+  fun assessRisksAndNeedsApiWebClient(
+    @Value("\${services.assess-risks-and-needs-api.base-url}") assessRisksAndNeedsApiBaseUrl: String
+  ): WebClient {
+    return WebClient.builder()
+      .baseUrl(assessRisksAndNeedsApiBaseUrl)
+      .build()
+  }
+
+  @Bean(name = ["hmppsTierApiWebClient"])
+  fun hmppsTierApiWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("hmpps-tier")
+
+    return WebClient.builder()
+      .baseUrl(hmppsTierApiBaseUrl)
+      .filter(oauth2Client)
+      .build()
+  }
 }

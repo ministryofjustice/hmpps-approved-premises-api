@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -85,9 +86,13 @@ class PremisesController(
 
     return ResponseEntity.ok(
       premises.bookings.map {
-        val offender = offenderService.getOffenderByCrn(it.crn, getDeliusPrincipalNameOrThrow())
-          ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
-        bookingTransformer.transformJpaToApi(it, offender)
+        val offenderResult = offenderService.getOffenderByCrn(it.crn, getDeliusPrincipalNameOrThrow())
+
+        if (offenderResult !is AuthorisableActionResult.Success) {
+          throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
+        }
+
+        bookingTransformer.transformJpaToApi(it, offenderResult.entity)
       }
     )
   }
@@ -95,10 +100,13 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val offender = offenderService.getOffenderByCrn(booking.crn, getDeliusPrincipalNameOrThrow())
-      ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
+    val offenderResult = offenderService.getOffenderByCrn(booking.crn, getDeliusPrincipalNameOrThrow())
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offender))
+    if (offenderResult !is AuthorisableActionResult.Success) {
+      throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
+    }
+
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity))
   }
 
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
@@ -107,11 +115,11 @@ class PremisesController(
 
     val validationErrors = mutableMapOf<String, String>()
 
-    val offender = offenderService.getOffenderByCrn(body.crn, getDeliusPrincipalNameOrThrow())
-    if (offender == null) validationErrors["crn"] = "Invalid crn"
+    val offenderResult = offenderService.getOffenderByCrn(body.crn, getDeliusPrincipalNameOrThrow())
+    if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
+    if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
+    offenderResult as AuthorisableActionResult.Success
 
-    // TODO: We will potentially need to check that if the JWT belongs to a person rather than a service account
-    //       that the requester is the key worker and 403 otherwise?
     val keyWorker = keyWorkerService.getKeyWorker(body.keyWorkerId)
     if (keyWorker == null) validationErrors["keyWorkerId"] = "Invalid keyWorkerId"
 
@@ -122,7 +130,7 @@ class PremisesController(
     val booking = bookingService.createBooking(
       BookingEntity(
         id = UUID.randomUUID(),
-        crn = offender!!.otherIds.crn,
+        crn = offenderResult.entity.otherIds.crn,
         arrivalDate = body.expectedArrivalDate,
         departureDate = body.expectedDepartureDate,
         keyWorker = keyWorker!!,
@@ -135,7 +143,7 @@ class PremisesController(
       )
     )
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offender))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
