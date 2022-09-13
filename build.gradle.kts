@@ -15,6 +15,7 @@ val springDocVersion = "1.6.10"
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+  implementation("com.vladmihalcea:hibernate-types-55:2.19.2")
   implementation("org.flywaydb:flyway-core")
 
   runtimeOnly("org.postgresql:postgresql")
