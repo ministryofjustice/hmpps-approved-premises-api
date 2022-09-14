@@ -95,6 +95,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /application-assessed/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - Application events
+      summary: An 'application-assessed' event
+      responses:
+        '200':
+          description: The 'application-assessed' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.application.assessed
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/ApplicationAssessed'
+
+        404:
+          description: No application-assessed event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     EventId:
@@ -186,6 +231,28 @@ components:
           type: string
           example: Parole denied at oral hearing
 
+    ApplicationAssessed:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        assessedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+          readOnly: true
+        assessedBy:
+          $ref: '#/components/schemas/StaffMember'
+        assessmentArea:
+          $ref: '#/components/schemas/ProbationArea'
+        decision:
+          type: string
+          example: Rejected
+        decisionRationale:
+          type: string
+          example: Risk too low
 
     Error:
       type: object
