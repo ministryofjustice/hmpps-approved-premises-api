@@ -78,6 +78,7 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
       .withNumberOfBeds(5)
       .produce()
 
