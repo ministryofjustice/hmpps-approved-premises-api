@@ -15,6 +15,8 @@ paths:
         schema:
           $ref: '#/components/schemas/EventId'
     get:
+      tags:
+        - Application events
       summary: An application-submitted event
       responses:
         '200':
@@ -38,6 +40,51 @@ paths:
 
         404:
           description: No application-submitted event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /application-withdrawn/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - Application events
+      summary: An application-withdrawn event
+      responses:
+        '200':
+          description: The application-withdrawn event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.application.withdrawn
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/ApplicationWithdrawn'
+
+        404:
+          description: No application-withdrawn event found for the provided `eventId`
           content:
             application/json:
               schema:
@@ -121,6 +168,23 @@ components:
         submittedBy:
           $ref: '#/components/schemas/StaffMember'
 
+    ApplicationWithdrawn:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        withdrawnAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+          readOnly: true
+        withdrawnBy:
+          $ref: '#/components/schemas/StaffMember'
+        reason:
+          type: string
+          example: Parole denied at oral hearing
 
 
     Error:
