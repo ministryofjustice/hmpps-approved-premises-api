@@ -66,7 +66,7 @@ tasks.register("bootRunLocal") {
 
 openApiGenerate {
   generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/mini-manage-api-stubs.yml")
+  inputSpec.set("$rootDir/src/main/resources/static/api.yml")
   outputDir.set("$buildDir/generated")
   apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
   modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")

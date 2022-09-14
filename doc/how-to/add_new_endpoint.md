@@ -1,14 +1,14 @@
 # How to add a new endpoint
 
 The Open API Generator Gradle plugin generates boilerplate (request/response models & Spring controllers) for endpoints 
-from the `src/main/resources/static/mini-manage-stubs.yml` file.  It also generates an interface for each top-level 
+from the `src/main/resources/static/api.yml` file.  It also generates an interface for each top-level 
 path which is what we need to implement.
 
 ![](./images/openapi.drawio.png)
 
 
 To create a new endpoint on a top-level path:
- - Edit `src/main/resources/static/mini-manage-stubs.yml` to add your endpoint, e.g.
+ - Edit `src/main/resources/static/api.yml` to add your endpoint, e.g.
     
    ![](./images/openapi-new-endpoint.png)
  - Run the `openapitools`->`openApiGenerate` Gradle Task
