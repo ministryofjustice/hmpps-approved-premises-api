@@ -29,6 +29,8 @@ class OAuth2ResourceServerSecurityConfiguration {
       authorizeHttpRequests {
         authorize(HttpMethod.GET, "/health/**", permitAll)
         authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
+        authorize(HttpMethod.GET, "/v3/api-docs/swagger-config", permitAll)
+        authorize(HttpMethod.GET, "/mini-manage-api-stubs.yml", permitAll)
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
