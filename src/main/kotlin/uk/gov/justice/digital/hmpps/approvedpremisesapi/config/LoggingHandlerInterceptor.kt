@@ -13,7 +13,11 @@ import javax.servlet.http.HttpServletResponse
 @Configuration
 class InterceptorConfig {
   @Bean
-  fun mappedInterceptor(loggingHandlerInterceptor: LoggingHandlerInterceptor) = MappedInterceptor(null, loggingHandlerInterceptor)
+  fun mappedInterceptor(loggingHandlerInterceptor: HandlerInterceptor) = MappedInterceptor(
+    null,
+    arrayOf("/health/**"),
+    loggingHandlerInterceptor
+  )
 }
 
 @Component
