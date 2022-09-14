@@ -1,0 +1,133 @@
+openapi: '3.0.1'
+info:
+  version: '0.1.0'
+  title: 'AP Domain events'
+  description: Get information about events in the Approved Premises domain
+servers:
+  - url: /events
+paths:
+  /application-submitted/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      summary: An application-submitted event
+      responses:
+        '200':
+          description: The application-submitted corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.application.submitted
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/ApplicationSubmitted'
+
+        404:
+          description: No application-submitted event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    EventId:
+      description: The UUID of an event
+      type: string
+      example: 364145f9-0af8-488e-9901-b4c46cd9ba37
+    ApplicationId:
+      description: The UUID of an application for an AP place
+      type: string
+      example: 484b8b5e-6c3b-4400-b200-425bbe410713
+    StaffMember:
+      description: A member of probation or AP staff
+      type: object
+      properties:
+        staffCode:
+          type: string
+          example: N54A999
+          readOnly: true
+        staffIdentifier:
+          type: integer
+          example: 1501234567
+          readOnly: true
+        forenames:
+          type: string
+          example: John
+        surname:
+          type: string
+          example: Smith
+        username:
+          type: string
+          example: JohnSmithNPS
+    ProbationArea:
+      type: object
+      properties:
+        code:
+          type: string
+          example: N54
+          readOnly: true
+        name:
+          type: string
+          example: North East Region
+          readOnly: true
+    PersonReference:
+      type: object
+      properties:
+        crn:
+          type: string
+          example: C123456
+          readOnly: true
+        noms:
+          type: string
+          example: A1234ZX
+          readOnly: true
+    ApplicationSubmitted:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        targetLocation:
+          type: string
+          example: Gateshead
+        probationArea:
+          $ref: '#/components/schemas/ProbationArea'
+        submittedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+          readOnly: true
+        submittedBy:
+          $ref: '#/components/schemas/StaffMember'
+
+
+
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          description: A human readable error message
+          type: string
