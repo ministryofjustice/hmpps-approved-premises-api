@@ -7,10 +7,9 @@ import java.time.LocalDate
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -31,8 +30,9 @@ data class LostBedsEntity(
   val startDate: LocalDate,
   val endDate: LocalDate,
   val numberOfBeds: Int,
-  @Enumerated(EnumType.STRING)
-  val reason: LostBedReason,
+  @ManyToOne
+  @JoinColumn(name = "lost_bed_reason_id")
+  val reason: LostBedReasonEntity,
   val referenceNumber: String?,
   val notes: String?,
   @OneToOne
@@ -57,11 +57,4 @@ data class LostBedsEntity(
   override fun hashCode() = Objects.hash(id, startDate, endDate, numberOfBeds, reason, referenceNumber, notes)
 
   override fun toString() = "ArrivalEntity:$id"
-}
-
-enum class LostBedReason() {
-  Fire,
-  Damaged,
-  Refurbishment,
-  StaffShortage
 }

@@ -5,6 +5,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -12,13 +13,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -26,16 +28,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import java.time.LocalDate
+import java.util.UUID
 
 class PremisesServiceTest {
   private val premisesRepositoryMock = mockk<PremisesRepository>()
   private val lostBedsRepositoryMock = mockk<LostBedsRepository>()
   private val bookingRepositoryMock = mockk<BookingRepository>()
+  private val lostBedReasonRepositoryMock = mockk<LostBedReasonRepository>()
 
   private val premisesService = PremisesService(
     premisesRepositoryMock,
     lostBedsRepositoryMock,
-    bookingRepositoryMock
+    bookingRepositoryMock,
+    lostBedReasonRepositoryMock
   )
 
   @Test
@@ -78,6 +83,7 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
       .withNumberOfBeds(5)
       .produce()
 
@@ -162,12 +168,16 @@ class PremisesServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
+    val reasonId = UUID.randomUUID()
+
+    every { lostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns null
+
     val result = premisesService.createLostBeds(
       premises = premisesEntity,
       startDate = LocalDate.parse("2022-08-28"),
       endDate = LocalDate.parse("2022-08-25"),
       numberOfBeds = 0,
-      reason = LostBedReason.StaffShortage,
+      reasonId = reasonId,
       referenceNumber = "12345",
       notes = "notes"
     )
@@ -175,7 +185,8 @@ class PremisesServiceTest {
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("endDate", "Cannot be before startDate"),
-      entry("numberOfBeds", "Must be greater than 0")
+      entry("numberOfBeds", "Must be greater than 0"),
+      entry("reason", "This reason does not exist")
     )
   }
 
@@ -190,6 +201,10 @@ class PremisesServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
+    val lostBedReason = LostBedReasonEntityFactory().produce()
+
+    every { lostBedReasonRepositoryMock.findByIdOrNull(lostBedReason.id) } returns lostBedReason
+
     every { lostBedsRepositoryMock.save(any()) } answers { it.invocation.args[0] as LostBedsEntity }
 
     val result = premisesService.createLostBeds(
@@ -197,7 +212,7 @@ class PremisesServiceTest {
       startDate = LocalDate.parse("2022-08-25"),
       endDate = LocalDate.parse("2022-08-28"),
       numberOfBeds = 5,
-      reason = LostBedReason.StaffShortage,
+      reasonId = lostBedReason.id,
       referenceNumber = "12345",
       notes = "notes"
     )
@@ -205,7 +220,7 @@ class PremisesServiceTest {
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
     assertThat(result.entity.premises).isEqualTo(premisesEntity)
-    assertThat(result.entity.reason).isEqualTo(LostBedReason.StaffShortage)
+    assertThat(result.entity.reason).isEqualTo(lostBedReason)
     assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
     assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
     assertThat(result.entity.numberOfBeds).isEqualTo(5)

@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -18,7 +18,8 @@ import java.util.UUID
 class PremisesService(
   private val premisesRepository: PremisesRepository,
   private val lostBedsRepository: LostBedsRepository,
-  private val bookingRepository: BookingRepository
+  private val bookingRepository: BookingRepository,
+  private val lostBedReasonRepository: LostBedReasonRepository
 ) {
   fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
@@ -52,7 +53,7 @@ class PremisesService(
     startDate: LocalDate,
     endDate: LocalDate,
     numberOfBeds: Int,
-    reason: LostBedReason,
+    reasonId: UUID,
     referenceNumber: String?,
     notes: String?
   ): ValidatableActionResult<LostBedsEntity> {
@@ -63,6 +64,11 @@ class PremisesService(
 
     if (numberOfBeds <= 0) {
       validationIssues["numberOfBeds"] = "Must be greater than 0"
+    }
+
+    val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      validationIssues["reason"] = "This reason does not exist"
     }
 
     if (validationIssues.any()) {
@@ -76,7 +82,7 @@ class PremisesService(
         startDate = startDate,
         endDate = endDate,
         numberOfBeds = numberOfBeds,
-        reason = reason,
+        reason = reason!!,
         referenceNumber = referenceNumber,
         notes = notes
       )

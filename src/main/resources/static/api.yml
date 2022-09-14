@@ -1403,7 +1403,7 @@ components:
         numberOfBeds:
           type: integer
         reason:
-          $ref: '#/components/schemas/LostBedReasons'
+          $ref: '#/components/schemas/LostBedReason'
         referenceNumber:
           type: string
         notes:
@@ -1426,7 +1426,8 @@ components:
         numberOfBeds:
           type: integer
         reason:
-          $ref: '#/components/schemas/LostBedReasons'
+          type: string
+          format: uuid
         referenceNumber:
           type: string
         notes:
@@ -1436,13 +1437,6 @@ components:
         - endDate
         - numberOfBeds
         - reason
-    LostBedReasons:
-      type: string
-      enum:
-        - Fire
-        - Damaged
-        - refurbishment
-        - Staff shortage
     DepartureReason:
       type: object
       properties:
