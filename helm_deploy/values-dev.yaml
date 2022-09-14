@@ -9,6 +9,7 @@ generic-service:
     tlsSecretName: approved-premises-api-dev-cert
 
   env:
+    SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
     SERVICES_COMMUNITY-API_BASE-URL: https://community-api.dev.probation.service.justice.gov.uk
