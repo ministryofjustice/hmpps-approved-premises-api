@@ -280,7 +280,7 @@ class PremisesController(
       startDate = body.startDate,
       endDate = body.endDate,
       numberOfBeds = body.numberOfBeds,
-      reason = lostBedsTransformer.transformReasonFromApiToJpa(body.reason),
+      reasonId = body.reason,
       referenceNumber = body.referenceNumber,
       notes = body.notes
     )

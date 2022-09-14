@@ -2,10 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReasons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import java.time.LocalDate
+import java.util.UUID
 
 class LostBedsTest : IntegrationTestBase() {
   @Autowired
@@ -51,6 +51,7 @@ class LostBedsTest : IntegrationTestBase() {
     val lostBeds = lostBedsEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
+      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
       withNumberOfBeds(5)
       withPremises(premises)
     }
@@ -85,7 +86,7 @@ class LostBedsTest : IntegrationTestBase() {
           startDate = LocalDate.parse("2022-08-15"),
           endDate = LocalDate.parse("2022-08-18"),
           numberOfBeds = 1,
-          reason = LostBedReasons.damaged,
+          reason = UUID.randomUUID(),
           referenceNumber = "REF-123",
           notes = null
         )
@@ -105,6 +106,8 @@ class LostBedsTest : IntegrationTestBase() {
       }
     }
 
+    val reason = lostBedReasonEntityFactory.produceAndPersist()
+
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.post()
@@ -115,7 +118,7 @@ class LostBedsTest : IntegrationTestBase() {
           startDate = LocalDate.parse("2022-08-17"),
           endDate = LocalDate.parse("2022-08-18"),
           numberOfBeds = 3,
-          reason = LostBedReasons.damaged,
+          reason = reason.id,
           referenceNumber = "REF-123",
           notes = "notes"
         )
@@ -127,7 +130,9 @@ class LostBedsTest : IntegrationTestBase() {
       .jsonPath(".startDate").isEqualTo("2022-08-17")
       .jsonPath(".endDate").isEqualTo("2022-08-18")
       .jsonPath(".numberOfBeds").isEqualTo(3)
-      .jsonPath(".reason").isEqualTo("Damaged")
+      .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+      .jsonPath(".reason.name").isEqualTo(reason.name)
+      .jsonPath(".reason.isActive").isEqualTo(true)
       .jsonPath(".referenceNumber").isEqualTo("REF-123")
       .jsonPath(".notes").isEqualTo("notes")
   }
