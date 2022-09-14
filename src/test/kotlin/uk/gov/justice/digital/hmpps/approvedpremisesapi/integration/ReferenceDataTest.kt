@@ -5,11 +5,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 
 class ReferenceDataTest : IntegrationTestBase() {
   @Autowired
   lateinit var departureReasonTransformer: DepartureReasonTransformer
+
+  @Autowired
+  lateinit var lostBedReasonTransformer: LostBedReasonTransformer
 
   @Autowired
   lateinit var moveOnCategoryTransformer: MoveOnCategoryTransformer
@@ -96,6 +100,27 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/cancellation-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Lost Bed Reasons returns 200 with correct body`() {
+    lostBedReasonRepository.deleteAll()
+
+    val lostBedReasons = lostBedReasonEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      lostBedReasons.map(lostBedReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/lost-bed-reasons")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
