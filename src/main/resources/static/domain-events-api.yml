@@ -140,16 +140,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /booking-made/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - Booking events
+      summary: An 'booking-made' event
+      responses:
+        '200':
+          description: The 'booking-made' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.booking.made
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/BookingMade'
+
+        404:
+          description: No 'booking-made' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     EventId:
       description: The UUID of an event
       type: string
       example: 364145f9-0af8-488e-9901-b4c46cd9ba37
+
     ApplicationId:
       description: The UUID of an application for an AP place
       type: string
       example: 484b8b5e-6c3b-4400-b200-425bbe410713
+
+    BookingId:
+      description: The UUID of booking for an AP place
+      type: string
+      example: 14c80733-4b6d-4f35-b724-66955aac320c
+
+    LegacyApCode:
+      description: The 'Q code' used in Delius to identify an Approved Premises
+      type: string
+      example: Q057
+
     StaffMember:
       description: A member of probation or AP staff
       type: object
@@ -253,6 +311,53 @@ components:
         decisionRationale:
           type: string
           example: Risk too low
+
+    BookingMade:
+      type: object
+      properties:
+        bookingId:
+          $ref: '#/components/schemas/BookingId'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        createdAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+          readOnly: true
+        bookedBy:
+          $ref: '#/components/schemas/StaffMember'
+        premises:
+          $ref: '#/components/schemas/Premises'
+        arrivalOn:
+          type: string
+          example: '2023-01-30'
+          format: date
+          readOnly: true
+        departureOn:
+          type: string
+          example: '2023-04-30'
+          format: date
+          readOnly: true
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
+
+    Premises:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        apCode:
+          type: string
+          example: NEHOPE1
+        legacyApCode:
+          $ref: '#/components/schemas/LegacyApCode'
+        probationArea:
+          $ref: '#/components/schemas/ProbationArea'
+
 
     Error:
       type: object
