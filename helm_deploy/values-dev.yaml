@@ -12,10 +12,10 @@ generic-service:
     SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
-    SERVICES_COMMUNITY-API_BASE-URL: https://community-api.dev.probation.service.justice.gov.uk
+    SERVICES_COMMUNITY-API_BASE-URL: https://community-api-secure.test.delius.probation.hmpps.dsd.io
     SERVICES_ASSESS-RISKS-AND-NEEDS-API_BASE-URL: https://assess-risks-and-needs-dev.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-dev.hmpps.service.justice.gov.uk
-    SERVICES_PRISONS-API_BASE-URL: https://api-dev.prison.service.justice.gov.uk
+    SERVICES_PRISONS-API_BASE-URL: https://nomis-user-dev.aks-dev-1.studio-hosting.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
