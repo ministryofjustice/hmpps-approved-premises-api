@@ -186,6 +186,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /booking-not-made/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Match' events"
+      summary: An 'booking-not-made' event
+      responses:
+        '200':
+          description: The 'booking-not-made' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.booking.not-made
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/BookingNotMade'
+
+        404:
+          description: No 'booking-not-made' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     EventId:
@@ -340,6 +385,24 @@ components:
           readOnly: true
         keyWorker:
           $ref: '#/components/schemas/StaffMember'
+
+    BookingNotMade:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        attemptedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+          readOnly: true
+        attemptedBy:
+          $ref: '#/components/schemas/StaffMember'
+        failureDescription:
+          type: string
+          example: No availability
 
     Premises:
       type: object
