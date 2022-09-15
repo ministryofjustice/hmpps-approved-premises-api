@@ -152,7 +152,7 @@ paths:
     get:
       tags:
         - "'Mini-manage' events"
-      summary: An 'booking-made' event
+      summary: A 'booking-made' event
       responses:
         '200':
           description: The 'booking-made' event corresponding to the provided `eventId`
@@ -197,7 +197,7 @@ paths:
     get:
       tags:
         - "'Mini-manage' events"
-      summary: An 'booking-cancelled' event
+      summary: A 'booking-cancelled' event
       responses:
         '200':
           description: The 'booking-cancelled' event corresponding to the provided `eventId`
@@ -242,7 +242,7 @@ paths:
     get:
       tags:
         - "'Match' events"
-      summary: An 'booking-not-made' event
+      summary: A 'booking-not-made' event
       responses:
         '200':
           description: The 'booking-not-made' event corresponding to the provided `eventId`
@@ -287,7 +287,7 @@ paths:
     get:
       tags:
         - "'Mini-manage' events"
-      summary: An 'person-arrived' event
+      summary: A 'person-arrived' event
       responses:
         '200':
           description: The 'person-arrived' event corresponding to the provided `eventId`
@@ -332,7 +332,7 @@ paths:
     get:
       tags:
         - "'Mini-manage' events"
-      summary: An 'person-not-arrived' event
+      summary: A 'person-not-arrived' event
       responses:
         '200':
           description: The 'person-not-arrived' event corresponding to the provided `eventId`
