@@ -186,6 +186,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /booking-cancelled/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Mini-manage' events"
+      summary: An 'booking-cancelled' event
+      responses:
+        '200':
+          description: The 'booking-cancelled' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.booking.cancelled
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/BookingCancelled'
+
+        404:
+          description: No 'booking-made' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /booking-not-made/{eventId}:
     parameters:
       - name: eventId
@@ -403,6 +448,27 @@ components:
         failureDescription:
           type: string
           example: No availability
+
+    BookingCancelled:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        bookingId:
+          $ref: '#/components/schemas/BookingId'
+        premises:
+          $ref: '#/components/schemas/Premises'
+        cancelledAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+          readOnly: true
+        cancelledBy:
+          $ref: '#/components/schemas/StaffMember'
+        cancellationReason:
+          type: string
+          example: Deceased
+
 
     Premises:
       type: object
