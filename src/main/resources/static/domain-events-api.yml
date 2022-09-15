@@ -366,6 +366,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /person-departed/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Mini-manage' events"
+      summary: A 'person-departed' event
+      responses:
+        '200':
+          description: The 'person-departed' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.person.departed
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/PersonDeparted'
+
+        404:
+          description: No 'person-not-arrived' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
   schemas:
@@ -600,6 +644,33 @@ components:
           type: string
           example: We learnt that Mr Smith is in hospital.
 
+    PersonDeparted:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        bookingId:
+          $ref: '#/components/schemas/BookingId'
+        premises:
+          $ref: '#/components/schemas/Premises'
+        departedAt:
+          type: string
+          example: '2023-03-30T14:51:30'
+          format: date-time
+        reason:
+          type: string
+          example: Planned move-on
+        destination:
+          type: object
+          properties:
+            premises:
+              $ref: '#/components/schemas/DestinationPremises'
+            moveOnCategory:
+              $ref: '#/components/schemas/MoveOnCategory'
+            destinationProvider:
+              $ref: '#/components/schemas/DestinationProvider'
+
+
     Premises:
       type: object
       properties:
@@ -617,6 +688,43 @@ components:
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
 
+    DestinationPremises:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: New Place
+        apCode:
+          type: string
+          example: NENEW1
+        legacyApCode:
+          type: string
+          example: Q061
+        probationArea:
+          $ref: '#/components/schemas/ProbationArea'
+
+    MoveOnCategory:
+      type: object
+      properties:
+        description:
+          type: string
+          example: Living with family / partner / other
+        code:
+          type: string
+          example: ABC123
+
+    DestinationProvider:
+      type: object
+      properties:
+        description:
+          type: string
+          example: Ext - North East Region
+        code:
+          type: string
+          example: XYZ456
 
     Error:
       type: object
