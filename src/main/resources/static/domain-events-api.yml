@@ -276,6 +276,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /person-arrived/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Mini-manage' events"
+      summary: An 'person-arrived' event
+      responses:
+        '200':
+          description: The 'person-arrived' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/EventId'
+                  timestamp:
+                    type: string
+                    example: '2022-11-30T14:53:44'
+                    format: date-time
+                  eventType:
+                    type: string
+                    example: approved-premises.person.arrived
+                    readOnly: true
+                  eventDetails:
+                    $ref: '#/components/schemas/PersonArrived'
+
+        404:
+          description: No 'person-arrived' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     EventId:
@@ -469,6 +514,28 @@ components:
           type: string
           example: Deceased
 
+    PersonArrived:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        bookingId:
+          $ref: '#/components/schemas/BookingId'
+        premises:
+          $ref: '#/components/schemas/Premises'
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
+        arrivedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        expectedDepartureOn:
+          type: string
+          example: '2023-02-28'
+          format: date
+        notes:
+          type: string
+          example: Arrived a day late due to rail strike. Informed in advance by COM.
 
     Premises:
       type: object
