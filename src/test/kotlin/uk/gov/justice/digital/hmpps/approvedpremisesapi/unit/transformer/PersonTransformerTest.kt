@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.PreviousConviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -42,12 +44,20 @@ class PersonTransformerTest {
         secondaryNationality = null,
         notes = null,
         immigrationStatus = null,
-        offenderLanguages = null,
+        offenderLanguages = OffenderLanguages(
+          primaryLanguage = null,
+          otherLanguages = listOf(),
+          languageConcerns = null,
+          requiresInterpreter = null
+        ),
         religion = "Sikh",
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = null,
+        previousConviction = PreviousConviction(
+          convictionDate = null,
+          detail = null
+        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = null,
@@ -112,12 +122,20 @@ class PersonTransformerTest {
         secondaryNationality = null,
         notes = null,
         immigrationStatus = null,
-        offenderLanguages = null,
+        offenderLanguages = OffenderLanguages(
+          primaryLanguage = null,
+          otherLanguages = listOf(),
+          languageConcerns = null,
+          requiresInterpreter = null
+        ),
         religion = "Sikh",
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = null,
+        previousConviction = PreviousConviction(
+          convictionDate = null,
+          detail = null
+        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = "Female",
@@ -182,12 +200,20 @@ class PersonTransformerTest {
         secondaryNationality = null,
         notes = null,
         immigrationStatus = null,
-        offenderLanguages = null,
+        offenderLanguages = OffenderLanguages(
+          primaryLanguage = null,
+          otherLanguages = listOf(),
+          languageConcerns = null,
+          requiresInterpreter = null
+        ),
         religion = "Sikh",
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = null,
+        previousConviction = PreviousConviction(
+          convictionDate = null,
+          detail = null
+        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = "Female",
@@ -252,12 +278,20 @@ class PersonTransformerTest {
         secondaryNationality = null,
         notes = null,
         immigrationStatus = null,
-        offenderLanguages = null,
+        offenderLanguages = OffenderLanguages(
+          primaryLanguage = null,
+          otherLanguages = listOf(),
+          languageConcerns = null,
+          requiresInterpreter = null
+        ),
         religion = "Sikh",
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = null,
+        previousConviction = PreviousConviction(
+          convictionDate = null,
+          detail = null
+        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = null,
