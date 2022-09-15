@@ -4,7 +4,9 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.PreviousConviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
@@ -108,12 +110,20 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       secondaryNationality = null,
       notes = null,
       immigrationStatus = null,
-      offenderLanguages = null,
+      offenderLanguages = OffenderLanguages(
+        primaryLanguage = null,
+        otherLanguages = listOf(),
+        languageConcerns = null,
+        requiresInterpreter = null
+      ),
       religion = this.religionOrBelief(),
       sexualOrientation = null,
       offenderDetails = null,
       remandStatus = null,
-      previousConviction = null,
+      previousConviction = PreviousConviction(
+        convictionDate = null,
+        detail = null
+      ),
       riskColour = null,
       disabilities = listOf(),
       genderIdentity = this.genderIdentity(),
