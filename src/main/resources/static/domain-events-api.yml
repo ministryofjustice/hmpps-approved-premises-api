@@ -16,7 +16,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - Application events
+        - "'Apply' events"
       summary: An application-submitted event
       responses:
         '200':
@@ -61,7 +61,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - Application events
+        - "'Apply' events"
       summary: An application-withdrawn event
       responses:
         '200':
@@ -106,7 +106,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - Application events
+        - "'Apply' events"
       summary: An 'application-assessed' event
       responses:
         '200':
@@ -151,7 +151,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - Booking events
+        - "'Mini-manage' events"
       summary: An 'booking-made' event
       responses:
         '200':
