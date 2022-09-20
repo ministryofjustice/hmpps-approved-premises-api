@@ -57,9 +57,9 @@ abstract class BaseHMPPSClient(
 
       return ClientResult.Success(result.statusCode, deserialized)
     } catch (exception: WebClientResponseException) {
-      return ClientResult.StatusCodeFailure(exception.statusCode, exception.responseBodyAsString)
+      return ClientResult.StatusCodeFailure(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString)
     } catch (exception: Exception) {
-      return ClientResult.OtherFailure(exception)
+      return ClientResult.OtherFailure(method, requestBuilder.path ?: "", exception)
     }
   }
 
@@ -77,14 +77,14 @@ interface ClientResult<ResponseType> {
   interface Failure<ResponseType> : ClientResult<ResponseType> {
     fun throwException(): Nothing
   }
-  class StatusCodeFailure<ResponseType>(val status: HttpStatus, val body: String?) : Failure<ResponseType> {
+  class StatusCodeFailure<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatus, val body: String?) : Failure<ResponseType> {
     override fun throwException(): Nothing {
-      throw RuntimeException("Unable to complete request: $status")
+      throw RuntimeException("Unable to complete $method request to $path: $status")
     }
   }
-  class OtherFailure<ResponseType>(val exception: Exception) : Failure<ResponseType> {
+  class OtherFailure<ResponseType>(val method: HttpMethod, val path: String, val exception: Exception) : Failure<ResponseType> {
     override fun throwException(): Nothing {
-      throw RuntimeException("Unable to complete request", exception)
+      throw RuntimeException("Unable to complete $method request to $path", exception)
     }
   }
 }
