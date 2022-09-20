@@ -12,7 +12,9 @@ import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
-interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID>
+interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
+  fun findAllByCreatedByProbationOfficer_Id(id: UUID): List<ApplicationEntity>
+}
 
 @Entity
 @Table(name = "applications")
@@ -33,5 +35,8 @@ data class ApplicationEntity(
   @JoinColumn(name = "schema_version")
   val schemaVersion: ApplicationSchemaEntity,
   val createdAt: OffsetDateTime,
-  val submittedAt: OffsetDateTime?
+  val submittedAt: OffsetDateTime?,
+
+  @Transient
+  var schemaUpToDate: Boolean
 )

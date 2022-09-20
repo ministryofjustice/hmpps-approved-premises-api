@@ -9,7 +9,9 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
-interface ProbationOfficerRepository : JpaRepository<ProbationOfficerEntity, UUID>
+interface ProbationOfficerRepository : JpaRepository<ProbationOfficerEntity, UUID> {
+  fun findByDistinguishedName(distinguishedName: String): ProbationOfficerEntity?
+}
 
 @Entity
 @Table(name = "probation_officers")
