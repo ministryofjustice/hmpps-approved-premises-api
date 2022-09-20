@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -81,6 +83,8 @@ interface ClientResult<ResponseType> {
     override fun throwException(): Nothing {
       throw RuntimeException("Unable to complete $method request to $path: $status")
     }
+
+    inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper().readValue(body, ResponseType::class.java)
   }
   class OtherFailure<ResponseType>(val method: HttpMethod, val path: String, val exception: Exception) : Failure<ResponseType> {
     override fun throwException(): Nothing {

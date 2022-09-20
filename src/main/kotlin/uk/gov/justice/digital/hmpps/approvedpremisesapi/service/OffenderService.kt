@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 
 @Service
@@ -41,6 +42,18 @@ class OffenderService(
       val access =
         when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
           is ClientResult.Success -> accessResponse.body
+          is ClientResult.StatusCodeFailure -> {
+            if (accessResponse.status == HttpStatus.FORBIDDEN) {
+              try {
+                accessResponse.deserializeTo<UserOffenderAccess>()
+                return AuthorisableActionResult.Unauthorised()
+              } catch (exception: Exception) {
+                accessResponse.throwException()
+              }
+            }
+
+            accessResponse.throwException()
+          }
           is ClientResult.Failure -> accessResponse.throwException()
           else -> shouldNotBeReached()
         }

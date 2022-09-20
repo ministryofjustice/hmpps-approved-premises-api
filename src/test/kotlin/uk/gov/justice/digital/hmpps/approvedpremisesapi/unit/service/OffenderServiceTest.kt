@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -54,7 +55,7 @@ class OffenderServiceTest {
   }
 
   @Test
-  fun `getOffenderByCrn throws when Client returns other non-2xx status code`() {
+  fun `getOffenderByCrn throws when Client returns other non-2xx status code except 403`() {
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
     val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
@@ -95,6 +96,49 @@ class OffenderServiceTest {
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getOffenderByCrn returns Unauthorised result when Client returns 403 with valid user access response body`() {
+    val resultBody = OffenderDetailsSummaryFactory()
+      .withCrn("a-crn")
+      .withFirstName("Bob")
+      .withLastName("Doe")
+      .withCurrentExclusion(true)
+      .produce()
+
+    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true)
+
+    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.StatusCodeFailure(
+      HttpMethod.GET,
+      "/secure/crn/a-crn/user/distinguished.name/userAccess",
+      HttpStatus.FORBIDDEN,
+      jacksonObjectMapper().writeValueAsString(accessBody)
+    )
+
+    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getOffenderByCrn throws when Client returns 403 without valid user access response body (problem with our service to service JWT)`() {
+    val resultBody = OffenderDetailsSummaryFactory()
+      .withCrn("a-crn")
+      .withFirstName("Bob")
+      .withLastName("Doe")
+      .withCurrentExclusion(true)
+      .produce()
+
+    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.StatusCodeFailure(
+      HttpMethod.GET,
+      "/secure/crn/a-crn/user/distinguished.name/userAccess",
+      HttpStatus.FORBIDDEN,
+      null
+    )
+
+    val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
+    assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/crn/a-crn/user/distinguished.name/userAccess: 403 FORBIDDEN")
   }
 
   @Test
