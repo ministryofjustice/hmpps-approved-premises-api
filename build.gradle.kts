@@ -30,6 +30,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
+  implementation(kotlin("reflect"))
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.12.5")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
