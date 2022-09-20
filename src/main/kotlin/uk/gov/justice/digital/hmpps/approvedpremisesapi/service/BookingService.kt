@@ -56,7 +56,7 @@ class BookingService(
     }
 
     if (expectedDepartureDate.isBefore(arrivalDate)) {
-      return ValidatableActionResult.FieldValidationError(mapOf("expectedDepartureDate" to "Cannot be before arrivalDate"))
+      return ValidatableActionResult.FieldValidationError(mapOf("$.expectedDepartureDate" to "Cannot be before arrivalDate"))
     }
 
     val arrivalEntity = arrivalRepository.save(
@@ -85,12 +85,12 @@ class BookingService(
     val validationIssues = mutableMapOf<String, String>()
 
     if (booking.arrivalDate.isAfter(date)) {
-      validationIssues["date"] = "Cannot be before Booking's arrivalDate"
+      validationIssues["$.date"] = "Cannot be before Booking's arrivalDate"
     }
 
     val reason = nonArrivalReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      validationIssues["reason"] = "This reason does not exist"
+      validationIssues["$.reason"] = "This reason does not exist"
     }
 
     if (validationIssues.any()) {
@@ -124,7 +124,7 @@ class BookingService(
 
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      validationIssues["reason"] = "This reason does not exist"
+      validationIssues["$.reason"] = "This reason does not exist"
     }
 
     if (validationIssues.any()) {
@@ -159,22 +159,22 @@ class BookingService(
     val validationIssues = mutableMapOf<String, String>()
 
     if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
-      validationIssues["dateTime"] = "Must be after the Booking's arrival date (${booking.arrivalDate})"
+      validationIssues["$.dateTime"] = "Must be after the Booking's arrival date (${booking.arrivalDate})"
     }
 
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      validationIssues["reasonId"] = "Reason does not exist"
+      validationIssues["$.reasonId"] = "Reason does not exist"
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
     if (reason == null) {
-      validationIssues["moveOnCategoryId"] = "Move on Category does not exist"
+      validationIssues["$.moveOnCategoryId"] = "Move on Category does not exist"
     }
 
     val destinationProvider = destinationProviderRepository.findByIdOrNull(destinationProviderId)
     if (destinationProvider == null) {
-      validationIssues["destinationProviderId"] = "Destination Provider does not exist"
+      validationIssues["$.destinationProviderId"] = "Destination Provider does not exist"
     }
 
     if (validationIssues.any()) {
@@ -203,7 +203,7 @@ class BookingService(
     notes: String?
   ): ValidatableActionResult<ExtensionEntity> {
     if (booking.departureDate.isAfter(newDepartureDate)) {
-      return ValidatableActionResult.FieldValidationError(mapOf("newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
+      return ValidatableActionResult.FieldValidationError(mapOf("$.newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
     }
 
     val extensionEntity = ExtensionEntity(
