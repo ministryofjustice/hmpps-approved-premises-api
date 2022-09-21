@@ -1085,11 +1085,11 @@ components:
         crn:
           type: string
           example: A123456
-        expectedArrivalDate:
+        arrivalDate:
           type: string
           format: date
           example: 2022-07-28
-        expectedDepartureDate:
+        departureDate:
           type: string
           format: date
           example: 2022-09-30
@@ -1098,8 +1098,8 @@ components:
           format: uuid
       required:
         - crn
-        - expectedArrivalDate
-        - expectedDepartureDate
+        - arrivalDate
+        - departureDate
         - keyWorkerId
     Booking:
       allOf:

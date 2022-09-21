@@ -201,8 +201,8 @@ class BookingTest : IntegrationTestBase() {
       .bodyValue(
         NewBooking(
           crn = "a crn",
-          expectedArrivalDate = LocalDate.parse("2022-08-12"),
-          expectedDepartureDate = LocalDate.parse("2022-08-30"),
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          departureDate = LocalDate.parse("2022-08-30"),
           keyWorkerId = keyWorker.id
         )
       )
@@ -242,8 +242,8 @@ class BookingTest : IntegrationTestBase() {
       .bodyValue(
         NewBooking(
           crn = "CRN321",
-          expectedArrivalDate = LocalDate.parse("2022-08-12"),
-          expectedDepartureDate = LocalDate.parse("2022-08-30"),
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          departureDate = LocalDate.parse("2022-08-30"),
           keyWorkerId = UUID.randomUUID()
         )
       )
@@ -294,8 +294,8 @@ class BookingTest : IntegrationTestBase() {
       .bodyValue(
         NewBooking(
           crn = "CRN321",
-          expectedArrivalDate = LocalDate.parse("2022-08-12"),
-          expectedDepartureDate = LocalDate.parse("2022-08-30"),
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          departureDate = LocalDate.parse("2022-08-30"),
           keyWorkerId = keyWorker.id
         )
       )

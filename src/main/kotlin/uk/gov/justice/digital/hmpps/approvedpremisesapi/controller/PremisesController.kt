@@ -160,8 +160,8 @@ class PremisesController(
       BookingEntity(
         id = UUID.randomUUID(),
         crn = offenderResult.entity.otherIds.crn,
-        arrivalDate = body.expectedArrivalDate,
-        departureDate = body.expectedDepartureDate,
+        arrivalDate = body.arrivalDate,
+        departureDate = body.departureDate,
         keyWorker = keyWorker!!,
         arrival = null,
         departure = null,
