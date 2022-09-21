@@ -236,10 +236,10 @@ class BookingServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("dateTime", "Must be after the Booking's arrival date (2022-08-25)"),
-      entry("reasonId", "Reason does not exist"),
-      entry("moveOnCategoryId", "Move on Category does not exist"),
-      entry("destinationProviderId", "Destination Provider does not exist")
+      entry("$.dateTime", "Must be after the Booking's arrival date (2022-08-25)"),
+      entry("$.reasonId", "Reason does not exist"),
+      entry("$.moveOnCategoryId", "Move on Category does not exist"),
+      entry("$.destinationProviderId", "Destination Provider does not exist")
     )
   }
 
@@ -352,7 +352,7 @@ class BookingServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("expectedDepartureDate", "Cannot be before arrivalDate")
+      entry("$.expectedDepartureDate", "Cannot be before arrivalDate")
     )
   }
 
@@ -452,8 +452,8 @@ class BookingServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("date", "Cannot be before Booking's arrivalDate"),
-      entry("reason", "This reason does not exist")
+      entry("$.date", "Cannot be before Booking's arrivalDate"),
+      entry("$.reason", "This reason does not exist")
     )
   }
 
@@ -559,7 +559,7 @@ class BookingServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("reason", "This reason does not exist")
+      entry("$.reason", "This reason does not exist")
     )
   }
 
@@ -625,7 +625,7 @@ class BookingServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("newDepartureDate", "Must be after the Booking's current departure date (2022-08-26)")
+      entry("$.newDepartureDate", "Must be after the Booking's current departure date (2022-08-26)")
     )
   }
 

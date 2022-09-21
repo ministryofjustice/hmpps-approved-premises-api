@@ -59,16 +59,16 @@ class PremisesService(
   ): ValidatableActionResult<LostBedsEntity> {
     val validationIssues = mutableMapOf<String, String>()
     if (endDate.isBefore(startDate)) {
-      validationIssues["endDate"] = "Cannot be before startDate"
+      validationIssues["$.endDate"] = "Cannot be before startDate"
     }
 
     if (numberOfBeds <= 0) {
-      validationIssues["numberOfBeds"] = "Must be greater than 0"
+      validationIssues["$.numberOfBeds"] = "Must be greater than 0"
     }
 
     val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      validationIssues["reason"] = "This reason does not exist"
+      validationIssues["$.reason"] = "This reason does not exist"
     }
 
     if (validationIssues.any()) {
