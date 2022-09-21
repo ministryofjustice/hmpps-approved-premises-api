@@ -33,6 +33,8 @@ dependencies {
 
   implementation(kotlin("reflect"))
 
+  implementation("com.networknt:json-schema-validator:1.0.73")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.12.5")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
