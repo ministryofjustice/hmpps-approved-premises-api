@@ -85,26 +85,25 @@ The initial contract covers the migration of certain bed-management functions fr
 
 This is available in development at [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
----
+## Infrastructure
 
-## Creating a CloudPlatform namespace
+The service is deployed to the [MoJ Cloud Platform](https://user-guide.cloud-platform.service.justice.gov.uk). This is 
+managed by Kubernetes and Helm Charts which reside within this repo at [`./helm_deploy`](./helm_deploy/approved-premises-api/).
 
-When deploying to a new namespace, you may wish to use this template kotlin project namespace as the basis for your new namespace:
 
-<https://github.com/ministryofjustice/cloud-platform-environments/tree/main/namespaces/live.cloud-platform.service.justice.gov.uk/hmpps-template-kotlin>
+To get set up with Kubernetes and configure your system so that the `kubectl` command authenticates, see this 
+[[MoJ guide to generating a 'kube' config](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/getting-started/kubectl-config.html#generating-a-kubeconfig-file)].
 
-Copy this folder, update all the existing namespace references, and submit a PR to the CloudPlatform team. Further instructions from the CloudPlatform team can be found here: <https://user-guide.cloud-platform.service.justice.gov.uk/#cloud-platform-user-guide>
+You should then be able to run `kubectl` commands, e.g. to list the 'pods' in a given 'namespace':
 
-## Renaming from HMPPS Template Kotlin - github Actions
+```bash
+$ kubectl -n hmpps-approved-premises-dev get pods
 
-Once the new repository is deployed. Navigate to the repository in github, and select the `Actions` tab.
-Click the link to `Enable Actions on this repository`.
-
-Find the Action workflow named: `rename-project-create-pr` and click `Run workflow`.  This workflow will
-execute the `rename-project.bash` and create Pull Request for you to review.  Review the PR and merge.
-
-Note: ideally this workflow would run automatically however due to a recent change github Actions are not
-enabled by default on newly created repos. There is no way to enable Actions other then to click the button in the UI.
-If this situation changes we will update this project so that the workflow is triggered during the bootstrap project.
-Further reading: <https://github.community/t/workflow-isnt-enabled-in-repos-generated-from-template/136421>
-
+NAME                                           READY   STATUS    RESTARTS   AGE
+hmpps-approved-premises-api-6958c57d9f-plgpm   1/1     Running   0          86m
+hmpps-approved-premises-api-6958c57d9f-sgxkc   1/1     Running   0          86m
+hmpps-approved-premises-ui-6c5b76c477-kmljb    1/1     Running   0          38m
+hmpps-approved-premises-ui-6c5b76c477-t62b4    1/1     Running   0          38m
+```
+**NB**: this [`kubectl` cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) is a good reference to 
+other commands you may need.
