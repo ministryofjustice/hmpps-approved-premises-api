@@ -1712,13 +1712,14 @@ components:
           format: uuid
         crn:
           type: string
-          format: uuid
         createdByProbationOfficerId:
           type: string
           format: uuid
         schemaVersion:
           type: string
           format: uuid
+        outdatedSchema:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -1726,14 +1727,13 @@ components:
           type: string
           format: date-time
         data:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/AnyValue'
       required:
         - id
         - crn
         - createdByProbationOfficerId
         - schemaVersion
+        - outdatedSchema
         - createdAt
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
@@ -20,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
@@ -30,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.KeyWorkerService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -46,6 +45,7 @@ import java.util.UUID
 
 @Service
 class PremisesController(
+  private val httpAuthService: HttpAuthService,
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
   private val keyWorkerService: KeyWorkerService,
@@ -84,9 +84,12 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = deliusPrincipal.name
+
     return ResponseEntity.ok(
       premises.bookings.map {
-        val offenderResult = offenderService.getOffenderByCrn(it.crn, getDeliusPrincipalNameOrThrow())
+        val offenderResult = offenderService.getOffenderByCrn(it.crn, username)
 
         if (offenderResult !is AuthorisableActionResult.Success) {
           throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
@@ -110,7 +113,7 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val offenderResult = offenderService.getOffenderByCrn(booking.crn, getDeliusPrincipalNameOrThrow())
+    val offenderResult = offenderService.getOffenderByCrn(booking.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
 
     if (offenderResult !is AuthorisableActionResult.Success) {
       throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
@@ -135,7 +138,7 @@ class PremisesController(
 
     val validationErrors = mutableMapOf<String, String>()
 
-    val offenderResult = offenderService.getOffenderByCrn(body.crn, getDeliusPrincipalNameOrThrow())
+    val offenderResult = offenderService.getOffenderByCrn(body.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
     if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
     if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
     offenderResult as AuthorisableActionResult.Success
@@ -322,16 +325,6 @@ class PremisesController(
         )
       }
     )
-  }
-
-  private fun getDeliusPrincipalNameOrThrow(): String {
-    val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
-
-    if (principal.token.claims["auth_source"] != "delius") {
-      throw ForbiddenProblem()
-    }
-
-    return principal.name
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
