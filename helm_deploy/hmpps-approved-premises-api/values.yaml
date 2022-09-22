@@ -1,18 +1,18 @@
 ---
 generic-service:
-  nameOverride: approved-premises-api
+  nameOverride: hmpps-approved-premises-api
 
   replicaCount: 4
 
   image:
-    repository: quay.io/hmpps/approved-premises-api
+    repository: quay.io/hmpps/hmpps-approved-premises-api
     tag: app_version    # override at deployment time
     port: 8080
 
   ingress:
     enabled: true
     host: app-hostname.local    # override per environment
-    tlsSecretName: approved-premises-api-cert
+    tlsSecretName: hmpps-approved-premises-api-cert
     contextColour: green
 
   # Environment variables to load into the deployment
@@ -32,7 +32,7 @@ generic-service:
   #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
 
   namespace_secrets:
-    approved-premises-api:
+    hmpps-approved-premises-api:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_COMMUNITY-API_CLIENT-ID: "SYSTEM_CLIENT_DELIUS_ID"
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_COMMUNITY-API_CLIENT-SECRET: "SYSTEM_CLIENT_DELIUS_SECRET"
@@ -57,4 +57,4 @@ generic-service:
     cloudplatform-live-3: "35.177.252.54/32"
 
 generic-prometheus-alerts:
-  targetApplication: approved-premises-api
+  targetApplication: hmpps-approved-premises-api
