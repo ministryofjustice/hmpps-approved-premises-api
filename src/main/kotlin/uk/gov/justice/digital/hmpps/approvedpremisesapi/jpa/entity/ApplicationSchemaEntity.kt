@@ -9,7 +9,9 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Repository
-interface ApplicationSchemaRepository : JpaRepository<ApplicationSchemaEntity, UUID>
+interface ApplicationSchemaRepository : JpaRepository<ApplicationSchemaEntity, UUID> {
+  fun findFirstByOrderByAddedAtDesc(): ApplicationSchemaEntity
+}
 
 @Entity
 @Table(name = "application_schemas")
