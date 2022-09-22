@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -34,6 +35,7 @@ class ApplicationsController(
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
+      else -> shouldNotBeReached()
     }
 
     return ResponseEntity.ok(applicationsTransformer.transformJpaToApi(application))

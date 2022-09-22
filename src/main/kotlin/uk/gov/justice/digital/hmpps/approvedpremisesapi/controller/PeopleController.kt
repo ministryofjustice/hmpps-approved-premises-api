@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -28,6 +29,7 @@ class PeopleController(
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> offenderResult.entity
+      else -> shouldNotBeReached()
     }
 
     if (offenderDetails.otherIds.nomsNumber == null) {
@@ -38,6 +40,7 @@ class PeopleController(
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(offenderDetails.otherIds.nomsNumber, "Inmate")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> inmateDetailResult.entity
+      else -> shouldNotBeReached()
     }
 
     return ResponseEntity.ok(
@@ -52,6 +55,7 @@ class PeopleController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Success -> risksResult.entity
+      else -> shouldNotBeReached()
     }
 
     return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks))
