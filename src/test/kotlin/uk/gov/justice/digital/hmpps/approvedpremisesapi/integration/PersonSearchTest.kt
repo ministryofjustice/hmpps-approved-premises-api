@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -142,18 +141,6 @@ class PersonSearchTest : IntegrationTestBase() {
         )
       )
   }
-
-  private fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(offenderDetails)
-          )
-      )
-  )
 
   private fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
     WireMock.get(WireMock.urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))

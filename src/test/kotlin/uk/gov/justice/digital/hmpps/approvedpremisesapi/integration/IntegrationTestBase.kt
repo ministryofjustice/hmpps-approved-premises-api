@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationSchemaTestRepository
@@ -256,4 +258,16 @@ abstract class IntegrationTestBase {
         )
     )
   }
+
+  fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            objectMapper.writeValueAsString(offenderDetails)
+          )
+      )
+  )
 }

@@ -8,8 +8,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class ApplicationTest : IntegrationTestBase() {
   @Autowired
@@ -287,6 +291,65 @@ class ApplicationTest : IntegrationTestBase() {
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion &&
         it.outdatedSchema == true
+    }
+  }
+
+  @Test
+  fun `Create new application without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/applications")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create new application returns 201 with correct body and Location header`() {
+    val crn = "CRN321"
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    mockOffenderDetailsCommunityApiCall(
+      OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withDateOfBirth(LocalDate.parse("1985-05-05"))
+        .withNomsNumber("NOMS321")
+        .withFirstName("James")
+        .withLastName("Someone")
+        .withGender("Male")
+        .withNationality("English")
+        .withReligionOrBelief("Judaism")
+        .withGenderIdentity("Prefer to self-describe")
+        .withSelfDescribedGenderIdentity("This is a self described identity")
+        .produce()
+    )
+
+    val applicationSchema = applicationSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+
+    val result = webTestClient.post()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewApplication(
+          crn = crn
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(Application::class.java)
+
+    assertThat(result.responseHeaders["Location"]).anyMatch {
+      it.matches(Regex("/applications/.+"))
+    }
+
+    assertThat(result.responseBody.blockFirst()).matches {
+      it.crn == crn &&
+        it.schemaVersion == applicationSchema.id
     }
   }
 

@@ -52,4 +52,6 @@ class JsonSchemaService(
 
     return application
   }
+
+  fun getNewestSchema(): ApplicationSchemaEntity = applicationSchemaRepository.findFirstByOrderByAddedAtDesc()
 }
