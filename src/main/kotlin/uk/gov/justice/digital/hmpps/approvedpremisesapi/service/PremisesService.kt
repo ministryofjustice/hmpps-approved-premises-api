@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.util.UUID
@@ -57,7 +58,7 @@ class PremisesService(
     referenceNumber: String?,
     notes: String?
   ): ValidatableActionResult<LostBedsEntity> {
-    val validationIssues = mutableMapOf<String, String>()
+    val validationIssues = ValidationErrors()
     if (endDate.isBefore(startDate)) {
       validationIssues["$.endDate"] = "Cannot be before startDate"
     }

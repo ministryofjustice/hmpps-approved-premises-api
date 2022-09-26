@@ -1,3 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
-typealias ValidationErrors = MutableMap<String, String>
+@JvmInline
+value class ValidationErrors(private val errorMap: MutableMap<String, String>) : MutableMap<String, String> by errorMap {
+  constructor() : this(mutableMapOf())
+}
+
+fun singleValidationErrorOf(propertyNameToMessage: Pair<String, String>) = ValidationErrors().apply { this[propertyNameToMessage.first] = propertyNameToMessage.second }

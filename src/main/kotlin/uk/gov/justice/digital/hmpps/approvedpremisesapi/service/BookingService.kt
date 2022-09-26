@@ -20,6 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.singleValidationErrorOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -56,7 +58,7 @@ class BookingService(
     }
 
     if (expectedDepartureDate.isBefore(arrivalDate)) {
-      return ValidatableActionResult.FieldValidationError(mapOf("$.expectedDepartureDate" to "Cannot be before arrivalDate"))
+      return ValidatableActionResult.FieldValidationError(singleValidationErrorOf("$.expectedDepartureDate" to "Cannot be before arrivalDate"))
     }
 
     val arrivalEntity = arrivalRepository.save(
@@ -82,7 +84,7 @@ class BookingService(
       return ValidatableActionResult.GeneralValidationError("This Booking already has a Non Arrival set")
     }
 
-    val validationIssues = mutableMapOf<String, String>()
+    val validationIssues = ValidationErrors()
 
     if (booking.arrivalDate.isAfter(date)) {
       validationIssues["$.date"] = "Cannot be before Booking's arrivalDate"
@@ -120,7 +122,7 @@ class BookingService(
       return ValidatableActionResult.GeneralValidationError("This Booking already has a Cancellation set")
     }
 
-    val validationIssues = mutableMapOf<String, String>()
+    val validationIssues = ValidationErrors()
 
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
@@ -156,7 +158,7 @@ class BookingService(
       return ValidatableActionResult.GeneralValidationError("This Booking already has a Departure set")
     }
 
-    val validationIssues = mutableMapOf<String, String>()
+    val validationIssues = ValidationErrors()
 
     if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
       validationIssues["$.dateTime"] = "Must be after the Booking's arrival date (${booking.arrivalDate})"
@@ -203,7 +205,7 @@ class BookingService(
     notes: String?
   ): ValidatableActionResult<ExtensionEntity> {
     if (booking.departureDate.isAfter(newDepartureDate)) {
-      return ValidatableActionResult.FieldValidationError(mapOf("$.newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
+      return ValidatableActionResult.FieldValidationError(singleValidationErrorOf("$.newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
     }
 
     val extensionEntity = ExtensionEntity(

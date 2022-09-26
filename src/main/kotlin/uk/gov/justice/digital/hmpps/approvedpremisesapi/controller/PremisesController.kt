@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -137,7 +138,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val validationErrors = mutableMapOf<String, String>()
+    val validationErrors = ValidationErrors()
 
     val offenderResult = offenderService.getOffenderByCrn(body.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
     if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
