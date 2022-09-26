@@ -100,6 +100,7 @@ class OffenderService(
           risks
         )
       }
+      else -> uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached()
     }
   }
 

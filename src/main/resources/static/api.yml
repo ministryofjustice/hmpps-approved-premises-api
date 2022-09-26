@@ -1742,7 +1742,6 @@ components:
       properties:
         crn:
           type: string
-          format: uuid
       required:
         - crn
     UpdateApplication:

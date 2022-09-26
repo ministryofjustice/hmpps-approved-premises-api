@@ -7,24 +7,32 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOfficerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ProbationOfficerService
 import java.util.UUID
 
 class ApplicationServiceTest {
   private val mockProbationOfficerRepository = mockk<ProbationOfficerRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
+  private val mockOffenderService = mockk<OffenderService>()
+  private val mockProbationOfficerService = mockk<ProbationOfficerService>()
 
   private val applicationService = ApplicationService(
     mockProbationOfficerRepository,
     mockApplicationRepository,
-    mockJsonSchemaService
+    mockJsonSchemaService,
+    mockOffenderService,
+    mockProbationOfficerService
   )
 
   @Test
@@ -123,5 +131,58 @@ class ApplicationServiceTest {
     result as AuthorisableActionResult.Success
 
     assertThat(result.entity).isEqualTo(applicationEntity)
+  }
+
+  @Test
+  fun `createApplication returns FieldValidationError when CRN does not exist`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
+
+    val result = applicationService.createApplication(crn, username)
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "This CRN does not exist")
+  }
+
+  @Test
+  fun `createApplication returns FieldValidationError when CRN is LAO restricted`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
+
+    val result = applicationService.createApplication(crn, username)
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "You do not have permission to access this CRN")
+  }
+
+  @Test
+  fun `createApplication returns Success with created Application`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val probationOfficer = ProbationOfficerEntityFactory().produce()
+    val schema = ApplicationSchemaEntityFactory().produce()
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce()
+    )
+    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockJsonSchemaService.getNewestSchema() } returns schema
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val result = applicationService.createApplication(crn, username)
+
+    assertThat(result is ValidatableActionResult.Success).isTrue
+    result as ValidatableActionResult.Success
+    assertThat(result.entity).matches {
+      it.crn == crn &&
+        it.createdByProbationOfficer == probationOfficer
+    }
   }
 }

@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
@@ -478,18 +477,6 @@ class BookingTest : IntegrationTestBase() {
 
     assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
   }
-
-  private fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(offenderDetails)
-          )
-      )
-  )
 
   private fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
     WireMock.get(WireMock.urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
