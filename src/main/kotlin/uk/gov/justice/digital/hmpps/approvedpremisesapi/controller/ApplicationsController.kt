@@ -55,6 +55,7 @@ class ApplicationsController(
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.Success -> applicationResult.entity
+      else -> shouldNotBeReached()
     }
 
     return ResponseEntity
