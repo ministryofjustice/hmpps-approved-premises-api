@@ -63,4 +63,49 @@ class ApplicationService(
 
     return ValidatableActionResult.Success(createdApplication)
   }
+
+  fun updateApplication(applicationId: UUID, data: String, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val probationOfficer = probationOfficerService.getProbationOfficerForRequestUser()
+
+    if (application.createdByProbationOfficer != probationOfficer) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted")
+      )
+    }
+
+    val validationErrors = mutableMapOf<String, String>()
+
+    val latestSchemaVersion = jsonSchemaService.getNewestSchema()
+
+    if (!jsonSchemaService.validate(latestSchemaVersion, data)) {
+      validationErrors["$.data"] = "This data does not conform to the newest application schema"
+    }
+
+    if (submittedAt?.isAfter(OffsetDateTime.now()) == true) {
+      validationErrors["$.submittedAt"] = "Submitted at must be in the past"
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors)
+      )
+    }
+
+    application.let {
+      it.schemaVersion = latestSchemaVersion
+      it.data = data
+      it.submittedAt = submittedAt
+    }
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(applicationRepository.save(application))
+    )
+  }
 }

@@ -105,4 +105,65 @@ class JsonSchemaServiceTest {
         !it.schemaUpToDate
     }
   }
+
+  @Test
+  fun `validate returns false for JSON that does not satisfy schema`() {
+    val schema = ApplicationSchemaEntityFactory()
+      .withSchema(
+        """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """
+      )
+      .produce()
+
+    assertThat(jsonSchemaService.validate(schema, "{}")).isFalse
+  }
+
+  @Test
+  fun `validate returns true for JSON that does satisfy schema`() {
+    val schema = ApplicationSchemaEntityFactory()
+      .withSchema(
+        """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """
+      )
+      .produce()
+
+    assertThat(
+      jsonSchemaService.validate(
+        schema,
+        """
+        {
+           "thingId": 123
+        }
+      """
+      )
+    ).isTrue
+  }
 }

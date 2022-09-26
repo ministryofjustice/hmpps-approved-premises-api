@@ -20,7 +20,7 @@ class JsonSchemaService(
 ) {
   private val schemas = synchronizedMap<UUID, JsonSchema>(mutableMapOf())
 
-  private fun validate(schema: ApplicationSchemaEntity, json: String): Boolean {
+  fun validate(schema: ApplicationSchemaEntity, json: String): Boolean {
     val schemaJsonNode = objectMapper.readTree(schema.schema)
     val jsonNode = objectMapper.readTree(json)
 
