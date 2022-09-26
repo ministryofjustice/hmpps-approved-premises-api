@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOffi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.singleValidationErrorOf
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -41,10 +41,10 @@ class ApplicationService(
     return AuthorisableActionResult.Success(jsonSchemaService.attemptSchemaUpgrade(applicationEntity))
   }
 
-  fun createApplication(crn: String, username: String): ValidatableActionResult<ApplicationEntity> {
+  fun createApplication(crn: String, username: String) = validated<ApplicationEntity> {
     when (offenderService.getOffenderByCrn(crn, username)) {
-      is AuthorisableActionResult.NotFound -> return ValidatableActionResult.FieldValidationError(singleValidationErrorOf("$.crn" to "This CRN does not exist"))
-      is AuthorisableActionResult.Unauthorised -> return ValidatableActionResult.FieldValidationError(singleValidationErrorOf("$.crn" to "You do not have permission to access this CRN"))
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "This CRN does not exist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "You do not have permission to access this CRN"
       is AuthorisableActionResult.Success -> Unit
     }
 
@@ -63,7 +63,7 @@ class ApplicationService(
       )
     )
 
-    return ValidatableActionResult.Success(createdApplication)
+    return success(createdApplication)
   }
 
   fun updateApplication(applicationId: UUID, data: String, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {

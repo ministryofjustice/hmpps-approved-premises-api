@@ -19,9 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.singleValidationErrorOf
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -52,13 +50,13 @@ class BookingService(
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
     notes: String?
-  ): ValidatableActionResult<ArrivalEntity> {
+  ) = validated<ArrivalEntity> {
     if (booking.arrival != null) {
-      return ValidatableActionResult.GeneralValidationError("This Booking already has an Arrival set")
+      return generalError("This Booking already has an Arrival set")
     }
 
     if (expectedDepartureDate.isBefore(arrivalDate)) {
-      return ValidatableActionResult.FieldValidationError(singleValidationErrorOf("$.expectedDepartureDate" to "Cannot be before arrivalDate"))
+      return "$.expectedDepartureDate" hasSingleValidationError "Cannot be before arrivalDate"
     }
 
     val arrivalEntity = arrivalRepository.save(
@@ -71,7 +69,7 @@ class BookingService(
       )
     )
 
-    return ValidatableActionResult.Success(arrivalEntity)
+    return success(arrivalEntity)
   }
 
   fun createNonArrival(
@@ -79,24 +77,22 @@ class BookingService(
     date: LocalDate,
     reasonId: UUID,
     notes: String?
-  ): ValidatableActionResult<NonArrivalEntity> {
+  ) = validated<NonArrivalEntity> {
     if (booking.nonArrival != null) {
-      return ValidatableActionResult.GeneralValidationError("This Booking already has a Non Arrival set")
+      return generalError("This Booking already has a Non Arrival set")
     }
 
-    val validationIssues = ValidationErrors()
-
     if (booking.arrivalDate.isAfter(date)) {
-      validationIssues["$.date"] = "Cannot be before Booking's arrivalDate"
+      "$.date" hasValidationError "Cannot be before Booking's arrivalDate"
     }
 
     val reason = nonArrivalReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      validationIssues["$.reason"] = "This reason does not exist"
+      "$.reason" hasValidationError "This reason does not exist"
     }
 
-    if (validationIssues.any()) {
-      return ValidatableActionResult.FieldValidationError(validationIssues)
+    if (validationErrors.any()) {
+      return fieldValidationError
     }
 
     val nonArrivalEntity = nonArrivalRepository.save(
@@ -109,7 +105,7 @@ class BookingService(
       )
     )
 
-    return ValidatableActionResult.Success(nonArrivalEntity)
+    return success(nonArrivalEntity)
   }
 
   fun createCancellation(
@@ -117,20 +113,18 @@ class BookingService(
     date: LocalDate,
     reasonId: UUID,
     notes: String?
-  ): ValidatableActionResult<CancellationEntity> {
+  ) = validated<CancellationEntity> {
     if (booking.cancellation != null) {
-      return ValidatableActionResult.GeneralValidationError("This Booking already has a Cancellation set")
+      return generalError("This Booking already has a Cancellation set")
     }
-
-    val validationIssues = ValidationErrors()
 
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      validationIssues["$.reason"] = "This reason does not exist"
+      "$.reason" hasValidationError "This reason does not exist"
     }
 
-    if (validationIssues.any()) {
-      return ValidatableActionResult.FieldValidationError(validationIssues)
+    if (validationErrors.any()) {
+      return fieldValidationError
     }
 
     val cancellationEntity = cancellationRepository.save(
@@ -143,7 +137,7 @@ class BookingService(
       )
     )
 
-    return ValidatableActionResult.Success(cancellationEntity)
+    return success(cancellationEntity)
   }
 
   fun createDeparture(
@@ -153,34 +147,32 @@ class BookingService(
     moveOnCategoryId: UUID,
     destinationProviderId: UUID,
     notes: String?
-  ): ValidatableActionResult<DepartureEntity> {
+  ) = validated<DepartureEntity> {
     if (booking.departure != null) {
-      return ValidatableActionResult.GeneralValidationError("This Booking already has a Departure set")
+      return generalError("This Booking already has a Departure set")
     }
 
-    val validationIssues = ValidationErrors()
-
     if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
-      validationIssues["$.dateTime"] = "Must be after the Booking's arrival date (${booking.arrivalDate})"
+      "$.dateTime" hasValidationError "Must be after the Booking's arrival date (${booking.arrivalDate})"
     }
 
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      validationIssues["$.reasonId"] = "Reason does not exist"
+      "$.reasonId" hasValidationError "Reason does not exist"
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
     if (reason == null) {
-      validationIssues["$.moveOnCategoryId"] = "Move on Category does not exist"
+      "$.moveOnCategoryId" hasValidationError "Move on Category does not exist"
     }
 
     val destinationProvider = destinationProviderRepository.findByIdOrNull(destinationProviderId)
     if (destinationProvider == null) {
-      validationIssues["$.destinationProviderId"] = "Destination Provider does not exist"
+      "$.destinationProviderId" hasValidationError "Destination Provider does not exist"
     }
 
-    if (validationIssues.any()) {
-      return ValidatableActionResult.FieldValidationError(validationIssues)
+    if (validationErrors.any()) {
+      return fieldValidationError
     }
 
     val departureEntity = departureRepository.save(
@@ -195,7 +187,7 @@ class BookingService(
       )
     )
 
-    return ValidatableActionResult.Success(departureEntity)
+    return success(departureEntity)
   }
 
   @Transactional
@@ -203,9 +195,9 @@ class BookingService(
     booking: BookingEntity,
     newDepartureDate: LocalDate,
     notes: String?
-  ): ValidatableActionResult<ExtensionEntity> {
+  ) = validated<ExtensionEntity> {
     if (booking.departureDate.isAfter(newDepartureDate)) {
-      return ValidatableActionResult.FieldValidationError(singleValidationErrorOf("$.newDepartureDate" to "Must be after the Booking's current departure date (${booking.departureDate})"))
+      return "$.newDepartureDate" hasSingleValidationError "Must be after the Booking's current departure date (${booking.departureDate})"
     }
 
     val extensionEntity = ExtensionEntity(
@@ -221,7 +213,7 @@ class BookingService(
     booking.extensions.add(extension)
     updateBooking(booking)
 
-    return ValidatableActionResult.Success(extensionEntity)
+    return success(extensionEntity)
   }
 
   fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {
