@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.time.LocalDate
@@ -351,6 +352,89 @@ class ApplicationTest : IntegrationTestBase() {
       it.crn == crn &&
         it.schemaVersion == applicationSchema.id
     }
+  }
+
+  @Test
+  fun `Update existing application returns 200 with correct body`() {
+    val username = "PROBATIONPERSON"
+    val crn = "CRN321"
+    val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    mockOffenderDetailsCommunityApiCall(
+      OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withDateOfBirth(LocalDate.parse("1985-05-05"))
+        .withNomsNumber("NOMS321")
+        .withFirstName("James")
+        .withLastName("Someone")
+        .withGender("Male")
+        .withNationality("English")
+        .withReligionOrBelief("Judaism")
+        .withGenderIdentity("Prefer to self-describe")
+        .withSelfDescribedGenderIdentity("This is a self described identity")
+        .produce()
+    )
+
+    val applicationSchema = applicationSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+      withSchema(
+        """
+          {
+            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+            "${"\$id"}": "https://example.com/product.schema.json",
+            "title": "Thing",
+            "description": "A thing",
+            "type": "object",
+            "properties": {
+              "thingId": {
+                "description": "The unique identifier for a thing",
+                "type": "integer"
+              }
+            },
+            "required": [ "thingId" ]
+          }
+        """
+      )
+    }
+
+    val probationOfficer = probationOfficerEntityFactory.produceAndPersist {
+      withDistinguishedName(username)
+    }
+
+    applicationEntityFactory.produceAndPersist {
+      withCrn(crn)
+      withId(applicationId)
+      withApplicationSchema(applicationSchema)
+      withCreatedByProbationOfficer(probationOfficer)
+    }
+
+    val submittedAt = OffsetDateTime.now()
+
+    val resultBody = webTestClient.put()
+      .uri("/applications/$applicationId")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateApplication(
+          data = mapOf("thingId" to 123),
+          submittedAt = submittedAt
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(String::class.java)
+      .responseBody
+      .blockFirst()
+
+    val result = objectMapper.readValue(resultBody, Application::class.java)
+
+    assertThat(result.crn).isEqualTo(crn)
+    assertThat(result.schemaVersion).isEqualTo(applicationSchema.id)
+    assertThat(result.submittedAt!!.toInstant()).isEqualTo(submittedAt.toInstant())
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {

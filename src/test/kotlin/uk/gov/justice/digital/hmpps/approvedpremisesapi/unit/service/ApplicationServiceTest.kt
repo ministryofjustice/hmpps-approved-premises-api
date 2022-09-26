@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ProbationOfficerService
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationServiceTest {
@@ -184,5 +185,127 @@ class ApplicationServiceTest {
       it.crn == crn &&
         it.createdByProbationOfficer == probationOfficer
     }
+  }
+
+  @Test
+  fun `updateApplication returns NotFound when application doesn't exist`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+    assertThat(applicationService.updateApplication(applicationId, "{}", null, username) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `updateApplication returns Unauthorised when application doesn't belong to request user`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns ProbationOfficerEntityFactory()
+      .withDistinguishedName(username)
+      .produce()
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+      .withId(applicationId)
+      .withYieldedCreatedByProbationOfficer { ProbationOfficerEntityFactory().produce() }
+      .produce()
+
+    assertThat(applicationService.updateApplication(applicationId, "{}", null, username) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `updateApplication returns GeneralValidationError when application has already been submitted`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val probationOfficer = ProbationOfficerEntityFactory()
+      .withDistinguishedName(username)
+      .produce()
+
+    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByProbationOfficer(probationOfficer)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    val result = applicationService.updateApplication(applicationId, "{}", null, username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+  }
+
+  @Test
+  fun `updateApplication returns FieldValidationError when data does not conform to newest schema, submitted at is in future`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val probationOfficer = ProbationOfficerEntityFactory()
+      .withDistinguishedName(username)
+      .produce()
+
+    val newestSchema = ApplicationSchemaEntityFactory().produce()
+
+    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByProbationOfficer(probationOfficer)
+      .produce()
+    every { mockJsonSchemaService.getNewestSchema() } returns newestSchema
+    every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
+
+    val result = applicationService.updateApplication(applicationId, "{}", OffsetDateTime.now().plusMinutes(1), username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.FieldValidationError
+
+    assertThat(validatableActionResult.validationMessages).containsEntry("$.data", "This data does not conform to the newest application schema")
+    assertThat(validatableActionResult.validationMessages).containsEntry("$.submittedAt", "Submitted at must be in the past")
+  }
+
+  @Test
+  fun `updateApplication returns Success with updated Application`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val probationOfficer = ProbationOfficerEntityFactory()
+      .withDistinguishedName(username)
+      .produce()
+
+    val newestSchema = ApplicationSchemaEntityFactory().produce()
+    val submittedAt = OffsetDateTime.now().minusMinutes(1)
+    val updatedData = """
+      {
+        "aProperty": "value"
+      }
+    """
+
+    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByProbationOfficer(probationOfficer)
+      .produce()
+    every { mockJsonSchemaService.getNewestSchema() } returns newestSchema
+    every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val result = applicationService.updateApplication(applicationId, updatedData, submittedAt, username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+    assertThat(validatableActionResult.entity.submittedAt).isEqualTo(submittedAt)
+    assertThat(validatableActionResult.entity.data).isEqualTo(updatedData)
   }
 }

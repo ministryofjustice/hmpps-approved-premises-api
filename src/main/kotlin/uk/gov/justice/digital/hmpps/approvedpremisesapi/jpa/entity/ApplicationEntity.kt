@@ -29,13 +29,13 @@ data class ApplicationEntity(
   val createdByProbationOfficer: ProbationOfficerEntity,
 
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
-  val data: String?,
+  var data: String?,
 
   @ManyToOne
   @JoinColumn(name = "schema_version")
   var schemaVersion: ApplicationSchemaEntity,
   val createdAt: OffsetDateTime,
-  val submittedAt: OffsetDateTime?,
+  var submittedAt: OffsetDateTime?,
 
   @Transient
   var schemaUpToDate: Boolean
