@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.util.UUID
@@ -56,38 +57,38 @@ class PremisesService(
     reasonId: UUID,
     referenceNumber: String?,
     notes: String?
-  ): ValidatableActionResult<LostBedsEntity> {
-    val validationIssues = mutableMapOf<String, String>()
-    if (endDate.isBefore(startDate)) {
-      validationIssues["$.endDate"] = "Cannot be before startDate"
-    }
+  ): ValidatableActionResult<LostBedsEntity> =
+    validated {
+      if (endDate.isBefore(startDate)) {
+        "$.endDate" hasValidationError "Cannot be before startDate"
+      }
 
-    if (numberOfBeds <= 0) {
-      validationIssues["$.numberOfBeds"] = "Must be greater than 0"
-    }
+      if (numberOfBeds <= 0) {
+        "$.numberOfBeds" hasValidationError "Must be greater than 0"
+      }
 
-    val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
-    if (reason == null) {
-      validationIssues["$.reason"] = "This reason does not exist"
-    }
+      val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
+      if (reason == null) {
+        "$.reason" hasValidationError "This reason does not exist"
+      }
 
-    if (validationIssues.any()) {
-      return ValidatableActionResult.FieldValidationError(validationIssues)
-    }
+      if (validationErrors.any()) {
+        return fieldValidationError
+      }
 
-    val lostBedsEntity = lostBedsRepository.save(
-      LostBedsEntity(
-        id = UUID.randomUUID(),
-        premises = premises,
-        startDate = startDate,
-        endDate = endDate,
-        numberOfBeds = numberOfBeds,
-        reason = reason!!,
-        referenceNumber = referenceNumber,
-        notes = notes
+      val lostBedsEntity = lostBedsRepository.save(
+        LostBedsEntity(
+          id = UUID.randomUUID(),
+          premises = premises,
+          startDate = startDate,
+          endDate = endDate,
+          numberOfBeds = numberOfBeds,
+          reason = reason!!,
+          referenceNumber = referenceNumber,
+          notes = notes
+        )
       )
-    )
 
-    return ValidatableActionResult.Success(lostBedsEntity)
-  }
+      return success(lostBedsEntity)
+    }
 }
