@@ -1,0 +1,60 @@
+---
+generic-service:
+  nameOverride: hmpps-temporary-accommodation-api
+
+  replicaCount: 4
+
+  image:
+    repository: quay.io/hmpps/hmpps-temporary-accommodation-api
+    tag: app_version    # override at deployment time
+    port: 8080
+
+  ingress:
+    enabled: true
+    host: app-hostname.local    # override per environment
+    tlsSecretName: hmpps-temporary-accommodation-api-cert
+    contextColour: green
+
+  # Environment variables to load into the deployment
+  env:
+    JAVA_OPTS: "-Xmx512m"
+    SERVER_PORT: "8080"
+    SPRING_PROFILES_ACTIVE: "logstash"
+    APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
+    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
+    SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+    SPRING_JPA_DATABASE: postgresql
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://${DB_HOST}/${DB_NAME}"
+
+  # Pre-existing kubernetes secrets to load as environment variables in the deployment.
+  # namespace_secrets:
+  #   [name of kubernetes secret]:
+  #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
+
+  namespace_secrets:
+    hmpps-temporary-accommodation-api:
+      APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_COMMUNITY-API_CLIENT-ID: "SYSTEM_CLIENT_DELIUS_ID"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_COMMUNITY-API_CLIENT-SECRET: "SYSTEM_CLIENT_DELIUS_SECRET"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_HMPPS-TIER_CLIENT-ID: "SYSTEM_CLIENT_TIER_ID"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_HMPPS-TIER_CLIENT-SECRET: "SYSTEM_CLIENT_TIER_SECRET"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_PRISONS-API_CLIENT-ID: "SYSTEM_CLIENT_NOMIS_ID"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_PRISONS-API_CLIENT-SECRET: "SYSTEM_CLIENT_NOMIS_SECRET"
+    rds-postgresql-instance-output:
+      SPRING_DATASOURCE_USERNAME: "database_username"
+      SPRING_DATASOURCE_PASSWORD: "database_password"
+      DB_HOST: "rds_instance_endpoint"
+      DB_NAME: "database_name"
+
+  allowlist:
+    office: "217.33.148.210/32"
+    health-kick: "35.177.252.195/32"
+    petty-france-wifi: "213.121.161.112/28"
+    global-protect: "35.176.93.186/32"
+    mojvpn: "81.134.202.29/32"
+    cloudplatform-live-1: "35.178.209.113/32"
+    cloudplatform-live-2: "3.8.51.207/32"
+    cloudplatform-live-3: "35.177.252.54/32"
+
+generic-prometheus-alerts:
+  targetApplication: hmpps-temporary-accommodation-api
