@@ -102,3 +102,5 @@ services:
 hmpps:
   auth:
     url: http://localhost:9091/auth
+
+log-client-credentials-jwt-info: false
