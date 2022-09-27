@@ -8,3 +8,5 @@ spring:
     locations: classpath:db/migration/all,classpath:db/migration/local+dev
   jpa:
     database: postgresql
+
+log-client-credentials-jwt-info: true
