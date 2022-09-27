@@ -60,16 +60,16 @@ class PremisesService(
   ): ValidatableActionResult<LostBedsEntity> =
     validated {
       if (endDate.isBefore(startDate)) {
-        "$.endDate" hasValidationError "Cannot be before startDate"
+        "$.endDate" hasValidationError "beforeStartDate"
       }
 
       if (numberOfBeds <= 0) {
-        "$.numberOfBeds" hasValidationError "Must be greater than 0"
+        "$.numberOfBeds" hasValidationError "isZero"
       }
 
       val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
       if (reason == null) {
-        "$.reason" hasValidationError "This reason does not exist"
+        "$.reason" hasValidationError "doesNotExist"
       }
 
       if (validationErrors.any()) {

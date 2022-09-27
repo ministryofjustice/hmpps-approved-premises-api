@@ -145,7 +145,7 @@ class ApplicationServiceTest {
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "This CRN does not exist")
+    assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
   }
 
   @Test
@@ -159,7 +159,7 @@ class ApplicationServiceTest {
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "You do not have permission to access this CRN")
+    assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
   }
 
   @Test
@@ -267,8 +267,8 @@ class ApplicationServiceTest {
     assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
     val validatableActionResult = result.entity as ValidatableActionResult.FieldValidationError
 
-    assertThat(validatableActionResult.validationMessages).containsEntry("$.data", "This data does not conform to the newest application schema")
-    assertThat(validatableActionResult.validationMessages).containsEntry("$.submittedAt", "Submitted at must be in the past")
+    assertThat(validatableActionResult.validationMessages).containsEntry("$.data", "invalid")
+    assertThat(validatableActionResult.validationMessages).containsEntry("$.submittedAt", "isInFuture")
   }
 
   @Test

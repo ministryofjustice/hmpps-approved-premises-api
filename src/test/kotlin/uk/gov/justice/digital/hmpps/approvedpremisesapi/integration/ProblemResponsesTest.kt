@@ -75,7 +75,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
                   "requiredString": null,
                   "optionalBoolean": 1234,
                   "optionalLocalDate": false
-               }, 
+               },
                null]
           }
         """
@@ -89,19 +89,19 @@ class ProblemResponsesTest : IntegrationTestBase() {
 
     assertThat(validationResult!!.invalidParams).containsAll(
       listOf(
-        InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalBoolean", errorType = "Expected a boolean"),
-        InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalLocalDate", errorType = "Expected a string"),
-        InvalidParam(propertyName = "$.optionalListOfObjects[0].requiredString", errorType = "A value must be provided for this property"),
-        InvalidParam(propertyName = "$.optionalListOfObjects[1]", errorType = "Expected an object"),
-        InvalidParam(propertyName = "$.optionalObject", errorType = "Expected an object"),
-        InvalidParam(propertyName = "$.requiredInt", errorType = "A value must be provided for this property"),
-        InvalidParam(propertyName = "$.requiredListOfInts[0]", errorType = "Expected a number"),
-        InvalidParam(propertyName = "$.requiredListOfInts[1]", errorType = "Expected a number"),
-        InvalidParam(propertyName = "$.requiredListOfInts[2]", errorType = "Expected a number"),
-        InvalidParam(propertyName = "$.requiredListOfObjects", errorType = "A value must be provided for this property"),
-        InvalidParam(propertyName = "$.requiredObject.optionalBoolean", errorType = "Expected a boolean"),
-        InvalidParam(propertyName = "$.requiredObject.optionalLocalDate", errorType = "Expected a string"),
-        InvalidParam(propertyName = "$.requiredObject.requiredString", errorType = "A value must be provided for this property")
+        InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalBoolean", errorType = "expectedBoolean"),
+        InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalLocalDate", errorType = "expectedString"),
+        InvalidParam(propertyName = "$.optionalListOfObjects[0].requiredString", errorType = "empty"),
+        InvalidParam(propertyName = "$.optionalListOfObjects[1]", errorType = "expectedObject"),
+        InvalidParam(propertyName = "$.optionalObject", errorType = "expectedObject"),
+        InvalidParam(propertyName = "$.requiredInt", errorType = "empty"),
+        InvalidParam(propertyName = "$.requiredListOfInts[0]", errorType = "expectedNumber"),
+        InvalidParam(propertyName = "$.requiredListOfInts[1]", errorType = "expectedNumber"),
+        InvalidParam(propertyName = "$.requiredListOfInts[2]", errorType = "expectedNumber"),
+        InvalidParam(propertyName = "$.requiredListOfObjects", errorType = "empty"),
+        InvalidParam(propertyName = "$.requiredObject.optionalBoolean", errorType = "expectedBoolean"),
+        InvalidParam(propertyName = "$.requiredObject.optionalLocalDate", errorType = "expectedString"),
+        InvalidParam(propertyName = "$.requiredObject.requiredString", errorType = "empty")
       )
     )
   }
@@ -131,7 +131,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
                   "requiredString": null,
                   "optionalBoolean": 1234,
                   "optionalLocalDate": false
-               }, 
+               },
                null]
           }]
         """
@@ -145,19 +145,19 @@ class ProblemResponsesTest : IntegrationTestBase() {
 
     assertThat(validationResult!!.invalidParams).containsAll(
       listOf(
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalBoolean", errorType = "Expected a boolean"),
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalLocalDate", errorType = "Expected a string"),
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].requiredString", errorType = "A value must be provided for this property"),
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[1]", errorType = "Expected an object"),
-        InvalidParam(propertyName = "$[0].optionalObject", errorType = "Expected an object"),
-        InvalidParam(propertyName = "$[0].requiredInt", errorType = "A value must be provided for this property"),
-        InvalidParam(propertyName = "$[0].requiredListOfInts[0]", errorType = "Expected a number"),
-        InvalidParam(propertyName = "$[0].requiredListOfInts[1]", errorType = "Expected a number"),
-        InvalidParam(propertyName = "$[0].requiredListOfInts[2]", errorType = "Expected a number"),
-        InvalidParam(propertyName = "$[0].requiredListOfObjects", errorType = "A value must be provided for this property"),
-        InvalidParam(propertyName = "$[0].requiredObject.optionalBoolean", errorType = "Expected a boolean"),
-        InvalidParam(propertyName = "$[0].requiredObject.optionalLocalDate", errorType = "Expected a string"),
-        InvalidParam(propertyName = "$[0].requiredObject.requiredString", errorType = "A value must be provided for this property")
+        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalBoolean", errorType = "expectedBoolean"),
+        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalLocalDate", errorType = "expectedString"),
+        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].requiredString", errorType = "empty"),
+        InvalidParam(propertyName = "$[0].optionalListOfObjects[1]", errorType = "expectedObject"),
+        InvalidParam(propertyName = "$[0].optionalObject", errorType = "expectedObject"),
+        InvalidParam(propertyName = "$[0].requiredInt", errorType = "empty"),
+        InvalidParam(propertyName = "$[0].requiredListOfInts[0]", errorType = "expectedNumber"),
+        InvalidParam(propertyName = "$[0].requiredListOfInts[1]", errorType = "expectedNumber"),
+        InvalidParam(propertyName = "$[0].requiredListOfInts[2]", errorType = "expectedNumber"),
+        InvalidParam(propertyName = "$[0].requiredListOfObjects", errorType = "empty"),
+        InvalidParam(propertyName = "$[0].requiredObject.optionalBoolean", errorType = "expectedBoolean"),
+        InvalidParam(propertyName = "$[0].requiredObject.optionalLocalDate", errorType = "expectedString"),
+        InvalidParam(propertyName = "$[0].requiredObject.requiredString", errorType = "empty")
       )
     )
   }

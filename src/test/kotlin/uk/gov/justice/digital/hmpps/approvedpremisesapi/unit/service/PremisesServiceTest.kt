@@ -184,9 +184,9 @@ class PremisesServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.endDate", "Cannot be before startDate"),
-      entry("$.numberOfBeds", "Must be greater than 0"),
-      entry("$.reason", "This reason does not exist")
+      entry("$.endDate", "beforeStartDate"),
+      entry("$.numberOfBeds", "isZero"),
+      entry("$.reason", "doesNotExist")
     )
   }
 
