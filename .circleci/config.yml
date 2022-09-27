@@ -60,6 +60,28 @@ workflows:
 #            - approved-premises-api-prod
 #          requires:
 #            - request-prod-approval
+  temporary-accommodation-build-test-and-deploy:
+    jobs:
+      - hmpps/helm_lint:
+          name: helm_lint
+      - hmpps/build_multiplatform_docker:
+          name: build_docker
+          filters:
+            branches:
+              only:
+                - main
+      - hmpps/deploy_env:
+          name: deploy_dev
+          env: "dev"
+          context: hmpps-common-vars
+          chart_name: hmpps-temporary-accommodation-api
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - build_docker
+            - helm_lint
 
   security:
     triggers:
@@ -97,5 +119,3 @@ workflows:
           context:
             - veracode-credentials
             - hmpps-common-vars
-
-
