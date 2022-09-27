@@ -23,7 +23,7 @@ class DeserializationValidationService {
       jsonArray.forEachIndexed { index, jsonNode ->
         val expectedJsonPrimitiveType = getExpectedJsonPrimitiveType(targetType.java)
         if (jsonNode.nodeType != expectedJsonPrimitiveType) {
-          result["$path[$index]"] = "Expected a ${expectedJsonPrimitiveType!!.name.lowercase()}"
+          result["$path[$index]"] = "expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}"
         }
       }
 
@@ -33,7 +33,7 @@ class DeserializationValidationService {
     jsonArray.forEachIndexed { index, jsonNode ->
       if (nullOrNullNode(jsonNode)) {
         if (!elementsNullable) {
-          result["$path[$index]"] = "Expected an object"
+          result["$path[$index]"] = "expectedObject"
         }
         return@forEachIndexed
       }
@@ -53,14 +53,14 @@ class DeserializationValidationService {
       }
 
       if (!it.returnType.isMarkedNullable && nullOrNullNode(jsonNode)) {
-        result["$path.${it.name}"] = "A value must be provided for this property"
+        result["$path.${it.name}"] = "empty"
         return@forEach
       }
 
       if (!nullOrNullNode(jsonNode)) {
         if (isArrayType(it.returnType.jvmErasure.java)) {
           if (jsonObject.get(it.name) !is ArrayNode) {
-            result["$path.${it.name}"] = "Expected an array"
+            result["$path.${it.name}"] = "expectedArray"
             return@forEach
           }
 
@@ -71,7 +71,7 @@ class DeserializationValidationService {
 
         if (getExpectedJsonPrimitiveType(it.returnType.jvmErasure.java) == null) {
           if (jsonObject.get(it.name) !is ObjectNode) {
-            result["$path.${it.name}"] = "Expected an object"
+            result["$path.${it.name}"] = "expectedObject"
             return@forEach
           }
 
@@ -83,7 +83,7 @@ class DeserializationValidationService {
 
         val expectedJsonPrimitiveType = getExpectedJsonPrimitiveType(it.returnType.jvmErasure.java)
         if (jsonNode.nodeType != expectedJsonPrimitiveType) {
-          result["$path.${it.name}"] = "Expected a ${expectedJsonPrimitiveType!!.name.lowercase()}"
+          result["$path.${it.name}"] = "expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}"
         }
       }
     }
