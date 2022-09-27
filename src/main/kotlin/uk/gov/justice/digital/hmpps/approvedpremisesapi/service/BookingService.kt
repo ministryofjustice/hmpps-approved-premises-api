@@ -56,7 +56,7 @@ class BookingService(
     }
 
     if (expectedDepartureDate.isBefore(arrivalDate)) {
-      return "$.expectedDepartureDate" hasSingleValidationError "Cannot be before arrivalDate"
+      return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
 
     val arrivalEntity = arrivalRepository.save(
@@ -83,12 +83,12 @@ class BookingService(
     }
 
     if (booking.arrivalDate.isAfter(date)) {
-      "$.date" hasValidationError "Cannot be before Booking's arrivalDate"
+      "$.date" hasValidationError "afterBookingArrivalDate"
     }
 
     val reason = nonArrivalReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      "$.reason" hasValidationError "This reason does not exist"
+      "$.reason" hasValidationError "doesNotExist"
     }
 
     if (validationErrors.any()) {
@@ -120,7 +120,7 @@ class BookingService(
 
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      "$.reason" hasValidationError "This reason does not exist"
+      "$.reason" hasValidationError "doesNotExist"
     }
 
     if (validationErrors.any()) {
@@ -153,22 +153,22 @@ class BookingService(
     }
 
     if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
-      "$.dateTime" hasValidationError "Must be after the Booking's arrival date (${booking.arrivalDate})"
+      "$.dateTime" hasValidationError "beforeBookingArrivalDate"
     }
 
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
-      "$.reasonId" hasValidationError "Reason does not exist"
+      "$.reasonId" hasValidationError "doesNotExist"
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
     if (reason == null) {
-      "$.moveOnCategoryId" hasValidationError "Move on Category does not exist"
+      "$.moveOnCategoryId" hasValidationError "doesNotExist"
     }
 
     val destinationProvider = destinationProviderRepository.findByIdOrNull(destinationProviderId)
     if (destinationProvider == null) {
-      "$.destinationProviderId" hasValidationError "Destination Provider does not exist"
+      "$.destinationProviderId" hasValidationError "doesNotExist"
     }
 
     if (validationErrors.any()) {
@@ -197,7 +197,7 @@ class BookingService(
     notes: String?
   ) = validated<ExtensionEntity> {
     if (booking.departureDate.isAfter(newDepartureDate)) {
-      return "$.newDepartureDate" hasSingleValidationError "Must be after the Booking's current departure date (${booking.departureDate})"
+      return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
     }
 
     val extensionEntity = ExtensionEntity(

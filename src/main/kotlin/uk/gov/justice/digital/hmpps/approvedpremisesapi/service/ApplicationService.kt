@@ -43,8 +43,8 @@ class ApplicationService(
 
   fun createApplication(crn: String, username: String) = validated<ApplicationEntity> {
     when (offenderService.getOffenderByCrn(crn, username)) {
-      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "This CRN does not exist"
-      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "You do not have permission to access this CRN"
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
       is AuthorisableActionResult.Success -> Unit
     }
 
@@ -87,11 +87,11 @@ class ApplicationService(
     val latestSchemaVersion = jsonSchemaService.getNewestSchema()
 
     if (!jsonSchemaService.validate(latestSchemaVersion, data)) {
-      validationErrors["$.data"] = "This data does not conform to the newest application schema"
+      validationErrors["$.data"] = "invalid"
     }
 
     if (submittedAt?.isAfter(OffsetDateTime.now()) == true) {
-      validationErrors["$.submittedAt"] = "Submitted at must be in the past"
+      validationErrors["$.submittedAt"] = "isInFuture"
     }
 
     if (validationErrors.any()) {
