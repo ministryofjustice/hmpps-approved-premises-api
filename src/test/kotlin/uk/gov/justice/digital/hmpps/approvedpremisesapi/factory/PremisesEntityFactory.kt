@@ -19,6 +19,7 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
   private var apCode: Yielded<String> = { randomStringUpperCase(5) }
   private var postcode: Yielded<String> = { randomPostCode() }
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
+  private var deliusTeamCode: Yielded<String> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -56,12 +57,17 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
     this.localAuthorityArea = localAuthorityAreaEntity
   }
 
+  fun withDeliusTeamCode(deliusTeamCode: String) = apply {
+    this.deliusTeamCode = { deliusTeamCode }
+  }
+
   override fun produce(): PremisesEntity = PremisesEntity(
     id = this.id(),
     name = this.name(),
     apCode = this.apCode(),
     postcode = this.postcode(),
     totalBeds = this.totalBeds(),
+    deliusTeamCode = this.deliusTeamCode(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
     bookings = mutableListOf(),

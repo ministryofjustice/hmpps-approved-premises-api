@@ -22,6 +22,7 @@ data class PremisesEntity(
   val apCode: String,
   var postcode: String,
   var totalBeds: Int,
+  val deliusTeamCode: String,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
