@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.util.UUID
 
 class ProblemResponsesTest : IntegrationTestBase() {
   @Test
@@ -76,7 +79,11 @@ class ProblemResponsesTest : IntegrationTestBase() {
                   "optionalBoolean": 1234,
                   "optionalLocalDate": false
                },
-               null]
+               null],
+             "aLocalDate": "not a date",
+             "aLocalDateTime": "not a date time",
+             "anOffsetDateTime": "not an offset date time",
+             "aUUID": "not a uuid"
           }
         """
       )
@@ -101,7 +108,11 @@ class ProblemResponsesTest : IntegrationTestBase() {
         InvalidParam(propertyName = "$.requiredListOfObjects", errorType = "empty"),
         InvalidParam(propertyName = "$.requiredObject.optionalBoolean", errorType = "expectedBoolean"),
         InvalidParam(propertyName = "$.requiredObject.optionalLocalDate", errorType = "expectedString"),
-        InvalidParam(propertyName = "$.requiredObject.requiredString", errorType = "empty")
+        InvalidParam(propertyName = "$.requiredObject.requiredString", errorType = "empty"),
+        InvalidParam(propertyName = "$.aLocalDate", errorType = "invalid"),
+        InvalidParam(propertyName = "$.aLocalDateTime", errorType = "invalid"),
+        InvalidParam(propertyName = "$.anOffsetDateTime", errorType = "invalid"),
+        InvalidParam(propertyName = "$.aUUID", errorType = "invalid")
       )
     )
   }
@@ -123,7 +134,11 @@ class ProblemResponsesTest : IntegrationTestBase() {
              "requiredObject": {
                 "requiredString": null,
                 "optionalBoolean": 1234,
-                "optionalLocalDate": false
+                "optionalLocalDate": false,
+                "aLocalDate": "not a date",
+                "aLocalDateTime": "not a date time",
+                "anOffsetDateTime": "not an offset date time",
+                "aUUID": "not a uuid"
              },
              "requiredListOfInts": ["not", "ints", false],
              "requiredListOfObjects": null,
@@ -132,7 +147,11 @@ class ProblemResponsesTest : IntegrationTestBase() {
                   "optionalBoolean": 1234,
                   "optionalLocalDate": false
                },
-               null]
+               null],
+             "aLocalDate": "not a date",
+             "aLocalDateTime": "not a date time",
+             "anOffsetDateTime": "not an offset date time",
+             "aUUID": "not a uuid"
           }]
         """
       )
@@ -157,7 +176,11 @@ class ProblemResponsesTest : IntegrationTestBase() {
         InvalidParam(propertyName = "$[0].requiredListOfObjects", errorType = "empty"),
         InvalidParam(propertyName = "$[0].requiredObject.optionalBoolean", errorType = "expectedBoolean"),
         InvalidParam(propertyName = "$[0].requiredObject.optionalLocalDate", errorType = "expectedString"),
-        InvalidParam(propertyName = "$[0].requiredObject.requiredString", errorType = "empty")
+        InvalidParam(propertyName = "$[0].requiredObject.requiredString", errorType = "empty"),
+        InvalidParam(propertyName = "$[0].aLocalDate", errorType = "invalid"),
+        InvalidParam(propertyName = "$[0].aLocalDateTime", errorType = "invalid"),
+        InvalidParam(propertyName = "$[0].anOffsetDateTime", errorType = "invalid"),
+        InvalidParam(propertyName = "$[0].aUUID", errorType = "invalid")
       )
     )
   }
@@ -183,7 +206,11 @@ data class DeserializationTestBody(
   val requiredObject: DeserializationTestBodyNested,
   val requiredListOfInts: List<Int>,
   val requiredListOfObjects: List<DeserializationTestBodyNested>,
-  val optionalListOfObjects: List<DeserializationTestBodyNested>?
+  val optionalListOfObjects: List<DeserializationTestBodyNested>?,
+  val aLocalDate: LocalDate,
+  val aLocalDateTime: LocalDateTime,
+  val anOffsetDateTime: OffsetDateTime,
+  val aUUID: UUID
 )
 
 data class DeserializationTestBodyNested(

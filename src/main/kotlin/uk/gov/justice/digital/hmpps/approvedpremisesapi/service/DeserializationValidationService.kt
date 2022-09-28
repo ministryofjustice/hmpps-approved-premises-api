@@ -10,6 +10,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.jvmErasure
@@ -24,6 +25,11 @@ class DeserializationValidationService {
         val expectedJsonPrimitiveType = getExpectedJsonPrimitiveType(targetType.java)
         if (jsonNode.nodeType != expectedJsonPrimitiveType) {
           result["$path[$index]"] = "expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}"
+        } else {
+          val expectedSpecialHandlingJsonPrimitiveType = getExpectedSpecialHandlingJsonPrimitiveTypeChecker(targetType.java, jsonNode)
+          if (expectedSpecialHandlingJsonPrimitiveType?.isValid() == false) {
+            result["$path[$index]"] = "invalid"
+          }
         }
       }
 
@@ -84,6 +90,11 @@ class DeserializationValidationService {
         val expectedJsonPrimitiveType = getExpectedJsonPrimitiveType(it.returnType.jvmErasure.java)
         if (jsonNode.nodeType != expectedJsonPrimitiveType) {
           result["$path.${it.name}"] = "expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}"
+        } else {
+          val expectedSpecialHandlingJsonPrimitiveType = getExpectedSpecialHandlingJsonPrimitiveTypeChecker(it.returnType.jvmErasure.java, jsonNode)
+          if (expectedSpecialHandlingJsonPrimitiveType?.isValid() == false) {
+            result["$path.${it.name}"] = "invalid"
+          }
         }
       }
     }
@@ -91,17 +102,28 @@ class DeserializationValidationService {
     return result
   }
 
+  private fun getExpectedSpecialHandlingJsonPrimitiveTypeChecker(jvmPrimitive: Class<*>, jsonNode: JsonNode): SpecialJsonPrimitiveTypeChecker? {
+    return when (jvmPrimitive) {
+      LocalDate::class.java -> LocalDateSpecialJsonPrimitiveTypeChecker(jsonNode)
+      LocalDateTime::class.java -> LocalDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
+      OffsetDateTime::class.java -> OffsetDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
+      UUID::class.java -> UUIDSpecialJsonPrimitiveTypeChecker(jsonNode)
+      else -> null
+    }
+  }
+
   private fun getExpectedJsonPrimitiveType(jvmPrimitive: Class<*>): JsonNodeType? {
     return when (jvmPrimitive) {
       String::class.java -> JsonNodeType.STRING
-      LocalDate::class.java -> JsonNodeType.STRING
-      LocalDateTime::class.java -> JsonNodeType.STRING
-      OffsetDateTime::class.java -> JsonNodeType.STRING
       Boolean::class.java -> JsonNodeType.BOOLEAN
       Boolean::class.javaObjectType -> JsonNodeType.BOOLEAN
       BigDecimal::class.java -> JsonNodeType.NUMBER
       Int::class.java -> JsonNodeType.NUMBER
       Int::class.javaObjectType -> JsonNodeType.NUMBER
+      LocalDate::class.java -> JsonNodeType.STRING
+      LocalDateTime::class.java -> JsonNodeType.STRING
+      OffsetDateTime::class.java -> JsonNodeType.STRING
+      UUID::class.java -> JsonNodeType.STRING
       else -> null
     }
   }
@@ -112,4 +134,47 @@ class DeserializationValidationService {
   fun isArrayType(type: Class<*>): Boolean {
     return arrayTypes.any { arrayType -> arrayType.isAssignableFrom(type) } || type.isArray
   }
+}
+
+interface SpecialJsonPrimitiveTypeChecker {
+  fun isValid(): Boolean
+}
+
+class LocalDateSpecialJsonPrimitiveTypeChecker(val jsonNode: JsonNode) : SpecialJsonPrimitiveTypeChecker {
+  override fun isValid(): Boolean {
+    if (jsonNode.nodeType != JsonNodeType.STRING) return false
+
+    return doesNotThrow { LocalDate.parse(jsonNode.textValue()) }
+  }
+}
+
+class LocalDateTimeSpecialJsonPrimitiveTypeChecker(val jsonNode: JsonNode) : SpecialJsonPrimitiveTypeChecker {
+  override fun isValid(): Boolean {
+    if (jsonNode.nodeType != JsonNodeType.STRING) return false
+
+    return doesNotThrow { LocalDateTime.parse(jsonNode.textValue()) }
+  }
+}
+
+class OffsetDateTimeSpecialJsonPrimitiveTypeChecker(val jsonNode: JsonNode) : SpecialJsonPrimitiveTypeChecker {
+  override fun isValid(): Boolean {
+    if (jsonNode.nodeType != JsonNodeType.STRING) return false
+
+    return doesNotThrow { OffsetDateTime.parse(jsonNode.textValue()) }
+  }
+}
+
+class UUIDSpecialJsonPrimitiveTypeChecker(val jsonNode: JsonNode) : SpecialJsonPrimitiveTypeChecker {
+  override fun isValid(): Boolean {
+    if (jsonNode.nodeType != JsonNodeType.STRING) return false
+
+    return doesNotThrow { UUID.fromString(jsonNode.textValue()) }
+  }
+}
+
+private fun doesNotThrow(block: () -> Unit) = try {
+  block()
+  true
+} catch (e: Exception) {
+  false
 }
