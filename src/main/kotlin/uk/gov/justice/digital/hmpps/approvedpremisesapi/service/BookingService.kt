@@ -49,7 +49,8 @@ class BookingService(
     booking: BookingEntity,
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
-    notes: String?
+    notes: String?,
+    keyWorkerStaffId: Long
   ) = validated<ArrivalEntity> {
     if (booking.arrival != null) {
       return generalError("This Booking already has an Arrival set")
@@ -58,6 +59,9 @@ class BookingService(
     if (expectedDepartureDate.isBefore(arrivalDate)) {
       return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
+
+    // TODO: Attempt to get the staff member first to verify it exists
+    updateBooking(booking.apply { this.keyWorkerStaffId = keyWorkerStaffId })
 
     val arrivalEntity = arrivalRepository.save(
       ArrivalEntity(

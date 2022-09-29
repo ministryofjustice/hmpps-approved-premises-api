@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
@@ -91,14 +90,14 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withArrivalDate(startDate.plusDays(1))
       .withDepartureDate(startDate.plusDays(3))
-      .withKeyWorker(KeyWorkerEntityFactory().produce())
+      .withStaffKeyWorkerId(null)
       .produce()
 
     val arrivedBookingEntity = BookingEntityFactory()
       .withPremises(premises)
       .withArrivalDate(startDate)
       .withDepartureDate(startDate.plusDays(2))
-      .withKeyWorker(KeyWorkerEntityFactory().produce())
+      .withStaffKeyWorkerId(123)
       .produce()
 
     val arrivalEntity = ArrivalEntityFactory()
@@ -111,7 +110,7 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withArrivalDate(startDate.plusDays(3))
       .withDepartureDate(startDate.plusDays(5))
-      .withKeyWorker(KeyWorkerEntityFactory().produce())
+      .withStaffKeyWorkerId(null)
       .produce()
 
     val nonArrivalEntity = NonArrivalEntityFactory()
@@ -125,7 +124,7 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withArrivalDate(startDate.plusDays(4))
       .withDepartureDate(startDate.plusDays(6))
-      .withKeyWorker(KeyWorkerEntityFactory().produce())
+      .withStaffKeyWorkerId(null)
       .produce()
 
     val cancelledArrivalEntity = CancellationEntityFactory()

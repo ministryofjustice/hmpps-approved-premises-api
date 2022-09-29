@@ -4,25 +4,26 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.lang.RuntimeException
 
 @Component
 class BookingTransformer(
   private val personTransformer: PersonTransformer,
-  private val keyWorkerTransformer: KeyWorkerTransformer,
+  private val staffMemberTransformer: StaffMemberTransformer,
   private val arrivalTransformer: ArrivalTransformer,
   private val departureTransformer: DepartureTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
   private val extensionTransformer: ExtensionTransformer
 ) {
-  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail) = Booking(
+  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?) = Booking(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offender, inmateDetail),
     arrivalDate = jpa.arrivalDate,
     departureDate = jpa.departureDate,
-    keyWorker = keyWorkerTransformer.transformJpaToApi(jpa.keyWorker),
+    keyWorker = staffMember?.let(staffMemberTransformer::transformDomainToApi),
     status = determineStatus(jpa),
     arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
     departure = departureTransformer.transformJpaToApi(jpa.departure),

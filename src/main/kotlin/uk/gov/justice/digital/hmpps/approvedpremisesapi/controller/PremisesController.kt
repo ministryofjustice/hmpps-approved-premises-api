@@ -31,9 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.KeyWorkerService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
@@ -50,7 +50,6 @@ class PremisesController(
   private val httpAuthService: HttpAuthService,
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
-  private val keyWorkerService: KeyWorkerService,
   private val bookingService: BookingService,
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
@@ -59,7 +58,8 @@ class PremisesController(
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
   private val departureTransformer: DepartureTransformer,
-  private val extensionTransformer: ExtensionTransformer
+  private val extensionTransformer: ExtensionTransformer,
+  private val staffMemberService: StaffMemberService
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
     return ResponseEntity.ok(
@@ -107,7 +107,17 @@ class PremisesController(
           throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${it.crn}")
         }
 
-        bookingTransformer.transformJpaToApi(it, offenderResult.entity, inmateDetailResult.entity)
+        val staffMember = it.keyWorkerStaffId?.let { keyWorkerStaffId ->
+          val staffMemberResult = staffMemberService.getStaffMemberById(keyWorkerStaffId)
+
+          if (staffMemberResult !is AuthorisableActionResult.Success) {
+            throw InternalServerErrorProblem("Unable to get Key Worker via Staff Id: $keyWorkerStaffId")
+          }
+
+          staffMemberResult.entity
+        }
+
+        bookingTransformer.transformJpaToApi(it, offenderResult.entity, inmateDetailResult.entity, staffMember)
       }
     )
   }
@@ -131,7 +141,17 @@ class PremisesController(
       throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${booking.crn}")
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity))
+    val staffMember = booking.keyWorkerStaffId?.let { keyWorkerStaffId ->
+      val staffMemberResult = staffMemberService.getStaffMemberById(keyWorkerStaffId)
+
+      if (staffMemberResult !is AuthorisableActionResult.Success) {
+        throw InternalServerErrorProblem("Unable to get Key Worker via Staff Id: $keyWorkerStaffId")
+      }
+
+      staffMemberResult.entity
+    }
+
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity, staffMember))
   }
 
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
@@ -154,9 +174,6 @@ class PremisesController(
     if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
     inmateDetailResult as AuthorisableActionResult.Success
 
-    val keyWorker = keyWorkerService.getKeyWorker(body.keyWorkerId)
-    if (keyWorker == null) validationErrors["keyWorkerId"] = "Invalid keyWorkerId"
-
     if (validationErrors.any()) {
       throw BadRequestProblem(validationErrors)
     }
@@ -167,7 +184,7 @@ class PremisesController(
         crn = offenderResult.entity.otherIds.crn,
         arrivalDate = body.arrivalDate,
         departureDate = body.departureDate,
-        keyWorker = keyWorker!!,
+        keyWorkerStaffId = null,
         arrival = null,
         departure = null,
         nonArrival = null,
@@ -177,7 +194,7 @@ class PremisesController(
       )
     )
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity, null))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
@@ -191,7 +208,8 @@ class PremisesController(
       booking = booking,
       arrivalDate = body.arrivalDate,
       expectedDepartureDate = body.expectedDepartureDate,
-      notes = body.notes
+      notes = body.notes,
+      keyWorkerStaffId = body.keyWorkerStaffId
     )
 
     val departure = extractResultEntityOrThrow(result)

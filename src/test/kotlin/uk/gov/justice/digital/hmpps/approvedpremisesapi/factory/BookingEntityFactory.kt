@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -22,7 +21,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
-  private var keyWorker: Yielded<KeyWorkerEntity>? = null
+  private var keyWorkerStaffId: Yielded<Long?> = { null }
   private var arrival: Yielded<ArrivalEntity>? = null
   private var departure: Yielded<DepartureEntity>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
@@ -46,12 +45,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.departureDate = { departureDate }
   }
 
-  fun withYieldedKeyWorker(keyWorker: Yielded<KeyWorkerEntity>) = apply {
-    this.keyWorker = keyWorker
-  }
-
-  fun withKeyWorker(keyWorker: KeyWorkerEntity) = apply {
-    this.keyWorker = { keyWorker }
+  fun withStaffKeyWorkerId(staffKeyWorkerId: Long?) = apply {
+    this.keyWorkerStaffId = { staffKeyWorkerId }
   }
 
   fun withYieldedArrival(arrival: Yielded<ArrivalEntity>) = apply {
@@ -107,7 +102,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     crn = this.crn(),
     arrivalDate = this.arrivalDate(),
     departureDate = this.departureDate(),
-    keyWorker = this.keyWorker?.invoke() ?: throw RuntimeException("Must provide a KeyWorker"),
+    keyWorkerStaffId = this.keyWorkerStaffId(),
     arrival = this.arrival?.invoke(),
     departure = this.departure?.invoke(),
     nonArrival = this.nonArrival?.invoke(),

@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.KeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
@@ -26,28 +25,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.KeyWorkerEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.KeyWorkerTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
-  private val mockKeyWorkerTransformer = mockk<KeyWorkerTransformer>()
+  private val mockStaffMemberTransformer = mockk<StaffMemberTransformer>()
   private val mockArrivalTransformer = mockk<ArrivalTransformer>()
   private val mockNonArrivalTransformer = mockk<NonArrivalTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
@@ -56,7 +56,7 @@ class BookingTransformerTest {
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
-    mockKeyWorkerTransformer,
+    mockStaffMemberTransformer,
     mockArrivalTransformer,
     mockDepartureTransformer,
     mockNonArrivalTransformer,
@@ -96,12 +96,7 @@ class BookingTransformerTest {
     id = UUID.fromString("c0cffa2a-490a-4e8b-a970-80aea3922a18"),
     arrivalDate = LocalDate.parse("2022-08-10"),
     departureDate = LocalDate.parse("2022-08-30"),
-    keyWorker = KeyWorkerEntity(
-      id = UUID.fromString("43a95422-75ab-4e06-8934-01db29ff102d"),
-      name = "Key Worker",
-      isActive = true,
-      bookings = mutableListOf()
-    ),
+    keyWorkerStaffId = 789,
     crn = "CRN123",
     arrival = null,
     departure = null,
@@ -109,6 +104,15 @@ class BookingTransformerTest {
     cancellation = null,
     extensions = mutableListOf(),
     premises = premisesEntity
+  )
+
+  private val staffMember = StaffMember(
+    staffCode = "STAFF",
+    staffIdentifier = 789,
+    staff = StaffInfo(
+      forenames = "first",
+      surname = "last"
+    )
   )
 
   private val offenderDetails = OffenderDetailsSummaryFactory()
@@ -128,10 +132,9 @@ class BookingTransformerTest {
     every { mockCancellationTransformer.transformJpaToApi(null) } returns null
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
 
-    every { mockKeyWorkerTransformer.transformJpaToApi(baseBookingEntity.keyWorker) } returns KeyWorker(
-      id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-      name = "first last",
-      isActive = true
+    every { mockStaffMemberTransformer.transformDomainToApi(staffMember) } returns uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
+      id = 789,
+      name = "first last"
     )
 
     every { mockPersonTransformer.transformModelToApi(offenderDetails, inmateDetail) } returns Person(
@@ -152,7 +155,7 @@ class BookingTransformerTest {
   fun `Awaiting Arrival entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"))
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail)
+    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
@@ -171,11 +174,6 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = KeyWorker(
-          id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "first last",
-          isActive = true
-        ),
         status = Booking.Status.awaitingMinusArrival,
         extensions = listOf()
       )
@@ -202,7 +200,7 @@ class BookingTransformerTest {
       notes = null
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(nonArrivalBooking, offenderDetails, inmateDetail)
+    val transformedBooking = bookingTransformer.transformJpaToApi(nonArrivalBooking, offenderDetails, inmateDetail, null)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
@@ -221,11 +219,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = KeyWorker(
-          id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "first last",
-          isActive = true
-        ),
+        keyWorker = null,
         status = Booking.Status.notMinusArrived,
         nonArrival = Nonarrival(
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
@@ -258,7 +252,7 @@ class BookingTransformerTest {
       notes = null
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(arrivalBooking, offenderDetails, inmateDetail)
+    val transformedBooking = bookingTransformer.transformJpaToApi(arrivalBooking, offenderDetails, inmateDetail, staffMember)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
@@ -277,10 +271,9 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = KeyWorker(
-          id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "first last",
-          isActive = true
+        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
+          id = 789,
+          name = "first last"
         ),
         status = Booking.Status.arrived,
         arrival = Arrival(
@@ -313,7 +306,7 @@ class BookingTransformerTest {
       reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true)
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails, inmateDetail)
+    val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails, inmateDetail, null)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
@@ -332,11 +325,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = KeyWorker(
-          id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "first last",
-          isActive = true
-        ),
+        keyWorker = null,
         status = Booking.Status.cancelled,
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
@@ -412,7 +401,7 @@ class BookingTransformerTest {
       notes = null
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail)
+    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
@@ -431,10 +420,9 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = KeyWorker(
-          id = UUID.fromString("058ad116-6087-4317-947d-a706bce9faf6"),
-          name = "first last",
-          isActive = true
+        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
+          id = 789,
+          name = "first last"
         ),
         status = Booking.Status.departed,
         arrival = Arrival(
