@@ -59,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOffi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationTestRepository
@@ -267,6 +268,18 @@ abstract class IntegrationTestBase {
           .withStatus(200)
           .withBody(
             objectMapper.writeValueAsString(offenderDetails)
+          )
+      )
+  )
+
+  fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            objectMapper.writeValueAsString(inmateDetail)
           )
       )
   )
