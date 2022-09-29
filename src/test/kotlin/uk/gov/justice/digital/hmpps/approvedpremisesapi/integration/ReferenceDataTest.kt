@@ -132,25 +132,4 @@ class ReferenceDataTest : IntegrationTestBase() {
       .expectBody()
       .json(expectedJson)
   }
-
-  @Test
-  fun `Get Key Workers returns 200 with correct body`() {
-    keyWorkerRepository.deleteAll()
-
-    val keyWorkers = keyWorkerEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
-      keyWorkers.map(keyWorkerTransformer::transformJpaToApi)
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/key-workers")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
 }
