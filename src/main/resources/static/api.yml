@@ -5,6 +5,37 @@ info:
 servers:
 - url: /
 paths:
+  /cas3_premises:
+    post:
+      tags:
+        - Operations on cas3 premises
+      summary: Adds a new premises
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewCas3Premises'
+        required: true
+      responses:
+        201:
+          description: new premises added
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Premises'
+        400:
+          description: invalid request
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises:
     get:
       tags:
@@ -973,6 +1004,46 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    Cas3Premises:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        added_at:
+          type: string
+          format: date-time
+        county:
+          type: string
+        town:
+          type: string
+        type:
+          type: string
+        address:
+          type: string
+      required:
+        - id
+        - added_at
+        - county
+        - town
+        - type
+        - address
+    NewCas3Premises:
+      type: object
+      properties:
+        county:
+          type: string
+        town:
+          type: string
+        type:
+          type: string
+        address:
+          type: string
+      required:
+        - county
+        - town
+        - type
+        - address
     Premises:
       type: object
       properties:
