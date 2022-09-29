@@ -75,7 +75,7 @@ class PremisesTest : IntegrationTestBase() {
     }
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
+    mockStaffMemberCommunityApiCall(keyWorker)
 
     bookingEntityFactory.produceAndPersist {
       withPremises(premises[2])

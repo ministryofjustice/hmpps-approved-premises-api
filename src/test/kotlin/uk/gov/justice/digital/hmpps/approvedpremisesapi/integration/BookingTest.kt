@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -42,7 +41,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP call for StaffMember
+    mockStaffMemberCommunityApiCall(keyWorker)
 
     val booking = bookingEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -126,7 +125,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
+    mockStaffMemberCommunityApiCall(keyWorker)
 
     val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
       withPremises(premises)
@@ -286,7 +285,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Arrival on Booking returns 200 with correct body`() {
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
+    mockStaffMemberCommunityApiCall(keyWorker)
 
     val booking = bookingEntityFactory.produceAndPersist {
       withYieldedPremises {
@@ -322,8 +321,6 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
       .jsonPath("$.expectedDepartureDate").isEqualTo("2022-08-14")
       .jsonPath("$.notes").isEqualTo("Hello")
-      .jsonPath("$.keyWorker.id").isEqualTo(keyWorker.staffIdentifier)
-      .jsonPath("$.keyWorker.name").isEqualTo("${keyWorker.staffInfo.forenames} ${keyWorker.staffInfo.surname}")
   }
 
   @Test
@@ -399,7 +396,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Extension on Booking returns OK with expected body, updates departureDate on Booking entity`() {
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
+    mockStaffMemberCommunityApiCall(keyWorker)
 
     val booking = bookingEntityFactory.produceAndPersist {
       withDepartureDate(LocalDate.parse("2022-08-20"))

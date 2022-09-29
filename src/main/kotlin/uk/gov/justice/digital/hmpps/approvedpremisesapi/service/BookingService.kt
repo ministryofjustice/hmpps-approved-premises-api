@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -29,6 +30,7 @@ import javax.transaction.Transactional
 @Service
 class BookingService(
   private val premisesService: PremisesService,
+  private val staffMemberService: StaffMemberService,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
   private val cancellationRepository: CancellationRepository,
@@ -45,6 +47,7 @@ class BookingService(
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
 
+  @Transactional
   fun createArrival(
     booking: BookingEntity,
     arrivalDate: LocalDate,
@@ -60,7 +63,12 @@ class BookingService(
       return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
 
-    // TODO: Attempt to get the staff member first to verify it exists
+    val staffMemberResponse = staffMemberService.getStaffMemberById(keyWorkerStaffId)
+
+    if (staffMemberResponse !is AuthorisableActionResult.Success) {
+      return "$.keyWorkerStaffId" hasSingleValidationError "notFound"
+    }
+
     updateBooking(booking.apply { this.keyWorkerStaffId = keyWorkerStaffId })
 
     val arrivalEntity = arrivalRepository.save(

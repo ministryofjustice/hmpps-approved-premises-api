@@ -70,7 +70,7 @@ class CapacityTest : IntegrationTestBase() {
     }
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
+    mockStaffMemberCommunityApiCall(keyWorker)
 
     bookingEntityFactory.produceAndPersist {
       withDepartureDate(LocalDate.now().minusDays(1))
@@ -101,7 +101,7 @@ class CapacityTest : IntegrationTestBase() {
     }
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
+    mockStaffMemberCommunityApiCall(keyWorker)
 
     bookingEntityFactory.produceAndPersist {
       withArrivalDate(LocalDate.now().plusDays(4))

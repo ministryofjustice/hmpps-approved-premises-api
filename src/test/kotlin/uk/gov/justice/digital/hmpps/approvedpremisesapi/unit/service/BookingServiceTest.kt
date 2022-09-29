@@ -38,16 +38,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingServiceTest {
   private val mockPremisesService = mockk<PremisesService>()
+  private val mockStaffMemberService = mockk<StaffMemberService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
   private val mockCancellationRepository = mockk<CancellationRepository>()
@@ -62,6 +65,7 @@ class BookingServiceTest {
 
   private val bookingService = BookingService(
     premisesService = mockPremisesService,
+    staffMemberService = mockStaffMemberService,
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
     cancellationRepository = mockCancellationRepository,
@@ -124,7 +128,6 @@ class BookingServiceTest {
     every { mockPremisesService.getPremises(premisesId) } returns premisesEntityFactory.produce()
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
 
     every { mockBookingRepository.findByIdOrNull(bookingId) } returns BookingEntityFactory()
       .withId(bookingId)
@@ -154,7 +157,6 @@ class BookingServiceTest {
     every { mockPremisesService.getPremises(premisesId) } returns premisesEntity
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
 
     val bookingEntity = BookingEntityFactory()
       .withId(bookingId)
@@ -171,7 +173,6 @@ class BookingServiceTest {
   @Test
   fun `createDeparture returns GeneralValidationError with correct message when Booking already has a Departure`() {
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
 
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
@@ -216,7 +217,6 @@ class BookingServiceTest {
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
 
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-25"))
@@ -262,7 +262,6 @@ class BookingServiceTest {
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
 
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
 
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-22"))
@@ -346,7 +345,6 @@ class BookingServiceTest {
   @Test
   fun `createArrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
 
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
@@ -378,7 +376,7 @@ class BookingServiceTest {
   @Test
   fun `createArrival returns Success with correct result when validation passed`() {
     val keyWorker = StaffMemberFactory().produce()
-    // TODO: Mock HTTP calls for StaffMember
+    every { mockStaffMemberService.getStaffMemberById(keyWorker.staffIdentifier) } returns AuthorisableActionResult.Success(keyWorker)
 
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
@@ -395,6 +393,7 @@ class BookingServiceTest {
       .produce()
 
     every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
     val result = bookingService.createArrival(
       booking = bookingEntity,
