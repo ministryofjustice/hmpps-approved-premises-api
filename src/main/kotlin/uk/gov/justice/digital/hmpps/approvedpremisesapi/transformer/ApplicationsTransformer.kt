@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 
 @Component
-class ApplicationsTransformer(private val objectMapper: ObjectMapper) {
-  fun transformJpaToApi(jpa: ApplicationEntity) = Application(
+class ApplicationsTransformer(private val objectMapper: ObjectMapper, private val personTransformer: PersonTransformer) {
+  fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Application(
     id = jpa.id,
-    crn = jpa.crn,
+    person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdByProbationOfficerId = jpa.createdByProbationOfficer.id,
     schemaVersion = jpa.schemaVersion.id,
     outdatedSchema = !jpa.schemaUpToDate,

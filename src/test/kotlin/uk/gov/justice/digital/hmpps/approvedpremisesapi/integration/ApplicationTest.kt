@@ -3,14 +3,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -19,6 +23,23 @@ import java.util.UUID
 class ApplicationTest : IntegrationTestBase() {
   @Autowired
   lateinit var applicationsTransformer: ApplicationsTransformer
+
+  private val offenderDetails = OffenderDetailsSummaryFactory()
+    .withCrn("CRN123")
+    .withNomsNumber("NOMS321")
+    .produce()
+
+  @BeforeEach
+  fun setup() {
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+  }
 
   @Test
   fun `Get all applications without JWT returns 401`() {
@@ -75,6 +96,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
+      withCrn(offenderDetails.otherIds.crn)
       withCreatedByProbationOfficer(probationOfficerEntity)
       withData(
         """
@@ -88,6 +110,7 @@ class ApplicationTest : IntegrationTestBase() {
     val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCreatedByProbationOfficer(probationOfficerEntity)
+      withCrn(offenderDetails.otherIds.crn)
       withData("{}")
     }
 
@@ -107,25 +130,93 @@ class ApplicationTest : IntegrationTestBase() {
 
     assertThat(responseBody).anyMatch {
       nonUpgradableApplicationEntity.id == it.id &&
-        nonUpgradableApplicationEntity.crn == it.crn &&
+        nonUpgradableApplicationEntity.crn == it.person?.crn &&
         nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
         nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
         nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-        olderJsonSchema.id == it.schemaVersion &&
-        it.outdatedSchema == true
+        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
     }
 
     assertThat(responseBody).anyMatch {
       upgradableApplicationEntity.id == it.id &&
-        upgradableApplicationEntity.crn == it.crn &&
+        upgradableApplicationEntity.crn == it.person?.crn &&
         upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
         upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
         upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-        newestJsonSchema.id == it.schemaVersion &&
-        it.outdatedSchema == false
+        newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
     }
+  }
+
+  @Test
+  fun `Get list of applications returns 500 when a person cannot be found`() {
+    val crn = "X1234"
+
+    produceAndPersistBasicApplication(crn)
+    mockOffenderDetailsCommunityApiCall404(crn)
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.get()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+  }
+
+  @Test
+  fun `Get list of applications returns 500 when a person has no NOMS number`() {
+    val crn = "X1234"
+
+    produceAndPersistBasicApplication(crn)
+
+    val offenderWithoutNomsNumber = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withoutNomsNumber()
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.get()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+  }
+
+  @Test
+  fun `Get list of applications returns 500 when the person cannot be fetched from the prisons API`() {
+    val crn = "X1234"
+
+    produceAndPersistBasicApplication(crn)
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withNomsNumber("ABC123")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.get()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
   }
 
   @Test
@@ -183,6 +274,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
+      withCrn(offenderDetails.otherIds.crn)
       withCreatedByProbationOfficer(probationOfficerEntity)
       withData(
         """
@@ -209,14 +301,83 @@ class ApplicationTest : IntegrationTestBase() {
 
     assertThat(responseBody).matches {
       upgradableApplicationEntity.id == it.id &&
-        upgradableApplicationEntity.crn == it.crn &&
+        upgradableApplicationEntity.crn == it.person.crn &&
         upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
         upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
         upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-        newestJsonSchema.id == it.schemaVersion &&
-        it.outdatedSchema == false
+        newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
     }
+  }
+
+  @Test
+  fun `Get single application returns 500 when a person cannot be found`() {
+    val crn = "X1234"
+
+    val application = produceAndPersistBasicApplication(crn)
+    mockOffenderDetailsCommunityApiCall404(crn)
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.get()
+      .uri("/applications/${application.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+  }
+
+  @Test
+  fun `Get single application returns 500 when a person has no NOMS number`() {
+    val crn = "X1234"
+
+    val application = produceAndPersistBasicApplication(crn)
+
+    val offenderWithoutNomsNumber = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withoutNomsNumber()
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.get()
+      .uri("/applications/${application.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+  }
+
+  @Test
+  fun `Get single application returns 500 when the person cannot be fetched from the prisons API`() {
+    val crn = "X1234"
+
+    val application = produceAndPersistBasicApplication(crn)
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withNomsNumber("ABC123")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.get()
+      .uri("/applications/${application.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
   }
 
   @Test
@@ -265,6 +426,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
+      withCrn(offenderDetails.otherIds.crn)
       withCreatedByProbationOfficer(probationOfficerEntity)
       withData("{}")
     }
@@ -285,13 +447,12 @@ class ApplicationTest : IntegrationTestBase() {
 
     assertThat(responseBody).matches {
       nonUpgradableApplicationEntity.id == it.id &&
-        nonUpgradableApplicationEntity.crn == it.crn &&
+        nonUpgradableApplicationEntity.crn == it.person?.crn &&
         nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
         nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
         nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-        olderJsonSchema.id == it.schemaVersion &&
-        it.outdatedSchema == true
+        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
     }
   }
 
@@ -305,8 +466,100 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create new application returns 500 when a person cannot be found`() {
+    val crn = "X1234"
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    mockOffenderDetailsCommunityApiCall404(crn)
+
+    applicationSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+
+    webTestClient.post()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewApplication(
+          crn = crn
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+  }
+
+  @Test
+  fun `Create new application returns 500 when a person has no NOMS number`() {
+    val crn = "X1234"
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+
+    val offenderWithoutNomsNumber = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withoutNomsNumber()
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
+
+    applicationSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+
+    webTestClient.post()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewApplication(
+          crn = crn
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+  }
+
+  @Test
+  fun `Create new application returns 500 when the person cannot be fetched from the prisons API`() {
+    val crn = "X1234"
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withNomsNumber("ABC123")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
+
+    webTestClient.post()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewApplication(
+          crn = crn
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+  }
+
+  @Test
   fun `Create new application returns 201 with correct body and Location header`() {
-    val crn = "CRN321"
+    val crn = offenderDetails.otherIds.crn
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
@@ -349,7 +602,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     assertThat(result.responseBody.blockFirst()).matches {
-      it.crn == crn &&
+      it.person.crn == crn &&
         it.schemaVersion == applicationSchema.id
     }
   }
@@ -357,7 +610,7 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Update existing application returns 200 with correct body`() {
     val username = "PROBATIONPERSON"
-    val crn = "CRN321"
+    val crn = offenderDetails.otherIds.crn
     val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
@@ -432,7 +685,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val result = objectMapper.readValue(resultBody, Application::class.java)
 
-    assertThat(result.crn).isEqualTo(crn)
+    assertThat(result.person.crn).isEqualTo(crn)
     assertThat(result.schemaVersion).isEqualTo(applicationSchema.id)
     assertThat(result.submittedAt!!.toInstant()).isEqualTo(submittedAt.toInstant())
   }
@@ -442,5 +695,64 @@ class ApplicationTest : IntegrationTestBase() {
     if (serializable is String) return objectMapper.readTree(serializable)
 
     return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+  }
+
+  private fun mockOffenderDetailsCommunityApiCall404(crn: String) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(404)
+      )
+  )
+
+  private fun mockInmateDetailPrisonsApiCall404(offenderNo: String) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/api/offenders/$offenderNo"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(404)
+      )
+  )
+
+  private fun produceAndPersistBasicApplication(crn: String): ApplicationEntity {
+    val jsonSchema = applicationSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+      withSchema(
+        """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """
+      )
+    }
+
+    val probationOfficerEntity = probationOfficerEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+
+    val application = applicationEntityFactory.produceAndPersist {
+      withApplicationSchema(jsonSchema)
+      withCrn(crn)
+      withCreatedByProbationOfficer(probationOfficerEntity)
+      withData(
+        """
+          {
+             "thingId": 123
+          }
+          """
+      )
+    }
+
+    return application
   }
 }

@@ -1710,8 +1710,8 @@ components:
         id:
           type: string
           format: uuid
-        crn:
-          type: string
+        person:
+          $ref: '#/components/schemas/Person'
         createdByProbationOfficerId:
           type: string
           format: uuid
@@ -1735,6 +1735,7 @@ components:
         - schemaVersion
         - outdatedSchema
         - createdAt
+        - person
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
