@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
@@ -42,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.time.LocalDate
 import java.util.UUID
 
@@ -59,6 +61,7 @@ class PremisesController(
   private val cancellationTransformer: CancellationTransformer,
   private val departureTransformer: DepartureTransformer,
   private val extensionTransformer: ExtensionTransformer,
+  private val staffMemberTransformer: StaffMemberTransformer,
   private val staffMemberService: StaffMemberService
 ) : PremisesApiDelegate {
   override fun premisesGet(): ResponseEntity<List<Premises>> {
@@ -345,6 +348,22 @@ class PremisesController(
         )
       }
     )
+  }
+
+  override fun premisesPremisesIdStaffGet(premisesId: UUID): ResponseEntity<List<StaffMember>> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val staffMembersResult = staffMemberService.getStaffMembersForDeliusTeam(premises.deliusTeamCode)
+
+    val staffMembers = when (staffMembersResult) {
+      is AuthorisableActionResult.Success -> staffMembersResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw InternalServerErrorProblem("No team found for Delius team code: ${premises.deliusTeamCode}")
+      else -> shouldNotBeReached()
+    }
+
+    return ResponseEntity.ok(staffMembers.map(staffMemberTransformer::transformDomainToApi))
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {

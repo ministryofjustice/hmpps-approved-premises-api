@@ -16,4 +16,11 @@ class StaffMemberService(private val communityApiClient: CommunityApiClient) {
     is ClientResult.Failure -> staffMemberResponse.throwException()
     else -> shouldNotBeReached()
   }
+
+  fun getStaffMembersForDeliusTeam(deliusTeamCode: String) = when (val staffMembersResponse = communityApiClient.getStaffMembers(deliusTeamCode)) {
+    is ClientResult.Success -> AuthorisableActionResult.Success(staffMembersResponse.body)
+    is ClientResult.StatusCodeFailure -> if (staffMembersResponse.status == HttpStatus.NOT_FOUND) AuthorisableActionResult.NotFound() else staffMembersResponse.throwException()
+    is ClientResult.Failure -> staffMembersResponse.throwException()
+    else -> shouldNotBeReached()
+  }
 }
