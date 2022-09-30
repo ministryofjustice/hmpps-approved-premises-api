@@ -577,6 +577,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/prison-case-notes:
+    get:
+      summary: Returns the prison case notes for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch prison case notes for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PrisonCaseNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -1757,3 +1788,30 @@ components:
           format: date-time
       required:
         - data
+    PrisonCaseNote:
+      type: object
+      properties:
+        id:
+          type: long
+        createdAt:
+          type: string
+          format: date-time
+        occurredAt:
+          type: string
+          format: date-time
+        authorName:
+          type: string
+        type:
+          type: string
+        subType:
+          type: string
+        note:
+          type: string
+      required:
+        - id
+        - createdAt
+        - occurredAt
+        - authorName
+        - type
+        - subType
+        - note
