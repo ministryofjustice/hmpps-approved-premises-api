@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRisksClientResponseFactory
@@ -39,12 +40,17 @@ class OffenderServiceTest {
   private val mockAssessRisksAndNeedsApiClient = mockk<AssessRisksAndNeedsApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
+  private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
+    lookbackDays = 30
+    excludedCategories = listOf()
+  }
 
   private val offenderService = OffenderService(
     mockCommunityApiClient,
     mockAssessRisksAndNeedsApiClient,
     mockHMPPSTierApiClient,
-    mockPrisonsApiClient
+    mockPrisonsApiClient,
+    prisonCaseNotesConfigBindingModel
   )
 
   @Test
@@ -345,6 +351,7 @@ class OffenderServiceTest {
     assertThat(result.entity.flags.value).contains("RISK FLAG")
   }
 
+  @Test
   fun `getInmateDetailByNomsNumber returns not found result when Client responds with 404`() {
     val nomsNumber = "NOMS321"
 
@@ -355,6 +362,7 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 
+  @Test
   fun `getInmateDetailByNomsNumber returns unauthorised result when Client responds with 403`() {
     val nomsNumber = "NOMS321"
 
@@ -365,6 +373,7 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
 
+  @Test
   fun `getInmateDetailByNomsNumber returns succesfully when Client responds with 200`() {
     val nomsNumber = "NOMS321"
 
