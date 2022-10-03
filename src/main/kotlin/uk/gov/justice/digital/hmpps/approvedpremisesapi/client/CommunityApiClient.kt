@@ -29,4 +29,8 @@ class CommunityApiClient(
   fun getStaffMember(staffId: Long) = getRequest<StaffMember> {
     path = "/secure/staff/staffIdentifier/$staffId"
   }
+
+  fun getStaffMembers(deliusTeamCode: String) = getRequest<List<StaffMember>> {
+    path = "/secure/teams/$deliusTeamCode/staff"
+  }
 }
