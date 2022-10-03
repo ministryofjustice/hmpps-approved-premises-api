@@ -15,6 +15,10 @@ spring:
     locations: classpath:db/migration/all
   jpa:
     database: postgresql
+  redis:
+    host: localhost
+    port: 6377
+    password: ""
   security:
     oauth2:
       client:
