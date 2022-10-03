@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.cache.CacheManager
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -94,6 +95,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   private lateinit var flyway: Flyway
+
+  @Autowired
+  private lateinit var cacheManager: CacheManager
 
   @Autowired
   lateinit var objectMapper: ObjectMapper
@@ -189,6 +193,10 @@ abstract class IntegrationTestBase {
 
     flyway.clean()
     flyway.migrate()
+
+    cacheManager.cacheNames.forEach {
+      cacheManager.getCache(it)!!.clear()
+    }
   }
 
   @AfterEach
