@@ -55,7 +55,11 @@ spring:
 
 springdoc:
   swagger-ui:
-    url: "api.yml"
+    urls:
+      - name: API
+        url: "api.yml"
+      - name: Domain events
+        url: "domain-events-api.yml"
 
 server:
   port: 8080
