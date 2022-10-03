@@ -7,6 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -18,17 +21,38 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
+import java.time.LocalDate
 
 @Service
 class OffenderService(
   private val communityApiClient: CommunityApiClient,
   private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
-  private val prisonsApiClient: PrisonsApiClient
+  private val prisonsApiClient: PrisonsApiClient,
+  prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel
 ) {
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
+  private val prisonCaseNotesConfig: PrisonCaseNotesConfig
+
+  init {
+    val excludedCategories = prisonCaseNotesConfigBindingModel.excludedCategories
+      ?: throw RuntimeException("No prison-case-notes.excluded-categories provided")
+
+    prisonCaseNotesConfig = PrisonCaseNotesConfig(
+      lookbackDays = prisonCaseNotesConfigBindingModel.lookbackDays ?: throw RuntimeException("No prison-case-notes.lookback-days configuration provided"),
+      prisonApiPageSize = prisonCaseNotesConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-api-page-size configuration provided"),
+      excludedCategories = excludedCategories.mapIndexed { index, categoryConfig ->
+        ExcludedCategory(
+          category = categoryConfig.category ?: throw RuntimeException("No category provided for prison-case-notes.excluded-categories at index $index"),
+          subcategory = categoryConfig.subcategory
+        )
+      }
+    )
+  }
 
   fun getOffenderByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<OffenderDetailSummary> {
     val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
@@ -102,6 +126,39 @@ class OffenderService(
       }
       else -> shouldNotBeReached()
     }
+  }
+
+  fun getPrisonCaseNotesByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<CaseNote>> {
+    val allCaseNotes = mutableListOf<CaseNote>()
+
+    val fromDate = LocalDate.now().minusDays(prisonCaseNotesConfig.lookbackDays.toLong())
+
+    var currentPage: CaseNotesPage?
+    var currentPageIndex: Int? = null
+    do {
+      if (currentPageIndex == null) currentPageIndex = 0
+      else currentPageIndex += 1
+
+      val caseNotesPageResponse = prisonsApiClient.getCaseNotesPage(nomsNumber, fromDate, currentPageIndex, prisonCaseNotesConfig.prisonApiPageSize)
+      currentPage = when (caseNotesPageResponse) {
+        is ClientResult.Success -> caseNotesPageResponse.body
+        is ClientResult.StatusCodeFailure -> when (caseNotesPageResponse.status) {
+          HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+          HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+          else -> caseNotesPageResponse.throwException()
+        }
+        is ClientResult.Failure -> caseNotesPageResponse.throwException()
+        else -> shouldNotBeReached()
+      }
+
+      allCaseNotes.addAll(
+        currentPage.content.filter { caseNote ->
+          prisonCaseNotesConfig.excludedCategories.none { it.excluded(caseNote.type, caseNote.subType) }
+        }
+      )
+    } while (currentPage != null && currentPage.totalPages > currentPageIndex!! + 1)
+
+    return AuthorisableActionResult.Success(allCaseNotes)
   }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {

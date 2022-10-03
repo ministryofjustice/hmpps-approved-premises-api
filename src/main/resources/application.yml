@@ -104,3 +104,16 @@ hmpps:
     url: http://localhost:9091/auth
 
 log-client-credentials-jwt-info: false
+
+prison-case-notes:
+  lookback-days: 365
+  prison-api-page-size: 30
+  excluded-categories:
+    - category: MOVED_CELL
+      subcategory: null
+    - category: TRANSFER
+      subcategory: null
+    - category: SENTENCE
+      subcategory: null
+    - category: PRISON
+      subcategory: RELEASE

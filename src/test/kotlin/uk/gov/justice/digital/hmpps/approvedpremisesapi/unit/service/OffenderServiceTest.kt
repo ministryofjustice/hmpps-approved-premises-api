@@ -13,6 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRisksClientResponseFactory
@@ -26,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -39,12 +43,27 @@ class OffenderServiceTest {
   private val mockAssessRisksAndNeedsApiClient = mockk<AssessRisksAndNeedsApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
+  private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
+    lookbackDays = 30
+    prisonApiPageSize = 2
+    excludedCategories = listOf(
+      ExcludedCategoryBindingModel().apply {
+        this.category = "CATEGORY"
+        this.subcategory = "EXCLUDED_SUBTYPE"
+      },
+      ExcludedCategoryBindingModel().apply {
+        this.category = "EXCLUDED_CATEGORY"
+        this.subcategory = null
+      }
+    )
+  }
 
   private val offenderService = OffenderService(
     mockCommunityApiClient,
     mockAssessRisksAndNeedsApiClient,
     mockHMPPSTierApiClient,
-    mockPrisonsApiClient
+    mockPrisonsApiClient,
+    prisonCaseNotesConfigBindingModel
   )
 
   @Test
@@ -345,6 +364,7 @@ class OffenderServiceTest {
     assertThat(result.entity.flags.value).contains("RISK FLAG")
   }
 
+  @Test
   fun `getInmateDetailByNomsNumber returns not found result when Client responds with 404`() {
     val nomsNumber = "NOMS321"
 
@@ -355,6 +375,7 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 
+  @Test
   fun `getInmateDetailByNomsNumber returns unauthorised result when Client responds with 403`() {
     val nomsNumber = "NOMS321"
 
@@ -365,6 +386,7 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
 
+  @Test
   fun `getInmateDetailByNomsNumber returns succesfully when Client responds with 200`() {
     val nomsNumber = "NOMS321"
 
@@ -396,6 +418,95 @@ class OffenderServiceTest {
         agencyName = "AGENCY NAME"
       )
     )
+  }
+
+  @Test
+  fun `getPrisonCaseNotesByNomsNumber returns NotFound when Case Notes request returns a 404`() {
+    val nomsNumber = "NOMS456"
+
+    every {
+      mockPrisonsApiClient.getCaseNotesPage(
+        nomsNumber = nomsNumber,
+        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        page = 0,
+        pageSize = 2
+      )
+    } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.NOT_FOUND, null)
+
+    assertThat(offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `getPrisonCaseNotesByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
+    val nomsNumber = "NOMS456"
+
+    every {
+      mockPrisonsApiClient.getCaseNotesPage(
+        nomsNumber = nomsNumber,
+        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        page = 0,
+        pageSize = 2
+      )
+    } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.FORBIDDEN, null)
+
+    assertThat(offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getPrisonCaseNotesByNomsNumber returns Success, traverses pages from Client & excludes categories + subcategories`() {
+    val nomsNumber = "NOMS456"
+
+    val caseNotesPageOne = listOf(
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().withType("EXCLUDED_TYPE").produce()
+    )
+
+    val caseNotesPageTwo = listOf(
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().withType("TYPE").withSubType("EXCLUDED_SUBTYPE").produce()
+    )
+
+    every {
+      mockPrisonsApiClient.getCaseNotesPage(
+        nomsNumber = nomsNumber,
+        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        page = 0,
+        pageSize = 2
+      )
+    } returns ClientResult.Success(
+      HttpStatus.OK,
+      CaseNotesPage(
+        totalElements = 6,
+        totalPages = 2,
+        number = 1,
+        content = caseNotesPageOne
+      )
+    )
+
+    every {
+      mockPrisonsApiClient.getCaseNotesPage(
+        nomsNumber = nomsNumber,
+        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        page = 1,
+        pageSize = 2
+      )
+    } returns ClientResult.Success(
+      HttpStatus.OK,
+      CaseNotesPage(
+        totalElements = 4,
+        totalPages = 2,
+        number = 2,
+        content = caseNotesPageTwo
+      )
+    )
+
+    val result = offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity).containsAll(caseNotesPageOne.subList(0, 1) + caseNotesPageTwo.subList(0, 1))
   }
 
   private fun mockExistingNonLaoOffender() {
