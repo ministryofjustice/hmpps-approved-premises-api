@@ -923,26 +923,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /reference-data/key-workers:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all key workers for arrivals
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/KeyWorker'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /reference-data/lost-bed-reasons:
     get:
       tags:
@@ -1103,13 +1083,12 @@ components:
           type: string
           format: date
         keyWorker:
-          $ref: '#/components/schemas/KeyWorker'
+          $ref: '#/components/schemas/StaffMember'
       required:
         - id
         - person
         - arrivalDate
         - departureDate
-        - keyWorker
     NewBooking:
       type: object
       properties:
@@ -1124,14 +1103,10 @@ components:
           type: string
           format: date
           example: 2022-09-30
-        keyWorkerId:
-          type: string
-          format: uuid
       required:
         - crn
         - arrivalDate
         - departureDate
-        - keyWorkerId
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -1230,9 +1205,12 @@ components:
           format: date
         notes:
           type: string
+        keyWorkerStaffId:
+          type: long
       required:
         - arrivalDate
         - expectedDepartureDate
+        - keyWorkerStaffId
     Nonarrival:
       type: object
       properties:
@@ -1558,21 +1536,17 @@ components:
         - id
         - name
         - isActive
-    KeyWorker:
+    StaffMember:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
+          type: long
         name:
           type: string
           example: Brown, James (PS - PSO)
-        isActive:
-          type: boolean
       required:
         - id
         - name
-        - isActive
     LostBedReason:
       type: object
       properties:

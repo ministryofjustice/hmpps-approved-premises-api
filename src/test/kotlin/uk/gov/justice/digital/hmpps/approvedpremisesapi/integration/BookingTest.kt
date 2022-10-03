@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -39,9 +40,12 @@ class BookingTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
     }
 
-    val booking = bookingEntityFactory.produceAndPersist() {
+    val keyWorker = StaffMemberFactory().produce()
+    mockStaffMemberCommunityApiCall(keyWorker)
+
+    val booking = bookingEntityFactory.produceAndPersist {
       withPremises(premises)
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withStaffKeyWorkerId(keyWorker.staffIdentifier)
       withCrn("CRN123")
     }
 
@@ -66,7 +70,7 @@ class BookingTest : IntegrationTestBase() {
       .expectBody()
       .json(
         objectMapper.writeValueAsString(
-          bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetail)
+          bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetail, keyWorker)
         )
       )
   }
@@ -120,9 +124,12 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
+    val keyWorker = StaffMemberFactory().produce()
+    mockStaffMemberCommunityApiCall(keyWorker)
+
     val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
       withPremises(premises)
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withStaffKeyWorkerId(keyWorker.staffIdentifier)
       withCrn("CRN123")
     }
 
@@ -166,7 +173,7 @@ class BookingTest : IntegrationTestBase() {
 
     val expectedJson = objectMapper.writeValueAsString(
       bookings.map {
-        bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetail)
+        bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetail, keyWorker)
       }
     )
 
@@ -191,69 +198,18 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val keyWorker = keyWorkerEntityFactory.produceAndPersist()
-
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
       .bodyValue(
         NewBooking(
           crn = "a crn",
           arrivalDate = LocalDate.parse("2022-08-12"),
-          departureDate = LocalDate.parse("2022-08-30"),
-          keyWorkerId = keyWorker.id
+          departureDate = LocalDate.parse("2022-08-30")
         )
       )
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Create booking with non existent Key Worker returns Bad Request with correct body`() {
-    val premises = premisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
-
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn("CRN321")
-      .withNomsNumber("NOMS321")
-      .produce()
-
-    val inmateDetail = InmateDetailFactory()
-      .withOffenderNo("NOMS321")
-      .produce()
-
-    mockOffenderDetailsCommunityApiCall(offenderDetails)
-    mockInmateDetailPrisonsApiCall(inmateDetail)
-
-    webTestClient.post()
-      .uri("/premises/${premises.id}/bookings")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewBooking(
-          crn = "CRN321",
-          arrivalDate = LocalDate.parse("2022-08-12"),
-          departureDate = LocalDate.parse("2022-08-30"),
-          keyWorkerId = UUID.randomUUID()
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath(".invalid-params[0]").isEqualTo(
-        mapOf(
-          "propertyName" to "keyWorkerId",
-          "errorType" to "Invalid keyWorkerId"
-        )
-      )
   }
 
   @Test
@@ -264,8 +220,6 @@ class BookingTest : IntegrationTestBase() {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
     }
-
-    val keyWorker = keyWorkerEntityFactory.produceAndPersist()
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -292,8 +246,7 @@ class BookingTest : IntegrationTestBase() {
         NewBooking(
           crn = "CRN321",
           arrivalDate = LocalDate.parse("2022-08-12"),
-          departureDate = LocalDate.parse("2022-08-30"),
-          keyWorkerId = keyWorker.id
+          departureDate = LocalDate.parse("2022-08-30")
         )
       )
       .exchange()
@@ -304,8 +257,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.person.name").isEqualTo("Mock Person")
       .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
       .jsonPath("$.departureDate").isEqualTo("2022-08-30")
-      .jsonPath("$.keyWorker.id").isEqualTo(keyWorker.id.toString())
-      .jsonPath("$.keyWorker.name").isEqualTo(keyWorker.name)
+      .jsonPath("$.keyWorker").isEqualTo(null)
       .jsonPath("$.status").isEqualTo("awaiting-arrival")
       .jsonPath("$.arrival").isEqualTo(null)
       .jsonPath("$.departure").isEqualTo(null)
@@ -321,7 +273,8 @@ class BookingTest : IntegrationTestBase() {
         NewArrival(
           arrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-14"),
-          notes = null
+          notes = null,
+          keyWorkerStaffId = 123
         )
       )
       .exchange()
@@ -331,8 +284,10 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival on Booking returns 200 with correct body`() {
+    val keyWorker = StaffMemberFactory().produce()
+    mockStaffMemberCommunityApiCall(keyWorker)
+
     val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       withYieldedPremises {
         premisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -354,17 +309,18 @@ class BookingTest : IntegrationTestBase() {
         NewArrival(
           arrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-14"),
-          notes = "Hello"
+          notes = "Hello",
+          keyWorkerStaffId = keyWorker.staffIdentifier
         )
       )
       .exchange()
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-      .jsonPath(".arrivalDate").isEqualTo("2022-08-12")
-      .jsonPath(".expectedDepartureDate").isEqualTo("2022-08-14")
-      .jsonPath(".notes").isEqualTo("Hello")
+      .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+      .jsonPath("$.expectedDepartureDate").isEqualTo("2022-08-14")
+      .jsonPath("$.notes").isEqualTo("Hello")
   }
 
   @Test
@@ -386,7 +342,6 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Cancellation on Booking returns OK with correct body`() {
     val booking = bookingEntityFactory.produceAndPersist {
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
       withYieldedPremises {
         premisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -440,9 +395,12 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Extension on Booking returns OK with expected body, updates departureDate on Booking entity`() {
+    val keyWorker = StaffMemberFactory().produce()
+    mockStaffMemberCommunityApiCall(keyWorker)
+
     val booking = bookingEntityFactory.produceAndPersist {
       withDepartureDate(LocalDate.parse("2022-08-20"))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withStaffKeyWorkerId(keyWorker.staffIdentifier)
       withYieldedPremises {
         premisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

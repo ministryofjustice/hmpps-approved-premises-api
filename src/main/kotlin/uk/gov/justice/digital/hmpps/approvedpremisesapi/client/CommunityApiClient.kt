@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
 @Component
@@ -23,5 +24,9 @@ class CommunityApiClient(
 
   fun getRegistrationsForOffenderCrn(crn: String) = getRequest<Registrations> {
     path = "/secure/offenders/crn/$crn/registrations?activeOnly=true"
+  }
+
+  fun getStaffMember(staffId: Long) = getRequest<StaffMember> {
+    path = "/secure/staff/staffIdentifier/$staffId"
   }
 }

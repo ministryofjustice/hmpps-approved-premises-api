@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -73,11 +74,14 @@ class PremisesTest : IntegrationTestBase() {
       withTotalBeds(20)
     }
 
+    val keyWorker = StaffMemberFactory().produce()
+    mockStaffMemberCommunityApiCall(keyWorker)
+
     bookingEntityFactory.produceAndPersist {
       withPremises(premises[2])
       withArrivalDate(LocalDate.now().minusDays(2))
       withDepartureDate(LocalDate.now().plusDays(4))
-      withYieldedKeyWorker { keyWorkerEntityFactory.produceAndPersist() }
+      withStaffKeyWorkerId(keyWorker.staffIdentifier)
     }
 
     val premisesToGet = premises[2]

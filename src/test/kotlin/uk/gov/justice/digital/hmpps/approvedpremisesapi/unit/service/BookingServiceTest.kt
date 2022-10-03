@@ -14,13 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.KeyWorkerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -38,16 +38,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingServiceTest {
   private val mockPremisesService = mockk<PremisesService>()
+  private val mockStaffMemberService = mockk<StaffMemberService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
   private val mockCancellationRepository = mockk<CancellationRepository>()
@@ -62,6 +65,7 @@ class BookingServiceTest {
 
   private val bookingService = BookingService(
     premisesService = mockPremisesService,
+    staffMemberService = mockStaffMemberService,
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
     cancellationRepository = mockCancellationRepository,
@@ -123,10 +127,12 @@ class BookingServiceTest {
 
     every { mockPremisesService.getPremises(premisesId) } returns premisesEntityFactory.produce()
 
+    val keyWorker = StaffMemberFactory().produce()
+
     every { mockBookingRepository.findByIdOrNull(bookingId) } returns BookingEntityFactory()
       .withId(bookingId)
       .withPremises(premisesEntityFactory.withId(UUID.randomUUID()).produce())
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
       .produce()
 
     assertThat(bookingService.getBookingForPremises(premisesId, bookingId))
@@ -150,10 +156,12 @@ class BookingServiceTest {
 
     every { mockPremisesService.getPremises(premisesId) } returns premisesEntity
 
+    val keyWorker = StaffMemberFactory().produce()
+
     val bookingEntity = BookingEntityFactory()
       .withId(bookingId)
       .withPremises(premisesEntity)
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
       .produce()
 
     every { mockBookingRepository.findByIdOrNull(bookingId) } returns bookingEntity
@@ -164,6 +172,8 @@ class BookingServiceTest {
 
   @Test
   fun `createDeparture returns GeneralValidationError with correct message when Booking already has a Departure`() {
+    val keyWorker = StaffMemberFactory().produce()
+
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
         PremisesEntityFactory()
@@ -175,7 +185,7 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
       .produce()
 
     val departureEntity = DepartureEntityFactory()
@@ -206,6 +216,8 @@ class BookingServiceTest {
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
 
+    val keyWorker = StaffMemberFactory().produce()
+
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-25"))
       .withYieldedPremises {
@@ -218,7 +230,7 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
       .produce()
 
     every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns null
@@ -249,6 +261,8 @@ class BookingServiceTest {
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
 
+    val keyWorker = StaffMemberFactory().produce()
+
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-22"))
       .withYieldedPremises {
@@ -261,7 +275,7 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
       .produce()
 
     val reasonEntity = DepartureReasonEntityFactory().produce()
@@ -307,7 +321,7 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .withStaffKeyWorkerId(123)
       .produce()
 
     val arrivalEntity = ArrivalEntityFactory()
@@ -320,7 +334,8 @@ class BookingServiceTest {
       booking = bookingEntity,
       arrivalDate = LocalDate.parse("2022-08-25"),
       expectedDepartureDate = LocalDate.parse("2022-08-26"),
-      notes = "notes"
+      notes = "notes",
+      keyWorkerStaffId = 123
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -329,6 +344,8 @@ class BookingServiceTest {
 
   @Test
   fun `createArrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    val keyWorker = StaffMemberFactory().produce()
+
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
         PremisesEntityFactory()
@@ -340,14 +357,14 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     val result = bookingService.createArrival(
       booking = bookingEntity,
       arrivalDate = LocalDate.parse("2022-08-27"),
       expectedDepartureDate = LocalDate.parse("2022-08-26"),
-      notes = "notes"
+      notes = "notes",
+      keyWorkerStaffId = keyWorker.staffIdentifier
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -358,6 +375,9 @@ class BookingServiceTest {
 
   @Test
   fun `createArrival returns Success with correct result when validation passed`() {
+    val keyWorker = StaffMemberFactory().produce()
+    every { mockStaffMemberService.getStaffMemberById(keyWorker.staffIdentifier) } returns AuthorisableActionResult.Success(keyWorker)
+
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
         PremisesEntityFactory()
@@ -369,16 +389,18 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
       .produce()
 
     every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
     val result = bookingService.createArrival(
       booking = bookingEntity,
       arrivalDate = LocalDate.parse("2022-08-27"),
       expectedDepartureDate = LocalDate.parse("2022-08-29"),
-      notes = "notes"
+      notes = "notes",
+      keyWorkerStaffId = keyWorker.staffIdentifier
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -401,7 +423,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     val nonArrivalEntity = NonArrivalEntityFactory()
@@ -438,7 +459,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns null
@@ -473,7 +493,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     val reasonEntity = NonArrivalReasonEntityFactory().produce()
@@ -508,7 +527,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     val cancellationEntity = CancellationEntityFactory()
@@ -545,7 +563,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns null
@@ -578,7 +595,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     val reasonEntity = CancellationReasonEntityFactory().produce()
@@ -614,7 +630,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     val result = bookingService.createExtension(
@@ -643,7 +658,6 @@ class BookingServiceTest {
           .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
           .produce()
       }
-      .withYieldedKeyWorker { KeyWorkerEntityFactory().produce() }
       .produce()
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }

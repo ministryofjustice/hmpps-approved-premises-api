@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.KeyWorkerTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 
 class ReferenceDataTest : IntegrationTestBase() {
   @Autowired
@@ -26,7 +26,7 @@ class ReferenceDataTest : IntegrationTestBase() {
   lateinit var cancellationReasonTransformer: CancellationReasonTransformer
 
   @Autowired
-  lateinit var keyWorkerTransformer: KeyWorkerTransformer
+  lateinit var staffMemberTransformer: StaffMemberTransformer
 
   @Test
   fun `Get Departure Reasons returns 200 with correct body`() {
@@ -125,27 +125,6 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/lost-bed-reasons")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
-
-  @Test
-  fun `Get Key Workers returns 200 with correct body`() {
-    keyWorkerRepository.deleteAll()
-
-    val keyWorkers = keyWorkerEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
-      keyWorkers.map(keyWorkerTransformer::transformJpaToApi)
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/key-workers")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
