@@ -15,10 +15,12 @@ class CommunityApiClient(
   @Qualifier("communityApiWebClient") webClient: WebClient,
   objectMapper: ObjectMapper
 ) : BaseHMPPSClient(webClient, objectMapper) {
+  @Cacheable(value = ["offenderDetailsCache"])
   fun getOffenderDetailSummary(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
   }
 
+  @Cacheable(value = ["userAccessCache"])
   fun getUserAccessForOffenderCrn(userDistinguishedName: String, crn: String) = getRequest<UserOffenderAccess> {
     path = "/secure/offenders/crn/$crn/user/$userDistinguishedName/userAccess"
   }

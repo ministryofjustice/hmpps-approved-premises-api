@@ -14,7 +14,10 @@ import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import java.time.Duration
 
@@ -31,6 +34,9 @@ class RedisConfiguration {
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
       builder.clientCacheFor<List<StaffMember>>("staffMembersCache", Duration.ofHours(6), version, objectMapper)
         .clientCacheFor<StaffMember>("staffMemberCache", Duration.ofHours(6), version, objectMapper)
+        .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofMinutes(20), version, objectMapper)
+        .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofMinutes(20), version, objectMapper)
+        .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofMinutes(20), version, objectMapper)
     }
   }
 
@@ -47,8 +53,8 @@ class RedisConfiguration {
 class ClientResultRedisSerializer(
   private val objectMapper: ObjectMapper,
   private val typeReference: TypeReference<*>
-) : RedisSerializer<ClientResult<Any>> {
-  override fun serialize(clientResult: ClientResult<Any>?): ByteArray? {
+) : RedisSerializer<ClientResult<*>> {
+  override fun serialize(clientResult: ClientResult<*>?): ByteArray {
     val toSerialize = when (clientResult) {
       is ClientResult.StatusCodeFailure -> {
         SerializableClientResult(
@@ -78,7 +84,7 @@ class ClientResultRedisSerializer(
           status = clientResult.status,
           body = objectMapper.writeValueAsString(clientResult.body),
           exceptionMessage = null,
-          type = clientResult.body::class.java.typeName,
+          type = clientResult.body!!::class.java.typeName,
           method = null,
           path = null
         )
@@ -109,11 +115,10 @@ class ClientResultRedisSerializer(
     }
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.OTHER_FAILURE) {
-      return ClientResult.StatusCodeFailure(
+      return ClientResult.OtherFailure(
         method = deserializedWrapper.method!!,
         path = deserializedWrapper.path!!,
-        status = deserializedWrapper.status!!,
-        body = deserializedWrapper.body
+        exception = RuntimeException(deserializedWrapper.exceptionMessage)
       )
     }
 
