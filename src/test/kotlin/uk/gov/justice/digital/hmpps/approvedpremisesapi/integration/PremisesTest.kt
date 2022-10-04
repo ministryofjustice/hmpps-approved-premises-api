@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.exactly
-import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
@@ -218,59 +215,5 @@ class PremisesTest : IntegrationTestBase() {
           staffMembers.map(staffMemberTransformer::transformDomainToApi)
         )
       )
-  }
-
-  @Test
-  fun `Get Premises Staff caches response`() {
-    val deliusTeamCode = "FOUND"
-
-    val premises = premisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
-      withDeliusTeamCode(deliusTeamCode)
-    }
-
-    val staffMembers = listOf(
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce()
-    )
-
-    mockClientCredentialsJwtRequest()
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/secure/teams/$deliusTeamCode/staff"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(staffMembers)
-            )
-        )
-    )
-
-    repeat(2) {
-      webTestClient.get()
-        .uri("/premises/${premises.id}/staff")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(
-          objectMapper.writeValueAsString(
-            staffMembers.map(staffMemberTransformer::transformDomainToApi)
-          )
-        )
-    }
-
-    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/teams/$deliusTeamCode/staff")))
   }
 }
