@@ -8,11 +8,3 @@ services:
       - POSTGRES_DB=approved_premises_integration_test
     ports:
       - "5433:5432"
-
-  integration_test_redis:
-    image: "bitnami/redis:5.0"
-    container_name: approved-premises-redis-test
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - "6377:6379"

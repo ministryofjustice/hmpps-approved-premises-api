@@ -75,13 +75,5 @@ services:
     volumes:
       - ./nomis-db:/nomis-db
 
-  redis:
-    image: "bitnami/redis:5.0"
-    container_name: approved-premises-redis-dev
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - "6379:6379"
-
 volumes:
   database-data-development:
