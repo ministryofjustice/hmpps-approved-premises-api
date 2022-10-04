@@ -15,6 +15,10 @@ spring:
     locations: classpath:db/migration/all
   jpa:
     database: postgresql
+  redis:
+    host: localhost
+    port: 6377
+    password: ""
   security:
     oauth2:
       client:
@@ -59,3 +63,15 @@ prison-case-notes:
       subcategory: null
     - category: PRISON
       subcategory: RELEASE
+
+caches:
+  staffMembers:
+    expiry-minutes: 360
+  staffMember:
+    expiry-minutes: 360
+  offenderDetails:
+    expiry-minutes: 20
+  userAccess:
+    expiry-minutes: 20
+  inmateDetails:
+    expiry-minutes: 20
