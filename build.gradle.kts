@@ -10,7 +10,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val springDocVersion = "1.6.10"
+val springDocVersion = "1.6.11"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
