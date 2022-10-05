@@ -6,10 +6,10 @@ orbs:
 parameters:
   alerts-slack-channel:
     type: string
-    default: dps_alerts_security
+    default: approved-premises-team-dev
   releases-slack-channel:
     type: string
-    default: dps-releases
+    default: approved-premises-team-dev
 
 workflows:
   version: 2
