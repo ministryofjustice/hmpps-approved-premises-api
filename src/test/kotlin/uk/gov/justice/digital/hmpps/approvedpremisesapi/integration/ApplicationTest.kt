@@ -31,6 +31,8 @@ class ApplicationTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setup() {
+    applicationSchemaRepository.deleteAll()
+
     val inmateDetail = InmateDetailFactory()
       .withOffenderNo("NOMS321")
       .produce()
