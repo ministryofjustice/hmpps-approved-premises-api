@@ -18,6 +18,7 @@ generic-service:
     SERVICES_PRISONS-API_BASE-URL: https://api-dev.prison.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
+    SENTRY_ENVIRONMENT: dev
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts

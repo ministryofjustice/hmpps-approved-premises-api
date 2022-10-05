@@ -11,6 +11,7 @@ configurations {
 }
 
 val springDocVersion = "1.6.10"
+val sentryVersion = "6.4.2"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -30,6 +31,9 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
+  implementation("io.sentry:sentry-spring-boot-starter:$sentryVersion")
+  implementation("io.sentry:sentry-logback:$sentryVersion")
 
   implementation(kotlin("reflect"))
 
