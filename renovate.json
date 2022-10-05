@@ -1,6 +1,32 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:base",
+    ":disableDependencyDashboard"
+  ],
+  "assigneesFromCodeOwners": true,
+  "timezone": "Europe/London",
+  "schedule": [
+    "after 9am every weekday",
+    "before 5pm every weekday"
+  ],
+  "enabledManagers": ["gradle", "gradle-wrapper", "dockerfile", "docker-compose", "helmv3", "helm-values", "circleci"],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "allowedVersions": "17-slim"
+    },
+    {
+      "groupName": "spring doc",
+      "matchPackagePrefixes": [
+        "org.springdoc"
+      ]
+    },
+    {
+      "groupName": "test containers",
+      "matchPackagePrefixes": [
+        "org.testcontainers"
+      ]
+    }
   ]
 }
