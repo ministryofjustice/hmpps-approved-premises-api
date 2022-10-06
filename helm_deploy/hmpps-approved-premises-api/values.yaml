@@ -26,6 +26,7 @@ generic-service:
     SPRING_JPA_DATABASE: postgresql
     SPRING_DATASOURCE_URL: "jdbc:postgresql://${DB_HOST}/${DB_NAME}"
     SPRING_REDIS_PORT: 6379
+    SPRING_REDIS_SSL: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
@@ -49,7 +50,6 @@ generic-service:
     elasticache-redis:
       SPRING_REDIS_HOST: "primary_endpoint_address"
       SPRING_REDIS_PASSWORD: "auth_token"
-      SPRING_REDIS_SSL: true
 
   allowlist:
     office: "217.33.148.210/32"
