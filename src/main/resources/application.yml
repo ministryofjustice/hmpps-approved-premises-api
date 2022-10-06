@@ -27,6 +27,10 @@ spring:
     hibernate:
       ddl-auto: none
 
+  redis:
+    database: 5
+    timeout: 60000
+
   security:
     oauth2:
       resourceserver:
