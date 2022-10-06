@@ -49,6 +49,7 @@ generic-service:
     elasticache-redis:
       SPRING_REDIS_HOST: "primary_endpoint_address"
       SPRING_REDIS_PASSWORD: "auth_token"
+      SPRING_REDIS_SSL: true
 
   allowlist:
     office: "217.33.148.210/32"
