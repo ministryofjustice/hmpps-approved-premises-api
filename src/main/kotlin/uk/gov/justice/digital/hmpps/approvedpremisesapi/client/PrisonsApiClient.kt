@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.time.LocalDate
@@ -14,7 +15,7 @@ class PrisonsApiClient(
   @Qualifier("prisonsApiWebClient") webClient: WebClient,
   objectMapper: ObjectMapper
 ) : BaseHMPPSClient(webClient, objectMapper) {
-  @Cacheable(value = ["inmateDetailsCache"])
+  @Cacheable(value = ["inmateDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getInmateDetails(nomsNumber: String) = getRequest<InmateDetail> {
     path = "/api/offenders/$nomsNumber"
   }

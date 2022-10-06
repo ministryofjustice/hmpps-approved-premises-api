@@ -147,3 +147,5 @@ enum class ClientResultDiscriminator {
   STATUS_CODE_FAILURE,
   OTHER_FAILURE
 }
+
+const val IS_NOT_SUCCESSFUL = "!(#result instanceof T(uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult\$Success))"
