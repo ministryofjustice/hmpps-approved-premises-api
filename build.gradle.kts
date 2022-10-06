@@ -17,6 +17,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("com.vladmihalcea:hibernate-types-55:2.19.2")
   implementation("org.flywaydb:flyway-core")
+  implementation("org.springframework.boot:spring-boot-starter-data-redis")
+  implementation("org.springframework.boot:spring-boot-starter-cache")
 
   runtimeOnly("org.postgresql:postgresql")
 
