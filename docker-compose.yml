@@ -1,5 +1,52 @@
 version: "3"
 services:
+  frontend:
+    image: quay.io/hmpps/hmpps-approved-premises-ui:latest
+    container_name: approved-premises-ui-dev
+    environment:
+      - REDIS_HOST=approved-premises-redis-dev
+      - REDIS_PORT=6379
+      - REDIS_TLS_ENABLED=false
+      - REDIS_AUTH_TOKEN=
+      - HMPPS_AUTH_EXTERNAL_URL=http://localhost:9091/auth
+      - HMPPS_AUTH_URL=http://hmpps-auth:8080/auth
+      - API_CLIENT_ID=approved-premises-ui
+      - API_CLIENT_SECRET=clientsecret
+      - SYSTEM_CLIENT_ID=approved-premises-ui
+      - SYSTEM_CLIENT_SECRET=clientsecret
+      - SESSION_SECRET=app-insecure-default-session
+      - NODE_ENV=development
+      - TOKEN_VERIFICATION_API_URL=http://hmpps-auth:8080/verification
+      - APPROVED_PREMISES_API_URL=http://host.docker.internal:8080
+      - INGRESS_URL=http://localhost:3000
+    ports:
+      - 3000:3000
+    entrypoint: "node dist/server.js | bunyan"
+
+  frontend-remote-debug:
+    image: quay.io/hmpps/hmpps-approved-premises-ui:latest
+    container_name: approved-premises-ui-dev
+    environment:
+      - REDIS_HOST=approved-premises-redis-dev
+      - REDIS_PORT=6379
+      - REDIS_TLS_ENABLED=false
+      - REDIS_AUTH_TOKEN=
+      - HMPPS_AUTH_EXTERNAL_URL=http://localhost:9091/auth
+      - HMPPS_AUTH_URL=http://hmpps-auth:8080/auth
+      - API_CLIENT_ID=approved-premises-ui
+      - API_CLIENT_SECRET=clientsecret
+      - SYSTEM_CLIENT_ID=approved-premises-ui
+      - SYSTEM_CLIENT_SECRET=clientsecret
+      - SESSION_SECRET=app-insecure-default-session
+      - NODE_ENV=development
+      - TOKEN_VERIFICATION_API_URL=http://hmpps-auth:8080/verification
+      - APPROVED_PREMISES_API_URL=http://host.docker.internal:8080
+      - INGRESS_URL=http://localhost:3000
+    ports:
+      - 3000:3000
+      - 9229:9229
+    entrypoint: "node --inspect-brk=0.0.0.0 dist/server.js | bunyan"
+
   database:
     image: "postgres"
     container_name: approved-premises-postgres-dev
@@ -17,13 +64,18 @@ services:
     container_name: hmpps-auth
     ports:
       - "9091:8080"
-    healthcheck:
-      test:
-        [ "CMD", "curl", "-f", "http://localhost:8080/auth/health" ]
+      - "5001:5005"
+    entrypoint: "java ${JAVA_OPTS} -Dcom.sun.management.jmxremote.local.only=false -Djava.security.egd=file:/dev/./urandom -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -jar /app/app.jar"
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
       - SPRING_H2_CONSOLE_SETTINGS_WEBALLOWOTHERS=true
+      - DELIUS_ENABLED=true
+      - DELIUS_ENDPOINT_URL=http://community-api:8080
+      - DELIUS_ENDPOINT_TIMEOUT=1s
+      - DELIUS_CLIENT_CLIENT-ID=delius-auth-api-client
+      - DELIUS_CLIENT_CLIENT-SECRET=delius-auth-api-client
+      - LOGGING_LEVEL_UK_GOV_JUSTICE=debug
 
   community-api:
     image: quay.io/hmpps/community-api:latest
@@ -32,18 +84,20 @@ services:
       - "9590:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    volumes:
+      - ./seed/community-api:/seed
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_H2_CONSOLE_SETTINGS_WEBALLOWOTHERS=true
+      - LOGGING_LEVEL_UK_GOV_JUSTICE=debug
+      - SPRING_FLYWAY_LOCATIONS=classpath:/db/schema,classpath:/db/data,filesystem:/seed
 
   hmpps-assess-risks-and-needs:
     image: quay.io/hmpps/hmpps-assess-risks-and-needs
     container_name: assess-risks-and-needs
     ports:
       - "9580:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=oasys-rsr,dev
@@ -64,16 +118,33 @@ services:
     container_name: prison-api
     ports:
       - "9570:8080"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=nomis-hsqldb
       - SPRING_DATASOURCE_URL=jdbc:hsqldb:file:/nomis-db/nomisdb;sql.syntax_ora=true;get_column_name=false;shutdown=false;sql.nulls_first=false;sql.nulls_order=false;hsqldb.lock_file=false
       - SPRING_DATASOURCE_USERNAME=sa
       - SPRING_DATASOURCE_PASSWORD=password
+      - LOGGING_LEVEL_UK_GOV_JUSTICE=debug
     volumes:
       - ./nomis-db:/nomis-db
+
+  redis:
+    image: "bitnami/redis:5.0"
+    container_name: approved-premises-redis-dev
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=frontend:approved-premises-redis-dev:6379:0,api-cache:approved-premises-redis-dev:6379:5
+    ports:
+      - "7341:8081"
 
 volumes:
   database-data-development:
