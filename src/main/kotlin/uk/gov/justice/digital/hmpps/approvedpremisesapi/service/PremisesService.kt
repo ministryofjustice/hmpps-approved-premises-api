@@ -3,7 +3,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -101,14 +109,14 @@ class PremisesService(
     )
 
     val probationRegion = ProbationRegionEntity(
-      id = UUID.fromString("afee0696-8df3-4d9f-9d0c-268f17772e2c"), //Wales
+      id = UUID.fromString("afee0696-8df3-4d9f-9d0c-268f17772e2c"), // Wales in db table
       name = "arbitrary_probation_region",
       apArea = apAreaEntity,
       premises = mutableListOf()
     )
 
     val localAuthorityArea = LocalAuthorityAreaEntity(
-      id = UUID.fromString("7de4177b-9177-4c28-9bb6-5f5292619546"), // Cardiff
+      id = UUID.fromString("7de4177b-9177-4c28-9bb6-5f5292619546"), // Cardiff in db table
       identifier = "arbitrary_identifier",
       name = "arbitrary_local_authority_area",
       premises = mutableListOf()
