@@ -43,6 +43,10 @@ dependencies {
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
+  implementation("com.fasterxml.jackson.core:jackson-databind") {
+    version { strictly("2.14.0-rc1") }
+  }
 }
 
 java {
