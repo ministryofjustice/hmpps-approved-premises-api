@@ -20,7 +20,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  runtimeOnly("org.postgresql:postgresql")
+  runtimeOnly("org.postgresql:postgresql:42.4.1")
 
   implementation("org.springdoc:springdoc-openapi-webmvc-core:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
