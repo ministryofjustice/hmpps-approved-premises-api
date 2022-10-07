@@ -1,15 +1,15 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@5.1
+  hmpps: ministryofjustice/hmpps@5.2.0
 
 parameters:
   alerts-slack-channel:
     type: string
-    default: dps_alerts_security
+    default: approved-premises-team-dev
   releases-slack-channel:
     type: string
-    default: dps-releases
+    default: approved-premises-team-dev
 
 workflows:
   version: 2

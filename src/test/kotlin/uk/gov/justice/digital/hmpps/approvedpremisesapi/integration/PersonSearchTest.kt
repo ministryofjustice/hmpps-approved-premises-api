@@ -140,4 +140,79 @@ class PersonSearchTest : IntegrationTestBase() {
         )
       )
   }
+
+  @Test
+  fun `Searching for a CRN caches responses`() {
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    mockOffenderDetailsCommunityApiCall(
+      OffenderDetailsSummaryFactory()
+        .withCrn("CRN")
+        .withDateOfBirth(LocalDate.parse("1985-05-05"))
+        .withNomsNumber("NOMS321")
+        .withFirstName("James")
+        .withLastName("Someone")
+        .withGender("Male")
+        .withNationality("English")
+        .withReligionOrBelief("Judaism")
+        .withGenderIdentity("Prefer to self-describe")
+        .withSelfDescribedGenderIdentity("This is a self described identity")
+        .produce()
+    )
+    mockInmateDetailPrisonsApiCall(
+      InmateDetailFactory()
+        .withOffenderNo("NOMS321")
+        .withInOutStatus(InOutStatus.IN)
+        .withAssignedLivingUnit(
+          AssignedLivingUnit(
+            agencyId = "Agency ID",
+            locationId = 5,
+            description = "SOMEPLACE",
+            agencyName = "Agency Name"
+          )
+        )
+        .produce()
+    )
+
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = "username",
+      authSource = "delius",
+      roles = listOf("ROLE_PROBATION")
+    )
+
+    repeat(2) {
+      webTestClient.get()
+        .uri("/people/search?crn=CRN")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            Person(
+              crn = "CRN",
+              name = "James Someone",
+              dateOfBirth = LocalDate.parse("1985-05-05"),
+              sex = "Male",
+              status = Person.Status.inCustody,
+              nomsNumber = "NOMS321",
+              nationality = "English",
+              religionOrBelief = "Judaism",
+              genderIdentity = "This is a self described identity",
+              prisonName = "SOMEPLACE"
+            )
+          )
+        )
+    }
+
+    wiremockServer.verify(
+      WireMock.exactly(1),
+      WireMock.getRequestedFor(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
+    )
+
+    wiremockServer.verify(
+      WireMock.exactly(1),
+      WireMock.getRequestedFor(WireMock.urlEqualTo("/api/offenders/NOMS321"))
+    )
+  }
 }

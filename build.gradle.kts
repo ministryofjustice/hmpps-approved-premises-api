@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.4.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.5.4"
   kotlin("plugin.spring") version "1.6.21"
 
   id("org.openapi.generator") version "5.4.0"
@@ -10,7 +10,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val springDocVersion = "1.6.10"
+val springDocVersion = "1.6.11"
 val sentryVersion = "6.4.2"
 
 dependencies {
@@ -18,8 +18,10 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("com.vladmihalcea:hibernate-types-55:2.19.2")
   implementation("org.flywaydb:flyway-core")
+  implementation("org.springframework.boot:spring-boot-starter-data-redis")
+  implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  runtimeOnly("org.postgresql:postgresql")
+  runtimeOnly("org.postgresql:postgresql:42.4.1")
 
   implementation("org.springdoc:springdoc-openapi-webmvc-core:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
@@ -40,11 +42,15 @@ dependencies {
   implementation("com.networknt:json-schema-validator:1.0.73")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
-  testImplementation("io.mockk:mockk:1.12.5")
+  testImplementation("io.mockk:mockk:1.13.2")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
+  implementation("com.fasterxml.jackson.core:jackson-databind") {
+    version { strictly("2.14.0-rc1") }
+  }
 }
 
 java {
