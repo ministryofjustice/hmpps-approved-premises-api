@@ -10,7 +10,7 @@ spring:
     database: postgresql
   redis:
     host: localhost
-    port: 6379
+    port: 6380
     password: ""
 
 log-client-credentials-jwt-info: true
