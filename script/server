@@ -7,6 +7,12 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+cleanup() {
+  echo "==> Tearing down any old containers..."
+  docker-compose down
+}
+trap cleanup EXIT
+
 ./script/development_database
 
 echo "==> Starting server..."
