@@ -51,6 +51,10 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-databind") {
     version { strictly("2.14.0-rc1") }
   }
+
+  testRuntimeOnly("com.fasterxml.jackson.core:jackson-databind") {
+    version { strictly("2.14.0-rc1") }
+  }
 }
 
 java {
