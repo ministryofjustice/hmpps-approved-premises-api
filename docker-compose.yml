@@ -2,7 +2,6 @@ version: "3"
 services:
   database:
     image: "postgres"
-    container_name: approved-premises-postgres-dev
     environment:
       - POSTGRES_USER=localdev
       - POSTGRES_PASSWORD=localdev_password
@@ -14,7 +13,6 @@ services:
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
-    container_name: hmpps-auth
     ports:
       - "9091:8080"
     healthcheck:
@@ -27,7 +25,6 @@ services:
 
   community-api:
     image: quay.io/hmpps/community-api:latest
-    container_name: community-api
     ports:
       - "9590:8080"
     healthcheck:
@@ -39,7 +36,6 @@ services:
 
   hmpps-assess-risks-and-needs:
     image: quay.io/hmpps/hmpps-assess-risks-and-needs
-    container_name: assess-risks-and-needs
     ports:
       - "9580:8080"
     healthcheck:
@@ -53,7 +49,6 @@ services:
 
   wiremock:
     image: rodolpheche/wiremock
-    container_name: wiremock
     ports:
       - "9004:8080"
     volumes:
@@ -77,7 +72,6 @@ services:
 
   redis:
     image: "bitnami/redis:5.0"
-    container_name: approved-premises-redis-dev
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
