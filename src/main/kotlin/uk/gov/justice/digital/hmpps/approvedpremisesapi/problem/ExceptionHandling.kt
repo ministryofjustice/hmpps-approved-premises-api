@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import io.sentry.Sentry
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -28,6 +29,8 @@ class ExceptionHandling(
   private val deserializationValidationService: DeserializationValidationService
 ) : ProblemHandling, MessageNotReadableAdviceTrait {
   override fun toProblem(throwable: Throwable, status: StatusType): ThrowableProblem? {
+    Sentry.captureException(throwable)
+
     if (throwable is AuthenticationCredentialsNotFoundException) {
       return UnauthenticatedProblem()
     }
