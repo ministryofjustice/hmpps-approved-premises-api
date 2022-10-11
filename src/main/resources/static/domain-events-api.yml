@@ -510,9 +510,8 @@ components:
           readOnly: true
         withdrawnBy:
           $ref: '#/components/schemas/StaffMember'
-        reason:
-          type: string
-          example: Parole denied at oral hearing
+        withdrawalReason:
+          $ref: '#/components/schemas/CancellationReason'
 
     ApplicationAssessed:
       type: object
@@ -601,8 +600,7 @@ components:
         cancelledBy:
           $ref: '#/components/schemas/StaffMember'
         cancellationReason:
-          type: string
-          example: Deceased
+          $ref: '#/components/schemas/CancellationReason'
 
     PersonArrived:
       type: object
@@ -742,6 +740,26 @@ components:
           example: Q061
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
+
+    CancellationReason:
+      type: object
+      properties:
+        description:
+          type: string
+          enum:
+            - Custodial disposal - RIC
+            - Offer Withdrawn
+            - Other
+            - Parole Licence not granted
+            - Withdrawn by Referrer
+        legacyCancellationCode:
+          type: string
+          enum:
+            - 1H
+            - B
+            - D
+            - 4I
+            - C
 
     MoveOnCategory:
       type: object
