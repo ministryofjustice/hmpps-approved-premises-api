@@ -659,7 +659,44 @@ components:
           format: date-time
         reason:
           type: string
-          example: Planned move-on
+          enum:
+            - Absconded, still at large
+            - Admitted to Hospital
+            - Arrested, remanded in custody, or sentenced
+            - Bed Withdrawn
+            - Breach / recall (abscond)
+            - Breach / recall (behaviour / increasing risk)
+            - Breach / recall (curfew)
+            - Breach / recall (house rules)
+            - Breach / recall (licence or bail condition)
+            - Breach / recall (other)
+            - Breach / recall (positive drugs test)
+            - Died
+            - End of ROTL
+            - Left of own volition
+            - Order / licence expired
+            - Other
+            - Planned move-on
+        legacyReasonCode:
+          type: string
+          enum:
+            - J
+            - Q
+            - H
+            - X
+            - A
+            - D
+            - F
+            - B
+            - E
+            - G
+            - C
+            - P
+            - V
+            - K
+            - N
+            - W
+            - O
         destination:
           type: object
           properties:
