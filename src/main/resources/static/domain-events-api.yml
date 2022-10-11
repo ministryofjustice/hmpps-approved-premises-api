@@ -748,7 +748,34 @@ components:
       properties:
         description:
           type: string
-          example: Living with family / partner / other
+          enum:
+            - B&B / Temp / Short-Term Housing
+            - Custody
+            - Deported/ Detention Centre/IRC
+            - Housing Association - Rented
+            - Living with Family/ Partner/ Other
+            - Local Authority - Rented
+            - No Fixed Abode
+            - Not Applicable
+            - Owner Occupied
+            - Private Rented
+            - Supported Housing
+            - Transferred to different AP
+        legacyMoveOnCategoryCode:
+          type: string
+          enum:
+            - MC05
+            - MC19
+            - MC10
+            - MC03
+            - MC07
+            - MC02
+            - MC14
+            - MCNA
+            - MC08
+            - MC04
+            - MC06
+            - P
         code:
           type: string
           example: ABC123
