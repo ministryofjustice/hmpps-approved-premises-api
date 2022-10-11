@@ -638,6 +638,8 @@ components:
           type: string
           example: '2022-11-29'
           format: date
+        recordedBy:
+          $ref: '#/components/schemas/StaffMember'
         notes:
           type: string
           example: We learnt that Mr Smith is in hospital.
