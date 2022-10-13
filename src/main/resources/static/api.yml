@@ -1767,6 +1767,8 @@ components:
           format: date-time
         data:
           $ref: '#/components/schemas/AnyValue'
+        document:
+          $ref: '#/components/schemas/AnyValue'
       required:
         - id
         - crn
@@ -1788,6 +1790,10 @@ components:
       type: object
       properties:
         data:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AnyValue'
+        document:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AnyValue'

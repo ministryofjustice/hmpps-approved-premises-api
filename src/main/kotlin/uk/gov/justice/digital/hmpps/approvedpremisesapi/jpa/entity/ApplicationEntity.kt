@@ -31,6 +31,9 @@ data class ApplicationEntity(
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var data: String?,
 
+  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  var document: String?,
+
   @ManyToOne
   @JoinColumn(name = "schema_version")
   var schemaVersion: ApplicationSchemaEntity,

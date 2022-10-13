@@ -56,6 +56,7 @@ class ApplicationService(
         crn = crn,
         createdByProbationOfficer = probationOfficer,
         data = null,
+        document = null,
         schemaVersion = jsonSchemaService.getNewestSchema(),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
@@ -66,7 +67,7 @@ class ApplicationService(
     return success(createdApplication)
   }
 
-  fun updateApplication(applicationId: UUID, data: String, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun updateApplication(applicationId: UUID, data: String, document: String?, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -94,6 +95,10 @@ class ApplicationService(
       validationErrors["$.submittedAt"] = "isInFuture"
     }
 
+    if (submittedAt != null && document == null) {
+      validationErrors["$.document"] = "empty"
+    }
+
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors)
@@ -103,6 +108,7 @@ class ApplicationService(
     application.let {
       it.schemaVersion = latestSchemaVersion
       it.data = data
+      it.document = document
       it.submittedAt = submittedAt
     }
 
