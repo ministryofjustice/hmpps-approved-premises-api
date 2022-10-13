@@ -194,7 +194,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", null, username) is AuthorisableActionResult.NotFound).isTrue
+    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, username) is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
@@ -210,7 +210,7 @@ class ApplicationServiceTest {
       .withYieldedCreatedByProbationOfficer { ProbationOfficerEntityFactory().produce() }
       .produce()
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", null, username) is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, username) is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
@@ -229,7 +229,7 @@ class ApplicationServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    val result = applicationService.updateApplication(applicationId, "{}", null, username)
+    val result = applicationService.updateApplication(applicationId, "{}", null, null, username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -259,7 +259,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.getNewestSchema() } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
 
-    val result = applicationService.updateApplication(applicationId, "{}", OffsetDateTime.now().plusMinutes(1), username)
+    val result = applicationService.updateApplication(applicationId, "{}", null, OffsetDateTime.now().plusMinutes(1), username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -269,6 +269,36 @@ class ApplicationServiceTest {
 
     assertThat(validatableActionResult.validationMessages).containsEntry("$.data", "invalid")
     assertThat(validatableActionResult.validationMessages).containsEntry("$.submittedAt", "isInFuture")
+  }
+
+  @Test
+  fun `updateApplication returns FieldValidationError when application is submitted but document not provided`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val probationOfficer = ProbationOfficerEntityFactory()
+      .withDistinguishedName(username)
+      .produce()
+
+    val newestSchema = ApplicationSchemaEntityFactory().produce()
+
+    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByProbationOfficer(probationOfficer)
+      .produce()
+    every { mockJsonSchemaService.getNewestSchema() } returns newestSchema
+    every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
+
+    val result = applicationService.updateApplication(applicationId, "{}", null, OffsetDateTime.now().minusMinutes(1), username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.FieldValidationError
+
+    assertThat(validatableActionResult.validationMessages).containsEntry("$.document", "empty")
   }
 
   @Test
@@ -297,7 +327,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val result = applicationService.updateApplication(applicationId, updatedData, submittedAt, username)
+    val result = applicationService.updateApplication(applicationId, updatedData, "{}", submittedAt, username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success

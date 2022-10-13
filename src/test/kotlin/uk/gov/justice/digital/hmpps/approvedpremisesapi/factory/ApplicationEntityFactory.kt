@@ -15,6 +15,7 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var createdByProbationOfficer: Yielded<ProbationOfficerEntity>? = null
   private var data: Yielded<String?> = { "{}" }
+  private var document: Yielded<String?> = { "{}" }
   private var applicationSchema: Yielded<ApplicationSchemaEntity> = {
     ApplicationSchemaEntity(
       id = UUID.randomUUID(),
@@ -45,6 +46,10 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
     this.data = { data }
   }
 
+  fun withDocument(document: String?) = apply {
+    this.document = { document }
+  }
+
   fun withApplicationSchema(applicationSchema: ApplicationSchemaEntity) = apply {
     this.applicationSchema = { applicationSchema }
   }
@@ -66,6 +71,7 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
     crn = this.crn(),
     createdByProbationOfficer = this.createdByProbationOfficer?.invoke() ?: throw RuntimeException("Must provide a createdByProbationOfficer"),
     data = this.data(),
+    document = this.document(),
     schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),

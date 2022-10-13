@@ -17,6 +17,7 @@ class ApplicationsTransformer(private val objectMapper: ObjectMapper, private va
     outdatedSchema = !jpa.schemaUpToDate,
     createdAt = jpa.createdAt,
     submittedAt = jpa.submittedAt,
-    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null
+    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null
   )
 }

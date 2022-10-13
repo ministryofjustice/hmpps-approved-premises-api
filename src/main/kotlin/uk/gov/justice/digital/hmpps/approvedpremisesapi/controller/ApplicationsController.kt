@@ -79,8 +79,9 @@ class ApplicationsController(
     val username = deliusPrincipal.name
 
     val serializedData = objectMapper.writeValueAsString(body.data)
+    val serializedDocument = objectMapper.writeValueAsString(body.document)
 
-    val applicationResult = applicationService.updateApplication(applicationId, serializedData, body.submittedAt, username)
+    val applicationResult = applicationService.updateApplication(applicationId, serializedData, serializedDocument, body.submittedAt, username)
 
     val validationResult = when (applicationResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
