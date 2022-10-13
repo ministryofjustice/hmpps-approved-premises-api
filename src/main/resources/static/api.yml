@@ -837,6 +837,41 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/allocations:
+    post:
+      tags:
+        - Operations on applications
+      summary: Reallocates an application
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Reallocation'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /reference-data/departure-reasons:
     get:
       tags:
@@ -991,6 +1026,172 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CancellationReason'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments:
+    get:
+      tags:
+        - Assessment data
+      summary: Gets assessments the user is authorised to view
+      responses:
+        200:
+          description: successfully retrieved assessments
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}:
+    get:
+      tags:
+        - Assessment data
+      summary: Gets a single assessment by its id
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved assessment
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Assessment data
+      summary: Updates an assessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Updated assessment
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdateAssessment'
+        required: true
+      responses:
+        200:
+          description: successfully retrieved assessment
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/notes:
+    post:
+      tags:
+        - Assessment data
+      summary: Adds a clarification note to an assessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Clarification note
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewClarificationNote'
+        required: true
+      responses:
+        201:
+          description: successfully created a clarification note
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ClarificationNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /profile:
+    get:
+      tags:
+        - Auth
+      summary: Returns information on the logged in user
+      responses:
+        200:
+          description: successfully retrieved information on user
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /users:
+    get:
+      tags:
+        - Auth
+      summary: Returns a list of users
+      parameters:
+        - in: path
+          name: roles
+          required: false
+          description: Only return users with the provided role(s)
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserRole'
+        - in: path
+          name: qualifications
+          required: false
+          description: Only return users with the provided qualification(s)
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserQualification'
+      responses:
+        200:
+          description: successfully retrieved users
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -1837,3 +2038,124 @@ components:
         - type
         - subType
         - note
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        application:
+            $ref: '#/components/schemas/Application'
+        allocatedToStaffMemberId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        allocatedAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        data:
+          $ref: '#/components/schemas/AnyValue'
+        clarificationNotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClarificationNote'
+      required:
+        - id
+        - application
+        - allocatedToUser
+        - schemaVersion
+        - outdatedSchema
+        - createdAt
+        - allocatedAt
+        - data
+        - clarificationNotes
+    UpdateAssessment:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AnyValue'
+        acceptedAt:
+          type: string
+          format: date-time
+        rejectedAt:
+          type: string
+          format: date-time
+        rejectionRationale:
+          type: string
+      required:
+        - data
+    ClarificationNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        text:
+          type: string
+      required:
+        - id
+        - createdAt
+        - text
+    NewClarificationNote:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        text:
+          type: string
+      required:
+        - createdAt
+        - text
+    Reallocation:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+    User:
+      type: object
+      properties:
+        deliusUsername:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRole'
+        qualifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserQualification'
+      required:
+        - deliusUsername
+        - roles
+        - qualifications
+    UserRole:
+      type: string
+      enum:
+        - ASSESSOR
+        - MATCHER
+        - MANAGER
+        - WORKFLOW_MANAGER
+        - APPLICANT
+        - ROLE_ADMIN
+    UserQualification:
+      type: string
+      enum:
+        - WOMENS
+        - PIPE
