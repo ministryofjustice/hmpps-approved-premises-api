@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
@@ -18,6 +19,27 @@ class PremisesTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var staffMemberTransformer: StaffMemberTransformer
+
+  @Test
+  fun `Create new premises returns 201`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          apCode = "AB1234",
+          postcode = "AB123CD",
+          bedCount = 123
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+  }
 
   @Test
   fun `Get all Premises returns OK with correct body`() {

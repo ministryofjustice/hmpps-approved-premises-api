@@ -2,12 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -91,4 +95,48 @@ class PremisesService(
 
       return success(lostBedsEntity)
     }
+
+  fun createNewPremises(requestBody: NewPremises): PremisesEntity {
+
+    /**
+     * Start of setting up some dummy data to spike the implementation.
+     * TODO: This will be removed once it's established how to dynamically get this data
+     */
+    val apAreaEntity = ApAreaEntity(
+      id = UUID.randomUUID(),
+      name = "arbitrary_ap_area",
+      identifier = "arbitrary_identifier",
+      probationRegions = mutableListOf()
+    )
+
+    val probationRegion = ProbationRegionEntity(
+      id = UUID.fromString("afee0696-8df3-4d9f-9d0c-268f17772e2c"), // Wales in db
+      name = "arbitrary_probation_region",
+      apArea = apAreaEntity,
+      premises = mutableListOf()
+    )
+
+    val localAuthorityArea = LocalAuthorityAreaEntity(
+      id = UUID.fromString("7de4177b-9177-4c28-9bb6-5f5292619546"), // Cardiff in db
+      identifier = "arbitrary_identifier",
+      name = "arbitrary_local_authority_area",
+      premises = mutableListOf()
+    )
+    // end of dummy data
+
+    return premisesRepository.save(
+      PremisesEntity(
+        id = UUID.randomUUID(),
+        name = requestBody.name,
+        apCode = requestBody.apCode,
+        postcode = requestBody.postcode,
+        deliusTeamCode = "arbitrary_delius_team_code", // We need this to look up the AP staff from Delius - not sure if you will need to do that?
+        probationRegion = probationRegion,
+        localAuthorityArea = localAuthorityArea,
+        bookings = mutableListOf(),
+        lostBeds = mutableListOf(),
+        totalBeds = 0
+      )
+    )
+  }
 }

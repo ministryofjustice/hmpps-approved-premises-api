@@ -25,6 +25,36 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+    post:
+      tags:
+        - Premises
+      summary: Add a new premises
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewPremises'
+        required: true
+      responses:
+        201:
+          description: new premises added
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Premises'
+        400:
+          description: invalid request
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises/{premisesId}:
     get:
       tags:
@@ -1305,6 +1335,21 @@ components:
         - probationRegion
         - apArea
         - localAuthorityArea
+    NewPremises:
+      type: object
+      properties:
+        name:
+          type: string
+        apCode:
+          type: string
+          example: NEHOPE1
+        postcode:
+          type: string
+      required:
+        - name
+        - apCode
+        - postcode
+        - bedCount
     LocalAuthorityArea:
       type: object
       properties:
