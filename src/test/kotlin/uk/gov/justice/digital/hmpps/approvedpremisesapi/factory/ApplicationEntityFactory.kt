@@ -27,6 +27,8 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
+  private var isWomensApplication: Yielded<Boolean?> = { null }
+  private var isPipeApplication: Yielded<Boolean?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -68,6 +70,14 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
     this.submittedAt = { submittedAt }
   }
 
+  fun withIsWomensApplication(isWomensApplication: Boolean) = apply {
+    this.isWomensApplication = { isWomensApplication }
+  }
+
+  fun withIsPipeApplication(isPipeApplication: Boolean) = apply {
+    this.isPipeApplication = { isPipeApplication }
+  }
+
   override fun produce(): ApplicationEntity = ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -77,6 +87,8 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
     schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
+    isWomensApplication = this.isWomensApplication(),
+    isPipeApplication = this.isPipeApplication(),
     schemaUpToDate = false
   )
 }

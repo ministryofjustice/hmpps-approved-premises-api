@@ -40,6 +40,9 @@ data class ApplicationEntity(
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
 
+  var isWomensApplication: Boolean?,
+  var isPipeApplication: Boolean?,
+
   @Transient
   var schemaUpToDate: Boolean
 )

@@ -62,6 +62,8 @@ class ApplicationService(
         schemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
+        isWomensApplication = null,
+        isPipeApplication = null,
         schemaUpToDate = true
       )
     )
