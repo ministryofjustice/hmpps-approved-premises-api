@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import io.swagger.v3.core.util.Json
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -71,7 +70,7 @@ class ApplicationService(
     return success(createdApplication)
   }
 
-  fun updateApplication(applicationId: UUID, data: String, document: String?, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun updateApplication(applicationId: UUID, data: String, document: String?, isWomensApplication: Boolean?, isPipeApplication: Boolean?, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -103,6 +102,14 @@ class ApplicationService(
       validationErrors["$.document"] = "empty"
     }
 
+    if (submittedAt != null && isWomensApplication == null) {
+      validationErrors["$.isWomensApplication"] = "empty"
+    }
+
+    if (submittedAt != null && isPipeApplication == null) {
+      validationErrors["$.isPipeApplication"] = "empty"
+    }
+
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors)
@@ -113,6 +120,8 @@ class ApplicationService(
       it.schemaVersion = latestSchemaVersion
       it.data = data
       it.document = document
+      it.isPipeApplication = isPipeApplication
+      it.isWomensApplication = isWomensApplication
       it.submittedAt = submittedAt
     }
 

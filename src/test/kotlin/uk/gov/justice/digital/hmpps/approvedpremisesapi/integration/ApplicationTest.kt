@@ -675,7 +675,9 @@ class ApplicationTest : IntegrationTestBase() {
       .bodyValue(
         UpdateApplication(
           data = mapOf("thingId" to 123),
-          submittedAt = submittedAt
+          submittedAt = submittedAt,
+          isWomensApplication = false,
+          isPipeApplication = false
         )
       )
       .exchange()

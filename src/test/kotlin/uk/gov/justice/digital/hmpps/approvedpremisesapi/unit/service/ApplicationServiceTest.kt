@@ -195,7 +195,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, username) is AuthorisableActionResult.NotFound).isTrue
+    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, null, null, username) is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
@@ -211,7 +211,7 @@ class ApplicationServiceTest {
       .withYieldedCreatedByProbationOfficer { ProbationOfficerEntityFactory().produce() }
       .produce()
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, username) is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, null, null, username) is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
@@ -230,7 +230,7 @@ class ApplicationServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    val result = applicationService.updateApplication(applicationId, "{}", null, null, username)
+    val result = applicationService.updateApplication(applicationId, "{}", null, null, null, null, username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -260,7 +260,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
 
-    val result = applicationService.updateApplication(applicationId, "{}", null, OffsetDateTime.now().plusMinutes(1), username)
+    val result = applicationService.updateApplication(applicationId, "{}", null, null, null, OffsetDateTime.now().plusMinutes(1), username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -273,7 +273,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `updateApplication returns FieldValidationError when application is submitted but document not provided`() {
+  fun `updateApplication returns FieldValidationError when application is submitted but document not provided, isWomensApplication, isPipeApplication unset`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -291,7 +291,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
 
-    val result = applicationService.updateApplication(applicationId, "{}", null, OffsetDateTime.now().minusMinutes(1), username)
+    val result = applicationService.updateApplication(applicationId, "{}", null, null, null, OffsetDateTime.now().minusMinutes(1), username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -300,6 +300,8 @@ class ApplicationServiceTest {
     val validatableActionResult = result.entity as ValidatableActionResult.FieldValidationError
 
     assertThat(validatableActionResult.validationMessages).containsEntry("$.document", "empty")
+    assertThat(validatableActionResult.validationMessages).containsEntry("$.isWomensApplication", "empty")
+    assertThat(validatableActionResult.validationMessages).containsEntry("$.isPipeApplication", "empty")
   }
 
   @Test
@@ -328,7 +330,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val result = applicationService.updateApplication(applicationId, updatedData, "{}", submittedAt, username)
+    val result = applicationService.updateApplication(applicationId, updatedData, "{}", false, false, submittedAt, username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
