@@ -3,7 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -16,11 +17,12 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
   private var createdByProbationOfficer: Yielded<ProbationOfficerEntity>? = null
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
-  private var applicationSchema: Yielded<ApplicationSchemaEntity> = {
-    ApplicationSchemaEntity(
+  private var applicationSchema: Yielded<JsonSchemaEntity> = {
+    JsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
+      type = JsonSchemaType.APPLICATION
     )
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -50,11 +52,11 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
     this.document = { document }
   }
 
-  fun withApplicationSchema(applicationSchema: ApplicationSchemaEntity) = apply {
+  fun withApplicationSchema(applicationSchema: JsonSchemaEntity) = apply {
     this.applicationSchema = { applicationSchema }
   }
 
-  fun withYieldedApplicationSchema(applicationSchema: Yielded<ApplicationSchemaEntity>) = apply {
+  fun withYieldedApplicationSchema(applicationSchema: Yielded<JsonSchemaEntity>) = apply {
     this.applicationSchema = applicationSchema
   }
 

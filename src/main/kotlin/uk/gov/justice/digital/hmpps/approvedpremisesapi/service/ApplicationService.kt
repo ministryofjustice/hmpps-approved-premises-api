@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import io.swagger.v3.core.util.Json
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -57,7 +59,7 @@ class ApplicationService(
         createdByProbationOfficer = probationOfficer,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(),
+        schemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
         schemaUpToDate = true
@@ -85,7 +87,7 @@ class ApplicationService(
 
     val validationErrors = ValidationErrors()
 
-    val latestSchemaVersion = jsonSchemaService.getNewestSchema()
+    val latestSchemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION)
 
     if (!jsonSchemaService.validate(latestSchemaVersion, data)) {
       validationErrors["$.data"] = "invalid"

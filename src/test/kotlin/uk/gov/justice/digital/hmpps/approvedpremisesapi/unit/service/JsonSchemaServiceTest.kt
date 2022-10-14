@@ -6,27 +6,28 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOfficerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSchemaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import java.util.UUID
 
 class JsonSchemaServiceTest {
-  private val mockApplicationSchemaRepository = mockk<ApplicationSchemaRepository>()
+  private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
 
   private val jsonSchemaService = JsonSchemaService(
     objectMapper = jacksonObjectMapper(),
-    applicationSchemaRepository = mockApplicationSchemaRepository,
+    jsonSchemaRepository = mockJsonSchemaRepository,
     applicationRepository = mockApplicationRepository
   )
 
   @Test
   fun `attemptSchemaUpgrade upgrades schema version where possible, marks outdated where not`() {
-    val newestJsonSchema = ApplicationSchemaEntityFactory()
+    val newestJsonSchema = JsonSchemaEntityFactory()
       .withSchema(
         """
         {
@@ -47,7 +48,7 @@ class JsonSchemaServiceTest {
       )
       .produce()
 
-    val olderJsonSchema = ApplicationSchemaEntityFactory()
+    val olderJsonSchema = JsonSchemaEntityFactory()
       .withSchema(
         """
         {
@@ -89,7 +90,7 @@ class JsonSchemaServiceTest {
 
     val applicationEntities = listOf(upgradableApplication, nonUpgradableApplication)
 
-    every { mockApplicationSchemaRepository.findFirstByOrderByAddedAtDesc() } returns newestJsonSchema
+    every { mockJsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(JsonSchemaType.APPLICATION) } returns newestJsonSchema
     every { mockApplicationRepository.findAllByCreatedByProbationOfficer_Id(probationOfficerId) } returns applicationEntities
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
@@ -108,7 +109,7 @@ class JsonSchemaServiceTest {
 
   @Test
   fun `validate returns false for JSON that does not satisfy schema`() {
-    val schema = ApplicationSchemaEntityFactory()
+    val schema = JsonSchemaEntityFactory()
       .withSchema(
         """
         {
@@ -134,7 +135,7 @@ class JsonSchemaServiceTest {
 
   @Test
   fun `validate returns true for JSON that does satisfy schema`() {
-    val schema = ApplicationSchemaEntityFactory()
+    val schema = JsonSchemaEntityFactory()
       .withSchema(
         """
         {

@@ -6,11 +6,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOfficerEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -47,7 +48,7 @@ class ApplicationServiceTest {
 
   @Test
   fun `Get all applications where Probation Officer exists returns applications returned from repository`() {
-    val newestJsonSchema = ApplicationSchemaEntityFactory()
+    val newestJsonSchema = JsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
 
@@ -108,7 +109,7 @@ class ApplicationServiceTest {
     val probationOfficerId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    val newestJsonSchema = ApplicationSchemaEntityFactory()
+    val newestJsonSchema = JsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
 
@@ -168,13 +169,13 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     val probationOfficer = ProbationOfficerEntityFactory().produce()
-    val schema = ApplicationSchemaEntityFactory().produce()
+    val schema = JsonSchemaEntityFactory().produce()
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce()
     )
     every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
-    every { mockJsonSchemaService.getNewestSchema() } returns schema
+    every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     val result = applicationService.createApplication(crn, username)
@@ -249,14 +250,14 @@ class ApplicationServiceTest {
       .withDistinguishedName(username)
       .produce()
 
-    val newestSchema = ApplicationSchemaEntityFactory().produce()
+    val newestSchema = JsonSchemaEntityFactory().produce()
 
     every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
       .withCreatedByProbationOfficer(probationOfficer)
       .produce()
-    every { mockJsonSchemaService.getNewestSchema() } returns newestSchema
+    every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
 
     val result = applicationService.updateApplication(applicationId, "{}", null, OffsetDateTime.now().plusMinutes(1), username)
@@ -280,14 +281,14 @@ class ApplicationServiceTest {
       .withDistinguishedName(username)
       .produce()
 
-    val newestSchema = ApplicationSchemaEntityFactory().produce()
+    val newestSchema = JsonSchemaEntityFactory().produce()
 
     every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
       .withCreatedByProbationOfficer(probationOfficer)
       .produce()
-    every { mockJsonSchemaService.getNewestSchema() } returns newestSchema
+    every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
 
     val result = applicationService.updateApplication(applicationId, "{}", null, OffsetDateTime.now().minusMinutes(1), username)
@@ -310,7 +311,7 @@ class ApplicationServiceTest {
       .withDistinguishedName(username)
       .produce()
 
-    val newestSchema = ApplicationSchemaEntityFactory().produce()
+    val newestSchema = JsonSchemaEntityFactory().produce()
     val submittedAt = OffsetDateTime.now().minusMinutes(1)
     val updatedData = """
       {
@@ -323,7 +324,7 @@ class ApplicationServiceTest {
       .withId(applicationId)
       .withCreatedByProbationOfficer(probationOfficer)
       .produce()
-    every { mockJsonSchemaService.getNewestSchema() } returns newestSchema
+    every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 

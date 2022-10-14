@@ -36,7 +36,7 @@ data class ApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "schema_version")
-  var schemaVersion: ApplicationSchemaEntity,
+  var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
 
