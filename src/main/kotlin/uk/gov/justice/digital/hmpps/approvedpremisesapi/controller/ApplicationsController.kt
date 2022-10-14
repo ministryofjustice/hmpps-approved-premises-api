@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -49,7 +48,6 @@ class ApplicationsController(
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
-      else -> shouldNotBeReached()
     }
 
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
@@ -86,7 +84,6 @@ class ApplicationsController(
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
-      else -> shouldNotBeReached()
     }
 
     val updatedApplication = when (validationResult) {

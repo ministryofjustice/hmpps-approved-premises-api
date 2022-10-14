@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -360,7 +359,6 @@ class PremisesController(
       is AuthorisableActionResult.Success -> staffMembersResult.entity
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw InternalServerErrorProblem("No team found for Delius team code: ${premises.deliusTeamCode}")
-      else -> shouldNotBeReached()
     }
 
     return ResponseEntity.ok(staffMembers.map(staffMemberTransformer::transformDomainToApi))

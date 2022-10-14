@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import java.time.LocalDate
 
 @Service
@@ -121,7 +120,6 @@ class OffenderService(
           risks
         )
       }
-      else -> shouldNotBeReached()
     }
   }
 
