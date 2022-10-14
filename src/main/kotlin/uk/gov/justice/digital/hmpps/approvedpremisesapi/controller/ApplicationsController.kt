@@ -66,7 +66,6 @@ class ApplicationsController(
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.Success -> applicationResult.entity
-      else -> shouldNotBeReached()
     }
 
     return ResponseEntity
@@ -94,7 +93,6 @@ class ApplicationsController(
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
       is ValidatableActionResult.Success -> validationResult.entity
-      else -> shouldNotBeReached()
     }
 
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))

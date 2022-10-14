@@ -376,6 +376,5 @@ class PremisesController(
     is ValidatableActionResult.Success -> result.entity
     is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
     is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
-    else -> shouldNotBeReached()
   }
 }
