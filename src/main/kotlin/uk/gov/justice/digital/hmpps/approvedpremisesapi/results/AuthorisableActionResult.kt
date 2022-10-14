@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.results
 
 sealed interface AuthorisableActionResult<EntityType> {
   data class Success<EntityType>(val entity: EntityType) : AuthorisableActionResult<EntityType>
