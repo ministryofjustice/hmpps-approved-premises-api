@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -59,9 +58,9 @@ abstract class BaseHMPPSClient(
 
       return ClientResult.Success(result.statusCode, deserialized)
     } catch (exception: WebClientResponseException) {
-      return ClientResult.StatusCodeFailure(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString)
+      return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString)
     } catch (exception: Exception) {
-      return ClientResult.OtherFailure(method, requestBuilder.path ?: "", exception)
+      return ClientResult.Failure.Other(method, requestBuilder.path ?: "", exception)
     }
   }
 
@@ -74,21 +73,23 @@ abstract class BaseHMPPSClient(
   }
 }
 
-interface ClientResult<ResponseType> {
+sealed interface ClientResult<ResponseType> {
   class Success<ResponseType>(val status: HttpStatus, val body: ResponseType) : ClientResult<ResponseType>
-  interface Failure<ResponseType> : ClientResult<ResponseType> {
+  sealed interface Failure<ResponseType> : ClientResult<ResponseType> {
     fun throwException(): Nothing
-  }
-  class StatusCodeFailure<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatus, val body: String?) : Failure<ResponseType> {
-    override fun throwException(): Nothing {
-      throw RuntimeException("Unable to complete $method request to $path: $status")
+
+    class StatusCode<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatus, val body: String?) : Failure<ResponseType> {
+      override fun throwException(): Nothing {
+        throw RuntimeException("Unable to complete $method request to $path: $status")
+      }
+
+      inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper().readValue(body, ResponseType::class.java)
     }
 
-    inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper().readValue(body, ResponseType::class.java)
-  }
-  class OtherFailure<ResponseType>(val method: HttpMethod, val path: String, val exception: Exception) : Failure<ResponseType> {
-    override fun throwException(): Nothing {
-      throw RuntimeException("Unable to complete $method request to $path", exception)
+    class Other<ResponseType>(val method: HttpMethod, val path: String, val exception: Exception) : Failure<ResponseType> {
+      override fun throwException(): Nothing {
+        throw RuntimeException("Unable to complete $method request to $path", exception)
+      }
     }
   }
 }

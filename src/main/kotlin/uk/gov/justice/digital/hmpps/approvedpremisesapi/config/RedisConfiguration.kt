@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
 import java.time.Duration
 
 @Configuration
@@ -62,7 +61,7 @@ class ClientResultRedisSerializer(
 ) : RedisSerializer<ClientResult<*>> {
   override fun serialize(clientResult: ClientResult<*>?): ByteArray {
     val toSerialize = when (clientResult) {
-      is ClientResult.StatusCodeFailure -> {
+      is ClientResult.Failure.StatusCode -> {
         SerializableClientResult(
           discriminator = ClientResultDiscriminator.STATUS_CODE_FAILURE,
           status = clientResult.status,
@@ -73,7 +72,7 @@ class ClientResultRedisSerializer(
           path = clientResult.path
         )
       }
-      is ClientResult.OtherFailure -> {
+      is ClientResult.Failure.Other -> {
         SerializableClientResult(
           discriminator = ClientResultDiscriminator.OTHER_FAILURE,
           status = null,
@@ -95,7 +94,7 @@ class ClientResultRedisSerializer(
           path = null
         )
       }
-      else -> shouldNotBeReached()
+      null -> null
     }
 
     return objectMapper.writeValueAsBytes(toSerialize)
@@ -112,7 +111,7 @@ class ClientResultRedisSerializer(
     }
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.STATUS_CODE_FAILURE) {
-      return ClientResult.StatusCodeFailure(
+      return ClientResult.Failure.StatusCode(
         method = deserializedWrapper.method!!,
         path = deserializedWrapper.path!!,
         status = deserializedWrapper.status!!,
@@ -121,7 +120,7 @@ class ClientResultRedisSerializer(
     }
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.OTHER_FAILURE) {
-      return ClientResult.OtherFailure(
+      return ClientResult.Failure.Other(
         method = deserializedWrapper.method!!,
         path = deserializedWrapper.path!!,
         exception = RuntimeException(deserializedWrapper.exceptionMessage)

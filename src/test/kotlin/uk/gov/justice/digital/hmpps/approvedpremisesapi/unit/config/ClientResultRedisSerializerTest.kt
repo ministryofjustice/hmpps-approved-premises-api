@@ -15,7 +15,7 @@ class ClientResultRedisSerializerTest {
 
   @Test
   fun `ClientResult-StatusCodeFailure responses are serialized and deserialized correctly`() {
-    val clientResult = ClientResult.StatusCodeFailure<ClientResponseBody>(
+    val clientResult = ClientResult.Failure.StatusCode<ClientResponseBody>(
       method = HttpMethod.GET,
       path = "/an/endpoint",
       status = HttpStatus.BAD_REQUEST,
@@ -25,8 +25,8 @@ class ClientResultRedisSerializerTest {
     val cachedByteArray = clientResponseRedisSerializer.serialize(clientResult)
     val deserializedCacheValue = clientResponseRedisSerializer.deserialize(cachedByteArray)
 
-    assertThat(deserializedCacheValue is ClientResult.StatusCodeFailure).isTrue
-    deserializedCacheValue as ClientResult.StatusCodeFailure
+    assertThat(deserializedCacheValue is ClientResult.Failure.StatusCode).isTrue
+    deserializedCacheValue as ClientResult.Failure.StatusCode
     assertThat(deserializedCacheValue.method).isEqualTo(HttpMethod.GET)
     assertThat(deserializedCacheValue.path).isEqualTo("/an/endpoint")
     assertThat(deserializedCacheValue.status).isEqualTo(HttpStatus.BAD_REQUEST)
@@ -35,7 +35,7 @@ class ClientResultRedisSerializerTest {
 
   @Test
   fun `ClientResult-OtherFailure responses are serialized and deserialized correctly`() {
-    val clientResult = ClientResult.OtherFailure<ClientResponseBody>(
+    val clientResult = ClientResult.Failure.Other<ClientResponseBody>(
       method = HttpMethod.GET,
       path = "/an/endpoint",
       exception = RuntimeException("Something went wrong")
@@ -44,8 +44,8 @@ class ClientResultRedisSerializerTest {
     val cachedByteArray = clientResponseRedisSerializer.serialize(clientResult)
     val deserializedCacheValue = clientResponseRedisSerializer.deserialize(cachedByteArray)
 
-    assertThat(deserializedCacheValue is ClientResult.OtherFailure).isTrue
-    deserializedCacheValue as ClientResult.OtherFailure
+    assertThat(deserializedCacheValue is ClientResult.Failure.Other).isTrue
+    deserializedCacheValue as ClientResult.Failure.Other
     assertThat(deserializedCacheValue.method).isEqualTo(HttpMethod.GET)
     assertThat(deserializedCacheValue.path).isEqualTo("/an/endpoint")
     assertThat(deserializedCacheValue.exception.message).isEqualTo(clientResult.exception.message)

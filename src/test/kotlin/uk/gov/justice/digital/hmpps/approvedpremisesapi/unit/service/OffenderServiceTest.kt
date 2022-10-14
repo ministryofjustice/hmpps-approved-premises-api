@@ -68,14 +68,14 @@ class OffenderServiceTest {
 
   @Test
   fun `getOffenderByCrn returns NotFound result when Client returns 404`() {
-    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
   fun `getOffenderByCrn throws when Client returns other non-2xx status code except 403`() {
-    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
     val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
     assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
@@ -129,7 +129,7 @@ class OffenderServiceTest {
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true)
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.StatusCodeFailure(
+    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
@@ -149,7 +149,7 @@ class OffenderServiceTest {
       .produce()
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.StatusCodeFailure(
+    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
@@ -204,14 +204,14 @@ class OffenderServiceTest {
 
   @Test
   fun `getRisksByCrn returns NotFound result when Community API Client returns 404`() {
-    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
     assertThat(offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
   fun `getRisksByCrn throws when Community API Client returns other non-2xx status code`() {
-    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+    every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
     val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") }
     assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
@@ -368,7 +368,7 @@ class OffenderServiceTest {
   fun `getInmateDetailByNomsNumber returns not found result when Client responds with 404`() {
     val nomsNumber = "NOMS321"
 
-    every { mockPrisonsApiClient.getInmateDetails(nomsNumber) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.NOT_FOUND, null)
+    every { mockPrisonsApiClient.getInmateDetails(nomsNumber) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.NOT_FOUND, null)
 
     val result = offenderService.getInmateDetailByNomsNumber(nomsNumber)
 
@@ -379,7 +379,7 @@ class OffenderServiceTest {
   fun `getInmateDetailByNomsNumber returns unauthorised result when Client responds with 403`() {
     val nomsNumber = "NOMS321"
 
-    every { mockPrisonsApiClient.getInmateDetails(nomsNumber) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.FORBIDDEN, null)
+    every { mockPrisonsApiClient.getInmateDetails(nomsNumber) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.FORBIDDEN, null)
 
     val result = offenderService.getInmateDetailByNomsNumber(nomsNumber)
 
@@ -431,7 +431,7 @@ class OffenderServiceTest {
         page = 0,
         pageSize = 2
       )
-    } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.NOT_FOUND, null)
+    } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.NOT_FOUND, null)
 
     assertThat(offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
   }
@@ -447,7 +447,7 @@ class OffenderServiceTest {
         page = 0,
         pageSize = 2
       )
-    } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.FORBIDDEN, null)
+    } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.FORBIDDEN, null)
 
     assertThat(offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -521,13 +521,13 @@ class OffenderServiceTest {
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
   }
 
-  private fun mock404RoSH(crn: String, jwt: String) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/risks/crn/a-crn", HttpStatus.NOT_FOUND, body = null)
-  private fun mock404Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.NOT_FOUND, body = null)
-  private fun mock404Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.NOT_FOUND, body = null)
+  private fun mock404RoSH(crn: String, jwt: String) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/risks/crn/a-crn", HttpStatus.NOT_FOUND, body = null)
+  private fun mock404Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.NOT_FOUND, body = null)
+  private fun mock404Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.NOT_FOUND, body = null)
 
-  private fun mock500RoSH(crn: String, jwt: String) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/risks/crn/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
-  private fun mock500Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
-  private fun mock500Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.StatusCodeFailure(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
+  private fun mock500RoSH(crn: String, jwt: String) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/risks/crn/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
+  private fun mock500Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
+  private fun mock500Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
 
   private fun mock200RoSH(crn: String, jwt: String, body: RoshRisks) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.Success(HttpStatus.OK, body = body)
   private fun mock200Tier(crn: String, body: Tier) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
