@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.util.UUID
