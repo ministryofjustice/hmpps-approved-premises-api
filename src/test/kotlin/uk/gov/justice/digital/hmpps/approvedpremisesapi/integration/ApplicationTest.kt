@@ -56,7 +56,7 @@ class ApplicationTest : IntegrationTestBase() {
   fun `Get all applications returns 200 with correct body, outdated applications upgraded where possible`() {
     applicationSchemaRepository.deleteAll()
 
-    val newestJsonSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """
@@ -78,7 +78,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val olderJsonSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val olderJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
       withSchema(
         """
@@ -234,7 +234,7 @@ class ApplicationTest : IntegrationTestBase() {
   fun `Get single application returns 200 with correct body, outdated application upgraded`() {
     applicationSchemaRepository.deleteAll()
 
-    val newestJsonSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """
@@ -256,7 +256,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val olderJsonSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val olderJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
       withSchema(
         """
@@ -386,7 +386,7 @@ class ApplicationTest : IntegrationTestBase() {
   fun `Get single application returns 200 with correct body, non-upgradable outdated application marked as such`() {
     applicationSchemaRepository.deleteAll()
 
-    applicationSchemaEntityFactory.produceAndPersist {
+    jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """
@@ -408,7 +408,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val olderJsonSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val olderJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
       withSchema(
         """
@@ -475,7 +475,7 @@ class ApplicationTest : IntegrationTestBase() {
     mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
     mockOffenderDetailsCommunityApiCall404(crn)
 
-    applicationSchemaEntityFactory.produceAndPersist {
+    jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
     }
@@ -509,7 +509,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
 
-    applicationSchemaEntityFactory.produceAndPersist {
+    jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
     }
@@ -581,7 +581,7 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
     )
 
-    val applicationSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
     }
@@ -633,7 +633,7 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
     )
 
-    val applicationSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
       withSchema(
@@ -675,7 +675,9 @@ class ApplicationTest : IntegrationTestBase() {
       .bodyValue(
         UpdateApplication(
           data = mapOf("thingId" to 123),
-          submittedAt = submittedAt
+          submittedAt = submittedAt,
+          isWomensApplication = false,
+          isPipeApplication = false
         )
       )
       .exchange()
@@ -718,7 +720,7 @@ class ApplicationTest : IntegrationTestBase() {
   )
 
   private fun produceAndPersistBasicApplication(crn: String): ApplicationEntity {
-    val jsonSchema = applicationSchemaEntityFactory.produceAndPersist {
+    val jsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """

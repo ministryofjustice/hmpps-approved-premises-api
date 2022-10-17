@@ -4,6 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -57,9 +58,11 @@ class ApplicationService(
         createdByProbationOfficer = probationOfficer,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(),
+        schemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
+        isWomensApplication = null,
+        isPipeApplication = null,
         schemaUpToDate = true
       )
     )
@@ -67,7 +70,7 @@ class ApplicationService(
     return success(createdApplication)
   }
 
-  fun updateApplication(applicationId: UUID, data: String, document: String?, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun updateApplication(applicationId: UUID, data: String, document: String?, isWomensApplication: Boolean?, isPipeApplication: Boolean?, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -85,7 +88,7 @@ class ApplicationService(
 
     val validationErrors = ValidationErrors()
 
-    val latestSchemaVersion = jsonSchemaService.getNewestSchema()
+    val latestSchemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION)
 
     if (!jsonSchemaService.validate(latestSchemaVersion, data)) {
       validationErrors["$.data"] = "invalid"
@@ -99,6 +102,14 @@ class ApplicationService(
       validationErrors["$.document"] = "empty"
     }
 
+    if (submittedAt != null && isWomensApplication == null) {
+      validationErrors["$.isWomensApplication"] = "empty"
+    }
+
+    if (submittedAt != null && isPipeApplication == null) {
+      validationErrors["$.isPipeApplication"] = "empty"
+    }
+
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors)
@@ -109,6 +120,8 @@ class ApplicationService(
       it.schemaVersion = latestSchemaVersion
       it.data = data
       it.document = document
+      it.isPipeApplication = isPipeApplication
+      it.isWomensApplication = isWomensApplication
       it.submittedAt = submittedAt
     }
 

@@ -1762,6 +1762,10 @@ components:
         createdAt:
           type: string
           format: date-time
+        isWomensApplication:
+          type: boolean
+        isPipeApplication:
+          type: boolean
         submittedAt:
           type: string
           format: date-time
@@ -1797,6 +1801,10 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AnyValue'
+        isWomensApplication:
+          type: boolean
+        isPipeApplication:
+          type: boolean
         submittedAt:
           type: string
           format: date-time

@@ -9,24 +9,21 @@ import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
-interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
-  fun findAllByCreatedByProbationOfficer_Id(id: UUID): List<ApplicationEntity>
-}
+interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID>
 
 @Entity
-@Table(name = "applications")
-data class ApplicationEntity(
+@Table(name = "assessments")
+data class AssessmentEntity(
   @Id
   val id: UUID,
 
-  val crn: String,
-
-  @ManyToOne
-  @JoinColumn(name = "created_by_probation_officer_id")
-  val createdByProbationOfficer: ProbationOfficerEntity,
+  @OneToOne
+  @JoinColumn(name = "application_id")
+  val application: ApplicationEntity,
 
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var data: String?,
@@ -37,11 +34,15 @@ data class ApplicationEntity(
   @ManyToOne
   @JoinColumn(name = "schema_version")
   var schemaVersion: JsonSchemaEntity,
+
+  @ManyToOne
+  @JoinColumn(name = "allocated_to_probation_officer_id")
+  val allocatedToProbationOfficerId: ProbationOfficerEntity,
+
+  val allocatedAt: OffsetDateTime,
+
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
-
-  var isWomensApplication: Boolean?,
-  var isPipeApplication: Boolean?,
 
   @Transient
   var schemaUpToDate: Boolean
