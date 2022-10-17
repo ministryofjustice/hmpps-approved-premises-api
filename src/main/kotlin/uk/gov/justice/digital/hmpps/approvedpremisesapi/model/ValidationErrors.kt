@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+
 @JvmInline
 value class ValidationErrors(private val errorMap: MutableMap<String, String>) : MutableMap<String, String> by errorMap {
   constructor() : this(mutableMapOf())

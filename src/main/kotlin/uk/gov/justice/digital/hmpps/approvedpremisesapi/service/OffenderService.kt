@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -24,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.shouldNotBeReached
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.time.LocalDate
 
 @Service
@@ -57,16 +56,15 @@ class OffenderService(
   fun getOffenderByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<OffenderDetailSummary> {
     val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
       is ClientResult.Success -> offenderResponse.body
-      is ClientResult.StatusCodeFailure -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
       is ClientResult.Failure -> offenderResponse.throwException()
-      else -> shouldNotBeReached()
     }
 
     if (offender.currentExclusion || offender.currentRestriction) {
       val access =
         when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
           is ClientResult.Success -> accessResponse.body
-          is ClientResult.StatusCodeFailure -> {
+          is ClientResult.Failure.StatusCode -> {
             if (accessResponse.status == HttpStatus.FORBIDDEN) {
               try {
                 accessResponse.deserializeTo<UserOffenderAccess>()
@@ -79,7 +77,6 @@ class OffenderService(
             accessResponse.throwException()
           }
           is ClientResult.Failure -> accessResponse.throwException()
-          else -> shouldNotBeReached()
         }
 
       if (access.userExcluded || access.userRestricted) {
@@ -93,13 +90,12 @@ class OffenderService(
   fun getInmateDetailByNomsNumber(nomsNumber: String): AuthorisableActionResult<InmateDetail> {
     val inmateDetail = when (val offenderResponse = prisonsApiClient.getInmateDetails(nomsNumber)) {
       is ClientResult.Success -> offenderResponse.body
-      is ClientResult.StatusCodeFailure -> when (offenderResponse.status) {
+      is ClientResult.Failure.StatusCode -> when (offenderResponse.status) {
         HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> offenderResponse.throwException()
       }
       is ClientResult.Failure -> offenderResponse.throwException()
-      else -> shouldNotBeReached()
     }
 
     return AuthorisableActionResult.Success(inmateDetail)
@@ -124,7 +120,6 @@ class OffenderService(
           risks
         )
       }
-      else -> shouldNotBeReached()
     }
   }
 
@@ -142,13 +137,12 @@ class OffenderService(
       val caseNotesPageResponse = prisonsApiClient.getCaseNotesPage(nomsNumber, fromDate, currentPageIndex, prisonCaseNotesConfig.prisonApiPageSize)
       currentPage = when (caseNotesPageResponse) {
         is ClientResult.Success -> caseNotesPageResponse.body
-        is ClientResult.StatusCodeFailure -> when (caseNotesPageResponse.status) {
+        is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
           HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
           HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
           else -> caseNotesPageResponse.throwException()
         }
         is ClientResult.Failure -> caseNotesPageResponse.throwException()
-        else -> shouldNotBeReached()
       }
 
       allCaseNotes.addAll(
@@ -177,7 +171,7 @@ class OffenderService(
           )
         )
       }
-      is ClientResult.StatusCodeFailure -> return if (roshRisksResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status == HttpStatus.NOT_FOUND) {
         RiskWithStatus(
           status = RiskStatus.NotFound,
           value = null
@@ -192,7 +186,6 @@ class OffenderService(
         status = RiskStatus.Error,
         value = null
       )
-      else -> shouldNotBeReached()
     }
   }
 
@@ -208,7 +201,7 @@ class OffenderService(
           }
         )
       }
-      is ClientResult.StatusCodeFailure -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
         RiskWithStatus(status = RiskStatus.NotFound)
       } else {
         RiskWithStatus(status = RiskStatus.Error)
@@ -216,7 +209,6 @@ class OffenderService(
       is ClientResult.Failure -> {
         return RiskWithStatus(status = RiskStatus.Error)
       }
-      else -> shouldNotBeReached()
     }
   }
 
@@ -227,7 +219,7 @@ class OffenderService(
           value = registrationsResponse.body.registrations.filter { !ignoredRegisterTypesForFlags.contains(it.type.code) }.map { it.type.description }
         )
       }
-      is ClientResult.StatusCodeFailure -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
         RiskWithStatus(status = RiskStatus.NotFound)
       } else {
         RiskWithStatus(status = RiskStatus.Error)
@@ -235,7 +227,6 @@ class OffenderService(
       is ClientResult.Failure -> {
         return RiskWithStatus(status = RiskStatus.Error)
       }
-      else -> shouldNotBeReached()
     }
   }
 
@@ -250,7 +241,7 @@ class OffenderService(
           )
         )
       }
-      is ClientResult.StatusCodeFailure -> return if (tierResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> return if (tierResponse.status == HttpStatus.NOT_FOUND) {
         RiskWithStatus(status = RiskStatus.NotFound)
       } else {
         RiskWithStatus(status = RiskStatus.Error)
@@ -258,7 +249,6 @@ class OffenderService(
       is ClientResult.Failure -> {
         return RiskWithStatus(status = RiskStatus.Error)
       }
-      else -> shouldNotBeReached()
     }
   }
 
