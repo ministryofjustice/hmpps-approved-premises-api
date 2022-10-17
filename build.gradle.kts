@@ -55,6 +55,14 @@ dependencies {
   testRuntimeOnly("com.fasterxml.jackson.core:jackson-databind") {
     version { strictly("2.14.0-rc1") }
   }
+
+  implementation("org.apache.commons:commons-text") {
+    version { strictly("1.10.0") }
+  }
+
+  testRuntimeOnly("org.apache.commons:commons-text") {
+    version { strictly("1.10.0") }
+  }
 }
 
 java {
