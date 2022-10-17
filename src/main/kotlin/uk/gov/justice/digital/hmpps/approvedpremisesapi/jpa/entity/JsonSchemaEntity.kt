@@ -27,5 +27,6 @@ data class JsonSchemaEntity(
 )
 
 enum class JsonSchemaType {
-  APPLICATION
+  APPLICATION,
+  ASSESSMENT
 }
