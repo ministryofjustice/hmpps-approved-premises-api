@@ -67,7 +67,7 @@ class JsonSchemaServiceTest {
     val distinguishedName = "SOMEPERSON"
     val userEntity = UserEntityFactory()
       .withId(userId)
-      .withDistinguishedName(distinguishedName)
+      .withDeliusUsername(distinguishedName)
       .produce()
 
     val upgradableApplication = ApplicationEntityFactory()

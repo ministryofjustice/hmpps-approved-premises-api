@@ -22,7 +22,7 @@ class ApplicationService(
   private val userService: UserService
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String): List<ApplicationEntity> {
-    val userEntity = userRepository.findByDistinguishedName(userDistinguishedName)
+    val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
 
     return applicationRepository.findAllByCreatedByUser_Id(userEntity.id)
@@ -33,7 +33,7 @@ class ApplicationService(
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    val userEntity = userRepository.findByDistinguishedName(userDistinguishedName)
+    val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
 
     if (userEntity != applicationEntity.createdByUser) {
       return AuthorisableActionResult.Unauthorised()

@@ -27,7 +27,7 @@ class UserServiceTest {
 
     val user = UserEntityFactory().produce()
 
-    every { mockUserRepository.findByDistinguishedName(username) } returns user
+    every { mockUserRepository.findByDeliusUsername(username) } returns user
 
     assertThat(userService.getUserForRequest()).isEqualTo(user)
   }
@@ -40,11 +40,11 @@ class UserServiceTest {
     every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
     every { mockPrincipal.name } returns username
 
-    every { mockUserRepository.findByDistinguishedName(username) } returns null
+    every { mockUserRepository.findByDeliusUsername(username) } returns null
     every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
 
     assertThat(userService.getUserForRequest()).matches {
-      it.name == username
+      it.name == "forenames surname"
     }
   }
 }

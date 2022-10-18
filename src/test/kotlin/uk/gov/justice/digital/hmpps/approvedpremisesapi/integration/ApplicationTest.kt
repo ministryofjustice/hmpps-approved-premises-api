@@ -94,7 +94,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val user = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
@@ -272,7 +272,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
@@ -424,7 +424,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
@@ -657,7 +657,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     val user = userEntityFactory.produceAndPersist {
-      withDistinguishedName(username)
+      withDeliusUsername(username)
     }
 
     applicationEntityFactory.produceAndPersist {
@@ -742,7 +742,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val application = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)

@@ -14,13 +14,15 @@ class UserService(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
-    return userRepository.findByDistinguishedName(username)
+    // TODO: Make call to Community API for details
+
+    return userRepository.findByDeliusUsername(username)
       ?: userRepository.save(
         UserEntity(
           id = UUID.randomUUID(),
-          name = username,
-          distinguishedName = username,
-          isActive = true,
+          name = "forenames surname",
+          deliusUsername = username,
+          deliusStaffIdentifier = 123,
           applications = mutableListOf()
         )
       )

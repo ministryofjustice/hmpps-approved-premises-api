@@ -41,7 +41,7 @@ class ApplicationServiceTest {
   fun `Get all applications where Probation Officer with provided distinguished name does not exist returns empty list`() {
     val distinguishedName = "SOMEPERSON"
 
-    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns null
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns null
 
     assertThat(applicationService.getAllApplicationsForUsername(distinguishedName)).isEmpty()
   }
@@ -56,7 +56,7 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val userEntity = UserEntityFactory()
       .withId(userId)
-      .withDistinguishedName(distinguishedName)
+      .withDeliusUsername(distinguishedName)
       .produce()
     val applicationEntities = listOf(
       ApplicationEntityFactory()
@@ -73,7 +73,7 @@ class ApplicationServiceTest {
         .produce()
     )
 
-    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns userEntity
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
     every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
     every { mockJsonSchemaService.attemptSchemaUpgrade(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
@@ -95,7 +95,7 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns UserEntityFactory().produce()
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory().produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withCreatedByUser(UserEntityFactory().produce())
       .produce()
@@ -115,7 +115,7 @@ class ApplicationServiceTest {
 
     val userEntity = UserEntityFactory()
       .withId(userId)
-      .withDistinguishedName(distinguishedName)
+      .withDeliusUsername(distinguishedName)
       .produce()
 
     val applicationEntity = ApplicationEntityFactory()
@@ -125,7 +125,7 @@ class ApplicationServiceTest {
 
     every { mockJsonSchemaService.attemptSchemaUpgrade(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns userEntity
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
 
     val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
 
@@ -204,7 +204,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-      .withDistinguishedName(username)
+      .withDeliusUsername(username)
       .produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
@@ -220,7 +220,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     val user = UserEntityFactory()
-      .withDistinguishedName(username)
+      .withDeliusUsername(username)
       .produce()
 
     every { mockUserService.getUserForRequest() } returns user
@@ -247,7 +247,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     val user = UserEntityFactory()
-      .withDistinguishedName(username)
+      .withDeliusUsername(username)
       .produce()
 
     val newestSchema = JsonSchemaEntityFactory().produce()
@@ -278,7 +278,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     val user = UserEntityFactory()
-      .withDistinguishedName(username)
+      .withDeliusUsername(username)
       .produce()
 
     val newestSchema = JsonSchemaEntityFactory().produce()
@@ -310,7 +310,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     val user = UserEntityFactory()
-      .withDistinguishedName(username)
+      .withDeliusUsername(username)
       .produce()
 
     val newestSchema = JsonSchemaEntityFactory().produce()

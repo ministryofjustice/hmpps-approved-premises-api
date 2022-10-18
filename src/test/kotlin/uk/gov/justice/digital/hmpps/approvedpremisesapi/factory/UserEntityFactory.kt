@@ -4,14 +4,15 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
 class UserEntityFactory : Factory<UserEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringUpperCase(12) }
-  private var distinguishedName: Yielded<String> = { randomStringUpperCase(12) }
-  private var isActive: Yielded<Boolean> = { false }
+  private var deliusUsername: Yielded<String> = { randomStringUpperCase(12) }
+  private var deliusStaffIdentifier: Yielded<Long> = { randomInt(1000, 10000).toLong() }
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
@@ -22,12 +23,12 @@ class UserEntityFactory : Factory<UserEntity> {
     this.name = { name }
   }
 
-  fun withDistinguishedName(distinguishedName: String) = apply {
-    this.distinguishedName = { distinguishedName }
+  fun withDeliusUsername(deliusUsername: String) = apply {
+    this.deliusUsername = { deliusUsername }
   }
 
-  fun withIsActive(isActive: Boolean) = apply {
-    this.isActive = { isActive }
+  fun withDeliusStaffIdentifier(deliusStaffIdentifier: Long) = apply {
+    this.deliusStaffIdentifier = { deliusStaffIdentifier }
   }
 
   fun withApplications(applications: MutableList<ApplicationEntity>) = apply {
@@ -37,8 +38,8 @@ class UserEntityFactory : Factory<UserEntity> {
   override fun produce(): UserEntity = UserEntity(
     id = this.id(),
     name = this.name(),
-    distinguishedName = this.distinguishedName(),
-    isActive = this.isActive(),
+    deliusUsername = this.deliusUsername(),
+    deliusStaffIdentifier = this.deliusStaffIdentifier(),
     applications = this.applications()
   )
 }
