@@ -164,7 +164,7 @@ class PremisesController(
 
     val offenderResult = offenderService.getOffenderByCrn(body.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
     if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
-    if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
+    if (offenderResult is AuthorisableActionResult.NotFound) throw BadRequestProblem(mapOf("crn" to "Invalid crn"))
     offenderResult as AuthorisableActionResult.Success
 
     if (offenderResult.entity.otherIds.nomsNumber == null) {
