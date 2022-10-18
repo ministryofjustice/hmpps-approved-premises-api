@@ -134,7 +134,7 @@ class ApplicationTest : IntegrationTestBase() {
       nonUpgradableApplicationEntity.id == it.id &&
         nonUpgradableApplicationEntity.crn == it.person?.crn &&
         nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByUserId &&
         nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
@@ -144,7 +144,7 @@ class ApplicationTest : IntegrationTestBase() {
       upgradableApplicationEntity.id == it.id &&
         upgradableApplicationEntity.crn == it.person?.crn &&
         upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByUserId &&
         upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
@@ -305,7 +305,7 @@ class ApplicationTest : IntegrationTestBase() {
       upgradableApplicationEntity.id == it.id &&
         upgradableApplicationEntity.crn == it.person.crn &&
         upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByUserId &&
         upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
@@ -451,7 +451,7 @@ class ApplicationTest : IntegrationTestBase() {
       nonUpgradableApplicationEntity.id == it.id &&
         nonUpgradableApplicationEntity.crn == it.person?.crn &&
         nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByUserId &&
         nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema

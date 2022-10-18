@@ -12,7 +12,7 @@ class ApplicationsTransformer(private val objectMapper: ObjectMapper, private va
   fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Application(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-    createdByProbationOfficerId = jpa.createdByProbationOfficer.id,
+    createdByUserId = jpa.createdByProbationOfficer.id,
     schemaVersion = jpa.schemaVersion.id,
     outdatedSchema = !jpa.schemaUpToDate,
     createdAt = jpa.createdAt,
