@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -15,17 +15,17 @@ import java.util.UUID
 
 @Service
 class ApplicationService(
-  private val probationOfficerRepository: ProbationOfficerRepository,
+  private val userRepository: UserRepository,
   private val applicationRepository: ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
-  private val probationOfficerService: ProbationOfficerService
+  private val userService: UserService
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String): List<ApplicationEntity> {
-    val probationOfficerEntity = probationOfficerRepository.findByDistinguishedName(userDistinguishedName)
+    val userEntity = userRepository.findByDistinguishedName(userDistinguishedName)
       ?: return emptyList()
 
-    return applicationRepository.findAllByCreatedByProbationOfficer_Id(probationOfficerEntity.id)
+    return applicationRepository.findAllByCreatedByUser_Id(userEntity.id)
       .map(jsonSchemaService::attemptSchemaUpgrade)
   }
 
@@ -33,9 +33,9 @@ class ApplicationService(
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    val probationOfficerEntity = probationOfficerRepository.findByDistinguishedName(userDistinguishedName)
+    val userEntity = userRepository.findByDistinguishedName(userDistinguishedName)
 
-    if (probationOfficerEntity != applicationEntity.createdByProbationOfficer) {
+    if (userEntity != applicationEntity.createdByUser) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -49,13 +49,13 @@ class ApplicationService(
       is AuthorisableActionResult.Success -> Unit
     }
 
-    val probationOfficer = probationOfficerService.getProbationOfficerForRequestUser()
+    val user = userService.getUserForRequest()
 
     val createdApplication = applicationRepository.save(
       ApplicationEntity(
         id = UUID.randomUUID(),
         crn = crn,
-        createdByProbationOfficer = probationOfficer,
+        createdByUser = user,
         data = null,
         document = null,
         schemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION),
@@ -74,9 +74,9 @@ class ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    val probationOfficer = probationOfficerService.getProbationOfficerForRequestUser()
+    val user = userService.getUserForRequest()
 
-    if (application.createdByProbationOfficer != probationOfficer) {
+    if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }
 

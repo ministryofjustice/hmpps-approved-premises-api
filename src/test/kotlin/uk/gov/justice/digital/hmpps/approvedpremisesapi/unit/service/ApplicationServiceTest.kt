@@ -8,40 +8,40 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOfficerEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ProbationOfficerService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationServiceTest {
-  private val mockProbationOfficerRepository = mockk<ProbationOfficerRepository>()
+  private val mockUserRepository = mockk<UserRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockProbationOfficerService = mockk<ProbationOfficerService>()
+  private val mockUserService = mockk<UserService>()
 
   private val applicationService = ApplicationService(
-    mockProbationOfficerRepository,
+    mockUserRepository,
     mockApplicationRepository,
     mockJsonSchemaService,
     mockOffenderService,
-    mockProbationOfficerService
+    mockUserService
   )
 
   @Test
   fun `Get all applications where Probation Officer with provided distinguished name does not exist returns empty list`() {
     val distinguishedName = "SOMEPERSON"
 
-    every { mockProbationOfficerRepository.findByDistinguishedName(distinguishedName) } returns null
+    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns null
 
     assertThat(applicationService.getAllApplicationsForUsername(distinguishedName)).isEmpty()
   }
@@ -52,29 +52,29 @@ class ApplicationServiceTest {
       .withSchema("{}")
       .produce()
 
-    val probationOfficerId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
+    val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
-    val probationOfficerEntity = ProbationOfficerEntityFactory()
-      .withId(probationOfficerId)
+    val userEntity = UserEntityFactory()
+      .withId(userId)
       .withDistinguishedName(distinguishedName)
       .produce()
     val applicationEntities = listOf(
       ApplicationEntityFactory()
-        .withCreatedByProbationOfficer(probationOfficerEntity)
+        .withCreatedByUser(userEntity)
         .withApplicationSchema(newestJsonSchema)
         .produce(),
       ApplicationEntityFactory()
-        .withCreatedByProbationOfficer(probationOfficerEntity)
+        .withCreatedByUser(userEntity)
         .withApplicationSchema(newestJsonSchema)
         .produce(),
       ApplicationEntityFactory()
-        .withCreatedByProbationOfficer(probationOfficerEntity)
+        .withCreatedByUser(userEntity)
         .withApplicationSchema(newestJsonSchema)
         .produce()
     )
 
-    every { mockProbationOfficerRepository.findByDistinguishedName(distinguishedName) } returns probationOfficerEntity
-    every { mockApplicationRepository.findAllByCreatedByProbationOfficer_Id(probationOfficerId) } returns applicationEntities
+    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns userEntity
+    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
     every { mockJsonSchemaService.attemptSchemaUpgrade(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     assertThat(applicationService.getAllApplicationsForUsername(distinguishedName)).containsAll(applicationEntities)
@@ -95,9 +95,9 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    every { mockProbationOfficerRepository.findByDistinguishedName(distinguishedName) } returns ProbationOfficerEntityFactory().produce()
+    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns UserEntityFactory().produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
-      .withCreatedByProbationOfficer(ProbationOfficerEntityFactory().produce())
+      .withCreatedByUser(UserEntityFactory().produce())
       .produce()
 
     assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
@@ -106,26 +106,26 @@ class ApplicationServiceTest {
   @Test
   fun `getApplicationForUsername where application belongs to user returns Success result with entity from db`() {
     val distinguishedName = "SOMEPERSON"
-    val probationOfficerId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+    val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
     val newestJsonSchema = JsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
 
-    val probationOfficerEntity = ProbationOfficerEntityFactory()
-      .withId(probationOfficerId)
+    val userEntity = UserEntityFactory()
+      .withId(userId)
       .withDistinguishedName(distinguishedName)
       .produce()
 
     val applicationEntity = ApplicationEntityFactory()
-      .withCreatedByProbationOfficer(probationOfficerEntity)
+      .withCreatedByUser(userEntity)
       .withApplicationSchema(newestJsonSchema)
       .produce()
 
     every { mockJsonSchemaService.attemptSchemaUpgrade(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-    every { mockProbationOfficerRepository.findByDistinguishedName(distinguishedName) } returns probationOfficerEntity
+    every { mockUserRepository.findByDistinguishedName(distinguishedName) } returns userEntity
 
     val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
 
@@ -168,13 +168,13 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
-    val probationOfficer = ProbationOfficerEntityFactory().produce()
+    val user = UserEntityFactory().produce()
     val schema = JsonSchemaEntityFactory().produce()
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce()
     )
-    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockUserService.getUserForRequest() } returns user
     every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
@@ -184,7 +184,7 @@ class ApplicationServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity).matches {
       it.crn == crn &&
-        it.createdByProbationOfficer == probationOfficer
+        it.createdByUser == user
     }
   }
 
@@ -203,12 +203,12 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns ProbationOfficerEntityFactory()
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withDistinguishedName(username)
       .produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
-      .withYieldedCreatedByProbationOfficer { ProbationOfficerEntityFactory().produce() }
+      .withYieldedCreatedByUser { UserEntityFactory().produce() }
       .produce()
 
     assertThat(applicationService.updateApplication(applicationId, "{}", null, null, null, null, username) is AuthorisableActionResult.Unauthorised).isTrue
@@ -219,14 +219,14 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    val probationOfficer = ProbationOfficerEntityFactory()
+    val user = UserEntityFactory()
       .withDistinguishedName(username)
       .produce()
 
-    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
-      .withCreatedByProbationOfficer(probationOfficer)
+      .withCreatedByUser(user)
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
@@ -246,16 +246,16 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    val probationOfficer = ProbationOfficerEntityFactory()
+    val user = UserEntityFactory()
       .withDistinguishedName(username)
       .produce()
 
     val newestSchema = JsonSchemaEntityFactory().produce()
 
-    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
-      .withCreatedByProbationOfficer(probationOfficer)
+      .withCreatedByUser(user)
       .produce()
     every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
@@ -277,16 +277,16 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    val probationOfficer = ProbationOfficerEntityFactory()
+    val user = UserEntityFactory()
       .withDistinguishedName(username)
       .produce()
 
     val newestSchema = JsonSchemaEntityFactory().produce()
 
-    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
-      .withCreatedByProbationOfficer(probationOfficer)
+      .withCreatedByUser(user)
       .produce()
     every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, "{}") } returns false
@@ -309,7 +309,7 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    val probationOfficer = ProbationOfficerEntityFactory()
+    val user = UserEntityFactory()
       .withDistinguishedName(username)
       .produce()
 
@@ -321,10 +321,10 @@ class ApplicationServiceTest {
       }
     """
 
-    every { mockProbationOfficerService.getProbationOfficerForRequestUser() } returns probationOfficer
+    every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
       .withId(applicationId)
-      .withCreatedByProbationOfficer(probationOfficer)
+      .withCreatedByUser(user)
       .produce()
     every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true

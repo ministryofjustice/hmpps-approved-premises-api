@@ -7,7 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOfficerEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
@@ -63,15 +63,15 @@ class JsonSchemaServiceTest {
       )
       .produce()
 
-    val probationOfficerId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
+    val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
-    val probationOfficerEntity = ProbationOfficerEntityFactory()
-      .withId(probationOfficerId)
+    val userEntity = UserEntityFactory()
+      .withId(userId)
       .withDistinguishedName(distinguishedName)
       .produce()
 
     val upgradableApplication = ApplicationEntityFactory()
-      .withCreatedByProbationOfficer(probationOfficerEntity)
+      .withCreatedByUser(userEntity)
       .withApplicationSchema(olderJsonSchema)
       .withData(
         """
@@ -83,7 +83,7 @@ class JsonSchemaServiceTest {
       .produce()
 
     val nonUpgradableApplication = ApplicationEntityFactory()
-      .withCreatedByProbationOfficer(probationOfficerEntity)
+      .withCreatedByUser(userEntity)
       .withApplicationSchema(olderJsonSchema)
       .withData("{}")
       .produce()
@@ -91,7 +91,7 @@ class JsonSchemaServiceTest {
     val applicationEntities = listOf(upgradableApplication, nonUpgradableApplication)
 
     every { mockJsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(JsonSchemaType.APPLICATION) } returns newestJsonSchema
-    every { mockApplicationRepository.findAllByCreatedByProbationOfficer_Id(probationOfficerId) } returns applicationEntities
+    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     assertThat(jsonSchemaService.attemptSchemaUpgrade(upgradableApplication)).matches {
