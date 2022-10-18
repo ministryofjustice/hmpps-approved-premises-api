@@ -94,12 +94,12 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val probationOfficerEntity = probationOfficerEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val user = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
-      withCreatedByProbationOfficer(probationOfficerEntity)
+      withCreatedByUser(user)
       withData(
         """
           {
@@ -111,7 +111,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
-      withCreatedByProbationOfficer(probationOfficerEntity)
+      withCreatedByUser(user)
       withCrn(offenderDetails.otherIds.crn)
       withData("{}")
     }
@@ -134,7 +134,7 @@ class ApplicationTest : IntegrationTestBase() {
       nonUpgradableApplicationEntity.id == it.id &&
         nonUpgradableApplicationEntity.crn == it.person?.crn &&
         nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
         nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
@@ -144,7 +144,7 @@ class ApplicationTest : IntegrationTestBase() {
       upgradableApplicationEntity.id == it.id &&
         upgradableApplicationEntity.crn == it.person?.crn &&
         upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        upgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
         upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
@@ -272,12 +272,12 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val probationOfficerEntity = probationOfficerEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
-      withCreatedByProbationOfficer(probationOfficerEntity)
+      withCreatedByUser(userEntity)
       withData(
         """
           {
@@ -305,7 +305,7 @@ class ApplicationTest : IntegrationTestBase() {
       upgradableApplicationEntity.id == it.id &&
         upgradableApplicationEntity.crn == it.person.crn &&
         upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        upgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
         upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
@@ -424,12 +424,12 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val probationOfficerEntity = probationOfficerEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
 
     val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
-      withCreatedByProbationOfficer(probationOfficerEntity)
+      withCreatedByUser(userEntity)
       withData("{}")
     }
 
@@ -451,7 +451,7 @@ class ApplicationTest : IntegrationTestBase() {
       nonUpgradableApplicationEntity.id == it.id &&
         nonUpgradableApplicationEntity.crn == it.person?.crn &&
         nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        nonUpgradableApplicationEntity.createdByProbationOfficer.id == it.createdByProbationOfficerId &&
+        nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
         nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
@@ -656,7 +656,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val probationOfficer = probationOfficerEntityFactory.produceAndPersist {
+    val user = userEntityFactory.produceAndPersist {
       withDistinguishedName(username)
     }
 
@@ -664,7 +664,7 @@ class ApplicationTest : IntegrationTestBase() {
       withCrn(crn)
       withId(applicationId)
       withApplicationSchema(applicationSchema)
-      withCreatedByProbationOfficer(probationOfficer)
+      withCreatedByUser(user)
     }
 
     val submittedAt = OffsetDateTime.now()
@@ -742,12 +742,12 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val probationOfficerEntity = probationOfficerEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
 
     val application = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)
       withCrn(crn)
-      withCreatedByProbationOfficer(probationOfficerEntity)
+      withCreatedByUser(userEntity)
       withData(
         """
           {

@@ -1,22 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import java.util.UUID
 
 @Service
-class ProbationOfficerService(
+class UserService(
   private val httpAuthService: HttpAuthService,
-  private val probationOfficerRepository: ProbationOfficerRepository
+  private val userRepository: UserRepository
 ) {
-  fun getProbationOfficerForRequestUser(): ProbationOfficerEntity {
+  fun getUserForRequest(): UserEntity {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
-    return probationOfficerRepository.findByDistinguishedName(username)
-      ?: probationOfficerRepository.save(
-        ProbationOfficerEntity(
+    return userRepository.findByDistinguishedName(username)
+      ?: userRepository.save(
+        UserEntity(
           id = UUID.randomUUID(),
           name = username,
           distinguishedName = username,

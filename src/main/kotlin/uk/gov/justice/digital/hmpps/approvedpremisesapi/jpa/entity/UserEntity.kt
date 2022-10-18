@@ -9,18 +9,18 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
-interface ProbationOfficerRepository : JpaRepository<ProbationOfficerEntity, UUID> {
-  fun findByDistinguishedName(distinguishedName: String): ProbationOfficerEntity?
+interface UserRepository : JpaRepository<UserEntity, UUID> {
+  fun findByDistinguishedName(distinguishedName: String): UserEntity?
 }
 
 @Entity
-@Table(name = "probation_officers")
-data class ProbationOfficerEntity(
+@Table(name = "users")
+data class UserEntity(
   @Id
   val id: UUID,
   val name: String,
   val distinguishedName: String,
   var isActive: Boolean,
-  @OneToMany(mappedBy = "createdByProbationOfficer")
+  @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<ApplicationEntity>
 )

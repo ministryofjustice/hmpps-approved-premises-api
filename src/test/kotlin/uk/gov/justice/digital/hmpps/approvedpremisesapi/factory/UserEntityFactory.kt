@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationOfficerEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class ProbationOfficerEntityFactory : Factory<ProbationOfficerEntity> {
+class UserEntityFactory : Factory<UserEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringUpperCase(12) }
   private var distinguishedName: Yielded<String> = { randomStringUpperCase(12) }
@@ -34,7 +34,7 @@ class ProbationOfficerEntityFactory : Factory<ProbationOfficerEntity> {
     this.applications = { applications }
   }
 
-  override fun produce(): ProbationOfficerEntity = ProbationOfficerEntity(
+  override fun produce(): UserEntity = UserEntity(
     id = this.id(),
     name = this.name(),
     distinguishedName = this.distinguishedName(),

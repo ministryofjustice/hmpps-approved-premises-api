@@ -13,7 +13,7 @@ import javax.persistence.Table
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
-  fun findAllByCreatedByProbationOfficer_Id(id: UUID): List<ApplicationEntity>
+  fun findAllByCreatedByUser_Id(id: UUID): List<ApplicationEntity>
 }
 
 @Entity
@@ -25,8 +25,8 @@ data class ApplicationEntity(
   val crn: String,
 
   @ManyToOne
-  @JoinColumn(name = "created_by_probation_officer_id")
-  val createdByProbationOfficer: ProbationOfficerEntity,
+  @JoinColumn(name = "created_by_user_id")
+  val createdByUser: UserEntity,
 
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var data: String?,

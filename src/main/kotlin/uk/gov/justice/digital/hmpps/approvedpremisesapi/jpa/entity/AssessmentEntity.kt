@@ -36,8 +36,8 @@ data class AssessmentEntity(
   var schemaVersion: JsonSchemaEntity,
 
   @ManyToOne
-  @JoinColumn(name = "allocated_to_probation_officer_id")
-  val allocatedToProbationOfficerId: ProbationOfficerEntity,
+  @JoinColumn(name = "allocated_to_user_id")
+  val allocatedToUserId: UserEntity,
 
   val allocatedAt: OffsetDateTime,
 
