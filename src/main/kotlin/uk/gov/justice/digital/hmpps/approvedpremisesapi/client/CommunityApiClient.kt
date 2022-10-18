@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
 @Component
@@ -38,5 +39,9 @@ class CommunityApiClient(
   @Cacheable(value = ["staffMembersCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffMembers(deliusTeamCode: String) = getRequest<List<StaffMember>> {
     path = "/secure/teams/$deliusTeamCode/staff"
+  }
+
+  fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {
+    path = "/secure/staff/username/$deliusUsername"
   }
 }
