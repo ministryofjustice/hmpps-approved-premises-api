@@ -20,6 +20,30 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
     this.username = { username }
   }
 
+  fun withEmail(email: String) = apply {
+    this.email = { email }
+  }
+
+  fun withTelephoneNumber(telephoneNumber: String) = apply {
+    this.telephoneNumber = { telephoneNumber }
+  }
+
+  fun withStaffCode(staffCode: String) = apply {
+    this.staffCode = { staffCode }
+  }
+
+  fun withStaffIdentifier(staffIdentifier: Long) = apply {
+    this.staffIdentifier = { staffIdentifier }
+  }
+
+  fun withForenames(forenames: String) = apply {
+    this.forenames = { forenames }
+  }
+
+  fun withSurname(surname: String) = apply {
+    this.surname = { surname }
+  }
+
   override fun produce(): StaffUserDetails = StaffUserDetails(
     username = this.username(),
     email = this.email(),

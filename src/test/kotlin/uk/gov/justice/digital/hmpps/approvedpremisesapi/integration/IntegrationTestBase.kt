@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
@@ -293,6 +294,18 @@ abstract class IntegrationTestBase {
           .withStatus(200)
           .withBody(
             objectMapper.writeValueAsString(inmateDetail)
+          )
+      )
+  )
+
+  fun mockStaffUserInfoCommunityApiCall(staffUserDetails: StaffUserDetails) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/secure/staff/username/${staffUserDetails.username}"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            objectMapper.writeValueAsString(staffUserDetails)
           )
       )
   )
