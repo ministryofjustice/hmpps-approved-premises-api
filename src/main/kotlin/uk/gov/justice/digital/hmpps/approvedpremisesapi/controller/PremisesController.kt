@@ -82,9 +82,9 @@ class PremisesController(
         addressLine1 = body.addressLine1,
         postcode = body.postcode,
         service = body.service,
-        localAuthorityAreaId = body.localAuthorityAreaId!!,
-        name = body.name!!,
-        notes = body.notes!!
+        localAuthorityAreaId = body.localAuthorityAreaId,
+        name = body.name,
+        notes = body.notes
       )
     )
     return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)

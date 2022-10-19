@@ -32,7 +32,8 @@ class PremisesTest : IntegrationTestBase() {
         NewPremises(
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
-          service = "CAS3"
+          service = "CAS3",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         )
       )
       .exchange()
@@ -54,18 +55,20 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           service = "CAS3",
           notes = "some arbitrary notes",
-          name = "some arbitrary name"
+          name = "some arbitrary name",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         )
       )
       .exchange()
       .expectStatus()
       .isCreated
       .expectBody()
-      .jsonPath("addressLine1").isEqualTo("1 somewhere")
+      .jsonPath("address_line_1").isEqualTo("1 somewhere")
       .jsonPath("postcode").isEqualTo("AB123CD")
       .jsonPath("service").isEqualTo("CAS3")
       .jsonPath("notes").isEqualTo("some arbitrary notes")
       .jsonPath("name").isEqualTo("some arbitrary name")
+      .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
   }
 
   @Test
@@ -81,7 +84,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           service = "CAS3",
-          notes = "some arbitrary notes"
+          notes = "some arbitrary notes",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         )
       )
       .exchange()
@@ -104,7 +108,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           service = "CAS3",
-          name = "some arbitrary name"
+          name = "some arbitrary name",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         )
       )
       .exchange()
@@ -191,33 +196,6 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("title").isEqualTo("Bad Request")
       .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
   }
-
-  @Test
-  fun `Trying to create a new premises without valid local authority id returns 400`() {
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
-
-    webTestClient.post()
-      .uri("/premises?service=temporary-accommodation")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewPremises(
-          name = "arbitrary_test_name",
-          postcode = "AB123CD",
-          addressLine1 = "FIRST LINE OF THE ADDRESS",
-          localAuthorityAreaId = UUID.fromString("not-a-valid-uuid"),
-          notes = "some notes",
-          service = "CAS3"
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .is4xxClientError
-      .expectBody()
-      .jsonPath("title").isEqualTo("Bad Request")
-      .jsonPath("invalid-params[0].errorType").isEqualTo("invalid")
-  }
-
   @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory.produceAndPersistMultiple(10) {

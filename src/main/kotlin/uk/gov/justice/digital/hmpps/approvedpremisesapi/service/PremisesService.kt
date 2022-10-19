@@ -104,8 +104,8 @@ class PremisesService(
     postcode: String,
     service: String,
     localAuthorityAreaId: UUID,
-    name: String,
-    notes: String
+    name: String?,
+    notes: String?
   ) = validated<PremisesEntity> {
 
     /**
@@ -162,7 +162,7 @@ class PremisesService(
     }
 
     val premisesName = when (name.isNullOrEmpty()) {
-      true -> ""
+      true -> "Unknown"
       false -> name
     }
 
