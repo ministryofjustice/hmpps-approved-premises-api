@@ -1325,6 +1325,9 @@ components:
         service:
           type: string
           example: CAS3
+        notes:
+          type: string
+          example: some notes about this property
         probationRegion:
           $ref: '#/components/schemas/ProbationRegion'
         apArea:
@@ -1357,6 +1360,9 @@ components:
         service:
           type: string
           example: CAS3
+        notes:
+          type: string
+          example: some notes about this property
       required:
         - name
         - apCode

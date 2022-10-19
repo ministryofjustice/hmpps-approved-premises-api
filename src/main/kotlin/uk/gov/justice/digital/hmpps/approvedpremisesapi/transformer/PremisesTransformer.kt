@@ -18,6 +18,7 @@ class PremisesTransformer(
     postcode = jpa.postcode,
     bedCount = jpa.totalBeds,
     service = jpa.service,
+    notes = jpa.notes,
     availableBedsForToday = availableBedsForToday,
     probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
     apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),

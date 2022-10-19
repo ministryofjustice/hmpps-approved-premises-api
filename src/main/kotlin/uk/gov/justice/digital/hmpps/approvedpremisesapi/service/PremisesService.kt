@@ -124,6 +124,11 @@ class PremisesService(
     )
     // end of dummy data
 
+    val premisesNotes = when(requestBody.notes.isNullOrEmpty()) {
+      true -> ""
+      false -> requestBody.notes
+    }
+
     return premisesRepository.save(
       PremisesEntity(
         id = UUID.randomUUID(),
@@ -137,6 +142,7 @@ class PremisesService(
         bookings = mutableListOf(),
         lostBeds = mutableListOf(),
         service = requestBody.service,
+        notes = premisesNotes,
         totalBeds = 0
       )
     )
