@@ -20,7 +20,7 @@ data class PremisesEntity(
   val id: UUID,
   val name: String,
   val apCode: String,
-  val address_line_1: String,
+  val addressLine1: String,
   var postcode: String,
   var totalBeds: Int,
   val deliusTeamCode: String,

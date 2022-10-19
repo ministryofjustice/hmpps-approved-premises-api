@@ -218,7 +218,6 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("invalid-params[0].errorType").isEqualTo("invalid")
   }
 
-
   @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory.produceAndPersistMultiple(10) {

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -101,7 +100,7 @@ class PremisesService(
     }
 
   fun createNewPremises(
-    address_line_1: String,
+    addressLine1: String,
     postcode: String,
     service: String,
     localAuthorityAreaId: UUID,
@@ -129,7 +128,7 @@ class PremisesService(
     // end of dummy data
 
     // start of validation
-    if (address_line_1.isEmpty()) {
+    if (addressLine1.isEmpty()) {
       "$.address" hasValidationError "empty"
     }
 
@@ -172,7 +171,7 @@ class PremisesService(
         id = UUID.randomUUID(),
         name = premisesName,
         apCode = "UNKNOWN",
-        address_line_1 = address_line_1,
+        addressLine1 = addressLine1,
         postcode = postcode,
         deliusTeamCode = "UNKNOWN",
         probationRegion = probationRegion,
