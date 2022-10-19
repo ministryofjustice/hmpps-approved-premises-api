@@ -14,6 +14,7 @@ class PremisesTransformer(
     id = jpa.id,
     name = jpa.name,
     apCode = jpa.apCode,
+    addressLine1 = jpa.address_line_1,
     postcode = jpa.postcode,
     bedCount = jpa.totalBeds,
     availableBedsForToday = availableBedsForToday,
