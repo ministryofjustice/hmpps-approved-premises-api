@@ -1322,6 +1322,9 @@ components:
         availableBedsForToday:
           type: integer
           example: 20
+        service:
+          type: string
+          example: CAS3
         probationRegion:
           $ref: '#/components/schemas/ProbationRegion'
         apArea:
@@ -1351,12 +1354,15 @@ components:
           type: string
         postcode:
           type: string
+        service:
+          type: string
+          example: CAS3
       required:
         - name
         - apCode
         - address_line_1
         - postcode
-        - bedCount
+        - service
     LocalAuthorityArea:
       type: object
       properties:

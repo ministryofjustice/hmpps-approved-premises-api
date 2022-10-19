@@ -136,6 +136,7 @@ class PremisesService(
         localAuthorityArea = localAuthorityArea,
         bookings = mutableListOf(),
         lostBeds = mutableListOf(),
+        service = requestBody.service,
         totalBeds = 0
       )
     )
