@@ -30,10 +30,9 @@ class PremisesTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewPremises(
-          name = "arbitrary_test_name",
-          apCode = "AB1234",
+          addressLine1 = "1 somewhere",
           postcode = "AB123CD",
-          bedCount = 123
+          service = "CAS3"
         )
       )
       .exchange()
