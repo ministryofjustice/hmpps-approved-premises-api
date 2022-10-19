@@ -92,6 +92,29 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `When a new premises is created with no notes then it defaults to empty`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          addressLine1 = "1 somewhere",
+          postcode = "AB123CD",
+          service = "CAS3",
+          name = "some arbitrary name"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .expectBody()
+      .jsonPath("notes").isEqualTo("")
+  }
+
+  @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory.produceAndPersistMultiple(10) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
