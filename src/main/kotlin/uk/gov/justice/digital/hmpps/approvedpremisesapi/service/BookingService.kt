@@ -174,7 +174,7 @@ class BookingService(
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
-    if (reason == null) {
+    if (moveOnCategory == null) {
       "$.moveOnCategoryId" hasValidationError "doesNotExist"
     }
 
