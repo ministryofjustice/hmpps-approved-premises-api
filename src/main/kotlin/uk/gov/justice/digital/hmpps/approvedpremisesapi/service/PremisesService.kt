@@ -136,7 +136,7 @@ class PremisesService(
         apCode = "UNKNOWN",
         address_line_1 = requestBody.addressLine1,
         postcode = requestBody.postcode,
-        deliusTeamCode = "arbitrary_delius_team_code", // We need this to look up the AP staff from Delius - not sure if you will need to do that?
+        deliusTeamCode = "UNKNOWN",
         probationRegion = probationRegion,
         localAuthorityArea = localAuthorityArea,
         bookings = mutableListOf(),
