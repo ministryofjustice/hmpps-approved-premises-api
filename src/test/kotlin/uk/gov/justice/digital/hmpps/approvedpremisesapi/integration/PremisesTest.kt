@@ -41,6 +41,34 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `When a new premises is created then all field data is persisted`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          addressLine1 = "1 somewhere",
+          postcode = "AB123CD",
+          service = "CAS3",
+          notes = "some arbitrary notes",
+          name = "some arbitrary name"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .expectBody()
+      .jsonPath("addressLine1").isEqualTo("1 somewhere")
+      .jsonPath("postcode").isEqualTo("AB123CD")
+      .jsonPath("service").isEqualTo("CAS3")
+      .jsonPath("notes").isEqualTo("some arbitrary notes")
+      .jsonPath("name").isEqualTo("some arbitrary name")
+  }
+
+  @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory.produceAndPersistMultiple(10) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
