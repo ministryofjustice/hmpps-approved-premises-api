@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -65,7 +66,7 @@ class PremisesController(
   private val staffMemberTransformer: StaffMemberTransformer,
   private val staffMemberService: StaffMemberService
 ) : PremisesApiDelegate {
-  override fun premisesGet(): ResponseEntity<List<Premises>> {
+  override fun premisesGet(xServiceName: ServiceName?): ResponseEntity<List<Premises>> {
     return ResponseEntity.ok(
       premisesService.getAllPremises().map {
         val availableBedsForToday = premisesService.getAvailabilityForRange(it, LocalDate.now(), LocalDate.now().plusDays(1))

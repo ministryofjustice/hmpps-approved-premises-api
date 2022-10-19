@@ -9,7 +9,14 @@ paths:
     get:
       tags:
         - Premises
-      summary: Lists all approved premises
+      summary: Lists all approved premises, optionally for the given service
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only premises for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
@@ -2321,3 +2328,11 @@ components:
       enum:
         - womens
         - pipe
+    ServiceName:
+      type: string
+      enum:
+        - approved-premises
+        - temporary-accommodation
+      x-enum-varnames:
+        - approvedPremises
+        - temporaryAccommodation
