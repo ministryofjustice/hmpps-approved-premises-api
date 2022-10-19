@@ -19,7 +19,8 @@ class ApplicationService(
   private val applicationRepository: ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
-  private val userService: UserService
+  private val userService: UserService,
+  private val assessmentService: AssessmentService
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String): List<ApplicationEntity> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -67,7 +68,7 @@ class ApplicationService(
       )
     )
 
-    return success(createdApplication)
+    return success(createdApplication.apply { schemaUpToDate = true })
   }
 
   fun updateApplication(applicationId: UUID, data: String, document: String?, isWomensApplication: Boolean?, isPipeApplication: Boolean?, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
@@ -125,8 +126,14 @@ class ApplicationService(
       it.submittedAt = submittedAt
     }
 
+    val savedApplication = applicationRepository.save(application)
+
+    if (savedApplication.submittedAt != null) {
+      assessmentService.createAssessment(application)
+    }
+
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(applicationRepository.save(application))
+      ValidatableActionResult.Success(savedApplication)
     )
   }
 }
