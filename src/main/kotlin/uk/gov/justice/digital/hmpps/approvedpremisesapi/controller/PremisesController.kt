@@ -77,7 +77,16 @@ class PremisesController(
   }
 
   override fun premisesPost(body: NewPremises): ResponseEntity<Premises> {
-    val premises = premisesService.createNewPremises(body)
+    val premises = extractResultEntityOrThrow(
+      premisesService.createNewPremises(
+        address_line_1 = body.addressLine1,
+        postcode = body.postcode,
+        service = body.service,
+        localAuthorityAreaId = body.localAuthorityAreaId!!,
+        name = body.name!!,
+        notes = body.notes!!
+      )
+    )
     return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)
   }
 

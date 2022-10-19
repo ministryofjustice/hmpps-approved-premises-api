@@ -32,7 +32,11 @@ class PremisesService(
   fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)
   fun getLastLostBedsDate(premises: PremisesEntity) = lostBedsRepository.getHighestBookingDate(premises.id)
 
-  fun getAvailabilityForRange(premises: PremisesEntity, startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Availability> {
+  fun getAvailabilityForRange(
+    premises: PremisesEntity,
+    startDate: LocalDate,
+    endDate: LocalDate
+  ): Map<LocalDate, Availability> {
     if (endDate.isBefore(startDate)) throw RuntimeException("startDate must be before endDate when calculating availability for range")
 
     val bookings = bookingRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
@@ -96,7 +100,14 @@ class PremisesService(
       return success(lostBedsEntity)
     }
 
-  fun createNewPremises(requestBody: NewPremises): PremisesEntity {
+  fun createNewPremises(
+    address_line_1: String,
+    postcode: String,
+    service: String,
+    localAuthorityAreaId: UUID,
+    name: String,
+    notes: String
+  ) = validated<PremisesEntity> {
 
     /**
      * Start of setting up some dummy data to spike the implementation.
@@ -117,39 +128,41 @@ class PremisesService(
     )
 
     val localAuthorityArea = LocalAuthorityAreaEntity(
-      id = requestBody.localAuthorityAreaId!!,
+      id = localAuthorityAreaId,
       identifier = "arbitrary_identifier",
       name = "arbitrary_local_authority_area",
       premises = mutableListOf()
     )
     // end of dummy data
 
-    val premisesNotes = when(requestBody.notes.isNullOrEmpty()) {
+    val premisesNotes = when (notes.isNullOrEmpty()) {
       true -> ""
-      false -> requestBody.notes
+      false -> notes
     }
 
-    val premisesName = when(requestBody.name.isNullOrEmpty()) {
+    val premisesName = when (name.isNullOrEmpty()) {
       true -> ""
-      false -> requestBody.name
+      false -> name
     }
 
-    return premisesRepository.save(
+    val premisesEntity = premisesRepository.save(
       PremisesEntity(
         id = UUID.randomUUID(),
         name = premisesName,
         apCode = "UNKNOWN",
-        address_line_1 = requestBody.addressLine1,
-        postcode = requestBody.postcode,
+        address_line_1 = address_line_1,
+        postcode = postcode,
         deliusTeamCode = "UNKNOWN",
         probationRegion = probationRegion,
         localAuthorityArea = localAuthorityArea,
         bookings = mutableListOf(),
         lostBeds = mutableListOf(),
-        service = requestBody.service,
+        service = service,
         notes = premisesNotes,
         totalBeds = 0
       )
     )
+
+    return success(premisesEntity)
   }
 }
