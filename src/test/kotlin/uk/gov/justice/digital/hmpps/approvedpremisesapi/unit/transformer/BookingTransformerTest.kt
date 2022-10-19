@@ -89,7 +89,10 @@ class BookingTransformerTest {
       premises = mutableListOf()
     ),
     bookings = mutableListOf(),
-    lostBeds = mutableListOf()
+    lostBeds = mutableListOf(),
+    addressLine1 = "1 somewhere",
+    service = "CAS3",
+    notes = ""
   )
 
   private val baseBookingEntity = BookingEntity(
