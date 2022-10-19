@@ -1350,9 +1350,6 @@ components:
       properties:
         name:
           type: string
-        apCode:
-          type: string
-          example: NEHOPE1
         address_line_1:
           type: string
         postcode:
@@ -1365,7 +1362,6 @@ components:
           example: some notes about this property
       required:
         - name
-        - apCode
         - address_line_1
         - postcode
         - service

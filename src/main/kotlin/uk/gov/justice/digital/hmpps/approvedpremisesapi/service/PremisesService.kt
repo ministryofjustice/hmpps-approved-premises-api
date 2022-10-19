@@ -133,7 +133,7 @@ class PremisesService(
       PremisesEntity(
         id = UUID.randomUUID(),
         name = requestBody.name,
-        apCode = requestBody.apCode,
+        apCode = "UNKNOWN",
         address_line_1 = requestBody.addressLine1,
         postcode = requestBody.postcode,
         deliusTeamCode = "arbitrary_delius_team_code", // We need this to look up the AP staff from Delius - not sure if you will need to do that?
