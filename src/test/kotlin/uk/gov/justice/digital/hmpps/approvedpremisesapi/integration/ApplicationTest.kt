@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.time.LocalDate
@@ -94,7 +95,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val user = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
@@ -272,7 +273,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
@@ -424,7 +425,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
@@ -562,8 +563,9 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Create new application returns 201 with correct body and Location header`() {
     val crn = offenderDetails.otherIds.crn
+    val username = "PROBATIONPERSON"
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
     mockOffenderDetailsCommunityApiCall(
@@ -578,6 +580,14 @@ class ApplicationTest : IntegrationTestBase() {
         .withReligionOrBelief("Judaism")
         .withGenderIdentity("Prefer to self-describe")
         .withSelfDescribedGenderIdentity("This is a self described identity")
+        .produce()
+    )
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername("PROBATIONPERSON")
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
         .produce()
     )
 
@@ -632,6 +642,14 @@ class ApplicationTest : IntegrationTestBase() {
         .withSelfDescribedGenderIdentity("This is a self described identity")
         .produce()
     )
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername("PROBATIONPERSON")
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
+        .produce()
+    )
 
     val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
@@ -657,7 +675,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     val user = userEntityFactory.produceAndPersist {
-      withDistinguishedName(username)
+      withDeliusUsername(username)
     }
 
     applicationEntityFactory.produceAndPersist {
@@ -742,7 +760,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDistinguishedName("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
     val application = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)

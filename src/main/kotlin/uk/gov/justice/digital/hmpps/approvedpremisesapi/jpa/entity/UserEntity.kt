@@ -10,7 +10,7 @@ import javax.persistence.Table
 
 @Repository
 interface UserRepository : JpaRepository<UserEntity, UUID> {
-  fun findByDistinguishedName(distinguishedName: String): UserEntity?
+  fun findByDeliusUsername(deliusUsername: String): UserEntity?
 }
 
 @Entity
@@ -19,8 +19,8 @@ data class UserEntity(
   @Id
   val id: UUID,
   val name: String,
-  val distinguishedName: String,
-  var isActive: Boolean,
+  val deliusUsername: String,
+  val deliusStaffIdentifier: Long,
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<ApplicationEntity>
 )
