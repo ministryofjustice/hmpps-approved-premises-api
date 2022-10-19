@@ -1,1 +1,1 @@
-ALTER TABLE premises ADD COLUMN addressLine1 TEXT NOT NULL;
+ALTER TABLE premises ADD COLUMN address_line1 TEXT NOT NULL;

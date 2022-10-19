@@ -1,4 +1,4 @@
-INSERT INTO premises (id, name, ap_code, notes, service, addressLine1, postcode, total_beds, probation_region_id,
+INSERT INTO premises (id, name, ap_code, notes, service, address_line1, postcode, total_beds, probation_region_id,
                       local_authority_area_id)
 VALUES ('3549f9ff-6d58-450f-8ea3-dc2cf196ef2c', 'Habard House', 'HBRDHSE', 'Some notes', 'CAS1', '1 Somewhere',
         'LA9 1DS', 30, 'a02b7727-63aa-46f2-80f1-e0b05b31903c', 'd75ce5b8-fc07-494b-8950-a46a63ac377e'),
