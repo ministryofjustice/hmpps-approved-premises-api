@@ -510,9 +510,8 @@ components:
           readOnly: true
         withdrawnBy:
           $ref: '#/components/schemas/StaffMember'
-        reason:
-          type: string
-          example: Parole denied at oral hearing
+        withdrawalReason:
+          $ref: '#/components/schemas/CancellationReason'
 
     ApplicationAssessed:
       type: object
@@ -601,8 +600,7 @@ components:
         cancelledBy:
           $ref: '#/components/schemas/StaffMember'
         cancellationReason:
-          type: string
-          example: Deceased
+          $ref: '#/components/schemas/CancellationReason'
 
     PersonArrived:
       type: object
@@ -640,6 +638,8 @@ components:
           type: string
           example: '2022-11-29'
           format: date
+        recordedBy:
+          $ref: '#/components/schemas/StaffMember'
         notes:
           type: string
           example: We learnt that Mr Smith is in hospital.
@@ -659,7 +659,44 @@ components:
           format: date-time
         reason:
           type: string
-          example: Planned move-on
+          enum:
+            - Absconded, still at large
+            - Admitted to Hospital
+            - Arrested, remanded in custody, or sentenced
+            - Bed Withdrawn
+            - Breach / recall (abscond)
+            - Breach / recall (behaviour / increasing risk)
+            - Breach / recall (curfew)
+            - Breach / recall (house rules)
+            - Breach / recall (licence or bail condition)
+            - Breach / recall (other)
+            - Breach / recall (positive drugs test)
+            - Died
+            - End of ROTL
+            - Left of own volition
+            - Order / licence expired
+            - Other
+            - Planned move-on
+        legacyReasonCode:
+          type: string
+          enum:
+            - J
+            - Q
+            - H
+            - X
+            - A
+            - D
+            - F
+            - B
+            - E
+            - G
+            - C
+            - P
+            - V
+            - K
+            - N
+            - W
+            - O
         destination:
           type: object
           properties:
@@ -706,12 +743,59 @@ components:
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
 
+    CancellationReason:
+      type: object
+      properties:
+        description:
+          type: string
+          enum:
+            - Custodial disposal - RIC
+            - Offer Withdrawn
+            - Other
+            - Parole Licence not granted
+            - Withdrawn by Referrer
+        legacyCancellationCode:
+          type: string
+          enum:
+            - 1H
+            - B
+            - D
+            - 4I
+            - C
+
     MoveOnCategory:
       type: object
       properties:
         description:
           type: string
-          example: Living with family / partner / other
+          enum:
+            - B&B / Temp / Short-Term Housing
+            - Custody
+            - Deported/ Detention Centre/IRC
+            - Housing Association - Rented
+            - Living with Family/ Partner/ Other
+            - Local Authority - Rented
+            - No Fixed Abode
+            - Not Applicable
+            - Owner Occupied
+            - Private Rented
+            - Supported Housing
+            - Transferred to different AP
+        legacyMoveOnCategoryCode:
+          type: string
+          enum:
+            - MC05
+            - MC19
+            - MC10
+            - MC03
+            - MC07
+            - MC02
+            - MC14
+            - MCNA
+            - MC08
+            - MC04
+            - MC06
+            - P
         code:
           type: string
           example: ABC123
