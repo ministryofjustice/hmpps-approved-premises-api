@@ -71,6 +71,7 @@ class ApplicationsController(
       .body(applicationsTransformer.transformJpaToApi(application, offender, inmate))
   }
 
+  @Transactional
   override fun applicationsApplicationIdPut(applicationId: UUID, body: UpdateApplication): ResponseEntity<Application> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
