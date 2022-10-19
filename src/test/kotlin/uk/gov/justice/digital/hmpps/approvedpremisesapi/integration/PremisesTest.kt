@@ -69,6 +69,29 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `When a new premises is created with no name then it defaults to unknown`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          addressLine1 = "1 somewhere",
+          postcode = "AB123CD",
+          service = "CAS3",
+          notes = "some arbitrary notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .expectBody()
+      .jsonPath("name").isEqualTo("Unknown")
+  }
+
+  @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory.produceAndPersistMultiple(10) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
