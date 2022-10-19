@@ -117,7 +117,7 @@ class PremisesService(
     )
 
     val localAuthorityArea = LocalAuthorityAreaEntity(
-      id = UUID.fromString("7de4177b-9177-4c28-9bb6-5f5292619546"), // Cardiff in db
+      id = requestBody.localAuthorityAreaId!!,
       identifier = "arbitrary_identifier",
       name = "arbitrary_local_authority_area",
       premises = mutableListOf()

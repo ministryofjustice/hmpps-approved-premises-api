@@ -1360,6 +1360,9 @@ components:
         notes:
           type: string
           example: some notes about this property
+        localAuthorityAreaId:
+          type: string
+          format: uuid
       required:
         - address_line_1
         - postcode
