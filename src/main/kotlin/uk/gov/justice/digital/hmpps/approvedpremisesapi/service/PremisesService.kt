@@ -126,6 +126,29 @@ class PremisesService(
       apArea = apAreaEntity,
       premises = mutableListOf()
     )
+    // end of dummy data
+
+    // start of validation
+    if (address_line_1.isEmpty()) {
+      "$.address" hasValidationError "empty"
+    }
+
+    if (postcode.isEmpty()) {
+      "$.postcode" hasValidationError "empty"
+    }
+
+    if (service.isEmpty()) {
+      "$.service" hasValidationError "empty"
+    }
+
+    if (localAuthorityAreaId == null) {
+      "$.localAuthorityAreaId" hasValidationError "invalid"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+    // end of validation
 
     val localAuthorityArea = LocalAuthorityAreaEntity(
       id = localAuthorityAreaId,
@@ -133,7 +156,6 @@ class PremisesService(
       name = "arbitrary_local_authority_area",
       premises = mutableListOf()
     )
-    // end of dummy data
 
     val premisesNotes = when (notes.isNullOrEmpty()) {
       true -> ""

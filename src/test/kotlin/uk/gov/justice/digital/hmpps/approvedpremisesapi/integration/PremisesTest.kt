@@ -115,6 +115,111 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Trying to create a new premises without an address returns 400`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises?service=temporary-accommodation")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          postcode = "AB123CD",
+          addressLine1 = "",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          notes = "some notes",
+          service = "CAS3"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
+  fun `Trying to create a new premises without a postcode returns 400`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises?service=temporary-accommodation")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          postcode = "",
+          addressLine1 = "FIRST LINE OF THE ADDRESS",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          notes = "some notes",
+          service = "CAS3"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
+  fun `Trying to create a new premises without a service returns 400`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises?service=temporary-accommodation")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          postcode = "AB123CD",
+          addressLine1 = "FIRST LINE OF THE ADDRESS",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          notes = "some notes",
+          service = ""
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
+  fun `Trying to create a new premises without valid local authority id returns 400`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises?service=temporary-accommodation")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          postcode = "AB123CD",
+          addressLine1 = "FIRST LINE OF THE ADDRESS",
+          localAuthorityAreaId = UUID.fromString("not-a-valid-uuid"),
+          notes = "some notes",
+          service = "CAS3"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("invalid")
+  }
+
+
+  @Test
   fun `Get all Premises returns OK with correct body`() {
     val premises = premisesEntityFactory.produceAndPersistMultiple(10) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
