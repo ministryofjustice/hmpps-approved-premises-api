@@ -211,7 +211,49 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createDeparture returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+  fun `createDeparture returns FieldValidationError with correct param to message map when dateTime in past supplied`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+
+    val keyWorker = StaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      .produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = destinationProviderId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.dateTime", "beforeBookingArrivalDate")
+    )
+  }
+
+  @Test
+  fun `createDeparture returns FieldValidationError with correct param to message map when invalid departure reason supplied`() {
     val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
@@ -234,12 +276,12 @@ class BookingServiceTest {
       .produce()
 
     every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns null
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns null
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns null
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
 
     val result = bookingService.createDeparture(
       booking = bookingEntity,
-      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+      dateTime = OffsetDateTime.now().minusMinutes(1),
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
@@ -248,9 +290,90 @@ class BookingServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.dateTime", "beforeBookingArrivalDate"),
-      entry("$.reasonId", "doesNotExist"),
-      entry("$.moveOnCategoryId", "doesNotExist"),
+      entry("$.reasonId", "doesNotExist")
+    )
+  }
+
+  @Test
+  fun `createDeparture returns FieldValidationError with correct param to message map when invalid move on category supplied`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+
+    val keyWorker = StaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      .produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns null
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.now().plusMinutes(1),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = destinationProviderId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.moveOnCategoryId", "doesNotExist")
+    )
+  }
+
+  @Test
+  fun `createDeparture returns FieldValidationError with correct param to message map when invalid destination provider supplied`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+
+    val keyWorker = StaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withYieldedPremises {
+        PremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      .produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns null
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.now().plusMinutes(1),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = destinationProviderId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.destinationProviderId", "doesNotExist")
     )
   }
