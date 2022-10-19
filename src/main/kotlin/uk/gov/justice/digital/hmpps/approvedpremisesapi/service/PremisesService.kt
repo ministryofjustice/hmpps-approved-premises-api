@@ -129,10 +129,15 @@ class PremisesService(
       false -> requestBody.notes
     }
 
+    val premisesName = when(requestBody.name.isNullOrEmpty()) {
+      true -> ""
+      false -> requestBody.name
+    }
+
     return premisesRepository.save(
       PremisesEntity(
         id = UUID.randomUUID(),
-        name = requestBody.name,
+        name = premisesName,
         apCode = "UNKNOWN",
         address_line_1 = requestBody.addressLine1,
         postcode = requestBody.postcode,
