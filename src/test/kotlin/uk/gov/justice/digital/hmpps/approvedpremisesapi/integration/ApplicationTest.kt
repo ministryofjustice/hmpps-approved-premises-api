@@ -16,6 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -620,7 +623,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update existing application returns 200 with correct body`() {
+  fun `Update existing application returns 200 with correct body and creates an allocated assessment`() {
     val username = "PROBATIONPERSON"
     val crn = offenderDetails.otherIds.crn
     val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
@@ -651,9 +654,46 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
     )
 
+    val assessor = userEntityFactory.produceAndPersist { withDeliusUsername("ASSESSOR") }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(assessor)
+      withRole(UserRole.ASSESSOR)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(assessor)
+      withQualification(UserQualification.PIPE)
+    }
+
     val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
+      withType(JsonSchemaType.APPLICATION)
+      withSchema(
+        """
+          {
+            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+            "${"\$id"}": "https://example.com/product.schema.json",
+            "title": "Thing",
+            "description": "A thing",
+            "type": "object",
+            "properties": {
+              "thingId": {
+                "description": "The unique identifier for a thing",
+                "type": "integer"
+              }
+            },
+            "required": [ "thingId" ]
+          }
+        """
+      )
+    }
+
+    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+      withType(JsonSchemaType.ASSESSMENT)
       withSchema(
         """
           {
@@ -695,7 +735,7 @@ class ApplicationTest : IntegrationTestBase() {
           data = mapOf("thingId" to 123),
           submittedAt = submittedAt,
           isWomensApplication = false,
-          isPipeApplication = false
+          isPipeApplication = true
         )
       )
       .exchange()
@@ -710,6 +750,13 @@ class ApplicationTest : IntegrationTestBase() {
     assertThat(result.person.crn).isEqualTo(crn)
     assertThat(result.schemaVersion).isEqualTo(applicationSchema.id)
     assertThat(result.submittedAt!!.toInstant()).isEqualTo(submittedAt.toInstant())
+
+    val allAssessments = assessmentRepository.findAll()
+
+    assertThat(allAssessments).anyMatch {
+      it.application.id == applicationId &&
+        it.allocatedToUser.id == assessor.id
+    }
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {

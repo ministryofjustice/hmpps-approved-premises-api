@@ -2,10 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -16,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -28,13 +31,15 @@ class ApplicationServiceTest {
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
+  private val mockAssessmentService = mockk<AssessmentService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
     mockApplicationRepository,
     mockJsonSchemaService,
     mockOffenderService,
-    mockUserService
+    mockUserService,
+    mockAssessmentService
   )
 
   @Test
@@ -314,7 +319,6 @@ class ApplicationServiceTest {
       .produce()
 
     val newestSchema = JsonSchemaEntityFactory().produce()
-    val submittedAt = OffsetDateTime.now().minusMinutes(1)
     val updatedData = """
       {
         "aProperty": "value"
@@ -330,6 +334,51 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
+    val result = applicationService.updateApplication(applicationId, updatedData, "{}", false, false, null, username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+    assertThat(validatableActionResult.entity.data).isEqualTo(updatedData)
+  }
+
+  @Test
+  fun `updateApplication with submittedAt value returns Success with updated Application, creates assessment`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .produce()
+
+    val newestSchema = JsonSchemaEntityFactory().produce()
+    val submittedAt = OffsetDateTime.now().minusMinutes(1)
+    val updatedData = """
+      {
+        "aProperty": "value"
+      }
+    """
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .produce()
+    every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
+    every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockAssessmentService.createAssessment(any()) } answers {
+      val submittedApplication = it.invocation.args[0] as ApplicationEntity
+
+      AssessmentEntityFactory()
+        .withAllocatedToUser(UserEntityFactory().produce())
+        .withApplication(submittedApplication)
+        .produce()
+    }
+
     val result = applicationService.updateApplication(applicationId, updatedData, "{}", false, false, submittedAt, username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -340,5 +389,7 @@ class ApplicationServiceTest {
 
     assertThat(validatableActionResult.entity.submittedAt).isEqualTo(submittedAt)
     assertThat(validatableActionResult.entity.data).isEqualTo(updatedData)
+
+    verify(exactly = 1) { mockAssessmentService.createAssessment(any()) }
   }
 }

@@ -18,6 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -69,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationTestRepository
@@ -178,6 +181,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var userQualificationAssignmentRepository: UserQualificationAssignmentTestRepository
 
+  @Autowired
+  lateinit var assessmentRepository: AssessmentTestRepository
+
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
@@ -200,6 +206,7 @@ abstract class IntegrationTestBase {
   lateinit var userEntityFactory: PersistedFactory<UserEntity, UUID, UserEntityFactory>
   lateinit var userRoleAssignmentEntityFactory: PersistedFactory<UserRoleAssignmentEntity, UUID, UserRoleAssignmentEntityFactory>
   lateinit var userQualificationAssignmentEntityFactory: PersistedFactory<UserQualificationAssignmentEntity, UUID, UserQualificationAssignmentEntityFactory>
+  lateinit var assessmentEntityFactory: PersistedFactory<AssessmentEntity, UUID, AssessmentEntityFactory>
 
   @BeforeEach
   fun beforeEach() {
@@ -243,6 +250,7 @@ abstract class IntegrationTestBase {
     userEntityFactory = PersistedFactory(UserEntityFactory(), userRepository)
     userRoleAssignmentEntityFactory = PersistedFactory(UserRoleAssignmentEntityFactory(), userRoleAssignmentRepository)
     userQualificationAssignmentEntityFactory = PersistedFactory(UserQualificationAssignmentEntityFactory(), userQualificationAssignmentRepository)
+    assessmentEntityFactory = PersistedFactory(AssessmentEntityFactory(), assessmentRepository)
   }
 
   fun mockClientCredentialsJwtRequest(
