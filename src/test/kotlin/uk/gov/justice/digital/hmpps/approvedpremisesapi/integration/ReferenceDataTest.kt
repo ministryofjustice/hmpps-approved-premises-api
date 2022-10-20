@@ -29,6 +29,19 @@ class ReferenceDataTest : IntegrationTestBase() {
   lateinit var staffMemberTransformer: StaffMemberTransformer
 
   @Test
+  fun `Get Local Authorities returns 200`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/local-authorities")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  @Test
   fun `Get Departure Reasons returns 200 with correct body`() {
     departureReasonRepository.deleteAll()
 

@@ -3,21 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReferenceDataApiDelegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.*
 
 @Service
 class ReferenceDataController(
@@ -26,12 +14,21 @@ class ReferenceDataController(
   private val destinationProviderRepository: DestinationProviderRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val lostBedReasonRepository: LostBedReasonRepository,
+  private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val departureReasonTransformer: DepartureReasonTransformer,
+  private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer,
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
   private val destinationProviderTransformer: DestinationProviderTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val lostBedReasonTransformer: LostBedReasonTransformer
 ) : ReferenceDataApiDelegate {
+
+  override fun referenceDataLocalAuthoritiesGet(): ResponseEntity<List<LocalAuthorityArea>> {
+    val localAuthorities = localAuthorityAreaRepository.findAll()
+
+    return ResponseEntity.ok(localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi))
+  }
+
   override fun referenceDataDepartureReasonsGet(): ResponseEntity<List<DepartureReason>> {
     val reasons = departureReasonRepository.findAll()
 
