@@ -2,12 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.*
 
 class ReferenceDataTest : IntegrationTestBase() {
   @Autowired
@@ -28,8 +23,17 @@ class ReferenceDataTest : IntegrationTestBase() {
   @Autowired
   lateinit var staffMemberTransformer: StaffMemberTransformer
 
+  @Autowired
+  lateinit var localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
+
   @Test
-  fun `Get Local Authorities returns 200`() {
+  fun `Get Local Authorities returns 200 with correct body`() {
+    localAuthorityAreaRepository.deleteAll()
+
+    val localAuthorities = localAuthorityEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi)
+    )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -39,6 +43,8 @@ class ReferenceDataTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+      .expectBody()
+      .json(expectedJson)
   }
 
   @Test
