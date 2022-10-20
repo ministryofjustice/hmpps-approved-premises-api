@@ -67,8 +67,14 @@ class PremisesController(
   private val staffMemberService: StaffMemberService
 ) : PremisesApiDelegate {
   override fun premisesGet(xServiceName: ServiceName?): ResponseEntity<List<Premises>> {
+    val premises = if (xServiceName == null) {
+      premisesService.getAllPremises()
+    } else {
+      premisesService.getAllPremisesForService(xServiceName)
+    }
+
     return ResponseEntity.ok(
-      premisesService.getAllPremises().map {
+      premises.map {
         val availableBedsForToday = premisesService.getAvailabilityForRange(it, LocalDate.now(), LocalDate.now().plusDays(1))
           .values.first().getFreeCapacity(it.totalBeds)
 

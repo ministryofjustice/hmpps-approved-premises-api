@@ -198,11 +198,62 @@ class PremisesTest : IntegrationTestBase() {
   }
   @Test
   fun `Get all Premises returns OK with correct body`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(10) {
+    val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
+      withService("CAS1")
+      withTotalBeds(20)
+    }
+
+    val cas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withService("CAS3")
+      withTotalBeds(20)
+    }
+
+    val premises = cas1Premises + cas3Premises
+
+    val expectedJson = objectMapper.writeValueAsString(
+      premises.map {
+        premisesTransformer.transformJpaToApi(it, 20)
+      }
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Premises for CAS1 returns OK with correct body`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withService("CAS1")
+      withTotalBeds(20)
+    }
+
+    // Add some extra premises for the other service that shouldn't be returned
+    temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withService("CAS3")
       withTotalBeds(20)
     }
 
@@ -217,6 +268,47 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/premises")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "approved-premises")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Premises for CAS3 returns OK with correct body`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withService("CAS3")
+      withTotalBeds(20)
+    }
+
+    // Add some extra premises for the other service that shouldn't be returned
+    approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withService("CAS1")
+      withTotalBeds(20)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      premises.map {
+        premisesTransformer.transformJpaToApi(it, 20)
+      }
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "temporary-accommodation")
       .exchange()
       .expectStatus()
       .isOk
