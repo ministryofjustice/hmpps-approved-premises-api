@@ -2,7 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 
 class ReferenceDataTest : IntegrationTestBase() {
   @Autowired

@@ -3,9 +3,24 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReferenceDataApiDelegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.*
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 
 @Service
 class ReferenceDataController(
