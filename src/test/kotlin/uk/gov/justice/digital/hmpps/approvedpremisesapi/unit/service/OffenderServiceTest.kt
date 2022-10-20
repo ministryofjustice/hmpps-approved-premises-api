@@ -109,7 +109,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(true)
       .produce()
 
-    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true)
+    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
@@ -126,7 +126,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(true)
       .produce()
 
-    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true)
+    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Failure.StatusCode(
@@ -169,7 +169,7 @@ class OffenderServiceTest {
       .withCurrentRestriction(true)
       .produce()
 
-    val accessBody = UserOffenderAccess(userRestricted = true, userExcluded = false)
+    val accessBody = UserOffenderAccess(userRestricted = true, userExcluded = false, restrictionMessage = null)
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
@@ -186,7 +186,7 @@ class OffenderServiceTest {
       .withCurrentRestriction(true)
       .produce()
 
-    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = false)
+    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = false, restrictionMessage = null)
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
@@ -226,7 +226,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(true)
       .produce()
 
-    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true)
+    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
