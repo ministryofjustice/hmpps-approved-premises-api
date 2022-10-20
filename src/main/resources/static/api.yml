@@ -2148,14 +2148,14 @@ components:
     UserRole:
       type: string
       enum:
-        - ASSESSOR
-        - MATCHER
-        - MANAGER
-        - WORKFLOW_MANAGER
-        - APPLICANT
-        - ROLE_ADMIN
+        - assessor
+        - matcher
+        - manager
+        - workflow_manager
+        - applicant
+        - admin
     UserQualification:
       type: string
       enum:
-        - WOMENS
-        - PIPE
+        - womens
+        - pipe

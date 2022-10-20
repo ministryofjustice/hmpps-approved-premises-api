@@ -33,7 +33,9 @@ class UserService(
         name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}",
         deliusUsername = username,
         deliusStaffIdentifier = staffUserDetails.staffIdentifier,
-        applications = mutableListOf()
+        applications = mutableListOf(),
+        roles = mutableListOf(),
+        qualifications = mutableListOf()
       )
     )
   }
