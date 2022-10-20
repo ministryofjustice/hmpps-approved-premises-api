@@ -33,7 +33,13 @@ class ReferenceDataTest : IntegrationTestBase() {
   lateinit var localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
 
   @Test
-  fun `Get Local Authorities returns 200`() {
+  fun `Get Local Authorities returns 200 with correct body`() {
+    localAuthorityAreaRepository.deleteAll()
+
+    val localAuthorities = localAuthorityEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi)
+    )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -43,6 +49,8 @@ class ReferenceDataTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+      .expectBody()
+      .json(expectedJson)
   }
 
   @Test
