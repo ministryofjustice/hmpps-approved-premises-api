@@ -1118,6 +1118,26 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /reference-data/characteristics:
+    get:
+      tags:
+        - Characteristics
+      summary: Lists all available characteristics
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Characteristic'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -1341,6 +1361,10 @@ components:
           $ref: '#/components/schemas/ApArea'
         localAuthorityArea:
           $ref: '#/components/schemas/LocalAuthorityArea'
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Characteristic'
       required:
         - id
         - name
@@ -1422,6 +1446,24 @@ components:
       required:
         - id
         - name
+    Characteristic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 952790c0-21d7-4fd6-a7e1-9018f08d8bb0
+        name:
+          type: string
+        serviceScope:
+          type: string
+        modelScope:
+          type: string
+      required:
+        - id
+        - name
+        - serviceScope
+        - modelScope
     BookingBody:
       type: object
       properties:
