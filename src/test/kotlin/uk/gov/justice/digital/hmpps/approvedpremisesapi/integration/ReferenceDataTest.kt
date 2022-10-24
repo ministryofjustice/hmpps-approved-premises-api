@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
@@ -32,8 +33,17 @@ class ReferenceDataTest : IntegrationTestBase() {
   @Autowired
   lateinit var localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
 
+  @Autowired
+  lateinit var characteristicTransformer: CharacteristicTransformer
+
   @Test
-  fun `Get Characteristics returns 200`() {
+  fun `Get Characteristics returns 200 with correct body`() {
+    characteristicRepository.deleteAll()
+
+    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      characteristics.map(characteristicTransformer::transformJpaToApi)
+    )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -43,6 +53,8 @@ class ReferenceDataTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+      .expectBody()
+      .json(expectedJson)
   }
 
   @Test
