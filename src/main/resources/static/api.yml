@@ -1310,7 +1310,7 @@ components:
         apCode:
           type: string
           example: NEHOPE1
-        address_line_1:
+        addressLine1:
           type: string
           example: one something street
         postcode:
@@ -1338,7 +1338,7 @@ components:
         - id
         - name
         - apCode
-        - address_line_1
+        - addressLine1
         - postcode
         - bedCount
         - availableBedsForToday
