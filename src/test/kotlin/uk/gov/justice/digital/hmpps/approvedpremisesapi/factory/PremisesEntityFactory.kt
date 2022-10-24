@@ -20,7 +20,9 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
   private var postcode: Yielded<String> = { randomPostCode() }
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
   private var deliusTeamCode: Yielded<String> = { randomStringUpperCase(6) }
-
+  private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
+  private var notes: Yielded<String> = { randomStringUpperCase(15) }
+  private var service: Yielded<String> = { randomStringUpperCase(4) }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -31,6 +33,18 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
 
   fun withApCode(apCode: String) = apply {
     this.apCode = { apCode }
+  }
+
+  fun withAddressLine1(addressLine1: String) = apply {
+    this.addressLine1 = { addressLine1 }
+  }
+
+  fun withNotes(notes: String) = apply {
+    this.notes = { notes }
+  }
+
+  fun withService(service: String) = apply {
+    this.service = { service }
   }
 
   fun withPostcode(postcode: String) = apply {
@@ -71,6 +85,9 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
     bookings = mutableListOf(),
-    lostBeds = mutableListOf()
+    lostBeds = mutableListOf(),
+    addressLine1 = this.addressLine1(),
+    notes = this.notes(),
+    service = this.service()
   )
 }

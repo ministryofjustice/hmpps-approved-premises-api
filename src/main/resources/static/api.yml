@@ -25,6 +25,36 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+    post:
+      tags:
+        - Premises
+      summary: Add a new premises
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewPremises'
+        required: true
+      responses:
+        201:
+          description: new premises added
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Premises'
+        400:
+          description: invalid request
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises/{premisesId}:
     get:
       tags:
@@ -1280,6 +1310,9 @@ components:
         apCode:
           type: string
           example: NEHOPE1
+        address_line_1:
+          type: string
+          example: one something street
         postcode:
           type: string
           example: LS1 3AD
@@ -1289,6 +1322,12 @@ components:
         availableBedsForToday:
           type: integer
           example: 20
+        service:
+          type: string
+          example: CAS3
+        notes:
+          type: string
+          example: some notes about this property
         probationRegion:
           $ref: '#/components/schemas/ProbationRegion'
         apArea:
@@ -1299,12 +1338,36 @@ components:
         - id
         - name
         - apCode
+        - address_line_1
         - postcode
         - bedCount
         - availableBedsForToday
         - probationRegion
         - apArea
         - localAuthorityArea
+    NewPremises:
+      type: object
+      properties:
+        name:
+          type: string
+        addressLine1:
+          type: string
+        postcode:
+          type: string
+        service:
+          type: string
+          example: CAS3
+        notes:
+          type: string
+          example: some notes about this property
+        localAuthorityAreaId:
+          type: string
+          format: uuid
+      required:
+        - addressLine1
+        - postcode
+        - service
+        - localAuthorityAreaId
     LocalAuthorityArea:
       type: object
       properties:

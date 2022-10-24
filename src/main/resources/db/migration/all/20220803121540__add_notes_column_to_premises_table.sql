@@ -1,0 +1,1 @@
+ALTER TABLE premises ADD COLUMN notes TEXT;

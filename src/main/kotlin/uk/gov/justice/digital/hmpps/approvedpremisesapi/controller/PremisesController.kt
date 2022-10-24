@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
@@ -72,6 +74,20 @@ class PremisesController(
         premisesTransformer.transformJpaToApi(it, availableBedsForToday)
       }
     )
+  }
+
+  override fun premisesPost(body: NewPremises): ResponseEntity<Premises> {
+    val premises = extractResultEntityOrThrow(
+      premisesService.createNewPremises(
+        addressLine1 = body.addressLine1,
+        postcode = body.postcode,
+        service = body.service,
+        localAuthorityAreaId = body.localAuthorityAreaId,
+        name = body.name,
+        notes = body.notes
+      )
+    )
+    return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)
   }
 
   override fun premisesPremisesIdGet(premisesId: UUID): ResponseEntity<Premises> {

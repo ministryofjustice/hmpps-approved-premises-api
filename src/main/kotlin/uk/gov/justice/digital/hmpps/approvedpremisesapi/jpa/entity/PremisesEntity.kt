@@ -20,9 +20,12 @@ data class PremisesEntity(
   val id: UUID,
   val name: String,
   val apCode: String,
+  val addressLine1: String,
   var postcode: String,
   var totalBeds: Int,
   val deliusTeamCode: String,
+  val service: String,
+  val notes: String,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
