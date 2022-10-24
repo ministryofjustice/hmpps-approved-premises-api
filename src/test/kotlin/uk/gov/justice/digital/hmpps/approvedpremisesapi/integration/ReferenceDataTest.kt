@@ -33,6 +33,19 @@ class ReferenceDataTest : IntegrationTestBase() {
   lateinit var localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
 
   @Test
+  fun `Get Characteristics returns 200`() {
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/characteristics")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  @Test
   fun `Get Local Authorities returns 200 with correct body`() {
     localAuthorityAreaRepository.deleteAll()
 
