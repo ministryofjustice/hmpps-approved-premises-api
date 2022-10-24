@@ -63,7 +63,7 @@ class PremisesTest : IntegrationTestBase() {
       .expectStatus()
       .isCreated
       .expectBody()
-      .jsonPath("address_line_1").isEqualTo("1 somewhere")
+      .jsonPath("addressLine1").isEqualTo("1 somewhere")
       .jsonPath("postcode").isEqualTo("AB123CD")
       .jsonPath("service").isEqualTo("CAS3")
       .jsonPath("notes").isEqualTo("some arbitrary notes")
