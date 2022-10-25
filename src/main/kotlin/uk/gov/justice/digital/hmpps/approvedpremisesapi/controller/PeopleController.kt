@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonNeeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -22,7 +24,8 @@ class PeopleController(
   private val offenderService: OffenderService,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
-  private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer
+  private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
+  private val needsTransformer: NeedsTransformer
 ) : PeopleApiDelegate {
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val principal = httpAuthService.getDeliusPrincipalOrThrow()
@@ -85,5 +88,19 @@ class PeopleController(
     }
 
     return ResponseEntity.ok(prisonCaseNotes.map(prisonCaseNoteTransformer::transformModelToApi))
+  }
+
+  override fun peopleCrnNeedsGet(crn: String): ResponseEntity<PersonNeeds> {
+    val principal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = principal.name
+
+    val offenderNeedsResult = offenderService.getIdentifiedNeedsByCrn(crn, principal.token.tokenValue, username)
+    val offenderNeeds = when (offenderNeedsResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> offenderNeedsResult.entity
+    }
+
+    return ResponseEntity.ok(needsTransformer.transformToApi(offenderNeeds))
   }
 }
