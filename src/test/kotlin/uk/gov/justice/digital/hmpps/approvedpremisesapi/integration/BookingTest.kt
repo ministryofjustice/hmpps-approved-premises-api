@@ -35,7 +35,7 @@ class BookingTest : IntegrationTestBase() {
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
 
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
     }
@@ -98,7 +98,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings on Premises without any Bookings returns empty list`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
     }
@@ -117,7 +117,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings returns OK with correct body`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -191,7 +191,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking without JWT returns 401`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -214,7 +214,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking returns OK with correct body`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -289,7 +289,7 @@ class BookingTest : IntegrationTestBase() {
 
     val booking = bookingEntityFactory.produceAndPersist {
       withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
+        approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist {
@@ -343,7 +343,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Cancellation on Booking returns OK with correct body`() {
     val booking = bookingEntityFactory.produceAndPersist {
       withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
+        approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -402,7 +402,7 @@ class BookingTest : IntegrationTestBase() {
       withDepartureDate(LocalDate.parse("2022-08-20"))
       withStaffKeyWorkerId(keyWorker.staffIdentifier)
       withYieldedPremises {
-        premisesEntityFactory.produceAndPersist {
+        approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }

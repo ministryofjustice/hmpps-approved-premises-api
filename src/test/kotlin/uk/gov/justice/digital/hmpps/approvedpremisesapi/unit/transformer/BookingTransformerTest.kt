@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
@@ -64,7 +64,7 @@ class BookingTransformerTest {
     mockExtensionTransformer
   )
 
-  private val premisesEntity = PremisesEntity(
+  private val premisesEntity = TemporaryAccommodationPremisesEntity(
     id = UUID.fromString("9703eaaf-164f-4f35-b038-f4de79e4847b"),
     name = "AP",
     apCode = "APCODE",
@@ -91,7 +91,6 @@ class BookingTransformerTest {
     bookings = mutableListOf(),
     lostBeds = mutableListOf(),
     addressLine1 = "1 somewhere",
-    service = "CAS3",
     notes = ""
   )
 

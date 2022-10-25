@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
@@ -16,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
@@ -47,7 +47,7 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(3)
 
-    val premises = PremisesEntityFactory()
+    val premises = ApprovedPremisesEntityFactory()
       .withTotalBeds(30)
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .withYieldedProbationRegion {
@@ -71,7 +71,7 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(6)
 
-    val premises = PremisesEntityFactory()
+    val premises = ApprovedPremisesEntityFactory()
       .withTotalBeds(30)
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .withYieldedProbationRegion {
@@ -158,7 +158,7 @@ class PremisesServiceTest {
 
   @Test
   fun `createLostBeds returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
-    val premisesEntity = PremisesEntityFactory()
+    val premisesEntity = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -191,7 +191,7 @@ class PremisesServiceTest {
 
   @Test
   fun `createLostBeds returns Success with correct result when validation passed`() {
-    val premisesEntity = PremisesEntityFactory()
+    val premisesEntity = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }

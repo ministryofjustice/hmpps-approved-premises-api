@@ -138,9 +138,7 @@ class PremisesService(
 
     if (service.isEmpty()) {
       "$.service" hasValidationError "empty"
-    }
-
-    if (service != "CAS3") {
+    } else if (service != "CAS3") {
       "$.service" hasValidationError "onlyCas3Supported"
     }
 

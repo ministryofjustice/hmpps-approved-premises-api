@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class PremisesEntityFactory : Factory<PremisesEntity> {
+class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var localAuthorityArea: Yielded<LocalAuthorityAreaEntity>? = null
   private var id: Yielded<UUID> = { UUID.randomUUID() }
@@ -23,6 +23,7 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { "CAS1" }
+  private var qCode: Yielded<String> = { randomStringUpperCase(4) }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -75,7 +76,11 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
     this.deliusTeamCode = { deliusTeamCode }
   }
 
-  override fun produce(): PremisesEntity = PremisesEntity(
+  fun withQCode(qCode: String) = apply {
+    this.qCode = { qCode }
+  }
+
+  override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),
     apCode = this.apCode(),
@@ -88,6 +93,6 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
     lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
     notes = this.notes(),
-    service = this.service()
+    qCode = this.qCode()
   )
 }

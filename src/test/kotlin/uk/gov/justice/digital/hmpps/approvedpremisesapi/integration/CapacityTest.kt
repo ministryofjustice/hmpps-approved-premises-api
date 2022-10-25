@@ -9,7 +9,7 @@ import java.time.LocalDate
 class CapacityTest : IntegrationTestBase() {
   @Test
   fun `Get Capacity without JWT returns 401`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -37,7 +37,7 @@ class CapacityTest : IntegrationTestBase() {
 
   @Test
   fun `Get Capacity with no bookings or lost beds returns OK with empty list body`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withTotalBeds(30)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
@@ -61,7 +61,7 @@ class CapacityTest : IntegrationTestBase() {
 
   @Test
   fun `Get Capacity with booking in past returns OK with empty list body`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withTotalBeds(30)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
@@ -92,7 +92,7 @@ class CapacityTest : IntegrationTestBase() {
 
   @Test
   fun `Get Capacity with booking in future returns OK with list entry for each day until the booking ends`() {
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withTotalBeds(30)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
