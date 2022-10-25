@@ -22,7 +22,7 @@ class PremisesEntityFactory : Factory<PremisesEntity> {
   private var deliusTeamCode: Yielded<String> = { randomStringUpperCase(6) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
-  private var service: Yielded<String> = { randomStringUpperCase(4) }
+  private var service: Yielded<String> = { "CAS1" }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }

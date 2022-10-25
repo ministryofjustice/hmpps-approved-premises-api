@@ -3,11 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
+import javax.persistence.DiscriminatorColumn
+import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.Inheritance
+import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
+import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 
 @Repository
@@ -15,7 +20,9 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID>
 
 @Entity
 @Table(name = "premises")
-data class PremisesEntity(
+@DiscriminatorColumn(name = "service")
+@Inheritance(strategy = InheritanceType.JOINED)
+abstract class PremisesEntity(
   @Id
   val id: UUID,
   val name: String,
@@ -24,7 +31,6 @@ data class PremisesEntity(
   var postcode: String,
   var totalBeds: Int,
   val deliusTeamCode: String,
-  val service: String,
   val notes: String,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
@@ -36,4 +42,45 @@ data class PremisesEntity(
   val bookings: MutableList<BookingEntity>,
   @OneToMany(mappedBy = "premises")
   var lostBeds: MutableList<LostBedsEntity>
+)
+
+@Entity
+@DiscriminatorValue("CAS1")
+@Table(name = "approved_premises")
+@PrimaryKeyJoinColumn(name = "premises_id")
+class ApprovedPremisesEntity(
+  id: UUID,
+  name: String,
+  apCode: String,
+  addressLine1: String,
+  postcode: String,
+  totalBeds: Int,
+  deliusTeamCode: String,
+  notes: String,
+  probationRegion: ProbationRegionEntity,
+  localAuthorityArea: LocalAuthorityAreaEntity,
+  bookings: MutableList<BookingEntity>,
+  lostBeds: MutableList<LostBedsEntity>,
+  val qCode: String?
+) : PremisesEntity(id, name, apCode, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds)
+
+@Entity
+@DiscriminatorValue("CAS3")
+@Table(name = "temporary_accommodation_premises")
+@PrimaryKeyJoinColumn(name = "premises_id")
+class TemporaryAccommodationPremisesEntity(
+  id: UUID,
+  name: String,
+  apCode: String,
+  addressLine1: String,
+  postcode: String,
+  totalBeds: Int,
+  deliusTeamCode: String,
+  notes: String,
+  probationRegion: ProbationRegionEntity,
+  localAuthorityArea: LocalAuthorityAreaEntity,
+  bookings: MutableList<BookingEntity>,
+  lostBeds: MutableList<LostBedsEntity>
+) : PremisesEntity(
+  id, name, apCode, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds
 )

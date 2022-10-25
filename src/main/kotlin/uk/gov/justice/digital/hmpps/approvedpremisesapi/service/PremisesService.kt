@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -107,7 +108,6 @@ class PremisesService(
     name: String?,
     notes: String?
   ) = validated<PremisesEntity> {
-
     /**
      * Start of setting up some dummy data to spike the implementation.
      * TODO: This will be removed once it's established how to dynamically get this data
@@ -140,6 +140,10 @@ class PremisesService(
       "$.service" hasValidationError "empty"
     }
 
+    if (service != "CAS3") {
+      "$.service" hasValidationError "onlyCas3Supported"
+    }
+
     if (localAuthorityAreaId == null) {
       "$.localAuthorityAreaId" hasValidationError "invalid"
     }
@@ -167,7 +171,7 @@ class PremisesService(
     }
 
     val premisesEntity = premisesRepository.save(
-      PremisesEntity(
+      TemporaryAccommodationPremisesEntity(
         id = UUID.randomUUID(),
         name = premisesName,
         apCode = "UNKNOWN",
@@ -178,7 +182,6 @@ class PremisesService(
         localAuthorityArea = localAuthorityArea,
         bookings = mutableListOf(),
         lostBeds = mutableListOf(),
-        service = service,
         notes = premisesNotes,
         totalBeds = 0
       )
