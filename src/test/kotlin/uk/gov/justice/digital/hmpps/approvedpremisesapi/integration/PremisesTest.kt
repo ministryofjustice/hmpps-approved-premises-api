@@ -198,7 +198,7 @@ class PremisesTest : IntegrationTestBase() {
   }
   @Test
   fun `Get all Premises returns OK with correct body`() {
-    val premises = premisesEntityFactory.produceAndPersistMultiple(10) {
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(10) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -226,7 +226,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get Premises by ID returns OK with correct body`() {
-    val premises = premisesEntityFactory.produceAndPersistMultiple(5) {
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -251,7 +251,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get Premises by ID returns OK with correct body when capacity is used`() {
-    val premises = premisesEntityFactory.produceAndPersistMultiple(5) {
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -316,7 +316,7 @@ class PremisesTest : IntegrationTestBase() {
   fun `Get Premises Staff where delius team cannot be found returns 500`() {
     val deliusTeamCode = "NOTFOUND"
 
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -351,7 +351,7 @@ class PremisesTest : IntegrationTestBase() {
   fun `Get Premises Staff returns 200 with correct body`() {
     val deliusTeamCode = "FOUND"
 
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -401,7 +401,7 @@ class PremisesTest : IntegrationTestBase() {
   fun `Get Premises Staff caches response`() {
     val deliusTeamCode = "FOUND"
 
-    val premises = premisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }

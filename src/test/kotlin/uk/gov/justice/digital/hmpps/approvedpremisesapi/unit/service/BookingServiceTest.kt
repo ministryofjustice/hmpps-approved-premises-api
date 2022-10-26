@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
@@ -18,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -95,7 +95,7 @@ class BookingServiceTest {
     val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
     val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
 
-    every { mockPremisesService.getPremises(premisesId) } returns PremisesEntityFactory()
+    every { mockPremisesService.getPremises(premisesId) } returns ApprovedPremisesEntityFactory()
       .withId(premisesId)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -116,7 +116,7 @@ class BookingServiceTest {
     val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
     val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
 
-    val premisesEntityFactory = PremisesEntityFactory()
+    val premisesEntityFactory = ApprovedPremisesEntityFactory()
       .withId(premisesId)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -144,7 +144,7 @@ class BookingServiceTest {
     val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
     val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
 
-    val premisesEntity = PremisesEntityFactory()
+    val premisesEntity = ApprovedPremisesEntityFactory()
       .withId(premisesId)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -176,7 +176,7 @@ class BookingServiceTest {
 
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -221,7 +221,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-25"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -263,7 +263,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-25"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -305,7 +305,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-25"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -347,7 +347,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-25"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -389,7 +389,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-22"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -435,7 +435,7 @@ class BookingServiceTest {
   fun `createArrival returns GeneralValidationError with correct message when Booking already has an Arrival`() {
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -471,7 +471,7 @@ class BookingServiceTest {
 
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -503,7 +503,7 @@ class BookingServiceTest {
 
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -537,7 +537,7 @@ class BookingServiceTest {
   fun `createNonArrival returns GeneralValidationError with correct message when Booking already has a NonArrival`() {
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -573,7 +573,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-26"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -607,7 +607,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-24"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -641,7 +641,7 @@ class BookingServiceTest {
   fun `createCancellation returns GeneralValidationError with correct message when Booking already has a Cancellation`() {
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -677,7 +677,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-26"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -709,7 +709,7 @@ class BookingServiceTest {
 
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -744,7 +744,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withDepartureDate(LocalDate.parse("2022-08-26"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -772,7 +772,7 @@ class BookingServiceTest {
     val bookingEntity = BookingEntityFactory()
       .withDepartureDate(LocalDate.parse("2022-08-24"))
       .withYieldedPremises {
-        PremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
