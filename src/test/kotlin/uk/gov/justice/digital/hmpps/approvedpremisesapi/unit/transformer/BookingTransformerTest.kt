@@ -67,7 +67,6 @@ class BookingTransformerTest {
   private val premisesEntity = TemporaryAccommodationPremisesEntity(
     id = UUID.fromString("9703eaaf-164f-4f35-b038-f4de79e4847b"),
     name = "AP",
-    apCode = "APCODE",
     postcode = "ST8ST8",
     totalBeds = 50,
     deliusTeamCode = "ABCDEFG",

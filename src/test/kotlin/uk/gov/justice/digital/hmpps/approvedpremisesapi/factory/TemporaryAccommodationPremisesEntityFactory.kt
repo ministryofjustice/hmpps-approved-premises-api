@@ -16,7 +16,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var localAuthorityArea: Yielded<LocalAuthorityAreaEntity>? = null
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var apCode: Yielded<String> = { randomStringUpperCase(5) }
   private var postcode: Yielded<String> = { randomPostCode() }
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
   private var deliusTeamCode: Yielded<String> = { randomStringUpperCase(6) }
@@ -29,10 +28,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
 
   fun withName(name: String) = apply {
     this.name = { name }
-  }
-
-  fun withApCode(apCode: String) = apply {
-    this.apCode = { apCode }
   }
 
   fun withAddressLine1(addressLine1: String) = apply {
@@ -78,7 +73,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   override fun produce(): TemporaryAccommodationPremisesEntity = TemporaryAccommodationPremisesEntity(
     id = this.id(),
     name = this.name(),
-    apCode = this.apCode(),
     postcode = this.postcode(),
     totalBeds = this.totalBeds(),
     deliusTeamCode = this.deliusTeamCode(),

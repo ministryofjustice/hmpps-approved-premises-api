@@ -30,7 +30,6 @@ abstract class PremisesEntity(
   @Id
   val id: UUID,
   val name: String,
-  val apCode: String,
   val addressLine1: String,
   var postcode: String,
   var totalBeds: Int,
@@ -55,7 +54,6 @@ abstract class PremisesEntity(
 class ApprovedPremisesEntity(
   id: UUID,
   name: String,
-  apCode: String,
   addressLine1: String,
   postcode: String,
   totalBeds: Int,
@@ -65,8 +63,9 @@ class ApprovedPremisesEntity(
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>,
+  val apCode: String,
   val qCode: String
-) : PremisesEntity(id, name, apCode, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds)
+) : PremisesEntity(id, name, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds)
 
 @Entity
 @DiscriminatorValue("CAS3")
@@ -75,7 +74,6 @@ class ApprovedPremisesEntity(
 class TemporaryAccommodationPremisesEntity(
   id: UUID,
   name: String,
-  apCode: String,
   addressLine1: String,
   postcode: String,
   totalBeds: Int,
@@ -86,5 +84,5 @@ class TemporaryAccommodationPremisesEntity(
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>
 ) : PremisesEntity(
-  id, name, apCode, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds
+  id, name, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds
 )
