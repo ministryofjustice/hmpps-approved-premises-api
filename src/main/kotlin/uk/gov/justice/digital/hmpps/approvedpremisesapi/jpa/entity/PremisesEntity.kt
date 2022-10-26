@@ -65,7 +65,7 @@ class ApprovedPremisesEntity(
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>,
-  val qCode: String?
+  val qCode: String
 ) : PremisesEntity(id, name, apCode, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds)
 
 @Entity
