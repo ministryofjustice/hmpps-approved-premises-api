@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
@@ -26,7 +28,17 @@ class PremisesService(
   private val bookingRepository: BookingRepository,
   private val lostBedReasonRepository: LostBedReasonRepository
 ) {
+  private val serviceNameToEntityType = mapOf(
+    ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
+    ServiceName.temporaryAccommodation to TemporaryAccommodationPremisesEntity::class.java,
+  )
+
   fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
+
+  fun getAllPremisesForService(service: ServiceName) = serviceNameToEntityType[service]?.let {
+    premisesRepository.findAllByType(it)
+  } ?: listOf()
+
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
 
   fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
 import javax.persistence.DiscriminatorColumn
@@ -16,7 +17,10 @@ import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 
 @Repository
-interface PremisesRepository : JpaRepository<PremisesEntity, UUID>
+interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
+  @Query("SELECT p FROM PremisesEntity p WHERE TYPE(p) = :type")
+  fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesEntity>
+}
 
 @Entity
 @Table(name = "premises")
