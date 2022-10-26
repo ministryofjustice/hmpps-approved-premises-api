@@ -69,7 +69,6 @@ class BookingTransformerTest {
     name = "AP",
     postcode = "ST8ST8",
     totalBeds = 50,
-    deliusTeamCode = "ABCDEFG",
     probationRegion = ProbationRegionEntity(
       id = UUID.fromString("4eae0059-af28-4436-a4d8-7106523866d9"),
       name = "region",

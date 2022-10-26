@@ -18,7 +18,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var postcode: Yielded<String> = { randomPostCode() }
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
-  private var deliusTeamCode: Yielded<String> = { randomStringUpperCase(6) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { "CAS3" }
@@ -66,16 +65,11 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.localAuthorityArea = localAuthorityAreaEntity
   }
 
-  fun withDeliusTeamCode(deliusTeamCode: String) = apply {
-    this.deliusTeamCode = { deliusTeamCode }
-  }
-
   override fun produce(): TemporaryAccommodationPremisesEntity = TemporaryAccommodationPremisesEntity(
     id = this.id(),
     name = this.name(),
     postcode = this.postcode(),
     totalBeds = this.totalBeds(),
-    deliusTeamCode = this.deliusTeamCode(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
     bookings = mutableListOf(),

@@ -186,7 +186,6 @@ class PremisesService(
         name = premisesName,
         addressLine1 = addressLine1,
         postcode = postcode,
-        deliusTeamCode = "UNKNOWN",
         probationRegion = probationRegion,
         localAuthorityArea = localAuthorityArea,
         bookings = mutableListOf(),
