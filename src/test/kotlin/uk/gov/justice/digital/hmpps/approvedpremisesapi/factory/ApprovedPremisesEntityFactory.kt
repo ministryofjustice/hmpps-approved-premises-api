@@ -93,6 +93,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
     notes = this.notes(),
-    qCode = this.qCode()
+    qCode = this.qCode(),
+    rooms = mutableListOf(),
   )
 }

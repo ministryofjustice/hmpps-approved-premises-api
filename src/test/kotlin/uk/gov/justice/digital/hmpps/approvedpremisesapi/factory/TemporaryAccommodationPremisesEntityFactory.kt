@@ -75,6 +75,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     bookings = mutableListOf(),
     lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
-    notes = this.notes()
+    notes = this.notes(),
+    rooms = mutableListOf(),
   )
 }

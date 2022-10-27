@@ -191,7 +191,8 @@ class PremisesService(
         bookings = mutableListOf(),
         lostBeds = mutableListOf(),
         notes = premisesNotes,
-        totalBeds = 0
+        totalBeds = 0,
+        rooms = mutableListOf(),
       )
     )
 
