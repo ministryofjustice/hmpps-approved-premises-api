@@ -1,0 +1,1 @@
+ALTER TABLE characteristic RENAME TO characteristics;
