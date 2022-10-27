@@ -45,7 +45,11 @@ class ReferenceDataController(
 ) : ReferenceDataApiDelegate {
 
   override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?): ResponseEntity<List<Characteristic>> {
-    val characteristics = characteristicRepository.findAll()
+
+    val characteristics = when (xServiceName != null) {
+      true -> characteristicRepository.findAllByServiceScope(xServiceName)
+      false -> characteristicRepository.findAll()
+    }
 
     return ResponseEntity.ok(characteristics.map(characteristicTransformer::transformJpaToApi))
   }
