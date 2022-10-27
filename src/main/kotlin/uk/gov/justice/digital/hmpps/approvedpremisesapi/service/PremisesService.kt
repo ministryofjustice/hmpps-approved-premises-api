@@ -184,10 +184,8 @@ class PremisesService(
       TemporaryAccommodationPremisesEntity(
         id = UUID.randomUUID(),
         name = premisesName,
-        apCode = "UNKNOWN",
         addressLine1 = addressLine1,
         postcode = postcode,
-        deliusTeamCode = "UNKNOWN",
         probationRegion = probationRegion,
         localAuthorityArea = localAuthorityArea,
         bookings = mutableListOf(),

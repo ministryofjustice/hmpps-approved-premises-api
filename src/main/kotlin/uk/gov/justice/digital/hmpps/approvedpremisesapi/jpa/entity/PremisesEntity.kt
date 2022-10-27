@@ -30,11 +30,9 @@ abstract class PremisesEntity(
   @Id
   val id: UUID,
   val name: String,
-  val apCode: String,
   val addressLine1: String,
   var postcode: String,
   var totalBeds: Int,
-  val deliusTeamCode: String,
   val notes: String,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
@@ -55,18 +53,18 @@ abstract class PremisesEntity(
 class ApprovedPremisesEntity(
   id: UUID,
   name: String,
-  apCode: String,
   addressLine1: String,
   postcode: String,
   totalBeds: Int,
-  deliusTeamCode: String,
   notes: String,
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>,
-  val qCode: String?
-) : PremisesEntity(id, name, apCode, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds)
+  val apCode: String,
+  val deliusTeamCode: String,
+  val qCode: String
+) : PremisesEntity(id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds)
 
 @Entity
 @DiscriminatorValue("CAS3")
@@ -75,16 +73,14 @@ class ApprovedPremisesEntity(
 class TemporaryAccommodationPremisesEntity(
   id: UUID,
   name: String,
-  apCode: String,
   addressLine1: String,
   postcode: String,
   totalBeds: Int,
-  deliusTeamCode: String,
   notes: String,
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>
 ) : PremisesEntity(
-  id, name, apCode, addressLine1, postcode, totalBeds, deliusTeamCode, notes, probationRegion, localAuthorityArea, bookings, lostBeds
+  id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds
 )

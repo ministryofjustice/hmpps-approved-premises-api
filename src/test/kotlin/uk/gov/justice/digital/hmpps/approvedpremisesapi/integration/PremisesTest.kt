@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -196,6 +197,7 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("title").isEqualTo("Bad Request")
       .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
   }
+
   @Test
   fun `Get all Premises returns OK with correct body`() {
     val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
@@ -440,7 +442,26 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Premises Staff returns 200 with correct body`() {
+  fun `Get Premises Staff for Temporary Accommodation Premises returns 501`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/staff")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isEqualTo(HttpStatus.NOT_IMPLEMENTED)
+  }
+
+  @Test
+  fun `Get Premises Staff for Approved Premises returns 200 with correct body`() {
     val deliusTeamCode = "FOUND"
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {

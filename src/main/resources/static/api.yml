@@ -1368,7 +1368,6 @@ components:
       required:
         - id
         - name
-        - apCode
         - addressLine1
         - postcode
         - bedCount
