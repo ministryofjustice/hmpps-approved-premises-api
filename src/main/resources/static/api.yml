@@ -1334,9 +1334,6 @@ components:
         name:
           type: string
           example: Hope House
-        apCode:
-          type: string
-          example: NEHOPE1
         addressLine1:
           type: string
           example: one something street
@@ -1365,6 +1362,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Characteristic'
+      discriminator:
+        propertyName: service
+        mapping:
+          CAS1: '#/components/schemas/ApprovedPremises'
+          CAS3: '#/components/schemas/TemporaryAccommodationPremises'
       required:
         - id
         - name
@@ -1375,6 +1377,19 @@ components:
         - probationRegion
         - apArea
         - localAuthorityArea
+    ApprovedPremises:
+      allOf:
+        - $ref: '#/components/schemas/Premises'
+        - type: object
+          properties:
+            apCode:
+              type: string
+              example: NEHOPE1
+      required:
+        - apCode
+    TemporaryAccommodationPremises:
+      allOf:
+        - $ref: '#/components/schemas/Premises'
     NewPremises:
       type: object
       properties:
