@@ -1,0 +1,1 @@
+ALTER TABLE premises ALTER COLUMN address_line1 SET NOT NULL;
