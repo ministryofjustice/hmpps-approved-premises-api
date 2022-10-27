@@ -1,4 +1,4 @@
-CREATE TABLE characteristic (
+CREATE TABLE characteristics (
     id UUID NOT NULL,
     name TEXT NOT NULL,
     service_scope TEXT NOT NULL DEFAULT '*',
