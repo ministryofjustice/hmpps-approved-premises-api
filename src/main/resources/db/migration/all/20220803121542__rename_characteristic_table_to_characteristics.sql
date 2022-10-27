@@ -1,1 +1,0 @@
-ALTER TABLE IF EXISTS characteristic RENAME TO characteristics;
