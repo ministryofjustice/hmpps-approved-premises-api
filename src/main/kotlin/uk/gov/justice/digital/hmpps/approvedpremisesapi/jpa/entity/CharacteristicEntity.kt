@@ -9,7 +9,7 @@ import javax.persistence.Table
 interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID>
 
 @Entity
-@Table(name = "characteristic")
+@Table(name = "characteristics")
 data class CharacteristicEntity(
   @Id
   var id: UUID,
