@@ -49,11 +49,27 @@ dependencies {
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
   implementation("com.fasterxml.jackson.core:jackson-databind") {
-    version { strictly("2.14.0-rc1") }
+    version { strictly("2.14.0-rc2") }
   }
 
   testRuntimeOnly("com.fasterxml.jackson.core:jackson-databind") {
-    version { strictly("2.14.0-rc1") }
+    version { strictly("2.14.0-rc2") }
+  }
+
+  implementation("com.fasterxml.jackson.core:jackson-annotations") {
+    version { strictly("2.14.0-rc2") }
+  }
+
+  testRuntimeOnly("com.fasterxml.jackson.core:jackson-annotations") {
+    version { strictly("2.14.0-rc2") }
+  }
+
+  implementation("com.fasterxml.jackson.core:jackson-core") {
+    version { strictly("2.14.0-rc2") }
+  }
+
+  testRuntimeOnly("com.fasterxml.jackson.core:jackson-core") {
+    version { strictly("2.14.0-rc2") }
   }
 
   implementation("org.apache.commons:commons-text") {
