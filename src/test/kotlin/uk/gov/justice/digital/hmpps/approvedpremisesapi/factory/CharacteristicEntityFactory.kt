@@ -13,6 +13,9 @@ class CharacteristicEntityFactory : Factory<CharacteristicEntity> {
   private var serviceScope: Yielded<String> = { randomStringUpperCase(4) }
   private var modelScope: Yielded<String> = { randomStringUpperCase(4) }
 
+  fun withServiceScope(serviceScope: String) = apply {
+    this.serviceScope = { serviceScope }
+  }
   override fun produce(): CharacteristicEntity = CharacteristicEntity(
     id = this.id(),
     name = this.name(),

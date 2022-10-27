@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
@@ -50,6 +51,54 @@ class ReferenceDataTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/reference-data/characteristics")
       .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Characteristics for only temporary accommodation returns 200 with correct body`() {
+    characteristicRepository.deleteAll()
+
+    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+    val expectedJson = objectMapper.writeValueAsString(
+      characteristics.map(characteristicTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/characteristics")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "temporary-accommodation")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Characteristics for only approved premises returns 200 with correct body`() {
+    characteristicRepository.deleteAll()
+
+    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+    val expectedJson = objectMapper.writeValueAsString(
+      characteristics.map(characteristicTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/characteristics")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "approved-premises")
       .exchange()
       .expectStatus()
       .isOk

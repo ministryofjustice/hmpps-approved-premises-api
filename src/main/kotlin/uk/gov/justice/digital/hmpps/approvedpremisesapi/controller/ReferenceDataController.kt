@@ -47,7 +47,7 @@ class ReferenceDataController(
   override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?): ResponseEntity<List<Characteristic>> {
 
     val characteristics = when (xServiceName != null) {
-      true -> characteristicRepository.findAllByServiceScope(xServiceName)
+      true -> characteristicRepository.findAllByServiceScope(xServiceName.value)
       false -> characteristicRepository.findAll()
     }
 
