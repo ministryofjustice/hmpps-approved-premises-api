@@ -19,8 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -38,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -47,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -66,7 +70,9 @@ class PremisesController(
   private val departureTransformer: DepartureTransformer,
   private val extensionTransformer: ExtensionTransformer,
   private val staffMemberTransformer: StaffMemberTransformer,
-  private val staffMemberService: StaffMemberService
+  private val staffMemberService: StaffMemberService,
+  private val roomService: RoomService,
+  private val roomTransformer: RoomTransformer,
 ) : PremisesApiDelegate {
   override fun premisesGet(xServiceName: ServiceName?): ResponseEntity<List<Premises>> {
     val premises = if (xServiceName == null) {
@@ -391,6 +397,16 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(staffMembers.map(staffMemberTransformer::transformDomainToApi))
+  }
+
+  override fun premisesPremisesIdRoomsPost(premisesId: UUID, newRoom: NewRoom): ResponseEntity<Room> {
+    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val room = extractResultEntityOrThrow(
+      roomService.createRoom(premises, newRoom.name, newRoom.notes)
+    )
+
+    return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {

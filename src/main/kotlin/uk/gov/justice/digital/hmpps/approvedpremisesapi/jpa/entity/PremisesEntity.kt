@@ -43,7 +43,9 @@ abstract class PremisesEntity(
   @OneToMany(mappedBy = "premises")
   val bookings: MutableList<BookingEntity>,
   @OneToMany(mappedBy = "premises")
-  var lostBeds: MutableList<LostBedsEntity>
+  val lostBeds: MutableList<LostBedsEntity>,
+  @OneToMany(mappedBy = "premises")
+  val rooms: MutableList<RoomEntity>,
 )
 
 @Entity
@@ -63,8 +65,9 @@ class ApprovedPremisesEntity(
   lostBeds: MutableList<LostBedsEntity>,
   val apCode: String,
   val deliusTeamCode: String,
-  val qCode: String
-) : PremisesEntity(id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds)
+  val qCode: String,
+  rooms: MutableList<RoomEntity>,
+) : PremisesEntity(id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds, rooms)
 
 @Entity
 @DiscriminatorValue("CAS3")
@@ -80,7 +83,8 @@ class TemporaryAccommodationPremisesEntity(
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
-  lostBeds: MutableList<LostBedsEntity>
+  lostBeds: MutableList<LostBedsEntity>,
+  rooms: MutableList<RoomEntity>,
 ) : PremisesEntity(
-  id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds
+  id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds, rooms
 )
