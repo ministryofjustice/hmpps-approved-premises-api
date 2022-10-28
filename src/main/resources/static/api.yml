@@ -579,6 +579,33 @@ paths:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/rooms:
+    get:
+      tags:
+        - Rooms
+      summary: Lists all rooms for the given premises
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to list the rooms for
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
     post:
       tags:
         - Rooms
