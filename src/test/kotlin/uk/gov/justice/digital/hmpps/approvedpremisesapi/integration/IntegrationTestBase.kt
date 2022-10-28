@@ -98,6 +98,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import java.time.Duration
+import java.util.TimeZone
 import java.util.UUID
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -224,6 +225,8 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun beforeEach() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+
     wiremockServer = WireMockServer(57839)
     wiremockServer.start()
 
