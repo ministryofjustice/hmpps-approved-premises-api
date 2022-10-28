@@ -753,6 +753,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/adjudications:
+    get:
+      summary: Returns the adjudications for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch adjudications for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Adjudication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2315,6 +2346,28 @@ components:
         - type
         - subType
         - note
+    Adjudication:
+      type: object
+      properties:
+        id:
+          type: long
+        reportedAt:
+          type: string
+          format: date-time
+        establishment:
+          type: string
+        offenceDescription:
+          type: string
+        hearingHeld:
+          type: boolean
+        finding:
+          type: string
+      required:
+        - id
+        - reportedAt
+        - establishment
+        - offenceDescription
+        - hearingHeld
     Assessment:
       type: object
       properties:
