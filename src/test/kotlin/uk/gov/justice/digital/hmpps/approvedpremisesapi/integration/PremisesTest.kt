@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -20,6 +21,9 @@ class PremisesTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var staffMemberTransformer: StaffMemberTransformer
+
+  @Autowired
+  lateinit var roomTransformer: RoomTransformer
 
   @Test
   fun `Create new premises returns 201`() {
@@ -562,5 +566,35 @@ class PremisesTest : IntegrationTestBase() {
     }
 
     wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/teams/$deliusTeamCode/staff")))
+  }
+
+  @Test
+  fun `Get all Rooms for Premises returns OK with correct body`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+    val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedPremises { premises }
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      rooms.map {
+        roomTransformer.transformJpaToApi(it)
+      }
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/rooms")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
   }
 }

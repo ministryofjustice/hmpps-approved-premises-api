@@ -400,7 +400,9 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdRoomsGet(premisesId: UUID): ResponseEntity<List<Room>> {
-    return super.premisesPremisesIdRoomsGet(premisesId)
+    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    return ResponseEntity.ok(premises.rooms.map(roomTransformer::transformJpaToApi))
   }
 
   override fun premisesPremisesIdRoomsPost(premisesId: UUID, newRoom: NewRoom): ResponseEntity<Room> {
