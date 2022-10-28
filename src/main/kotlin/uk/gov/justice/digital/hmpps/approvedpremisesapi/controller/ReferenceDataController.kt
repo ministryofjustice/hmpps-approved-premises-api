@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
@@ -43,8 +44,12 @@ class ReferenceDataController(
   private val characteristicTransformer: CharacteristicTransformer
 ) : ReferenceDataApiDelegate {
 
-  override fun referenceDataCharacteristicsGet(): ResponseEntity<List<Characteristic>> {
-    val characteristics = characteristicRepository.findAll()
+  override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?): ResponseEntity<List<Characteristic>> {
+
+    val characteristics = when (xServiceName != null) {
+      true -> characteristicRepository.findAllByServiceScope(xServiceName.value)
+      false -> characteristicRepository.findAll()
+    }
 
     return ResponseEntity.ok(characteristics.map(characteristicTransformer::transformJpaToApi))
   }
