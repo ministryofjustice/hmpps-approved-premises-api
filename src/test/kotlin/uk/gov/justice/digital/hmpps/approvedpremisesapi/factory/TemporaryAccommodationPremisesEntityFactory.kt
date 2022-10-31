@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -20,7 +21,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
-  private var service: Yielded<String> = { "CAS3" }
+  private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }

@@ -71,7 +71,7 @@ class PremisesTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("addressLine1").isEqualTo("1 somewhere")
       .jsonPath("postcode").isEqualTo("AB123CD")
-      .jsonPath("service").isEqualTo("CAS3")
+      .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
       .jsonPath("notes").isEqualTo("some arbitrary notes")
       .jsonPath("name").isEqualTo("some arbitrary name")
       .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
@@ -185,7 +185,6 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises?service=temporary-accommodation")
       .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
           name = "arbitrary_test_name",
@@ -200,7 +199,7 @@ class PremisesTest : IntegrationTestBase() {
       .is4xxClientError
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
-      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("onlyCas3Supported")
   }
 
   @Test

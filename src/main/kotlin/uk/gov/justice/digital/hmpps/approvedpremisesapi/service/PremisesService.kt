@@ -115,7 +115,7 @@ class PremisesService(
   fun createNewPremises(
     addressLine1: String,
     postcode: String,
-    service: String?,
+    service: String,
     localAuthorityAreaId: UUID,
     name: String?,
     notes: String?
@@ -148,9 +148,9 @@ class PremisesService(
       "$.postcode" hasValidationError "empty"
     }
 
-    if (service == null) {
+    if (service.isEmpty()) {
       "$.service" hasValidationError "empty"
-    } else if (service != "CAS3") {
+    } else if (service != ServiceName.temporaryAccommodation.value) {
       "$.service" hasValidationError "onlyCas3Supported"
     }
 
