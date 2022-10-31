@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -596,5 +597,196 @@ class PremisesTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .json(expectedJson)
+  }
+
+  @Test
+  fun `Create new Room for Premises returns 201 Created with correct body when given valid data`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(5) {
+      withModelScope("room")
+      withServiceScope("temporary-accommodation")
+    }.map { it.id }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/rooms")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewRoom(
+          notes = "test notes",
+          name = "test-room",
+          characteristics = characteristics
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .expectBody()
+      .jsonPath("name").isEqualTo("test-room")
+      .jsonPath("notes").isEqualTo("test notes")
+      .jsonPath("characteristics[*].id").isEqualTo(characteristics.map { it.toString() })
+      .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+      .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+  }
+
+  @Test
+  fun `When a new room is created with no notes then it defaults to empty`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/rooms")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewRoom(
+          notes = null,
+          name = "test-room",
+          characteristics = mutableListOf(),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .expectBody()
+      .jsonPath("notes").isEqualTo("")
+  }
+
+  @Test
+  fun `Trying to create a room without a name returns 400`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/rooms")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewRoom(
+          notes = "test notes",
+          name = "",
+          characteristics = mutableListOf(),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
+  fun `Trying to create a room with an unknown characteristic returns 400`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/rooms")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewRoom(
+          notes = "test notes",
+          name = "test-room",
+          characteristics = mutableListOf(UUID.randomUUID()),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+  }
+
+  @Test
+  fun `Trying to create a room with a characteristic of the wrong service scope returns 400`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val characteristic = characteristicEntityFactory.produceAndPersist {
+      withModelScope("room")
+      withServiceScope("approved-premises")
+    }.id
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/rooms")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewRoom(
+          notes = "test notes",
+          name = "test-room",
+          characteristics = mutableListOf(characteristic),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicServiceScope")
+  }
+
+  @Test
+  fun `Trying to create a room with a characteristic of the wrong model scope returns 400`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val characteristic = characteristicEntityFactory.produceAndPersist {
+      withModelScope("premises")
+      withServiceScope("approved-premises")
+    }.id
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/rooms")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewRoom(
+          notes = "test notes",
+          name = "test-room",
+          characteristics = mutableListOf(characteristic),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicModelScope")
   }
 }

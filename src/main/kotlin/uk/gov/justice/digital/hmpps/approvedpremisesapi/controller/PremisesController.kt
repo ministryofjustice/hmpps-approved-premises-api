@@ -415,7 +415,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
     val room = extractResultEntityOrThrow(
-      roomService.createRoom(premises, newRoom.name, newRoom.notes)
+      roomService.createRoom(premises, newRoom.name, newRoom.notes, newRoom.characteristics)
     )
 
     return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)

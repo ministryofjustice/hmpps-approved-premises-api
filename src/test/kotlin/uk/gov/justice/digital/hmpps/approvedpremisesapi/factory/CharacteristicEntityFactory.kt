@@ -16,6 +16,11 @@ class CharacteristicEntityFactory : Factory<CharacteristicEntity> {
   fun withServiceScope(serviceScope: String) = apply {
     this.serviceScope = { serviceScope }
   }
+
+  fun withModelScope(modelScope: String) = apply {
+    this.modelScope = { modelScope }
+  }
+
   override fun produce(): CharacteristicEntity = CharacteristicEntity(
     id = this.id(),
     name = this.name(),

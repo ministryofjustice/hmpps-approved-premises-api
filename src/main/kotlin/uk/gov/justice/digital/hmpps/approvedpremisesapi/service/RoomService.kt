@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
@@ -15,15 +18,37 @@ import java.util.UUID
 class RoomService(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
+  private val characteristicRepository: CharacteristicRepository,
 ) {
 
   fun createRoom(
     premises: PremisesEntity,
     roomName: String,
     notes: String?,
+    characteristics: List<UUID>,
   ): ValidatableActionResult<RoomEntity> = validated {
     if (roomName.isEmpty()) {
       "$.name" hasValidationError "empty"
+    }
+
+    val characteristicEntities = characteristics.mapIndexed { index, uuid ->
+      val entity = characteristicRepository.findByIdOrNull(uuid)
+
+      if (entity == null) {
+        "$.characteristics[$index]" hasValidationError "doesNotExist"
+      } else {
+        if (entity.modelScope != "room") {
+          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
+        }
+        if (premises is TemporaryAccommodationPremisesEntity && entity.serviceScope != "temporary-accommodation") {
+          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
+        }
+        if (premises is ApprovedPremisesEntity && entity.serviceScope != "approved-premises") {
+          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
+        }
+      }
+
+      entity
     }
 
     if (validationErrors.any()) {
@@ -42,7 +67,7 @@ class RoomService(
         notes = notes,
         premises = premises,
         beds = mutableListOf(),
-        characteristics = mutableListOf(),
+        characteristics = characteristicEntities.map { it!! }.toMutableList(),
       )
     )
 
