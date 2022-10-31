@@ -14,7 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -57,13 +61,17 @@ class OffenderServiceTest {
       }
     )
   }
+  private val adjudicationsConfigBindingModel = PrisonAdjudicationsConfigBindingModel().apply {
+    prisonApiPageSize = 2
+  }
 
   private val offenderService = OffenderService(
     mockCommunityApiClient,
     mockAssessRisksAndNeedsApiClient,
     mockHMPPSTierApiClient,
     mockPrisonsApiClient,
-    prisonCaseNotesConfigBindingModel
+    prisonCaseNotesConfigBindingModel,
+    adjudicationsConfigBindingModel
   )
 
   @Test
@@ -507,6 +515,102 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
     assertThat(result.entity).containsAll(caseNotesPageOne.subList(0, 1) + caseNotesPageTwo.subList(0, 1))
+  }
+
+  @Test
+  fun `getAdjudicationsByNomsNumber returns NotFound when Adjudications request returns a 404`() {
+    val nomsNumber = "NOMS456"
+
+    every {
+      mockPrisonsApiClient.getAdjudicationsPage(
+        nomsNumber = nomsNumber,
+        pageSize = 2,
+        offset = 0
+      )
+    } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
+
+    assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `getAdjudicationsByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
+    val nomsNumber = "NOMS456"
+
+    every {
+      mockPrisonsApiClient.getAdjudicationsPage(
+        nomsNumber = nomsNumber,
+        pageSize = 2,
+        offset = 0
+      )
+    } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
+
+    assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getAdjudicationsByNomsNumber returns Success, traverses pages from Client`() {
+    val nomsNumber = "NOMS456"
+
+    val adjudicationsPageOne = AdjudicationsPageFactory()
+      .withResults(
+        listOf(
+          AdjudicationFactory().withAgencyId("AGNCY1").produce(),
+          AdjudicationFactory().withAgencyId("AGNCY2").produce()
+        )
+      )
+      .withAgencies(
+        listOf(
+          AgencyFactory().withAgencyId("AGNCY1").produce(),
+          AgencyFactory().withAgencyId("AGNCY2").produce()
+        )
+      )
+      .produce()
+
+    val adjudicationsPageTwo = AdjudicationsPageFactory()
+      .withResults(
+        listOf(
+          AdjudicationFactory().withAgencyId("AGNCY3").produce()
+        )
+      )
+      .withAgencies(
+        listOf(
+          AgencyFactory().withAgencyId("AGNCY3").produce()
+        )
+      )
+      .produce()
+
+    every {
+      mockPrisonsApiClient.getAdjudicationsPage(
+        nomsNumber = nomsNumber,
+        pageSize = 2,
+        offset = 0
+      )
+    } returns ClientResult.Success(
+      HttpStatus.OK,
+      adjudicationsPageOne
+    )
+
+    every {
+      mockPrisonsApiClient.getAdjudicationsPage(
+        nomsNumber = nomsNumber,
+        pageSize = 2,
+        offset = 2
+      )
+    } returns ClientResult.Success(
+      HttpStatus.OK,
+      adjudicationsPageTwo
+    )
+
+    val result = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity.results).containsAll(
+      adjudicationsPageOne.results.plus(adjudicationsPageTwo.results)
+    )
+    assertThat(result.entity.agencies).containsExactlyInAnyOrder(
+      *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray()
+    )
   }
 
   private fun mockExistingNonLaoOffender() {
