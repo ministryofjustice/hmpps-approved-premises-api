@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
@@ -33,11 +34,11 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
-          service = "CAS3",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         )
       )
@@ -54,11 +55,11 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
-          service = "CAS3",
           notes = "some arbitrary notes",
           name = "some arbitrary name",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
@@ -70,7 +71,7 @@ class PremisesTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("addressLine1").isEqualTo("1 somewhere")
       .jsonPath("postcode").isEqualTo("AB123CD")
-      .jsonPath("service").isEqualTo("CAS3")
+      .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
       .jsonPath("notes").isEqualTo("some arbitrary notes")
       .jsonPath("name").isEqualTo("some arbitrary name")
       .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
@@ -84,11 +85,11 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
-          service = "CAS3",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         )
@@ -108,11 +109,11 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
-          service = "CAS3",
           name = "some arbitrary name",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         )
@@ -132,14 +133,14 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises?service=temporary-accommodation")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
           name = "arbitrary_test_name",
           postcode = "AB123CD",
           addressLine1 = "",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          notes = "some notes",
-          service = "CAS3"
+          notes = "some notes"
         )
       )
       .exchange()
@@ -158,14 +159,14 @@ class PremisesTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises?service=temporary-accommodation")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
           name = "arbitrary_test_name",
           postcode = "",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          notes = "some notes",
-          service = "CAS3"
+          notes = "some notes"
         )
       )
       .exchange()
@@ -190,8 +191,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          notes = "some notes",
-          service = ""
+          notes = "some notes"
         )
       )
       .exchange()
@@ -199,7 +199,7 @@ class PremisesTest : IntegrationTestBase() {
       .is4xxClientError
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
-      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("onlyCas3Supported")
   }
 
   @Test

@@ -49,7 +49,7 @@ abstract class PremisesEntity(
 )
 
 @Entity
-@DiscriminatorValue("CAS1")
+@DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises")
 @PrimaryKeyJoinColumn(name = "premises_id")
 class ApprovedPremisesEntity(
@@ -70,7 +70,7 @@ class ApprovedPremisesEntity(
 ) : PremisesEntity(id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds, rooms)
 
 @Entity
-@DiscriminatorValue("CAS3")
+@DiscriminatorValue("temporary-accommodation")
 @Table(name = "temporary_accommodation_premises")
 @PrimaryKeyJoinColumn(name = "premises_id")
 class TemporaryAccommodationPremisesEntity(

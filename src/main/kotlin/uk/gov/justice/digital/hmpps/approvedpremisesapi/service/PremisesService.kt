@@ -150,7 +150,7 @@ class PremisesService(
 
     if (service.isEmpty()) {
       "$.service" hasValidationError "empty"
-    } else if (service != "CAS3") {
+    } else if (service != ServiceName.temporaryAccommodation.value) {
       "$.service" hasValidationError "onlyCas3Supported"
     }
 

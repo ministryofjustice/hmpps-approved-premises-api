@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -22,7 +23,7 @@ class PremisesTransformer(
       addressLine1 = jpa.addressLine1,
       postcode = jpa.postcode,
       bedCount = jpa.totalBeds,
-      service = "CAS1",
+      service = ServiceName.approvedPremises.value,
       notes = jpa.notes,
       availableBedsForToday = availableBedsForToday,
       probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
@@ -35,7 +36,7 @@ class PremisesTransformer(
       addressLine1 = jpa.addressLine1,
       postcode = jpa.postcode,
       bedCount = jpa.totalBeds,
-      service = "CAS3",
+      service = ServiceName.temporaryAccommodation.value,
       notes = jpa.notes,
       availableBedsForToday = availableBedsForToday,
       probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),

@@ -36,6 +36,13 @@ paths:
       tags:
         - Premises
       summary: Add a new premises
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, persist the service name against this property
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       requestBody:
         content:
           'application/json':
@@ -1478,9 +1485,6 @@ components:
           type: string
         postcode:
           type: string
-        service:
-          type: string
-          example: CAS3
         notes:
           type: string
           example: some notes about this property
@@ -1490,7 +1494,6 @@ components:
       required:
         - addressLine1
         - postcode
-        - service
         - localAuthorityAreaId
     LocalAuthorityArea:
       type: object

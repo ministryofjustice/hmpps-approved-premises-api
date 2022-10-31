@@ -91,12 +91,18 @@ class PremisesController(
     )
   }
 
-  override fun premisesPost(body: NewPremises): ResponseEntity<Premises> {
+  override fun premisesPost(body: NewPremises, xServiceName: ServiceName?): ResponseEntity<Premises> {
+
+    val serviceName = when (xServiceName == null) {
+      true -> ServiceName.approvedPremises.value
+      false -> xServiceName.value
+    }
+
     val premises = extractResultEntityOrThrow(
       premisesService.createNewPremises(
         addressLine1 = body.addressLine1,
         postcode = body.postcode,
-        service = body.service,
+        service = serviceName,
         localAuthorityAreaId = body.localAuthorityAreaId,
         name = body.name,
         notes = body.notes
