@@ -42,6 +42,7 @@ class RoomService(
         notes = notes,
         premises = premises,
         beds = mutableListOf(),
+        characteristics = mutableListOf(),
       )
     )
 

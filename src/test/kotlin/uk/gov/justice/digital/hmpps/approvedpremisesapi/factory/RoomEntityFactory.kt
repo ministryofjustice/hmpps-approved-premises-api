@@ -39,7 +39,8 @@ class RoomEntityFactory : Factory<RoomEntity> {
     name = this.name(),
     notes = this.notes(),
     beds = mutableListOf(),
-    premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a premises")
+    premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a premises"),
+    characteristics = mutableListOf(),
   )
 }
 
