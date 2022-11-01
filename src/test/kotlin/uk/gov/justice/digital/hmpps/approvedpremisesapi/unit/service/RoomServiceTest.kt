@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -21,8 +22,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 class RoomServiceTest {
   private val roomRepository = mockk<RoomRepository>()
   private val bedRepository = mockk<BedRepository>()
+  private val characteristicRepository = mockk<CharacteristicRepository>()
 
-  private val roomService = RoomService(roomRepository, bedRepository)
+  private val roomService = RoomService(roomRepository, bedRepository, characteristicRepository)
 
   @Test
   fun `An empty room name results in a validation error`() {
@@ -35,7 +37,7 @@ class RoomServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    val result = roomService.createRoom(premises, "", "test-notes")
+    val result = roomService.createRoom(premises, "", "test-notes", mutableListOf())
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
@@ -79,7 +81,7 @@ class RoomServiceTest {
 
     every { roomRepository.save(any()) } answers { it.invocation.args[0] as RoomEntity }
 
-    val result = roomService.createRoom(premises, "test-room", "test-notes")
+    val result = roomService.createRoom(premises, "test-room", "test-notes", mutableListOf())
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
@@ -103,7 +105,7 @@ class RoomServiceTest {
     every { roomRepository.save(any()) } answers { it.invocation.args[0] as RoomEntity }
     every { bedRepository.save(any()) } answers { it.invocation.args[0] as BedEntity }
 
-    val result = roomService.createRoom(premises, "test-room", "test-notes")
+    val result = roomService.createRoom(premises, "test-room", "test-notes", mutableListOf())
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
