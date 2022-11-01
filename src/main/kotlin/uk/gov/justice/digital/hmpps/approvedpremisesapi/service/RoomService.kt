@@ -25,13 +25,13 @@ class RoomService(
     premises: PremisesEntity,
     roomName: String,
     notes: String?,
-    characteristics: List<UUID>,
+    characteristicIds: List<UUID>,
   ): ValidatableActionResult<RoomEntity> = validated {
     if (roomName.isEmpty()) {
       "$.name" hasValidationError "empty"
     }
 
-    val characteristicEntities = characteristics.mapIndexed { index, uuid ->
+    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
       val entity = characteristicRepository.findByIdOrNull(uuid)
 
       if (entity == null) {
