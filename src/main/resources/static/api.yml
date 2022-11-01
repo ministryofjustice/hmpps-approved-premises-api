@@ -2488,14 +2488,14 @@ components:
           type: string
         notes:
           type: string
-        characteristics:
+        characteristicIds:
           type: array
           items:
             type: string
             format: uuid
       required:
         - name
-        - characteristics
+        - characteristicIds
     Room:
       type: object
       properties:

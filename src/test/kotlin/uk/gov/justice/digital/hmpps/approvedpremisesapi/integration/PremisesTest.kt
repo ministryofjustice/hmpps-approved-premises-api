@@ -608,7 +608,7 @@ class PremisesTest : IntegrationTestBase() {
       }
     }
 
-    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(5) {
+    val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
       withModelScope("room")
       withServiceScope("temporary-accommodation")
     }.map { it.id }
@@ -622,7 +622,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
-          characteristics = characteristics
+          characteristicIds = characteristicIds
         )
       )
       .exchange()
@@ -631,7 +631,7 @@ class PremisesTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("name").isEqualTo("test-room")
       .jsonPath("notes").isEqualTo("test notes")
-      .jsonPath("characteristics[*].id").isEqualTo(characteristics.map { it.toString() })
+      .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
       .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
       .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
   }
@@ -654,7 +654,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = null,
           name = "test-room",
-          characteristics = mutableListOf(),
+          characteristicIds = mutableListOf(),
         )
       )
       .exchange()
@@ -682,7 +682,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "",
-          characteristics = mutableListOf(),
+          characteristicIds = mutableListOf(),
         )
       )
       .exchange()
@@ -711,7 +711,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
-          characteristics = mutableListOf(UUID.randomUUID()),
+          characteristicIds = mutableListOf(UUID.randomUUID()),
         )
       )
       .exchange()
@@ -731,7 +731,7 @@ class PremisesTest : IntegrationTestBase() {
       }
     }
 
-    val characteristic = characteristicEntityFactory.produceAndPersist {
+    val characteristicId = characteristicEntityFactory.produceAndPersist {
       withModelScope("room")
       withServiceScope("approved-premises")
     }.id
@@ -745,7 +745,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
-          characteristics = mutableListOf(characteristic),
+          characteristicIds = mutableListOf(characteristicId),
         )
       )
       .exchange()
@@ -765,7 +765,7 @@ class PremisesTest : IntegrationTestBase() {
       }
     }
 
-    val characteristic = characteristicEntityFactory.produceAndPersist {
+    val characteristicId = characteristicEntityFactory.produceAndPersist {
       withModelScope("premises")
       withServiceScope("approved-premises")
     }.id
@@ -779,7 +779,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
-          characteristics = mutableListOf(characteristic),
+          characteristicIds = mutableListOf(characteristicId),
         )
       )
       .exchange()
