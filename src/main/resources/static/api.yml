@@ -2370,6 +2370,8 @@ components:
         submittedAt:
           type: string
           format: date-time
+        decision:
+          $ref: '#/components/schemas/AssessmentDecision'
         data:
           $ref: '#/components/schemas/AnyValue'
         clarificationNotes:
@@ -2386,6 +2388,11 @@ components:
         - allocatedAt
         - data
         - clarificationNotes
+    AssessmentDecision:
+      type: string
+      enum:
+        - accepted
+        - rejected
     UpdateAssessment:
       type: object
       properties:

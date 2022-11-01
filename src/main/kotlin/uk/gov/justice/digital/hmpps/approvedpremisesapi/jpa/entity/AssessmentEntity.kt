@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -42,8 +44,16 @@ data class AssessmentEntity(
   val allocatedAt: OffsetDateTime,
 
   val createdAt: OffsetDateTime,
+
   var submittedAt: OffsetDateTime?,
+  @Enumerated(value = EnumType.STRING)
+  var decision: AssessmentDecision?,
 
   @Transient
   var schemaUpToDate: Boolean
 )
+
+enum class AssessmentDecision {
+  ACCEPTED,
+  REJECTED
+}

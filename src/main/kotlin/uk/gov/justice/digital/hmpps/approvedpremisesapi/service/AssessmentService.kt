@@ -33,7 +33,9 @@ class AssessmentService(
         allocatedToUser = allocatedUser,
         allocatedAt = dateTimeNow,
         createdAt = dateTimeNow,
-        submittedAt = null, schemaUpToDate = true
+        submittedAt = null,
+        decision = null,
+        schemaUpToDate = true
       )
     )
   }

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
@@ -27,6 +28,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var allocatedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
+  private var decision: Yielded<AssessmentDecision> = { AssessmentDecision.ACCEPTED }
   private var allocatedToUser: Yielded<UserEntity>? = null
 
   fun withId(id: UUID) = apply {
@@ -61,6 +63,10 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     this.submittedAt = { submittedAt }
   }
 
+  fun withDecision(decision: AssessmentDecision) = apply {
+    this.decision = { decision }
+  }
+
   fun withAllocatedToUser(allocatedToUser: UserEntity) = apply {
     this.allocatedToUser = { allocatedToUser }
   }
@@ -72,6 +78,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     schemaVersion = this.assessmentSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
+    decision = this.decision(),
     schemaUpToDate = false,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     allocatedToUser = this.allocatedToUser?.invoke() ?: throw RuntimeException("Must provide an allocatedToUser"),
