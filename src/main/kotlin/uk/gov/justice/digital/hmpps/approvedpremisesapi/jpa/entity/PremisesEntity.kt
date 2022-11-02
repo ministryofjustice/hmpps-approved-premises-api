@@ -11,6 +11,8 @@ import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
+import javax.persistence.JoinTable
+import javax.persistence.ManyToMany
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
@@ -46,6 +48,13 @@ abstract class PremisesEntity(
   val lostBeds: MutableList<LostBedsEntity>,
   @OneToMany(mappedBy = "premises")
   val rooms: MutableList<RoomEntity>,
+  @ManyToMany
+  @JoinTable(
+    name = "premises_characteristics",
+    joinColumns = [JoinColumn(name = "premises_id")],
+    inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
+  )
+  val characteristics: MutableList<CharacteristicEntity>,
 )
 
 @Entity
@@ -67,7 +76,21 @@ class ApprovedPremisesEntity(
   val deliusTeamCode: String,
   val qCode: String,
   rooms: MutableList<RoomEntity>,
-) : PremisesEntity(id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds, rooms)
+  characteristics: MutableList<CharacteristicEntity>,
+) : PremisesEntity(
+  id,
+  name,
+  addressLine1,
+  postcode,
+  totalBeds,
+  notes,
+  probationRegion,
+  localAuthorityArea,
+  bookings,
+  lostBeds,
+  rooms,
+  characteristics
+)
 
 @Entity
 @DiscriminatorValue("temporary-accommodation")
@@ -85,6 +108,18 @@ class TemporaryAccommodationPremisesEntity(
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>,
   rooms: MutableList<RoomEntity>,
+  characteristics: MutableList<CharacteristicEntity>,
 ) : PremisesEntity(
-  id, name, addressLine1, postcode, totalBeds, notes, probationRegion, localAuthorityArea, bookings, lostBeds, rooms
+  id,
+  name,
+  addressLine1,
+  postcode,
+  totalBeds,
+  notes,
+  probationRegion,
+  localAuthorityArea,
+  bookings,
+  lostBeds,
+  rooms,
+  characteristics
 )
