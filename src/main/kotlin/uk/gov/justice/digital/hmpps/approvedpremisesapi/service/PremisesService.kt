@@ -118,7 +118,8 @@ class PremisesService(
     service: String,
     localAuthorityAreaId: UUID,
     name: String?,
-    notes: String?
+    notes: String?,
+    characteristicIds: List<UUID>
   ) = validated<PremisesEntity> {
     /**
      * Start of setting up some dummy data to spike the implementation.

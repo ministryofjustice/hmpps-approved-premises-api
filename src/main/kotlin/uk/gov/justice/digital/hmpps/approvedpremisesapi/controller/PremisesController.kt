@@ -105,7 +105,8 @@ class PremisesController(
         service = serviceName,
         localAuthorityAreaId = body.localAuthorityAreaId,
         name = body.name,
-        notes = body.notes
+        notes = body.notes,
+        characteristicIds = body.characteristicIds
       )
     )
     return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)
