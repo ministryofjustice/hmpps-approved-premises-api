@@ -1,11 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
@@ -18,7 +15,7 @@ import java.util.UUID
 class RoomService(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
-  private val characteristicRepository: CharacteristicRepository,
+  private val characteristicService: CharacteristicService,
 ) {
 
   fun createRoom(
@@ -27,23 +24,31 @@ class RoomService(
     notes: String?,
     characteristicIds: List<UUID>,
   ): ValidatableActionResult<RoomEntity> = validated {
+    // RoomEntity needs to be created before the validation so that the CharacteristicService can match the
+    // model and service scopes against it.
+    var room = RoomEntity(
+      id = UUID.randomUUID(),
+      name = roomName,
+      notes = notes,
+      premises = premises,
+      beds = mutableListOf(),
+      characteristics = mutableListOf(),
+    )
+
     if (roomName.isEmpty()) {
       "$.name" hasValidationError "empty"
     }
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
-      val entity = characteristicRepository.findByIdOrNull(uuid)
+      val entity = characteristicService.getCharacteristic(uuid)
 
       if (entity == null) {
         "$.characteristics[$index]" hasValidationError "doesNotExist"
       } else {
-        if (entity.modelScope != "room") {
+        if (!characteristicService.modelScopeMatches(entity, room)) {
           "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
         }
-        if (premises is TemporaryAccommodationPremisesEntity && entity.serviceScope != "temporary-accommodation") {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
-        }
-        if (premises is ApprovedPremisesEntity && entity.serviceScope != "approved-premises") {
+        if (!characteristicService.serviceScopeMatches(entity, room)) {
           "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
         }
       }
@@ -55,21 +60,14 @@ class RoomService(
       return fieldValidationError
     }
 
+    room.characteristics.addAll(characteristicEntities.map { it!! })
+
+    room = roomRepository.save(room)
+
     val automaticallyCreateBed = when (premises) {
       is TemporaryAccommodationPremisesEntity -> true
       else -> false
     }
-
-    val room = roomRepository.save(
-      RoomEntity(
-        id = UUID.randomUUID(),
-        name = roomName,
-        notes = notes,
-        premises = premises,
-        beds = mutableListOf(),
-        characteristics = characteristicEntities.map { it!! }.toMutableList(),
-      )
-    )
 
     if (automaticallyCreateBed) {
       val bed = createBedInternal(room, "default-bed")
