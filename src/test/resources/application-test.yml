@@ -64,6 +64,9 @@ prison-case-notes:
     - category: PRISON
       subcategory: RELEASE
 
+prison-adjudications:
+  prison-api-page-size: 30
+
 caches:
   staffMembers:
     expiry-minutes: 360

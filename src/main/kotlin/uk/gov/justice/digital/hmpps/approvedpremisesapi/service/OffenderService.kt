@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -21,6 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -33,10 +38,12 @@ class OffenderService(
   private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val prisonsApiClient: PrisonsApiClient,
-  prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel
+  prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
+  adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel
 ) {
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
+  private val adjudicationsConfig: PrisonAdjudicationsConfig
 
   init {
     val excludedCategories = prisonCaseNotesConfigBindingModel.excludedCategories
@@ -51,6 +58,10 @@ class OffenderService(
           subcategory = categoryConfig.subcategory
         )
       }
+    )
+
+    adjudicationsConfig = PrisonAdjudicationsConfig(
+      prisonApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided")
     )
   }
 
@@ -170,6 +181,42 @@ class OffenderService(
     } while (currentPage != null && currentPage.totalPages > currentPageIndex!! + 1)
 
     return AuthorisableActionResult.Success(allCaseNotes)
+  }
+
+  fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
+    val allAdjudications = mutableListOf<Adjudication>()
+    val allAgencies = mutableListOf<Agency>()
+
+    var currentPage: AdjudicationsPage? = null
+    var currentPageIndex = 0
+    do {
+      if (currentPage != null) {
+        currentPageIndex += 1
+      }
+
+      val offset = currentPageIndex * adjudicationsConfig.prisonApiPageSize
+
+      val adjudicationsPageResponse = prisonsApiClient.getAdjudicationsPage(nomsNumber, offset, adjudicationsConfig.prisonApiPageSize)
+      currentPage = when (adjudicationsPageResponse) {
+        is ClientResult.Success -> adjudicationsPageResponse.body
+        is ClientResult.Failure.StatusCode -> when (adjudicationsPageResponse.status) {
+          HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+          HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+          else -> adjudicationsPageResponse.throwException()
+        }
+        is ClientResult.Failure -> adjudicationsPageResponse.throwException()
+      }
+
+      allAdjudications.addAll(currentPage.results)
+      allAgencies.addAll(currentPage.agencies)
+    } while (currentPage != null && currentPage.results.size == adjudicationsConfig.prisonApiPageSize)
+
+    return AuthorisableActionResult.Success(
+      AdjudicationsPage(
+        results = allAdjudications,
+        agencies = allAgencies
+      )
+    )
   }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
