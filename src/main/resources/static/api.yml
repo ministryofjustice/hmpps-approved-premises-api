@@ -2491,13 +2491,9 @@ components:
     NewClarificationNote:
       type: object
       properties:
-        createdAt:
-          type: string
-          format: date-time
         text:
           type: string
       required:
-        - createdAt
         - text
     Reallocation:
       type: object
