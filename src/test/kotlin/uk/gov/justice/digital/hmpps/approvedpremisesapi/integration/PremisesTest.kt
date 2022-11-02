@@ -38,6 +38,7 @@ class PremisesTest : IntegrationTestBase() {
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
+          name = "test-premises",
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
@@ -91,6 +92,7 @@ class PremisesTest : IntegrationTestBase() {
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
+          name = "",
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           notes = "some arbitrary notes",

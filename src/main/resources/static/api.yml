@@ -1528,6 +1528,7 @@ components:
             type: string
             format: uuid
       required:
+        - name
         - addressLine1
         - postcode
         - localAuthorityAreaId
