@@ -13,18 +13,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 
 class RoomServiceTest {
   private val roomRepository = mockk<RoomRepository>()
   private val bedRepository = mockk<BedRepository>()
-  private val characteristicRepository = mockk<CharacteristicRepository>()
+  private val characteristicService = mockk<CharacteristicService>()
 
-  private val roomService = RoomService(roomRepository, bedRepository, characteristicRepository)
+  private val roomService = RoomService(roomRepository, bedRepository, characteristicService)
 
   @Test
   fun `An empty room name results in a validation error`() {
