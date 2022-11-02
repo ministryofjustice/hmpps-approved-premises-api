@@ -2471,11 +2471,15 @@ components:
         createdAt:
           type: string
           format: date-time
+        createdByStaffMemberId:
+          type: string
+          format: uuid
         text:
           type: string
       required:
         - id
         - createdAt
+        - createdByStaffMemberId
         - text
     NewClarificationNote:
       type: object
