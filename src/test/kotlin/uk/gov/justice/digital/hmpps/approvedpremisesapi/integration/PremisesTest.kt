@@ -82,7 +82,7 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `When a new premises is created with no name then it defaults to unknown`() {
+  fun `Trying to create a new premises without a name returns 400`() {
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
@@ -102,9 +102,10 @@ class PremisesTest : IntegrationTestBase() {
       )
       .exchange()
       .expectStatus()
-      .isCreated
+      .is4xxClientError
       .expectBody()
-      .jsonPath("name").isEqualTo("Unknown")
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
   }
 
   @Test

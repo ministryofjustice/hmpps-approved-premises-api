@@ -118,7 +118,7 @@ class PremisesService(
     postcode: String,
     service: String,
     localAuthorityAreaId: UUID,
-    name: String?,
+    name: String,
     notes: String?,
     characteristicIds: List<UUID>
   ) = validated<PremisesEntity> {
@@ -150,7 +150,7 @@ class PremisesService(
 
     var premises = TemporaryAccommodationPremisesEntity(
       id = UUID.randomUUID(),
-      name = if (name.isNullOrEmpty()) "Unknown" else name,
+      name = name,
       addressLine1 = addressLine1,
       postcode = postcode,
       probationRegion = probationRegion,
@@ -180,6 +180,10 @@ class PremisesService(
 
     if (localAuthorityAreaId == null) {
       "$.localAuthorityAreaId" hasValidationError "invalid"
+    }
+
+    if (name.isEmpty()) {
+      "$.name" hasValidationError "empty"
     }
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
