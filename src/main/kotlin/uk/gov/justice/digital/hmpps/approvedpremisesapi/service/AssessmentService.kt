@@ -35,7 +35,8 @@ class AssessmentService(
         createdAt = dateTimeNow,
         submittedAt = null,
         decision = null,
-        schemaUpToDate = true
+        schemaUpToDate = true,
+        clarificationNotes = mutableListOf()
       )
     )
   }
