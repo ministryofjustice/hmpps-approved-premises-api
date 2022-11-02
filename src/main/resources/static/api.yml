@@ -2439,7 +2439,6 @@ components:
         - outdatedSchema
         - createdAt
         - allocatedAt
-        - data
         - clarificationNotes
     AssessmentDecision:
       type: string
