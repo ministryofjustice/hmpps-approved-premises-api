@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -420,6 +421,14 @@ class PremisesController(
     )
 
     return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)
+  }
+
+  override fun premisesPremisesIdRoomsRoomIdPut(
+    premisesId: UUID,
+    roomId: UUID,
+    updateRoom: UpdateRoom
+  ): ResponseEntity<Room> {
+    return super.premisesPremisesIdRoomsRoomIdPut(premisesId, roomId, updateRoom)
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
