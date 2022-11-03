@@ -40,7 +40,8 @@ class PremisesTest : IntegrationTestBase() {
         NewPremises(
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
-          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -63,7 +64,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           name = "some arbitrary name",
-          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -92,7 +94,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           notes = "some arbitrary notes",
-          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -116,7 +119,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           name = "some arbitrary name",
-          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -141,7 +145,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           addressLine1 = "",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          notes = "some notes"
+          notes = "some notes",
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -167,7 +172,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          notes = "some notes"
+          notes = "some notes",
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -192,7 +198,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          notes = "some notes"
+          notes = "some notes",
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -611,6 +618,7 @@ class PremisesTest : IntegrationTestBase() {
     val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
       withModelScope("room")
       withServiceScope("temporary-accommodation")
+      withName("Floor level access")
     }.map { it.id }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -634,6 +642,7 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
       .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
       .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+      .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
   }
 
   @Test

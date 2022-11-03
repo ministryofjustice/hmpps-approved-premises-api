@@ -26,7 +26,8 @@ class PremisesService(
   private val premisesRepository: PremisesRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val bookingRepository: BookingRepository,
-  private val lostBedReasonRepository: LostBedReasonRepository
+  private val lostBedReasonRepository: LostBedReasonRepository,
+  private val characteristicService: CharacteristicService,
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -118,7 +119,8 @@ class PremisesService(
     service: String,
     localAuthorityAreaId: UUID,
     name: String?,
-    notes: String?
+    notes: String?,
+    characteristicIds: List<UUID>
   ) = validated<PremisesEntity> {
     /**
      * Start of setting up some dummy data to spike the implementation.
@@ -139,6 +141,28 @@ class PremisesService(
     )
     // end of dummy data
 
+    val localAuthorityArea = LocalAuthorityAreaEntity(
+      id = localAuthorityAreaId,
+      identifier = "arbitrary_identifier",
+      name = "arbitrary_local_authority_area",
+      premises = mutableListOf()
+    )
+
+    var premises = TemporaryAccommodationPremisesEntity(
+      id = UUID.randomUUID(),
+      name = if (name.isNullOrEmpty()) "Unknown" else name,
+      addressLine1 = addressLine1,
+      postcode = postcode,
+      probationRegion = probationRegion,
+      localAuthorityArea = localAuthorityArea,
+      bookings = mutableListOf(),
+      lostBeds = mutableListOf(),
+      notes = if (notes.isNullOrEmpty()) "" else notes,
+      totalBeds = 0,
+      rooms = mutableListOf(),
+      characteristics = mutableListOf(),
+    )
+
     // start of validation
     if (addressLine1.isEmpty()) {
       "$.address" hasValidationError "empty"
@@ -158,44 +182,30 @@ class PremisesService(
       "$.localAuthorityAreaId" hasValidationError "invalid"
     }
 
+    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
+      val entity = characteristicService.getCharacteristic(uuid)
+
+      if (entity == null) {
+        "$.characteristics[$index]" hasValidationError "doesNotExist"
+      } else {
+        if (!characteristicService.modelScopeMatches(entity, premises)) {
+          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
+        }
+        if (!characteristicService.serviceScopeMatches(entity, premises)) {
+          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
+        }
+      }
+
+      entity
+    }
+
     if (validationErrors.any()) {
       return fieldValidationError
     }
     // end of validation
+    premises.characteristics.addAll(characteristicEntities.map { it!! })
+    premisesRepository.save(premises)
 
-    val localAuthorityArea = LocalAuthorityAreaEntity(
-      id = localAuthorityAreaId,
-      identifier = "arbitrary_identifier",
-      name = "arbitrary_local_authority_area",
-      premises = mutableListOf()
-    )
-
-    val premisesNotes = when (notes.isNullOrEmpty()) {
-      true -> ""
-      false -> notes
-    }
-
-    val premisesName = when (name.isNullOrEmpty()) {
-      true -> "Unknown"
-      false -> name
-    }
-
-    val premisesEntity = premisesRepository.save(
-      TemporaryAccommodationPremisesEntity(
-        id = UUID.randomUUID(),
-        name = premisesName,
-        addressLine1 = addressLine1,
-        postcode = postcode,
-        probationRegion = probationRegion,
-        localAuthorityArea = localAuthorityArea,
-        bookings = mutableListOf(),
-        lostBeds = mutableListOf(),
-        notes = premisesNotes,
-        totalBeds = 0,
-        rooms = mutableListOf(),
-      )
-    )
-
-    return success(premisesEntity)
+    return success(premises)
   }
 }

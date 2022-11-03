@@ -78,5 +78,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     addressLine1 = this.addressLine1(),
     notes = this.notes(),
     rooms = mutableListOf(),
+    characteristics = mutableListOf(),
   )
 }

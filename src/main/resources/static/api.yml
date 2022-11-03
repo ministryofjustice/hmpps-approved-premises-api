@@ -1522,10 +1522,16 @@ components:
         localAuthorityAreaId:
           type: string
           format: uuid
+        characteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
       required:
         - addressLine1
         - postcode
         - localAuthorityAreaId
+        - characteristicIds
     LocalAuthorityArea:
       type: object
       properties:

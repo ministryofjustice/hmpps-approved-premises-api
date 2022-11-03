@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import java.time.LocalDate
 import java.util.UUID
@@ -34,12 +35,14 @@ class PremisesServiceTest {
   private val lostBedsRepositoryMock = mockk<LostBedsRepository>()
   private val bookingRepositoryMock = mockk<BookingRepository>()
   private val lostBedReasonRepositoryMock = mockk<LostBedReasonRepository>()
+  private val characteristicServiceMock = mockk<CharacteristicService>()
 
   private val premisesService = PremisesService(
     premisesRepositoryMock,
     lostBedsRepositoryMock,
     bookingRepositoryMock,
-    lostBedReasonRepositoryMock
+    lostBedReasonRepositoryMock,
+    characteristicServiceMock
   )
 
   @Test

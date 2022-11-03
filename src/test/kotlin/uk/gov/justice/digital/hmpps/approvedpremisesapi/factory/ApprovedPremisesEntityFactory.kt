@@ -95,5 +95,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     notes = this.notes(),
     qCode = this.qCode(),
     rooms = mutableListOf(),
+    characteristics = mutableListOf()
   )
 }
