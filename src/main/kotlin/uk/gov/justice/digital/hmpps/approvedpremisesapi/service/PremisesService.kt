@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
@@ -15,7 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
@@ -28,6 +31,7 @@ class PremisesService(
   private val bookingRepository: BookingRepository,
   private val lostBedReasonRepository: LostBedReasonRepository,
   private val characteristicService: CharacteristicService,
+  private val jsonSchemaService: JsonSchemaService,
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -215,5 +219,44 @@ class PremisesService(
     premisesRepository.save(premises)
 
     return success(premises)
+  }
+
+  fun updatePremises(
+    premisesId: UUID,
+    data: String,
+    document: String?,
+    addressLine1: String,
+    postcode: String,
+    name: String
+  ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
+
+    val premises = premisesRepository.findByIdOrNull(premisesId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val validationErrors = ValidationErrors()
+
+    val latestSchemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION)
+
+    if (!jsonSchemaService.validate(latestSchemaVersion, data)) {
+      validationErrors["$.data"] = "invalid"
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors)
+      )
+    }
+
+    premises.let {
+      it.addressLine1 = addressLine1
+      it.postcode = postcode
+      it.name = name
+    }
+
+    val savedPremises = premisesRepository.save(premises)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedPremises)
+    )
   }
 }

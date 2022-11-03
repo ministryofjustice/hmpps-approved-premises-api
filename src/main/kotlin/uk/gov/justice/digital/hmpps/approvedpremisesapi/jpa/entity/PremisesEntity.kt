@@ -34,11 +34,11 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 abstract class PremisesEntity(
   @Id
   val id: UUID,
-  val name: String,
-  val addressLine1: String,
+  var name: String,
+  var addressLine1: String,
   var postcode: String,
   var totalBeds: Int,
-  val notes: String,
+  var notes: String,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
