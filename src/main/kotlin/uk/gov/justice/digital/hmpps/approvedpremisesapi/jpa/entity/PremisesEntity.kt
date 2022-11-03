@@ -22,6 +22,9 @@ import javax.persistence.Table
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query("SELECT p FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesEntity>
+
+  @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
+  fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
 }
 
 @Entity

@@ -186,6 +186,10 @@ class PremisesService(
       "$.name" hasValidationError "empty"
     }
 
+    if (!premisesRepository.nameIsUniqueForType(name, TemporaryAccommodationPremisesEntity::class.java)) {
+      "$.name" hasValidationError "notUnique"
+    }
+
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
       val entity = characteristicService.getCharacteristic(uuid)
 
