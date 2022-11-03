@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
@@ -30,6 +31,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<AssessmentDecision> = { AssessmentDecision.ACCEPTED }
   private var allocatedToUser: Yielded<UserEntity>? = null
+  private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -71,6 +73,10 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     this.allocatedToUser = { allocatedToUser }
   }
 
+  fun withClarificationNotes(clarificationNotes: MutableList<AssessmentClarificationNoteEntity>) = apply {
+    this.clarificationNotes = { clarificationNotes }
+  }
+
   override fun produce(): AssessmentEntity = AssessmentEntity(
     id = this.id(),
     data = this.data(),
@@ -82,6 +88,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     schemaUpToDate = false,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     allocatedToUser = this.allocatedToUser?.invoke() ?: throw RuntimeException("Must provide an allocatedToUser"),
-    allocatedAt = this.allocatedAt()
+    allocatedAt = this.allocatedAt(),
+    clarificationNotes = this.clarificationNotes()
   )
 }

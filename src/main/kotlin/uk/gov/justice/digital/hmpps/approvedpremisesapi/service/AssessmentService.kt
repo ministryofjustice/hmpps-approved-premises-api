@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaTyp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -17,6 +18,22 @@ class AssessmentService(
   private val assessmentRepository: AssessmentRepository,
   private val jsonSchemaService: JsonSchemaService
 ) {
+  fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
+    val latestSchema = jsonSchemaService.getNewestSchema(JsonSchemaType.ASSESSMENT)
+
+    val assessments = if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
+      assessmentRepository.findAll()
+    } else {
+      assessmentRepository.findAllByAllocatedToUser_Id(user.id)
+    }
+
+    assessments.forEach {
+      it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
+    }
+
+    return assessments
+  }
+
   fun createAssessment(application: ApplicationEntity): AssessmentEntity {
     val requiredQualifications = getRequiredQualifications(application)
 
@@ -35,7 +52,8 @@ class AssessmentService(
         createdAt = dateTimeNow,
         submittedAt = null,
         decision = null,
-        schemaUpToDate = true
+        schemaUpToDate = true,
+        clarificationNotes = mutableListOf()
       )
     )
   }

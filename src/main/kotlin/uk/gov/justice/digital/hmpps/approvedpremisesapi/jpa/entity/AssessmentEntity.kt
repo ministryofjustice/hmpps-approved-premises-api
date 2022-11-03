@@ -11,11 +11,14 @@ import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
-interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID>
+interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
+  fun findAllByAllocatedToUser_Id(id: UUID): List<AssessmentEntity>
+}
 
 @Entity
 @Table(name = "assessments")
@@ -49,6 +52,9 @@ data class AssessmentEntity(
   @Enumerated(value = EnumType.STRING)
   var decision: AssessmentDecision?,
 
+  @OneToMany(mappedBy = "assessment")
+  val clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
+
   @Transient
   var schemaUpToDate: Boolean
 )
@@ -57,3 +63,24 @@ enum class AssessmentDecision {
   ACCEPTED,
   REJECTED
 }
+
+@Repository
+interface AssessmentClarificationNoteRepository : JpaRepository<AssessmentClarificationNoteEntity, UUID>
+
+@Entity
+@Table(name = "assessment_clarification_notes")
+data class AssessmentClarificationNoteEntity(
+  @Id
+  val id: UUID,
+
+  @ManyToOne
+  @JoinColumn(name = "assessment_id")
+  val assessment: AssessmentEntity,
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_user_id")
+  val createdByUser: UserEntity,
+  val createdAt: OffsetDateTime,
+
+  val text: String
+)

@@ -1,0 +1,47 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
+
+import io.github.bluegroundltd.kfactory.Factory
+import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.OffsetDateTime
+import java.util.UUID
+
+class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarificationNoteEntity> {
+  private var id: Yielded<UUID> = { UUID.randomUUID() }
+  private var assessment: Yielded<AssessmentEntity>? = null
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
+  private var createdBy: Yielded<UserEntity>? = null
+  private var text: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+
+  fun withId(id: UUID) = apply {
+    this.id = { id }
+  }
+
+  fun withAssessment(assessment: AssessmentEntity) = apply {
+    this.assessment = { assessment }
+  }
+
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
+  fun withCreatedBy(createdBy: UserEntity) = apply {
+    this.createdBy = { createdBy }
+  }
+
+  fun withText(text: String) = apply {
+    this.text = { text }
+  }
+
+  override fun produce(): AssessmentClarificationNoteEntity = AssessmentClarificationNoteEntity(
+    id = this.id(),
+    assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an assessment"),
+    createdAt = this.createdAt(),
+    createdByUser = this.createdBy?.invoke() ?: throw RuntimeException("Must provide a createdBy"),
+    text = this.text()
+  )
+}

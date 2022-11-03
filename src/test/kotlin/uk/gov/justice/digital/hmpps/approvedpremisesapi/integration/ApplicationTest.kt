@@ -35,7 +35,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setup() {
-    applicationSchemaRepository.deleteAll()
+    jsonSchemaRepository.deleteAll()
 
     val inmateDetail = InmateDetailFactory()
       .withOffenderNo("NOMS321")
@@ -58,7 +58,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get all applications returns 200 with correct body, outdated applications upgraded where possible`() {
-    applicationSchemaRepository.deleteAll()
+    jsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -236,7 +236,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 200 with correct body, outdated application upgraded`() {
-    applicationSchemaRepository.deleteAll()
+    jsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -388,7 +388,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 200 with correct body, non-upgradable outdated application marked as such`() {
-    applicationSchemaRepository.deleteAll()
+    jsonSchemaRepository.deleteAll()
 
     jsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))

@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -80,6 +82,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationSc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentClarificationNoteTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationReasonTestRepository
@@ -183,7 +186,7 @@ abstract class IntegrationTestBase {
   lateinit var applicationRepository: ApplicationTestRepository
 
   @Autowired
-  lateinit var applicationSchemaRepository: ApplicationSchemaTestRepository
+  lateinit var jsonSchemaRepository: ApplicationSchemaTestRepository
 
   @Autowired
   lateinit var userRepository: UserTestRepository
@@ -196,6 +199,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var assessmentRepository: AssessmentTestRepository
+
+  @Autowired
+  lateinit var assessmentClarificationNoteRepository: AssessmentClarificationNoteTestRepository
 
   @Autowired
   lateinit var characteristicRepository: CharacteristicRepository
@@ -227,6 +233,7 @@ abstract class IntegrationTestBase {
   lateinit var userRoleAssignmentEntityFactory: PersistedFactory<UserRoleAssignmentEntity, UUID, UserRoleAssignmentEntityFactory>
   lateinit var userQualificationAssignmentEntityFactory: PersistedFactory<UserQualificationAssignmentEntity, UUID, UserQualificationAssignmentEntityFactory>
   lateinit var assessmentEntityFactory: PersistedFactory<AssessmentEntity, UUID, AssessmentEntityFactory>
+  lateinit var assessmentClarificationNoteEntityFactory: PersistedFactory<AssessmentClarificationNoteEntity, UUID, AssessmentClarificationNoteEntityFactory>
   lateinit var characteristicEntityFactory: PersistedFactory<CharacteristicEntity, UUID, CharacteristicEntityFactory>
   lateinit var roomEntityFactory: PersistedFactory<RoomEntity, UUID, RoomEntityFactory>
 
@@ -271,11 +278,12 @@ abstract class IntegrationTestBase {
     extensionEntityFactory = PersistedFactory(ExtensionEntityFactory(), extensionRepository)
     nonArrivalReasonEntityFactory = PersistedFactory(NonArrivalReasonEntityFactory(), nonArrivalReasonRepository)
     applicationEntityFactory = PersistedFactory(ApplicationEntityFactory(), applicationRepository)
-    jsonSchemaEntityFactory = PersistedFactory(JsonSchemaEntityFactory(), applicationSchemaRepository)
+    jsonSchemaEntityFactory = PersistedFactory(JsonSchemaEntityFactory(), jsonSchemaRepository)
     userEntityFactory = PersistedFactory(UserEntityFactory(), userRepository)
     userRoleAssignmentEntityFactory = PersistedFactory(UserRoleAssignmentEntityFactory(), userRoleAssignmentRepository)
     userQualificationAssignmentEntityFactory = PersistedFactory(UserQualificationAssignmentEntityFactory(), userQualificationAssignmentRepository)
     assessmentEntityFactory = PersistedFactory(AssessmentEntityFactory(), assessmentRepository)
+    assessmentClarificationNoteEntityFactory = PersistedFactory(AssessmentClarificationNoteEntityFactory(), assessmentClarificationNoteRepository)
     characteristicEntityFactory = PersistedFactory(CharacteristicEntityFactory(), characteristicRepository)
     roomEntityFactory = PersistedFactory(RoomEntityFactory(), roomRepository)
   }
