@@ -186,7 +186,7 @@ abstract class IntegrationTestBase {
   lateinit var applicationRepository: ApplicationTestRepository
 
   @Autowired
-  lateinit var applicationSchemaRepository: ApplicationSchemaTestRepository
+  lateinit var jsonSchemaRepository: ApplicationSchemaTestRepository
 
   @Autowired
   lateinit var userRepository: UserTestRepository
@@ -278,7 +278,7 @@ abstract class IntegrationTestBase {
     extensionEntityFactory = PersistedFactory(ExtensionEntityFactory(), extensionRepository)
     nonArrivalReasonEntityFactory = PersistedFactory(NonArrivalReasonEntityFactory(), nonArrivalReasonRepository)
     applicationEntityFactory = PersistedFactory(ApplicationEntityFactory(), applicationRepository)
-    jsonSchemaEntityFactory = PersistedFactory(JsonSchemaEntityFactory(), applicationSchemaRepository)
+    jsonSchemaEntityFactory = PersistedFactory(JsonSchemaEntityFactory(), jsonSchemaRepository)
     userEntityFactory = PersistedFactory(UserEntityFactory(), userRepository)
     userRoleAssignmentEntityFactory = PersistedFactory(UserRoleAssignmentEntityFactory(), userRoleAssignmentRepository)
     userQualificationAssignmentEntityFactory = PersistedFactory(UserQualificationAssignmentEntityFactory(), userQualificationAssignmentRepository)

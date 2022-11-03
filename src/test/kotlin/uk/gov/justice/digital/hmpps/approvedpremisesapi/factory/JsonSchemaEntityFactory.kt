@@ -30,6 +30,21 @@ class JsonSchemaEntityFactory : Factory<JsonSchemaEntity> {
     this.type = { type }
   }
 
+  fun withPermissiveSchema() = apply {
+    withSchema(
+      """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": { }
+        }
+        """
+    )
+  }
+
   override fun produce(): JsonSchemaEntity = JsonSchemaEntity(
     id = this.id(),
     addedAt = this.addedAt(),

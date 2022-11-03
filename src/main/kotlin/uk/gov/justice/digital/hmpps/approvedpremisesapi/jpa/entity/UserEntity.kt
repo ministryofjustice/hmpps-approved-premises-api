@@ -48,7 +48,9 @@ data class UserEntity(
   val roles: MutableList<UserRoleAssignmentEntity>,
   @OneToMany(mappedBy = "user")
   val qualifications: MutableList<UserQualificationAssignmentEntity>
-)
+) {
+  fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
+}
 
 @Repository
 interface UserRoleAssignmentRepository : JpaRepository<UserRoleAssignmentEntity, UUID>

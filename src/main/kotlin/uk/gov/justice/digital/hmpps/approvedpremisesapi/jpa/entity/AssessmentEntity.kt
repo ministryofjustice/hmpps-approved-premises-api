@@ -16,7 +16,9 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
-interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID>
+interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
+  fun findAllByAllocatedToUser_Id(id: UUID): List<AssessmentEntity>
+}
 
 @Entity
 @Table(name = "assessments")
