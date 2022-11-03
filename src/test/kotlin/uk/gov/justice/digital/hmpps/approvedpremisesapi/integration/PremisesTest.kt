@@ -618,6 +618,7 @@ class PremisesTest : IntegrationTestBase() {
     val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
       withModelScope("room")
       withServiceScope("temporary-accommodation")
+      withName("Floor level access")
     }.map { it.id }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -641,6 +642,7 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
       .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
       .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+      .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
   }
 
   @Test

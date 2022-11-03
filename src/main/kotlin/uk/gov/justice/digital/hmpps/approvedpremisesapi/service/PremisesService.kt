@@ -150,14 +150,14 @@ class PremisesService(
 
     var premises = TemporaryAccommodationPremisesEntity(
       id = UUID.randomUUID(),
-      name = if(name.isNullOrEmpty()) "Unknown" else name,
+      name = if (name.isNullOrEmpty()) "Unknown" else name,
       addressLine1 = addressLine1,
       postcode = postcode,
       probationRegion = probationRegion,
       localAuthorityArea = localAuthorityArea,
       bookings = mutableListOf(),
       lostBeds = mutableListOf(),
-      notes = if(notes.isNullOrEmpty()) "" else notes,
+      notes = if (notes.isNullOrEmpty()) "" else notes,
       totalBeds = 0,
       rooms = mutableListOf(),
       characteristics = mutableListOf(),

@@ -21,6 +21,10 @@ class CharacteristicEntityFactory : Factory<CharacteristicEntity> {
     this.modelScope = { modelScope }
   }
 
+  fun withName(name: String) = apply {
+    this.name = { name }
+  }
+
   override fun produce(): CharacteristicEntity = CharacteristicEntity(
     id = this.id(),
     name = this.name(),

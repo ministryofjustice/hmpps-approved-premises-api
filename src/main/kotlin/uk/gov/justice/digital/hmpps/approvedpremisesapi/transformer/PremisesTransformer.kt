@@ -13,7 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 class PremisesTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
   private val apAreaTransformer: ApAreaTransformer,
-  private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
+  private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer,
+  private val characteristicTransformer: CharacteristicTransformer
 ) {
   fun transformJpaToApi(jpa: PremisesEntity, availableBedsForToday: Int): Premises = when (jpa) {
     is ApprovedPremisesEntity -> ApprovedPremises(
@@ -28,7 +29,8 @@ class PremisesTransformer(
       availableBedsForToday = availableBedsForToday,
       probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
-      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea)
+      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea),
+      characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
     )
     is TemporaryAccommodationPremisesEntity -> TemporaryAccommodationPremises(
       id = jpa.id,
@@ -41,7 +43,8 @@ class PremisesTransformer(
       availableBedsForToday = availableBedsForToday,
       probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
-      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea)
+      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea),
+      characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
     )
     else -> throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")
   }
