@@ -38,6 +38,7 @@ class PremisesTest : IntegrationTestBase() {
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
+          name = "test-premises",
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
@@ -81,7 +82,7 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `When a new premises is created with no name then it defaults to unknown`() {
+  fun `Trying to create a new premises without a name returns 400`() {
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
@@ -91,6 +92,7 @@ class PremisesTest : IntegrationTestBase() {
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewPremises(
+          name = "",
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           notes = "some arbitrary notes",
@@ -100,9 +102,44 @@ class PremisesTest : IntegrationTestBase() {
       )
       .exchange()
       .expectStatus()
-      .isCreated
+      .is4xxClientError
       .expectBody()
-      .jsonPath("name").isEqualTo("Unknown")
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
+  fun `Trying to create a new premises with a non-unique name returns 400`() {
+    temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withName("premises-name-conflict")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .bodyValue(
+        NewPremises(
+          name = "premises-name-conflict",
+          addressLine1 = "1 somewhere",
+          postcode = "AB123CD",
+          notes = "some arbitrary notes",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          characteristicIds = mutableListOf(),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("notUnique")
   }
 
   @Test
