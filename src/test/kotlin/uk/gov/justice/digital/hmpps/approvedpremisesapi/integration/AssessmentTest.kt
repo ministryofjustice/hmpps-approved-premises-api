@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
@@ -167,5 +168,63 @@ class AssessmentTest : IntegrationTestBase() {
           assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
         )
       )
+  }
+
+  @Test
+  fun `Create clarification note returns 200 with correct body`() {
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+
+    val inmateDetails = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockInmateDetailPrisonsApiCall(inmateDetails)
+
+    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
+      withType(JsonSchemaType.APPLICATION)
+      withPermissiveSchema()
+    }
+
+    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
+      withType(JsonSchemaType.ASSESSMENT)
+      withPermissiveSchema()
+    }
+
+    val application = applicationEntityFactory.produceAndPersist {
+      withCrn("CRN123")
+      withCreatedByUser(user)
+      withApplicationSchema(applicationSchema)
+    }
+
+    val assessment = assessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(user)
+      withApplication(application)
+      withAssessmentSchema(assessmentSchema)
+    }
+
+    webTestClient.post()
+      .uri("/assessments/${assessment.id}/notes")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewClarificationNote(
+          text = "some text"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.text").isEqualTo("some text")
   }
 }

@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.AssessmentsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -12,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import java.util.UUID
 
@@ -20,7 +23,8 @@ class AssessmentController(
   private val assessmentService: AssessmentService,
   private val userService: UserService,
   private val offenderService: OffenderService,
-  private val assessmentTransformer: AssessmentTransformer
+  private val assessmentTransformer: AssessmentTransformer,
+  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -93,6 +97,24 @@ class AssessmentController(
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
+    )
+  }
+
+  override fun assessmentsAssessmentIdNotesPost(
+    assessmentId: UUID,
+    newClarificationNote: NewClarificationNote
+  ): ResponseEntity<ClarificationNote> {
+    val user = userService.getUserForRequest()
+
+    val clarificiationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.text)
+    val clarificiationNote = when (clarificiationNoteResult) {
+      is AuthorisableActionResult.Success -> clarificiationNoteResult.entity
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(
+      assessmentClarificationNoteTransformer.transformJpaToApi(clarificiationNote)
     )
   }
 }
