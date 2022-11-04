@@ -1811,6 +1811,57 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/acceptance:
+    post:
+      tags:
+        - Assessment data
+      summary: Accepts an Assessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully accepted the assessment
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/rejection:
+    post:
+      tags:
+        - Assessment data
+      summary: Rejects an Assessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Rejection info
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/AssessmentRejection'
+        required: true
+      responses:
+        200:
+          description: successfully rejected the assessment
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /profile:
     get:
       tags:
@@ -3013,16 +3064,15 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AnyValue'
-        acceptedAt:
-          type: string
-          format: date-time
-        rejectedAt:
-          type: string
-          format: date-time
+      required:
+        - data
+    AssessmentRejection:
+      type: object
+      properties:
         rejectionRationale:
           type: string
       required:
-        - data
+        - rejectionRationale
     ClarificationNote:
       type: object
       properties:
