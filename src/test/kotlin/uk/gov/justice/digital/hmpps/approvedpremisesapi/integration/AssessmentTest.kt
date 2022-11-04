@@ -100,4 +100,72 @@ class AssessmentTest : IntegrationTestBase() {
         )
       )
   }
+
+  @Test
+  fun `Get assessment by ID without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get assessment by ID returns 200 with correct body`() {
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+
+    val inmateDetails = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockInmateDetailPrisonsApiCall(inmateDetails)
+
+    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
+      withType(JsonSchemaType.APPLICATION)
+      withPermissiveSchema()
+    }
+
+    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
+      withType(JsonSchemaType.ASSESSMENT)
+      withPermissiveSchema()
+    }
+
+    val application = applicationEntityFactory.produceAndPersist {
+      withCrn("CRN123")
+      withCreatedByUser(user)
+      withApplicationSchema(applicationSchema)
+    }
+
+    val assessment = assessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(user)
+      withApplication(application)
+      withAssessmentSchema(assessmentSchema)
+    }
+
+    assessment.schemaUpToDate = true
+
+    webTestClient.get()
+      .uri("/assessments/${assessment.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(
+        objectMapper.writeValueAsString(
+          assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
+        )
+      )
+  }
 }

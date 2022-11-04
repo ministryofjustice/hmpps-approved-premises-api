@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
@@ -14,8 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import java.util.UUID
 
 class AssessmentServiceTest {
   private val userRepositoryMock = mockk<UserRepository>()
@@ -83,5 +86,85 @@ class AssessmentServiceTest {
     assertThat(result).containsAll(allocatedAssessments)
 
     verify(exactly = 1) { assessmentRepositoryMock.findAllByAllocatedToUser_Id(user.id) }
+  }
+
+  @Test
+  fun `getAssessmentForUser gets any assessment for workflow manager`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    user.roles.add(
+      UserRoleAssignmentEntityFactory()
+        .withRole(UserRole.WORKFLOW_MANAGER)
+        .withUser(user)
+        .produce()
+    )
+
+    val assessment =
+      AssessmentEntityFactory()
+        .withId(assessmentId)
+        .withAllocatedToUser(
+          UserEntityFactory().produce()
+        )
+        .withApplication(
+          ApplicationEntityFactory()
+            .withCreatedByUser(UserEntityFactory().produce())
+            .produce()
+        )
+        .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.getAssessmentForUser(user, assessmentId)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity).isEqualTo(assessment)
+  }
+
+  @Test
+  fun `getAssessmentForUser does not get assessments allocated to other users for non-workflow manager`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    val assessment =
+      AssessmentEntityFactory()
+        .withId(assessmentId)
+        .withAllocatedToUser(
+          UserEntityFactory().produce()
+        )
+        .withApplication(
+          ApplicationEntityFactory()
+            .withCreatedByUser(UserEntityFactory().produce())
+            .produce()
+        )
+        .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.getAssessmentForUser(user, assessmentId)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getAssessmentForUser returns not found for non-existent Assessment`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
+    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.getAssessmentForUser(user, assessmentId)
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 }
