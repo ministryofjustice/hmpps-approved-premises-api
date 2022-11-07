@@ -1,0 +1,78 @@
+{
+  "id": "331bc347-d9c7-42d9-9c47-217860c35749",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/approved-premises/(.*)/staff"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "content": [
+        {
+          "code": "N07A848",
+          "name": {
+            "forename": "John",
+            "surname": "Peterson",
+            "middleName": null
+          },
+          "grade": {
+            "code": "NPSM",
+            "description": "NPS - PO"
+          },
+          "keyWorker": true
+        },
+        {
+          "code": "N07B423",
+          "name": {
+            "forename": "David",
+            "surname": "Davidson",
+            "middleName": null
+          },
+          "grade": {
+            "code": "H106",
+            "description": "CRC - Additional Grade"
+          },
+          "keyWorker": false
+        },
+        {
+          "code": "N07APRU",
+          "name": {
+            "forename": "Unallocated",
+            "surname": "Staff",
+            "middleName": null
+          },
+          "grade": null,
+          "keyWorker": false
+        }
+      ],
+      "pageable": {
+        "sort": {
+          "empty": true,
+          "unsorted": true,
+          "sorted": false
+        },
+        "offset": 0,
+        "pageNumber": 0,
+        "pageSize": 20,
+        "paged": true,
+        "unpaged": false
+      },
+      "last": true,
+      "totalPages": 1,
+      "totalElements": 3,
+      "size": 20,
+      "number": 0,
+      "sort": {
+        "empty": true,
+        "unsorted": true,
+        "sorted": false
+      },
+      "first": true,
+      "numberOfElements": 3,
+      "empty": false
+    }
+  }
+}
