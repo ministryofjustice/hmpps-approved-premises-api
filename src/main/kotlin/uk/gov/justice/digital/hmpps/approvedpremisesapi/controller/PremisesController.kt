@@ -448,6 +448,10 @@ class PremisesController(
     return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)
   }
 
+  override fun premisesPremisesIdRoomsRoomIdGet(premisesId: UUID, roomId: UUID): ResponseEntity<Room> {
+    return super.premisesPremisesIdRoomsRoomIdGet(premisesId, roomId)
+  }
+
   override fun premisesPremisesIdRoomsRoomIdPut(
     premisesId: UUID,
     roomId: UUID,
