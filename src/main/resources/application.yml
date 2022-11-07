@@ -39,7 +39,7 @@ spring:
           jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
       client:
         registration:
-          community-api:
+          delius-backed-apis:
             provider: hmpps-auth
             client-id: approved-premises-api
             client-secret: clientsecret

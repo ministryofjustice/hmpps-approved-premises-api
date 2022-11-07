@@ -18,7 +18,7 @@ class WebClientConfiguration {
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
-    oauth2Client.setDefaultClientRegistrationId("community-api")
+    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
 
     return WebClient.builder()
       .baseUrl(communityApiBaseUrl)

@@ -23,7 +23,7 @@ spring:
     oauth2:
       client:
         registration:
-          community-api:
+          delius-backed-apis:
             client-id: approved-premises-api
             client-secret: clientsecret
             client-authentication-method: client_secret_jwt
