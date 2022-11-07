@@ -17,7 +17,7 @@ import javax.persistence.Table
 
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
-  fun findAllByAllocatedToUser_Id(id: UUID): List<AssessmentEntity>
+  fun findAllByAllocatedToUser_Id(userId: UUID): List<AssessmentEntity>
 }
 
 @Entity
