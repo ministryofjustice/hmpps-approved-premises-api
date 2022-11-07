@@ -974,6 +974,38 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/offence-analysis:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys offence analysis for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys offence analysis
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: object
+                $ref: '#/components/schemas/OASysOffenceAnalysis'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2855,3 +2887,41 @@ components:
         - pending
         - active
         - archived
+    OASysAssessmentId:
+      description: The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.
+      type: long
+      example: 138985987
+    ArrayOfOASysOffenceAnalysisQuestions:
+      type: array
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+          questionNumber:
+            type: string
+          answers:
+            type: object
+        example:
+          - label: "Offence summary"
+            questionNumber: "2.1"
+            answers:
+              - "Mr Smith admits he went to Mr Jones's address on 23rd March 2010..."
+          - label: "Offence involved"
+            questionNumber: "2.2"
+            answers:
+              - "Any violence or threat of violence / coercion"
+              -  "Excessive use of violence / sadistic violence"
+              -  "Carrying or using a weapon"
+          - label: "Specific weapon"
+            questionNumber: "2.3"
+            answers:
+              - "Iron bar"
+    OASysOffenceAnalysis:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        offenceAnalysis:
+          $ref: '#/components/schemas/ArrayOfOASysOffenceAnalysisQuestions'
