@@ -31,7 +31,6 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Create new premises returns 201`() {
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     webTestClient.post()
@@ -54,7 +53,6 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `When a new premises is created then all field data is persisted`() {
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     webTestClient.post()
@@ -122,7 +120,6 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to create a new premises without a name returns 400`() {
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     webTestClient.post()
@@ -203,7 +200,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          characteristicIds = mutableListOf(),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -216,7 +213,6 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `When a new premises is created with no notes then it defaults to empty`() {
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     webTestClient.post()
@@ -241,7 +237,6 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to create a new premises without an address returns 400`() {
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     webTestClient.post()
@@ -268,7 +263,6 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to create a new premises without a postcode returns 400`() {
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     webTestClient.post()
@@ -295,7 +289,6 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to create a new premises without a service returns 400`() {
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     webTestClient.post()
@@ -772,7 +765,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = null,
           name = "test-room",
-          characteristicIds = mutableListOf(),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -800,7 +793,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "",
-          characteristicIds = mutableListOf(),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -829,7 +822,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
-          characteristicIds = mutableListOf(UUID.randomUUID()),
+          characteristicIds = mutableListOf(UUID.randomUUID())
         )
       )
       .exchange()
@@ -863,7 +856,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
-          characteristicIds = mutableListOf(characteristicId),
+          characteristicIds = mutableListOf(characteristicId)
         )
       )
       .exchange()
@@ -897,7 +890,7 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
-          characteristicIds = mutableListOf(characteristicId),
+          characteristicIds = mutableListOf(characteristicId)
         )
       )
       .exchange()
@@ -972,7 +965,7 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdateRoom(
           notes = null,
-          characteristicIds = mutableListOf(),
+          characteristicIds = mutableListOf()
         )
       )
       .exchange()
@@ -1001,7 +994,7 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdateRoom(
           notes = "test notes",
-          characteristicIds = mutableListOf(UUID.randomUUID()),
+          characteristicIds = mutableListOf(UUID.randomUUID())
         )
       )
       .exchange()
@@ -1035,7 +1028,7 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdateRoom(
           notes = "test notes",
-          characteristicIds = mutableListOf(UUID.randomUUID()),
+          characteristicIds = mutableListOf(UUID.randomUUID())
         )
       )
       .exchange()
@@ -1073,7 +1066,7 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdateRoom(
           notes = "test notes",
-          characteristicIds = mutableListOf(characteristicId),
+          characteristicIds = mutableListOf(characteristicId)
         )
       )
       .exchange()
@@ -1111,7 +1104,7 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdateRoom(
           notes = "test notes",
-          characteristicIds = mutableListOf(characteristicId),
+          characteristicIds = mutableListOf(characteristicId)
         )
       )
       .exchange()
@@ -1120,5 +1113,95 @@ class PremisesTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
       .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicModelScope")
+  }
+
+  @Test
+  fun `Get Room by ID returns OK with correct body`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withName("test-room")
+      withNotes("test notes")
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(roomTransformer.transformJpaToApi(room))
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/rooms/${room.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Room by ID returns Not Found with correct body when Premises does not exist`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withName("test-room")
+      withNotes("test notes")
+    }
+
+    val premisesIdToRequest = UUID.randomUUID().toString()
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/$premisesIdToRequest/rooms/${room.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectHeader().contentType("application/problem+json")
+      .expectStatus()
+      .isNotFound
+      .expectBody()
+      .jsonPath("title").isEqualTo("Not Found")
+      .jsonPath("status").isEqualTo(404)
+      .jsonPath("detail").isEqualTo("No Premises with an ID of $premisesIdToRequest could be found")
+  }
+
+  @Test
+  fun `Get Room by ID returns Not Found with correct body when Room does not exist`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val roomIdToRequest = UUID.randomUUID().toString()
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/rooms/$roomIdToRequest")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectHeader().contentType("application/problem+json")
+      .expectStatus()
+      .isNotFound
+      .expectBody()
+      .jsonPath("title").isEqualTo("Not Found")
+      .jsonPath("status").isEqualTo(404)
+      .jsonPath("detail").isEqualTo("No Room with an ID of $roomIdToRequest could be found")
   }
 }

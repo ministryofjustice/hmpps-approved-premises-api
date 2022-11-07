@@ -449,7 +449,11 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdRoomsRoomIdGet(premisesId: UUID, roomId: UUID): ResponseEntity<Room> {
-    return super.premisesPremisesIdRoomsRoomIdGet(premisesId, roomId)
+    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val room = premises.rooms.find { it.id == roomId } ?: throw NotFoundProblem(roomId, "Room")
+
+    return ResponseEntity.ok(roomTransformer.transformJpaToApi(room))
   }
 
   override fun premisesPremisesIdRoomsRoomIdPut(
