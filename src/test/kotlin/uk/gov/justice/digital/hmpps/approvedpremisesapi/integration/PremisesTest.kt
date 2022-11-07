@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
@@ -825,6 +826,221 @@ class PremisesTest : IntegrationTestBase() {
         NewRoom(
           notes = "test notes",
           name = "test-room",
+          characteristicIds = mutableListOf(characteristicId),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicModelScope")
+  }
+
+  @Test
+  fun `Updating a Room returns OK with correct body when given valid data`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withName("test-room")
+    }
+
+    val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+      withModelScope("room")
+      withServiceScope("temporary-accommodation")
+      withName("Floor level access")
+    }.map { it.id }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.put()
+      .uri("/premises/${premises.id}/rooms/${room.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateRoom(
+          notes = "test notes",
+          characteristicIds = characteristicIds
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("name").isEqualTo("test-room")
+      .jsonPath("notes").isEqualTo("test notes")
+      .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+      .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+      .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+      .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
+  }
+
+  @Test
+  fun `When a room is updated with no notes then it defaults to empty`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withName("test-room")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.put()
+      .uri("/premises/${premises.id}/rooms/${room.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateRoom(
+          notes = null,
+          characteristicIds = mutableListOf(),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("notes").isEqualTo("")
+  }
+
+  @Test
+  fun `Trying to update a room that does not exist returns 404`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val id = UUID.randomUUID()
+
+    webTestClient.put()
+      .uri("/premises/${premises.id}/rooms/$id")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateRoom(
+          notes = "test notes",
+          characteristicIds = mutableListOf(UUID.randomUUID()),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Not Found")
+      .jsonPath("status").isEqualTo(404)
+      .jsonPath("detail").isEqualTo("No Room with an ID of $id could be found")
+  }
+
+  @Test
+  fun `Trying to update a room with an unknown characteristic returns 400`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withName("test-room")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.put()
+      .uri("/premises/${premises.id}/rooms/${room.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateRoom(
+          notes = "test notes",
+          characteristicIds = mutableListOf(UUID.randomUUID()),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+  }
+
+  @Test
+  fun `Trying to update a room with a characteristic of the wrong service scope returns 400`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withName("test-room")
+    }
+
+    val characteristicId = characteristicEntityFactory.produceAndPersist {
+      withModelScope("room")
+      withServiceScope("approved-premises")
+    }.id
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.put()
+      .uri("/premises/${premises.id}/rooms/${room.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateRoom(
+          notes = "test notes",
+          characteristicIds = mutableListOf(characteristicId),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicServiceScope")
+  }
+
+  @Test
+  fun `Trying to update a room with a characteristic of the wrong model scope returns 400`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withName("test-room")
+    }
+
+    val characteristicId = characteristicEntityFactory.produceAndPersist {
+      withModelScope("premises")
+      withServiceScope("approved-premises")
+    }.id
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.put()
+      .uri("/premises/${premises.id}/rooms/${room.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateRoom(
+          notes = "test notes",
           characteristicIds = mutableListOf(characteristicId),
         )
       )

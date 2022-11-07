@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -420,6 +421,26 @@ class PremisesController(
     )
 
     return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)
+  }
+
+  override fun premisesPremisesIdRoomsRoomIdPut(
+    premisesId: UUID,
+    roomId: UUID,
+    updateRoom: UpdateRoom
+  ): ResponseEntity<Room> {
+    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val updateRoomResult = roomService.updateRoom(premises, roomId, updateRoom.notes, updateRoom.characteristicIds)
+
+    val validationResult = when (updateRoomResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(roomId, "Room")
+      is AuthorisableActionResult.Success -> updateRoomResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    val room = extractResultEntityOrThrow(validationResult)
+
+    return ResponseEntity.ok(roomTransformer.transformJpaToApi(room))
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {

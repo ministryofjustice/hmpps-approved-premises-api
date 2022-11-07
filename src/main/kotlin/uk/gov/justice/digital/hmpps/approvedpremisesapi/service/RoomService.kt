@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
@@ -7,7 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.util.UUID
 
@@ -75,6 +78,57 @@ class RoomService(
     }
 
     return success(room)
+  }
+
+  fun updateRoom(
+    premises: PremisesEntity,
+    roomId: UUID,
+    notes: String?,
+    characteristicIds: List<UUID>,
+  ): AuthorisableActionResult<ValidatableActionResult<RoomEntity>> {
+    var room = roomRepository.findByIdOrNull(roomId) ?: return AuthorisableActionResult.NotFound()
+
+    if (room.premises.id != premises.id) {
+      return AuthorisableActionResult.NotFound()
+    }
+
+    val validationErrors = ValidationErrors()
+
+    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
+      val entity = characteristicService.getCharacteristic(uuid)
+
+      if (entity == null) {
+        validationErrors["$.characteristics[$index]"] = "doesNotExist"
+      } else {
+        if (!characteristicService.modelScopeMatches(entity, room)) {
+          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicModelScope"
+        }
+        if (!characteristicService.serviceScopeMatches(entity, room)) {
+          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicServiceScope"
+        }
+      }
+
+      entity
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors)
+      )
+    }
+
+    room = RoomEntity(
+      id = room.id,
+      name = room.name,
+      notes = notes,
+      premises = room.premises,
+      beds = room.beds,
+      characteristics = characteristicEntities.map { it!! }.toMutableList(),
+    )
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(roomRepository.save(room))
+    )
   }
 
   fun createBed(
