@@ -107,6 +107,8 @@ services:
     base-url: http://localhost:9004
   prisons-api:
     base-url: http://localhost:9570
+  ap-delius-context-api:
+    base-url: http://localhost:9004
 
 hmpps:
   auth:

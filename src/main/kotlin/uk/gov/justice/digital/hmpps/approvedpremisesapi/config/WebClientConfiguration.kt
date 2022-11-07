@@ -26,6 +26,22 @@ class WebClientConfiguration {
       .build()
   }
 
+  @Bean(name = ["apDeliusContextApiWebClient"])
+  fun apDeliusContextApiWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.ap-delius-context-api.base-url}") communityApiBaseUrl: String
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
+
+    return WebClient.builder()
+      .baseUrl(communityApiBaseUrl)
+      .filter(oauth2Client)
+      .build()
+  }
+
   @Bean(name = ["assessRisksAndNeedsApiWebClient"])
   fun assessRisksAndNeedsApiWebClient(
     @Value("\${services.assess-risks-and-needs-api.base-url}") assessRisksAndNeedsApiBaseUrl: String
