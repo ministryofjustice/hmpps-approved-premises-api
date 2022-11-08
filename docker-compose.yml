@@ -72,6 +72,9 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:hsqldb:file:/nomis-db/nomisdb;sql.syntax_ora=true;get_column_name=false;shutdown=false;sql.nulls_first=false;sql.nulls_order=false;hsqldb.lock_file=false
       - SPRING_DATASOURCE_USERNAME=sa
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_REPLICA_DATASOURCE_URL=jdbc:hsqldb:file:/nomis-db/nomisdb;sql.syntax_ora=true;get_column_name=false;shutdown=false;sql.nulls_first=false;sql.nulls_order=false;hsqldb.lock_file=false
+      - SPRING_REPLICA_DATASOURCE_USERNAME=sa
+      - SPRING_REPLICA_DATASOURCE_PASSWORD=password
     volumes:
       - ./nomis-db:/nomis-db
 
