@@ -1006,6 +1006,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risk-contributors:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys information on issues contributing to risks of offending or harm for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys information on issues contributing to risks
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskContributors'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2917,6 +2948,26 @@ components:
             questionNumber: "2.3"
             answers:
               - "Iron bar"
+    ArrayOfOASysRiskContributorsQuestions:
+      type: array
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+          questionNumber:
+            type: string
+          answers:
+            type: object
+        example:
+          - label: "Accommodation issues contributing to risks of offending and harm"
+            questionNumber: "3.9"
+            answers:
+              - "Mr Smith told me that he was renting a room in a shared house, prior to his current remand..."
+          - label: "Education, training and employability issues contributing to risks of offending and harm"
+            questionNumber: "4.9"
+            answers:
+              - "Mr Smith told me that his formal school education was regularly interrupted as he and his family travelled a lot whilst he was growing up..."
     OASysOffenceAnalysis:
       type: object
       properties:
@@ -2925,3 +2976,12 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         offenceAnalysis:
           $ref: '#/components/schemas/ArrayOfOASysOffenceAnalysisQuestions'
+    OASysRiskContributors:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        riskContributors:
+          $ref: '#/components/schemas/ArrayOfOASysRiskContributorsQuestions'
+
