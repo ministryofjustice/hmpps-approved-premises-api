@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.time.Duration
 
@@ -38,6 +39,7 @@ class RedisConfiguration {
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
       builder.clientCacheFor<List<StaffMember>>("staffMembersCache", Duration.ofMinutes(staffMembersExpiryMinutes), version, objectMapper)
+        .clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofMinutes(staffMembersExpiryMinutes), version, objectMapper)
         .clientCacheFor<StaffMember>("staffMemberCache", Duration.ofMinutes(staffMemberExpiryMinutes), version, objectMapper)
         .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofMinutes(offenderDetailsExpiryMinutes), version, objectMapper)
         .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofMinutes(userAccessExpiryMinutes), version, objectMapper)
