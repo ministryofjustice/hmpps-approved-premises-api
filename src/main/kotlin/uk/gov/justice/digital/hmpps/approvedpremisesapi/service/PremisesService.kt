@@ -6,8 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -30,8 +30,8 @@ class PremisesService(
   private val lostBedsRepository: LostBedsRepository,
   private val bookingRepository: BookingRepository,
   private val lostBedReasonRepository: LostBedReasonRepository,
-  private val characteristicService: CharacteristicService,
-  private val jsonSchemaService: JsonSchemaService,
+  private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
+  private val characteristicService: CharacteristicService
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -223,11 +223,11 @@ class PremisesService(
 
   fun updatePremises(
     premisesId: UUID,
-    data: String,
-    document: String?,
     addressLine1: String,
     postcode: String,
-    name: String
+    localAuthorityAreaId: UUID,
+    characteristicIds: List<UUID>,
+    notes: String?
   ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
 
     val premises = premisesRepository.findByIdOrNull(premisesId)
@@ -235,10 +235,27 @@ class PremisesService(
 
     val validationErrors = ValidationErrors()
 
-    val latestSchemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION)
+    val localAuthorityArea = localAuthorityAreaRepository.findById(localAuthorityAreaId)
 
-    if (!jsonSchemaService.validate(latestSchemaVersion, data)) {
-      validationErrors["$.data"] = "invalid"
+    if (localAuthorityArea == null) {
+      validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
+    }
+
+    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
+      val entity = characteristicService.getCharacteristic(uuid)
+
+      if (entity == null) {
+        validationErrors["$.characteristics[$index]"] = "doesNotExist"
+      } else {
+        if (!characteristicService.modelScopeMatches(entity, premises)) {
+          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicModelScope"
+        }
+        if (!characteristicService.serviceScopeMatches(entity, premises)) {
+          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicServiceScope"
+        }
+      }
+
+      entity
     }
 
     if (validationErrors.any()) {
@@ -250,7 +267,9 @@ class PremisesService(
     premises.let {
       it.addressLine1 = addressLine1
       it.postcode = postcode
-      it.name = name
+      it.localAuthorityArea = localAuthorityArea.get()
+      it.characteristics= characteristicEntities.map { it!! }.toMutableList()
+      it.notes = if (notes.isNullOrEmpty()) "" else notes
     }
 
     val savedPremises = premisesRepository.save(premises)

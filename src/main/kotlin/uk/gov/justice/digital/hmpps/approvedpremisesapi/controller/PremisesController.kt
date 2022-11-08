@@ -77,6 +77,30 @@ class PremisesController(
   private val roomService: RoomService,
   private val roomTransformer: RoomTransformer,
 ) : PremisesApiDelegate {
+
+  override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
+
+    val updatePremisesResult = premisesService
+      .updatePremises(
+        premisesId, body.addressLine1,
+        body.postcode, body.localAuthorityAreaId, body.characteristicIds, body.notes
+      )
+
+    val validationResult = when (updatePremisesResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> updatePremisesResult.entity
+    }
+
+    val updatedPremises = when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(updatedPremises, updatedPremises.totalBeds))
+  }
+
   override fun premisesGet(xServiceName: ServiceName?): ResponseEntity<List<Premises>> {
     val premises = if (xServiceName == null) {
       premisesService.getAllPremises()

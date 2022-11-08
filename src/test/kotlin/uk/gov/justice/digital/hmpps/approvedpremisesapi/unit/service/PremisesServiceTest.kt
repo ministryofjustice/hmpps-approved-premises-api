@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import java.time.LocalDate
 import java.util.UUID
@@ -35,6 +37,7 @@ class PremisesServiceTest {
   private val lostBedsRepositoryMock = mockk<LostBedsRepository>()
   private val bookingRepositoryMock = mockk<BookingRepository>()
   private val lostBedReasonRepositoryMock = mockk<LostBedReasonRepository>()
+  private val localAuthorityAreaRepositoryMock = mockk<LocalAuthorityAreaRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
 
   private val premisesService = PremisesService(
@@ -42,6 +45,7 @@ class PremisesServiceTest {
     lostBedsRepositoryMock,
     bookingRepositoryMock,
     lostBedReasonRepositoryMock,
+    localAuthorityAreaRepositoryMock,
     characteristicServiceMock
   )
 

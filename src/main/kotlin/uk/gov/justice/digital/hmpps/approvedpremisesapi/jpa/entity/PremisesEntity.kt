@@ -44,7 +44,7 @@ abstract class PremisesEntity(
   val probationRegion: ProbationRegionEntity,
   @ManyToOne
   @JoinColumn(name = "local_authority_area_id")
-  val localAuthorityArea: LocalAuthorityAreaEntity,
+  var localAuthorityArea: LocalAuthorityAreaEntity,
   @OneToMany(mappedBy = "premises")
   val bookings: MutableList<BookingEntity>,
   @OneToMany(mappedBy = "premises")
@@ -57,7 +57,7 @@ abstract class PremisesEntity(
     joinColumns = [JoinColumn(name = "premises_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val characteristics: MutableList<CharacteristicEntity>,
+  var characteristics: MutableList<CharacteristicEntity>,
 )
 
 @Entity
