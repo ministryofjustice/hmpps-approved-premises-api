@@ -235,7 +235,7 @@ class PremisesService(
 
     val validationErrors = ValidationErrors()
 
-    val localAuthorityArea = localAuthorityAreaRepository.findById(localAuthorityAreaId)
+    val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
 
     if (localAuthorityArea == null) {
       validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
@@ -267,8 +267,10 @@ class PremisesService(
     premises.let {
       it.addressLine1 = addressLine1
       it.postcode = postcode
-      it.localAuthorityArea = localAuthorityArea.get()
-      it.characteristics= characteristicEntities.map { it!! }.toMutableList()
+      if (localAuthorityArea != null) {
+        it.localAuthorityArea = localAuthorityArea
+      }
+      it.characteristics = characteristicEntities.map { it!! }.toMutableList()
       it.notes = if (notes.isNullOrEmpty()) "" else notes
     }
 

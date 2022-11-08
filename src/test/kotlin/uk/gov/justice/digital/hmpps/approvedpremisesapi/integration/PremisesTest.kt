@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -83,6 +84,43 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `When a premises is updated then all field data is persisted`() {
+
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val premisesToGet = premises[0]
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.put()
+      .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePremises(
+          addressLine1 = "1 somewhere updated",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes updated",
+          localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+          characteristicIds = mutableListOf()
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
+      .jsonPath("postcode").isEqualTo("AB456CD")
+      .jsonPath("notes").isEqualTo("some arbitrary notes updated")
+      .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
+      .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
+  }
+
+  @Test
   fun `Trying to create a new premises without a name returns 400`() {
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
@@ -107,6 +145,39 @@ class PremisesTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
       .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+  @Test
+  fun `Trying to update a premises with an invalid local authority area id returns 400`() {
+
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val premisesToGet = premises[0]
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.put()
+      .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePremises(
+          addressLine1 = "1 somewhere updated",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes updated",
+          localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+          characteristicIds = mutableListOf()
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
   }
 
   @Test
@@ -836,7 +907,6 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("title").isEqualTo("Bad Request")
       .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicModelScope")
   }
-
   @Test
   fun `Updating a Room returns OK with correct body when given valid data`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
