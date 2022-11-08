@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -15,7 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
@@ -27,7 +30,8 @@ class PremisesService(
   private val lostBedsRepository: LostBedsRepository,
   private val bookingRepository: BookingRepository,
   private val lostBedReasonRepository: LostBedReasonRepository,
-  private val characteristicService: CharacteristicService,
+  private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
+  private val characteristicService: CharacteristicService
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -215,5 +219,65 @@ class PremisesService(
     premisesRepository.save(premises)
 
     return success(premises)
+  }
+
+  fun updatePremises(
+    premisesId: UUID,
+    addressLine1: String,
+    postcode: String,
+    localAuthorityAreaId: UUID,
+    characteristicIds: List<UUID>,
+    notes: String?
+  ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
+
+    val premises = premisesRepository.findByIdOrNull(premisesId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val validationErrors = ValidationErrors()
+
+    val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
+
+    if (localAuthorityArea == null) {
+      validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
+    }
+
+    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
+      val entity = characteristicService.getCharacteristic(uuid)
+
+      if (entity == null) {
+        validationErrors["$.characteristics[$index]"] = "doesNotExist"
+      } else {
+        if (!characteristicService.modelScopeMatches(entity, premises)) {
+          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicModelScope"
+        }
+        if (!characteristicService.serviceScopeMatches(entity, premises)) {
+          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicServiceScope"
+        }
+      }
+
+      entity
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors)
+      )
+    }
+
+    premises.let {
+      it.addressLine1 = addressLine1
+      it.postcode = postcode
+      if (localAuthorityArea != null) {
+        it.localAuthorityArea = localAuthorityArea
+      }
+      it.characteristics = characteristicEntities.map { it!! }.toMutableList()
+      it.notes = if (notes.isNullOrEmpty()) "" else notes
+    }
+
+    val savedPremises = premisesRepository.save(premises)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedPremises)
+    )
   }
 }

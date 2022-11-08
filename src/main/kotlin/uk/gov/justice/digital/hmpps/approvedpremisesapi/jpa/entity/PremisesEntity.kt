@@ -34,17 +34,17 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 abstract class PremisesEntity(
   @Id
   val id: UUID,
-  val name: String,
-  val addressLine1: String,
+  var name: String,
+  var addressLine1: String,
   var postcode: String,
   var totalBeds: Int,
-  val notes: String,
+  var notes: String,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
   @ManyToOne
   @JoinColumn(name = "local_authority_area_id")
-  val localAuthorityArea: LocalAuthorityAreaEntity,
+  var localAuthorityArea: LocalAuthorityAreaEntity,
   @OneToMany(mappedBy = "premises")
   val bookings: MutableList<BookingEntity>,
   @OneToMany(mappedBy = "premises")
@@ -57,7 +57,7 @@ abstract class PremisesEntity(
     joinColumns = [JoinColumn(name = "premises_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val characteristics: MutableList<CharacteristicEntity>,
+  var characteristics: MutableList<CharacteristicEntity>,
 )
 
 @Entity
