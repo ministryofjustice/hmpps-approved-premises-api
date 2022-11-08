@@ -2540,7 +2540,9 @@ components:
       type: object
       properties:
         id:
-          type: long
+          type: string
+        sensitive:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -2557,6 +2559,7 @@ components:
           type: string
       required:
         - id
+        - sensitive
         - createdAt
         - occurredAt
         - authorName
