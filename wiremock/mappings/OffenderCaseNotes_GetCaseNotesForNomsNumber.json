@@ -1,0 +1,60 @@
+{
+  "id": "25845b66-5614-4ec3-b4b9-3cc2cec4681b",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/case-notes/(.*)"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "totalElements": 2,
+      "totalPages": 1,
+      "number": 1,
+      "content": [{
+        "caseNoteId": "12311312",
+        "offenderIdentifier": "A1234AA",
+        "type": "MO",
+        "typeDescription": "Mock Case Note Type",
+        "subType": "M1",
+        "subTypeDescription": "Mock Case Note Subtype",
+        "source": "INST",
+        "creationDateTime": "2022-11-08T12:00:00",
+        "occurrenceDateTime": "2022-11-06T10:00:00",
+        "authorName": "Some Person",
+        "authorUserId": "12345",
+        "text": "This is a case note",
+        "locationId": "MDI",
+        "eventId": 55,
+        "sensitive": false,
+        "amendments": [{
+          "caseNoteAmendmentId": 5432,
+          "creationDateTime": "2022-11-08T13:00:00",
+          "authorUserName": "12345",
+          "authorName": "Some Person",
+          "authorUserId": "12345",
+          "additionalNoteText": "additional text"
+        }]
+      }, {
+        "caseNoteId": "12311319",
+        "offenderIdentifier": "A1234AA",
+        "type": "S0",
+        "typeDescription": "Mock Sensitive Case Note Type",
+        "subType": "S1",
+        "subTypeDescription": "Mock Sensitive Case Note Subtype",
+        "source": "INST",
+        "creationDateTime": "2022-11-08T14:00:00",
+        "occurrenceDateTime": "2022-11-05T09:00:00",
+        "authorName": "Some Person",
+        "authorUserId": "12345",
+        "text": "This is a sensitive case note",
+        "locationId": "MDI",
+        "eventId": -20,
+        "sensitive": true,
+        "amendments": []
+      }]
+    }
+  }
+}
