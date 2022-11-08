@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
@@ -39,6 +40,7 @@ class OffenderService(
   private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val prisonsApiClient: PrisonsApiClient,
+  private val caseNotesClient: CaseNotesClient,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel
 ) {
@@ -163,7 +165,7 @@ class OffenderService(
       if (currentPageIndex == null) currentPageIndex = 0
       else currentPageIndex += 1
 
-      val caseNotesPageResponse = prisonsApiClient.getCaseNotesPage(nomsNumber, fromDate, currentPageIndex, prisonCaseNotesConfig.prisonApiPageSize)
+      val caseNotesPageResponse = caseNotesClient.getCaseNotesPage(nomsNumber, fromDate, currentPageIndex, prisonCaseNotesConfig.prisonApiPageSize)
       currentPage = when (caseNotesPageResponse) {
         is ClientResult.Success -> caseNotesPageResponse.body
         is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
