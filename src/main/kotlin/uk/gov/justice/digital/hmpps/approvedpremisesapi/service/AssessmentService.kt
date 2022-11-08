@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
@@ -18,6 +20,7 @@ import java.util.UUID
 class AssessmentService(
   private val userRepository: UserRepository,
   private val assessmentRepository: AssessmentRepository,
+  private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService
 ) {
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
@@ -77,6 +80,27 @@ class AssessmentService(
         clarificationNotes = mutableListOf()
       )
     )
+  }
+
+  fun addAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, text: String): AuthorisableActionResult<AssessmentClarificationNoteEntity> {
+    val assessmentResult = getAssessmentForUser(user, assessmentId)
+    val assessment = when (assessmentResult) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    val clarificationNoteEntity = assessmentClarificationNoteRepository.save(
+      AssessmentClarificationNoteEntity(
+        id = UUID.randomUUID(),
+        assessment = assessment,
+        createdByUser = user,
+        createdAt = OffsetDateTime.now(),
+        text = text
+      )
+    )
+
+    return AuthorisableActionResult.Success(clarificationNoteEntity)
   }
 
   private fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
