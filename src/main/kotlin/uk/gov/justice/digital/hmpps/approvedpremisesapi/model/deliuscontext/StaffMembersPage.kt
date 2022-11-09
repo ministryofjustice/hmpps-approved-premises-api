@@ -1,16 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext
 
 data class StaffMembersPage(
-  val content: List<ContextStaffMember>
+  val content: List<StaffMember>
 )
 
-data class ContextStaffMember(
+data class StaffMember(
   val code: String,
   val keyWorker: Boolean,
-  val name: ContextStaffMemberName
+  val name: StaffMemberName
 )
 
-data class ContextStaffMemberName(
+data class StaffMemberName(
   val forename: String,
   val middleName: String?,
   val surname: String

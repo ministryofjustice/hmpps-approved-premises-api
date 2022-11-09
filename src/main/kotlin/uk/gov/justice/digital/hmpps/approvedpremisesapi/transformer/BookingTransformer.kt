@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.lang.RuntimeException
 
@@ -18,7 +18,7 @@ class BookingTransformer(
   private val cancellationTransformer: CancellationTransformer,
   private val extensionTransformer: ExtensionTransformer
 ) {
-  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: ContextStaffMember?) = Booking(
+  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?) = Booking(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offender, inmateDetail),
     arrivalDate = jpa.arrivalDate,

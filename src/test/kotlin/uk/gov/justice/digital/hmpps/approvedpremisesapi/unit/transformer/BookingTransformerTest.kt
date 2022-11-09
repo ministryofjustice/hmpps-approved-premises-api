@@ -31,8 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMemberName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
@@ -108,10 +108,10 @@ class BookingTransformerTest {
     premises = premisesEntity
   )
 
-  private val staffMember = ContextStaffMember(
+  private val staffMember = StaffMember(
     code = "STAFF",
     keyWorker = true,
-    name = ContextStaffMemberName(
+    name = StaffMemberName(
       forename = "first",
       middleName = null,
       surname = "last"

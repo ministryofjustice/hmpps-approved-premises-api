@@ -2,19 +2,19 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMemberName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
-class ContextStaffMemberFactory : Factory<ContextStaffMember> {
+class ContextStaffMemberFactory : Factory<StaffMember> {
   private var staffCode: Yielded<String> = { randomStringUpperCase(8) }
   private var forenames: Yielded<String> = { randomStringUpperCase(6) }
   private var surname: Yielded<String> = { randomStringUpperCase(6) }
 
-  override fun produce(): ContextStaffMember = ContextStaffMember(
+  override fun produce(): StaffMember = StaffMember(
     code = this.staffCode(),
     keyWorker = false,
-    name = ContextStaffMemberName(
+    name = StaffMemberName(
       forename = this.forenames(),
       middleName = null,
       surname = this.surname()

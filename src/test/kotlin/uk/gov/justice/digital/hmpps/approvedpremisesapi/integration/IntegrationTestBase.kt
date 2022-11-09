@@ -74,7 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -334,7 +334,7 @@ abstract class IntegrationTestBase {
       )
   )
 
-  fun mockStaffMembersContextApiCall(staffMember: ContextStaffMember, qCode: String) = wiremockServer.stubFor(
+  fun mockStaffMembersContextApiCall(staffMember: StaffMember, qCode: String) = wiremockServer.stubFor(
     WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
       .willReturn(
         WireMock.aResponse()

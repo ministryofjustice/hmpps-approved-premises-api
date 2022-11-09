@@ -4,12 +4,12 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 
 @Service
 class StaffMemberService(private val apDeliusContextApiClient: ApDeliusContextApiClient) {
-  fun getStaffMemberByCode(code: String, qCode: String): AuthorisableActionResult<ContextStaffMember> {
+  fun getStaffMemberByCode(code: String, qCode: String): AuthorisableActionResult<StaffMember> {
     val premisesStaffMembersResult = getStaffMembersForQCode(qCode)
 
     val premisesStaffMembers = when (premisesStaffMembersResult) {
