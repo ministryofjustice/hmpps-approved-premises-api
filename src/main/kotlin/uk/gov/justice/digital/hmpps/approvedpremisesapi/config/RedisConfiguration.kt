@@ -16,7 +16,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -38,9 +37,7 @@ class RedisConfiguration {
     val version = buildProperties.version
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
-      builder.clientCacheFor<List<StaffMember>>("staffMembersCache", Duration.ofMinutes(staffMembersExpiryMinutes), version, objectMapper)
-        .clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofMinutes(staffMembersExpiryMinutes), version, objectMapper)
-        .clientCacheFor<StaffMember>("staffMemberCache", Duration.ofMinutes(staffMemberExpiryMinutes), version, objectMapper)
+      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofMinutes(staffMembersExpiryMinutes), version, objectMapper)
         .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofMinutes(offenderDetailsExpiryMinutes), version, objectMapper)
         .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofMinutes(userAccessExpiryMinutes), version, objectMapper)
         .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofMinutes(inmateDetailsExpiryMinutes), version, objectMapper)

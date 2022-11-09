@@ -73,8 +73,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
@@ -333,14 +334,18 @@ abstract class IntegrationTestBase {
       )
   )
 
-  fun mockStaffMemberCommunityApiCall(staffMember: StaffMember) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/staff/staffIdentifier/${staffMember.staffIdentifier}"))
+  fun mockStaffMembersContextApiCall(staffMember: ContextStaffMember, qCode: String) = wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(staffMember)
+            objectMapper.writeValueAsString(
+              StaffMembersPage(
+                content = listOf(staffMember)
+              )
+            )
           )
       )
   )

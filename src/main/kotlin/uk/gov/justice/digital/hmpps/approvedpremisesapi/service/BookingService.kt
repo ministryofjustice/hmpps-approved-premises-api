@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -53,8 +54,10 @@ class BookingService(
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
     notes: String?,
-    keyWorkerStaffId: Long
+    keyWorkerStaffCode: String
   ) = validated<ArrivalEntity> {
+    val premises = booking.premises
+
     if (booking.arrival != null) {
       return generalError("This Booking already has an Arrival set")
     }
@@ -63,13 +66,16 @@ class BookingService(
       return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
 
-    val staffMemberResponse = staffMemberService.getStaffMemberById(keyWorkerStaffId)
+    // TODO: Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
+    if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${booking.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
+
+    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
 
     if (staffMemberResponse !is AuthorisableActionResult.Success) {
       return "$.keyWorkerStaffId" hasSingleValidationError "notFound"
     }
 
-    updateBooking(booking.apply { this.keyWorkerStaffId = keyWorkerStaffId })
+    updateBooking(booking.apply { this.keyWorkerStaffCode = keyWorkerStaffCode })
 
     val arrivalEntity = arrivalRepository.save(
       ArrivalEntity(

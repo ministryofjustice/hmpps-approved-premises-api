@@ -96,14 +96,14 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withArrivalDate(startDate.plusDays(1))
       .withDepartureDate(startDate.plusDays(3))
-      .withStaffKeyWorkerId(null)
+      .withStaffKeyWorkerCode(null)
       .produce()
 
     val arrivedBookingEntity = BookingEntityFactory()
       .withPremises(premises)
       .withArrivalDate(startDate)
       .withDepartureDate(startDate.plusDays(2))
-      .withStaffKeyWorkerId(123)
+      .withStaffKeyWorkerCode("123")
       .produce()
 
     val arrivalEntity = ArrivalEntityFactory()
@@ -116,7 +116,7 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withArrivalDate(startDate.plusDays(3))
       .withDepartureDate(startDate.plusDays(5))
-      .withStaffKeyWorkerId(null)
+      .withStaffKeyWorkerCode(null)
       .produce()
 
     val nonArrivalEntity = NonArrivalEntityFactory()
@@ -130,7 +130,7 @@ class PremisesServiceTest {
       .withPremises(premises)
       .withArrivalDate(startDate.plusDays(4))
       .withDepartureDate(startDate.plusDays(6))
-      .withStaffKeyWorkerId(null)
+      .withStaffKeyWorkerCode(null)
       .produce()
 
     val cancelledArrivalEntity = CancellationEntityFactory()

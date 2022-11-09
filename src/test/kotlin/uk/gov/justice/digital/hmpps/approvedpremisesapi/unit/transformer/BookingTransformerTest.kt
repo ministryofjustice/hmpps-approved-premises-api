@@ -31,8 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ContextStaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
@@ -98,7 +98,7 @@ class BookingTransformerTest {
     id = UUID.fromString("c0cffa2a-490a-4e8b-a970-80aea3922a18"),
     arrivalDate = LocalDate.parse("2022-08-10"),
     departureDate = LocalDate.parse("2022-08-30"),
-    keyWorkerStaffId = 789,
+    keyWorkerStaffCode = "789",
     crn = "CRN123",
     arrival = null,
     departure = null,
@@ -108,11 +108,12 @@ class BookingTransformerTest {
     premises = premisesEntity
   )
 
-  private val staffMember = StaffMember(
-    staffCode = "STAFF",
-    staffIdentifier = 789,
-    staff = StaffInfo(
-      forenames = "first",
+  private val staffMember = ContextStaffMember(
+    code = "STAFF",
+    keyWorker = true,
+    name = ContextStaffMemberName(
+      forename = "first",
+      middleName = null,
       surname = "last"
     )
   )
@@ -135,7 +136,8 @@ class BookingTransformerTest {
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
 
     every { mockStaffMemberTransformer.transformDomainToApi(staffMember) } returns uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-      id = 789,
+      code = "789",
+      keyWorker = true,
       name = "first last"
     )
 
@@ -274,7 +276,8 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          id = 789,
+          code = "789",
+          keyWorker = true,
           name = "first last"
         ),
         status = Booking.Status.arrived,
@@ -423,7 +426,8 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          id = 789,
+          code = "789",
+          keyWorker = true,
           name = "first last"
         ),
         status = Booking.Status.departed,

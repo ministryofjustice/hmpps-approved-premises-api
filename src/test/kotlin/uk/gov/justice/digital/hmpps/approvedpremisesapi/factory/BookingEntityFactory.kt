@@ -21,7 +21,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
-  private var keyWorkerStaffId: Yielded<Long?> = { null }
+  private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var arrival: Yielded<ArrivalEntity>? = null
   private var departure: Yielded<DepartureEntity>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
@@ -45,8 +45,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.departureDate = { departureDate }
   }
 
-  fun withStaffKeyWorkerId(staffKeyWorkerId: Long?) = apply {
-    this.keyWorkerStaffId = { staffKeyWorkerId }
+  fun withStaffKeyWorkerCode(staffKeyWorkerCode: String?) = apply {
+    this.keyWorkerStaffCode = { staffKeyWorkerCode }
   }
 
   fun withYieldedArrival(arrival: Yielded<ArrivalEntity>) = apply {
@@ -102,7 +102,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     crn = this.crn(),
     arrivalDate = this.arrivalDate(),
     departureDate = this.departureDate(),
-    keyWorkerStaffId = this.keyWorkerStaffId(),
+    keyWorkerStaffCode = this.keyWorkerStaffCode(),
     arrival = this.arrival?.invoke(),
     departure = this.departure?.invoke(),
     nonArrival = this.nonArrival?.invoke(),

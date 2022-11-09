@@ -12,7 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
@@ -467,14 +468,16 @@ class PremisesTest : IntegrationTestBase() {
       withTotalBeds(20)
     }
 
-    val keyWorker = StaffMemberFactory().produce()
-    mockStaffMemberCommunityApiCall(keyWorker)
+    val keyWorker = ContextStaffMemberFactory().produce()
+    premises.forEach {
+      mockStaffMembersContextApiCall(keyWorker, it.qCode)
+    }
 
     bookingEntityFactory.produceAndPersist {
       withPremises(premises[2])
       withArrivalDate(LocalDate.now().minusDays(2))
       withDepartureDate(LocalDate.now().plusDays(4))
-      withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      withStaffKeyWorkerCode(keyWorker.code)
     }
 
     val premisesToGet = premises[2]
@@ -576,22 +579,22 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get Premises Staff for Approved Premises returns 200 with correct body`() {
-    val deliusTeamCode = "FOUND"
+    val qCode = "FOUND"
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-      withDeliusTeamCode(deliusTeamCode)
+      withQCode(qCode)
     }
 
     val staffMembers = listOf(
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce()
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce()
     )
 
     mockClientCredentialsJwtRequest()
@@ -599,13 +602,17 @@ class PremisesTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/secure/teams/$deliusTeamCode/staff"))
+      WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
             .withBody(
-              objectMapper.writeValueAsString(staffMembers)
+              objectMapper.writeValueAsString(
+                StaffMembersPage(
+                  content = staffMembers
+                )
+              )
             )
         )
     )
@@ -626,22 +633,22 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get Premises Staff caches response`() {
-    val deliusTeamCode = "FOUND"
+    val qCode = "FOUND"
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-      withDeliusTeamCode(deliusTeamCode)
+      withQCode(qCode)
     }
 
     val staffMembers = listOf(
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce(),
-      StaffMemberFactory().produce()
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce(),
+      ContextStaffMemberFactory().produce()
     )
 
     mockClientCredentialsJwtRequest()
@@ -649,13 +656,17 @@ class PremisesTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/secure/teams/$deliusTeamCode/staff"))
+      WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
             .withBody(
-              objectMapper.writeValueAsString(staffMembers)
+              objectMapper.writeValueAsString(
+                StaffMembersPage(
+                  content = staffMembers
+                )
+              )
             )
         )
     )
@@ -675,7 +686,7 @@ class PremisesTest : IntegrationTestBase() {
         )
     }
 
-    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/teams/$deliusTeamCode/staff")))
+    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/approved-premises/$qCode/staff")))
   }
 
   @Test
