@@ -1037,6 +1037,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risk-management-plan:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys Risk Management Plan for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys Risk Management Plan
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskManagementPlan'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2968,6 +2999,30 @@ components:
             questionNumber: "4.9"
             answers:
               - "Mr Smith told me that his formal school education was regularly interrupted as he and his family travelled a lot whilst he was growing up..."
+    ArrayOfOASysRiskManagementQuestions:
+      type: array
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+          questionNumber:
+            type: string
+          answers:
+            type: object
+        example:
+          - label: "Current situation"
+            questionNumber: "RM28.1"
+            answers:
+              - "Currently on remand at HMP Wandsworth - Management of case under MAPPA - level not yet set."
+          - label: "Supervision"
+            questionNumber: "RM30"
+            answers:
+              - "Probation Officer, Education training and employment Officer, Prison Offender Supervisor"
+          - label: "Monitoring and control"
+            questionNumber: "RM31"
+            answers:
+              - "State they will have secure accommodation for Mr Smith and partner on release, although ..."
     OASysOffenceAnalysis:
       type: object
       properties:
@@ -2984,4 +3039,12 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         riskContributors:
           $ref: '#/components/schemas/ArrayOfOASysRiskContributorsQuestions'
+    OASysRiskManagementPlan:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        riskManagementPlan:
+          $ref: '#/components/schemas/ArrayOfOASysRiskManagementQuestions'
 
