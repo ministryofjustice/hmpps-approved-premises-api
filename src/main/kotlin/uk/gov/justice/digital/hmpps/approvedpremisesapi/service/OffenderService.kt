@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -217,6 +218,22 @@ class OffenderService(
         agencies = allAgencies
       )
     )
+  }
+
+  fun getAcctAlertsByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<Alert>> {
+    val alertsResult = prisonsApiClient.getAlerts(nomsNumber, "HA")
+
+    val alerts = when (alertsResult) {
+      is ClientResult.Success -> alertsResult.body
+      is ClientResult.Failure.StatusCode -> when (alertsResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> alertsResult.throwException()
+      }
+      is ClientResult.Failure.Other -> alertsResult.throwException()
+    }
+
+    return AuthorisableActionResult.Success(alerts)
   }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
