@@ -943,6 +943,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/acct-alerts:
+    get:
+      summary: Returns the ACCT alerts for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch ACCT alerts for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonAcctAlert'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2414,6 +2445,27 @@ components:
         - severity
         - identifiedAsNeed
         - needScore
+    PersonAcctAlert:
+      type: object
+      properties:
+        alertId:
+          type: long
+        comment:
+          type: string
+        dateCreated:
+          type: date
+        dateExpires:
+          type: date
+        expired:
+          type: boolean
+        active:
+          type: boolean
+      required:
+        - alertId
+        - comment
+        - dateCreated
+        - expired
+        - active
     Application:
       type: object
       properties:
