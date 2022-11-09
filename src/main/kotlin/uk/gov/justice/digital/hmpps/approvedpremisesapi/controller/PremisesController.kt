@@ -434,7 +434,7 @@ class PremisesController(
     val staffMembers = when (staffMembersResult) {
       is AuthorisableActionResult.Success -> staffMembersResult.entity
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw InternalServerErrorProblem("No team found for Delius team code: ${premises.deliusTeamCode}")
+      is AuthorisableActionResult.NotFound -> throw InternalServerErrorProblem("No team found for QCode: ${premises.qCode}")
     }
 
     return ResponseEntity.ok(staffMembers.content.map(staffMemberTransformer::transformDomainToApi))

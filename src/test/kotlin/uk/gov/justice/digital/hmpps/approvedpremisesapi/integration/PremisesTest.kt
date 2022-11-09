@@ -525,14 +525,14 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get Premises Staff where delius team cannot be found returns 500`() {
-    val deliusTeamCode = "NOTFOUND"
+    val qCode = "NOTFOUND"
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-      withDeliusTeamCode(deliusTeamCode)
+      withQCode(qCode)
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -540,7 +540,7 @@ class PremisesTest : IntegrationTestBase() {
     mockClientCredentialsJwtRequest()
 
     wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/secure/teams/$deliusTeamCode/staff"))
+      WireMock.get(WireMock.urlEqualTo("/secure/teams/$qCode/staff"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -555,7 +555,7 @@ class PremisesTest : IntegrationTestBase() {
       .expectStatus()
       .is5xxServerError
       .expectBody()
-      .jsonPath("$.detail").isEqualTo("No team found for Delius team code: ${premises.deliusTeamCode}")
+      .jsonPath("$.detail").isEqualTo("No team found for QCode: ${premises.qCode}")
   }
 
   @Test

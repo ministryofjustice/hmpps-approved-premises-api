@@ -19,7 +19,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var apCode: Yielded<String> = { randomStringUpperCase(5) }
   private var postcode: Yielded<String> = { randomPostCode() }
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
-  private var deliusTeamCode: Yielded<String> = { randomStringUpperCase(6) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { "CAS1" }
@@ -72,10 +71,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.localAuthorityArea = localAuthorityAreaEntity
   }
 
-  fun withDeliusTeamCode(deliusTeamCode: String) = apply {
-    this.deliusTeamCode = { deliusTeamCode }
-  }
-
   fun withQCode(qCode: String) = apply {
     this.qCode = { qCode }
   }
@@ -86,7 +81,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     apCode = this.apCode(),
     postcode = this.postcode(),
     totalBeds = this.totalBeds(),
-    deliusTeamCode = this.deliusTeamCode(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
     bookings = mutableListOf(),
