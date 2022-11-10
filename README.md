@@ -97,13 +97,15 @@ To get set up with Kubernetes and configure your system so that the `kubectl` co
 You should then be able to run `kubectl` commands, e.g. to list the 'pods' in a given 'namespace':
 
 ```bash
-$ kubectl -n hmpps-approved-premises-dev get pods
+$ kubectl -n hmpps-community-accommodation-dev get pods
 
-NAME                                           READY   STATUS    RESTARTS   AGE
-hmpps-approved-premises-api-6958c57d9f-plgpm   1/1     Running   0          86m
-hmpps-approved-premises-api-6958c57d9f-sgxkc   1/1     Running   0          86m
-hmpps-approved-premises-ui-6c5b76c477-kmljb    1/1     Running   0          38m
-hmpps-approved-premises-ui-6c5b76c477-t62b4    1/1     Running   0          38m
+NAME                                                READY   STATUS    RESTARTS   AGE
+hmpps-approved-premises-api-655968557b-5qlbc        1/1     Running   0          83m
+hmpps-approved-premises-api-655968557b-bp7v9        1/1     Running   0          83m
+hmpps-approved-premises-ui-5cf65777bf-bqtlc         1/1     Running   0          74m
+hmpps-approved-premises-ui-5cf65777bf-n4j89         1/1     Running   0          74m
+hmpps-temporary-accommodation-ui-67b49b8dcd-p85pt   1/1     Running   0          125m
+hmpps-temporary-accommodation-ui-67b49b8dcd-tgjd5   1/1     Running   0          125m
 ```
 **NB**: this [`kubectl` cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) is a good reference to 
 other commands you may need.
