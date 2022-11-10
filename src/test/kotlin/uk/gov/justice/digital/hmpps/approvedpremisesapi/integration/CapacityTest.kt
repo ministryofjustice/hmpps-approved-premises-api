@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import java.time.LocalDate
 
 class CapacityTest : IntegrationTestBase() {
@@ -69,12 +69,12 @@ class CapacityTest : IntegrationTestBase() {
       }
     }
 
-    val keyWorker = StaffMemberFactory().produce()
-    mockStaffMemberCommunityApiCall(keyWorker)
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, premises.qCode)
 
     bookingEntityFactory.produceAndPersist {
       withDepartureDate(LocalDate.now().minusDays(1))
-        .withStaffKeyWorkerId(keyWorker.staffIdentifier)
+        .withStaffKeyWorkerCode(keyWorker.code)
         .withPremises(premises)
     }
 
@@ -100,13 +100,13 @@ class CapacityTest : IntegrationTestBase() {
       }
     }
 
-    val keyWorker = StaffMemberFactory().produce()
-    mockStaffMemberCommunityApiCall(keyWorker)
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, premises.qCode)
 
     bookingEntityFactory.produceAndPersist {
       withArrivalDate(LocalDate.now().plusDays(4))
       withDepartureDate(LocalDate.now().plusDays(6))
-      withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      withStaffKeyWorkerCode(keyWorker.code)
       withPremises(premises)
     }
 

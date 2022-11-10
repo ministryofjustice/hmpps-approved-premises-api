@@ -76,7 +76,6 @@ class ApprovedPremisesEntity(
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>,
   val apCode: String,
-  val deliusTeamCode: String,
   val qCode: String,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,

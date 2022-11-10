@@ -1891,12 +1891,12 @@ components:
           format: date
         notes:
           type: string
-        keyWorkerStaffId:
-          type: long
+        keyWorkerStaffCode:
+          type: string
       required:
         - arrivalDate
         - expectedDepartureDate
-        - keyWorkerStaffId
+        - keyWorkerStaffCode
     Nonarrival:
       type: object
       properties:
@@ -2225,13 +2225,16 @@ components:
     StaffMember:
       type: object
       properties:
-        id:
-          type: long
+        code:
+          type: string
+        keyWorker:
+          type: boolean
         name:
           type: string
           example: Brown, James (PS - PSO)
       required:
-        - id
+        - code
+        - keyWorker
         - name
     LostBedReason:
       type: object

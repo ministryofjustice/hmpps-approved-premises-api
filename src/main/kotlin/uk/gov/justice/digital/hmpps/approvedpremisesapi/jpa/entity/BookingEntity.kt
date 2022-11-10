@@ -31,7 +31,7 @@ data class BookingEntity(
   var crn: String,
   val arrivalDate: LocalDate,
   var departureDate: LocalDate,
-  var keyWorkerStaffId: Long?,
+  var keyWorkerStaffCode: String?,
   @OneToOne(mappedBy = "booking")
   var arrival: ArrivalEntity?,
   @OneToOne(mappedBy = "booking")
@@ -54,7 +54,7 @@ data class BookingEntity(
     if (crn != other.crn) return false
     if (arrivalDate != other.arrivalDate) return false
     if (departureDate != other.departureDate) return false
-    if (keyWorkerStaffId != other.keyWorkerStaffId) return false
+    if (keyWorkerStaffCode != other.keyWorkerStaffCode) return false
     if (arrival != other.arrival) return false
     if (departure != other.departure) return false
     if (nonArrival != other.nonArrival) return false
@@ -63,7 +63,7 @@ data class BookingEntity(
     return true
   }
 
-  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffId, arrival, departure, nonArrival, cancellation)
+  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation)
 
   override fun toString() = "BookingEntity:$id"
 }

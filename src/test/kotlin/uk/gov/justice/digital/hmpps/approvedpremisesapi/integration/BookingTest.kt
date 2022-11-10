@@ -9,9 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
 import java.util.UUID
@@ -40,12 +40,12 @@ class BookingTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
     }
 
-    val keyWorker = StaffMemberFactory().produce()
-    mockStaffMemberCommunityApiCall(keyWorker)
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, premises.qCode)
 
     val booking = bookingEntityFactory.produceAndPersist {
       withPremises(premises)
-      withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      withStaffKeyWorkerCode(keyWorker.code)
       withCrn("CRN123")
     }
 
@@ -124,12 +124,12 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val keyWorker = StaffMemberFactory().produce()
-    mockStaffMemberCommunityApiCall(keyWorker)
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, premises.qCode)
 
     val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
       withPremises(premises)
-      withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      withStaffKeyWorkerCode(keyWorker.code)
       withCrn("CRN123")
     }
 
@@ -274,7 +274,7 @@ class BookingTest : IntegrationTestBase() {
           arrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-14"),
           notes = null,
-          keyWorkerStaffId = 123
+          keyWorkerStaffCode = "123"
         )
       )
       .exchange()
@@ -284,12 +284,13 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival on Booking returns 200 with correct body`() {
-    val keyWorker = StaffMemberFactory().produce()
-    mockStaffMemberCommunityApiCall(keyWorker)
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
 
     val booking = bookingEntityFactory.produceAndPersist {
       withYieldedPremises {
         approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist {
@@ -310,7 +311,7 @@ class BookingTest : IntegrationTestBase() {
           arrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-14"),
           notes = "Hello",
-          keyWorkerStaffId = keyWorker.staffIdentifier
+          keyWorkerStaffCode = keyWorker.code
         )
       )
       .exchange()
@@ -395,14 +396,15 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Extension on Booking returns OK with expected body, updates departureDate on Booking entity`() {
-    val keyWorker = StaffMemberFactory().produce()
-    mockStaffMemberCommunityApiCall(keyWorker)
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
 
     val booking = bookingEntityFactory.produceAndPersist {
       withDepartureDate(LocalDate.parse("2022-08-20"))
-      withStaffKeyWorkerId(keyWorker.staffIdentifier)
+      withStaffKeyWorkerCode(keyWorker.code)
       withYieldedPremises {
         approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }

@@ -74,7 +74,7 @@ class PremisesController(
   private val staffMemberTransformer: StaffMemberTransformer,
   private val staffMemberService: StaffMemberService,
   private val roomService: RoomService,
-  private val roomTransformer: RoomTransformer,
+  private val roomTransformer: RoomTransformer
 ) : PremisesApiDelegate {
 
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
@@ -173,11 +173,14 @@ class PremisesController(
           throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${it.crn}")
         }
 
-        val staffMember = it.keyWorkerStaffId?.let { keyWorkerStaffId ->
-          val staffMemberResult = staffMemberService.getStaffMemberById(keyWorkerStaffId)
+        val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
+          // TODO: Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
+          if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${it.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
+
+          val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
 
           if (staffMemberResult !is AuthorisableActionResult.Success) {
-            throw InternalServerErrorProblem("Unable to get Key Worker via Staff Id: $keyWorkerStaffId")
+            throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
           }
 
           staffMemberResult.entity
@@ -207,11 +210,16 @@ class PremisesController(
       throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${booking.crn}")
     }
 
-    val staffMember = booking.keyWorkerStaffId?.let { keyWorkerStaffId ->
-      val staffMemberResult = staffMemberService.getStaffMemberById(keyWorkerStaffId)
+    val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
+      val premises = booking.premises
+
+      // TODO: Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
+      if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking has a Key Worker specified but Premises is not an ApprovedPremises")
+
+      val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
 
       if (staffMemberResult !is AuthorisableActionResult.Success) {
-        throw InternalServerErrorProblem("Unable to get Key Worker via Staff Id: $keyWorkerStaffId")
+        throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
       }
 
       staffMemberResult.entity
@@ -250,7 +258,7 @@ class PremisesController(
         crn = offenderResult.entity.otherIds.crn,
         arrivalDate = body.arrivalDate,
         departureDate = body.departureDate,
-        keyWorkerStaffId = null,
+        keyWorkerStaffCode = null,
         arrival = null,
         departure = null,
         nonArrival = null,
@@ -275,7 +283,7 @@ class PremisesController(
       arrivalDate = body.arrivalDate,
       expectedDepartureDate = body.expectedDepartureDate,
       notes = body.notes,
-      keyWorkerStaffId = body.keyWorkerStaffId
+      keyWorkerStaffCode = body.keyWorkerStaffCode
     )
 
     val departure = extractResultEntityOrThrow(result)
@@ -421,15 +429,15 @@ class PremisesController(
       throw NotImplementedProblem("Fetching staff for non-AP Premises is not currently supported")
     }
 
-    val staffMembersResult = staffMemberService.getStaffMembersForDeliusTeam(premises.deliusTeamCode)
+    val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
 
     val staffMembers = when (staffMembersResult) {
       is AuthorisableActionResult.Success -> staffMembersResult.entity
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw InternalServerErrorProblem("No team found for Delius team code: ${premises.deliusTeamCode}")
+      is AuthorisableActionResult.NotFound -> throw InternalServerErrorProblem("No team found for QCode: ${premises.qCode}")
     }
 
-    return ResponseEntity.ok(staffMembers.map(staffMemberTransformer::transformDomainToApi))
+    return ResponseEntity.ok(staffMembers.content.map(staffMemberTransformer::transformDomainToApi))
   }
 
   override fun premisesPremisesIdRoomsGet(premisesId: UUID): ResponseEntity<List<Room>> {

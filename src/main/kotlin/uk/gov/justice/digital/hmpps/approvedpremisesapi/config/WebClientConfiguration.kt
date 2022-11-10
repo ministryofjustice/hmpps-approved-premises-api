@@ -18,7 +18,23 @@ class WebClientConfiguration {
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
-    oauth2Client.setDefaultClientRegistrationId("community-api")
+    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
+
+    return WebClient.builder()
+      .baseUrl(communityApiBaseUrl)
+      .filter(oauth2Client)
+      .build()
+  }
+
+  @Bean(name = ["apDeliusContextApiWebClient"])
+  fun apDeliusContextApiWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.ap-delius-context-api.base-url}") communityApiBaseUrl: String
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
 
     return WebClient.builder()
       .baseUrl(communityApiBaseUrl)
