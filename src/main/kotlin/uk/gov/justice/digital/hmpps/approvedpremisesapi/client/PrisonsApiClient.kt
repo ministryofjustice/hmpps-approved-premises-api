@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.time.LocalDate
@@ -33,5 +34,9 @@ class PrisonsApiClient(
     }
 
     path = "/api/offenders/$nomsNumber/adjudications"
+  }
+
+  fun getAlerts(nomsNumber: String, alertCode: String) = getRequest<List<Alert>> {
+    path = "/api/offenders/$nomsNumber/alerts/v2?alertCodes=HA&sort=dateCreated&direction=DESC"
   }
 }
