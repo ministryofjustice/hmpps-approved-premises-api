@@ -1,6 +1,9 @@
-# Approved Premises API
+# Approved Premises API (now Community Accommodation)
 
-This is the backend for the Approved Premises service. Its API is consumed by the corresponding "UI" codebase ([approved-premises-ui](https://github.com/ministryofjustice/approved-premises-ui)).
+This is the shared backend for the Community Accommodation services, currently:
+
+- [Approved Premises (CAS1)](https://github.com/ministryofjustice/hmpps-approved-premises-ui)
+- [Temporary Accommodation (CAS3)](https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui)
 
 ## Prerequisites
 
