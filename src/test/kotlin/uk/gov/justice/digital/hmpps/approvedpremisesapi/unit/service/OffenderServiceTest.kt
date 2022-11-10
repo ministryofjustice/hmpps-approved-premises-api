@@ -9,6 +9,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
@@ -47,6 +48,7 @@ class OffenderServiceTest {
   private val mockAssessRisksAndNeedsApiClient = mockk<AssessRisksAndNeedsApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
+  private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
     lookbackDays = 30
     prisonApiPageSize = 2
@@ -70,6 +72,7 @@ class OffenderServiceTest {
     mockAssessRisksAndNeedsApiClient,
     mockHMPPSTierApiClient,
     mockPrisonsApiClient,
+    mockCaseNotesClient,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel
   )
@@ -433,7 +436,7 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockPrisonsApiClient.getCaseNotesPage(
+      mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
@@ -449,7 +452,7 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockPrisonsApiClient.getCaseNotesPage(
+      mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
@@ -477,7 +480,7 @@ class OffenderServiceTest {
     )
 
     every {
-      mockPrisonsApiClient.getCaseNotesPage(
+      mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
@@ -494,7 +497,7 @@ class OffenderServiceTest {
     )
 
     every {
-      mockPrisonsApiClient.getCaseNotesPage(
+      mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 1,

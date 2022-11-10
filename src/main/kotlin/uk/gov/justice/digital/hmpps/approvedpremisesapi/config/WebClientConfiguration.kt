@@ -82,4 +82,20 @@ class WebClientConfiguration {
       .filter(oauth2Client)
       .build()
   }
+
+  @Bean(name = ["caseNotesWebClient"])
+  fun caseNotesWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.case-notes.base-url}") caseNotesBaseUrl: String
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("case-notes")
+
+    return WebClient.builder()
+      .baseUrl(caseNotesBaseUrl)
+      .filter(oauth2Client)
+      .build()
+  }
 }

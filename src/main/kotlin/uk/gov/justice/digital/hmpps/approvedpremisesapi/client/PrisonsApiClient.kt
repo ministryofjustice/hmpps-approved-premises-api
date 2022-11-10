@@ -8,9 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import java.time.LocalDate
 
 @Component
 class PrisonsApiClient(
@@ -20,10 +18,6 @@ class PrisonsApiClient(
   @Cacheable(value = ["inmateDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getInmateDetails(nomsNumber: String) = getRequest<InmateDetail> {
     path = "/api/offenders/$nomsNumber"
-  }
-
-  fun getCaseNotesPage(nomsNumber: String, from: LocalDate, page: Int, pageSize: Int) = getRequest<CaseNotesPage> {
-    path = "/api/offenders/$nomsNumber/case-notes/v2?from=$from&page=$page&size=$pageSize"
   }
 
   fun getAdjudicationsPage(nomsNumber: String, offset: Int?, pageSize: Int) = getRequest<AdjudicationsPage> {

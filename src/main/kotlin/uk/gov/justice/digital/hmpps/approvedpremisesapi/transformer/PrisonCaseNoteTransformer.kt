@@ -9,6 +9,7 @@ import java.time.ZoneOffset
 class PrisonCaseNoteTransformer {
   fun transformModelToApi(domain: CaseNote) = PrisonCaseNote(
     id = domain.caseNoteId,
+    sensitive = domain.sensitive,
     createdAt = domain.creationDateTime.atOffset(ZoneOffset.UTC),
     occurredAt = domain.occurrenceDateTime.atOffset(ZoneOffset.UTC),
     authorName = domain.authorName,

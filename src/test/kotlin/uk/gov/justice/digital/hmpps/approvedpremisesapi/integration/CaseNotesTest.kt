@@ -135,7 +135,7 @@ class CaseNotesTest : IntegrationTestBase() {
   }
 
   private fun mockCaseNotesPrisonApiCall(page: Int, from: LocalDate, nomsNumber: String, result: CaseNotesPage) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/api/offenders/$nomsNumber/case-notes/v2?from=$from&page=$page&size=30"))
+    WireMock.get(WireMock.urlEqualTo("/case-notes/$nomsNumber?startDate=$from&page=$page&size=30"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
