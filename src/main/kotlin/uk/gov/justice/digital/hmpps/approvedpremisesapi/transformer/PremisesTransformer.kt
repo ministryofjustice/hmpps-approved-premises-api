@@ -31,6 +31,7 @@ class PremisesTransformer(
       apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
       localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea),
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
+      status = jpa.status,
     )
     is TemporaryAccommodationPremisesEntity -> TemporaryAccommodationPremises(
       id = jpa.id,
@@ -45,6 +46,7 @@ class PremisesTransformer(
       apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
       localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea),
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
+      status = jpa.status,
     )
     else -> throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")
   }
