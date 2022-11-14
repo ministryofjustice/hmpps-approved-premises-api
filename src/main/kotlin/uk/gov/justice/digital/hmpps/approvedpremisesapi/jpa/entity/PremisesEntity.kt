@@ -3,10 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import java.util.UUID
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
@@ -58,6 +61,8 @@ abstract class PremisesEntity(
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
   var characteristics: MutableList<CharacteristicEntity>,
+  @Enumerated(value = EnumType.STRING)
+  var status: PropertyStatus
 )
 
 @Entity
@@ -79,6 +84,7 @@ class ApprovedPremisesEntity(
   val qCode: String,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
+  status: PropertyStatus
 ) : PremisesEntity(
   id,
   name,
@@ -91,7 +97,8 @@ class ApprovedPremisesEntity(
   bookings,
   lostBeds,
   rooms,
-  characteristics
+  characteristics,
+  status
 )
 
 @Entity
@@ -111,6 +118,7 @@ class TemporaryAccommodationPremisesEntity(
   lostBeds: MutableList<LostBedsEntity>,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
+  status: PropertyStatus
 ) : PremisesEntity(
   id,
   name,
@@ -123,5 +131,6 @@ class TemporaryAccommodationPremisesEntity(
   bookings,
   lostBeds,
   rooms,
-  characteristics
+  characteristics,
+  status
 )

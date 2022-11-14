@@ -82,7 +82,9 @@ class PremisesController(
     val updatePremisesResult = premisesService
       .updatePremises(
         premisesId, body.addressLine1,
-        body.postcode, body.localAuthorityAreaId, body.characteristicIds, body.notes
+        body.postcode, body.localAuthorityAreaId,
+        body.characteristicIds, body.notes,
+        body.status
       )
 
     val validationResult = when (updatePremisesResult) {
@@ -132,7 +134,8 @@ class PremisesController(
         localAuthorityAreaId = body.localAuthorityAreaId,
         name = body.name,
         notes = body.notes,
-        characteristicIds = body.characteristicIds
+        characteristicIds = body.characteristicIds,
+        status = body.status
       )
     )
     return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
@@ -44,7 +45,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.pending
         )
       )
       .exchange()
@@ -67,7 +69,8 @@ class PremisesTest : IntegrationTestBase() {
           notes = "some arbitrary notes",
           name = "some arbitrary name",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.pending
         )
       )
       .exchange()
@@ -80,6 +83,7 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("notes").isEqualTo("some arbitrary notes")
       .jsonPath("name").isEqualTo("some arbitrary name")
       .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+      .jsonPath("status").isEqualTo("pending")
   }
 
   @Test
@@ -105,7 +109,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.archived
         )
       )
       .exchange()
@@ -117,6 +122,7 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("notes").isEqualTo("some arbitrary notes updated")
       .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
       .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
+      .jsonPath("status").isEqualTo("archived")
   }
 
   @Test
@@ -134,7 +140,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
         )
       )
       .exchange()
@@ -167,7 +174,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
         )
       )
       .exchange()
@@ -201,7 +209,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
         )
       )
       .exchange()
@@ -226,7 +235,8 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           name = "some arbitrary name",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
         )
       )
       .exchange()
@@ -251,7 +261,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           notes = "some notes",
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
         )
       )
       .exchange()
@@ -277,7 +288,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           notes = "some notes",
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
         )
       )
       .exchange()
@@ -302,7 +314,8 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           notes = "some notes",
-          characteristicIds = mutableListOf()
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
         )
       )
       .exchange()

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -124,7 +125,8 @@ class PremisesService(
     localAuthorityAreaId: UUID,
     name: String,
     notes: String?,
-    characteristicIds: List<UUID>
+    characteristicIds: List<UUID>,
+    status: PropertyStatus
   ) = validated<PremisesEntity> {
     /**
      * Start of setting up some dummy data to spike the implementation.
@@ -165,6 +167,7 @@ class PremisesService(
       totalBeds = 0,
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
+      status = status
     )
 
     // start of validation
@@ -227,7 +230,8 @@ class PremisesService(
     postcode: String,
     localAuthorityAreaId: UUID,
     characteristicIds: List<UUID>,
-    notes: String?
+    notes: String?,
+    status: PropertyStatus
   ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
 
     val premises = premisesRepository.findByIdOrNull(premisesId)
@@ -272,6 +276,7 @@ class PremisesService(
       }
       it.characteristics = characteristicEntities.map { it!! }.toMutableList()
       it.notes = if (notes.isNullOrEmpty()) "" else notes
+      it.status = status
     }
 
     val savedPremises = premisesRepository.save(premises)

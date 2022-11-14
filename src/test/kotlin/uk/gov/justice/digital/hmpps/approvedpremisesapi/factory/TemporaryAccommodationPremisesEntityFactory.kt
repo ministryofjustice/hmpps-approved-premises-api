@@ -2,11 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -22,6 +24,8 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
+  private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -66,6 +70,9 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.localAuthorityArea = localAuthorityAreaEntity
   }
 
+  fun withStatus(status: PropertyStatus) = apply {
+    this.status = { status }
+  }
   override fun produce(): TemporaryAccommodationPremisesEntity = TemporaryAccommodationPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -79,5 +86,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     notes = this.notes(),
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
+    status = this.status()
   )
 }
