@@ -17,8 +17,19 @@ to surface in the future.
 
 ## Decision
 
-- CAS3 will not use the `bookings` table to store personal information.
+- CAS3 will not use the `bookings` table nor create a `persons` table to store personal
+  information.
   This aligns with CAS1's use of the `applications` table to store such data.
+  As the personal data is primarily needed for reporting, it's better to have a snapshot of this
+  data at the time of recording.
+  If we were to create a `persons` table, we would have the issue that changes to personal data
+  (such as a change of name or gender) would affect past applications, unless we also created
+  historical tables to capture when data changes.
+  As neither CAS1 nor CAS3 have any intention of being a canonical source of personal data, this
+  would be a complex solution with little additional benefit beyond storing this data as part of
+  the application.
+  There are several services that already exist to provide canonical data, such as Delius, NOMIS,
+  and Offenders Case Note Service, which can be referred to if up-to-date information is required.
 - We will split applications into service-specific tables using the same method as decided in
   [ADR 7](0007-storing-service-specific-properties.md) for premises:
   - We will use JPA's inheritance support to create a base class (`ApplicationEntity`) from which
@@ -37,15 +48,6 @@ to surface in the future.
   created.
   This is so that CAS3 can start capturing personal data as soon as possible, but will likely be
   superseded by dedicated application creation and management flows in the future.
-- We will not create a `persons` (or similar) table.
-  As the personal data is primarily needed for reporting, it's better to have a snapshot of this
-  data at the time of recording.
-  If we were to create a `persons` table, we would have the issue that changes to personal data
-  (such as a change of name or gender) would affect past applications, unless we also created
-  historical tables to capture when data changes.
-  As neither CAS1 nor CAS3 have any intention of being a canonical source of personal data
-  (this role belongs to Delius), this would be a complex solution with little additional benefit
-  beyond storing this data as part of the application.
 
 ## Consequences
 
