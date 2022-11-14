@@ -26,7 +26,7 @@ class JsonSchemaServiceTest {
   )
 
   @Test
-  fun `attemptSchemaUpgrade upgrades schema version where possible, marks outdated where not`() {
+  fun `checkSchemaOutdated marks outdated correctly`() {
     val newestJsonSchema = JsonSchemaEntityFactory()
       .withSchema(
         """
@@ -70,9 +70,9 @@ class JsonSchemaServiceTest {
       .withDeliusUsername(distinguishedName)
       .produce()
 
-    val upgradableApplication = ApplicationEntityFactory()
+    val upToDateApplication = ApplicationEntityFactory()
       .withCreatedByUser(userEntity)
-      .withApplicationSchema(olderJsonSchema)
+      .withApplicationSchema(newestJsonSchema)
       .withData(
         """
           {
@@ -82,26 +82,26 @@ class JsonSchemaServiceTest {
       )
       .produce()
 
-    val nonUpgradableApplication = ApplicationEntityFactory()
+    val outdatedApplication = ApplicationEntityFactory()
       .withCreatedByUser(userEntity)
       .withApplicationSchema(olderJsonSchema)
       .withData("{}")
       .produce()
 
-    val applicationEntities = listOf(upgradableApplication, nonUpgradableApplication)
+    val applicationEntities = listOf(upToDateApplication, outdatedApplication)
 
     every { mockJsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(JsonSchemaType.APPLICATION) } returns newestJsonSchema
     every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    assertThat(jsonSchemaService.attemptSchemaUpgrade(upgradableApplication)).matches {
-      it.id == upgradableApplication.id &&
+    assertThat(jsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {
+      it.id == upToDateApplication.id &&
         it.schemaVersion == newestJsonSchema &&
         it.schemaUpToDate
     }
 
-    assertThat(jsonSchemaService.attemptSchemaUpgrade(nonUpgradableApplication)).matches {
-      it.id == nonUpgradableApplication.id &&
+    assertThat(jsonSchemaService.checkSchemaOutdated(outdatedApplication)).matches {
+      it.id == outdatedApplication.id &&
         it.schemaVersion == olderJsonSchema &&
         !it.schemaUpToDate
     }

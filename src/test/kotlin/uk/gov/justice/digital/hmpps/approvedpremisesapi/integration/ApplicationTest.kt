@@ -57,7 +57,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all applications returns 200 with correct body, outdated applications upgraded where possible`() {
+  fun `Get all applications returns 200 with correct body`() {
     jsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
@@ -100,8 +100,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
-    val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
-      withApplicationSchema(olderJsonSchema)
+    val upToDateApplicationEntity = applicationEntityFactory.produceAndPersist {
+      withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
       withData(
@@ -113,7 +113,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
+    val outdatedApplicationEntity = applicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCreatedByUser(user)
       withCrn(offenderDetails.otherIds.crn)
@@ -135,22 +135,22 @@ class ApplicationTest : IntegrationTestBase() {
     val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
 
     assertThat(responseBody).anyMatch {
-      nonUpgradableApplicationEntity.id == it.id &&
-        nonUpgradableApplicationEntity.crn == it.person?.crn &&
-        nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
-        nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
+      outdatedApplicationEntity.id == it.id &&
+        outdatedApplicationEntity.crn == it.person?.crn &&
+        outdatedApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+        outdatedApplicationEntity.createdByUser.id == it.createdByUserId &&
+        outdatedApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(outdatedApplicationEntity.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
     }
 
     assertThat(responseBody).anyMatch {
-      upgradableApplicationEntity.id == it.id &&
-        upgradableApplicationEntity.crn == it.person?.crn &&
-        upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
-        upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
+      upToDateApplicationEntity.id == it.id &&
+        upToDateApplicationEntity.crn == it.person?.crn &&
+        upToDateApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+        upToDateApplicationEntity.createdByUser.id == it.createdByUserId &&
+        upToDateApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(upToDateApplicationEntity.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
     }
   }
@@ -235,7 +235,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get single application returns 200 with correct body, outdated application upgraded`() {
+  fun `Get single application returns 200 with correct body`() {
     jsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
@@ -260,26 +260,10 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val olderJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-      withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": { }
-        }
-        """
-      )
-    }
-
     val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
-    val upgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
-      withApplicationSchema(olderJsonSchema)
+    val applicationEntity = applicationEntityFactory.produceAndPersist {
+      withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(userEntity)
       withData(
@@ -294,7 +278,7 @@ class ApplicationTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     val rawResponseBody = webTestClient.get()
-      .uri("/applications/${upgradableApplicationEntity.id}")
+      .uri("/applications/${applicationEntity.id}")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -306,12 +290,12 @@ class ApplicationTest : IntegrationTestBase() {
     val responseBody = objectMapper.readValue(rawResponseBody, Application::class.java)
 
     assertThat(responseBody).matches {
-      upgradableApplicationEntity.id == it.id &&
-        upgradableApplicationEntity.crn == it.person.crn &&
-        upgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
-        upgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(upgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
+      applicationEntity.id == it.id &&
+        applicationEntity.crn == it.person.crn &&
+        applicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+        applicationEntity.createdByUser.id == it.createdByUserId &&
+        applicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
     }
   }
@@ -623,7 +607,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update existing application returns 200 with correct body and creates an allocated assessment`() {
+  fun `Update existing application returns 200 with correct body`() {
     val username = "PROBATIONPERSON"
     val crn = offenderDetails.otherIds.crn
     val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
@@ -690,30 +674,6 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-      withType(JsonSchemaType.ASSESSMENT)
-      withSchema(
-        """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-        """
-      )
-    }
-
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
     }
@@ -725,15 +685,12 @@ class ApplicationTest : IntegrationTestBase() {
       withCreatedByUser(user)
     }
 
-    val submittedAt = OffsetDateTime.now()
-
     val resultBody = webTestClient.put()
       .uri("/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdateApplication(
           data = mapOf("thingId" to 123),
-          submittedAt = submittedAt,
           isWomensApplication = false,
           isPipeApplication = true
         )
@@ -748,15 +705,6 @@ class ApplicationTest : IntegrationTestBase() {
     val result = objectMapper.readValue(resultBody, Application::class.java)
 
     assertThat(result.person.crn).isEqualTo(crn)
-    assertThat(result.schemaVersion).isEqualTo(applicationSchema.id)
-    assertThat(result.submittedAt!!.toInstant()).isEqualTo(submittedAt.toInstant())
-
-    val allAssessments = assessmentRepository.findAll()
-
-    assertThat(allAssessments).anyMatch {
-      it.application.id == applicationId &&
-        it.allocatedToUser.id == assessor.id
-    }
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {

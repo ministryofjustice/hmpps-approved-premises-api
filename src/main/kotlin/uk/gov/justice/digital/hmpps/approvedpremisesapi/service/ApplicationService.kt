@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -27,7 +26,7 @@ class ApplicationService(
       ?: return emptyList()
 
     return applicationRepository.findAllByCreatedByUser_Id(userEntity.id)
-      .map(jsonSchemaService::attemptSchemaUpgrade)
+      .map(jsonSchemaService::checkSchemaOutdated)
   }
 
   fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<ApplicationEntity> {
@@ -40,7 +39,7 @@ class ApplicationService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    return AuthorisableActionResult.Success(jsonSchemaService.attemptSchemaUpgrade(applicationEntity))
+    return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
   }
 
   fun createApplication(crn: String, username: String) = validated<ApplicationEntity> {
@@ -71,8 +70,8 @@ class ApplicationService(
     return success(createdApplication.apply { schemaUpToDate = true })
   }
 
-  fun updateApplication(applicationId: UUID, data: String, document: String?, isWomensApplication: Boolean?, isPipeApplication: Boolean?, submittedAt: OffsetDateTime?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
-    val application = applicationRepository.findByIdOrNull(applicationId)
+  fun updateApplication(applicationId: UUID, data: String, isWomensApplication: Boolean?, isPipeApplication: Boolean?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
     val user = userService.getUserForRequest()
@@ -81,56 +80,25 @@ class ApplicationService(
       return AuthorisableActionResult.Unauthorised()
     }
 
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+      )
+    }
+
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("This application has already been submitted")
       )
     }
 
-    val validationErrors = ValidationErrors()
-
-    val latestSchemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION)
-
-    if (!jsonSchemaService.validate(latestSchemaVersion, data)) {
-      validationErrors["$.data"] = "invalid"
-    }
-
-    if (submittedAt?.isAfter(OffsetDateTime.now()) == true) {
-      validationErrors["$.submittedAt"] = "isInFuture"
-    }
-
-    if (submittedAt != null && document == null) {
-      validationErrors["$.document"] = "empty"
-    }
-
-    if (submittedAt != null && isWomensApplication == null) {
-      validationErrors["$.isWomensApplication"] = "empty"
-    }
-
-    if (submittedAt != null && isPipeApplication == null) {
-      validationErrors["$.isPipeApplication"] = "empty"
-    }
-
-    if (validationErrors.any()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors)
-      )
-    }
-
     application.let {
-      it.schemaVersion = latestSchemaVersion
       it.data = data
-      it.document = document
       it.isPipeApplication = isPipeApplication
       it.isWomensApplication = isWomensApplication
-      it.submittedAt = submittedAt
     }
 
     val savedApplication = applicationRepository.save(application)
-
-    if (savedApplication.submittedAt != null) {
-      assessmentService.createAssessment(application)
-    }
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication)
