@@ -30,7 +30,7 @@ class RedisConfiguration {
     objectMapper: ObjectMapper,
     @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
     @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
-    @Value("\${caches.userAccess.expiry-minutes}") userAccessExpirySeconds: Long,
+    @Value("\${caches.userAccess.expiry-seconds}") userAccessExpirySeconds: Long,
     @Value("\${caches.offenderDetails.expiry-seconds}") offenderDetailsExpirySeconds: Long,
     @Value("\${caches.inmateDetails.expiry-seconds}") inmateDetailsExpirySeconds: Long
   ): RedisCacheManagerBuilderCustomizer? {
