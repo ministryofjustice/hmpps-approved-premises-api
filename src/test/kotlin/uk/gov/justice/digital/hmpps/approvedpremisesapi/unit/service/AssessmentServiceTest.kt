@@ -7,14 +7,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -61,7 +61,7 @@ class AssessmentServiceTest {
     )
 
     every { assessmentRepositoryMock.findAll() } returns allAssessments
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getVisibleAssessmentsForUser(user)
 
@@ -87,7 +87,7 @@ class AssessmentServiceTest {
     )
 
     every { assessmentRepositoryMock.findAllByAllocatedToUser_Id(user.id) } returns allocatedAssessments
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getVisibleAssessmentsForUser(user)
 
@@ -124,7 +124,7 @@ class AssessmentServiceTest {
         .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getAssessmentForUser(user, assessmentId)
 
@@ -154,7 +154,7 @@ class AssessmentServiceTest {
         .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getAssessmentForUser(user, assessmentId)
 
@@ -169,7 +169,7 @@ class AssessmentServiceTest {
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getAssessmentForUser(user, assessmentId)
 
@@ -184,7 +184,7 @@ class AssessmentServiceTest {
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
@@ -208,7 +208,7 @@ class AssessmentServiceTest {
       .withAllocatedToUser(UserEntityFactory().produce())
       .produce()
 
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
@@ -243,7 +243,7 @@ class AssessmentServiceTest {
       it.invocation.args[0] as AssessmentClarificationNoteEntity
     }
 
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
@@ -273,7 +273,7 @@ class AssessmentServiceTest {
       it.invocation.args[0] as AssessmentClarificationNoteEntity
     }
 
-    every { jsonSchemaServiceMock.getNewestSchema(JsonSchemaType.ASSESSMENT) } returns JsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 

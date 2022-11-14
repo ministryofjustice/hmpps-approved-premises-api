@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -18,11 +18,12 @@ class ApplicationEntityFactory : Factory<ApplicationEntity> {
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var applicationSchema: Yielded<JsonSchemaEntity> = {
-    JsonSchemaEntity(
+    ApprovedPremisesApplicationJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
       schema = "{}",
-      type = JsonSchemaType.APPLICATION
+      isWomensJsonLogicRule = """{"==": [1, 2]}""",
+      isPipeJsonLogicRule = """{"==": [1, 1]}"""
     )
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }

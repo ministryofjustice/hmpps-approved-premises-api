@@ -6,12 +6,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -51,7 +51,7 @@ class ApplicationServiceTest {
 
   @Test
   fun `Get all applications where Probation Officer exists returns applications returned from repository`() {
-    val newestJsonSchema = JsonSchemaEntityFactory()
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
 
@@ -112,7 +112,7 @@ class ApplicationServiceTest {
     val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    val newestJsonSchema = JsonSchemaEntityFactory()
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
 
@@ -172,13 +172,13 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     val user = UserEntityFactory().produce()
-    val schema = JsonSchemaEntityFactory().produce()
+    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce()
     )
     every { mockUserService.getUserForRequest() } returns user
-    every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns schema
+    every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     val result = applicationService.createApplication(crn, username)
@@ -258,7 +258,7 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    val newestSchema = JsonSchemaEntityFactory().produce()
+    val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val user = UserEntityFactory()
       .withDeliusUsername(username)
@@ -298,7 +298,7 @@ class ApplicationServiceTest {
       .withDeliusUsername(username)
       .produce()
 
-    val newestSchema = JsonSchemaEntityFactory().produce()
+    val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
     val updatedData = """
       {
         "aProperty": "value"
@@ -317,7 +317,7 @@ class ApplicationServiceTest {
     every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-    every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
+    every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 

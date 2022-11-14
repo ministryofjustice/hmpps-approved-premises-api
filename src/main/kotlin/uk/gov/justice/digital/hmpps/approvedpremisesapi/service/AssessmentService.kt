@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -26,7 +26,7 @@ class AssessmentService(
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
 
-    val latestSchema = jsonSchemaService.getNewestSchema(JsonSchemaType.ASSESSMENT)
+    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
 
     val assessments = if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
       assessmentRepository.findAll()
@@ -44,7 +44,7 @@ class AssessmentService(
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
 
-    val latestSchema = jsonSchemaService.getNewestSchema(JsonSchemaType.ASSESSMENT)
+    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
 
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()
@@ -70,7 +70,7 @@ class AssessmentService(
     return assessmentRepository.save(
       AssessmentEntity(
         id = UUID.randomUUID(), application = application,
-        data = null, document = null, schemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.ASSESSMENT),
+        data = null, document = null, schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
         allocatedToUser = allocatedUser,
         allocatedAt = dateTimeNow,
         createdAt = dateTimeNow,

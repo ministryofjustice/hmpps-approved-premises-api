@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -35,7 +34,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setup() {
-    jsonSchemaRepository.deleteAll()
+    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
     val inmateDetail = InmateDetailFactory()
       .withOffenderNo("NOMS321")
@@ -58,9 +57,9 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get all applications returns 200 with correct body`() {
-    jsonSchemaRepository.deleteAll()
+    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-    val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
+    val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """
@@ -82,7 +81,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val olderJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
+    val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
       withSchema(
         """
@@ -236,9 +235,9 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 200 with correct body`() {
-    jsonSchemaRepository.deleteAll()
+    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-    val newestJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
+    val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """
@@ -372,9 +371,9 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 200 with correct body, non-upgradable outdated application marked as such`() {
-    jsonSchemaRepository.deleteAll()
+    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-    jsonSchemaEntityFactory.produceAndPersist {
+    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """
@@ -396,7 +395,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val olderJsonSchema = jsonSchemaEntityFactory.produceAndPersist {
+    val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
       withSchema(
         """
@@ -463,7 +462,7 @@ class ApplicationTest : IntegrationTestBase() {
     mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
     mockOffenderDetailsCommunityApiCall404(crn)
 
-    jsonSchemaEntityFactory.produceAndPersist {
+    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
     }
@@ -497,7 +496,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
 
-    jsonSchemaEntityFactory.produceAndPersist {
+    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
     }
@@ -578,7 +577,7 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
     )
 
-    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
     }
@@ -650,10 +649,9 @@ class ApplicationTest : IntegrationTestBase() {
       withQualification(UserQualification.PIPE)
     }
 
-    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
-      withType(JsonSchemaType.APPLICATION)
       withSchema(
         """
           {
@@ -733,7 +731,7 @@ class ApplicationTest : IntegrationTestBase() {
   )
 
   private fun produceAndPersistBasicApplication(crn: String): ApplicationEntity {
-    val jsonSchema = jsonSchemaEntityFactory.produceAndPersist {
+    val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         """

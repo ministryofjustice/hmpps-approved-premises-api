@@ -7,9 +7,9 @@ import com.networknt.schema.SpecVersionDetector
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import java.util.Collections.synchronizedMap
 import java.util.UUID
 
@@ -36,10 +36,10 @@ class JsonSchemaService(
   }
 
   fun checkSchemaOutdated(application: ApplicationEntity): ApplicationEntity {
-    val newestSchema = jsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(JsonSchemaType.APPLICATION)
+    val newestSchema = getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java)
 
     return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
   }
 
-  fun getNewestSchema(jsonSchemaType: JsonSchemaType): JsonSchemaEntity = jsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(jsonSchemaType)
+  fun <T : JsonSchemaEntity> getNewestSchema(type: Class<T>): JsonSchemaEntity = jsonSchemaRepository.getSchemasForType(type).maxBy { it.addedAt }
 }
