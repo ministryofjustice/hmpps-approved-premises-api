@@ -1068,6 +1068,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/rosh-summary:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys Risk of Serious Harm (RoSH) summary for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys RoSH summary
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskOfSeriousHarmSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -3023,6 +3054,40 @@ components:
             questionNumber: "RM31"
             answers:
               - "State they will have secure accommodation for Mr Smith and partner on release, although ..."
+    ArrayOfOASysRiskOfSeriousHarmSummaryQuestions:
+      type: array
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+          questionNumber:
+            type: string
+          answers:
+            type: object
+        example:
+          - label: "Who is at risk?"
+            questionNumber: "R10.1"
+            answers:
+              - "Males whom Mr Smith believes have wronged him, or strangers with whom he gets...."
+          - label: "What is the nature of the risk?"
+            questionNumber: "R10.2"
+            answers:
+              - "Violence"
+              - "Threats"
+              - "Physical harm"
+          - label: "When is the risk likely to be greatest?"
+            questionNumber: "R10.3"
+            answers:
+              - "Not imminent ? lengthy gap between convictions for violent offences..."
+          - label: "What circumstances are likely to increase the risk?"
+            questionNumber: "R10.4"
+            answers:
+              - "As above ? drug use, need to obtain money for drugs at all costs..."
+          - label: "What factors are likely to reduce the risk?"
+            questionNumber: "R10.5"
+            answers:
+              - "Mr Smith thinking about consequences of his actions and not acting impulsively..."
     OASysOffenceAnalysis:
       type: object
       properties:
@@ -3047,4 +3112,12 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         riskManagementPlan:
           $ref: '#/components/schemas/ArrayOfOASysRiskManagementQuestions'
+    OASysRiskOfSeriousHarmSummary:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        riskOfSeriousHarmSummary:
+          $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
 
