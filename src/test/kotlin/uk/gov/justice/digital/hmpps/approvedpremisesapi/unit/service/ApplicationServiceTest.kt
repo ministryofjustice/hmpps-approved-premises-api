@@ -206,19 +206,22 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-      .withDeliusUsername(username)
-      .produce()
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+    val application = ApplicationEntityFactory()
       .withId(applicationId)
       .withYieldedCreatedByUser { UserEntityFactory().produce() }
       .produce()
+
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withDeliusUsername(username)
+      .produce()
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
     assertThat(applicationService.updateApplication(applicationId, "{}", null, null, username) is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `updateApplication returns GeneralValidationError when application has already been submitted`() {
+  fun `updateApplication returns GeneralValidationError when application schema is outdated`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -226,12 +229,54 @@ class ApplicationServiceTest {
       .withDeliusUsername(username)
       .produce()
 
+    val application = ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(null)
+      .produce()
+      .apply {
+        schemaUpToDate = false
+      }
+
     every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.updateApplication(applicationId, "{}", null, null, username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+  }
+
+  @Test
+  fun `updateApplication returns GeneralValidationError when application has already been submitted`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val newestSchema = JsonSchemaEntityFactory().produce()
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .produce()
+
+    val application = ApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
     val result = applicationService.updateApplication(applicationId, "{}", null, null, username)
 
@@ -260,11 +305,18 @@ class ApplicationServiceTest {
       }
     """
 
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+    val application = ApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
       .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
     every { mockJsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }

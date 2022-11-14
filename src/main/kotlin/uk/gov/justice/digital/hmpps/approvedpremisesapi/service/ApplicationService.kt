@@ -71,13 +71,19 @@ class ApplicationService(
   }
 
   fun updateApplication(applicationId: UUID, data: String, isWomensApplication: Boolean?, isPipeApplication: Boolean?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
-    val application = applicationRepository.findByIdOrNull(applicationId)
+    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
     val user = userService.getUserForRequest()
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+      )
     }
 
     if (application.submittedAt != null) {
