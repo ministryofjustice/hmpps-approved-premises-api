@@ -73,12 +73,12 @@ prison-adjudications:
 
 caches:
   staffMembers:
-    expiry-minutes: 360
+    expiry-seconds: 21600
   staffMember:
-    expiry-minutes: 360
+    expiry-seconds: 21600
   offenderDetails:
-    expiry-minutes: 20
+    expiry-seconds: 1200
   userAccess:
-    expiry-minutes: 20
+    expiry-seconds: 1200
   inmateDetails:
-    expiry-minutes: 20
+    expiry-seconds: 1200
