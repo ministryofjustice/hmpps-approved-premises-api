@@ -623,7 +623,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update existing application returns 200 with correct body and creates an allocated assessment`() {
+  fun `Update existing application returns 200 with correct body`() {
     val username = "PROBATIONPERSON"
     val crn = offenderDetails.otherIds.crn
     val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
@@ -690,30 +690,6 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-      withType(JsonSchemaType.ASSESSMENT)
-      withSchema(
-        """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-        """
-      )
-    }
-
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
     }
@@ -725,15 +701,12 @@ class ApplicationTest : IntegrationTestBase() {
       withCreatedByUser(user)
     }
 
-    val submittedAt = OffsetDateTime.now()
-
     val resultBody = webTestClient.put()
       .uri("/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdateApplication(
           data = mapOf("thingId" to 123),
-          submittedAt = submittedAt,
           isWomensApplication = false,
           isPipeApplication = true
         )
@@ -748,15 +721,6 @@ class ApplicationTest : IntegrationTestBase() {
     val result = objectMapper.readValue(resultBody, Application::class.java)
 
     assertThat(result.person.crn).isEqualTo(crn)
-    assertThat(result.schemaVersion).isEqualTo(applicationSchema.id)
-    assertThat(result.submittedAt!!.toInstant()).isEqualTo(submittedAt.toInstant())
-
-    val allAssessments = assessmentRepository.findAll()
-
-    assertThat(allAssessments).anyMatch {
-      it.application.id == applicationId &&
-        it.allocatedToUser.id == assessor.id
-    }
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
