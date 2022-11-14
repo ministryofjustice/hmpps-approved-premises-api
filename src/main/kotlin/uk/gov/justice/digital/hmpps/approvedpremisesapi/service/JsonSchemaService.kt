@@ -35,23 +35,10 @@ class JsonSchemaService(
     return validationErrors.isEmpty()
   }
 
-  fun attemptSchemaUpgrade(application: ApplicationEntity): ApplicationEntity {
-    if (application.data == null) return application.apply { schemaUpToDate = true }
-
+  fun checkSchemaOutdated(application: ApplicationEntity): ApplicationEntity {
     val newestSchema = jsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(JsonSchemaType.APPLICATION)
 
-    if (application.schemaVersion.id != newestSchema.id) {
-      if (!validate(newestSchema, application.data!!)) {
-        return application.apply { schemaUpToDate = false }
-      }
-
-      application.schemaVersion = newestSchema
-      applicationRepository.save(application)
-    }
-
-    application.schemaUpToDate = true
-
-    return application
+    return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
   }
 
   fun getNewestSchema(jsonSchemaType: JsonSchemaType): JsonSchemaEntity = jsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(jsonSchemaType)

@@ -78,7 +78,7 @@ class ApplicationServiceTest {
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
     every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
-    every { mockJsonSchemaService.attemptSchemaUpgrade(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     assertThat(applicationService.getAllApplicationsForUsername(distinguishedName)).containsAll(applicationEntities)
   }
@@ -126,7 +126,7 @@ class ApplicationServiceTest {
       .withApplicationSchema(newestJsonSchema)
       .produce()
 
-    every { mockJsonSchemaService.attemptSchemaUpgrade(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
 

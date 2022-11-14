@@ -26,7 +26,7 @@ class ApplicationService(
       ?: return emptyList()
 
     return applicationRepository.findAllByCreatedByUser_Id(userEntity.id)
-      .map(jsonSchemaService::attemptSchemaUpgrade)
+      .map(jsonSchemaService::checkSchemaOutdated)
   }
 
   fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<ApplicationEntity> {
@@ -39,7 +39,7 @@ class ApplicationService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    return AuthorisableActionResult.Success(jsonSchemaService.attemptSchemaUpgrade(applicationEntity))
+    return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
   }
 
   fun createApplication(crn: String, username: String) = validated<ApplicationEntity> {
