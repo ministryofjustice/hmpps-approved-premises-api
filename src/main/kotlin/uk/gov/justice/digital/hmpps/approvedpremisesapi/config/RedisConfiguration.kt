@@ -34,13 +34,13 @@ class RedisConfiguration {
     @Value("\${caches.offenderDetails.expiry-seconds}") offenderDetailsExpirySeconds: Long,
     @Value("\${caches.inmateDetails.expiry-seconds}") inmateDetailsExpirySeconds: Long
   ): RedisCacheManagerBuilderCustomizer? {
-    val version = buildProperties.version
+    val time = buildProperties.time.epochSecond.toString()
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
-      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), version, objectMapper)
-        .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofSeconds(offenderDetailsExpirySeconds), version, objectMapper)
-        .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), version, objectMapper)
-        .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofSeconds(inmateDetailsExpirySeconds), version, objectMapper)
+      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), time, objectMapper)
+        .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofSeconds(offenderDetailsExpirySeconds), time, objectMapper)
+        .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
+        .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofSeconds(inmateDetailsExpirySeconds), time, objectMapper)
     }
   }
 
