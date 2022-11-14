@@ -28,19 +28,19 @@ class RedisConfiguration {
   fun redisCacheManagerBuilderCustomizer(
     buildProperties: BuildProperties,
     objectMapper: ObjectMapper,
-    @Value("\${caches.staffMembers.expiry-minutes}") staffMembersExpiryMinutes: Long,
-    @Value("\${caches.staffMember.expiry-minutes}") staffMemberExpiryMinutes: Long,
-    @Value("\${caches.offenderDetails.expiry-minutes}") offenderDetailsExpiryMinutes: Long,
-    @Value("\${caches.userAccess.expiry-minutes}") userAccessExpiryMinutes: Long,
-    @Value("\${caches.inmateDetails.expiry-minutes}") inmateDetailsExpiryMinutes: Long
+    @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
+    @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
+    @Value("\${caches.userAccess.expiry-minutes}") userAccessExpirySeconds: Long,
+    @Value("\${caches.offenderDetails.expiry-seconds}") offenderDetailsExpirySeconds: Long,
+    @Value("\${caches.inmateDetails.expiry-seconds}") inmateDetailsExpirySeconds: Long
   ): RedisCacheManagerBuilderCustomizer? {
     val version = buildProperties.version
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
-      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofMinutes(staffMembersExpiryMinutes), version, objectMapper)
-        .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofMinutes(offenderDetailsExpiryMinutes), version, objectMapper)
-        .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofMinutes(userAccessExpiryMinutes), version, objectMapper)
-        .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofMinutes(inmateDetailsExpiryMinutes), version, objectMapper)
+      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), version, objectMapper)
+        .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofSeconds(offenderDetailsExpirySeconds), version, objectMapper)
+        .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), version, objectMapper)
+        .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofSeconds(inmateDetailsExpirySeconds), version, objectMapper)
     }
   }
 
