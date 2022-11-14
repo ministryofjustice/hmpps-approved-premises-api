@@ -198,7 +198,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, username) is AuthorisableActionResult.NotFound).isTrue
+    assertThat(applicationService.updateApplication(applicationId, "{}", username) is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
@@ -217,7 +217,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", null, null, username) is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(applicationService.updateApplication(applicationId, "{}", username) is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
@@ -242,7 +242,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    val result = applicationService.updateApplication(applicationId, "{}", null, null, username)
+    val result = applicationService.updateApplication(applicationId, "{}", username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -278,7 +278,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    val result = applicationService.updateApplication(applicationId, "{}", null, null, username)
+    val result = applicationService.updateApplication(applicationId, "{}", username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -321,7 +321,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val result = applicationService.updateApplication(applicationId, updatedData, false, false, username)
+    val result = applicationService.updateApplication(applicationId, updatedData, username)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
