@@ -4,7 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -58,7 +58,7 @@ class ApplicationService(
         createdByUser = user,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(JsonSchemaType.APPLICATION),
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
         isWomensApplication = null,
@@ -70,7 +70,7 @@ class ApplicationService(
     return success(createdApplication.apply { schemaUpToDate = true })
   }
 
-  fun updateApplication(applicationId: UUID, data: String, isWomensApplication: Boolean?, isPipeApplication: Boolean?, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun updateApplication(applicationId: UUID, data: String, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -92,11 +92,7 @@ class ApplicationService(
       )
     }
 
-    application.let {
-      it.data = data
-      it.isPipeApplication = isPipeApplication
-      it.isWomensApplication = isWomensApplication
-    }
+    application.data = data
 
     val savedApplication = applicationRepository.save(application)
 

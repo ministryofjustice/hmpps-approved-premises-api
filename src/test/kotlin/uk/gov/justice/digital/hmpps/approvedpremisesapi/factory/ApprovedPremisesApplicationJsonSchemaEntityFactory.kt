@@ -2,17 +2,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class JsonSchemaEntityFactory : Factory<JsonSchemaEntity> {
+class ApprovedPremisesApplicationJsonSchemaEntityFactory : Factory<ApprovedPremisesApplicationJsonSchemaEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var addedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var schema: Yielded<String> = { "{}" }
-  private var type: Yielded<JsonSchemaType> = { JsonSchemaType.APPLICATION }
+  private var isWomensJsonLogicRule: Yielded<String> = { """{"==": [1, 2]}""" }
+  private var isPipeJsonLogicRule: Yielded<String> = { """{"==": [1, 1]}""" }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -24,10 +24,6 @@ class JsonSchemaEntityFactory : Factory<JsonSchemaEntity> {
 
   fun withSchema(schema: String) = apply {
     this.schema = { schema }
-  }
-
-  fun withType(type: JsonSchemaType) = apply {
-    this.type = { type }
   }
 
   fun withPermissiveSchema() = apply {
@@ -45,10 +41,19 @@ class JsonSchemaEntityFactory : Factory<JsonSchemaEntity> {
     )
   }
 
-  override fun produce(): JsonSchemaEntity = JsonSchemaEntity(
+  fun withIsWomensJsonLogicRule(isWomensJsonLogicRule: String) = apply {
+    this.isWomensJsonLogicRule = { isWomensJsonLogicRule }
+  }
+
+  fun withIsPipeJsonLogicRule(isPipeJsonLogicRule: String) = apply {
+    this.isPipeJsonLogicRule = { isPipeJsonLogicRule }
+  }
+
+  override fun produce(): ApprovedPremisesApplicationJsonSchemaEntity = ApprovedPremisesApplicationJsonSchemaEntity(
     id = this.id(),
     addedAt = this.addedAt(),
     schema = this.schema(),
-    type = this.type()
+    isWomensJsonLogicRule = this.isWomensJsonLogicRule(),
+    isPipeJsonLogicRule = this.isPipeJsonLogicRule()
   )
 }

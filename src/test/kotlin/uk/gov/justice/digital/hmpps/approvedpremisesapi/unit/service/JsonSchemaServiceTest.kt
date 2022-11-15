@@ -6,12 +6,12 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.JsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import java.util.UUID
 
@@ -27,7 +27,7 @@ class JsonSchemaServiceTest {
 
   @Test
   fun `checkSchemaOutdated marks outdated correctly`() {
-    val newestJsonSchema = JsonSchemaEntityFactory()
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema(
         """
         {
@@ -48,7 +48,7 @@ class JsonSchemaServiceTest {
       )
       .produce()
 
-    val olderJsonSchema = JsonSchemaEntityFactory()
+    val olderJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema(
         """
         {
@@ -90,7 +90,7 @@ class JsonSchemaServiceTest {
 
     val applicationEntities = listOf(upToDateApplication, outdatedApplication)
 
-    every { mockJsonSchemaRepository.findFirstByTypeOrderByAddedAtDesc(JsonSchemaType.APPLICATION) } returns newestJsonSchema
+    every { mockJsonSchemaRepository.getSchemasForType(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
     every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
@@ -109,7 +109,7 @@ class JsonSchemaServiceTest {
 
   @Test
   fun `validate returns false for JSON that does not satisfy schema`() {
-    val schema = JsonSchemaEntityFactory()
+    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema(
         """
         {
@@ -135,7 +135,7 @@ class JsonSchemaServiceTest {
 
   @Test
   fun `validate returns true for JSON that does satisfy schema`() {
-    val schema = JsonSchemaEntityFactory()
+    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema(
         """
         {

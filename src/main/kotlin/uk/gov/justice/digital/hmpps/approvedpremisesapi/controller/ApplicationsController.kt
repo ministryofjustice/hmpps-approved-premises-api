@@ -78,7 +78,7 @@ class ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateApplication(applicationId, serializedData, body.isWomensApplication, body.isPipeApplication, username)
+    val applicationResult = applicationService.updateApplication(applicationId, serializedData, username)
 
     val validationResult = when (applicationResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")

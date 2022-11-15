@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import java.time.OffsetDateTime
 
 class AssessmentTest : IntegrationTestBase() {
   @Autowired
@@ -20,7 +20,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setup() {
-    jsonSchemaRepository.deleteAll()
+    approvedPremisesAssessmentJsonSchemaRepository.deleteAll()
 
     val inmateDetail = InmateDetailFactory()
       .withOffenderNo("NOMS321")
@@ -62,14 +62,13 @@ class AssessmentTest : IntegrationTestBase() {
 
     mockInmateDetailPrisonsApiCall(inmateDetails)
 
-    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withType(JsonSchemaType.APPLICATION)
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
-    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withType(JsonSchemaType.ASSESSMENT)
+    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
+      withAddedAt(OffsetDateTime.now())
     }
 
     val application = applicationEntityFactory.produceAndPersist {
@@ -132,14 +131,13 @@ class AssessmentTest : IntegrationTestBase() {
 
     mockInmateDetailPrisonsApiCall(inmateDetails)
 
-    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withType(JsonSchemaType.APPLICATION)
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
-    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withType(JsonSchemaType.ASSESSMENT)
+    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
+      withAddedAt(OffsetDateTime.now())
     }
 
     val application = applicationEntityFactory.produceAndPersist {
@@ -191,13 +189,11 @@ class AssessmentTest : IntegrationTestBase() {
 
     mockInmateDetailPrisonsApiCall(inmateDetails)
 
-    val applicationSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withType(JsonSchemaType.APPLICATION)
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
-    val assessmentSchema = jsonSchemaEntityFactory.produceAndPersist {
-      withType(JsonSchemaType.ASSESSMENT)
+    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
