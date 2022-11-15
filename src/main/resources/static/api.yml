@@ -1099,6 +1099,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risks-to-the-individual:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys risks to the individual (R8, R9) for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys risks to the individual
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRisksToTheIndividual'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -3088,6 +3119,34 @@ components:
             questionNumber: "R10.5"
             answers:
               - "Mr Smith thinking about consequences of his actions and not acting impulsively..."
+    ArrayOfOASysRisksToTheIndividualQuestions:
+      type: array
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+          questionNumber:
+            type: string
+          answers:
+            type: object
+        example:
+          - label: "Current concerns about self-harm or suicide"
+            questionNumber: "R8.1.1"
+            answers:
+              - "There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody..."
+          - label: "Previous concerns about self-harm or suicide"
+            questionNumber: "R8.1.4"
+            answers:
+              - "During Mr Smith's psr report, he denied having any history of self-harm, however... "
+          - label: "Current concerns about Coping in Custody or Hostel."
+            questionNumber: "R8.2.1"
+            answers:
+              - "Has told prison staff that he swallowed batteries on one occasion due to wanting..."
+          - label: "Previous concerns about Coping in Custody or Hostel."
+            questionNumber: "R8.2.2"
+            answers:
+              - "Reported in 2021 that he will keep himself to himself because he gets discomfiture..."
     OASysOffenceAnalysis:
       type: object
       properties:
@@ -3120,4 +3179,12 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         riskOfSeriousHarmSummary:
           $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
+    OASysRisksToTheIndividual:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        risksToTheIndividual:
+          $ref: '#/components/schemas/ArrayOfOASysRisksToTheIndividualQuestions'
 
