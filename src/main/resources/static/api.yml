@@ -1130,6 +1130,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risks-to-others:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys current and previous risks to others (R6.1, R6.2) for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys risks to others
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRisksToOthers'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -3147,6 +3178,34 @@ components:
             questionNumber: "R8.2.2"
             answers:
               - "Reported in 2021 that he will keep himself to himself because he gets discomfiture..."
+    ArrayOfOASysRisksToOthersQuestions:
+      type: array
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+          questionNumber:
+            type: string
+          answers:
+            type: object
+        example:
+          - label: "Current offence details"
+            questionNumber: "R6.1 FA1"
+            answers:
+              - "Mr Smith was released on licence from custody on 12/7/2018.  Between then and 1/8/2018 Mr Smith approached..."
+          - label: "Current where and when"
+            questionNumber: "R6.1 FA2"
+            answers:
+              - "Between 12/7/2018 - 31/7/2018, initially victim in the street putting bins out... "
+          - label: "Previous offence details"
+            questionNumber: "R6.2 FA8"
+            answers:
+              - "Mr Smith is assessed to have committed a number of offences that are considered to have crossed the Threshold of serious harm..."
+          - label: "Previous where and when"
+            questionNumber: "R6.2 FA9"
+            answers:
+              - "Bolton and Bury Districts."
     OASysOffenceAnalysis:
       type: object
       properties:
@@ -3187,4 +3246,12 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         risksToTheIndividual:
           $ref: '#/components/schemas/ArrayOfOASysRisksToTheIndividualQuestions'
+    OASysRisksToOthers:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        risksToOthers:
+          $ref: '#/components/schemas/ArrayOfOASysRisksToOthersQuestions'
 
