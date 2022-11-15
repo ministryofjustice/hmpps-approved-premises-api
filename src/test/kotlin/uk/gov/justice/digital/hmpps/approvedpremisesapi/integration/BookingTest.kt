@@ -5,10 +5,11 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -201,10 +202,11 @@ class BookingTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
       .bodyValue(
-        NewBooking(
+        NewApprovedPremisesBooking(
           crn = "a crn",
           arrivalDate = LocalDate.parse("2022-08-12"),
-          departureDate = LocalDate.parse("2022-08-30")
+          departureDate = LocalDate.parse("2022-08-30"),
+          serviceName = ServiceName.approvedPremises
         )
       )
       .exchange()
@@ -243,10 +245,11 @@ class BookingTest : IntegrationTestBase() {
       .uri("/premises/${premises.id}/bookings")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
-        NewBooking(
+        NewApprovedPremisesBooking(
           crn = "CRN321",
           arrivalDate = LocalDate.parse("2022-08-12"),
-          departureDate = LocalDate.parse("2022-08-30")
+          departureDate = LocalDate.parse("2022-08-30"),
+          serviceName = ServiceName.approvedPremises,
         )
       )
       .exchange()

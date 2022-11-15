@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -181,7 +182,8 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Booking.Status.awaitingMinusArrival,
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -234,7 +236,8 @@ class BookingTransformerTest {
           reason = NonArrivalReason(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -289,7 +292,8 @@ class BookingTransformerTest {
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -340,7 +344,8 @@ class BookingTransformerTest {
           reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -460,7 +465,8 @@ class BookingTransformerTest {
           ),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
