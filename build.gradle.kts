@@ -40,6 +40,7 @@ dependencies {
   implementation(kotlin("reflect"))
 
   implementation("com.networknt:json-schema-validator:1.0.73")
+  implementation("io.github.jamsesso:json-logic-java:1.0.7")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.2")
