@@ -267,7 +267,9 @@ class PremisesController(
         nonArrival = null,
         cancellation = null,
         extensions = mutableListOf(),
-        premises = premises
+        premises = premises,
+        bed = null,
+        service = ServiceName.approvedPremises,
       )
     )
 

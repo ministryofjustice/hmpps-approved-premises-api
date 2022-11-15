@@ -108,7 +108,9 @@ class BookingTransformerTest {
     nonArrival = null,
     cancellation = null,
     extensions = mutableListOf(),
-    premises = premisesEntity
+    premises = premisesEntity,
+    bed = null,
+    service = ServiceName.approvedPremises,
   )
 
   private val staffMember = StaffMember(

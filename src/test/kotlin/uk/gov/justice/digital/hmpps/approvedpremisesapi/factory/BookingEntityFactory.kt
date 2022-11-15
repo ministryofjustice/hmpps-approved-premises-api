@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
@@ -11,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.util.UUID
@@ -28,6 +31,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var cancellation: Yielded<CancellationEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
+  private var serviceName: Yielded<ServiceName> = { randomOf(ServiceName.values().asList()) }
+  private var bed: Yielded<BedEntity>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -97,6 +102,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.premises = { premises }
   }
 
+  fun withServiceName(serviceName: ServiceName) = apply {
+    this.serviceName = { serviceName }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -108,6 +117,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
     nonArrival = this.nonArrival?.invoke(),
     cancellation = this.cancellation?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
-    premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises")
+    premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
+    bed = this.bed?.invoke(),
+    service = this.serviceName.invoke()
   )
 }
