@@ -3177,6 +3177,10 @@ components:
             type: string
           answers:
             type: object
+        required:
+          - label
+          - questionNumber
+          - answers
         example:
           - label: "Current concerns about self-harm or suicide"
             questionNumber: "R8.1.1"
@@ -3274,6 +3278,9 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         risksToTheIndividual:
           $ref: '#/components/schemas/ArrayOfOASysRisksToTheIndividualQuestions'
+      required:
+        - assessmentId
+        - risksToTheIndividual
     OASysRisksToOthers:
       type: object
       properties:
