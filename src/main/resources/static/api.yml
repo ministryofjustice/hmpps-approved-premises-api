@@ -3139,6 +3139,10 @@ components:
             type: string
           answers:
             type: object
+        required:
+          - label
+          - questionNumber
+          - answers
         example:
           - label: "Who is at risk?"
             questionNumber: "R10.1"
@@ -3259,6 +3263,9 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         riskOfSeriousHarmSummary:
           $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
+      required:
+        - assessmentId
+        - riskOfSeriousHarmSummary
     OASysRisksToTheIndividual:
       type: object
       properties:
