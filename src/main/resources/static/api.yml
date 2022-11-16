@@ -3056,7 +3056,9 @@ components:
           questionNumber:
             type: string
           answers:
-            type: object
+            type: array
+            items:
+              type: string
         required:
           - label
           - questionNumber
@@ -3086,7 +3088,9 @@ components:
           questionNumber:
             type: string
           answers:
-            type: object
+            type: array
+            items:
+              type: string
         required:
           - label
           - questionNumber
@@ -3110,7 +3114,9 @@ components:
           questionNumber:
             type: string
           answers:
-            type: object
+            type: array
+            items:
+              type: string
         required:
           - label
           - questionNumber
@@ -3138,7 +3144,9 @@ components:
           questionNumber:
             type: string
           answers:
-            type: object
+            type: array
+            items:
+              type: string
         required:
           - label
           - questionNumber
@@ -3176,7 +3184,9 @@ components:
           questionNumber:
             type: string
           answers:
-            type: object
+            type: array
+            items:
+              type: string
         required:
           - label
           - questionNumber
@@ -3208,7 +3218,9 @@ components:
           questionNumber:
             type: string
           answers:
-            type: object
+            type: array
+            items:
+              type: string
         required:
           - label
           - questionNumber
