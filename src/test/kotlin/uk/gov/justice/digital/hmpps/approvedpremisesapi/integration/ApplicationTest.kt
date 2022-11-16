@@ -8,9 +8,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -703,6 +705,124 @@ class ApplicationTest : IntegrationTestBase() {
     val result = objectMapper.readValue(resultBody, Application::class.java)
 
     assertThat(result.person.crn).isEqualTo(crn)
+  }
+
+  @Test
+  fun `Submit application returns 200, creates and allocates an assessment`() {
+    val username = "PROBATIONPERSON"
+    val crn = offenderDetails.otherIds.crn
+    val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    mockOffenderDetailsCommunityApiCall(
+      OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withDateOfBirth(LocalDate.parse("1985-05-05"))
+        .withNomsNumber("NOMS321")
+        .withFirstName("James")
+        .withLastName("Someone")
+        .withGender("Male")
+        .withNationality("English")
+        .withReligionOrBelief("Judaism")
+        .withGenderIdentity("Prefer to self-describe")
+        .withSelfDescribedGenderIdentity("This is a self described identity")
+        .produce()
+    )
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername("PROBATIONPERSON")
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
+        .produce()
+    )
+
+    val assessor = userEntityFactory.produceAndPersist { withDeliusUsername("ASSESSOR") }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(assessor)
+      withRole(UserRole.ASSESSOR)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(assessor)
+      withQualification(UserQualification.PIPE)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(assessor)
+      withQualification(UserQualification.WOMENS)
+    }
+
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+      withSchema(
+        """
+          {
+            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+            "${"\$id"}": "https://example.com/product.schema.json",
+            "title": "Thing",
+            "description": "A thing",
+            "type": "object",
+            "properties": {
+              "isWomensApplication": {
+                "description": "whether this is a womens application",
+                "type": "boolean"
+              },
+              "isPipeApplication": {
+                "description": "whether this is a PIPE application",
+                "type": "boolean"
+              }
+            },
+            "required": [ "isWomensApplication", "isPipeApplication" ]
+          }
+        """
+      )
+      withIsPipeJsonLogicRule("""{"var": "isPipeApplication"}""")
+      withIsWomensJsonLogicRule("""{"var": "isWomensApplication"}""")
+    }
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    applicationEntityFactory.produceAndPersist {
+      withCrn(crn)
+      withId(applicationId)
+      withApplicationSchema(applicationSchema)
+      withCreatedByUser(user)
+      withData(
+        """
+          {
+             "isWomensApplication": true,
+             "isPipeApplication": true
+          }
+        """
+      )
+    }
+
+    webTestClient.post()
+      .uri("/applications/$applicationId/submission")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        SubmitApplication(
+          translatedDocument = mapOf("isWomensApplication" to true, "isPipeApplication" to true)
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    val persistedApplication = applicationRepository.findByIdOrNull(applicationId)!!
+
+    assertThat(persistedApplication.isWomensApplication).isTrue
+    assertThat(persistedApplication.isPipeApplication).isTrue
+
+    val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
+    assertThat(createdAssessment.allocatedToUser.id).isEqualTo(assessor.id)
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {

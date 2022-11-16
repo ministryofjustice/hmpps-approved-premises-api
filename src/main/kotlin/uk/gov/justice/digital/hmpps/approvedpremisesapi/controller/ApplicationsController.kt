@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -93,6 +95,32 @@ class ApplicationsController(
     }
 
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
+  }
+
+  override fun applicationsApplicationIdSubmissionPost(
+    applicationId: UUID,
+    submitApplication: SubmitApplication
+  ): ResponseEntity<Unit> {
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = deliusPrincipal.name
+
+    val document = objectMapper.writeValueAsString(submitApplication.translatedDocument)
+
+    val submitResult = applicationService.submitApplication(applicationId, document, username)
+
+    val validationResult = when (submitResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> submitResult.entity
+    }
+
+    when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.Success -> Unit
+    }
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {
