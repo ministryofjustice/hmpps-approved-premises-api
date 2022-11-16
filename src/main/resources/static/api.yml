@@ -3209,6 +3209,10 @@ components:
             type: string
           answers:
             type: object
+        required:
+          - label
+          - questionNumber
+          - answers
         example:
           - label: "Current offence details"
             questionNumber: "R6.1 FA1"
@@ -3289,4 +3293,7 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         risksToOthers:
           $ref: '#/components/schemas/ArrayOfOASysRisksToOthersQuestions'
+      required:
+        - assessmentId
+        - risksToOthers
 
