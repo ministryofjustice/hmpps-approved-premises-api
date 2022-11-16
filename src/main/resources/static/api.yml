@@ -3087,6 +3087,10 @@ components:
             type: string
           answers:
             type: object
+        required:
+          - label
+          - questionNumber
+          - answers
         example:
           - label: "Accommodation issues contributing to risks of offending and harm"
             questionNumber: "3.9"
@@ -3229,6 +3233,9 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         riskContributors:
           $ref: '#/components/schemas/ArrayOfOASysRiskContributorsQuestions'
+      required:
+        - assessmentId
+        - riskContributors
     OASysRiskManagementPlan:
       type: object
       properties:
