@@ -3057,6 +3057,10 @@ components:
             type: string
           answers:
             type: object
+        required:
+          - label
+          - questionNumber
+          - answers
         example:
           - label: "Offence summary"
             questionNumber: "2.1"
@@ -3214,6 +3218,9 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         offenceAnalysis:
           $ref: '#/components/schemas/ArrayOfOASysOffenceAnalysisQuestions'
+      required:
+        - assessmentId
+        - offenceAnalysis
     OASysRiskContributors:
       type: object
       properties:
