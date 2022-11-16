@@ -3046,23 +3046,25 @@ components:
       description: The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.
       type: long
       example: 138985987
+    OASysQuestion:
+      type: object
+      properties:
+        label:
+          type: string
+        questionNumber:
+          type: string
+        answers:
+          type: array
+          items:
+            type: string
+      required:
+        - label
+        - questionNumber
+        - answers
     ArrayOfOASysOffenceAnalysisQuestions:
       type: array
       items:
-        type: object
-        properties:
-          label:
-            type: string
-          questionNumber:
-            type: string
-          answers:
-            type: array
-            items:
-              type: string
-        required:
-          - label
-          - questionNumber
-          - answers
+        type: OASysQuestion
         example:
           - label: "Offence summary"
             questionNumber: "2.1"
@@ -3081,20 +3083,7 @@ components:
     ArrayOfOASysRiskContributorsQuestions:
       type: array
       items:
-        type: object
-        properties:
-          label:
-            type: string
-          questionNumber:
-            type: string
-          answers:
-            type: array
-            items:
-              type: string
-        required:
-          - label
-          - questionNumber
-          - answers
+        type: OASysQuestion
         example:
           - label: "Accommodation issues contributing to risks of offending and harm"
             questionNumber: "3.9"
@@ -3107,20 +3096,7 @@ components:
     ArrayOfOASysRiskManagementQuestions:
       type: array
       items:
-        type: object
-        properties:
-          label:
-            type: string
-          questionNumber:
-            type: string
-          answers:
-            type: array
-            items:
-              type: string
-        required:
-          - label
-          - questionNumber
-          - answers
+        type: OASysQuestion
         example:
           - label: "Current situation"
             questionNumber: "RM28.1"
@@ -3137,20 +3113,7 @@ components:
     ArrayOfOASysRiskOfSeriousHarmSummaryQuestions:
       type: array
       items:
-        type: object
-        properties:
-          label:
-            type: string
-          questionNumber:
-            type: string
-          answers:
-            type: array
-            items:
-              type: string
-        required:
-          - label
-          - questionNumber
-          - answers
+        type: OASysQuestion
         example:
           - label: "Who is at risk?"
             questionNumber: "R10.1"
@@ -3175,56 +3138,28 @@ components:
             answers:
               - "Mr Smith thinking about consequences of his actions and not acting impulsively..."
     ArrayOfOASysRisksToTheIndividualQuestions:
-      type: array
-      items:
-        type: object
-        properties:
-          label:
-            type: string
-          questionNumber:
-            type: string
+      type: OASysQuestion
+      example:
+        - label: "Current concerns about self-harm or suicide"
+          questionNumber: "R8.1.1"
           answers:
-            type: array
-            items:
-              type: string
-        required:
-          - label
-          - questionNumber
-          - answers
-        example:
-          - label: "Current concerns about self-harm or suicide"
-            questionNumber: "R8.1.1"
-            answers:
-              - "There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody..."
-          - label: "Previous concerns about self-harm or suicide"
-            questionNumber: "R8.1.4"
-            answers:
-              - "During Mr Smith's psr report, he denied having any history of self-harm, however... "
-          - label: "Current concerns about Coping in Custody or Hostel."
-            questionNumber: "R8.2.1"
-            answers:
-              - "Has told prison staff that he swallowed batteries on one occasion due to wanting..."
-          - label: "Previous concerns about Coping in Custody or Hostel."
-            questionNumber: "R8.2.2"
-            answers:
-              - "Reported in 2021 that he will keep himself to himself because he gets discomfiture..."
+            - "There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody..."
+        - label: "Previous concerns about self-harm or suicide"
+          questionNumber: "R8.1.4"
+          answers:
+            - "During Mr Smith's psr report, he denied having any history of self-harm, however... "
+        - label: "Current concerns about Coping in Custody or Hostel."
+          questionNumber: "R8.2.1"
+          answers:
+            - "Has told prison staff that he swallowed batteries on one occasion due to wanting..."
+        - label: "Previous concerns about Coping in Custody or Hostel."
+          questionNumber: "R8.2.2"
+          answers:
+            - "Reported in 2021 that he will keep himself to himself because he gets discomfiture..."
     ArrayOfOASysRisksToOthersQuestions:
       type: array
       items:
-        type: object
-        properties:
-          label:
-            type: string
-          questionNumber:
-            type: string
-          answers:
-            type: array
-            items:
-              type: string
-        required:
-          - label
-          - questionNumber
-          - answers
+        type: OASysQuestion
         example:
           - label: "Current offence details"
             questionNumber: "R6.1 FA1"
