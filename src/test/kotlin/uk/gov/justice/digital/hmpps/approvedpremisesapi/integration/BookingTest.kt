@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
@@ -31,7 +32,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get a booking for a premises returns OK with the correct body`() {
+  fun `Get a booking for an Approved Premises returns OK with the correct body`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
@@ -48,6 +49,7 @@ class BookingTest : IntegrationTestBase() {
       withPremises(premises)
       withStaffKeyWorkerCode(keyWorker.code)
       withCrn("CRN123")
+      withServiceName(ServiceName.approvedPremises)
     }
 
     val offenderDetails = OffenderDetailsSummaryFactory()
@@ -72,6 +74,60 @@ class BookingTest : IntegrationTestBase() {
       .json(
         objectMapper.writeValueAsString(
           bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetail, keyWorker)
+        )
+      )
+  }
+
+  @Test
+  fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withName("test-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("test-room")
+          withYieldedPremises { premises }
+        }
+      }
+    }
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCrn("CRN123")
+      withServiceName(ServiceName.temporaryAccommodation)
+      withYieldedBed { bed }
+    }
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/bookings/${booking.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(
+        objectMapper.writeValueAsString(
+          bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetail, null)
         )
       )
   }
@@ -215,7 +271,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Booking returns OK with correct body`() {
+  fun `Create Approved Premises Booking returns OK with correct body`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
@@ -266,6 +322,124 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.departure").isEqualTo(null)
       .jsonPath("$.nonArrival").isEqualTo(null)
       .jsonPath("$.cancellation").isEqualTo(null)
+      .jsonPath("$.serviceName").isEqualTo(ServiceName.approvedPremises.value)
+      .jsonPath("$.bed.id").doesNotHaveJsonPath()
+      .jsonPath("$.bed.name").doesNotHaveJsonPath()
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns OK with correct body`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withName("test-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("test-room")
+          withYieldedPremises { premises }
+        }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewTemporaryAccommodationBooking(
+          crn = "CRN321",
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          departureDate = LocalDate.parse("2022-08-30"),
+          serviceName = ServiceName.temporaryAccommodation,
+          bedId = bed.id,
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.person.crn").isEqualTo("CRN321")
+      .jsonPath("$.person.name").isEqualTo("Mock Person")
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+      .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.keyWorker").isEqualTo(null)
+      .jsonPath("$.status").isEqualTo("awaiting-arrival")
+      .jsonPath("$.arrival").isEqualTo(null)
+      .jsonPath("$.departure").isEqualTo(null)
+      .jsonPath("$.nonArrival").isEqualTo(null)
+      .jsonPath("$.cancellation").isEqualTo(null)
+      .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
+      .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+      .jsonPath("$.bed.name").isEqualTo("test-bed")
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns 400 when bed does not exist on the premises`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewTemporaryAccommodationBooking(
+          crn = "CRN321",
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          departureDate = LocalDate.parse("2022-08-30"),
+          serviceName = ServiceName.temporaryAccommodation,
+          bedId = UUID.randomUUID(),
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
   }
 
   @Test

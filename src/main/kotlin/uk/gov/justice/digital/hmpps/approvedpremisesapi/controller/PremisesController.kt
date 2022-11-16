@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
@@ -237,6 +238,15 @@ class PremisesController(
 
     val validationErrors = ValidationErrors()
 
+    val bed = when (body) {
+      is NewTemporaryAccommodationBooking ->
+        premises.rooms
+          .flatMap { it.beds }
+          .find { it.id == body.bedId }
+          ?: throw BadRequestProblem(mapOf("bedId" to "doesNotExist"))
+      else -> null
+    }
+
     val offenderResult = offenderService.getOffenderByCrn(body.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
     if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
     if (offenderResult is AuthorisableActionResult.NotFound) throw BadRequestProblem(mapOf("crn" to "Invalid crn"))
@@ -268,8 +278,8 @@ class PremisesController(
         cancellation = null,
         extensions = mutableListOf(),
         premises = premises,
-        bed = null,
-        service = ServiceName.approvedPremises,
+        bed = bed,
+        service = body.serviceName,
       )
     )
 

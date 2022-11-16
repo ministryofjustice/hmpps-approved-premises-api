@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
@@ -17,21 +16,23 @@ class BookingTransformer(
   private val departureTransformer: DepartureTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
-  private val extensionTransformer: ExtensionTransformer
+  private val extensionTransformer: ExtensionTransformer,
+  private val bedTransformer: BedTransformer,
 ) {
   fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?) = Booking(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offender, inmateDetail),
     arrivalDate = jpa.arrivalDate,
     departureDate = jpa.departureDate,
-    serviceName = ServiceName.approvedPremises,
+    serviceName = jpa.service,
     keyWorker = staffMember?.let(staffMemberTransformer::transformDomainToApi),
     status = determineStatus(jpa),
     arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
     departure = departureTransformer.transformJpaToApi(jpa.departure),
     nonArrival = nonArrivalTransformer.transformJpaToApi(jpa.nonArrival),
     cancellation = cancellationTransformer.transformJpaToApi(jpa.cancellation),
-    extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi)
+    extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi),
+    bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
   )
 
   private fun determineStatus(jpa: BookingEntity) = when {

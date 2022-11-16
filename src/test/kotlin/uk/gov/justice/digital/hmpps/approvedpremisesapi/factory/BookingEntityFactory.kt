@@ -106,6 +106,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.serviceName = { serviceName }
   }
 
+  fun withYieldedBed(bed: Yielded<BedEntity>) = apply {
+    this.bed = bed
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),

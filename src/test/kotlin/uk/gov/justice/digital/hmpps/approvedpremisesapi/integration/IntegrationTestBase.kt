@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
@@ -52,6 +53,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -216,6 +219,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var roomRepository: RoomRepository
 
+  @Autowired
+  lateinit var bedRepository: BedRepository
+
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
@@ -244,6 +250,7 @@ abstract class IntegrationTestBase {
   lateinit var assessmentClarificationNoteEntityFactory: PersistedFactory<AssessmentClarificationNoteEntity, UUID, AssessmentClarificationNoteEntityFactory>
   lateinit var characteristicEntityFactory: PersistedFactory<CharacteristicEntity, UUID, CharacteristicEntityFactory>
   lateinit var roomEntityFactory: PersistedFactory<RoomEntity, UUID, RoomEntityFactory>
+  lateinit var bedEntityFactory: PersistedFactory<BedEntity, UUID, BedEntityFactory>
 
   @BeforeEach
   fun beforeEach() {
@@ -295,6 +302,7 @@ abstract class IntegrationTestBase {
     assessmentClarificationNoteEntityFactory = PersistedFactory(AssessmentClarificationNoteEntityFactory(), assessmentClarificationNoteRepository)
     characteristicEntityFactory = PersistedFactory(CharacteristicEntityFactory(), characteristicRepository)
     roomEntityFactory = PersistedFactory(RoomEntityFactory(), roomRepository)
+    bedEntityFactory = PersistedFactory(BedEntityFactory(), bedRepository)
   }
 
   fun mockClientCredentialsJwtRequest(

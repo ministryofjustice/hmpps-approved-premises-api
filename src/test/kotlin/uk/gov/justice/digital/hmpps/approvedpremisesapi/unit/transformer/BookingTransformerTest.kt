@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
@@ -55,6 +56,7 @@ class BookingTransformerTest {
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
   private val mockExtensionTransformer = mockk<ExtensionTransformer>()
+  private val mockBedTransformer = mockk<BedTransformer>()
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
@@ -63,7 +65,8 @@ class BookingTransformerTest {
     mockDepartureTransformer,
     mockNonArrivalTransformer,
     mockCancellationTransformer,
-    mockExtensionTransformer
+    mockExtensionTransformer,
+    mockBedTransformer,
   )
 
   private val premisesEntity = TemporaryAccommodationPremisesEntity(
