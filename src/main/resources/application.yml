@@ -59,6 +59,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          ap-oasys-context:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token
@@ -115,6 +120,8 @@ services:
   case-notes:
     base-url: http://localhost:9004/case-notes
   ap-delius-context-api:
+    base-url: http://localhost:9004
+  ap-oasys-context-api:
     base-url: http://localhost:9004
 
 hmpps:
