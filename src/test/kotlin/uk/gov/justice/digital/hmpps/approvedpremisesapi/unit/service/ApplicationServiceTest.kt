@@ -2,11 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -17,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonLogicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -30,6 +33,7 @@ class ApplicationServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
+  private val mockJsonLogicService = mockk<JsonLogicService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -37,7 +41,8 @@ class ApplicationServiceTest {
     mockJsonSchemaService,
     mockOffenderService,
     mockUserService,
-    mockAssessmentService
+    mockAssessmentService,
+    mockJsonLogicService
   )
 
   @Test
@@ -330,5 +335,150 @@ class ApplicationServiceTest {
     val validatableActionResult = result.entity as ValidatableActionResult.Success
 
     assertThat(validatableActionResult.entity.data).isEqualTo(updatedData)
+  }
+
+  @Test
+  fun `submitApplication returns NotFound when application doesn't exist`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+    assertThat(applicationService.submitApplication(applicationId, "{}", username) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `submitApplication returns Unauthorised when application doesn't belong to request user`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val application = ApplicationEntityFactory()
+      .withId(applicationId)
+      .withYieldedCreatedByUser { UserEntityFactory().produce() }
+      .produce()
+
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withDeliusUsername(username)
+      .produce()
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    assertThat(applicationService.submitApplication(applicationId, "{}", username) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `submitApplication returns GeneralValidationError when application schema is outdated`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .produce()
+
+    val application = ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(null)
+      .produce()
+      .apply {
+        schemaUpToDate = false
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.submitApplication(applicationId, "{}", username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+  }
+
+  @Test
+  fun `submitApplication returns GeneralValidationError when application has already been submitted`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .produce()
+
+    val application = ApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.submitApplication(applicationId, "{}", username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+  }
+
+  @Test
+  fun `submitApplication returns Success, runs json logic rules and creates assessment`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .produce()
+
+    val application = ApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(null)
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+    every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockJsonLogicService.resolveBoolean(newestSchema.isPipeJsonLogicRule, application.data!!) } returns true
+    every { mockJsonLogicService.resolveBoolean(newestSchema.isWomensJsonLogicRule, application.data!!) } returns false
+    every { mockAssessmentService.createAssessment(application) } returns AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
+
+    val result = applicationService.submitApplication(applicationId, "{}", username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.Success
+    assertThat(validatableActionResult.entity.isPipeApplication).isTrue
+    assertThat(validatableActionResult.entity.isWomensApplication).isFalse
+
+    verify { mockApplicationRepository.save(any()) }
+    verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
   }
 }
