@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -72,6 +73,13 @@ class DeserializationValidationService {
 
           val genericType = it.returnType.arguments.first().type!!.jvmErasure
           result.putAll(validateArray("$path.${it.name}", genericType, jsonObject.get(it.name) as ArrayNode, it.returnType.arguments.first().type!!.isMarkedNullable))
+          return@forEach
+        }
+
+        if ((it.returnType.jvmErasure.java as Class<*>).isEnum) {
+          if (jsonObject.get(it.name) !is TextNode) {
+            result["$path.${it.name}"] = "expectedString"
+          }
           return@forEach
         }
 
