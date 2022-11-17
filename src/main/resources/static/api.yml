@@ -974,6 +974,193 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/offence-analysis:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys offence analysis for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys offence analysis
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: object
+                $ref: '#/components/schemas/OASysOffenceAnalysis'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risk-contributors:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys information on issues contributing to risks of offending or harm for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys information on issues contributing to risks
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskContributors'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risk-management-plan:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys Risk Management Plan for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys Risk Management Plan
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskManagementPlan'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/rosh-summary:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys Risk of Serious Harm (RoSH) summary for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys RoSH summary
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskOfSeriousHarmSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risks-to-the-individual:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys risks to the individual (R8, R9) for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys risks to the individual
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRisksToTheIndividual'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risks-to-others:
+    get:
+      tags:
+        - OASys
+      summary: Returns the latest OASys current and previous risks to others (R6.1, R6.2) for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys risks to others
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRisksToOthers'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2855,3 +3042,205 @@ components:
         - pending
         - active
         - archived
+    OASysAssessmentId:
+      description: The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.
+      type: long
+      example: 138985987
+    OASysQuestion:
+      type: object
+      properties:
+        label:
+          type: string
+        questionNumber:
+          type: string
+        answers:
+          type: array
+          items:
+            type: string
+      required:
+        - label
+        - questionNumber
+        - answers
+    ArrayOfOASysOffenceAnalysisQuestions:
+      type: array
+      items:
+        type: OASysQuestion
+        example:
+          - label: "Offence summary"
+            questionNumber: "2.1"
+            answers:
+              - "Mr Smith admits he went to Mr Jones's address on 23rd March 2010..."
+          - label: "Offence involved"
+            questionNumber: "2.2"
+            answers:
+              - "Any violence or threat of violence / coercion"
+              -  "Excessive use of violence / sadistic violence"
+              -  "Carrying or using a weapon"
+          - label: "Specific weapon"
+            questionNumber: "2.3"
+            answers:
+              - "Iron bar"
+    ArrayOfOASysRiskContributorsQuestions:
+      type: array
+      items:
+        type: OASysQuestion
+        example:
+          - label: "Accommodation issues contributing to risks of offending and harm"
+            questionNumber: "3.9"
+            answers:
+              - "Mr Smith told me that he was renting a room in a shared house, prior to his current remand..."
+          - label: "Education, training and employability issues contributing to risks of offending and harm"
+            questionNumber: "4.9"
+            answers:
+              - "Mr Smith told me that his formal school education was regularly interrupted as he and his family travelled a lot whilst he was growing up..."
+    ArrayOfOASysRiskManagementQuestions:
+      type: array
+      items:
+        type: OASysQuestion
+        example:
+          - label: "Current situation"
+            questionNumber: "RM28.1"
+            answers:
+              - "Currently on remand at HMP Wandsworth - Management of case under MAPPA - level not yet set."
+          - label: "Supervision"
+            questionNumber: "RM30"
+            answers:
+              - "Probation Officer, Education training and employment Officer, Prison Offender Supervisor"
+          - label: "Monitoring and control"
+            questionNumber: "RM31"
+            answers:
+              - "State they will have secure accommodation for Mr Smith and partner on release, although ..."
+    ArrayOfOASysRiskOfSeriousHarmSummaryQuestions:
+      type: array
+      items:
+        type: OASysQuestion
+        example:
+          - label: "Who is at risk?"
+            questionNumber: "R10.1"
+            answers:
+              - "Males whom Mr Smith believes have wronged him, or strangers with whom he gets...."
+          - label: "What is the nature of the risk?"
+            questionNumber: "R10.2"
+            answers:
+              - "Violence"
+              - "Threats"
+              - "Physical harm"
+          - label: "When is the risk likely to be greatest?"
+            questionNumber: "R10.3"
+            answers:
+              - "Not imminent ? lengthy gap between convictions for violent offences..."
+          - label: "What circumstances are likely to increase the risk?"
+            questionNumber: "R10.4"
+            answers:
+              - "As above ? drug use, need to obtain money for drugs at all costs..."
+          - label: "What factors are likely to reduce the risk?"
+            questionNumber: "R10.5"
+            answers:
+              - "Mr Smith thinking about consequences of his actions and not acting impulsively..."
+    ArrayOfOASysRisksToTheIndividualQuestions:
+      type: OASysQuestion
+      example:
+        - label: "Current concerns about self-harm or suicide"
+          questionNumber: "R8.1.1"
+          answers:
+            - "There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody..."
+        - label: "Previous concerns about self-harm or suicide"
+          questionNumber: "R8.1.4"
+          answers:
+            - "During Mr Smith's psr report, he denied having any history of self-harm, however... "
+        - label: "Current concerns about Coping in Custody or Hostel."
+          questionNumber: "R8.2.1"
+          answers:
+            - "Has told prison staff that he swallowed batteries on one occasion due to wanting..."
+        - label: "Previous concerns about Coping in Custody or Hostel."
+          questionNumber: "R8.2.2"
+          answers:
+            - "Reported in 2021 that he will keep himself to himself because he gets discomfiture..."
+    ArrayOfOASysRisksToOthersQuestions:
+      type: array
+      items:
+        type: OASysQuestion
+        example:
+          - label: "Current offence details"
+            questionNumber: "R6.1 FA1"
+            answers:
+              - "Mr Smith was released on licence from custody on 12/7/2018.  Between then and 1/8/2018 Mr Smith approached..."
+          - label: "Current where and when"
+            questionNumber: "R6.1 FA2"
+            answers:
+              - "Between 12/7/2018 - 31/7/2018, initially victim in the street putting bins out... "
+          - label: "Previous offence details"
+            questionNumber: "R6.2 FA8"
+            answers:
+              - "Mr Smith is assessed to have committed a number of offences that are considered to have crossed the Threshold of serious harm..."
+          - label: "Previous where and when"
+            questionNumber: "R6.2 FA9"
+            answers:
+              - "Bolton and Bury Districts."
+    OASysOffenceAnalysis:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        offenceAnalysis:
+          $ref: '#/components/schemas/ArrayOfOASysOffenceAnalysisQuestions'
+      required:
+        - assessmentId
+        - offenceAnalysis
+    OASysRiskContributors:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        riskContributors:
+          $ref: '#/components/schemas/ArrayOfOASysRiskContributorsQuestions'
+      required:
+        - assessmentId
+        - riskContributors
+    OASysRiskManagementPlan:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        riskManagementPlan:
+          $ref: '#/components/schemas/ArrayOfOASysRiskManagementQuestions'
+      required:
+        - assessmentId
+        - riskManagementPlan
+    OASysRiskOfSeriousHarmSummary:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        riskOfSeriousHarmSummary:
+          $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
+      required:
+        - assessmentId
+        - riskOfSeriousHarmSummary
+    OASysRisksToTheIndividual:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        risksToTheIndividual:
+          $ref: '#/components/schemas/ArrayOfOASysRisksToTheIndividualQuestions'
+      required:
+        - assessmentId
+        - risksToTheIndividual
+    OASysRisksToOthers:
+      type: object
+      properties:
+        assessmentId:
+          type: object
+          $ref: '#/components/schemas/OASysAssessmentId'
+        risksToOthers:
+          $ref: '#/components/schemas/ArrayOfOASysRisksToOthersQuestions'
+      required:
+        - assessmentId
+        - risksToOthers
+
