@@ -30,3 +30,30 @@ fun LocalDate.getDaysUntilExclusiveEnd(end: LocalDate): List<LocalDate> {
 }
 
 fun LocalDate.toLocalDateTime(zoneOffset: ZoneOffset = ZoneOffset.UTC) = OffsetDateTime.of(this, LocalTime.MIN, zoneOffset)
+
+infix fun ClosedRange<LocalDate>.overlaps(other: ClosedRange<LocalDate>): Boolean {
+  /*
+  false:  <--A-->             (A entirely before B)
+                    <--B-->
+
+  false:            <--A-->   (A entirely after B)
+          <--B-->
+
+  true:   <--A-->             (A ends after B begins)
+             <--B-->
+
+  true:      <--A-->          (A starts before B ends)
+          <--B-->
+
+  true:   <-------A------->   (A fully contains B)
+            <--B-->
+
+  true:        <--A-->        (B fully contains A)
+          <-------B------->
+  */
+
+  val thisFullyBefore = this.start < other.start && this.endInclusive < other.start
+  val thisFullyAfter = this.endInclusive > other.endInclusive && this.start > other.endInclusive
+
+  return !(thisFullyBefore || thisFullyAfter)
+}
