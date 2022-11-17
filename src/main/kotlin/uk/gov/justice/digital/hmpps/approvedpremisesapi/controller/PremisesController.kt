@@ -261,6 +261,10 @@ class PremisesController(
     if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
     inmateDetailResult as AuthorisableActionResult.Success
 
+    if (body.departureDate.isBefore(body.arrivalDate)) {
+      validationErrors["departureDate"] = "departureBeforeArrival"
+    }
+
     if (validationErrors.any()) {
       throw BadRequestProblem(validationErrors)
     }

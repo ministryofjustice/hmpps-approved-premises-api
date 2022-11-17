@@ -443,6 +443,63 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Booking returns 400 when the departure date is before the arrival date`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withName("test-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("test-room")
+          withYieldedPremises { premises }
+        }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewTemporaryAccommodationBooking(
+          crn = "CRN321",
+          arrivalDate = LocalDate.parse("2022-09-30"),
+          departureDate = LocalDate.parse("2022-08-30"),
+          serviceName = ServiceName.temporaryAccommodation,
+          bedId = bed.id,
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("departureBeforeArrival")
+  }
+
+  @Test
   fun `Create Arrival without JWT returns 401`() {
     webTestClient.post()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/arrivals")
