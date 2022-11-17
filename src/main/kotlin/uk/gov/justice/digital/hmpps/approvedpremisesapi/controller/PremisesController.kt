@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -55,6 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import java.time.LocalDate
 import java.util.UUID
 
@@ -239,17 +241,47 @@ class PremisesController(
     val validationErrors = ValidationErrors()
 
     val bed = when (body) {
-      is NewTemporaryAccommodationBooking ->
-        premises.rooms
+      is NewTemporaryAccommodationBooking -> {
+        val result = premises.rooms
           .flatMap { it.beds }
           .find { it.id == body.bedId }
-          ?: throw BadRequestProblem(mapOf("bedId" to "doesNotExist"))
+
+        if (result == null) {
+          validationErrors["$.bedId"] = "doesNotExist"
+        }
+
+        result
+      }
       else -> null
+    }
+
+    if (body.departureDate.isBefore(body.arrivalDate)) {
+      validationErrors["$.departureDate"] = "departureBeforeArrival"
+    }
+
+    if (body is NewTemporaryAccommodationBooking) {
+      // TODO: NewApprovedPremisesBooking will likely need to check for overlaps once bed-level bookings are implemented for AP
+      val desiredRange = body.arrivalDate..body.departureDate
+      premises.bookings
+        .filter { it.bed?.id == body.bedId }
+        .map { it to (it.arrivalDate..it.departureDate) }
+        .find { (_, range) -> range overlaps desiredRange }
+        ?.first
+        ?.let {
+          throw ConflictProblem(
+            it.id,
+            "Booking",
+            "dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+          )
+        }
     }
 
     val offenderResult = offenderService.getOffenderByCrn(body.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
     if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
-    if (offenderResult is AuthorisableActionResult.NotFound) throw BadRequestProblem(mapOf("crn" to "Invalid crn"))
+    if (offenderResult is AuthorisableActionResult.NotFound) {
+      validationErrors["$.crn"] = "doesNotExist"
+      throw BadRequestProblem(validationErrors)
+    }
     offenderResult as AuthorisableActionResult.Success
 
     if (offenderResult.entity.otherIds.nomsNumber == null) {
@@ -257,13 +289,12 @@ class PremisesController(
     }
 
     val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
-    if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
-    if (offenderResult is AuthorisableActionResult.NotFound) validationErrors["crn"] = "Invalid crn"
-    inmateDetailResult as AuthorisableActionResult.Success
-
-    if (body.departureDate.isBefore(body.arrivalDate)) {
-      validationErrors["departureDate"] = "departureBeforeArrival"
+    if (inmateDetailResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
+    if (inmateDetailResult is AuthorisableActionResult.NotFound) {
+      validationErrors["$.crn"] = "doesNotExist"
+      throw BadRequestProblem(validationErrors)
     }
+    inmateDetailResult as AuthorisableActionResult.Success
 
     if (validationErrors.any()) {
       throw BadRequestProblem(validationErrors)
