@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysOffenceAnalysis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonNeeds
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceAnalysisTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -32,7 +34,8 @@ class PeopleController(
   private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
   private val needsTransformer: NeedsTransformer,
   private val adjudicationTransformer: AdjudicationTransformer,
-  private val alertTransformer: AlertTransformer
+  private val alertTransformer: AlertTransformer,
+  private val offenceAnalysisTransformer: OffenceAnalysisTransformer
 ) : PeopleApiDelegate {
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val offenderDetails = getOffenderDetails(crn)
@@ -133,6 +136,20 @@ class PeopleController(
     }
 
     return ResponseEntity.ok(acctAlerts.map(alertTransformer::transformToApi))
+  }
+
+  override fun peopleCrnOasysOffenceAnalysisGet(crn: String): ResponseEntity<OASysOffenceAnalysis> {
+    getOffenderDetails(crn)
+
+    val offenceDetailsResult = offenderService.getOASysOffenceDetails(crn)
+
+    val offenceDetails = when (offenceDetailsResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> offenceDetailsResult.entity
+    }
+
+    return ResponseEntity.ok(offenceAnalysisTransformer.transformToApi(offenceDetails))
   }
 
   private fun getOffenderDetails(crn: String): OffenderDetailSummary {

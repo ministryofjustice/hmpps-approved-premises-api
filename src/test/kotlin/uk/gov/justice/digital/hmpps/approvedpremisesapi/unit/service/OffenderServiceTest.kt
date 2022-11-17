@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -49,6 +50,7 @@ class OffenderServiceTest {
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
+  private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
     lookbackDays = 30
     prisonApiPageSize = 2
@@ -73,6 +75,7 @@ class OffenderServiceTest {
     mockHMPPSTierApiClient,
     mockPrisonsApiClient,
     mockCaseNotesClient,
+    mockApOASysContextApiClient,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel
   )
