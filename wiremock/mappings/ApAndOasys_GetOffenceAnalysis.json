@@ -1,0 +1,34 @@
+{
+  "id": "f5f0e36b-84a5-4169-92f3-3719cec200f4",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/offence-details/(.*)"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "assessmentId": 1310103,
+      "assessmentType": "LAYER3",
+      "dateCompleted": null,
+      "assessorSignedDate": null,
+      "initiationDate": "2022-11-02T15:17:29Z",
+      "assessmentStatus": "OPEN",
+      "superStatus": "WIP",
+      "limitedAccessOffender": false,
+      "offenceDetails": {
+        "offenceAnalysis": "[2.1] Mr Smith appeared before Newcastle Crown Court 16/09/2021 where he pleaded guilty to Wounding and other acts endangering life...",
+        "othersInvolved": "[2.7.3] Mr Smith had some associates at his house at the time of the index offence, the total number is unknown...",
+        "issueContributingToRisk": "[2.98] The index offence is assessed as harm related and there is an identifiable victim Ms Black...",
+        "offenceMotivation": "[2.8.3] Mr Smith states that he was angry, and became aggressive towards Ms Black because...",
+        "victimImpact": "[2.5] Ms Black attended Newtree hospital at 22:40 hours on 01/03/21 with injuries to her face and body that they were...",
+        "victimPerpetratorRel": "[2.4.2] Ms Joan Black, ex-partner of Mr Smith ",
+        "victimInfo": "[2.4.1] There is an element of vulnerability as Ms Black experience years of domestic abuse...",
+        "patternOffending": "[2.12] Mr Smith has 11 previous convictions from 22 offences. His criminal history includes...",
+        "acceptsResponsibility": "[2.11.t] Mr Smith states that he takes full responsibility for his actions and seems remorseful..."
+      }
+    }
+  }
+}
