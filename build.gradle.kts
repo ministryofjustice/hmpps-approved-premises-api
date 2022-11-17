@@ -1,9 +1,8 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.5.5"
-  kotlin("plugin.spring") version "1.6.21"
-
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.5.7"
+  kotlin("plugin.spring") version "1.7.21"
   id("org.openapi.generator") version "5.4.0"
-  id("org.jetbrains.kotlin.plugin.jpa") version "1.7.10"
+  id("org.jetbrains.kotlin.plugin.jpa") version "1.7.21"
 }
 
 configurations {
@@ -48,38 +47,6 @@ dependencies {
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
-
-  implementation("com.fasterxml.jackson.core:jackson-databind") {
-    version { strictly("2.14.0-rc2") }
-  }
-
-  testRuntimeOnly("com.fasterxml.jackson.core:jackson-databind") {
-    version { strictly("2.14.0-rc2") }
-  }
-
-  implementation("com.fasterxml.jackson.core:jackson-annotations") {
-    version { strictly("2.14.0-rc2") }
-  }
-
-  testRuntimeOnly("com.fasterxml.jackson.core:jackson-annotations") {
-    version { strictly("2.14.0-rc2") }
-  }
-
-  implementation("com.fasterxml.jackson.core:jackson-core") {
-    version { strictly("2.14.0-rc2") }
-  }
-
-  testRuntimeOnly("com.fasterxml.jackson.core:jackson-core") {
-    version { strictly("2.14.0-rc2") }
-  }
-
-  implementation("org.apache.commons:commons-text") {
-    version { strictly("1.10.0") }
-  }
-
-  testRuntimeOnly("org.apache.commons:commons-text") {
-    version { strictly("1.10.0") }
-  }
 }
 
 java {
