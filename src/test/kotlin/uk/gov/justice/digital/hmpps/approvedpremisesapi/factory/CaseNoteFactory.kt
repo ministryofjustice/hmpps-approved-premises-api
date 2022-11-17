@@ -22,7 +22,6 @@ class CaseNoteFactory : Factory<CaseNote> {
   private var authorUserId: Yielded<String> = { randomInt(0, 1000).toLong().toString() }
   private var authorName: Yielded<String> = { randomStringUpperCase(10) }
   private var text: Yielded<String> = { randomStringUpperCase(20) }
-  private var originalTextNote: Yielded<String> = { randomStringUpperCase(20) }
   private var eventId: Yielded<Int> = { randomInt(0, 1000) }
   private var locationId: Yielded<String?> = { null }
 
@@ -82,10 +81,6 @@ class CaseNoteFactory : Factory<CaseNote> {
     this.text = { text }
   }
 
-  fun withOriginalNoteText(originalNoteText: String) = apply {
-    this.originalTextNote = { originalNoteText }
-  }
-
   fun withLocationId(locationId: String?) = apply {
     this.locationId = { locationId }
   }
@@ -102,7 +97,6 @@ class CaseNoteFactory : Factory<CaseNote> {
     authorUserId = this.authorUserId(),
     authorName = this.authorName(),
     text = this.text(),
-    originalNoteText = this.originalTextNote(),
     locationId = this.locationId(),
     amendments = listOf(),
     offenderIdentifier = this.offenderIdentifier(),

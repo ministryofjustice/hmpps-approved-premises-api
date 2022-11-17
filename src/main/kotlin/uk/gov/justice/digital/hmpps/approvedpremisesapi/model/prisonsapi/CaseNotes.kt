@@ -22,7 +22,6 @@ data class CaseNote(
   val authorUserId: String,
   val authorName: String,
   val text: String,
-  val originalNoteText: String,
   val locationId: String?,
   val eventId: Int,
   val sensitive: Boolean,
