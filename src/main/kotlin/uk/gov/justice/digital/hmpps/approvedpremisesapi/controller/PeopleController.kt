@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAler
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonNeeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -34,13 +35,7 @@ class PeopleController(
   private val alertTransformer: AlertTransformer
 ) : PeopleApiDelegate {
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
-    val principal = httpAuthService.getDeliusPrincipalOrThrow()
-
-    val offenderDetails = when (val offenderResult = offenderService.getOffenderByCrn(crn, principal.name)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> offenderResult.entity
-    }
+    val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
@@ -70,15 +65,7 @@ class PeopleController(
   }
 
   override fun peopleCrnPrisonCaseNotesGet(crn: String): ResponseEntity<List<PrisonCaseNote>> {
-    val principal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = principal.name
-
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, username)
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    }
+    val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
@@ -111,15 +98,7 @@ class PeopleController(
   }
 
   override fun peopleCrnAdjudicationsGet(crn: String): ResponseEntity<List<Adjudication>> {
-    val principal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = principal.name
-
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, username)
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    }
+    val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
@@ -138,15 +117,7 @@ class PeopleController(
   }
 
   override fun peopleCrnAcctAlertsGet(crn: String): ResponseEntity<List<PersonAcctAlert>> {
-    val principal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = principal.name
-
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, username)
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    }
+    val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
@@ -162,5 +133,17 @@ class PeopleController(
     }
 
     return ResponseEntity.ok(acctAlerts.map(alertTransformer::transformToApi))
+  }
+
+  private fun getOffenderDetails(crn: String): OffenderDetailSummary {
+    val principal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = principal.name
+
+    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, username)
+    return when (offenderDetailsResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    }
   }
 }
