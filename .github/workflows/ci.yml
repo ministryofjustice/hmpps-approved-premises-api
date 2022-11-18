@@ -25,3 +25,19 @@ jobs:
       - name: Run tests
         id: test
         run: script/test
+  generate-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger UI Type Generation Workflow
+        if: ${{ github.ref == 'refs/heads/main' }}
+        id: trigger-ui-workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.UI_REPO_ACCESS_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: 'hmpps-approved-premises-ui',
+              workflow_id: 'generate-types.yml',
+              ref: 'main'
+            })
