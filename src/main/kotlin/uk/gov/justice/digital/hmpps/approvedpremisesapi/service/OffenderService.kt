@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
@@ -41,6 +43,7 @@ class OffenderService(
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   private val caseNotesClient: CaseNotesClient,
+  private val apOASysContextApiClient: ApOASysContextApiClient,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel
 ) {
@@ -236,6 +239,22 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(alerts)
+  }
+
+  fun getOASysOffenceDetails(crn: String): AuthorisableActionResult<OffenceDetails> {
+    val offenceDetailsResult = apOASysContextApiClient.getOffenceDetails(crn)
+
+    val offenceDetails = when (offenceDetailsResult) {
+      is ClientResult.Success -> offenceDetailsResult.body
+      is ClientResult.Failure.StatusCode -> when (offenceDetailsResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> offenceDetailsResult.throwException()
+      }
+      is ClientResult.Failure.Other -> offenceDetailsResult.throwException()
+    }
+
+    return AuthorisableActionResult.Success(offenceDetails)
   }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {

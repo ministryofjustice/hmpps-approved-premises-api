@@ -98,4 +98,20 @@ class WebClientConfiguration {
       .filter(oauth2Client)
       .build()
   }
+
+  @Bean(name = ["apOASysContextApiWebClient"])
+  fun apOASysContextApiWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.ap-oasys-context-api.base-url}") apOASysContextApiBaseUrl: String
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("ap-oasys-context")
+
+    return WebClient.builder()
+      .baseUrl(apOASysContextApiBaseUrl)
+      .filter(oauth2Client)
+      .build()
+  }
 }

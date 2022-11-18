@@ -3183,6 +3183,12 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        date:
+          type: string
+          format: date-time
+          description: If the assessment is completed this is the date it was completed, otherwise it is the date it was initiated
         offenceAnalysis:
           $ref: '#/components/schemas/ArrayOfOASysOffenceAnalysisQuestions'
       required:
@@ -3243,4 +3249,8 @@ components:
       required:
         - assessmentId
         - risksToOthers
-
+    OASysAssessmentState:
+      type: string
+      enum:
+        - Completed
+        - Incomplete
