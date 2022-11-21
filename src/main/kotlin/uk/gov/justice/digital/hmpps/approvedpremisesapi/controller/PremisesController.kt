@@ -314,7 +314,7 @@ class PremisesController(
         extensions = mutableListOf(),
         premises = premises,
         bed = bed,
-        service = body.serviceName,
+        service = body.serviceName.value,
       )
     )
 

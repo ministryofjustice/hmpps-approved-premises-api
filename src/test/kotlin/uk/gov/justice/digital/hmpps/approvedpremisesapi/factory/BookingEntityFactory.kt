@@ -123,6 +123,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed?.invoke(),
-    service = this.serviceName.invoke()
+    service = this.serviceName.invoke().value
   )
 }
