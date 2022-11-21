@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 
 @Component
 class ApOASysContextApiClient(
@@ -18,5 +19,9 @@ class ApOASysContextApiClient(
 
   fun getRiskManagementPlan(crn: String) = getRequest<RiskManagementPlan> {
     path = "/risk-management-plan/$crn"
+  }
+
+  fun getRoshSummary(crn: String) = getRequest<RoshSummary> {
+    path = "/rosh-summary/$crn"
   }
 }
