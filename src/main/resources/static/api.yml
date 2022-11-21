@@ -3217,14 +3217,18 @@ components:
           $ref: '#/components/schemas/OASysAssessmentId'
         assessmentState:
           $ref: '#/components/schemas/OASysAssessmentState'
-        date:
+        dateStarted:
           type: string
           format: date-time
-          description: If the assessment is completed this is the date it was completed, otherwise it is the date it was initiated
+        dateCompleted:
+          type: string
+          format: date-time
         offenceAnalysis:
           $ref: '#/components/schemas/ArrayOfOASysOffenceAnalysisQuestions'
       required:
         - assessmentId
+        - assessmentState
+        - dateStarted
         - offenceAnalysis
     OASysRiskContributors:
       type: object
@@ -3232,10 +3236,20 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
         riskContributors:
           $ref: '#/components/schemas/ArrayOfOASysRiskContributorsQuestions'
       required:
         - assessmentId
+        - assessmentState
+        - dateStarted
         - riskContributors
     OASysRiskManagementPlan:
       type: object
@@ -3264,10 +3278,20 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
         riskOfSeriousHarmSummary:
           $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
       required:
         - assessmentId
+        - assessmentState
+        - dateStarted
         - riskOfSeriousHarmSummary
     OASysRisksToTheIndividual:
       type: object
@@ -3275,10 +3299,20 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
         risksToTheIndividual:
           $ref: '#/components/schemas/ArrayOfOASysRisksToTheIndividualQuestions'
       required:
         - assessmentId
+        - assessmentState
+        - dateStarted
         - risksToTheIndividual
     OASysRisksToOthers:
       type: object
@@ -3286,10 +3320,20 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
         risksToOthers:
           $ref: '#/components/schemas/ArrayOfOASysRisksToOthersQuestions'
       required:
         - assessmentId
+        - asessmentState
+        - dateStarted
         - risksToOthers
     OASysAssessmentState:
       type: string
