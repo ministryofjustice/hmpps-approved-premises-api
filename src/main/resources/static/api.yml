@@ -3232,6 +3232,12 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        date:
+          type: string
+          format: date-time
+          description: If the assessment is completed this is the date it was completed, otherwise it is the date it was initiated
         riskContributors:
           $ref: '#/components/schemas/ArrayOfOASysRiskContributorsQuestions'
       required:
@@ -3254,6 +3260,12 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        date:
+          type: string
+          format: date-time
+          description: If the assessment is completed this is the date it was completed, otherwise it is the date it was initiated
         riskOfSeriousHarmSummary:
           $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
       required:
@@ -3265,6 +3277,12 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        date:
+          type: string
+          format: date-time
+          description: If the assessment is completed this is the date it was completed, otherwise it is the date it was initiated
         risksToTheIndividual:
           $ref: '#/components/schemas/ArrayOfOASysRisksToTheIndividualQuestions'
       required:
@@ -3276,6 +3294,12 @@ components:
         assessmentId:
           type: object
           $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        date:
+          type: string
+          format: date-time
+          description: If the assessment is completed this is the date it was completed, otherwise it is the date it was initiated
         risksToOthers:
           $ref: '#/components/schemas/ArrayOfOASysRisksToOthersQuestions'
       required:
