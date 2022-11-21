@@ -3,11 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmentState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysOffenceAnalysis
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 
 @Component
-class OffenceAnalysisTransformer {
+class OffenceAnalysisTransformer : OASysTransformer() {
   fun transformToApi(offenceDetails: OffenceDetails) = OASysOffenceAnalysis(
     assessmentId = offenceDetails.assessmentId,
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
@@ -23,11 +22,5 @@ class OffenceAnalysisTransformer {
       oASysQuestionWithSingleAnswer("Pattern Offending", "2.12", offenceDetails.offenceDetails.patternOffending),
       oASysQuestionWithSingleAnswer("Accepts Responsibility", "2.11.t", offenceDetails.offenceDetails.acceptsResponsibility)
     )
-  )
-
-  private fun oASysQuestionWithSingleAnswer(label: String, questionNumber: String, answer: String) = OASysQuestion(
-    label = label,
-    questionNumber = questionNumber,
-    answers = listOf(answer)
   )
 }
