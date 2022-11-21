@@ -283,6 +283,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        409:
+          description: An existing booking for the given bed has overlapping dates
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
@@ -1998,11 +2004,16 @@ components:
           format: date
         keyWorker:
           $ref: '#/components/schemas/StaffMember'
+        serviceName:
+          $ref: '#/components/schemas/ServiceName'
+        bed:
+          $ref: '#/components/schemas/Bed'
       required:
         - id
         - person
         - arrivalDate
         - departureDate
+        - serviceName
     NewBooking:
       type: object
       properties:
@@ -2017,10 +2028,31 @@ components:
           type: string
           format: date
           example: 2022-09-30
+        serviceName:
+          $ref: '#/components/schemas/ServiceName'
       required:
         - crn
         - arrivalDate
         - departureDate
+        - serviceName
+      discriminator:
+        propertyName: serviceName
+        mapping:
+          approved-premises: '#/components/schemas/NewApprovedPremisesBooking'
+          temporary-accommodation: '#/components/schemas/NewTemporaryAccommodationBooking'
+    NewApprovedPremisesBooking:
+      allOf:
+        - $ref: '#/components/schemas/NewBooking'
+    NewTemporaryAccommodationBooking:
+      allOf:
+        - $ref: '#/components/schemas/NewBooking'
+        - type: object
+          properties:
+            bedId:
+              type: string
+              format: uuid
+          required:
+            - bedId
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'

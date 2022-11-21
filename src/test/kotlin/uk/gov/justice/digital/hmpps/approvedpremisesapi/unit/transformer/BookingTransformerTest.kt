@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -35,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
@@ -54,6 +56,7 @@ class BookingTransformerTest {
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
   private val mockExtensionTransformer = mockk<ExtensionTransformer>()
+  private val mockBedTransformer = mockk<BedTransformer>()
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
@@ -62,7 +65,8 @@ class BookingTransformerTest {
     mockDepartureTransformer,
     mockNonArrivalTransformer,
     mockCancellationTransformer,
-    mockExtensionTransformer
+    mockExtensionTransformer,
+    mockBedTransformer,
   )
 
   private val premisesEntity = TemporaryAccommodationPremisesEntity(
@@ -107,7 +111,9 @@ class BookingTransformerTest {
     nonArrival = null,
     cancellation = null,
     extensions = mutableListOf(),
-    premises = premisesEntity
+    premises = premisesEntity,
+    bed = null,
+    service = ServiceName.approvedPremises,
   )
 
   private val staffMember = StaffMember(
@@ -181,7 +187,8 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Booking.Status.awaitingMinusArrival,
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -234,7 +241,8 @@ class BookingTransformerTest {
           reason = NonArrivalReason(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -289,7 +297,8 @@ class BookingTransformerTest {
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -340,7 +349,8 @@ class BookingTransformerTest {
           reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
@@ -460,7 +470,8 @@ class BookingTransformerTest {
           ),
           notes = null
         ),
-        extensions = listOf()
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
       )
     )
   }
