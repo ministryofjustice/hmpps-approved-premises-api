@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -57,6 +58,7 @@ class BookingTransformerTest {
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
   private val mockExtensionTransformer = mockk<ExtensionTransformer>()
   private val mockBedTransformer = mockk<BedTransformer>()
+  private val enumConverterFactory = EnumConverterFactory()
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
@@ -67,6 +69,7 @@ class BookingTransformerTest {
     mockCancellationTransformer,
     mockExtensionTransformer,
     mockBedTransformer,
+    enumConverterFactory,
   )
 
   private val premisesEntity = TemporaryAccommodationPremisesEntity(
@@ -113,7 +116,7 @@ class BookingTransformerTest {
     extensions = mutableListOf(),
     premises = premisesEntity,
     bed = null,
-    service = ServiceName.approvedPremises,
+    service = ServiceName.approvedPremises.value,
   )
 
   private val staffMember = StaffMember(

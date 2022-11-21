@@ -3,13 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.time.LocalDate
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -51,8 +48,7 @@ data class BookingEntity(
   @ManyToOne
   @JoinColumn(name = "bed_id")
   var bed: BedEntity?,
-  @Enumerated(value = EnumType.STRING)
-  var service: ServiceName,
+  var service: String,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

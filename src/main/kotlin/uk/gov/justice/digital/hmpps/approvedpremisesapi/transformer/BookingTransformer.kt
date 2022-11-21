@@ -2,10 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import java.lang.RuntimeException
 
 @Component
@@ -18,13 +21,14 @@ class BookingTransformer(
   private val cancellationTransformer: CancellationTransformer,
   private val extensionTransformer: ExtensionTransformer,
   private val bedTransformer: BedTransformer,
+  private val enumConverterFactory: EnumConverterFactory,
 ) {
   fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?) = Booking(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offender, inmateDetail),
     arrivalDate = jpa.arrivalDate,
     departureDate = jpa.departureDate,
-    serviceName = jpa.service,
+    serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),
     keyWorker = staffMember?.let(staffMemberTransformer::transformDomainToApi),
     status = determineStatus(jpa),
     arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
