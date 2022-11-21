@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
@@ -255,6 +256,22 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(offenceDetails)
+  }
+
+  fun getOASysRiskManagementPlan(crn: String): AuthorisableActionResult<RiskManagementPlan> {
+    val riskManagementPlanResult = apOASysContextApiClient.getRiskManagementPlan(crn)
+
+    val riskManagement = when (riskManagementPlanResult) {
+      is ClientResult.Success -> riskManagementPlanResult.body
+      is ClientResult.Failure.StatusCode -> when (riskManagementPlanResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> riskManagementPlanResult.throwException()
+      }
+      is ClientResult.Failure.Other -> riskManagementPlanResult.throwException()
+    }
+
+    return AuthorisableActionResult.Success(riskManagement)
   }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
