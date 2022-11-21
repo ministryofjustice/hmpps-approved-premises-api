@@ -31,7 +31,8 @@ class OffenceAnalysisTransformerTest {
 
     assertThat(result.assessmentId).isEqualTo(apiResponse.assessmentId)
     assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-    assertThat(result.date).isEqualTo(apiResponse.initiationDate)
+    assertThat(result.dateStarted).isEqualTo(apiResponse.initiationDate)
+    assertThat(result.dateCompleted).isEqualTo(apiResponse.dateCompleted)
     assertThat(result.offenceAnalysis).containsAll(
       listOf(
         OASysQuestion(
@@ -105,7 +106,8 @@ class OffenceAnalysisTransformerTest {
 
     assertThat(result.assessmentId).isEqualTo(apiResponse.assessmentId)
     assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.completed)
-    assertThat(result.date).isEqualTo(apiResponse.dateCompleted)
+    assertThat(result.dateStarted).isEqualTo(apiResponse.initiationDate)
+    assertThat(result.dateCompleted).isEqualTo(apiResponse.dateCompleted)
     assertThat(result.offenceAnalysis).containsAll(
       listOf(
         OASysQuestion(

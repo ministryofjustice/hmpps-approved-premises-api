@@ -10,7 +10,8 @@ class OffenceAnalysisTransformer : OASysTransformer() {
   fun transformToApi(offenceDetails: OffenceDetails) = OASysOffenceAnalysis(
     assessmentId = offenceDetails.assessmentId,
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
-    date = offenceDetails.dateCompleted ?: offenceDetails.initiationDate,
+    dateStarted = offenceDetails.initiationDate,
+    dateCompleted = offenceDetails.dateCompleted,
     offenceAnalysis = listOf(
       oASysQuestionWithSingleAnswer("Offence Analysis", "2.1", offenceDetails.offenceDetails.offenceAnalysis),
       oASysQuestionWithSingleAnswer("Others Involved", "2.7.3", offenceDetails.offenceDetails.othersInvolved),
