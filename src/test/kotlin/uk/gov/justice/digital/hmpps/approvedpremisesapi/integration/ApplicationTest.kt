@@ -474,7 +474,10 @@ class ApplicationTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewApplication(
-          crn = crn
+          crn = crn,
+          convictionId = 123,
+          eventNumber = "123",
+          offenceId = "123"
         )
       )
       .exchange()
@@ -508,7 +511,10 @@ class ApplicationTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewApplication(
-          crn = crn
+          crn = crn,
+          convictionId = 123,
+          eventNumber = "123",
+          offenceId = "123"
         )
       )
       .exchange()
@@ -538,7 +544,10 @@ class ApplicationTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewApplication(
-          crn = crn
+          crn = crn,
+          convictionId = 123,
+          eventNumber = "123",
+          offenceId = "123"
         )
       )
       .exchange()
@@ -589,7 +598,10 @@ class ApplicationTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewApplication(
-          crn = crn
+          crn = crn,
+          convictionId = 123,
+          eventNumber = "123",
+          offenceId = "123"
         )
       )
       .exchange()
