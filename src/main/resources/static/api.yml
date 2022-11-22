@@ -1167,6 +1167,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/offences:
+    get:
+      summary: Returns the active Offences for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch active Offences for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActiveOffence'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -3340,3 +3371,19 @@ components:
       enum:
         - Completed
         - Incomplete
+    ActiveOffence:
+      type: object
+      properties:
+        deliusEventNumber:
+          type: string
+        offenceDescription:
+          type: string
+        offenceId:
+          type: string
+        convictionId:
+          type: long
+      required:
+        - deliusEventNumber
+        - offenceDescription
+        - offenceId
+        - convictionId
