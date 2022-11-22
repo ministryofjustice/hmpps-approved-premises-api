@@ -2805,8 +2805,17 @@ components:
       properties:
         crn:
           type: string
+        convictionId:
+          type: long
+        eventNumber:
+          type: string
+        offenceId:
+          type: string
       required:
         - crn
+        - convictionId
+        - eventNumber
+        - offenceId
     UpdateApplication:
       type: object
       properties:
