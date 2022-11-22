@@ -46,6 +46,6 @@ class AdjudicationFactory : Factory<Adjudication> {
     agencyIncidentId = this.agencyIncidentId(),
     agencyId = this.agencyId(),
     partySeq = this.partySeq(),
-    charges = this.charges()
+    adjudicationCharges = this.charges()
   )
 }

@@ -13,7 +13,7 @@ data class Adjudication(
   val agencyIncidentId: Long,
   val agencyId: String,
   val partySeq: Long,
-  val charges: List<AdjudicationCharge>
+  val adjudicationCharges: List<AdjudicationCharge>
 )
 
 data class AdjudicationCharge(

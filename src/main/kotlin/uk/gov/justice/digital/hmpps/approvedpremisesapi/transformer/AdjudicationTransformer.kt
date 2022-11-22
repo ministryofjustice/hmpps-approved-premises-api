@@ -8,7 +8,7 @@ import java.time.ZoneOffset
 @Component
 class AdjudicationTransformer {
   fun transformToApi(adjudicationsPage: AdjudicationsPage) = adjudicationsPage.results.flatMap { result ->
-    result.charges.map { charge ->
+    result.adjudicationCharges.map { charge ->
       Adjudication(
         id = result.adjudicationNumber,
         reportedAt = result.reportTime.atOffset(ZoneOffset.UTC),
