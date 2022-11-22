@@ -1,0 +1,30 @@
+{
+  "id": "1112984a-9435-4a75-b0e1-30c6b4caf6d6",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/rosh-summary/(.*)"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "assessmentId": 1310103,
+      "assessmentType": "LAYER3",
+      "dateCompleted": null,
+      "assessorSignedDate": null,
+      "initiationDate": "2022-11-02T15:17:29Z",
+      "assessmentStatus": "OPEN",
+      "superStatus": "WIP",
+      "limitedAccessOffender": false,
+      "roshSummary": {
+        "whoAtRisk": "[R10.1] IN CUSTODY\n\nKNOWN ADULTS:\nSuch as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Smith cell.\n\nCHILDREN:\nSimon Smith, Roger Smith, Lindy Smith",
+        "natureOfRisk": "[R10.2] IN CUSTODY:\n\nKNOWN ADULTS:\nIntimidation, threats of violence, use of weapons or boiling water, physical education and violent assault, long term psychological impact as a result of Mr Smith violent behaviour. This harm may be cause in the course of physical altercation due to seeking revenge or holding grudges...",
+        "riskGreatest": "[R10.3] STATIC RISK FACTORS:\n\nMr Smith gender - At the time of the offence, Mr Smith was 35 years old and considered to be in the higher risk group.\n\nSTABLE DYNAMIC RISK FACTORS:\nThinking and behaviour - limited ability to manage mood or emotions poor impulse control. Mr Smith demonstrated cognitive deficit in committing the index offences and this still remains a concern...",
+        "riskIncreaseLikelyTo":  "[R10.4] CIRCUMSTANCES:\nA lack of stable accommodation\nunemployment\nnon constructive use of time\nbreakdown of family support\nbeing unable to access benefits\n\nUNDERLYING FACTORS:\npro criminal attitudes supporting commission of crime...",
+        "riskReductionLikelyTo": "[R10.5] Engage with Mental Health Services in prison and in the community.\nMaintain emotional stability.\nAbstain from alcohol.\nAbstain from illegal drugs.\nRegular testing for alcohol and drug use, in prison and on Licence.\nMaintain stable accommodation..."
+      }
+    }
+  }
+}
