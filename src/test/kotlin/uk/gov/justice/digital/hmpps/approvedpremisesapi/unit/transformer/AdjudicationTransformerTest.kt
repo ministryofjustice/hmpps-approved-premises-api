@@ -46,7 +46,7 @@ class AdjudicationTransformerTest {
           agencyIncidentId = 78910,
           agencyId = "PLACE",
           partySeq = 1,
-          charges = listOf(
+          adjudicationCharges = listOf(
             AdjudicationCharge(
               oicChargeId = "CHARGE",
               offenceCode = "OFFENCE",
@@ -90,7 +90,7 @@ class AdjudicationTransformerTest {
           agencyIncidentId = 78910,
           agencyId = "PLACE",
           partySeq = 1,
-          charges = listOf(
+          adjudicationCharges = listOf(
             AdjudicationCharge(
               oicChargeId = "CHARGE",
               offenceCode = "OFFENCE",
