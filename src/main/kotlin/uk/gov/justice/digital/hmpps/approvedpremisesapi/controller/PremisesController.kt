@@ -311,6 +311,7 @@ class PremisesController(
         departure = null,
         nonArrival = null,
         cancellation = null,
+        confirmation = null,
         extensions = mutableListOf(),
         premises = premises,
         bed = bed,

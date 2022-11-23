@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
@@ -29,6 +30,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var departure: Yielded<DepartureEntity>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
   private var cancellation: Yielded<CancellationEntity>? = null
+  private var confirmation: Yielded<ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(ServiceName.values().asList()) }
@@ -86,6 +88,14 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.cancellation = { cancellation }
   }
 
+  fun withYieldedConfirmation(confirmation: Yielded<ConfirmationEntity>) = apply {
+    this.confirmation = confirmation
+  }
+
+  fun withConfirmation(confirmation: ConfirmationEntity) = apply {
+    this.confirmation = { confirmation }
+  }
+
   fun withYieldedExtensions(extensions: Yielded<MutableList<ExtensionEntity>>) = apply {
     this.extensions = extensions
   }
@@ -120,6 +130,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     departure = this.departure?.invoke(),
     nonArrival = this.nonArrival?.invoke(),
     cancellation = this.cancellation?.invoke(),
+    confirmation = this.confirmation?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed?.invoke(),

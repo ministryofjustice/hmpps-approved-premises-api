@@ -113,6 +113,7 @@ class BookingTransformerTest {
     departure = null,
     nonArrival = null,
     cancellation = null,
+    confirmation = null,
     extensions = mutableListOf(),
     premises = premisesEntity,
     bed = null,
