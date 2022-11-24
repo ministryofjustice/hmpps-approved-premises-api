@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
@@ -40,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
@@ -55,6 +58,7 @@ class BookingTransformerTest {
   private val mockArrivalTransformer = mockk<ArrivalTransformer>()
   private val mockNonArrivalTransformer = mockk<NonArrivalTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
+  private val mockConfirmationTransformer = mockk<ConfirmationTransformer>()
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
   private val mockExtensionTransformer = mockk<ExtensionTransformer>()
   private val mockBedTransformer = mockk<BedTransformer>()
@@ -67,6 +71,7 @@ class BookingTransformerTest {
     mockDepartureTransformer,
     mockNonArrivalTransformer,
     mockCancellationTransformer,
+    mockConfirmationTransformer,
     mockExtensionTransformer,
     mockBedTransformer,
     enumConverterFactory,
@@ -145,6 +150,7 @@ class BookingTransformerTest {
     every { mockArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockNonArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockCancellationTransformer.transformJpaToApi(null) } returns null
+    every { mockConfirmationTransformer.transformJpaToApi(null) } returns null
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
 
     every { mockStaffMemberTransformer.transformDomainToApi(staffMember) } returns uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
@@ -193,6 +199,39 @@ class BookingTransformerTest {
         status = Booking.Status.awaitingMinusArrival,
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
+      )
+    )
+  }
+
+  @Test
+  fun `Provisional entity is correctly transformed`() {
+    val awaitingArrivalBooking = baseBookingEntity.copy(
+      id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+      service = ServiceName.temporaryAccommodation.value,
+    )
+
+    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
+
+    assertThat(transformedBooking).isEqualTo(
+      Booking(
+        id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+        person = Person(
+          crn = "crn",
+          name = "first last",
+          dateOfBirth = LocalDate.parse("2022-09-08"),
+          sex = "Male",
+          status = Person.Status.inCommunity,
+          nomsNumber = "NOMS321",
+          nationality = "English",
+          religionOrBelief = null,
+          genderIdentity = null,
+          prisonName = null
+        ),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = LocalDate.parse("2022-08-30"),
+        status = Booking.Status.provisional,
+        extensions = listOf(),
+        serviceName = ServiceName.temporaryAccommodation,
       )
     )
   }
@@ -476,6 +515,61 @@ class BookingTransformerTest {
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
+      )
+    )
+  }
+
+  @Test
+  fun `Confirmed entity is correctly transformed`() {
+    val confirmationBooking = baseBookingEntity.copy(
+      id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
+      service = ServiceName.temporaryAccommodation.value,
+    ).apply {
+      confirmation = ConfirmationEntity(
+        id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
+        dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
+        notes = null,
+        booking = this
+      )
+    }
+
+    every { mockConfirmationTransformer.transformJpaToApi(confirmationBooking.confirmation) } returns Confirmation(
+      id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
+      bookingId = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
+      notes = null,
+      dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
+    )
+
+    val transformedBooking = bookingTransformer.transformJpaToApi(confirmationBooking, offenderDetails, inmateDetail, null)
+
+    assertThat(transformedBooking).isEqualTo(
+      Booking(
+        id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
+        person = Person(
+          crn = "crn",
+          name = "first last",
+          dateOfBirth = LocalDate.parse("2022-09-08"),
+          sex = "Male",
+          status = Person.Status.inCommunity,
+          nomsNumber = "NOMS321",
+          nationality = "English",
+          religionOrBelief = null,
+          genderIdentity = null,
+          prisonName = null
+        ),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = LocalDate.parse("2022-08-30"),
+        keyWorker = null,
+        status = Booking.Status.confirmed,
+        cancellation = null,
+        confirmation = Confirmation(
+          id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
+          bookingId = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
+          notes = null,
+          dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
+        ),
+        extensions = listOf(),
+        serviceName = ServiceName.temporaryAccommodation,
       )
     )
   }

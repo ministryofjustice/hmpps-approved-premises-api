@@ -6,12 +6,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
@@ -28,6 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
@@ -54,6 +58,7 @@ class BookingServiceTest {
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
   private val mockCancellationRepository = mockk<CancellationRepository>()
+  private val mockConfirmationRepository = mockk<ConfirmationRepository>()
   private val mockExtensionRepository = mockk<ExtensionRepository>()
   private val mockDepartureRepository = mockk<DepartureRepository>()
   private val mockNonArrivalRepository = mockk<NonArrivalRepository>()
@@ -69,6 +74,7 @@ class BookingServiceTest {
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
     cancellationRepository = mockCancellationRepository,
+    confirmationRepository = mockConfirmationRepository,
     extensionRepository = mockExtensionRepository,
     departureRepository = mockDepartureRepository,
     nonArrivalRepository = mockNonArrivalRepository,
@@ -797,6 +803,68 @@ class BookingServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
     assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createConfirmation returns GeneralValidationError with correct message when Booking already has a Confirmation`() {
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withService(ServiceName.temporaryAccommodation.value)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val confirmationEntity = ConfirmationEntityFactory()
+      .withBooking(bookingEntity)
+      .produce()
+
+    bookingEntity.confirmation = confirmationEntity
+
+    val result = bookingService.createConfirmation(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+    assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Confirmation set")
+  }
+
+  @Test
+  fun `createConfirmation returns Success with correct result when validation passed`() {
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withService(ServiceName.temporaryAccommodation.value)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+
+    val result = bookingService.createConfirmation(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
     assertThat(result.entity.notes).isEqualTo("notes")
   }
 }
