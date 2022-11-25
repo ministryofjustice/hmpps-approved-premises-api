@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -266,19 +267,7 @@ class PremisesController(
 
     if (body is NewTemporaryAccommodationBooking) {
       // TODO: NewApprovedPremisesBooking will likely need to check for overlaps once bed-level bookings are implemented for AP
-      val desiredRange = body.arrivalDate..body.departureDate
-      premises.bookings
-        .filter { it.bed?.id == body.bedId }
-        .map { it to (it.arrivalDate..it.departureDate) }
-        .find { (_, range) -> range overlaps desiredRange }
-        ?.first
-        ?.let {
-          throw ConflictProblem(
-            it.id,
-            "Booking",
-            "dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-          )
-        }
+      throwIfBookingDatesConflict(body.arrivalDate, body.departureDate, null, body.bedId, premises)
     }
 
     val offenderResult = offenderService.getOffenderByCrn(body.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
@@ -334,6 +323,14 @@ class PremisesController(
   ): ResponseEntity<Arrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
+    if (booking.service == ServiceName.temporaryAccommodation.value) {
+      // TODO: Arrivals will likely need to check for overlaps once bed-level bookings are implemented for AP
+      val bedId = booking.bed?.id
+        ?: throw InternalServerErrorProblem("No bed ID present on Temporary Accommodation booking: $bookingId")
+
+      throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId, booking.premises)
+    }
+
     val result = bookingService.createArrival(
       booking = booking,
       arrivalDate = body.arrivalDate,
@@ -342,9 +339,9 @@ class PremisesController(
       keyWorkerStaffCode = body.keyWorkerStaffCode
     )
 
-    val departure = extractResultEntityOrThrow(result)
+    val arrival = extractResultEntityOrThrow(result)
 
-    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(departure))
+    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
   }
 
   override fun premisesPremisesIdBookingsBookingIdNonArrivalsPost(
@@ -568,5 +565,28 @@ class PremisesController(
     is ValidatableActionResult.Success -> result.entity
     is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
     is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+  }
+
+  private fun throwIfBookingDatesConflict(
+    arrivalDate: LocalDate,
+    departureDate: LocalDate,
+    thisBookingId: UUID?,
+    bedId: UUID,
+    premises: PremisesEntity,
+  ) {
+    val desiredRange = arrivalDate..departureDate
+    premises.bookings
+      .filter { it.id != thisBookingId }
+      .filter { it.bed?.id == bedId }
+      .map { it to (it.arrivalDate..it.departureDate) }
+      .find { (_, range) -> range overlaps desiredRange }
+      ?.first
+      ?.let {
+        throw ConflictProblem(
+          it.id,
+          "Booking",
+          "dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+        )
+      }
   }
 }
