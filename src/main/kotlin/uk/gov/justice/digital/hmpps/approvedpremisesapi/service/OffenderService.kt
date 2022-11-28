@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.Need
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
@@ -140,22 +139,6 @@ class OffenderService(
         AuthorisableActionResult.Success(
           risks
         )
-      }
-    }
-  }
-
-  fun getIdentifiedNeedsByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<List<Need>> {
-    return when (getOffenderByCrn(crn, userDistinguishedName)) {
-      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> {
-        val needsResponse = assessRisksAndNeedsApiClient.getNeeds(crn, jwt)
-
-        return when (needsResponse) {
-          is ClientResult.Failure.StatusCode -> if (needsResponse.status == HttpStatus.NOT_FOUND) AuthorisableActionResult.NotFound() else needsResponse.throwException()
-          is ClientResult.Failure.Other -> needsResponse.throwException()
-          is ClientResult.Success -> AuthorisableActionResult.Success(needsResponse.body.identifiedNeeds)
-        }
       }
     }
   }
