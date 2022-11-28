@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
@@ -28,5 +29,9 @@ class ApOASysContextApiClient(
 
   fun getRiskToTheIndividual(crn: String) = getRequest<RisksToTheIndividual> {
     path = "/risk-to-the-individual/$crn"
+  }
+
+  fun getNeedsDetails(crn: String) = getRequest<NeedsDetails> {
+    path = "/needs-details/$crn"
   }
 }
