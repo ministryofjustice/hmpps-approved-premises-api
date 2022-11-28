@@ -1191,6 +1191,39 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/selection:
+    get:
+      tags:
+        - OASys
+      summary: Returns the importable sections of OASys including details of links to harm and reoffending
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys selection
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OASysSection'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -3341,6 +3374,22 @@ components:
         - asessmentState
         - dateStarted
         - risksToOthers
+    OASysSection:
+      type: object
+      properties:
+        section:
+          type: integer
+          example: 10
+        name:
+          type: string
+          example: Emotional wellbeing
+        linkedToHarm:
+          type: boolean
+        linkedToReOffending:
+          type: boolean
+      required:
+        - section
+        - name
     OASysAssessmentState:
       type: string
       enum:
