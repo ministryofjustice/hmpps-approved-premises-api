@@ -1494,6 +1494,13 @@ paths:
       tags:
         - Reference Data
       summary: Lists all departure reasons
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only departure reasons for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
@@ -1514,6 +1521,13 @@ paths:
       tags:
         - Reference Data
       summary: Lists all move-on categories for departures
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only move-on categories for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
@@ -2487,11 +2501,14 @@ components:
         name:
           type: string
           example: Admitted to Hospital
+        serviceScope:
+          type: string
         isActive:
           type: boolean
       required:
         - id
         - name
+        - serviceScope
         - isActive
     MoveOnCategory:
       type: object
@@ -2502,11 +2519,14 @@ components:
         name:
           type: string
           example: Housing Association - Rented
+        serviceScope:
+          type: string
         isActive:
           type: boolean
       required:
         - id
         - name
+        - serviceScope
         - isActive
     DestinationProvider:
       type: object
