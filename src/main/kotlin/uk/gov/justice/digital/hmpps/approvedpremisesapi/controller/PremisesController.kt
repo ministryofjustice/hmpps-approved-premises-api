@@ -262,7 +262,7 @@ class PremisesController(
     }
 
     if (body.departureDate.isBefore(body.arrivalDate)) {
-      validationErrors["$.departureDate"] = "departureBeforeArrival"
+      validationErrors["$.departureDate"] = "beforeBookingArrivalDate"
     }
 
     if (body is NewTemporaryAccommodationBooking) {

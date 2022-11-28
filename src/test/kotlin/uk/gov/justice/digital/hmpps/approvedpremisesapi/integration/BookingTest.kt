@@ -502,7 +502,7 @@ class BookingTest : IntegrationTestBase() {
       .is4xxClientError
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
-      .jsonPath("invalid-params[0].errorType").isEqualTo("departureBeforeArrival")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("beforeBookingArrivalDate")
   }
 
   @Test
