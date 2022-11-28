@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
@@ -49,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
@@ -58,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -72,6 +76,7 @@ class PremisesController(
   private val arrivalTransformer: ArrivalTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
+  private val confirmationTransformer: ConfirmationTransformer,
   private val departureTransformer: DepartureTransformer,
   private val extensionTransformer: ExtensionTransformer,
   private val staffMemberTransformer: StaffMemberTransformer,
@@ -311,6 +316,7 @@ class PremisesController(
         departure = null,
         nonArrival = null,
         cancellation = null,
+        confirmation = null,
         extensions = mutableListOf(),
         premises = premises,
         bed = bed,
@@ -377,6 +383,24 @@ class PremisesController(
     val cancellation = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdConfirmationsPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewConfirmation,
+  ): ResponseEntity<Confirmation> {
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+
+    val result = bookingService.createConfirmation(
+      booking = booking,
+      dateTime = OffsetDateTime.now(),
+      notes = body.notes,
+    )
+
+    val confirmation = extractResultEntityOrThrow(result)
+
+    return ResponseEntity.ok(confirmationTransformer.transformJpaToApi(confirmation))
   }
 
   override fun premisesPremisesIdBookingsBookingIdDeparturesPost(

@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
@@ -35,6 +37,7 @@ class BookingService(
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
   private val cancellationRepository: CancellationRepository,
+  private val confirmationRepository: ConfirmationRepository,
   private val extensionRepository: ExtensionRepository,
   private val departureRepository: DepartureRepository,
   private val departureReasonRepository: DepartureReasonRepository,
@@ -156,6 +159,27 @@ class BookingService(
     )
 
     return success(cancellationEntity)
+  }
+
+  fun createConfirmation(
+    booking: BookingEntity,
+    dateTime: OffsetDateTime,
+    notes: String?,
+  ) = validated<ConfirmationEntity> {
+    if (booking.confirmation != null) {
+      return generalError("This Booking already has a Confirmation set")
+    }
+
+    val confirmationEntity = confirmationRepository.save(
+      ConfirmationEntity(
+        id = UUID.randomUUID(),
+        dateTime = dateTime,
+        notes = notes,
+        booking = booking,
+      )
+    )
+
+    return success(confirmationEntity)
   }
 
   fun createDeparture(

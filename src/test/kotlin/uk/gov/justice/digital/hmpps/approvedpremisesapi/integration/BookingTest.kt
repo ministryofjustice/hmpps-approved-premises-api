@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.BaseMatcher
+import org.hamcrest.Description
+import org.hamcrest.Matcher
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -8,6 +11,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -16,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
@@ -385,11 +390,12 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
       .jsonPath("$.departureDate").isEqualTo("2022-08-30")
       .jsonPath("$.keyWorker").isEqualTo(null)
-      .jsonPath("$.status").isEqualTo("awaiting-arrival")
+      .jsonPath("$.status").isEqualTo("provisional")
       .jsonPath("$.arrival").isEqualTo(null)
       .jsonPath("$.departure").isEqualTo(null)
       .jsonPath("$.nonArrival").isEqualTo(null)
       .jsonPath("$.cancellation").isEqualTo(null)
+      .jsonPath("$.confirmation").isEqualTo(null)
       .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
       .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
       .jsonPath("$.bed.name").isEqualTo("test-bed")
@@ -735,5 +741,72 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".notes").isEqualTo("notes")
 
     assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
+  }
+
+  @Test
+  fun `Create Confirmation without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/confirmations")
+      .bodyValue(
+        NewConfirmation(
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create Confirmation on Booking returns OK with correct body`() {
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedPremises {
+        temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+      }
+      withServiceName(ServiceName.temporaryAccommodation)
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val matcher: Matcher<OffsetDateTime> = object : BaseMatcher<OffsetDateTime>() {
+      override fun describeTo(description: Description?) {
+        description?.appendText("within the last five seconds")
+      }
+
+      override fun matches(actual: Any?): Boolean {
+        val actualDateTime = when (actual) {
+          is String -> OffsetDateTime.parse(actual)
+          is OffsetDateTime -> actual
+          else -> return false
+        }
+
+        val now = OffsetDateTime.now()
+
+        if (now.isBefore(actualDateTime)) return false
+
+        return actualDateTime.plusSeconds(5L).isAfter(now)
+      }
+    }
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewConfirmation(
+          notes = null
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+      .jsonPath("$.dateTime").value(matcher, OffsetDateTime::class.java)
+      .jsonPath("$.notes").isEqualTo(null)
   }
 }

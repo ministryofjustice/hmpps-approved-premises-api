@@ -40,6 +40,8 @@ data class BookingEntity(
   var nonArrival: NonArrivalEntity?,
   @OneToOne(mappedBy = "booking")
   var cancellation: CancellationEntity?,
+  @OneToOne(mappedBy = "booking")
+  var confirmation: ConfirmationEntity?,
   @OneToMany(mappedBy = "booking")
   var extensions: MutableList<ExtensionEntity>,
   @ManyToOne
@@ -63,11 +65,12 @@ data class BookingEntity(
     if (departure != other.departure) return false
     if (nonArrival != other.nonArrival) return false
     if (cancellation != other.cancellation) return false
+    if (confirmation != other.confirmation) return false
 
     return true
   }
 
-  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation)
+  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation, confirmation)
 
   override fun toString() = "BookingEntity:$id"
 }
