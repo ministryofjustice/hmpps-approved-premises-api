@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
@@ -225,6 +226,22 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(alerts)
+  }
+
+  fun getOASysNeeds(crn: String): AuthorisableActionResult<NeedsDetails> {
+    val needsResult = apOASysContextApiClient.getNeedsDetails(crn)
+
+    val needs = when (needsResult) {
+      is ClientResult.Success -> needsResult.body
+      is ClientResult.Failure.StatusCode -> when (needsResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> needsResult.throwException()
+      }
+      is ClientResult.Failure.Other -> needsResult.throwException()
+    }
+
+    return AuthorisableActionResult.Success(needs)
   }
 
   fun getOASysOffenceDetails(crn: String): AuthorisableActionResult<OffenceDetails> {
