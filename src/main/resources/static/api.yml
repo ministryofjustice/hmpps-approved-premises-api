@@ -1037,6 +1037,45 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/sections:
+    get:
+      tags:
+        - OASys
+      summary: Returns OASys sections to support an Application.  The Supporting Information sections are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys selection
+          required: true
+          schema:
+            type: string
+        - name: selected-sections
+          in: query
+          description: Section numbers for optional (not Linked to Harm) suppprting information
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysSections'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2947,6 +2986,24 @@ components:
       description: The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.
       type: long
       example: 138985987
+    OASysSupportingInformationQuestion:
+      type: object
+      properties:
+        label:
+          type: string
+        sectionNumber:
+          type: integer
+        questionNumber:
+          type: string
+        linkedToHarm:
+          type: boolean
+        linkedToReOffending:
+          type: boolean
+        answer:
+          type: string
+      required:
+        - label
+        - questionNumber
     OASysQuestion:
       type: object
       properties:
@@ -2954,33 +3011,22 @@ components:
           type: string
         questionNumber:
           type: string
-        answers:
-          type: array
-          items:
-            type: string
+        answer:
+          type: string
       required:
         - label
         - questionNumber
-        - answers
-    ArrayOfOASysOffenceAnalysisQuestions:
+    ArrayOfOASysOffenceDetailsQuestions:
       type: array
       items:
         type: OASysQuestion
         example:
-          - label: "Offence summary"
+          - label: "Offence analysis"
             questionNumber: "2.1"
-            answers:
-              - "Mr Smith admits he went to Mr Jones's address on 23rd March 2010..."
-          - label: "Offence involved"
-            questionNumber: "2.2"
-            answers:
-              - "Any violence or threat of violence / coercion"
-              -  "Excessive use of violence / sadistic violence"
-              -  "Carrying or using a weapon"
-          - label: "Specific weapon"
-            questionNumber: "2.3"
-            answers:
-              - "Iron bar"
+            answer: "Mr Smith admits he went to Mr Jones's address on 23rd March 2010..."
+          - label: "Victim - perpetrator relationship"
+            questionNumber: "2.4.1"
+            answer: "Mr Smith told me that he did not know the victim, prior to the incident..."
     ArrayOfOASysRiskContributorsQuestions:
       type: array
       items:
@@ -2988,12 +3034,10 @@ components:
         example:
           - label: "Accommodation issues contributing to risks of offending and harm"
             questionNumber: "3.9"
-            answers:
-              - "Mr Smith told me that he was renting a room in a shared house, prior to his current remand..."
+            answer: "Mr Smith told me that he was renting a room in a shared house, prior to his current remand..."
           - label: "Education, training and employability issues contributing to risks of offending and harm"
             questionNumber: "4.9"
-            answers:
-              - "Mr Smith told me that his formal school education was regularly interrupted as he and his family travelled a lot whilst he was growing up..."
+            answer: "Mr Smith told me that his formal school education was regularly interrupted as he and his family travelled a lot whilst he was growing up..."
     ArrayOfOASysRiskManagementQuestions:
       type: array
       items:
@@ -3001,16 +3045,13 @@ components:
         example:
           - label: "Current situation"
             questionNumber: "RM28.1"
-            answers:
-              - "Currently on remand at HMP Wandsworth - Management of case under MAPPA - level not yet set."
+            answer: "Currently on remand at HMP Wandsworth - Management of case under MAPPA - level not yet set."
           - label: "Supervision"
             questionNumber: "RM30"
-            answers:
-              - "Probation Officer, Education training and employment Officer, Prison Offender Supervisor"
+            answer: "Probation Officer, Education training and employment Officer, Prison Offender Supervisor"
           - label: "Monitoring and control"
             questionNumber: "RM31"
-            answers:
-              - "State they will have secure accommodation for Mr Smith and partner on release, although ..."
+            answer: "State they will have secure accommodation for Mr Smith and partner on release, although ..."
     ArrayOfOASysRiskOfSeriousHarmSummaryQuestions:
       type: array
       items:
@@ -3018,26 +3059,19 @@ components:
         example:
           - label: "Who is at risk?"
             questionNumber: "R10.1"
-            answers:
-              - "Males whom Mr Smith believes have wronged him, or strangers with whom he gets...."
+            answer: "Males whom Mr Smith believes have wronged him, or strangers with whom he gets...."
           - label: "What is the nature of the risk?"
             questionNumber: "R10.2"
-            answers:
-              - "Violence"
-              - "Threats"
-              - "Physical harm"
+            answer: "Violence, Threats, Physical harm"
           - label: "When is the risk likely to be greatest?"
             questionNumber: "R10.3"
-            answers:
-              - "Not imminent ? lengthy gap between convictions for violent offences..."
+            answer: "Not imminent ? lengthy gap between convictions for violent offences..."
           - label: "What circumstances are likely to increase the risk?"
             questionNumber: "R10.4"
-            answers:
-              - "As above ? drug use, need to obtain money for drugs at all costs..."
+            answer: "As above ? drug use, need to obtain money for drugs at all costs..."
           - label: "What factors are likely to reduce the risk?"
             questionNumber: "R10.5"
-            answers:
-              - "Mr Smith thinking about consequences of his actions and not acting impulsively..."
+            answer: "Mr Smith thinking about consequences of his actions and not acting impulsively..."
     ArrayOfOASysRisksToTheIndividualQuestions:
       type: array
       items:
@@ -3045,20 +3079,16 @@ components:
         example:
           - label: "Current concerns about self-harm or suicide"
             questionNumber: "R8.1.1"
-            answers:
-              - "There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody..."
+            answers: "There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody..."
           - label: "Previous concerns about self-harm or suicide"
             questionNumber: "R8.1.4"
-            answers:
-              - "During Mr Smith's psr report, he denied having any history of self-harm, however... "
+            answer: "During Mr Smith's psr report, he denied having any history of self-harm, however... "
           - label: "Current concerns about Coping in Custody or Hostel."
             questionNumber: "R8.2.1"
-            answers:
-              - "Has told prison staff that he swallowed batteries on one occasion due to wanting..."
+            answer: "Has told prison staff that he swallowed batteries on one occasion due to wanting..."
           - label: "Previous concerns about Coping in Custody or Hostel."
             questionNumber: "R8.2.2"
-            answers:
-              - "Reported in 2021 that he will keep himself to himself because he gets discomfiture..."
+            answer: "Reported in 2021 that he will keep himself to himself because he gets discomfiture..."
     ArrayOfOASysRisksToOthersQuestions:
       type: array
       items:
@@ -3066,21 +3096,56 @@ components:
         example:
           - label: "Current offence details"
             questionNumber: "R6.1 FA1"
-            answers:
-              - "Mr Smith was released on licence from custody on 12/7/2018.  Between then and 1/8/2018 Mr Smith approached..."
+            answer: "Mr Smith was released on licence from custody on 12/7/2018.  Between then and 1/8/2018 Mr Smith approached..."
           - label: "Current where and when"
             questionNumber: "R6.1 FA2"
-            answers:
-              - "Between 12/7/2018 - 31/7/2018, initially victim in the street putting bins out... "
+            answer: "Between 12/7/2018 - 31/7/2018, initially victim in the street putting bins out... "
           - label: "Previous offence details"
             questionNumber: "R6.2 FA8"
-            answers:
-              - "Mr Smith is assessed to have committed a number of offences that are considered to have crossed the Threshold of serious harm..."
+            answer: "Mr Smith is assessed to have committed a number of offences that are considered to have crossed the Threshold of serious harm..."
           - label: "Previous where and when"
             questionNumber: "R6.2 FA9"
-            answers:
-              - "Bolton and Bury Districts."
-    OASysOffenceAnalysis:
+            answer: "Bolton and Bury Districts."
+    ArrayOfOASysSupportingInformationQuestions:
+      type: array
+      items:
+        type: OASysSupportingInformationQuestion
+        example:
+          - label: "Accommodation issues contributing to risks of offending and harm?"
+            questionNumber: "3.9"
+            sectionNumber: 3
+            linkedToHarm: false
+            linkedToReOffending: true
+            answer: "Mr Smith told me that he was renting a room in a shared house, prior to his current remand. He said that this accomodation..."
+          - label: "Education, training and employability issues contributing to risks of offending and harm"
+            questionNumber: "4.9"
+            sectionNumber: 4
+            linkedToHarm: false
+            linkedToReOffending: true
+            answer: "He said that he has since learnt to read and write during periods of custody and..."
+    ArrayOfOASysRiskToSelfQuestions:
+      type: array
+      items:
+        type: OASysQuestion
+        example:
+          - label: "Current concerns about self-harm or suicide"
+            questionNumber: "R8.1.1"
+            answer: "There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody....."
+          - label: "Current concerns about Coping in Custody or Hostel."
+            questionNumber: "R8.2.1"
+            answer: "Has told prison staff that he swallowed batteries on one occasion due to wanting..."
+    ArrayOfOASysRiskManagementPlanQuestions:
+      type: array
+      items:
+        type: OASysQuestion
+        example:
+          - label: "Key information about current situation"
+            questionNumber: "RM28.1"
+            answer: "Currently on remand - Management of case under MAPPA - level not yet set......"
+          - label: "Further considerations about current situation"
+            questionNumber: "RM28"
+            answer: "Mr Manette is currently on remand awaiting sentence"
+    OASysSections:
       type: object
       properties:
         assessmentId:
@@ -3094,118 +3159,25 @@ components:
         dateCompleted:
           type: string
           format: date-time
-        offenceAnalysis:
-          $ref: '#/components/schemas/ArrayOfOASysOffenceAnalysisQuestions'
-      required:
-        - assessmentId
-        - assessmentState
-        - dateStarted
-        - offenceAnalysis
-    OASysRiskContributors:
-      type: object
-      properties:
-        assessmentId:
-          type: object
-          $ref: '#/components/schemas/OASysAssessmentId'
-        assessmentState:
-          $ref: '#/components/schemas/OASysAssessmentState'
-        dateStarted:
-          type: string
-          format: date-time
-        dateCompleted:
-          type: string
-          format: date-time
-        riskContributors:
-          $ref: '#/components/schemas/ArrayOfOASysRiskContributorsQuestions'
-      required:
-        - assessmentId
-        - assessmentState
-        - dateStarted
-        - riskContributors
-    OASysRiskManagementPlan:
-      type: object
-      properties:
-        assessmentId:
-          type: object
-          $ref: '#/components/schemas/OASysAssessmentId'
-        assessmentState:
-          $ref: '#/components/schemas/OASysAssessmentState'
-        dateStarted:
-          type: string
-          format: date-time
-        dateCompleted:
-          type: string
-          format: date-time
-        riskManagementPlan:
-          $ref: '#/components/schemas/ArrayOfOASysRiskManagementQuestions'
-      required:
-        - assessmentId
-        - assessmentState
-        - dateStarted
-        - riskManagementPlan
-    OASysRiskOfSeriousHarmSummary:
-      type: object
-      properties:
-        assessmentId:
-          type: object
-          $ref: '#/components/schemas/OASysAssessmentId'
-        assessmentState:
-          $ref: '#/components/schemas/OASysAssessmentState'
-        dateStarted:
-          type: string
-          format: date-time
-        dateCompleted:
-          type: string
-          format: date-time
-        riskOfSeriousHarmSummary:
+        offenceDetails:
+          $ref: '#/components/schemas/ArrayOfOASysOffenceDetailsQuestions'
+        roshSummary:
           $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
+        supportingInformation:
+          $ref: '#/components/schemas/ArrayOfOASysSupportingInformationQuestions'
+        riskToSelf:
+          $ref: '#/components/schemas/ArrayOfOASysRiskToSelfQuestions'
+        riskManagementPlan:
+          $ref: '#/components/schemas/ArrayOfOASysRiskManagementPlanQuestions'
       required:
         - assessmentId
         - assessmentState
         - dateStarted
-        - riskOfSeriousHarmSummary
-    OASysRisksToTheIndividual:
-      type: object
-      properties:
-        assessmentId:
-          type: object
-          $ref: '#/components/schemas/OASysAssessmentId'
-        assessmentState:
-          $ref: '#/components/schemas/OASysAssessmentState'
-        dateStarted:
-          type: string
-          format: date-time
-        dateCompleted:
-          type: string
-          format: date-time
-        risksToTheIndividual:
-          $ref: '#/components/schemas/ArrayOfOASysRisksToTheIndividualQuestions'
-      required:
-        - assessmentId
-        - assessmentState
-        - dateStarted
-        - risksToTheIndividual
-    OASysRisksToOthers:
-      type: object
-      properties:
-        assessmentId:
-          type: object
-          $ref: '#/components/schemas/OASysAssessmentId'
-        assessmentState:
-          $ref: '#/components/schemas/OASysAssessmentState'
-        dateStarted:
-          type: string
-          format: date-time
-        dateCompleted:
-          type: string
-          format: date-time
-        risksToOthers:
-          $ref: '#/components/schemas/ArrayOfOASysRisksToOthersQuestions'
-      required:
-        - assessmentId
-        - asessmentState
-        - dateStarted
-        - risksToOthers
+        - offenceDetails
+        - roshSummary
+        - supportingInformation
+        - riskToSelf
+        - riskManagementPlan
     OASysSection:
       type: object
       properties:
