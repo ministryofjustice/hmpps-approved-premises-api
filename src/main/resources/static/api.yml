@@ -911,35 +911,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /people/{crn}/needs:
-    get:
-      summary: Returns the needs for a Person
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch needs for
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/PersonNeeds'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /people/{crn}/prison-case-notes:
     get:
       summary: Returns the prison case notes for a Person
@@ -1208,6 +1179,39 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/OASysRisksToOthers'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/selection:
+    get:
+      tags:
+        - OASys
+      summary: Returns the importable sections of OASys including details of links to harm and reoffending
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys selection
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OASysSection'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -2741,56 +2745,6 @@ components:
         - retrieved
         - not_found
         - error
-    PersonNeeds:
-      type: object
-      properties:
-        linkedToRiskOfSeriousHarm:
-          type: array
-          items:
-            $ref: '#/components/schemas/PersonNeed'
-        linkedToReoffending:
-          type: array
-          items:
-            $ref: '#/components/schemas/PersonNeed'
-        notLinkedToSeriousHarmOrReoffending:
-          type: array
-          items:
-            $ref: '#/components/schemas/PersonNeed'
-      required:
-        - linkedToRiskOfSeriousHarm
-        - linkedToReoffending
-        - notLinkedToSeriousHarmOrReoffending
-    PersonNeed:
-      type: object
-      properties:
-        section:
-          type: string
-        name:
-          type: string
-        overThreshold:
-          type: boolean
-        riskOfHarm:
-          type: boolean
-        riskOfReoffending:
-          type: boolean
-        flaggedAsNeed:
-          type: boolean
-        severity:
-          type: string
-        identifiedAsNeed:
-          type: boolean
-        needScore:
-          type: integer
-      required:
-        - section
-        - name
-        - overThreshold
-        - riskOfHarm
-        - riskOfReoffending
-        - flaggedAsNeed
-        - severity
-        - identifiedAsNeed
-        - needScore
     PersonAcctAlert:
       type: object
       properties:
@@ -3420,6 +3374,22 @@ components:
         - asessmentState
         - dateStarted
         - risksToOthers
+    OASysSection:
+      type: object
+      properties:
+        section:
+          type: integer
+          example: 10
+        name:
+          type: string
+          example: Emotional wellbeing
+        linkedToHarm:
+          type: boolean
+        linkedToReOffending:
+          type: boolean
+      required:
+        - section
+        - name
     OASysAssessmentState:
       type: string
       enum:

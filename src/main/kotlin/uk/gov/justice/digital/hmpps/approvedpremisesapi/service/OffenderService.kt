@@ -20,11 +20,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.Need
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
@@ -144,22 +144,6 @@ class OffenderService(
     }
   }
 
-  fun getIdentifiedNeedsByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<List<Need>> {
-    return when (getOffenderByCrn(crn, userDistinguishedName)) {
-      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> {
-        val needsResponse = assessRisksAndNeedsApiClient.getNeeds(crn, jwt)
-
-        return when (needsResponse) {
-          is ClientResult.Failure.StatusCode -> if (needsResponse.status == HttpStatus.NOT_FOUND) AuthorisableActionResult.NotFound() else needsResponse.throwException()
-          is ClientResult.Failure.Other -> needsResponse.throwException()
-          is ClientResult.Success -> AuthorisableActionResult.Success(needsResponse.body.identifiedNeeds)
-        }
-      }
-    }
-  }
-
   fun getPrisonCaseNotesByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<CaseNote>> {
     val allCaseNotes = mutableListOf<CaseNote>()
 
@@ -242,6 +226,22 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(alerts)
+  }
+
+  fun getOASysNeeds(crn: String): AuthorisableActionResult<NeedsDetails> {
+    val needsResult = apOASysContextApiClient.getNeedsDetails(crn)
+
+    val needs = when (needsResult) {
+      is ClientResult.Success -> needsResult.body
+      is ClientResult.Failure.StatusCode -> when (needsResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> needsResult.throwException()
+      }
+      is ClientResult.Failure.Other -> needsResult.throwException()
+    }
+
+    return AuthorisableActionResult.Success(needs)
   }
 
   fun getOASysOffenceDetails(crn: String): AuthorisableActionResult<OffenceDetails> {

@@ -1,0 +1,60 @@
+{
+  "id": "ad9834de-3c9b-4de7-bacf-49f3e984704f",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/needs-details/(.*)"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "assessmentId": 1310103,
+      "assessmentType": "LAYER3",
+      "dateCompleted": null,
+      "assessorSignedDate": null,
+      "initiationDate": "2022-11-02T15:17:29Z",
+      "assessmentStatus": "OPEN",
+      "superStatus": "WIP",
+      "limitedAccessOffender": false,
+      "needs": {
+        "offenceAnalysisDetails": "Analysis",
+        "emotionalIssuesDetails": "[10.9] Mr Smith told me that he was untroubled by mental health difficulties and had no history of self harm or suicidal thoughts",
+        "drugIssuesDetails":  "[8.9] Mr Smith told me that he had experimented with many drugs throughout his teens. ...",
+        "alcoholIssuesDetails": "[9.9] Mr Smith told me that he rarely consumes alcohol and has not had any problems associated with excessive drinking in years...",
+        "lifestyleIssuesDetails":  "[7.9] Mr Smith has clearly had issues concerning the company he keeps, in that his involvement in the drug culture has at times been entrenched...",
+        "relationshipIssuesDetails": "[6.9] Mr Smith described his family as travellers.  He said that they were very supportive of him, although they had at times found it difficult to accept his involvement with drugs...",
+        "financeIssuesDetails":  "[5.9] Mr Smith was in receipt of Job Seekers Allowance prior to his current remand in custody...",
+        "educationTrainingEmploymentIssuesDetails": "[4.9] He said that he has since learnt to read and write during periods of custody and an initial assessment of his...",
+        "accommodationIssuesDetails":  "[3.9] Mr Smith told me that he was renting a room in a shared house, prior to his current remand...",
+        "attitudeIssuesDetails": "[12.9] During interview, Mr Smith referred to being motivated to alter his....",
+        "thinkingBehaviouralIssuesDetails":  "[11.9] The circumstances of the current offence suggest that Mr Smith acted ..."
+      },
+      "linksToHarm": {
+        "accommodationLinkedToHarm":  true,
+        "educationTrainingEmploymentLinkedToHarm": true,
+        "financeLinkedToHarm":  false,
+        "relationshipLinkedToHarm": false,
+        "lifestyleLinkedToHarm":  false,
+        "drugLinkedToHarm": false,
+        "alcoholLinkedToHarm":  false,
+        "emotionalLinkedToHarm": false,
+        "thinkingBehaviouralLinkedToHarm":  false,
+        "attitudeLinkedToHarm": false
+      },
+      "linksToReOffending": {
+        "accommodationLinkedToReOffending": true,
+        "educationTrainingEmploymentLinkedToReOffending":true,
+        "financeLinkedToReOffending": false,
+        "relationshipLinkedToReOffending":false,
+        "lifestyleLinkedToReOffending": false,
+        "drugLinkedToReOffending":false,
+        "alcoholLinkedToReOffending": true,
+        "emotionalLinkedToReOffending":false,
+        "thinkingBehaviouralLinkedToReOffending": false,
+        "attitudeLinkedToReOffending": false
+      }
+    }
+  }
+}
