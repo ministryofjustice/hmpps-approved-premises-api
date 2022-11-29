@@ -1,0 +1,33 @@
+{
+  "id": "5bea7fae-090b-4010-b0bc-bf4d9068b2bd",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/risk-to-the-individual/(.*)"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "assessmentId": 1310103,
+      "assessmentType": "LAYER3",
+      "dateCompleted": null,
+      "assessorSignedDate": null,
+      "initiationDate": "2022-11-02T15:17:29",
+      "assessmentStatus": "OPEN",
+      "superStatus": "WIP",
+      "limitedAccessOffender": false,
+      "riskToTheIndividual": {
+        "currentConcernsSelfHarmSuicide": "Review 06.10.21:\n\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021...",
+        "previousConcernsSelfHarmSuicide": "Review 06.10.21:\n\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021 there...",
+        "currentCustodyHostelCoping": "Has told prison staff that he swallowed batteries on one occasion due to wanting..",
+        "previousCustodyHostelCoping": "Reported in 2021 that he will keep himself to himself because he gets discomfiture...",
+        "currentVulnerability": "Review 06.10.21:\n\n        A previous assessor opined that Mr Smith was displaying all the characteristics of someone...",
+        "previousVulnerability": "This has not been noted previously, as my assessment identifies a different set of vulnerabilities.",
+        "riskOfSeriousHarm": "Mr Smith's previous risk of suicide does not indicate a risk of serious harm to others.",
+        "currentConcernsBreachOfTrustText": "Prison records highlight that previously a female contacted the prison to say she was receiving nuisance calls..."
+      }
+    }
+  }
+}
