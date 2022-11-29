@@ -415,12 +415,14 @@ class BookingTransformerTest {
         reason = DepartureReasonEntity(
           id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
           name = "Departure Reason",
-          isActive = true
+          isActive = true,
+          serviceScope = "*",
         ),
         moveOnCategory = MoveOnCategoryEntity(
           id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
           name = "Move on Category",
-          isActive = true
+          isActive = true,
+          serviceScope = "*",
         ),
         destinationProvider = DestinationProviderEntity(
           id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
@@ -446,12 +448,14 @@ class BookingTransformerTest {
       reason = DepartureReason(
         id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
         name = "Departure Reason",
-        isActive = true
+        isActive = true,
+        serviceScope = "*",
       ),
       moveOnCategory = MoveOnCategory(
         id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
         name = "Move on Category",
-        isActive = true
+        isActive = true,
+        serviceScope = "*",
       ),
       destinationProvider = DestinationProvider(
         id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
@@ -499,12 +503,14 @@ class BookingTransformerTest {
           reason = DepartureReason(
             id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
             name = "Departure Reason",
-            isActive = true
+            isActive = true,
+            serviceScope = "*",
           ),
           moveOnCategory = MoveOnCategory(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
             name = "Move on Category",
-            isActive = true
+            isActive = true,
+            serviceScope = "*",
           ),
           destinationProvider = DestinationProvider(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),

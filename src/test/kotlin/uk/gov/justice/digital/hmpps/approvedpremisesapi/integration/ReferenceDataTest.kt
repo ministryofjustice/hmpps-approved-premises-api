@@ -149,6 +149,60 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get Departure Reasons for only approved premises returns 200 with correct body`() {
+    departureReasonRepository.deleteAll()
+
+    departureReasonEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedDepartureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/departure-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "approved-premises")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Departure Reasons for only temporary accommodation returns 200 with correct body`() {
+    departureReasonRepository.deleteAll()
+
+    departureReasonEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedDepartureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/departure-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "temporary-accommodation")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
   fun `Get Move on Categories returns 200 with correct body`() {
     moveOnCategoryRepository.deleteAll()
 
@@ -162,6 +216,60 @@ class ReferenceDataTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/reference-data/move-on-categories")
       .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Move on Categories for only approved premises returns 200 with correct body`() {
+    moveOnCategoryRepository.deleteAll()
+
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedMoveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/move-on-categories")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "approved-premises")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Move on Categories for only temporary accommodation returns 200 with correct body`() {
+    moveOnCategoryRepository.deleteAll()
+
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedMoveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/move-on-categories")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "temporary-accommodation")
       .exchange()
       .expectStatus()
       .isOk

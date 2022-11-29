@@ -60,14 +60,20 @@ class ReferenceDataController(
     return ResponseEntity.ok(localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataDepartureReasonsGet(): ResponseEntity<List<DepartureReason>> {
-    val reasons = departureReasonRepository.findAll()
+  override fun referenceDataDepartureReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<DepartureReason>> {
+    val reasons = when (xServiceName != null) {
+      true -> departureReasonRepository.findAllByServiceScope(xServiceName.value)
+      false -> departureReasonRepository.findAll()
+    }
 
     return ResponseEntity.ok(reasons.map(departureReasonTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataMoveOnCategoriesGet(): ResponseEntity<List<MoveOnCategory>> {
-    val moveOnCategories = moveOnCategoryRepository.findAll()
+  override fun referenceDataMoveOnCategoriesGet(xServiceName: ServiceName?): ResponseEntity<List<MoveOnCategory>> {
+    val moveOnCategories = when (xServiceName != null) {
+      true -> moveOnCategoryRepository.findAllByServiceScope(xServiceName.value)
+      false -> moveOnCategoryRepository.findAll()
+    }
 
     return ResponseEntity.ok(moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi))
   }

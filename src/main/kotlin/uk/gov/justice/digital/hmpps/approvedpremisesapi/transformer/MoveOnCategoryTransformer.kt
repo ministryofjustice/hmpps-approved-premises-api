@@ -9,6 +9,7 @@ class MoveOnCategoryTransformer() {
   fun transformJpaToApi(jpa: MoveOnCategoryEntity) = MoveOnCategory(
     id = jpa.id,
     name = jpa.name,
-    isActive = jpa.isActive
+    isActive = jpa.isActive,
+    serviceScope = jpa.serviceScope,
   )
 }
