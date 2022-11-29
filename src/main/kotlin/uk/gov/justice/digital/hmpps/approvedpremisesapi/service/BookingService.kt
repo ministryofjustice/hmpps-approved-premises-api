@@ -57,7 +57,7 @@ class BookingService(
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
     notes: String?,
-    keyWorkerStaffCode: String
+    keyWorkerStaffCode: String?,
   ) = validated<ArrivalEntity> {
     val premises = booking.premises
 
@@ -69,16 +69,19 @@ class BookingService(
       return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
 
-    // TODO: Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
-    if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${booking.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
+    if (premises is ApprovedPremisesEntity) {
+      if (keyWorkerStaffCode == null) {
+        return "$.keyWorkerStaffCode" hasSingleValidationError "empty"
+      }
 
-    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
+      val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
 
-    if (staffMemberResponse !is AuthorisableActionResult.Success) {
-      return "$.keyWorkerStaffId" hasSingleValidationError "notFound"
+      if (staffMemberResponse !is AuthorisableActionResult.Success) {
+        return "$.keyWorkerStaffId" hasSingleValidationError "notFound"
+      }
+
+      updateBooking(booking.apply { this.keyWorkerStaffCode = keyWorkerStaffCode })
     }
-
-    updateBooking(booking.apply { this.keyWorkerStaffCode = keyWorkerStaffCode })
 
     val arrivalEntity = arrivalRepository.save(
       ArrivalEntity(
