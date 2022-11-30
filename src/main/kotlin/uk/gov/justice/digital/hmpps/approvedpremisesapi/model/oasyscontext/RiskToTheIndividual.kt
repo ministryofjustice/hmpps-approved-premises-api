@@ -9,9 +9,9 @@ class RisksToTheIndividual(
   assessorSignedDate: OffsetDateTime?,
   initiationDate: OffsetDateTime,
   assessmentStatus: String,
-  superStatus: String,
+  superStatus: String?,
   limitedAccessOffender: Boolean,
-  val riskToTheIndividual: RiskToTheIndividualInner
+  val riskToTheIndividual: RiskToTheIndividualInner?
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -24,12 +24,12 @@ class RisksToTheIndividual(
 )
 
 data class RiskToTheIndividualInner(
-  val currentConcernsSelfHarmSuicide: String,
-  val previousConcernsSelfHarmSuicide: String,
-  val currentCustodyHostelCoping: String,
-  val previousCustodyHostelCoping: String,
-  val currentVulnerability: String,
-  val previousVulnerability: String,
-  val riskOfSeriousHarm: String,
-  val currentConcernsBreachOfTrustText: String
+  val currentConcernsSelfHarmSuicide: String?,
+  val previousConcernsSelfHarmSuicide: String?,
+  val currentCustodyHostelCoping: String?,
+  val previousCustodyHostelCoping: String?,
+  val currentVulnerability: String?,
+  val previousVulnerability: String?,
+  val riskOfSeriousHarm: String?,
+  val currentConcernsBreachOfTrustText: String?
 )

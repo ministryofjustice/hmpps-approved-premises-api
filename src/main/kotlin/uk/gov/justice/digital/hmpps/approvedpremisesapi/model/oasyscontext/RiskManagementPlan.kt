@@ -9,9 +9,9 @@ class RiskManagementPlan(
   assessorSignedDate: OffsetDateTime?,
   initiationDate: OffsetDateTime,
   assessmentStatus: String,
-  superStatus: String,
+  superStatus: String?,
   limitedAccessOffender: Boolean,
-  val riskManagementPlan: RiskManagementPlanInner
+  val riskManagementPlan: RiskManagementPlanInner?
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -24,12 +24,12 @@ class RiskManagementPlan(
 )
 
 data class RiskManagementPlanInner(
-  val furtherConsiderations: String,
-  val additionalComments: String,
-  val contingencyPlans: String,
-  val victimSafetyPlanning: String,
-  val interventionsAndTreatment: String,
-  val monitoringAndControl: String,
-  val supervision: String,
-  val keyInformationAboutCurrentSituation: String
+  val furtherConsiderations: String?,
+  val additionalComments: String?,
+  val contingencyPlans: String?,
+  val victimSafetyPlanning: String?,
+  val interventionsAndTreatment: String?,
+  val monitoringAndControl: String?,
+  val supervision: String?,
+  val keyInformationAboutCurrentSituation: String?
 )

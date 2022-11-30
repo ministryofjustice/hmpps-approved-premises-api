@@ -9,7 +9,7 @@ class NeedsDetails(
   assessorSignedDate: OffsetDateTime?,
   initiationDate: OffsetDateTime,
   assessmentStatus: String,
-  superStatus: String,
+  superStatus: String?,
   limitedAccessOffender: Boolean,
   val needs: NeedsDetailsInner?,
   val linksToHarm: LinksToHarm?,
