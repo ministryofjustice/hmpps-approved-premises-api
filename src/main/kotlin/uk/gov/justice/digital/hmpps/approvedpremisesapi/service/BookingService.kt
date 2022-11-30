@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
@@ -190,7 +191,7 @@ class BookingService(
     dateTime: OffsetDateTime,
     reasonId: UUID,
     moveOnCategoryId: UUID,
-    destinationProviderId: UUID,
+    destinationProviderId: UUID?,
     notes: String?
   ) = validated<DepartureEntity> {
     if (booking.departure != null) {
@@ -204,16 +205,34 @@ class BookingService(
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reasonId" hasValidationError "doesNotExist"
+    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+      "$.reasonId" hasValidationError "incorrectDepartureReasonServiceScope"
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
     if (moveOnCategory == null) {
       "$.moveOnCategoryId" hasValidationError "doesNotExist"
+    } else if (!serviceScopeMatches(moveOnCategory.serviceScope, booking)) {
+      "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
     }
 
-    val destinationProvider = destinationProviderRepository.findByIdOrNull(destinationProviderId)
-    if (destinationProvider == null) {
-      "$.destinationProviderId" hasValidationError "doesNotExist"
+    val destinationProvider = when (booking.service) {
+      ServiceName.approvedPremises.value -> {
+        when (destinationProviderId) {
+          null -> {
+            "$.destinationProviderId" hasValidationError "empty"
+            null
+          }
+          else -> {
+            val result = destinationProviderRepository.findByIdOrNull(destinationProviderId)
+            if (result == null) {
+              "$.destinationProviderId" hasValidationError "doesNotExist"
+            }
+            result
+          }
+        }
+      }
+      else -> null
     }
 
     if (validationErrors.any()) {
@@ -226,7 +245,7 @@ class BookingService(
         dateTime = dateTime,
         reason = reason!!,
         moveOnCategory = moveOnCategory!!,
-        destinationProvider = destinationProvider!!,
+        destinationProvider = destinationProvider,
         notes = notes,
         booking = booking
       )
@@ -273,6 +292,14 @@ class BookingService(
     }
 
     return GetBookingForPremisesResult.Success(booking)
+  }
+
+  private fun serviceScopeMatches(scope: String, booking: BookingEntity): Boolean {
+    return when (scope) {
+      "*" -> true
+      booking.service -> true
+      else -> return false
+    }
   }
 }
 

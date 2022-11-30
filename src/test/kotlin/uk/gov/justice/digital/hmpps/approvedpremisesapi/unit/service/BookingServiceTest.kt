@@ -303,6 +303,52 @@ class BookingServiceTest {
   }
 
   @Test
+  fun `createDeparture returns FieldValidationError with correct param to message map when the departure reason has the wrong service scope`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory()
+      .withServiceScope(ServiceName.temporaryAccommodation.value)
+      .produce()
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory()
+      .withServiceScope("*")
+      .produce()
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.now().minusMinutes(1),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = destinationProviderId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.reasonId", "incorrectDepartureReasonServiceScope")
+    )
+  }
+
+  @Test
   fun `createDeparture returns FieldValidationError with correct param to message map when invalid move on category supplied`() {
     val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
@@ -341,6 +387,53 @@ class BookingServiceTest {
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.moveOnCategoryId", "doesNotExist")
+    )
+  }
+
+  @Test
+  fun `createDeparture returns FieldValidationError with correct param to message map when the move-on category has the wrong service scope`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory()
+      .withServiceScope("*")
+      .produce()
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory()
+      .withServiceScope(ServiceName.approvedPremises.value)
+      .produce()
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.now().plusMinutes(1),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = destinationProviderId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.moveOnCategoryId", "incorrectMoveOnCategoryServiceScope")
     )
   }
 
@@ -387,6 +480,47 @@ class BookingServiceTest {
   }
 
   @Test
+  fun `createDeparture for an Approved Premises booking returns FieldValidationError with correct param to message map when the destination provider is empty`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
+    every { mockDestinationProviderRepository.findByIdOrNull(any()) } returns null
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.now().plusMinutes(1),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = null,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.destinationProviderId", "empty")
+    )
+  }
+
+  @Test
   fun `createDeparture returns Success with correct result when validation passed`() {
     val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
@@ -409,8 +543,12 @@ class BookingServiceTest {
       .withStaffKeyWorkerCode(keyWorker.code)
       .produce()
 
-    val reasonEntity = DepartureReasonEntityFactory().produce()
-    val moveOnCategoryEntity = MoveOnCategoryEntityFactory().produce()
+    val reasonEntity = DepartureReasonEntityFactory()
+      .withServiceScope("approved-premises")
+      .produce()
+    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
+      .withServiceScope("approved-premises")
+      .produce()
     val destinationProviderEntity = DestinationProviderEntityFactory().produce()
 
     every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity

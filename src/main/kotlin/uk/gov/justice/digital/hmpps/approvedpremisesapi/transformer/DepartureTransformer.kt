@@ -17,7 +17,7 @@ class DepartureTransformer(
       dateTime = jpa.dateTime,
       reason = departureReasonTransformer.transformJpaToApi(jpa.reason),
       moveOnCategory = moveOnCategoryTransformer.transformJpaToApi(jpa.moveOnCategory),
-      destinationProvider = destinationProviderTransformer.transformJpaToApi(jpa.destinationProvider),
+      destinationProvider = jpa.destinationProvider?.let { destinationProviderTransformer.transformJpaToApi(it) },
       notes = jpa.notes
     )
   }
