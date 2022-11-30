@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -32,7 +34,8 @@ class PeopleController(
   private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
   private val adjudicationTransformer: AdjudicationTransformer,
   private val alertTransformer: AlertTransformer,
-  private val needsDetailsTransformer: NeedsDetailsTransformer
+  private val needsDetailsTransformer: NeedsDetailsTransformer,
+  private val oaSysSectionsTransformer: OASysSectionsTransformer
 ) : PeopleApiDelegate {
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val offenderDetails = getOffenderDetails(crn)
@@ -133,6 +136,42 @@ class PeopleController(
     }
 
     return ResponseEntity.ok(needsDetailsTransformer.transformToApi(needs))
+  }
+
+  override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
+    getOffenderDetails(crn)
+
+    val needsResult = offenderService.getOASysNeeds(crn)
+    val needs = getSuccessEntityOrThrow(crn, needsResult)
+
+    val offenceDetailsResult = offenderService.getOASysOffenceDetails(crn)
+    val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult)
+
+    val roshSummaryResult = offenderService.getOASysRoshSummary(crn)
+    val roshSummary = getSuccessEntityOrThrow(crn, roshSummaryResult)
+
+    val riskToTheIndividualResult = offenderService.getOASysRiskToTheIndividual(crn)
+    val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult)
+
+    val riskManagementPlanResult = offenderService.getOASysRiskManagementPlan(crn)
+    val riskManagementPlan = getSuccessEntityOrThrow(crn, riskManagementPlanResult)
+
+    return ResponseEntity.ok(
+      oaSysSectionsTransformer.transformToApi(
+        offenceDetails,
+        roshSummary,
+        riskToTheIndividual,
+        riskManagementPlan,
+        needs,
+        selectedSections ?: emptyList()
+      )
+    )
+  }
+
+  private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {
+    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
+    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    is AuthorisableActionResult.Success -> authorisableActionResult.entity
   }
 
   private fun getOffenderDetails(crn: String): OffenderDetailSummary {
