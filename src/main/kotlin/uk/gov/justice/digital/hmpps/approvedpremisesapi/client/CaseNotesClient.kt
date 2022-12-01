@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Component
 class CaseNotesClient(
@@ -13,6 +15,7 @@ class CaseNotesClient(
   objectMapper: ObjectMapper
 ) : BaseHMPPSClient(webClient, objectMapper) {
   fun getCaseNotesPage(nomsNumber: String, from: LocalDate, page: Int, pageSize: Int) = getRequest<CaseNotesPage> {
-    path = "/case-notes/$nomsNumber?startDate=$from&page=$page&size=$pageSize"
+    val fromLocalDateTime = LocalDateTime.of(from, LocalTime.MIN)
+    path = "/case-notes/$nomsNumber?startDate=$fromLocalDateTime&page=$page&size=$pageSize"
   }
 }
