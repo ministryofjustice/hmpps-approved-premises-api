@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 
 class ReferenceDataTest : IntegrationTestBase() {
@@ -36,6 +37,9 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var characteristicTransformer: CharacteristicTransformer
+
+  @Autowired
+  lateinit var probationRegionTransformer: ProbationRegionTransformer
 
   @Test
   fun `Get Characteristics returns 200 with correct body`() {
@@ -332,6 +336,29 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/lost-bed-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Probation Regions returns 200 with correct body`() {
+    probationRegionRepository.deleteAll()
+
+    val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(10) {
+      withApArea(apAreaEntityFactory.produceAndPersist())
+    }
+    val expectedJson = objectMapper.writeValueAsString(
+      probationRegions.map(probationRegionTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/probation-regions")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
