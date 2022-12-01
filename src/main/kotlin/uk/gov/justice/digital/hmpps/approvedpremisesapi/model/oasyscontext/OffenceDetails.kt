@@ -9,9 +9,9 @@ class OffenceDetails(
   assessorSignedDate: OffsetDateTime?,
   initiationDate: OffsetDateTime,
   assessmentStatus: String,
-  superStatus: String,
+  superStatus: String?,
   limitedAccessOffender: Boolean,
-  val offenceDetails: OffenceDetailsInner
+  val offenceDetails: OffenceDetailsInner?
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -24,13 +24,13 @@ class OffenceDetails(
 )
 
 data class OffenceDetailsInner(
-  val offenceAnalysis: String,
-  val othersInvolved: String,
-  val issueContributingToRisk: String,
-  val offenceMotivation: String,
-  val victimImpact: String,
-  val victimPerpetratorRel: String,
-  val victimInfo: String,
-  val patternOffending: String,
-  val acceptsResponsibility: String
+  val offenceAnalysis: String?,
+  val othersInvolved: String?,
+  val issueContributingToRisk: String?,
+  val offenceMotivation: String?,
+  val victimImpact: String?,
+  val victimPerpetratorRel: String?,
+  val victimInfo: String?,
+  val patternOffending: String?,
+  val acceptsResponsibility: String?
 )
