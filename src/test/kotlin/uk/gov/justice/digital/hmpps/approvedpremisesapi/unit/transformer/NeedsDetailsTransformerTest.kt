@@ -48,7 +48,8 @@ class NeedsDetailsTransformerTest {
       OASysSection(section = 6, name = "Relationships", linkedToHarm = null, linkedToReOffending = null),
       OASysSection(section = 7, name = "Lifestyle", linkedToHarm = null, linkedToReOffending = null),
       OASysSection(section = 11, name = "Thinking and Behavioural", linkedToHarm = null, linkedToReOffending = null),
-      OASysSection(section = 12, name = "Attitude", linkedToHarm = null, linkedToReOffending = null)
+      OASysSection(section = 12, name = "Attitude", linkedToHarm = null, linkedToReOffending = null),
+      OASysSection(section = 13, name = "Health", linkedToHarm = null, linkedToReOffending = null)
     )
   }
 }
