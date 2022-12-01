@@ -13,6 +13,6 @@ class CaseNotesClient(
   objectMapper: ObjectMapper
 ) : BaseHMPPSClient(webClient, objectMapper) {
   fun getCaseNotesPage(nomsNumber: String, from: LocalDate, page: Int, pageSize: Int) = getRequest<CaseNotesPage> {
-    path = "/$nomsNumber?startDate=$from&page=$page&size=$pageSize"
+    path = "/case-notes/$nomsNumber?startDate=$from&page=$page&size=$pageSize"
   }
 }
