@@ -45,6 +45,7 @@ class PremisesTest : IntegrationTestBase() {
           addressLine1 = "1 somewhere",
           postcode = "AB123CD",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
           status = PropertyStatus.pending
         )
@@ -69,6 +70,7 @@ class PremisesTest : IntegrationTestBase() {
           notes = "some arbitrary notes",
           name = "some arbitrary name",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
           status = PropertyStatus.pending
         )
@@ -83,6 +85,7 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("notes").isEqualTo("some arbitrary notes")
       .jsonPath("name").isEqualTo("some arbitrary name")
       .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+      .jsonPath("probationRegion.id").isEqualTo("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891")
       .jsonPath("status").isEqualTo("pending")
   }
 
@@ -109,6 +112,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+          probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
           characteristicIds = mutableListOf(),
           status = PropertyStatus.archived
         )
@@ -122,6 +126,8 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("notes").isEqualTo("some arbitrary notes updated")
       .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
       .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
+      .jsonPath("probationRegion.id").isEqualTo("a02b7727-63aa-46f2-80f1-e0b05b31903c")
+      .jsonPath("probationRegion.name").isEqualTo("North West")
       .jsonPath("status").isEqualTo("archived")
   }
 
@@ -140,6 +146,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
           status = PropertyStatus.active
         )
@@ -174,6 +181,42 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+  }
+
+  @Test
+  fun `Trying to update a premises with an invalid probation region id returns 400`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val premisesToGet = premises[0]
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.put()
+      .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePremises(
+          addressLine1 = "1 somewhere updated",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes updated",
+          localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+          probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
           characteristicIds = mutableListOf(),
           status = PropertyStatus.active
         )
@@ -209,6 +252,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
           status = PropertyStatus.active
         )
@@ -235,6 +279,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           name = "some arbitrary name",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
           status = PropertyStatus.active
         )
@@ -260,6 +305,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           addressLine1 = "",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           notes = "some notes",
           characteristicIds = mutableListOf(),
           status = PropertyStatus.active
@@ -287,6 +333,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           notes = "some notes",
           characteristicIds = mutableListOf(),
           status = PropertyStatus.active
@@ -313,6 +360,7 @@ class PremisesTest : IntegrationTestBase() {
           postcode = "AB123CD",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           notes = "some notes",
           characteristicIds = mutableListOf(),
           status = PropertyStatus.active
@@ -324,6 +372,62 @@ class PremisesTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
       .jsonPath("invalid-params[0].errorType").isEqualTo("onlyCas3Supported")
+  }
+
+  @Test
+  fun `Trying to create a new premises with an invalid local authority area id returns 400`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          addressLine1 = "1 somewhere",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes",
+          localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+  }
+
+  @Test
+  fun `Trying to create a new premises with an invalid probation region id returns 400`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          addressLine1 = "1 somewhere",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes",
+          localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+          probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
   }
 
   @Test

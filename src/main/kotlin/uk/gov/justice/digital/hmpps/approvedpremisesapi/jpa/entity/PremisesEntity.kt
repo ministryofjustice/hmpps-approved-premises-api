@@ -44,7 +44,7 @@ abstract class PremisesEntity(
   var notes: String,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
-  val probationRegion: ProbationRegionEntity,
+  var probationRegion: ProbationRegionEntity,
   @ManyToOne
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity,
