@@ -2208,7 +2208,6 @@ components:
         - dateTime
         - reasonId
         - moveOnCategoryId
-        - destinationProviderId
     Departure:
       type: object
       properties:
@@ -2235,7 +2234,6 @@ components:
         - dateTime
         - reason
         - moveOnCategory
-        - destinationProvider
     Confirmation:
       type: object
       properties:

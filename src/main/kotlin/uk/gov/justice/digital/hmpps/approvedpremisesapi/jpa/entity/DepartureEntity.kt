@@ -29,7 +29,7 @@ data class DepartureEntity(
   val moveOnCategory: MoveOnCategoryEntity,
   @ManyToOne
   @JoinColumn(name = "destination_provider_id")
-  val destinationProvider: DestinationProviderEntity,
+  val destinationProvider: DestinationProviderEntity?,
   val notes: String?,
   @OneToOne
   @JoinColumn(name = "booking_id")
