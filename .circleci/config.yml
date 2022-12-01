@@ -34,18 +34,19 @@ workflows:
           requires:
             - build_docker
             - helm_lint
-#      - request-preprod-approval:
-#          type: approval
-#          requires:
-#            - deploy_dev
-#      - hmpps/deploy_env:
-#          name: deploy_preprod
-#          env: "preprod"
-#          context:
-#            - hmpps-common-vars
-#            - approved-premises-api-preprod
-#          requires:
-#            - request-preprod-approval
+      - request-preprod-approval:
+          type: approval
+          requires:
+            - deploy_dev
+      - hmpps/deploy_env:
+          name: deploy_preprod
+          env: "preprod"
+          context:
+            - hmpps-common-vars
+            - approved-premises-api-preprod
+          requires:
+            - request-preprod-approval
+
 #      - request-prod-approval:
 #          type: approval
 #          requires:
@@ -97,5 +98,3 @@ workflows:
           context:
             - veracode-credentials
             - hmpps-common-vars
-
-
