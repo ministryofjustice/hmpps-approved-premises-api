@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
@@ -10,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 class CaseNotesTest : IntegrationTestBase() {
   @Autowired
@@ -134,15 +137,19 @@ class CaseNotesTest : IntegrationTestBase() {
       )
   }
 
-  private fun mockCaseNotesPrisonApiCall(page: Int, from: LocalDate, nomsNumber: String, result: CaseNotesPage) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/case-notes/$nomsNumber?startDate=$from&page=$page&size=30"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(result)
-          )
-      )
-  )
+  private fun mockCaseNotesPrisonApiCall(page: Int, from: LocalDate, nomsNumber: String, result: CaseNotesPage): StubMapping? {
+    val fromLocalDateTime = LocalDateTime.of(from, LocalTime.MIN)
+
+    return wiremockServer.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/case-notes/$nomsNumber?startDate=$fromLocalDateTime&page=$page&size=30"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withBody(
+              objectMapper.writeValueAsString(result)
+            )
+        )
+    )
+  }
 }
