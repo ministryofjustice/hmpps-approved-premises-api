@@ -1852,6 +1852,9 @@ components:
         localAuthorityAreaId:
           type: string
           format: uuid
+        probationRegionId:
+          type: string
+          format: uuid
         characteristicIds:
           type: array
           items:
@@ -1864,6 +1867,7 @@ components:
         - addressLine1
         - postcode
         - localAuthorityAreaId
+        - probationRegionId
         - characteristicIds
         - status
     LocalAuthorityArea:
@@ -2833,6 +2837,9 @@ components:
         localAuthorityAreaId:
           type: string
           format: uuid
+        probationRegionId:
+          type: string
+          format: uuid
         characteristicIds:
           type: array
           items:
@@ -2844,6 +2851,7 @@ components:
         - addressLine1
         - postcode
         - localAuthorityAreaId
+        - probationRegionId
         - characteristicIds
         - status
     UpdateAssessment:
