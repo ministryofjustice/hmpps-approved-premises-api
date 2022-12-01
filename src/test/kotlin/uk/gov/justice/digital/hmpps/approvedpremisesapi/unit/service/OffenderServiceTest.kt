@@ -441,7 +441,7 @@ class OffenderServiceTest {
     every {
       mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
-        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        from = LocalDateTime.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
         pageSize = 2
       )
@@ -457,7 +457,7 @@ class OffenderServiceTest {
     every {
       mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
-        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        from = LocalDateTime.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
         pageSize = 2
       )
@@ -485,7 +485,7 @@ class OffenderServiceTest {
     every {
       mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
-        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        from = LocalDateTime.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
         pageSize = 2
       )
@@ -502,7 +502,7 @@ class OffenderServiceTest {
     every {
       mockCaseNotesClient.getCaseNotesPage(
         nomsNumber = nomsNumber,
-        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        from = LocalDateTime.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 1,
         pageSize = 2
       )

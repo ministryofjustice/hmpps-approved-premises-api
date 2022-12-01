@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class OffenderService(
@@ -147,7 +147,7 @@ class OffenderService(
   fun getPrisonCaseNotesByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<CaseNote>> {
     val allCaseNotes = mutableListOf<CaseNote>()
 
-    val fromDate = LocalDate.now().minusDays(prisonCaseNotesConfig.lookbackDays.toLong())
+    val fromDate = LocalDateTime.now().minusDays(prisonCaseNotesConfig.lookbackDays.toLong())
 
     var currentPage: CaseNotesPage?
     var currentPageIndex: Int? = null
