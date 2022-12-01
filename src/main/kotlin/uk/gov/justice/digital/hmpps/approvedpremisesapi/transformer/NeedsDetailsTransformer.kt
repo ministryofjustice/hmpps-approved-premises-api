@@ -66,6 +66,12 @@ class NeedsDetailsTransformer {
       name = "Attitude",
       linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending
+    ),
+    OASysSection(
+      section = 13,
+      name = "Health",
+      linkedToHarm = null,
+      linkedToReOffending = null
     )
   )
 }
