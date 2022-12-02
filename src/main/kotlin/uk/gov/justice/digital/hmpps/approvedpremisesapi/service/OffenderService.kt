@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -41,7 +40,6 @@ import java.time.LocalDate
 @Service
 class OffenderService(
   private val communityApiClient: CommunityApiClient,
-  private val assessRisksAndNeedsApiClient: AssessRisksAndNeedsApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   private val caseNotesClient: CaseNotesClient,

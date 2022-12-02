@@ -9,7 +9,6 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -45,7 +44,6 @@ import java.util.UUID
 
 class OffenderServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
-  private val mockAssessRisksAndNeedsApiClient = mockk<AssessRisksAndNeedsApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
@@ -70,7 +68,6 @@ class OffenderServiceTest {
 
   private val offenderService = OffenderService(
     mockCommunityApiClient,
-    mockAssessRisksAndNeedsApiClient,
     mockHMPPSTierApiClient,
     mockPrisonsApiClient,
     mockCaseNotesClient,

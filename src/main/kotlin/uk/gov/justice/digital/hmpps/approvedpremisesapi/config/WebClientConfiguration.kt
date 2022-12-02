@@ -42,15 +42,6 @@ class WebClientConfiguration {
       .build()
   }
 
-  @Bean(name = ["assessRisksAndNeedsApiWebClient"])
-  fun assessRisksAndNeedsApiWebClient(
-    @Value("\${services.assess-risks-and-needs-api.base-url}") assessRisksAndNeedsApiBaseUrl: String
-  ): WebClient {
-    return WebClient.builder()
-      .baseUrl(assessRisksAndNeedsApiBaseUrl)
-      .build()
-  }
-
   @Bean(name = ["hmppsTierApiWebClient"])
   fun hmppsTierApiWebClient(
     clientRegistrations: ClientRegistrationRepository,
