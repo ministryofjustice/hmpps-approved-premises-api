@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.Needs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 
 @Component
@@ -38,5 +39,9 @@ class ApOASysContextApiClient(
 
   fun getHealthDetails(crn: String) = getRequest<HealthDetails> {
     path = "/health-details/$crn"
+  }
+
+  fun getRoshRatings(crn: String) = getRequest<RoshRatings> {
+    path = "/rosh/$crn"
   }
 }
