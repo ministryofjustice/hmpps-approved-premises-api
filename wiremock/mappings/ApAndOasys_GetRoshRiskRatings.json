@@ -1,0 +1,34 @@
+{
+  "id": "3945dfc8-a31b-4877-9eeb-5ae391e8d6e1",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/rosh/(.*)"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "assessmentId": 1310103,
+      "assessmentType": "LAYER3",
+      "dateCompleted": null,
+      "assessorSignedDate": null,
+      "initiationDate": "2022-11-02T15:17:29Z",
+      "assessmentStatus": "OPEN",
+      "superStatus": "WIP",
+      "limitedAccessOffender": false,
+      "rosh": {
+        "riskChildrenCommunity": "Medium",
+        "riskPublicCommunity": "High",
+        "riskKnownAdultCommunity": "High",
+        "riskStaffCommunity": "Low",
+        "riskChildrenCustody": "Low",
+        "riskPublicCustody": "Low",
+        "riskKnownAdultCustody": "Low",
+        "riskStaffCustody": "Low",
+        "riskPrisonersCustody": "Low"
+      }
+    }
+  }
+}

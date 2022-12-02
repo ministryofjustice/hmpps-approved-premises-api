@@ -9,7 +9,6 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AssessRisksAndNeedsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -24,29 +23,27 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRisksClientResponseFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RoshRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RoshRisksSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import java.lang.RuntimeException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class OffenderServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
-  private val mockAssessRisksAndNeedsApiClient = mockk<AssessRisksAndNeedsApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
@@ -71,7 +68,6 @@ class OffenderServiceTest {
 
   private val offenderService = OffenderService(
     mockCommunityApiClient,
-    mockAssessRisksAndNeedsApiClient,
     mockHMPPSTierApiClient,
     mockPrisonsApiClient,
     mockCaseNotesClient,
@@ -301,24 +297,14 @@ class OffenderServiceTest {
     mock200RoSH(
       crn,
       jwt,
-      RoshRisksClientResponseFactory().withSummary(
-        RoshRisksSummary(
-          whoIsAtRisk = null,
-          natureOfRisk = null,
-          riskImminence = null,
-          riskIncreaseFactors = null,
-          riskMitigationFactors = null,
-          riskInCommunity = mapOf(
-            RiskLevel.LOW to listOf("Children"),
-            RiskLevel.MEDIUM to listOf("Public"),
-            RiskLevel.HIGH to listOf("Known Adult"),
-            RiskLevel.VERY_HIGH to listOf("Staff")
-          ),
-          riskInCustody = mapOf(),
-          assessedOn = LocalDateTime.parse("2022-09-06T13:45:00"),
-          overallRiskLevel = RiskLevel.MEDIUM
-        )
-      ).produce()
+      RoshRatingsFactory().apply {
+        withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
+        withAssessmentId(34853487)
+        withRiskChildrenCommunity(RiskLevel.LOW)
+        withRiskPublicCommunity(RiskLevel.MEDIUM)
+        withRiskKnownAdultCommunity(RiskLevel.HIGH)
+        withRiskStaffCommunity(RiskLevel.VERY_HIGH)
+      }.produce()
     )
 
     mock200Tier(
@@ -355,7 +341,7 @@ class OffenderServiceTest {
     assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
     result.entity.roshRisks.value!!.let {
       assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.overallRisk).isEqualTo("Medium")
+      assertThat(it.overallRisk).isEqualTo("Very High")
       assertThat(it.riskToChildren).isEqualTo("Low")
       assertThat(it.riskToPublic).isEqualTo("Medium")
       assertThat(it.riskToKnownAdult).isEqualTo("High")
@@ -631,15 +617,15 @@ class OffenderServiceTest {
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
   }
 
-  private fun mock404RoSH(crn: String, jwt: String) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/risks/crn/a-crn", HttpStatus.NOT_FOUND, body = null)
+  private fun mock404RoSH(crn: String, jwt: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)
   private fun mock404Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.NOT_FOUND, body = null)
   private fun mock404Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.NOT_FOUND, body = null)
 
-  private fun mock500RoSH(crn: String, jwt: String) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/risks/crn/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
+  private fun mock500RoSH(crn: String, jwt: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
   private fun mock500Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
   private fun mock500Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
 
-  private fun mock200RoSH(crn: String, jwt: String, body: RoshRisks) = every { mockAssessRisksAndNeedsApiClient.getRoshRisks(crn, jwt) } returns ClientResult.Success(HttpStatus.OK, body = body)
+  private fun mock200RoSH(crn: String, jwt: String, body: RoshRatings) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
   private fun mock200Tier(crn: String, body: Tier) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
   private fun mock200Registrations(crn: String, body: Registrations) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
 }

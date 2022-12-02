@@ -15,14 +15,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRisksClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RoshRisksSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class PersonRisksTest : IntegrationTestBase() {
@@ -115,31 +115,21 @@ class PersonRisksTest : IntegrationTestBase() {
     )
 
     wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/risks/crn/CRN"))
+      get(WireMock.urlEqualTo("/rosh/CRN"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
             .withBody(
               objectMapper.writeValueAsString(
-                RoshRisksClientResponseFactory().withSummary(
-                  RoshRisksSummary(
-                    whoIsAtRisk = null,
-                    natureOfRisk = null,
-                    riskImminence = null,
-                    riskIncreaseFactors = null,
-                    riskMitigationFactors = null,
-                    riskInCommunity = mapOf(
-                      RiskLevel.LOW to listOf("Children"),
-                      RiskLevel.MEDIUM to listOf("Public"),
-                      RiskLevel.HIGH to listOf("Known Adult"),
-                      RiskLevel.VERY_HIGH to listOf("Staff")
-                    ),
-                    riskInCustody = mapOf(),
-                    assessedOn = LocalDateTime.parse("2022-09-06T13:45:00"),
-                    overallRiskLevel = RiskLevel.MEDIUM
-                  )
-                ).produce()
+                RoshRatingsFactory().apply {
+                  withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
+                  withAssessmentId(34853487)
+                  withRiskChildrenCommunity(RiskLevel.LOW)
+                  withRiskPublicCommunity(RiskLevel.MEDIUM)
+                  withRiskKnownAdultCommunity(RiskLevel.HIGH)
+                  withRiskStaffCommunity(RiskLevel.VERY_HIGH)
+                }.produce()
               )
             )
         )
@@ -209,7 +199,7 @@ class PersonRisksTest : IntegrationTestBase() {
             roshRisks = RoshRisksEnvelope(
               status = RiskEnvelopeStatus.retrieved,
               value = RoshRisks(
-                overallRisk = "Medium",
+                overallRisk = "Very High",
                 riskToChildren = "Low",
                 riskToPublic = "Medium",
                 riskToKnownAdult = "High",

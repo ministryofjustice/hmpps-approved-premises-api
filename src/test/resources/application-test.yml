@@ -44,8 +44,6 @@ hmpps:
 services:
   community-api:
     base-url: http://localhost:57839
-  assess-risks-and-needs-api:
-    base-url: http://localhost:57839
   hmpps-tier:
     base-url: http://localhost:57839
   prisons-api:
