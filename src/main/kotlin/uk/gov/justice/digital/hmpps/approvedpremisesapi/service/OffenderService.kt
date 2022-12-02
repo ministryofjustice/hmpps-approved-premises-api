@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.assessrisksandneeds.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
@@ -309,18 +308,27 @@ class OffenderService(
   }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
-    when (val roshRisksResponse = assessRisksAndNeedsApiClient.getRoshRisks(crn, jwt)) {
+    when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
       is ClientResult.Success -> {
-        val summary = roshRisksResponse.body.summary
+        val summary = roshRisksResponse.body.rosh
+
+        if (summary.anyRisksAreNull()) {
+          return RiskWithStatus(
+            status = RiskStatus.NotFound,
+            value = null
+          )
+        }
+
         return RiskWithStatus(
           status = RiskStatus.Retrieved,
           value = RoshRisks(
-            overallRisk = getOrThrow("overallRiskLevel") { summary.overallRiskLevel?.value },
-            riskToChildren = getRiskOrThrow("Children", summary.riskInCommunity),
-            riskToPublic = getRiskOrThrow("Public", summary.riskInCommunity),
-            riskToKnownAdult = getRiskOrThrow("Known Adult", summary.riskInCommunity),
-            riskToStaff = getRiskOrThrow("Staff", summary.riskInCommunity),
-            lastUpdated = summary.assessedOn?.toLocalDate()
+            overallRisk = summary.determineOverallRiskLevel().text,
+            riskToChildren = summary.riskChildrenCommunity!!.text,
+            riskToPublic = summary.riskPublicCommunity!!.text,
+            riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
+            riskToStaff = summary.riskStaffCommunity!!.text,
+            lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
+              ?: roshRisksResponse.body.initiationDate.toLocalDate()
           )
         )
       }
@@ -403,19 +411,5 @@ class OffenderService(
         return RiskWithStatus(status = RiskStatus.Error)
       }
     }
-  }
-
-  private fun <T> getOrThrow(thing: String, getter: () -> T?): T {
-    return getter() ?: throw RuntimeException("Value unexpectedly missing when getting $thing")
-  }
-
-  private fun getRiskOrThrow(category: String, risks: Map<RiskLevel?, List<String>>): String {
-    risks.forEach {
-      if (it.value.contains(category)) {
-        return it.key?.value ?: throw RuntimeException("Risk level unexpectedly null when getting $category")
-      }
-    }
-
-    throw RuntimeException("Category not present in any Risk level when getting $category")
   }
 }

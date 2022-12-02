@@ -44,6 +44,8 @@ data class RoshRatingsInner(
 
     throw RuntimeException("No RiskLevels found")
   }
+
+  fun anyRisksAreNull() = riskChildrenCommunity == null || riskPublicCommunity == null || riskKnownAdultCommunity == null || riskStaffCommunity == null
 }
 
 enum class RiskLevel(val text: String) {
