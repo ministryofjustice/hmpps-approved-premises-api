@@ -6,7 +6,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -53,7 +53,7 @@ class AssessmentServiceTest {
           UserEntityFactory().produce()
         )
         .withApplication(
-          ApplicationEntityFactory()
+          ApprovedPremisesApplicationEntityFactory()
             .withCreatedByUser(UserEntityFactory().produce())
             .produce()
         )
@@ -79,7 +79,7 @@ class AssessmentServiceTest {
       AssessmentEntityFactory()
         .withAllocatedToUser(user)
         .withApplication(
-          ApplicationEntityFactory()
+          ApprovedPremisesApplicationEntityFactory()
             .withCreatedByUser(UserEntityFactory().produce())
             .produce()
         )
@@ -117,7 +117,7 @@ class AssessmentServiceTest {
           UserEntityFactory().produce()
         )
         .withApplication(
-          ApplicationEntityFactory()
+          ApprovedPremisesApplicationEntityFactory()
             .withCreatedByUser(UserEntityFactory().produce())
             .produce()
         )
@@ -147,7 +147,7 @@ class AssessmentServiceTest {
           UserEntityFactory().produce()
         )
         .withApplication(
-          ApplicationEntityFactory()
+          ApprovedPremisesApplicationEntityFactory()
             .withCreatedByUser(UserEntityFactory().produce())
             .produce()
         )
@@ -201,7 +201,7 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
-        ApplicationEntityFactory()
+        ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(UserEntityFactory().produce())
           .produce()
       )
@@ -232,7 +232,7 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
-        ApplicationEntityFactory()
+        ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(UserEntityFactory().produce())
           .produce()
       )
@@ -262,7 +262,7 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
-        ApplicationEntityFactory()
+        ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(UserEntityFactory().produce())
           .produce()
       )

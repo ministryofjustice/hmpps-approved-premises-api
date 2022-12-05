@@ -5,11 +5,12 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
@@ -70,7 +71,7 @@ class JsonSchemaServiceTest {
       .withDeliusUsername(distinguishedName)
       .produce()
 
-    val upToDateApplication = ApplicationEntityFactory()
+    val upToDateApplication = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(userEntity)
       .withApplicationSchema(newestJsonSchema)
       .withData(
@@ -82,7 +83,7 @@ class JsonSchemaServiceTest {
       )
       .produce()
 
-    val outdatedApplication = ApplicationEntityFactory()
+    val outdatedApplication = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(userEntity)
       .withApplicationSchema(olderJsonSchema)
       .withData("{}")
@@ -91,7 +92,7 @@ class JsonSchemaServiceTest {
     val applicationEntities = listOf(upToDateApplication, outdatedApplication)
 
     every { mockJsonSchemaRepository.getSchemasForType(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
+    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     assertThat(jsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {

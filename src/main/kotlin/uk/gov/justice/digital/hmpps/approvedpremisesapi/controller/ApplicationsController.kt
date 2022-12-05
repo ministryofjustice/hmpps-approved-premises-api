@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -34,10 +35,12 @@ class ApplicationsController(
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService
 ) : ApplicationsApiDelegate {
-  override fun applicationsGet(): ResponseEntity<List<Application>> {
+  override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
+    val serviceName = xServiceName ?: ServiceName.approvedPremises
+
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
-    val applications = applicationService.getAllApplicationsForUsername(username)
+    val applications = applicationService.getAllApplicationsForUsername(username, serviceName)
 
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransform(it) })
   }
@@ -56,13 +59,15 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication): ResponseEntity<Application> {
+  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?): ResponseEntity<Application> {
+    val serviceName = xServiceName?.value ?: ServiceName.approvedPremises.value
+
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
     val (offender, inmate) = getPersonDetail(body.crn)
 
-    val application = when (val applicationResult = applicationService.createApplication(body.crn, username)) {
+    val application = when (val applicationResult = applicationService.createApplication(body.crn, username, serviceName)) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.Success -> applicationResult.entity

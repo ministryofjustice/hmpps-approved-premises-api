@@ -6,13 +6,15 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -51,7 +53,7 @@ class ApplicationServiceTest {
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns null
 
-    assertThat(applicationService.getAllApplicationsForUsername(distinguishedName)).isEmpty()
+    assertThat(applicationService.getAllApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).isEmpty()
   }
 
   @Test
@@ -67,25 +69,25 @@ class ApplicationServiceTest {
       .withDeliusUsername(distinguishedName)
       .produce()
     val applicationEntities = listOf(
-      ApplicationEntityFactory()
+      ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(userEntity)
         .withApplicationSchema(newestJsonSchema)
         .produce(),
-      ApplicationEntityFactory()
+      ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(userEntity)
         .withApplicationSchema(newestJsonSchema)
         .produce(),
-      ApplicationEntityFactory()
+      ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(userEntity)
         .withApplicationSchema(newestJsonSchema)
         .produce()
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns applicationEntities
+    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    assertThat(applicationService.getAllApplicationsForUsername(distinguishedName)).containsAll(applicationEntities)
+    assertThat(applicationService.getAllApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).containsAll(applicationEntities)
   }
 
   @Test
@@ -104,7 +106,7 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory().produce()
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApplicationEntityFactory()
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(UserEntityFactory().produce())
       .produce()
 
@@ -126,7 +128,7 @@ class ApplicationServiceTest {
       .withDeliusUsername(distinguishedName)
       .produce()
 
-    val applicationEntity = ApplicationEntityFactory()
+    val applicationEntity = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(userEntity)
       .withApplicationSchema(newestJsonSchema)
       .produce()
@@ -150,7 +152,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
-    val result = applicationService.createApplication(crn, username)
+    val result = applicationService.createApplication(crn, username, "approved-premises")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -164,7 +166,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
-    val result = applicationService.createApplication(crn, username)
+    val result = applicationService.createApplication(crn, username, "approved-premises")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -186,7 +188,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val result = applicationService.createApplication(crn, username)
+    val result = applicationService.createApplication(crn, username, "approved-premises")
 
     assertThat(result is ValidatableActionResult.Success).isTrue
     result as ValidatableActionResult.Success
@@ -211,7 +213,7 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withId(applicationId)
       .withYieldedCreatedByUser { UserEntityFactory().produce() }
       .produce()
@@ -234,7 +236,7 @@ class ApplicationServiceTest {
       .withDeliusUsername(username)
       .produce()
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withId(applicationId)
       .withCreatedByUser(user)
       .withSubmittedAt(null)
@@ -269,7 +271,7 @@ class ApplicationServiceTest {
       .withDeliusUsername(username)
       .produce()
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
@@ -310,7 +312,7 @@ class ApplicationServiceTest {
       }
     """
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
@@ -352,7 +354,7 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withId(applicationId)
       .withYieldedCreatedByUser { UserEntityFactory().produce() }
       .produce()
@@ -375,7 +377,7 @@ class ApplicationServiceTest {
       .withDeliusUsername(username)
       .produce()
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withId(applicationId)
       .withCreatedByUser(user)
       .withSubmittedAt(null)
@@ -410,7 +412,7 @@ class ApplicationServiceTest {
       .withDeliusUsername(username)
       .produce()
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
@@ -446,7 +448,7 @@ class ApplicationServiceTest {
       .withDeliusUsername(username)
       .produce()
 
-    val application = ApplicationEntityFactory()
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
@@ -475,8 +477,9 @@ class ApplicationServiceTest {
 
     assertThat(result.entity is ValidatableActionResult.Success).isTrue
     val validatableActionResult = result.entity as ValidatableActionResult.Success
-    assertThat(validatableActionResult.entity.isPipeApplication).isTrue
-    assertThat(validatableActionResult.entity.isWomensApplication).isFalse
+    val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+    assertThat(persistedApplication.isPipeApplication).isTrue
+    assertThat(persistedApplication.isWomensApplication).isFalse
 
     verify { mockApplicationRepository.save(any()) }
     verify(exactly = 1) { mockAssessmentService.createAssessment(application) }

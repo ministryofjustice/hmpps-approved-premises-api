@@ -71,7 +71,7 @@ class AssessmentTest : IntegrationTestBase() {
       withAddedAt(OffsetDateTime.now())
     }
 
-    val application = applicationEntityFactory.produceAndPersist {
+    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn("CRN123")
       withCreatedByUser(user)
       withApplicationSchema(applicationSchema)
@@ -140,7 +140,7 @@ class AssessmentTest : IntegrationTestBase() {
       withAddedAt(OffsetDateTime.now())
     }
 
-    val application = applicationEntityFactory.produceAndPersist {
+    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn("CRN123")
       withCreatedByUser(user)
       withApplicationSchema(applicationSchema)
@@ -197,7 +197,7 @@ class AssessmentTest : IntegrationTestBase() {
       withPermissiveSchema()
     }
 
-    val application = applicationEntityFactory.produceAndPersist {
+    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn("CRN123")
       withCreatedByUser(user)
       withApplicationSchema(applicationSchema)
