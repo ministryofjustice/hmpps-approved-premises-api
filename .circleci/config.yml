@@ -43,7 +43,7 @@ workflows:
           env: "preprod"
           context:
             - hmpps-common-vars
-            - approved-premises-api-preprod
+            - hmpps-approved-premises-api-preprod
           requires:
             - request-preprod-approval
 
