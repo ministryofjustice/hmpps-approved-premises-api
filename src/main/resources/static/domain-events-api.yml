@@ -418,6 +418,11 @@ components:
       type: string
       example: 364145f9-0af8-488e-9901-b4c46cd9ba37
 
+    DeliusEventNumber:
+      description: Used in Delius to identify the 'event' via the first active conviction's 'index'
+      type: string
+      example: "7"
+
     ApplicationId:
       description: The UUID of an application for an AP place
       type: string
@@ -483,6 +488,8 @@ components:
           $ref: '#/components/schemas/ApplicationId'
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
         targetLocation:
           type: string
           example: Gateshead
@@ -503,6 +510,8 @@ components:
           $ref: '#/components/schemas/ApplicationId'
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
         withdrawnAt:
           type: string
           example: '2022-11-30T14:51:30'
@@ -520,6 +529,8 @@ components:
           $ref: '#/components/schemas/ApplicationId'
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
         assessedAt:
           type: string
           example: '2022-11-30T14:51:30'
@@ -539,10 +550,14 @@ components:
     BookingMade:
       type: object
       properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
         createdAt:
           type: string
           example: '2022-11-30T14:51:30'
@@ -570,6 +585,8 @@ components:
       properties:
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
         attemptedAt:
@@ -588,6 +605,10 @@ components:
       properties:
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -607,6 +628,10 @@ components:
       properties:
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -630,6 +655,10 @@ components:
       properties:
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -649,6 +678,10 @@ components:
       properties:
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
