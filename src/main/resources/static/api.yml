@@ -1076,6 +1076,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/offences:
+    get:
+      summary: Returns all active offences for a Person.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch active offences for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActiveOffence'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -2768,6 +2799,7 @@ components:
           type: string
         offenceDescription:
           type: string
+          example: "Wounding or inflicting grievous bodily harm (inflicting bodily injury with or without weapon) (S20) - 00801"
         hearingHeld:
           type: boolean
         finding:
@@ -3225,3 +3257,22 @@ components:
       enum:
         - Completed
         - Incomplete
+    ActiveOffence:
+      type: object
+      properties:
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceDescription:
+          type: string
+        offenceId:
+          type: string
+          example: "M1502750438"
+        convictionId:
+          type: long
+          example: 1502724704
+      required:
+        - deliusEventNumber
+        - offenceDescription
+        - offenceId
+        - convictionId
