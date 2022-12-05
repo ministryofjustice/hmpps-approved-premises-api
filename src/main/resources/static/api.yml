@@ -1185,6 +1185,13 @@ paths:
       tags:
         - Operations on applications
       summary: Creates an application
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: Which service the application will belong to, defaults to approved-premises
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       requestBody:
         description: Information to create a blank application with
         content:
@@ -1222,6 +1229,13 @@ paths:
       tags:
         - Operations on applications
       summary: Lists all applications that the user has created
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: Which service to get applications for, defaults to approved-premises
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
@@ -2709,10 +2723,6 @@ components:
         createdAt:
           type: string
           format: date-time
-        isWomensApplication:
-          type: boolean
-        isPipeApplication:
-          type: boolean
         submittedAt:
           type: string
           format: date-time
@@ -2720,6 +2730,11 @@ components:
           $ref: '#/components/schemas/AnyValue'
         document:
           $ref: '#/components/schemas/AnyValue'
+      discriminator:
+        propertyName: service
+        mapping:
+          CAS1: '#/components/schemas/ApprovedPremisesApplication'
+          CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
         - id
         - crn
@@ -2728,6 +2743,21 @@ components:
         - outdatedSchema
         - createdAt
         - person
+        - service
+    ApprovedPremisesApplication:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          properties:
+            isWomensApplication:
+              type: boolean
+            isPipeApplication:
+              type: boolean
+    TemporaryAccommodationApplication:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          properties: {}
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
