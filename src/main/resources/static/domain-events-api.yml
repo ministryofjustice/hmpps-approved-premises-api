@@ -550,6 +550,8 @@ components:
     BookingMade:
       type: object
       properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         personReference:
@@ -605,6 +607,8 @@ components:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
           $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -626,6 +630,8 @@ components:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
           $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -651,6 +657,8 @@ components:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
           $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -672,6 +680,8 @@ components:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
           $ref: '#/components/schemas/DeliusEventNumber'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
