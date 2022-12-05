@@ -4,17 +4,15 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -32,6 +30,7 @@ class PremisesService(
   private val bookingRepository: BookingRepository,
   private val lostBedReasonRepository: LostBedReasonRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
+  private val probationRegionRepository: ProbationRegionRepository,
   private val characteristicService: CharacteristicService
 ) {
   private val serviceNameToEntityType = mapOf(
@@ -123,52 +122,22 @@ class PremisesService(
     postcode: String,
     service: String,
     localAuthorityAreaId: UUID,
+    probationRegionId: UUID,
     name: String,
     notes: String?,
     characteristicIds: List<UUID>,
     status: PropertyStatus
   ) = validated<PremisesEntity> {
-    /**
-     * Start of setting up some dummy data to spike the implementation.
-     * TODO: This will be removed once it's established how to dynamically get this data
-     */
-    val apAreaEntity = ApAreaEntity(
-      id = UUID.randomUUID(),
-      name = "arbitrary_ap_area",
-      identifier = "arbitrary_identifier",
-      probationRegions = mutableListOf()
-    )
 
-    val probationRegion = ProbationRegionEntity(
-      id = UUID.fromString("afee0696-8df3-4d9f-9d0c-268f17772e2c"), // Wales in db
-      name = "arbitrary_probation_region",
-      apArea = apAreaEntity,
-      premises = mutableListOf()
-    )
-    // end of dummy data
+    val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
+    if (probationRegion == null) {
+      "$.probationRegionId" hasValidationError "doesNotExist"
+    }
 
-    val localAuthorityArea = LocalAuthorityAreaEntity(
-      id = localAuthorityAreaId,
-      identifier = "arbitrary_identifier",
-      name = "arbitrary_local_authority_area",
-      premises = mutableListOf()
-    )
-
-    var premises = TemporaryAccommodationPremisesEntity(
-      id = UUID.randomUUID(),
-      name = name,
-      addressLine1 = addressLine1,
-      postcode = postcode,
-      probationRegion = probationRegion,
-      localAuthorityArea = localAuthorityArea,
-      bookings = mutableListOf(),
-      lostBeds = mutableListOf(),
-      notes = if (notes.isNullOrEmpty()) "" else notes,
-      totalBeds = 0,
-      rooms = mutableListOf(),
-      characteristics = mutableListOf(),
-      status = status
-    )
+    val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
+    if (localAuthorityArea == null) {
+      "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+    }
 
     // start of validation
     if (addressLine1.isEmpty()) {
@@ -185,10 +154,6 @@ class PremisesService(
       "$.service" hasValidationError "onlyCas3Supported"
     }
 
-    if (localAuthorityAreaId == null) {
-      "$.localAuthorityAreaId" hasValidationError "invalid"
-    }
-
     if (name.isEmpty()) {
       "$.name" hasValidationError "empty"
     }
@@ -196,6 +161,26 @@ class PremisesService(
     if (!premisesRepository.nameIsUniqueForType(name, TemporaryAccommodationPremisesEntity::class.java)) {
       "$.name" hasValidationError "notUnique"
     }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val premises = TemporaryAccommodationPremisesEntity(
+      id = UUID.randomUUID(),
+      name = name,
+      addressLine1 = addressLine1,
+      postcode = postcode,
+      probationRegion = probationRegion!!,
+      localAuthorityArea = localAuthorityArea!!,
+      bookings = mutableListOf(),
+      lostBeds = mutableListOf(),
+      notes = if (notes.isNullOrEmpty()) "" else notes,
+      totalBeds = 0,
+      rooms = mutableListOf(),
+      characteristics = mutableListOf(),
+      status = status
+    )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
       val entity = characteristicService.getCharacteristic(uuid)
@@ -229,6 +214,7 @@ class PremisesService(
     addressLine1: String,
     postcode: String,
     localAuthorityAreaId: UUID,
+    probationRegionId: UUID,
     characteristicIds: List<UUID>,
     notes: String?,
     status: PropertyStatus
@@ -243,6 +229,12 @@ class PremisesService(
 
     if (localAuthorityArea == null) {
       validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
+    }
+
+    val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
+
+    if (probationRegion == null) {
+      validationErrors["$.probationRegionId"] = "doesNotExist"
     }
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -271,9 +263,8 @@ class PremisesService(
     premises.let {
       it.addressLine1 = addressLine1
       it.postcode = postcode
-      if (localAuthorityArea != null) {
-        it.localAuthorityArea = localAuthorityArea
-      }
+      it.localAuthorityArea = localAuthorityArea!!
+      it.probationRegion = probationRegion!!
       it.characteristics = characteristicEntities.map { it!! }.toMutableList()
       it.notes = if (notes.isNullOrEmpty()) "" else notes
       it.status = status

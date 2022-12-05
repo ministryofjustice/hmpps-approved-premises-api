@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 
 @Service
 class ReferenceDataController(
@@ -35,13 +38,15 @@ class ReferenceDataController(
   private val lostBedReasonRepository: LostBedReasonRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val characteristicRepository: CharacteristicRepository,
+  private val probationRegionRepository: ProbationRegionRepository,
   private val departureReasonTransformer: DepartureReasonTransformer,
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
   private val destinationProviderTransformer: DestinationProviderTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val lostBedReasonTransformer: LostBedReasonTransformer,
   private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer,
-  private val characteristicTransformer: CharacteristicTransformer
+  private val characteristicTransformer: CharacteristicTransformer,
+  private val probationRegionTransformer: ProbationRegionTransformer,
 ) : ReferenceDataApiDelegate {
 
   override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?): ResponseEntity<List<Characteristic>> {
@@ -94,5 +99,11 @@ class ReferenceDataController(
     val lostBedReasons = lostBedReasonRepository.findAll()
 
     return ResponseEntity.ok(lostBedReasons.map(lostBedReasonTransformer::transformJpaToApi))
+  }
+
+  override fun referenceDataProbationRegionsGet(): ResponseEntity<List<ProbationRegion>> {
+    val probationRegions = probationRegionRepository.findAll()
+
+    return ResponseEntity.ok(probationRegions.map(probationRegionTransformer::transformJpaToApi))
   }
 }

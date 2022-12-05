@@ -1535,6 +1535,26 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /reference-data/probation-regions:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all probation regions
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProbationRegion'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/characteristics:
     get:
       tags:
@@ -1832,6 +1852,9 @@ components:
         localAuthorityAreaId:
           type: string
           format: uuid
+        probationRegionId:
+          type: string
+          format: uuid
         characteristicIds:
           type: array
           items:
@@ -1844,6 +1867,7 @@ components:
         - addressLine1
         - postcode
         - localAuthorityAreaId
+        - probationRegionId
         - characteristicIds
         - status
     LocalAuthorityArea:
@@ -2813,6 +2837,9 @@ components:
         localAuthorityAreaId:
           type: string
           format: uuid
+        probationRegionId:
+          type: string
+          format: uuid
         characteristicIds:
           type: array
           items:
@@ -2824,6 +2851,7 @@ components:
         - addressLine1
         - postcode
         - localAuthorityAreaId
+        - probationRegionId
         - characteristicIds
         - status
     UpdateAssessment:

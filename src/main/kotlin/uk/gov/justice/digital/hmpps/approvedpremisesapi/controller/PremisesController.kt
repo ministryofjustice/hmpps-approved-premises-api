@@ -90,9 +90,13 @@ class PremisesController(
 
     val updatePremisesResult = premisesService
       .updatePremises(
-        premisesId, body.addressLine1,
-        body.postcode, body.localAuthorityAreaId,
-        body.characteristicIds, body.notes,
+        premisesId,
+        body.addressLine1,
+        body.postcode,
+        body.localAuthorityAreaId,
+        body.probationRegionId,
+        body.characteristicIds,
+        body.notes,
         body.status
       )
 
@@ -141,6 +145,7 @@ class PremisesController(
         postcode = body.postcode,
         service = serviceName,
         localAuthorityAreaId = body.localAuthorityAreaId,
+        probationRegionId = body.probationRegionId,
         name = body.name,
         notes = body.notes,
         characteristicIds = body.characteristicIds,
