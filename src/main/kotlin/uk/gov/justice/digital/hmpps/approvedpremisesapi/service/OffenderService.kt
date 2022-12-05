@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
@@ -303,6 +304,22 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(riskToTheIndividual)
+  }
+
+  fun getConvictions(crn: String): AuthorisableActionResult<List<Conviction>> {
+    val convictionsResult = communityApiClient.getConvictions(crn)
+
+    val convictions = when (convictionsResult) {
+      is ClientResult.Success -> convictionsResult.body
+      is ClientResult.Failure.StatusCode -> when (convictionsResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> convictionsResult.throwException()
+      }
+      is ClientResult.Failure.Other -> convictionsResult.throwException()
+    }
+
+    return AuthorisableActionResult.Success(convictions)
   }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -35,7 +37,8 @@ class PeopleController(
   private val adjudicationTransformer: AdjudicationTransformer,
   private val alertTransformer: AlertTransformer,
   private val needsDetailsTransformer: NeedsDetailsTransformer,
-  private val oaSysSectionsTransformer: OASysSectionsTransformer
+  private val oaSysSectionsTransformer: OASysSectionsTransformer,
+  private val convictionTransformer: ConvictionTransformer
 ) : PeopleApiDelegate {
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val offenderDetails = getOffenderDetails(crn)
@@ -165,6 +168,17 @@ class PeopleController(
         needs,
         selectedSections ?: emptyList()
       )
+    )
+  }
+
+  override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
+    getOffenderDetails(crn)
+
+    val convictionsResult = offenderService.getConvictions(crn)
+    val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
+
+    return ResponseEntity.ok(
+      activeConvictions.flatMap(convictionTransformer::transformToApi)
     )
   }
 
