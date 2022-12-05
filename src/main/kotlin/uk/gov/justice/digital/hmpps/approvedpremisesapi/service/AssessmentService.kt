@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
@@ -59,7 +60,11 @@ class AssessmentService(
   }
 
   fun createAssessment(application: ApplicationEntity): AssessmentEntity {
-    val requiredQualifications = getRequiredQualifications(application)
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw RuntimeException("Only CAS1 Applications are currently supported")
+    }
+
+    val requiredQualifications = getRequiredQualificationsForApprovedPremisesApplication(application)
 
     // Might want to handle this more robustly in future if it emerges this is more common than initially thought
     val allocatedUser = getUserForAllocation(requiredQualifications)
@@ -104,7 +109,7 @@ class AssessmentService(
   }
 
   private fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
-  private fun getRequiredQualifications(application: ApplicationEntity): List<UserQualification> {
+  private fun getRequiredQualificationsForApprovedPremisesApplication(application: ApprovedPremisesApplicationEntity): List<UserQualification> {
     val requiredQualifications = mutableListOf<UserQualification>()
 
     if (application.isPipeApplication == true) {

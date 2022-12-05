@@ -2,9 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -23,11 +26,17 @@ class ApplicationService(
   private val assessmentService: AssessmentService,
   private val jsonLogicService: JsonLogicService
 ) {
-  fun getAllApplicationsForUsername(userDistinguishedName: String): List<ApplicationEntity> {
+  fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
 
-    return applicationRepository.findAllByCreatedByUser_Id(userEntity.id)
+    val entityType = if (serviceName == ServiceName.approvedPremises) {
+      ApprovedPremisesApplicationEntity::class.java
+    } else {
+      TemporaryAccommodationApplicationEntity::class.java
+    }
+
+    return applicationRepository.findAllByCreatedByUser_Id(userEntity.id, entityType)
       .map(jsonSchemaService::checkSchemaOutdated)
   }
 
@@ -44,7 +53,12 @@ class ApplicationService(
     return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
   }
 
-  fun createApplication(crn: String, username: String) = validated<ApplicationEntity> {
+  fun createApplication(crn: String, username: String, service: String) = validated<ApplicationEntity> {
+    if (service != ServiceName.approvedPremises.value) {
+      "$.service" hasValidationError "onlyCas1Supported"
+      return fieldValidationError
+    }
+
     when (offenderService.getOffenderByCrn(crn, username)) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
@@ -54,7 +68,7 @@ class ApplicationService(
     val user = userService.getUserForRequest()
 
     val createdApplication = applicationRepository.save(
-      ApplicationEntity(
+      ApprovedPremisesApplicationEntity(
         id = UUID.randomUUID(),
         crn = crn,
         createdByUser = user,
@@ -111,6 +125,12 @@ class ApplicationService(
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (application !is ApprovedPremisesApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas1Supported")
+      )
     }
 
     if (application.submittedAt != null) {

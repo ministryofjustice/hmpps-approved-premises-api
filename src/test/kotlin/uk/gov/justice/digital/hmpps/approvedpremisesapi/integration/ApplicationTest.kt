@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -101,7 +102,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
-    val upToDateApplicationEntity = applicationEntityFactory.produceAndPersist {
+    val upToDateApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
@@ -114,7 +115,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val outdatedApplicationEntity = applicationEntityFactory.produceAndPersist {
+    val outdatedApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCreatedByUser(user)
       withCrn(offenderDetails.otherIds.crn)
@@ -263,7 +264,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
-    val applicationEntity = applicationEntityFactory.produceAndPersist {
+    val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(userEntity)
@@ -415,7 +416,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
-    val nonUpgradableApplicationEntity = applicationEntityFactory.produceAndPersist {
+    val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(userEntity)
@@ -678,7 +679,7 @@ class ApplicationTest : IntegrationTestBase() {
       withDeliusUsername(username)
     }
 
-    applicationEntityFactory.produceAndPersist {
+    approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
       withId(applicationId)
       withApplicationSchema(applicationSchema)
@@ -789,7 +790,7 @@ class ApplicationTest : IntegrationTestBase() {
       withDeliusUsername(username)
     }
 
-    applicationEntityFactory.produceAndPersist {
+    approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
       withId(applicationId)
       withApplicationSchema(applicationSchema)
@@ -816,7 +817,7 @@ class ApplicationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
 
-    val persistedApplication = applicationRepository.findByIdOrNull(applicationId)!!
+    val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
     assertThat(persistedApplication.isWomensApplication).isTrue
     assertThat(persistedApplication.isPipeApplication).isTrue
@@ -875,7 +876,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
 
-    val application = applicationEntityFactory.produceAndPersist {
+    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)
       withCrn(crn)
       withCreatedByUser(userEntity)

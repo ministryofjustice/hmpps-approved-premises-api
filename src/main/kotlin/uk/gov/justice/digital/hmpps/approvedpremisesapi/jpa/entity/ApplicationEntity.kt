@@ -2,23 +2,32 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.persistence.DiscriminatorColumn
+import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.Inheritance
+import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
-  fun findAllByCreatedByUser_Id(id: UUID): List<ApplicationEntity>
+  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
+  fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
 }
 
 @Entity
 @Table(name = "applications")
-data class ApplicationEntity(
+@DiscriminatorColumn(name = "service")
+@Inheritance(strategy = InheritanceType.JOINED)
+abstract class ApplicationEntity(
   @Id
   val id: UUID,
 
@@ -40,9 +49,60 @@ data class ApplicationEntity(
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
 
-  var isWomensApplication: Boolean?,
-  var isPipeApplication: Boolean?,
-
   @Transient
   var schemaUpToDate: Boolean
+)
+
+@Entity
+@DiscriminatorValue("approved-premises")
+@Table(name = "approved_premises_applications")
+@PrimaryKeyJoinColumn(name = "id")
+class ApprovedPremisesApplicationEntity(
+  id: UUID,
+  crn: String,
+  createdByUser: UserEntity,
+  data: String?,
+  document: String?,
+  schemaVersion: JsonSchemaEntity,
+  createdAt: OffsetDateTime,
+  submittedAt: OffsetDateTime?,
+  schemaUpToDate: Boolean,
+  var isWomensApplication: Boolean?,
+  var isPipeApplication: Boolean?
+) : ApplicationEntity(
+  id,
+  crn,
+  createdByUser,
+  data,
+  document,
+  schemaVersion,
+  createdAt,
+  submittedAt,
+  schemaUpToDate
+)
+
+@Entity
+@DiscriminatorValue("temporary-accommodation")
+@Table(name = "temporary_accommodation_applications")
+@PrimaryKeyJoinColumn(name = "id")
+class TemporaryAccommodationApplicationEntity(
+  id: UUID,
+  crn: String,
+  createdByUser: UserEntity,
+  data: String?,
+  document: String?,
+  schemaVersion: JsonSchemaEntity,
+  createdAt: OffsetDateTime,
+  submittedAt: OffsetDateTime?,
+  schemaUpToDate: Boolean
+) : ApplicationEntity(
+  id,
+  crn,
+  createdByUser,
+  data,
+  document,
+  schemaVersion,
+  createdAt,
+  submittedAt,
+  schemaUpToDate
 )

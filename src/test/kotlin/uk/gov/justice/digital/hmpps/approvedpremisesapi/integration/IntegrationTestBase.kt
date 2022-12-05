@@ -16,7 +16,7 @@ import org.springframework.cache.CacheManager
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -41,12 +41,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersistedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -73,6 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
@@ -84,8 +86,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesApplicationJsonSchemaTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesAssessmentJsonSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRepository
@@ -190,7 +192,10 @@ abstract class IntegrationTestBase {
   lateinit var nonArrivalReasonRepository: NonArrivalReasonTestRepository
 
   @Autowired
-  lateinit var applicationRepository: ApplicationTestRepository
+  lateinit var approvedPremisesApplicationRepository: ApprovedPremisesApplicationTestRepository
+
+  @Autowired
+  lateinit var temporaryAccommodationApplicationRepository: TemporaryAccommodationPremisesTestRepository
 
   @Autowired
   lateinit var approvedPremisesApplicationJsonSchemaRepository: ApprovedPremisesApplicationJsonSchemaTestRepository
@@ -240,7 +245,8 @@ abstract class IntegrationTestBase {
   lateinit var lostBedReasonEntityFactory: PersistedFactory<LostBedReasonEntity, UUID, LostBedReasonEntityFactory>
   lateinit var extensionEntityFactory: PersistedFactory<ExtensionEntity, UUID, ExtensionEntityFactory>
   lateinit var nonArrivalReasonEntityFactory: PersistedFactory<NonArrivalReasonEntity, UUID, NonArrivalReasonEntityFactory>
-  lateinit var applicationEntityFactory: PersistedFactory<ApplicationEntity, UUID, ApplicationEntityFactory>
+  lateinit var approvedPremisesApplicationEntityFactory: PersistedFactory<ApprovedPremisesApplicationEntity, UUID, ApprovedPremisesApplicationEntityFactory>
+  lateinit var temporaryAccommodationApplicationEntityFactory: PersistedFactory<TemporaryAccommodationApplicationEntity, UUID, TemporaryAccommodationApplicationEntityFactory>
   lateinit var approvedPremisesApplicationJsonSchemaEntityFactory: PersistedFactory<ApprovedPremisesApplicationJsonSchemaEntity, UUID, ApprovedPremisesApplicationJsonSchemaEntityFactory>
   lateinit var approvedPremisesAssessmentJsonSchemaEntityFactory: PersistedFactory<ApprovedPremisesAssessmentJsonSchemaEntity, UUID, ApprovedPremisesAssessmentJsonSchemaEntityFactory>
   lateinit var userEntityFactory: PersistedFactory<UserEntity, UUID, UserEntityFactory>
@@ -292,7 +298,7 @@ abstract class IntegrationTestBase {
     lostBedReasonEntityFactory = PersistedFactory(LostBedReasonEntityFactory(), lostBedReasonRepository)
     extensionEntityFactory = PersistedFactory(ExtensionEntityFactory(), extensionRepository)
     nonArrivalReasonEntityFactory = PersistedFactory(NonArrivalReasonEntityFactory(), nonArrivalReasonRepository)
-    applicationEntityFactory = PersistedFactory(ApplicationEntityFactory(), applicationRepository)
+    approvedPremisesApplicationEntityFactory = PersistedFactory(ApprovedPremisesApplicationEntityFactory(), approvedPremisesApplicationRepository)
     approvedPremisesApplicationJsonSchemaEntityFactory = PersistedFactory(ApprovedPremisesApplicationJsonSchemaEntityFactory(), approvedPremisesApplicationJsonSchemaRepository)
     approvedPremisesAssessmentJsonSchemaEntityFactory = PersistedFactory(ApprovedPremisesAssessmentJsonSchemaEntityFactory(), approvedPremisesAssessmentJsonSchemaRepository)
     userEntityFactory = PersistedFactory(UserEntityFactory(), userRepository)
