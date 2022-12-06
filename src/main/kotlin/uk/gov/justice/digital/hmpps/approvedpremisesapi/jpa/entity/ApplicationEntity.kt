@@ -68,7 +68,10 @@ class ApprovedPremisesApplicationEntity(
   submittedAt: OffsetDateTime?,
   schemaUpToDate: Boolean,
   var isWomensApplication: Boolean?,
-  var isPipeApplication: Boolean?
+  var isPipeApplication: Boolean?,
+  val convictionId: Long,
+  val eventNumber: String,
+  val offenceId: String
 ) : ApplicationEntity(
   id,
   crn,

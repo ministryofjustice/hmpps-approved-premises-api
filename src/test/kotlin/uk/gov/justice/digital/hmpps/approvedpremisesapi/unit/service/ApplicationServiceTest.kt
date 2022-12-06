@@ -152,7 +152,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
-    val result = applicationService.createApplication(crn, username, "approved-premises")
+    val result = applicationService.createApplication(crn, username, "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -166,11 +166,29 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
-    val result = applicationService.createApplication(crn, username, "approved-premises")
+    val result = applicationService.createApplication(crn, username, "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
     assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+  }
+
+  @Test
+  fun `createApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce()
+    )
+
+    val result = applicationService.createApplication(crn, username, "approved-premises", null, null, null)
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.convictionId", "empty")
+    assertThat(result.validationMessages).containsEntry("$.deliusEventNumber", "empty")
+    assertThat(result.validationMessages).containsEntry("$.offenceId", "empty")
   }
 
   @Test
@@ -188,7 +206,7 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val result = applicationService.createApplication(crn, username, "approved-premises")
+    val result = applicationService.createApplication(crn, username, "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.Success).isTrue
     result as ValidatableActionResult.Success

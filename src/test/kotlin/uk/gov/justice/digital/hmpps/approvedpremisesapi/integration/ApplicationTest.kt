@@ -590,7 +590,10 @@ class ApplicationTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewApplication(
-          crn = crn
+          crn = crn,
+          convictionId = 123,
+          deliusEventNumber = "1",
+          offenceId = "789"
         )
       )
       .exchange()
