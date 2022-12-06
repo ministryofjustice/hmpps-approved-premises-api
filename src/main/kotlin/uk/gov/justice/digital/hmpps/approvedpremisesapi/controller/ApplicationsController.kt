@@ -67,7 +67,7 @@ class ApplicationsController(
 
     val (offender, inmate) = getPersonDetail(body.crn)
 
-    val application = when (val applicationResult = applicationService.createApplication(body.crn, username, serviceName)) {
+    val application = when (val applicationResult = applicationService.createApplication(body.crn, username, serviceName, body.convictionId, body.deliusEventNumber, body.offenceId)) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.Success -> applicationResult.entity
