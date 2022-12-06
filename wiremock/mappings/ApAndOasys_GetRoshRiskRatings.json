@@ -18,6 +18,7 @@
       "assessmentStatus": "OPEN",
       "superStatus": "WIP",
       "limitedAccessOffender": false,
+      "lastUpdatedDate": "2022-11-29T10:37:22Z",
       "rosh": {
         "riskChildrenCommunity": "Medium",
         "riskPublicCommunity": "High",

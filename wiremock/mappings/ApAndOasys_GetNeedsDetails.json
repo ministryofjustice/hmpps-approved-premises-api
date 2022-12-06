@@ -18,6 +18,7 @@
       "assessmentStatus": "OPEN",
       "superStatus": "WIP",
       "limitedAccessOffender": false,
+      "lastUpdatedDate": "2022-11-29T10:37:22Z",
       "needs": {
         "offenceAnalysisDetails": "Analysis",
         "emotionalIssuesDetails": "[10.9] Mr Smith told me that he was untroubled by mental health difficulties and had no history of self harm or suicidal thoughts",
