@@ -23,6 +23,20 @@ generic-service:
     SENTRY_ENVIRONMENT: dev
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
 
+  allowlist:
+    unilink-aovpn1: "194.75.210.216/29"
+    unilink-aovpn2: "83.98.63.176/29"
+    unilink-aovpn3: "78.33.10.50/31"
+    unilink-aovpn4: "78.33.10.52/30"
+    unilink-aovpn5: "78.33.10.56/30"
+    unilink-aovpn6: "78.33.10.60/32"
+    unilink-aovpn7: "78.33.32.99/32"
+    unilink-aovpn8: "78.33.32.100/30"
+    unilink-aovpn9: "78.33.32.104/30"
+    unilink-aovpn10: "78.33.32.108/32"
+    unilink-aovpn11: "217.138.45.109/32"
+    unilink-aovpn12: "217.138.45.110/32"
+
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
