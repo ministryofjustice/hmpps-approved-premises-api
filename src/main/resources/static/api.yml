@@ -3310,8 +3310,12 @@ components:
         convictionId:
           type: long
           example: 1502724704
+        offenceDate:
+          type: string
+          format: date
       required:
         - deliusEventNumber
         - offenceDescription
         - offenceId
         - convictionId
+        - offenceDate
