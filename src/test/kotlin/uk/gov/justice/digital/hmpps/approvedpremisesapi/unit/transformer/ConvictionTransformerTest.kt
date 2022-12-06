@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class ConvictionTransformerTest {
   private val convictionTransformer = ConvictionTransformer()
@@ -21,11 +23,13 @@ class ConvictionTransformerTest {
             .withOffenceId("1")
             .withMainCategoryDescription("Main Category 1")
             .withSubCategoryDescription("Sub Category 1")
+            .withOffenceDate(LocalDateTime.parse("2022-12-06T00:00:00"))
             .produce(),
           OffenceFactory()
             .withOffenceId("2")
             .withMainCategoryDescription("Main Category 2")
             .withSubCategoryDescription("Sub Category 2")
+            .withOffenceDate(LocalDateTime.parse("2022-12-05T00:00:00"))
             .produce()
         )
       )
@@ -36,13 +40,15 @@ class ConvictionTransformerTest {
         deliusEventNumber = "5",
         offenceDescription = "Main Category 1 - Sub Category 1",
         offenceId = "1",
-        convictionId = 12345
+        convictionId = 12345,
+        offenceDate = LocalDate.parse("2022-12-06")
       ),
       ActiveOffence(
         deliusEventNumber = "5",
         offenceDescription = "Main Category 2 - Sub Category 2",
         offenceId = "2",
-        convictionId = 12345
+        convictionId = 12345,
+        offenceDate = LocalDate.parse("2022-12-05")
       )
     )
   }
@@ -58,6 +64,7 @@ class ConvictionTransformerTest {
             .withOffenceId("1")
             .withMainCategoryDescription("A Description")
             .withSubCategoryDescription("A Description")
+            .withOffenceDate(LocalDateTime.parse("2022-12-06T00:00:00"))
             .produce(),
         )
       )
@@ -68,7 +75,8 @@ class ConvictionTransformerTest {
         deliusEventNumber = "5",
         offenceDescription = "A Description",
         offenceId = "1",
-        convictionId = 12345
+        convictionId = 12345,
+        offenceDate = LocalDate.parse("2022-12-06")
       )
     )
   }
