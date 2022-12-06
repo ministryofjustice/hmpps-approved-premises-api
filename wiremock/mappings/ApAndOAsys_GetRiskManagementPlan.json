@@ -18,6 +18,7 @@
       "assessmentStatus": "OPEN",
       "superStatus": "WIP",
       "limitedAccessOffender": false,
+      "lastUpdatedDate": "2022-11-29T10:37:22Z",
       "riskManagementPlan": {
         "furtherConsiderations": "[RM28] Mr Smith is currently on remand awaiting sentence",
         "additionalComments": "[RM35] Placeholder content for additional comments",
