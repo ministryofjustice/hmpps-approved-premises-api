@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.domain.events.ApplicationEventGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -24,7 +25,8 @@ class ApplicationService(
   private val offenderService: OffenderService,
   private val userService: UserService,
   private val assessmentService: AssessmentService,
-  private val jsonLogicService: JsonLogicService
+  private val jsonLogicService: JsonLogicService,
+  private val applicationEventGenerator: ApplicationEventGenerator
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -193,6 +195,7 @@ class ApplicationService(
 
     application = applicationRepository.save(application)
 
+    applicationEventGenerator.generate(eventName = "application.submitted", application = application)
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application)
     )

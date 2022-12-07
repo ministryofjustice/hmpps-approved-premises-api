@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.domain.events.ApplicationEventGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
@@ -36,6 +37,7 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockJsonLogicService = mockk<JsonLogicService>()
+  private val mockApplicationEventGenerator = mockk<ApplicationEventGenerator>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -44,7 +46,8 @@ class ApplicationServiceTest {
     mockOffenderService,
     mockUserService,
     mockAssessmentService,
-    mockJsonLogicService
+    mockJsonLogicService,
+    mockApplicationEventGenerator
   )
 
   @Test
@@ -365,6 +368,8 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
     assertThat(applicationService.submitApplication(applicationId, "{}", username) is AuthorisableActionResult.NotFound).isTrue
+
+    verify(exactly = 0) { mockApplicationEventGenerator.generate(eventName = any(), any()) }
   }
 
   @Test
@@ -384,6 +389,8 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
     assertThat(applicationService.submitApplication(applicationId, "{}", username) is AuthorisableActionResult.Unauthorised).isTrue
+
+    verify(exactly = 0) { mockApplicationEventGenerator.generate(eventName = any(), any()) }
   }
 
   @Test
@@ -417,6 +424,8 @@ class ApplicationServiceTest {
     val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
     assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+
+    verify(exactly = 0) { mockApplicationEventGenerator.generate(eventName = any(), any()) }
   }
 
   @Test
@@ -453,10 +462,12 @@ class ApplicationServiceTest {
     val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
     assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+
+    verify(exactly = 0) { mockApplicationEventGenerator.generate(eventName = any(), any()) }
   }
 
   @Test
-  fun `submitApplication returns Success, runs json logic rules and creates assessment`() {
+  fun `submitApplication returns Success, generates Event, runs json logic rules and creates assessment`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -487,6 +498,7 @@ class ApplicationServiceTest {
       .withApplication(application)
       .withAllocatedToUser(user)
       .produce()
+    every { mockApplicationEventGenerator.generate(any(), any()) } returns "Some string"
 
     val result = applicationService.submitApplication(applicationId, "{}", username)
 
@@ -501,5 +513,6 @@ class ApplicationServiceTest {
 
     verify { mockApplicationRepository.save(any()) }
     verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
+    verify { mockApplicationEventGenerator.generate(eventName = "application.submitted", application = application) }
   }
 }
