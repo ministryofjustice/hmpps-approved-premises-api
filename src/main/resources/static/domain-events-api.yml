@@ -428,6 +428,11 @@ components:
       type: string
       example: 484b8b5e-6c3b-4400-b200-425bbe410713
 
+    ApplicationUrl:
+      description: The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
+      type: string
+      example: https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+
     BookingId:
       description: The UUID of booking for an AP place
       type: string
@@ -486,6 +491,8 @@ components:
       properties:
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         personReference:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
@@ -508,6 +515,8 @@ components:
       properties:
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         personReference:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
@@ -527,6 +536,8 @@ components:
       properties:
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         personReference:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
@@ -552,6 +563,8 @@ components:
       properties:
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         personReference:
@@ -589,6 +602,8 @@ components:
           $ref: '#/components/schemas/DeliusEventNumber'
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         attemptedAt:
           type: string
           example: '2022-11-30T14:51:30'
@@ -609,6 +624,8 @@ components:
           $ref: '#/components/schemas/DeliusEventNumber'
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -632,6 +649,8 @@ components:
           $ref: '#/components/schemas/DeliusEventNumber'
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -659,6 +678,8 @@ components:
           $ref: '#/components/schemas/DeliusEventNumber'
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -682,6 +703,8 @@ components:
           $ref: '#/components/schemas/DeliusEventNumber'
         applicationId:
           $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
