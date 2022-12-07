@@ -1,0 +1,78 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionLevelDocumentFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderLevelDocumentFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.util.UUID
+
+class DocumentTransformerTest {
+  private val documentTransformer = DocumentTransformer()
+
+  @Test
+  fun `transformToApi transforms correctly - filters out convictions other than one specified`() {
+    val groupedDocuments = GroupedDocumentsFactory()
+      .withOffenderLevelDocument(
+        OffenderLevelDocumentFactory()
+          .withId(UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f"))
+          .withDocumentName("offender_level_doc.pdf")
+          .withTypeCode("TYPE-1")
+          .withTypeDescription("Type 1 Description")
+          .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
+          .withExtendedDescription("Extended Description 1")
+          .produce()
+      )
+      .withConvictionLevelDocument(
+        "12345",
+        ConvictionLevelDocumentFactory()
+          .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865"))
+          .withDocumentName("conviction_level_doc.pdf")
+          .withTypeCode("TYPE-2")
+          .withTypeDescription("Type 2 Description")
+          .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
+          .withExtendedDescription("Extended Description 2")
+          .produce()
+      )
+      .withConvictionLevelDocument(
+        "6789",
+        ConvictionLevelDocumentFactory()
+          .withId(UUID.fromString("e20589b3-7f83-4502-a0df-c8dd645f3f44"))
+          .withDocumentName("conviction_level_doc_2.pdf")
+          .withTypeCode("TYPE-2")
+          .withTypeDescription("Type 2 Description")
+          .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
+          .withExtendedDescription("Extended Description 2")
+          .produce()
+      )
+      .produce()
+
+    val result = documentTransformer.transformToApi(groupedDocuments, 12345)
+
+    assertThat(result).containsExactlyInAnyOrder(
+      Document(
+        id = UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f"),
+        level = DocumentLevel.offender,
+        fileName = "offender_level_doc.pdf",
+        createdAt = OffsetDateTime.parse("2022-12-07T11:40:00Z"),
+        typeCode = "TYPE-1",
+        typeDescription = "Type 1 Description",
+        description = "Extended Description 1"
+      ),
+      Document(
+        id = UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865"),
+        level = DocumentLevel.conviction,
+        fileName = "conviction_level_doc.pdf",
+        createdAt = OffsetDateTime.parse("2022-12-07T10:40:00Z"),
+        typeCode = "TYPE-2",
+        typeDescription = "Type 2 Description",
+        description = "Extended Description 2"
+      )
+    )
+  }
+}
