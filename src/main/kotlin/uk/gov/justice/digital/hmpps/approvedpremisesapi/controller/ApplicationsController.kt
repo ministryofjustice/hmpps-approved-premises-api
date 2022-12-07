@@ -6,11 +6,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -33,7 +36,8 @@ class ApplicationsController(
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
-  private val offenderService: OffenderService
+  private val offenderService: OffenderService,
+  private val documentTransformer: DocumentTransformer
 ) : ApplicationsApiDelegate {
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
@@ -126,6 +130,29 @@ class ApplicationsController(
     }
 
     return ResponseEntity(HttpStatus.OK)
+  }
+
+  override fun applicationsApplicationIdDocumentsGet(applicationId: UUID): ResponseEntity<List<Document>> {
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = deliusPrincipal.name
+
+    val application = when (val applicationResult = applicationService.getApplicationForUsername(applicationId, username)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> applicationResult.entity
+    }
+
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw BadRequestProblem(errorDetail = "Only CAS1 is currently supported")
+    }
+
+    val documents = when (val documentsResult = offenderService.getDocuments(application.crn)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(application.crn, "Person")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> documentsResult.entity
+    }
+
+    return ResponseEntity(documentTransformer.transformToApi(documents, application.convictionId), HttpStatus.OK)
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {
