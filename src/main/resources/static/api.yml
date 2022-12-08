@@ -2025,7 +2025,13 @@ components:
         arrivalDate:
           type: string
           format: date
+        originalArrivalDate:
+          type: string
+          format: date
         departureDate:
+          type: string
+          format: date
+        originalDepartureDate:
           type: string
           format: date
         keyWorker:
@@ -2038,7 +2044,9 @@ components:
         - id
         - person
         - arrivalDate
+        - originalArrivalDate
         - departureDate
+        - originalDepartureDate
         - serviceName
     NewBooking:
       type: object
