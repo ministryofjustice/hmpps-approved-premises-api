@@ -123,6 +123,8 @@ class BookingTransformerTest {
     premises = premisesEntity,
     bed = null,
     service = ServiceName.approvedPremises.value,
+    originalArrivalDate = LocalDate.parse("2022-08-10"),
+    originalDepartureDate = LocalDate.parse("2022-08-30"),
   )
 
   private val staffMember = StaffMember(
@@ -199,6 +201,8 @@ class BookingTransformerTest {
         status = Booking.Status.awaitingMinusArrival,
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -232,6 +236,8 @@ class BookingTransformerTest {
         status = Booking.Status.provisional,
         extensions = listOf(),
         serviceName = ServiceName.temporaryAccommodation,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -286,6 +292,8 @@ class BookingTransformerTest {
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -342,6 +350,8 @@ class BookingTransformerTest {
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -394,6 +404,8 @@ class BookingTransformerTest {
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -521,6 +533,8 @@ class BookingTransformerTest {
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -576,6 +590,8 @@ class BookingTransformerTest {
         ),
         extensions = listOf(),
         serviceName = ServiceName.temporaryAccommodation,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
       )
     )
   }

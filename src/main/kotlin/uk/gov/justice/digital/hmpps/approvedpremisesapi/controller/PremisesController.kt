@@ -315,6 +315,8 @@ class PremisesController(
         premises = premises,
         bed = bed,
         service = body.serviceName.value,
+        originalArrivalDate = body.arrivalDate,
+        originalDepartureDate = body.departureDate,
       )
     )
 

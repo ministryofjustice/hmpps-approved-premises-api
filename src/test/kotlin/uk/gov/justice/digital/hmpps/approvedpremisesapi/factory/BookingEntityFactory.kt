@@ -25,6 +25,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
+  private var originalArrivalDate: Yielded<LocalDate>? = null
+  private var originalDepartureDate: Yielded<LocalDate>? = null
   private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var arrival: Yielded<ArrivalEntity>? = null
   private var departure: Yielded<DepartureEntity>? = null
@@ -48,8 +50,16 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.arrivalDate = { arrivalDate }
   }
 
+  fun withOriginalArrivalDate(arrivalDate: LocalDate) = apply {
+    this.originalArrivalDate = { arrivalDate }
+  }
+
   fun withDepartureDate(departureDate: LocalDate) = apply {
     this.departureDate = { departureDate }
+  }
+
+  fun withOriginalDepartureDate(departureDate: LocalDate) = apply {
+    this.originalDepartureDate = { departureDate }
   }
 
   fun withStaffKeyWorkerCode(staffKeyWorkerCode: String?) = apply {
@@ -134,6 +144,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed?.invoke(),
-    service = this.serviceName.invoke().value
+    service = this.serviceName.invoke().value,
+    originalArrivalDate = this.originalArrivalDate?.invoke() ?: this.arrivalDate(),
+    originalDepartureDate = this.originalDepartureDate?.invoke() ?: this.departureDate(),
   )
 }
