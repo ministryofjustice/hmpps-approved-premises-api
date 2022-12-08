@@ -70,7 +70,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
     val groupedDocuments = GroupedDocumentsFactory()
       .withOffenderLevelDocument(
         OffenderLevelDocumentFactory()
-          .withId(UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f"))
+          .withId(UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString())
           .withDocumentName("offender_level_doc.pdf")
           .withTypeCode("TYPE-1")
           .withTypeDescription("Type 1 Description")
@@ -81,7 +81,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       .withConvictionLevelDocument(
         "12345",
         ConvictionLevelDocumentFactory()
-          .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865"))
+          .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString())
           .withDocumentName("conviction_level_doc.pdf")
           .withTypeCode("TYPE-2")
           .withTypeDescription("Type 2 Description")

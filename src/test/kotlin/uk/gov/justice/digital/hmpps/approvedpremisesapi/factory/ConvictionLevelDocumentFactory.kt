@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ConvictionLevelDocumentFactory : Factory<ConvictionLevelDocument> {
-  private var id: Yielded<UUID> = { UUID.randomUUID() }
+  private var id: Yielded<String> = { UUID.randomUUID().toString() }
   private var documentName: Yielded<String> = { "${randomStringMultiCaseWithNumbers(5)}.pdf" }
   private var author: Yielded<String> = { randomStringMultiCaseWithNumbers(4) }
   private var typeCode: Yielded<String> = { randomStringMultiCaseWithNumbers(4) }
@@ -20,7 +20,7 @@ class ConvictionLevelDocumentFactory : Factory<ConvictionLevelDocument> {
   private var createdAt: Yielded<LocalDateTime> = { LocalDateTime.now().randomDateTimeBefore(5) }
   private var parentPrimaryKeyId: Yielded<Long?> = { null }
 
-  fun withId(id: UUID) = apply {
+  fun withId(id: String) = apply {
     this.id = { id }
   }
 

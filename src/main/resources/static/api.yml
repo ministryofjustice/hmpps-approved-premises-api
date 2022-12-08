@@ -3412,7 +3412,6 @@ components:
       properties:
         id:
           type: string
-          format: uuid
         level:
           $ref: '#/components/schemas/DocumentLevel'
         fileName:
