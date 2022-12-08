@@ -11,7 +11,7 @@ data class Conviction(
   val failureToComplyCount: Long,
   val breachEnd: LocalDate?,
   val awaitingPsr: Boolean,
-  val convictionDate: LocalDate,
+  val convictionDate: LocalDate?,
   val referralDate: LocalDate,
   val offences: List<Offence>?
 )

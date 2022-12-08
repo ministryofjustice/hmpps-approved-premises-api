@@ -16,7 +16,7 @@ class ConvictionFactory : Factory<Conviction> {
   private var failureToComplyCount: Yielded<Long> = { 0 }
   private var breachEnd: Yielded<LocalDate?> = { null }
   private var awaitingPsr: Yielded<Boolean> = { false }
-  private var convictionDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(10) }
+  private var convictionDate: Yielded<LocalDate?> = { LocalDate.now().randomDateBefore(10) }
   private var referralDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(10) }
   private var offences: Yielded<List<Offence>> = { listOf() }
 
@@ -48,7 +48,7 @@ class ConvictionFactory : Factory<Conviction> {
     this.awaitingPsr = { awaitingPsr }
   }
 
-  fun withConvictionDate(convictionDate: LocalDate) = apply {
+  fun withConvictionDate(convictionDate: LocalDate?) = apply {
     this.convictionDate = { convictionDate }
   }
 
