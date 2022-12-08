@@ -94,6 +94,12 @@ class BookingService(
       )
     )
 
+    if (booking.service == ServiceName.temporaryAccommodation.value) {
+      booking.arrivalDate = arrivalDate
+      booking.departureDate = expectedDepartureDate
+      updateBooking(booking)
+    }
+
     return success(arrivalEntity)
   }
 
@@ -250,6 +256,11 @@ class BookingService(
         booking = booking
       )
     )
+
+    if (booking.service == ServiceName.temporaryAccommodation.value) {
+      booking.departureDate = dateTime.toLocalDate()
+      updateBooking(booking)
+    }
 
     return success(departureEntity)
   }

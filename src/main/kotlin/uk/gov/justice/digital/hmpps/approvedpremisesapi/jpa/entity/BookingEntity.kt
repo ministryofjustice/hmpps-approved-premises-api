@@ -29,7 +29,7 @@ data class BookingEntity(
   @Id
   val id: UUID,
   var crn: String,
-  val arrivalDate: LocalDate,
+  var arrivalDate: LocalDate,
   var departureDate: LocalDate,
   var keyWorkerStaffCode: String?,
   @OneToOne(mappedBy = "booking")

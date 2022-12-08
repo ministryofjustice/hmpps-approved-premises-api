@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -321,6 +322,8 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.person.name").isEqualTo("Mock Person")
       .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
       .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+      .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
       .jsonPath("$.keyWorker").isEqualTo(null)
       .jsonPath("$.status").isEqualTo("awaiting-arrival")
       .jsonPath("$.arrival").isEqualTo(null)
@@ -389,6 +392,8 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.person.name").isEqualTo("Mock Person")
       .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
       .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+      .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
       .jsonPath("$.keyWorker").isEqualTo(null)
       .jsonPath("$.status").isEqualTo("provisional")
       .jsonPath("$.arrival").isEqualTo(null)
@@ -707,6 +712,347 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Arrival does not update arrival or departure date for an Approved Premises booking`() {
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedPremises {
+        approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+      }
+      withArrivalDate(LocalDate.parse("2022-08-10"))
+      withDepartureDate(LocalDate.parse("2022-08-30"))
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(booking.crn)
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewArrival(
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-14"),
+          notes = "Hello",
+          keyWorkerStaffCode = keyWorker.code
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    webTestClient.get()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
+      .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+      .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+  }
+
+  @Test
+  fun `Create Arrival updates arrival and departure date for a Temporary Accommodation booking`() {
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withYieldedPremises { premises }
+        }
+      }
+    }
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+      withYieldedBed { bed }
+      withServiceName(ServiceName.temporaryAccommodation)
+      withArrivalDate(LocalDate.parse("2022-08-10"))
+      withDepartureDate(LocalDate.parse("2022-08-30"))
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(booking.crn)
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewArrival(
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          expectedDepartureDate = LocalDate.parse("2022-08-14"),
+          notes = "Hello",
+          keyWorkerStaffCode = keyWorker.code
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    webTestClient.get()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+      .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+      .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+      .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+  }
+
+  @Test
+  fun `Create Departure on Booking returns 200 with correct body`() {
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedPremises {
+        approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+      }
+      withServiceName(ServiceName.approvedPremises)
+      withArrivalDate(LocalDate.parse("2022-08-10"))
+      withDepartureDate(LocalDate.parse("2022-08-30"))
+    }
+
+    val reason = departureReasonEntityFactory.produceAndPersist {
+      withServiceScope("approved-premises")
+    }
+    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+      withServiceScope("approved-premises")
+    }
+    val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+          reasonId = reason.id,
+          moveOnCategoryId = moveOnCategory.id,
+          destinationProviderId = destinationProvider.id,
+          notes = "Hello",
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.dateTime").isEqualTo("2022-09-01T12:34:56.789Z")
+      .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+      .jsonPath("$.moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
+      .jsonPath("$.destinationProvider.id").isEqualTo(destinationProvider.id.toString())
+      .jsonPath("$.notes").isEqualTo("Hello")
+  }
+
+  @Test
+  fun `Create Departure does not update departure date for an Approved Premises booking`() {
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedPremises {
+        approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+      }
+      withServiceName(ServiceName.approvedPremises)
+      withArrivalDate(LocalDate.parse("2022-08-10"))
+      withDepartureDate(LocalDate.parse("2022-08-30"))
+    }
+
+    val reason = departureReasonEntityFactory.produceAndPersist {
+      withServiceScope("approved-premises")
+    }
+    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+      withServiceScope("approved-premises")
+    }
+    val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(booking.crn)
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+          reasonId = reason.id,
+          moveOnCategoryId = moveOnCategory.id,
+          destinationProviderId = destinationProvider.id,
+          notes = "Hello",
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    webTestClient.get()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
+      .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+      .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+  }
+
+  @Test
+  fun `Create Departure updates the departure date for a Temporary Accommodation booking`() {
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedPremises {
+        temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+      }
+      withServiceName(ServiceName.temporaryAccommodation)
+      withArrivalDate(LocalDate.parse("2022-08-10"))
+      withDepartureDate(LocalDate.parse("2022-08-30"))
+    }
+
+    val reason = departureReasonEntityFactory.produceAndPersist {
+      withServiceScope("temporary-accommodation")
+    }
+    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+      withServiceScope("temporary-accommodation")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(booking.crn)
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewDeparture(
+          dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+          reasonId = reason.id,
+          moveOnCategoryId = moveOnCategory.id,
+          destinationProviderId = null,
+          notes = "Hello",
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    webTestClient.get()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
+      .jsonPath("$.departureDate").isEqualTo("2022-09-01")
+      .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+      .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+  }
+
+  @Test
   fun `Create Cancellation without JWT returns 401`() {
     webTestClient.post()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/cancellations")
@@ -815,7 +1161,10 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".newDepartureDate").isEqualTo("2022-08-22")
       .jsonPath(".notes").isEqualTo("notes")
 
-    assertThat(bookingRepository.findByIdOrNull(booking.id)!!.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
+    val actualBooking = bookingRepository.findByIdOrNull(booking.id)!!
+
+    assertThat(actualBooking.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
+    assertThat(actualBooking.originalDepartureDate).isEqualTo(LocalDate.parse("2022-08-20"))
   }
 
   @Test
