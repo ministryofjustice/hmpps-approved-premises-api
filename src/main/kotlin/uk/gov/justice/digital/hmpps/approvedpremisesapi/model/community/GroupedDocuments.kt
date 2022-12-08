@@ -5,7 +5,9 @@ import java.time.LocalDateTime
 data class GroupedDocuments(
   val documents: List<OffenderLevelDocument>,
   val convictions: List<ConvictionDocuments>
-)
+) {
+  fun documentExists(documentId: String) = documents.any { it.id == documentId } || convictions.flatMap { it.documents }.any { it.id == documentId }
+}
 
 data class OffenderLevelDocument(
   val id: String,
