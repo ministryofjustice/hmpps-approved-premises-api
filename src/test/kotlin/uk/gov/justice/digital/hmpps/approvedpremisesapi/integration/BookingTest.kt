@@ -1123,6 +1123,79 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withName("test-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("test-room")
+          withYieldedPremises { premises }
+        }
+      }
+    }
+
+    val conflictingBooking = bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
+      withCrn("CRN123")
+      withYieldedPremises { premises }
+      withYieldedBed { bed }
+      withArrivalDate(LocalDate.parse("2022-07-15"))
+      withDepartureDate(LocalDate.parse("2022-08-15"))
+    }
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
+      withCrn("CRN456")
+      withYieldedPremises { premises }
+      withYieldedBed { bed }
+      withArrivalDate(LocalDate.parse("2022-06-14"))
+      withDepartureDate(LocalDate.parse("2022-07-14"))
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewExtension(
+          newDepartureDate = LocalDate.parse("2022-07-16"),
+          notes = null,
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Conflict")
+      .jsonPath("status").isEqualTo(409)
+      .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+  }
+
+  @Test
   fun `Create Extension on Booking returns OK with expected body, updates departureDate on Booking entity`() {
     val keyWorker = ContextStaffMemberFactory().produce()
     mockStaffMembersContextApiCall(keyWorker, "QCODE")
