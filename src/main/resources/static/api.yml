@@ -2679,10 +2679,13 @@ components:
           example: Recall
         isActive:
           type: boolean
+        serviceScope:
+          type: string
       required:
         - id
         - name
         - isActive
+        - serviceScope
     NonArrivalReason:
       type: object
       properties:
