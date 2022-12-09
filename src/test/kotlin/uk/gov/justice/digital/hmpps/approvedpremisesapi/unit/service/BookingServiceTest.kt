@@ -923,7 +923,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createExtension returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+  fun `createExtension returns FieldValidationError with correct param to message map when an Approved Premises booking has a new departure date before the existing departure date`() {
     val bookingEntity = BookingEntityFactory()
       .withDepartureDate(LocalDate.parse("2022-08-26"))
       .withYieldedPremises {
@@ -947,6 +947,69 @@ class BookingServiceTest {
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.newDepartureDate", "beforeExistingDepartureDate")
+    )
+  }
+
+  @Test
+  fun `createExtension returns Success with correct result when a Temporary Accommodation booking has a new departure date before the existing departure date`() {
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-10"))
+      .withDepartureDate(LocalDate.parse("2022-08-26"))
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
+
+    val result = bookingService.createExtension(
+      booking = bookingEntity,
+      newDepartureDate = LocalDate.parse("2022-08-25"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createExtension returns FieldValidationError with correct param to message map when a Temporary Accommodation booking has a new departure date before the arrival date`() {
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-26"))
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+
+    val result = bookingService.createExtension(
+      booking = bookingEntity,
+      newDepartureDate = LocalDate.parse("2022-08-25"),
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.newDepartureDate", "beforeBookingArrivalDate")
     )
   }
 
