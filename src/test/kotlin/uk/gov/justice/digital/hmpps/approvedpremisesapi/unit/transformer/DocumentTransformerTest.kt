@@ -20,7 +20,7 @@ class DocumentTransformerTest {
     val groupedDocuments = GroupedDocumentsFactory()
       .withOffenderLevelDocument(
         OffenderLevelDocumentFactory()
-          .withId(UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f"))
+          .withId(UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString())
           .withDocumentName("offender_level_doc.pdf")
           .withTypeCode("TYPE-1")
           .withTypeDescription("Type 1 Description")
@@ -31,7 +31,7 @@ class DocumentTransformerTest {
       .withConvictionLevelDocument(
         "12345",
         ConvictionLevelDocumentFactory()
-          .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865"))
+          .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString())
           .withDocumentName("conviction_level_doc.pdf")
           .withTypeCode("TYPE-2")
           .withTypeDescription("Type 2 Description")
@@ -42,7 +42,7 @@ class DocumentTransformerTest {
       .withConvictionLevelDocument(
         "6789",
         ConvictionLevelDocumentFactory()
-          .withId(UUID.fromString("e20589b3-7f83-4502-a0df-c8dd645f3f44"))
+          .withId(UUID.fromString("e20589b3-7f83-4502-a0df-c8dd645f3f44").toString())
           .withDocumentName("conviction_level_doc_2.pdf")
           .withTypeCode("TYPE-2")
           .withTypeDescription("Type 2 Description")
@@ -56,7 +56,7 @@ class DocumentTransformerTest {
 
     assertThat(result).containsExactlyInAnyOrder(
       Document(
-        id = UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f"),
+        id = UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString(),
         level = DocumentLevel.offender,
         fileName = "offender_level_doc.pdf",
         createdAt = OffsetDateTime.parse("2022-12-07T11:40:00Z"),
@@ -65,7 +65,7 @@ class DocumentTransformerTest {
         description = "Extended Description 1"
       ),
       Document(
-        id = UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865"),
+        id = UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString(),
         level = DocumentLevel.conviction,
         fileName = "conviction_level_doc.pdf",
         createdAt = OffsetDateTime.parse("2022-12-07T10:40:00Z"),

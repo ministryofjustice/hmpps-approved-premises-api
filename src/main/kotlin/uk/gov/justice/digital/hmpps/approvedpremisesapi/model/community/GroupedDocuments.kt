@@ -1,15 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 
 import java.time.LocalDateTime
-import java.util.UUID
 
 data class GroupedDocuments(
   val documents: List<OffenderLevelDocument>,
   val convictions: List<ConvictionDocuments>
-)
+) {
+  fun documentExists(documentId: String) = documents.any { it.id == documentId } || convictions.flatMap { it.documents }.any { it.id == documentId }
+}
 
 data class OffenderLevelDocument(
-  val id: UUID,
+  val id: String,
   val documentName: String,
   val author: String,
   val type: DocumentType,
@@ -25,7 +26,7 @@ data class ConvictionDocuments(
 )
 
 data class ConvictionLevelDocument(
-  val id: UUID,
+  val id: String,
   val documentName: String,
   val author: String,
   val type: DocumentType,

@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import java.io.OutputStream
 import java.time.LocalDate
 
 @Service
@@ -338,6 +339,8 @@ class OffenderService(
 
     return AuthorisableActionResult.Success(documents)
   }
+
+  fun getDocument(crn: String, documentId: String, outputStream: OutputStream) = communityApiClient.getDocument(crn, documentId, outputStream)
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
     when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
