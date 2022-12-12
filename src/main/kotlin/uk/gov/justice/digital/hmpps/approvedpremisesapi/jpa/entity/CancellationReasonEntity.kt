@@ -16,7 +16,8 @@ data class CancellationReasonEntity(
   @Id
   val id: UUID,
   val name: String,
-  val isActive: Boolean
+  val isActive: Boolean,
+  val serviceScope: String,
 ) {
   override fun toString() = "CancellationReasonEntity:$id"
 }

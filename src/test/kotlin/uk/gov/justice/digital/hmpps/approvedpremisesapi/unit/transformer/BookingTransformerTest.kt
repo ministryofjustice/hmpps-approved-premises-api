@@ -362,7 +362,7 @@ class BookingTransformerTest {
       cancellation = CancellationEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         date = LocalDate.parse("2022-08-10"),
-        reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true),
+        reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
         notes = null,
         booking = this
       )
@@ -372,7 +372,7 @@ class BookingTransformerTest {
       bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
       notes = null,
       date = LocalDate.parse("2022-08-10"),
-      reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true)
+      reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises")
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails, inmateDetail, null)
@@ -399,7 +399,7 @@ class BookingTransformerTest {
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           date = LocalDate.parse("2022-08-10"),
-          reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true),
+          reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
           notes = null
         ),
         extensions = listOf(),

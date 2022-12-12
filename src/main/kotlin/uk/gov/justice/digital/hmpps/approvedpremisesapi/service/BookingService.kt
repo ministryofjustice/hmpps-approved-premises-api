@@ -152,6 +152,8 @@ class BookingService(
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reason" hasValidationError "doesNotExist"
+    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+      "$.reason" hasValidationError "incorrectCancellationReasonServiceScope"
     }
 
     if (validationErrors.any()) {

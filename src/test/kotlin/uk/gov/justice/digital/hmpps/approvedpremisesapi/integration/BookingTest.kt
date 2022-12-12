@@ -1081,7 +1081,9 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
+    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+      withServiceScope("*")
+    }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
