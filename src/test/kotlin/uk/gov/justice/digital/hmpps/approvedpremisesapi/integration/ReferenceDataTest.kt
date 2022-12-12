@@ -324,6 +324,60 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get Cancellation Reasons for only approved premises returns 200 with correct body`() {
+    cancellationReasonRepository.deleteAll()
+
+    cancellationReasonEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedCancellationReasons = cancellationReasonEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/cancellation-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "approved-premises")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Cancellation Reasons for only temporary accommodation returns 200 with correct body`() {
+    cancellationReasonRepository.deleteAll()
+
+    cancellationReasonEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedCancellationReasons = cancellationReasonEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/cancellation-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "temporary-accommodation")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
   fun `Get Lost Bed Reasons returns 200 with correct body`() {
     lostBedReasonRepository.deleteAll()
 
