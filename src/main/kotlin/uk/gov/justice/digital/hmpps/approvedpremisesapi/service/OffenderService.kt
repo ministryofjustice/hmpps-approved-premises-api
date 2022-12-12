@@ -130,7 +130,6 @@ class OffenderService(
         val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)
 
         val risks = PersonRisks(
-          crn = crn,
           roshRisks = getRoshRisksEnvelope(crn, jwt),
           mappa = getMappaEnvelope(registrationsResponse),
           tier = getRiskTierEnvelope(crn),

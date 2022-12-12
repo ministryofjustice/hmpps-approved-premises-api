@@ -258,7 +258,6 @@ class OffenderServiceTest {
     val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
-    assertThat(result.entity.crn).isEqualTo(crn)
     assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.entity.tier.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.NotFound)
@@ -279,7 +278,6 @@ class OffenderServiceTest {
     val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
-    assertThat(result.entity.crn).isEqualTo(crn)
     assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Error)
     assertThat(result.entity.tier.status).isEqualTo(RiskStatus.Error)
     assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.Error)
@@ -336,7 +334,6 @@ class OffenderServiceTest {
     val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
-    assertThat(result.entity.crn).isEqualTo(crn)
 
     assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
     result.entity.roshRisks.value!!.let {

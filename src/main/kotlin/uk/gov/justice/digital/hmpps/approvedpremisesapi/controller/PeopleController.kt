@@ -67,7 +67,7 @@ class PeopleController(
       is AuthorisableActionResult.Success -> risksResult.entity
     }
 
-    return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks))
+    return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks, crn))
   }
 
   override fun peopleCrnPrisonCaseNotesGet(crn: String): ResponseEntity<List<PrisonCaseNote>> {

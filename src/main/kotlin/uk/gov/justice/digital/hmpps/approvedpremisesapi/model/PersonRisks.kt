@@ -13,7 +13,6 @@ enum class RiskStatus {
 }
 
 data class PersonRisks(
-  val crn: String,
   val roshRisks: RiskWithStatus<RoshRisks>,
   val mappa: RiskWithStatus<Mappa>,
   val tier: RiskWithStatus<RiskTier>,
