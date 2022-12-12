@@ -315,6 +315,8 @@ class PremisesController(
         premises = premises,
         bed = bed,
         service = body.serviceName.value,
+        originalArrivalDate = body.arrivalDate,
+        originalDepartureDate = body.departureDate,
       )
     )
 
@@ -432,6 +434,14 @@ class PremisesController(
     body: NewExtension
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+
+    if (booking.service == ServiceName.temporaryAccommodation.value) {
+      // TODO: Extensions will likely need to check for overlaps once bed-level bookings are implemented for AP
+      val bedId = booking.bed?.id
+        ?: throw InternalServerErrorProblem("No bed ID present on Temporary Accommodation booking: $bookingId")
+
+      throwIfBookingDatesConflict(booking.arrivalDate, body.newDepartureDate, bookingId, bedId, booking.premises)
+    }
 
     val result = bookingService.createExtension(
       booking = booking,

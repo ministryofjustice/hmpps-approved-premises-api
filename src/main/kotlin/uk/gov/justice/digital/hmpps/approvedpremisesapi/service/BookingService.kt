@@ -94,6 +94,12 @@ class BookingService(
       )
     )
 
+    if (booking.service == ServiceName.temporaryAccommodation.value) {
+      booking.arrivalDate = arrivalDate
+      booking.departureDate = expectedDepartureDate
+      updateBooking(booking)
+    }
+
     return success(arrivalEntity)
   }
 
@@ -251,6 +257,11 @@ class BookingService(
       )
     )
 
+    if (booking.service == ServiceName.temporaryAccommodation.value) {
+      booking.departureDate = dateTime.toLocalDate()
+      updateBooking(booking)
+    }
+
     return success(departureEntity)
   }
 
@@ -260,8 +271,13 @@ class BookingService(
     newDepartureDate: LocalDate,
     notes: String?
   ) = validated<ExtensionEntity> {
-    if (booking.departureDate.isAfter(newDepartureDate)) {
-      return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
+    when (booking.service) {
+      ServiceName.approvedPremises.value -> if (booking.departureDate.isAfter(newDepartureDate)) {
+        return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
+      }
+      ServiceName.temporaryAccommodation.value -> if (booking.arrivalDate.isAfter(newDepartureDate)) {
+        return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+      }
     }
 
     val extensionEntity = ExtensionEntity(

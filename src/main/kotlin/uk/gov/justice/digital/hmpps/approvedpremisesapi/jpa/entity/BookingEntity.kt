@@ -29,7 +29,7 @@ data class BookingEntity(
   @Id
   val id: UUID,
   var crn: String,
-  val arrivalDate: LocalDate,
+  var arrivalDate: LocalDate,
   var departureDate: LocalDate,
   var keyWorkerStaffCode: String?,
   @OneToOne(mappedBy = "booking")
@@ -51,6 +51,8 @@ data class BookingEntity(
   @JoinColumn(name = "bed_id")
   var bed: BedEntity?,
   var service: String,
+  var originalArrivalDate: LocalDate,
+  var originalDepartureDate: LocalDate,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -66,11 +68,13 @@ data class BookingEntity(
     if (nonArrival != other.nonArrival) return false
     if (cancellation != other.cancellation) return false
     if (confirmation != other.confirmation) return false
+    if (originalArrivalDate != other.originalArrivalDate) return false
+    if (originalDepartureDate != other.originalDepartureDate) return false
 
     return true
   }
 
-  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation, confirmation)
+  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation, confirmation, originalArrivalDate, originalDepartureDate)
 
   override fun toString() = "BookingEntity:$id"
 }
