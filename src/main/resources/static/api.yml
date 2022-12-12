@@ -1618,6 +1618,13 @@ paths:
       tags:
         - Reference Data
       summary: Lists all cancellation reasons
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only departure reasons for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
