@@ -6,7 +6,7 @@ data class GroupedDocuments(
   val documents: List<Document>,
   val convictions: List<ConvictionDocuments>
 ) {
-  fun documentExists(documentId: String) = documents.any { it.id == documentId } || convictions.flatMap { it.documents }.any { it.id == documentId }
+  fun findDocument(documentId: String) = documents.firstOrNull { it.id == documentId } ?: convictions.flatMap { it.documents }.firstOrNull { it.id == documentId }
 }
 
 data class Document(

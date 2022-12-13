@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -38,13 +39,15 @@ class DocumentsController(
       is AuthorisableActionResult.Success -> documentsMetaDataResult.entity
     }
 
-    if (! documentsMetaData.documentExists(documentId)) {
-      throw NotFoundProblem(documentId, "Document")
-    }
+    val documentMetaData = documentsMetaData.findDocument(documentId)
+      ?: throw NotFoundProblem(documentId, "Document")
 
     return ResponseEntity(
       StreamingResponseBody { outputStream ->
         offenderService.getDocument(crn, documentId, outputStream)
+      },
+      HttpHeaders().apply {
+        put("Content-Disposition", listOf("attachment; filename=\"${documentMetaData.documentName}\""))
       },
       HttpStatus.OK
     )

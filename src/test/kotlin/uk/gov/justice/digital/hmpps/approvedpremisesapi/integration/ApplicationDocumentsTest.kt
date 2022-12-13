@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
@@ -155,7 +156,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Download document returns 200 with correct body`() {
+  fun `Download document returns 200 with correct body and headers`() {
     val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
@@ -209,6 +210,8 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+      .expectHeader()
+      .contentDisposition(ContentDisposition.parse("attachment; filename=\"conviction_level_doc.pdf\""))
       .expectBody()
       .returnResult()
 
