@@ -14,12 +14,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class AssessmentServiceTest {
@@ -280,5 +284,133 @@ class AssessmentServiceTest {
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
     verify(exactly = 1) { assessmentClarificationNoteRepositoryMock.save(any()) }
+  }
+
+  @Test
+  fun `updateAssessment returns unauthorised for Assessment not allocated to user`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withAllocatedToUser(UserEntityFactory().produce())
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.updateAssessment(user, assessmentId, "{}")
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `updateAssessment returns general validation error for Assessment where schema is outdated`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withAllocatedToUser(user)
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.updateAssessment(user, assessmentId, "{}")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("The schema version is outdated")
+  }
+
+  @Test
+  fun `updateAssessment returns general validation error for Assessment where decision has already been taken`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    val result = assessmentService.updateAssessment(user, assessmentId, "{}")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("A decision has already been taken on this assessment")
+  }
+
+  @Test
+  fun `updateAssessment returns updated assessment`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    val result = assessmentService.updateAssessment(user, assessmentId, "{\"test\": \"data\"}")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.Success)
+    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
+    assertThat(updatedAssessment.data).isEqualTo("{\"test\": \"data\"}")
   }
 }
