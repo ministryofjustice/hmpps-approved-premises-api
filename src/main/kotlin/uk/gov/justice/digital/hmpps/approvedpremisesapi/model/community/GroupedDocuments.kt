@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 import java.time.LocalDateTime
 
 data class GroupedDocuments(
-  val documents: List<OffenderLevelDocument>,
+  val documents: List<Document>,
   val convictions: List<ConvictionDocuments>
 ) {
-  fun documentExists(documentId: String) = documents.any { it.id == documentId } || convictions.flatMap { it.documents }.any { it.id == documentId }
+  fun findDocument(documentId: String) = documents.firstOrNull { it.id == documentId } ?: convictions.flatMap { it.documents }.firstOrNull { it.id == documentId }
 }
 
-data class OffenderLevelDocument(
+data class Document(
   val id: String,
   val documentName: String,
   val author: String,
@@ -22,18 +22,7 @@ data class OffenderLevelDocument(
 
 data class ConvictionDocuments(
   val convictionId: String,
-  val documents: List<ConvictionLevelDocument>
-)
-
-data class ConvictionLevelDocument(
-  val id: String,
-  val documentName: String,
-  val author: String,
-  val type: DocumentType,
-  val extendedDescription: String?,
-  val lastModifiedAt: LocalDateTime?,
-  val createdAt: LocalDateTime,
-  val parentPrimaryKeyId: Long?
+  val documents: List<Document>
 )
 
 data class DocumentType(
