@@ -9,6 +9,7 @@ class CancellationReasonTransformer() {
   fun transformJpaToApi(jpa: CancellationReasonEntity) = CancellationReason(
     id = jpa.id,
     name = jpa.name,
-    isActive = jpa.isActive
+    isActive = jpa.isActive,
+    serviceScope = jpa.serviceScope,
   )
 }

@@ -887,6 +887,44 @@ class BookingServiceTest {
   }
 
   @Test
+  fun `createCancellation returns FieldValidationError with correct param to message map when the cancellation reason has the wrong service scope`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withServiceName(ServiceName.approvedPremises)
+      .produce()
+
+    val reasonEntity = CancellationReasonEntityFactory()
+      .withServiceScope(ServiceName.temporaryAccommodation.value)
+      .produce()
+
+    every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+
+    val result = bookingService.createCancellation(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.reason", "incorrectCancellationReasonServiceScope")
+    )
+  }
+
+  @Test
   fun `createCancellation returns Success with correct result when validation passed`() {
     val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
 
@@ -903,7 +941,7 @@ class BookingServiceTest {
       }
       .produce()
 
-    val reasonEntity = CancellationReasonEntityFactory().produce()
+    val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
 
     every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
     every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
