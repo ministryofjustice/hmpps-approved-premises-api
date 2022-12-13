@@ -4,9 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionLevelDocumentFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderLevelDocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -19,7 +18,7 @@ class DocumentTransformerTest {
   fun `transformToApi transforms correctly - filters out convictions other than one specified`() {
     val groupedDocuments = GroupedDocumentsFactory()
       .withOffenderLevelDocument(
-        OffenderLevelDocumentFactory()
+        DocumentFactory()
           .withId(UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString())
           .withDocumentName("offender_level_doc.pdf")
           .withTypeCode("TYPE-1")
@@ -30,7 +29,7 @@ class DocumentTransformerTest {
       )
       .withConvictionLevelDocument(
         "12345",
-        ConvictionLevelDocumentFactory()
+        DocumentFactory()
           .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString())
           .withDocumentName("conviction_level_doc.pdf")
           .withTypeCode("TYPE-2")
@@ -41,7 +40,7 @@ class DocumentTransformerTest {
       )
       .withConvictionLevelDocument(
         "6789",
-        ConvictionLevelDocumentFactory()
+        DocumentFactory()
           .withId(UUID.fromString("e20589b3-7f83-4502-a0df-c8dd645f3f44").toString())
           .withDocumentName("conviction_level_doc_2.pdf")
           .withTypeCode("TYPE-2")

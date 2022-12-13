@@ -2,19 +2,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.ConvictionDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.ConvictionLevelDocument
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLevelDocument
 
 class GroupedDocumentsFactory : Factory<GroupedDocuments> {
-  private val offenderLevelDocuments = mutableListOf<OffenderLevelDocument>()
-  private val convictionLevelDocuments = mutableMapOf<String, MutableList<ConvictionLevelDocument>>()
+  private val offenderLevelDocuments = mutableListOf<Document>()
+  private val convictionLevelDocuments = mutableMapOf<String, MutableList<Document>>()
 
-  fun withOffenderLevelDocument(offenderLevelDocument: OffenderLevelDocument) = apply {
+  fun withOffenderLevelDocument(offenderLevelDocument: Document) = apply {
     this.offenderLevelDocuments += offenderLevelDocument
   }
 
-  fun withConvictionLevelDocument(convictionId: String, convictionLevelDocument: ConvictionLevelDocument) = apply {
+  fun withConvictionLevelDocument(convictionId: String, convictionLevelDocument: Document) = apply {
     if (! this.convictionLevelDocuments.containsKey(convictionId)) {
       this.convictionLevelDocuments[convictionId] = mutableListOf()
     }

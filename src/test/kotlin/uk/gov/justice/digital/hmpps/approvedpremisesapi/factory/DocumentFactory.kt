@@ -2,14 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.DocumentType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLevelDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDateTime
 import java.util.UUID
 
-class OffenderLevelDocumentFactory : Factory<OffenderLevelDocument> {
+class DocumentFactory : Factory<Document> {
   private var id: Yielded<String> = { UUID.randomUUID().toString() }
   private var documentName: Yielded<String> = { "${randomStringMultiCaseWithNumbers(5)}.pdf" }
   private var author: Yielded<String> = { randomStringMultiCaseWithNumbers(4) }
@@ -56,7 +56,7 @@ class OffenderLevelDocumentFactory : Factory<OffenderLevelDocument> {
     this.parentPrimaryKeyId = { parentPrimaryKeyId }
   }
 
-  override fun produce(): OffenderLevelDocument = OffenderLevelDocument(
+  override fun produce(): Document = Document(
     id = this.id(),
     documentName = this.documentName(),
     author = this.author(),

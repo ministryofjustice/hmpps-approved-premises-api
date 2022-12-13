@@ -4,11 +4,10 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionLevelDocumentFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderLevelDocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
@@ -69,7 +68,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
 
     val groupedDocuments = GroupedDocumentsFactory()
       .withOffenderLevelDocument(
-        OffenderLevelDocumentFactory()
+        DocumentFactory()
           .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
           .withDocumentName("offender_level_doc.pdf")
           .withTypeCode("TYPE-1")
@@ -80,7 +79,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       )
       .withConvictionLevelDocument(
         "12345",
-        ConvictionLevelDocumentFactory()
+        DocumentFactory()
           .withId("457af8a5-82b1-449a-ad03-032b39435865")
           .withDocumentName("conviction_level_doc.pdf")
           .withTypeCode("TYPE-2")
@@ -122,7 +121,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
 
     val groupedDocuments = GroupedDocumentsFactory()
       .withOffenderLevelDocument(
-        OffenderLevelDocumentFactory()
+        DocumentFactory()
           .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
           .withDocumentName("offender_level_doc.pdf")
           .withTypeCode("TYPE-1")
@@ -133,7 +132,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       )
       .withConvictionLevelDocument(
         "12345",
-        ConvictionLevelDocumentFactory()
+        DocumentFactory()
           .withId("457af8a5-82b1-449a-ad03-032b39435865")
           .withDocumentName("conviction_level_doc.pdf")
           .withTypeCode("TYPE-2")
@@ -169,7 +168,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
 
     val groupedDocuments = GroupedDocumentsFactory()
       .withOffenderLevelDocument(
-        OffenderLevelDocumentFactory()
+        DocumentFactory()
           .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
           .withDocumentName("offender_level_doc.pdf")
           .withTypeCode("TYPE-1")
@@ -180,7 +179,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       )
       .withConvictionLevelDocument(
         "12345",
-        ConvictionLevelDocumentFactory()
+        DocumentFactory()
           .withId("457af8a5-82b1-449a-ad03-032b39435865")
           .withDocumentName("conviction_level_doc.pdf")
           .withTypeCode("TYPE-2")
