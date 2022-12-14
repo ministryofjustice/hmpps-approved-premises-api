@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
 @Component
 class AssessmentTransformer(
@@ -29,7 +31,9 @@ class AssessmentTransformer(
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
       allocatedToStaffMemberId = jpa.allocatedToUser.id,
-      submittedAt = jpa.submittedAt
+      submittedAt = jpa.submittedAt,
+      decision = transformJpaDecisionToApi(jpa.decision),
+      rejectionRationale = jpa.rejectionRationale
     )
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationAssessment(
       id = jpa.id,
@@ -41,8 +45,16 @@ class AssessmentTransformer(
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
       allocatedToStaffMemberId = jpa.allocatedToUser.id,
-      submittedAt = jpa.submittedAt
+      submittedAt = jpa.submittedAt,
+      decision = transformJpaDecisionToApi(jpa.decision),
+      rejectionRationale = jpa.rejectionRationale
     )
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
+  }
+
+  private fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
+    JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
+    JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
+    null -> null
   }
 }
