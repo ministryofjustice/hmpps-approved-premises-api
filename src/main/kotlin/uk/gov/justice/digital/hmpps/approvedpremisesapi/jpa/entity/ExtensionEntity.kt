@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
@@ -22,6 +23,7 @@ data class ExtensionEntity(
   val previousDepartureDate: LocalDate,
   val newDepartureDate: LocalDate,
   val notes: String?,
+  val createdAt: OffsetDateTime,
   @ManyToOne
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity
@@ -34,11 +36,12 @@ data class ExtensionEntity(
     if (previousDepartureDate != other.previousDepartureDate) return false
     if (newDepartureDate != other.newDepartureDate) return false
     if (notes != other.notes) return false
+    if (createdAt != other.createdAt) return false
 
     return true
   }
 
-  override fun hashCode() = Objects.hash(id, previousDepartureDate, newDepartureDate, notes)
+  override fun hashCode() = Objects.hash(id, previousDepartureDate, newDepartureDate, notes, createdAt)
 
   override fun toString() = "ExtensionEntity:$id"
 }
