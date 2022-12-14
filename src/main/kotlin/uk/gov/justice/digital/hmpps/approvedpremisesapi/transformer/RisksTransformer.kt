@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 
 @Component
 class RisksTransformer {
-  fun transformDomainToApi(domain: PersonRisks) = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks(
-    crn = domain.crn,
+  fun transformDomainToApi(domain: PersonRisks, crn: String) = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks(
+    crn = crn,
     roshRisks = RoshRisksEnvelope(
       status = transformDomainToApi(domain.roshRisks.status),
       value = domain.roshRisks.value?.let {

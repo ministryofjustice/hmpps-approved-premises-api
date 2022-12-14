@@ -4,8 +4,10 @@ import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.persistence.Convert
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
@@ -71,7 +73,10 @@ class ApprovedPremisesApplicationEntity(
   var isPipeApplication: Boolean?,
   val convictionId: Long,
   val eventNumber: String,
-  val offenceId: String
+  val offenceId: String,
+  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Convert(disableConversion = true)
+  val riskRatings: PersonRisks
 ) : ApplicationEntity(
   id,
   crn,

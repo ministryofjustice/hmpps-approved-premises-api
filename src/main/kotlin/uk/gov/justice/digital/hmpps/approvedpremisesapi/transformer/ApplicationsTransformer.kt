@@ -12,7 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 
 @Component
-class ApplicationsTransformer(private val objectMapper: ObjectMapper, private val personTransformer: PersonTransformer) {
+class ApplicationsTransformer(
+  private val objectMapper: ObjectMapper,
+  private val personTransformer: PersonTransformer,
+  private val risksTransformer: RisksTransformer
+) {
   fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): Application = when (jpa) {
     is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
       id = jpa.id,
@@ -25,7 +29,8 @@ class ApplicationsTransformer(private val objectMapper: ObjectMapper, private va
       isWomensApplication = jpa.isWomensApplication,
       isPipeApplication = jpa.isPipeApplication,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null
+      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      risks = risksTransformer.transformDomainToApi(jpa.riskRatings, jpa.crn)
     )
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
       id = jpa.id,

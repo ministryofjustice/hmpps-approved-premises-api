@@ -53,7 +53,7 @@ class ApplicationService(
     return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
   }
 
-  fun createApplication(crn: String, username: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?) = validated<ApplicationEntity> {
+  fun createApplication(crn: String, username: String, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?) = validated<ApplicationEntity> {
     if (service != ServiceName.approvedPremises.value) {
       "$.service" hasValidationError "onlyCas1Supported"
       return fieldValidationError
@@ -83,6 +83,14 @@ class ApplicationService(
 
     val user = userService.getUserForRequest()
 
+    val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, username)
+
+    val riskRatings = when (riskRatingsResult) {
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+      is AuthorisableActionResult.Success -> riskRatingsResult.entity
+    }
+
     val createdApplication = applicationRepository.save(
       ApprovedPremisesApplicationEntity(
         id = UUID.randomUUID(),
@@ -98,7 +106,8 @@ class ApplicationService(
         convictionId = convictionId!!,
         eventNumber = deliusEventNumber!!,
         offenceId = offenceId!!,
-        schemaUpToDate = true
+        schemaUpToDate = true,
+        riskRatings = riskRatings
       )
     )
 

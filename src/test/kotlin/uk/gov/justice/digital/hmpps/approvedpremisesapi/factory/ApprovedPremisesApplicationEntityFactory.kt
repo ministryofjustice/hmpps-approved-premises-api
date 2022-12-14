@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -34,6 +35,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var convictionId: Yielded<Long> = { randomInt(0, 1000).toLong() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
+  private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -109,6 +111,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     convictionId = this.convictionId(),
     eventNumber = this.eventNumber(),
     offenceId = this.offenceId(),
-    schemaUpToDate = false
+    schemaUpToDate = false,
+    riskRatings = this.riskRatings()
   )
 }

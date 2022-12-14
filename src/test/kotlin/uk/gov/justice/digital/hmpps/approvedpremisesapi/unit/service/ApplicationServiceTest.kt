@@ -11,12 +11,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -25,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonLogicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -152,7 +157,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
-    val result = applicationService.createApplication(crn, username, "approved-premises", 123, "1", "A12HI")
+    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -166,7 +171,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
-    val result = applicationService.createApplication(crn, username, "approved-premises", 123, "1", "A12HI")
+    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -182,7 +187,7 @@ class ApplicationServiceTest {
       OffenderDetailsSummaryFactory().produce()
     )
 
-    val result = applicationService.createApplication(crn, username, "approved-premises", null, null, null)
+    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", null, null, null)
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -192,7 +197,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApplication returns Success with created Application`() {
+  fun `createApplication returns Success with created Application + persisted Risk data`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
@@ -206,14 +211,47 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val result = applicationService.createApplication(crn, username, "approved-premises", 123, "1", "A12HI")
+    val riskRatings = PersonRisksFactory()
+      .withRoshRisks(
+        RiskWithStatus(
+          value = RoshRisks(
+            overallRisk = "High",
+            riskToChildren = "Medium",
+            riskToPublic = "Low",
+            riskToKnownAdult = "High",
+            riskToStaff = "High",
+            lastUpdated = null
+          )
+        )
+      )
+      .withMappa(
+        RiskWithStatus(
+          value = Mappa(
+            level = "",
+            lastUpdated = LocalDate.parse("2022-12-12")
+          )
+        )
+      )
+      .withFlags(
+        RiskWithStatus(
+          value = listOf(
+            "flag1",
+            "flag2"
+          )
+        )
+      )
+      .produce()
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
+
+    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.Success).isTrue
     result as ValidatableActionResult.Success
-    assertThat(result.entity).matches {
-      it.crn == crn &&
-        it.createdByUser == user
-    }
+    assertThat(result.entity.crn).isEqualTo(crn)
+    assertThat(result.entity.createdByUser).isEqualTo(user)
+    val approvedPremisesApplication = result.entity as ApprovedPremisesApplicationEntity
+    assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
   }
 
   @Test
