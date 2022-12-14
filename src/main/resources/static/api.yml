@@ -2138,6 +2138,9 @@ components:
         originalDepartureDate:
           type: string
           format: date
+        createdAt:
+          type: string
+          format: date-time
         keyWorker:
           $ref: '#/components/schemas/StaffMember'
         serviceName:
@@ -2151,6 +2154,7 @@ components:
         - originalArrivalDate
         - departureDate
         - originalDepartureDate
+        - createdAt
         - serviceName
     NewBooking:
       type: object
@@ -2280,10 +2284,14 @@ components:
           format: date
         notes:
           type: string
+        createdAt:
+          type: string
+          format: date-time
       required:
         - bookingId
         - arrivalDate
         - expectedDepartureDate
+        - createdAt
     NewArrival:
       type: object
       properties:
@@ -2316,11 +2324,15 @@ components:
           $ref: '#/components/schemas/NonArrivalReason'
         notes:
           type: string
+        createdAt:
+          type: string
+          format: date-time
       required:
         - id
         - bookingId
         - date
         - reason
+        - createdAt
     NewNonarrival:
       type: object
       properties:
@@ -2366,10 +2378,14 @@ components:
           $ref: '#/components/schemas/CancellationReason'
         notes:
           type: string
+        createdAt:
+          type: string
+          format: date-time
       required:
         - bookingId
         - date
         - reason
+        - createdAt
     Extension:
       type: object
       properties:
@@ -2387,11 +2403,15 @@ components:
           format: date
         notes:
           type: string
+        createdAt:
+          type: string
+          format: date-time
       required:
         - id
         - bookingId
         - previousDepartureDate
         - newDepartureDate
+        - createdAt
     NewExtension:
       type: object
       properties:
@@ -2443,12 +2463,16 @@ components:
           $ref: '#/components/schemas/MoveOnCategory'
         destinationProvider:
           $ref: '#/components/schemas/DestinationProvider'
+        createdAt:
+          type: string
+          format: date-time
       required:
         - id
         - bookingId
         - dateTime
         - reason
         - moveOnCategory
+        - createdAt
     Confirmation:
       type: object
       properties:
@@ -2463,10 +2487,14 @@ components:
           format: date-time
         notes:
           type: string
+        createdAt:
+          type: string
+          format: date-time
       required:
         - id
         - bookingId
         - dateTime
+        - createdAt
     NewConfirmation:
       type: object
       properties:
