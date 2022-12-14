@@ -85,6 +85,7 @@ class AssessmentService(
         submittedAt = null,
         decision = null,
         schemaUpToDate = true,
+        rejectionRationale = null,
         clarificationNotes = mutableListOf()
       )
     )

@@ -30,6 +30,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<AssessmentDecision> = { AssessmentDecision.ACCEPTED }
   private var allocatedToUser: Yielded<UserEntity>? = null
+  private var rejectionRationale: Yielded<String?> = { null }
   private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
@@ -76,6 +77,10 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     this.clarificationNotes = { clarificationNotes }
   }
 
+  fun withRejectionRationale(rejectionRationale: String?) = apply {
+    this.rejectionRationale = { rejectionRationale }
+  }
+
   override fun produce(): AssessmentEntity = AssessmentEntity(
     id = this.id(),
     data = this.data(),
@@ -88,6 +93,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     allocatedToUser = this.allocatedToUser?.invoke() ?: throw RuntimeException("Must provide an allocatedToUser"),
     allocatedAt = this.allocatedAt(),
+    rejectionRationale = this.rejectionRationale(),
     clarificationNotes = this.clarificationNotes()
   )
 }
