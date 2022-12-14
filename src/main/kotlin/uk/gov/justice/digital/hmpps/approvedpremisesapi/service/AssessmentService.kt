@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -84,6 +85,35 @@ class AssessmentService(
         schemaUpToDate = true,
         clarificationNotes = mutableListOf()
       )
+    )
+  }
+
+  fun updateAssessment(user: UserEntity, assessmentId: UUID, data: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val assessmentResult = getAssessmentForUser(user, assessmentId)
+    val assessment = when (assessmentResult) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    if (!assessment.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+      )
+    }
+
+    if (assessment.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+      )
+    }
+
+    assessment.data = data
+
+    val savedAssessment = assessmentRepository.save(assessment)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedAssessment)
     )
   }
 
