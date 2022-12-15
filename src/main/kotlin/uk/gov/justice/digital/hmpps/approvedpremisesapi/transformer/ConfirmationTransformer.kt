@@ -12,6 +12,7 @@ class ConfirmationTransformer {
       bookingId = it.booking.id,
       dateTime = it.dateTime,
       notes = it.notes,
+      createdAt = jpa.createdAt,
     )
   }
 }

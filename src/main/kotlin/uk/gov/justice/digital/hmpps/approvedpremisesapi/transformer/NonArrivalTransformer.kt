@@ -12,7 +12,8 @@ class NonArrivalTransformer(private val nonArrivalReasonTransformer: NonArrivalR
       bookingId = jpa.booking.id,
       date = jpa.date,
       reason = nonArrivalReasonTransformer.transformJpaToApi(jpa.reason),
-      notes = jpa.notes
+      notes = jpa.notes,
+      createdAt = jpa.createdAt,
     )
   }
 }
