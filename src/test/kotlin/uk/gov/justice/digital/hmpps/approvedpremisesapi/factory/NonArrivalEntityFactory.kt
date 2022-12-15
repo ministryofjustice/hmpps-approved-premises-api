@@ -6,8 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class NonArrivalEntityFactory : Factory<NonArrivalEntity> {
@@ -16,6 +18,7 @@ class NonArrivalEntityFactory : Factory<NonArrivalEntity> {
   private var reason: Yielded<NonArrivalReasonEntity>? = null
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -45,11 +48,16 @@ class NonArrivalEntityFactory : Factory<NonArrivalEntity> {
     this.booking = { booking }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): NonArrivalEntity = NonArrivalEntity(
     id = this.id(),
     date = this.date(),
     reason = this.reason?.invoke() ?: throw RuntimeException("Reason must be provided"),
     notes = this.notes(),
-    booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided")
+    booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided"),
+    createdAt = this.createdAt(),
   )
 }

@@ -317,6 +317,7 @@ class PremisesController(
         service = body.serviceName.value,
         originalArrivalDate = body.arrivalDate,
         originalDepartureDate = body.departureDate,
+        createdAt = OffsetDateTime.now(),
       )
     )
 

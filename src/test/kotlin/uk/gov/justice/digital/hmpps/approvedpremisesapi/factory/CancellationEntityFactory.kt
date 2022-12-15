@@ -6,8 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class CancellationEntityFactory : Factory<CancellationEntity> {
@@ -16,6 +18,7 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
   private var reason: Yielded<CancellationReasonEntity>? = null
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -45,11 +48,16 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
     this.booking = { booking }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): CancellationEntity = CancellationEntity(
     id = this.id(),
     notes = this.notes(),
     date = this.date(),
     reason = this.reason?.invoke() ?: throw RuntimeException("Reason must be provided"),
-    booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided")
+    booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided"),
+    createdAt = this.createdAt(),
   )
 }

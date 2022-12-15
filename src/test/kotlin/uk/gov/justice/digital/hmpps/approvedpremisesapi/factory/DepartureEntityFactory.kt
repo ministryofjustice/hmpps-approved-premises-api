@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -20,6 +21,7 @@ class DepartureEntityFactory : Factory<DepartureEntity> {
   private var destinationProvider: Yielded<DestinationProviderEntity>? = null
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -65,6 +67,10 @@ class DepartureEntityFactory : Factory<DepartureEntity> {
     this.booking = { booking }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): DepartureEntity = DepartureEntity(
     id = this.id(),
     dateTime = this.dateTime(),
@@ -72,6 +78,7 @@ class DepartureEntityFactory : Factory<DepartureEntity> {
     moveOnCategory = this.moveOnCategory?.invoke() ?: throw RuntimeException("MoveOnCategory must be provided"),
     destinationProvider = this.destinationProvider?.invoke() ?: throw RuntimeException("DestinationProvider must be provided"),
     notes = this.notes(),
-    booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided")
+    booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided"),
+    createdAt = this.createdAt(),
   )
 }

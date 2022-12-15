@@ -14,6 +14,7 @@ class ConfirmationEntityFactory : Factory<ConfirmationEntity> {
   private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore() }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -35,10 +36,15 @@ class ConfirmationEntityFactory : Factory<ConfirmationEntity> {
     this.booking = { booking }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): ConfirmationEntity = ConfirmationEntity(
     id = this.id(),
     notes = this.notes(),
     dateTime = this.dateTime(),
     booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided"),
+    createdAt = this.createdAt(),
   )
 }
