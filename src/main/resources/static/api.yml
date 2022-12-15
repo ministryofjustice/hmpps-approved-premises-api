@@ -3001,8 +3001,6 @@ components:
         id:
           type: string
           format: uuid
-        application:
-            $ref: '#/components/schemas/Application'
         allocatedToStaffMemberId:
           type: string
           format: uuid
@@ -3028,15 +3026,37 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
+      discriminator:
+        propertyName: service
+        mapping:
+          CAS1: '#/components/schemas/ApprovedPremisesAssessment'
+          CAS3: '#/components/schemas/TemporaryAccommodationAssessment'
       required:
         - id
-        - application
         - allocatedToUser
         - schemaVersion
         - outdatedSchema
         - createdAt
         - allocatedAt
         - clarificationNotes
+    ApprovedPremisesAssessment:
+      allOf:
+        - $ref: '#/components/schemas/Assessment'
+        - type: object
+          properties:
+            application:
+              $ref: '#/components/schemas/ApprovedPremisesApplication'
+          required:
+            - application
+    TemporaryAccommodationAssessment:
+      allOf:
+        - $ref: '#/components/schemas/Assessment'
+        - type: object
+          properties:
+            application:
+              $ref: '#/components/schemas/TemporaryAccommodationApplication'
+          required:
+            - application
     AssessmentDecision:
       type: string
       enum:
