@@ -1931,6 +1931,24 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /seed:
+    post:
+      summary: Starts the data seeding process, can only be called from a local connection
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SeedRequest'
+        required: true
+      responses:
+        202:
+          description: successfully requested task
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     401Response:
@@ -3563,3 +3581,17 @@ components:
         - createdAt
         - typeCode
         - typeDescription
+    SeedRequest:
+      type: object
+      properties:
+        seedType:
+          $ref: '#/components/schemas/SeedFileType'
+        fileName:
+          type: string
+      required:
+        - seedType
+        - fileName
+    SeedFileType:
+      type: string
+      enum:
+        - approved_premises
