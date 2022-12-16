@@ -7,12 +7,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
@@ -109,6 +111,52 @@ class AssessmentService(
     }
 
     assessment.data = data
+
+    val savedAssessment = assessmentRepository.save(assessment)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedAssessment)
+    )
+  }
+
+  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val assessmentResult = getAssessmentForUser(user, assessmentId)
+    val assessment = when (assessmentResult) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    if (!assessment.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+      )
+    }
+
+    if (assessment.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+      )
+    }
+
+    val validationErrors = ValidationErrors()
+    val assessmentData = assessment.data
+
+    if (assessmentData == null) {
+      validationErrors["$.data"] = "empty"
+    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
+      validationErrors["$.data"] = "invalid"
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors)
+      )
+    }
+
+    assessment.document = document
+    assessment.submittedAt = OffsetDateTime.now()
+    assessment.decision = AssessmentDecision.ACCEPTED
 
     val savedAssessment = assessmentRepository.save(assessment)
 

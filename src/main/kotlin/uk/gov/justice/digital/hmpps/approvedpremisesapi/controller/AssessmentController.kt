@@ -2,10 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.AssessmentsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
@@ -146,6 +148,28 @@ class AssessmentController(
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
     )
+  }
+
+  override fun assessmentsAssessmentIdAcceptancePost(assessmentId: UUID, assessmentAcceptance: AssessmentAcceptance): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
+
+    val assessmentAuthResult = assessmentService.acceptAssessment(user, assessmentId, serializedData)
+
+    val assessmentValidationResult = when (assessmentAuthResult) {
+      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    when (assessmentValidationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
+      is ValidatableActionResult.Success -> Unit
+    }
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   override fun assessmentsAssessmentIdNotesPost(

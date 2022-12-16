@@ -1831,6 +1831,13 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: Information needed to accept an assessment
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/AssessmentAcceptance'
+        required: true
       responses:
         200:
           description: successfully accepted the assessment
@@ -3100,12 +3107,22 @@ components:
             $ref: '#/components/schemas/AnyValue'
       required:
         - data
+    AssessmentAcceptance:
+      type: object
+      properties:
+        document:
+          $ref: '#/components/schemas/AnyValue'
+      required:
+        - document
     AssessmentRejection:
       type: object
       properties:
+        document:
+          $ref: '#/components/schemas/AnyValue'
         rejectionRationale:
           type: string
       required:
+        - document
         - rejectionRationale
     ClarificationNote:
       type: object
