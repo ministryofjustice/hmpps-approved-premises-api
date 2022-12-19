@@ -464,16 +464,27 @@ components:
         username:
           type: string
           example: JohnSmithNPS
+    Cru:
+      type: object
+      properties:
+        code:
+          type: string
+          example: N02
+          readOnly: true
+        name:
+          type: string
+          example: NPS North East
+          readOnly: true
     ProbationArea:
       type: object
       properties:
         code:
           type: string
-          example: N54
+          example: N02
           readOnly: true
         name:
           type: string
-          example: North East Region
+          example: NPS North East
           readOnly: true
     PersonReference:
       type: object
@@ -502,6 +513,8 @@ components:
           example: Gateshead
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
+        applicationCru:
+          $ref: '#/components/schemas/Cru'
         submittedAt:
           type: string
           example: '2022-11-30T14:51:30'
@@ -551,6 +564,8 @@ components:
           $ref: '#/components/schemas/StaffMember'
         assessmentArea:
           $ref: '#/components/schemas/ProbationArea'
+        assessmentCru:
+          $ref: '#/components/schemas/Cru'
         decision:
           type: string
           example: Rejected
@@ -578,6 +593,8 @@ components:
           readOnly: true
         bookedBy:
           $ref: '#/components/schemas/StaffMember'
+        bookingCru:
+          $ref: '#/components/schemas/Cru'
         premises:
           $ref: '#/components/schemas/Premises'
         arrivalOn:
@@ -611,6 +628,8 @@ components:
           readOnly: true
         attemptedBy:
           $ref: '#/components/schemas/StaffMember'
+        matchingCru:
+          $ref: '#/components/schemas/Cru'
         failureDescription:
           type: string
           example: No availability
