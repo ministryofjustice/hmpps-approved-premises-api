@@ -15,7 +15,7 @@ class SeedController(private val seedService: SeedService) : SeedApiDelegate {
   override fun seedPost(seedRequest: SeedRequest): ResponseEntity<Unit> {
     throwIfNotLoopbackRequest()
 
-    seedService.seedData(seedRequest.seedType, seedRequest.fileName)
+    seedService.seedDataAsync(seedRequest.seedType, seedRequest.fileName)
 
     return ResponseEntity(HttpStatus.ACCEPTED)
   }
