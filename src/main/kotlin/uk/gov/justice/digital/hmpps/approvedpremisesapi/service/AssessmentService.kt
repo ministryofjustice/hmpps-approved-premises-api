@@ -85,6 +85,7 @@ class AssessmentService(
         submittedAt = null,
         decision = null,
         schemaUpToDate = true,
+        rejectionRationale = null,
         clarificationNotes = mutableListOf()
       )
     )
@@ -157,6 +158,53 @@ class AssessmentService(
     assessment.document = document
     assessment.submittedAt = OffsetDateTime.now()
     assessment.decision = AssessmentDecision.ACCEPTED
+
+    val savedAssessment = assessmentRepository.save(assessment)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedAssessment)
+    )
+  }
+
+  fun rejectAssessment(user: UserEntity, assessmentId: UUID, document: String?, rejectionRationale: String): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val assessmentResult = getAssessmentForUser(user, assessmentId)
+    val assessment = when (assessmentResult) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    if (!assessment.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+      )
+    }
+
+    if (assessment.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+      )
+    }
+
+    val validationErrors = ValidationErrors()
+    val assessmentData = assessment.data
+
+    if (assessmentData == null) {
+      validationErrors["$.data"] = "empty"
+    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
+      validationErrors["$.data"] = "invalid"
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors)
+      )
+    }
+
+    assessment.document = document
+    assessment.submittedAt = OffsetDateTime.now()
+    assessment.decision = AssessmentDecision.REJECTED
+    assessment.rejectionRationale = rejectionRationale
 
     val savedAssessment = assessmentRepository.save(assessment)
 

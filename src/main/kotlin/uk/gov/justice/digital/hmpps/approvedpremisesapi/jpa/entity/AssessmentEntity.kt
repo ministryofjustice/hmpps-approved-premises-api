@@ -51,6 +51,7 @@ data class AssessmentEntity(
   var submittedAt: OffsetDateTime?,
   @Enumerated(value = EnumType.STRING)
   var decision: AssessmentDecision?,
+  var rejectionRationale: String?,
 
   @OneToMany(mappedBy = "assessment")
   val clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,

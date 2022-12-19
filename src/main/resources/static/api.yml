@@ -3055,6 +3055,8 @@ components:
           format: date-time
         decision:
           $ref: '#/components/schemas/AssessmentDecision'
+        rejectionRationale:
+          type: string
         data:
           $ref: '#/components/schemas/AnyValue'
         clarificationNotes:

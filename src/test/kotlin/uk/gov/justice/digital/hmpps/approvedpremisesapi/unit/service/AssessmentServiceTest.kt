@@ -589,4 +589,180 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
   }
+
+  @Test
+  fun `rejectAssessment returns unauthorised for Assessment not allocated to user`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withAllocatedToUser(UserEntityFactory().produce())
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `rejectAssessment returns general validation error for Assessment where schema is outdated`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withAllocatedToUser(user)
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("The schema version is outdated")
+  }
+
+  @Test
+  fun `rejectAssessment returns general validation error for Assessment where decision has already been taken`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("A decision has already been taken on this assessment")
+  }
+
+  @Test
+  fun `rejectAssessment returns field validation error when JSON schema not satisfied by data`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns false
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.FieldValidationError)
+    val fieldValidationError = (validationResult as ValidatableActionResult.FieldValidationError)
+    assertThat(fieldValidationError.validationMessages).contains(
+      entry("$.data", "invalid")
+    )
+  }
+
+  @Test
+  fun `rejectAssessment returns updated assessment`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.Success)
+    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
+    assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+    assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
+    assertThat(updatedAssessment.submittedAt).isNotNull()
+    assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+  }
 }
