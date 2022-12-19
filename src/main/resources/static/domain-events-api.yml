@@ -549,6 +549,10 @@ components:
           type: integer
           example: 57
           readOnly: true
+        offenceDescription:
+          type: string
+          example: 'Wounding or inflicting grievous bodily harm (inflicting bodily injury with or without weapon) (S20) - 00801'
+          readOnly: true
         targetLocation:
           type: string
           example: LS2
