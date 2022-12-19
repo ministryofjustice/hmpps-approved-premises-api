@@ -544,23 +544,26 @@ components:
         targetLocation:
           type: string
           example: LS2
-        probationArea:
-          $ref: '#/components/schemas/ProbationArea'
-        applicationCru:
-          $ref: '#/components/schemas/Cru'
-        applicationTeam:
-          $ref: '#/components/schemas/Team'
-        applicationLdu:
-          $ref: '#/components/schemas/Ldu'
-        applicationRegion:
-          $ref: '#/components/schemas/Region'
         submittedAt:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
           readOnly: true
         submittedBy:
-          $ref: '#/components/schemas/StaffMember'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            probationArea:
+              $ref: '#/components/schemas/ProbationArea'
+            cru:
+              $ref: '#/components/schemas/Cru'
+            team:
+              $ref: '#/components/schemas/Team'
+            ldu:
+              $ref: '#/components/schemas/Ldu'
+            region:
+              $ref: '#/components/schemas/Region'
 
     ApplicationWithdrawn:
       type: object
