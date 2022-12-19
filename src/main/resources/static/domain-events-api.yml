@@ -557,6 +557,10 @@ components:
           type: string
           example: 'Release on Temporary Licence (ROTL)'
           readOnly: true
+        age:
+          type: integer
+          example: 43
+          readOnly: true
         targetLocation:
           type: string
           example: LS2
