@@ -475,6 +475,39 @@ components:
           type: string
           example: NPS North East
           readOnly: true
+    Ldu:
+      type: object
+      properties:
+        code:
+          type: string
+          example: N54PPU
+          readOnly: true
+        name:
+          type: string
+          example: Public Protection NE
+          readOnly: true
+    Region:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NE
+          readOnly: true
+        name:
+          type: string
+          example: North East
+          readOnly: true
+    Team:
+      type: object
+      properties:
+        code:
+          type: string
+          example: N54NGH
+          readOnly: true
+        name:
+          type: string
+          example: Gateshead 1
+          readOnly: true
     ProbationArea:
       type: object
       properties:
@@ -515,6 +548,12 @@ components:
           $ref: '#/components/schemas/ProbationArea'
         applicationCru:
           $ref: '#/components/schemas/Cru'
+        applicationTeam:
+          $ref: '#/components/schemas/Team'
+        applicationLdu:
+          $ref: '#/components/schemas/Ldu'
+        applicationRegion:
+          $ref: '#/components/schemas/Region'
         submittedAt:
           type: string
           example: '2022-11-30T14:51:30'
