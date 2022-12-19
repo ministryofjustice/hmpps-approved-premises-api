@@ -561,6 +561,12 @@ components:
           type: integer
           example: 43
           readOnly: true
+        gender:
+          type: string
+          readOnly: true
+          enum:
+            - Male
+            - Female
         targetLocation:
           type: string
           example: LS2
