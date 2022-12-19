@@ -14,9 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.RuntimeException
 
@@ -37,6 +39,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var premises: Yielded<PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(ServiceName.values().asList()) }
   private var bed: Yielded<BedEntity>? = null
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -130,6 +133,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.bed = bed
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -147,5 +154,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     service = this.serviceName.invoke().value,
     originalArrivalDate = this.originalArrivalDate?.invoke() ?: this.arrivalDate(),
     originalDepartureDate = this.originalDepartureDate?.invoke() ?: this.departureDate(),
+    createdAt = this.createdAt(),
   )
 }

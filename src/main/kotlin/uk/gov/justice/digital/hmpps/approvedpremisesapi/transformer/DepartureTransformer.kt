@@ -18,7 +18,8 @@ class DepartureTransformer(
       reason = departureReasonTransformer.transformJpaToApi(jpa.reason),
       moveOnCategory = moveOnCategoryTransformer.transformJpaToApi(jpa.moveOnCategory),
       destinationProvider = jpa.destinationProvider?.let { destinationProviderTransformer.transformJpaToApi(it) },
-      notes = jpa.notes
+      notes = jpa.notes,
+      createdAt = jpa.createdAt,
     )
   }
 }

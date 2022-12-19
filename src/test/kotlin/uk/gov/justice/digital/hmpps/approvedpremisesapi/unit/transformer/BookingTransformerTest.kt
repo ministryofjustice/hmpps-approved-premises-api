@@ -125,6 +125,7 @@ class BookingTransformerTest {
     service = ServiceName.approvedPremises.value,
     originalArrivalDate = LocalDate.parse("2022-08-10"),
     originalDepartureDate = LocalDate.parse("2022-08-30"),
+    createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
   )
 
   private val staffMember = StaffMember(
@@ -203,6 +204,7 @@ class BookingTransformerTest {
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     )
   }
@@ -238,6 +240,7 @@ class BookingTransformerTest {
         serviceName = ServiceName.temporaryAccommodation,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     )
   }
@@ -250,7 +253,8 @@ class BookingTransformerTest {
         date = LocalDate.parse("2022-08-10"),
         reason = NonArrivalReasonEntity(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
         notes = null,
-        booking = this
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     }
 
@@ -259,7 +263,8 @@ class BookingTransformerTest {
       bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
       date = LocalDate.parse("2022-08-10"),
       reason = NonArrivalReason(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
-      notes = null
+      notes = null,
+      createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(nonArrivalBooking, offenderDetails, inmateDetail, null)
@@ -288,12 +293,14 @@ class BookingTransformerTest {
           bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
           date = LocalDate.parse("2022-08-10"),
           reason = NonArrivalReason(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
-          notes = null
+          notes = null,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     )
   }
@@ -306,7 +313,8 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         expectedDepartureDate = LocalDate.parse("2022-08-16"),
         notes = null,
-        booking = this
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     }
 
@@ -314,7 +322,8 @@ class BookingTransformerTest {
       bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
-      notes = null
+      notes = null,
+      createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(arrivalBooking, offenderDetails, inmateDetail, staffMember)
@@ -346,12 +355,14 @@ class BookingTransformerTest {
           bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
-          notes = null
+          notes = null,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     )
   }
@@ -364,7 +375,8 @@ class BookingTransformerTest {
         date = LocalDate.parse("2022-08-10"),
         reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
         notes = null,
-        booking = this
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     }
 
@@ -372,7 +384,8 @@ class BookingTransformerTest {
       bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
       notes = null,
       date = LocalDate.parse("2022-08-10"),
-      reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises")
+      reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
+      createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails, inmateDetail, null)
@@ -400,12 +413,14 @@ class BookingTransformerTest {
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           date = LocalDate.parse("2022-08-10"),
           reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
-          notes = null
+          notes = null,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     )
   }
@@ -419,7 +434,8 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         expectedDepartureDate = LocalDate.parse("2022-08-16"),
         notes = null,
-        booking = this
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
       departure = DepartureEntity(
         id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
@@ -442,7 +458,8 @@ class BookingTransformerTest {
           isActive = true
         ),
         notes = null,
-        booking = this
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     }
 
@@ -450,7 +467,8 @@ class BookingTransformerTest {
       bookingId = bookingId,
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
-      notes = null
+      notes = null,
+      createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
     )
 
     every { mockDepartureTransformer.transformJpaToApi(departedBooking.departure) } returns Departure(
@@ -474,7 +492,8 @@ class BookingTransformerTest {
         name = "Destination Provider",
         isActive = true
       ),
-      notes = null
+      notes = null,
+      createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
@@ -506,7 +525,8 @@ class BookingTransformerTest {
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
-          notes = null
+          notes = null,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
         ),
         departure = Departure(
           id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
@@ -529,12 +549,14 @@ class BookingTransformerTest {
             name = "Destination Provider",
             isActive = true
           ),
-          notes = null
+          notes = null,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     )
   }
@@ -549,7 +571,8 @@ class BookingTransformerTest {
         id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
         dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
         notes = null,
-        booking = this
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     }
 
@@ -558,6 +581,7 @@ class BookingTransformerTest {
       bookingId = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
       notes = null,
       dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
+      createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(confirmationBooking, offenderDetails, inmateDetail, null)
@@ -587,11 +611,13 @@ class BookingTransformerTest {
           bookingId = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
           notes = null,
           dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
         serviceName = ServiceName.temporaryAccommodation,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
     )
   }

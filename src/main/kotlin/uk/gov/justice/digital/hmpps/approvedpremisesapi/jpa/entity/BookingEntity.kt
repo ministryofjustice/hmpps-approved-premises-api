@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
@@ -53,6 +54,7 @@ data class BookingEntity(
   var service: String,
   var originalArrivalDate: LocalDate,
   var originalDepartureDate: LocalDate,
+  val createdAt: OffsetDateTime,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -70,11 +72,12 @@ data class BookingEntity(
     if (confirmation != other.confirmation) return false
     if (originalArrivalDate != other.originalArrivalDate) return false
     if (originalDepartureDate != other.originalDepartureDate) return false
+    if (createdAt != other.createdAt) return false
 
     return true
   }
 
-  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation, confirmation, originalArrivalDate, originalDepartureDate)
+  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation, confirmation, originalArrivalDate, originalDepartureDate, createdAt)
 
   override fun toString() = "BookingEntity:$id"
 }

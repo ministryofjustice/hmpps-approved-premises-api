@@ -90,7 +90,8 @@ class BookingService(
         arrivalDate = arrivalDate,
         expectedDepartureDate = expectedDepartureDate,
         notes = notes,
-        booking = booking
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
       )
     )
 
@@ -132,7 +133,8 @@ class BookingService(
         date = date,
         notes = notes,
         reason = reason!!,
-        booking = booking
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
       )
     )
 
@@ -166,7 +168,8 @@ class BookingService(
         date = date,
         reason = reason!!,
         notes = notes,
-        booking = booking
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
       )
     )
 
@@ -188,6 +191,7 @@ class BookingService(
         dateTime = dateTime,
         notes = notes,
         booking = booking,
+        createdAt = OffsetDateTime.now(),
       )
     )
 
@@ -255,7 +259,8 @@ class BookingService(
         moveOnCategory = moveOnCategory!!,
         destinationProvider = destinationProvider,
         notes = notes,
-        booking = booking
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
       )
     )
 
@@ -287,7 +292,8 @@ class BookingService(
       previousDepartureDate = booking.departureDate,
       newDepartureDate = newDepartureDate,
       notes = notes,
-      booking = booking
+      booking = booking,
+      createdAt = OffsetDateTime.now(),
     )
 
     val extension = extensionRepository.save(extensionEntity)

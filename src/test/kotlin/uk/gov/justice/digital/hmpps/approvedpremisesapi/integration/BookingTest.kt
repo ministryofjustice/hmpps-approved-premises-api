@@ -331,6 +331,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.nonArrival").isEqualTo(null)
       .jsonPath("$.cancellation").isEqualTo(null)
       .jsonPath("$.serviceName").isEqualTo(ServiceName.approvedPremises.value)
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
       .jsonPath("$.bed.id").doesNotHaveJsonPath()
       .jsonPath("$.bed.name").doesNotHaveJsonPath()
   }
@@ -402,6 +403,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.cancellation").isEqualTo(null)
       .jsonPath("$.confirmation").isEqualTo(null)
       .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
       .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
       .jsonPath("$.bed.name").isEqualTo("test-bed")
   }
@@ -709,6 +711,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
       .jsonPath("$.expectedDepartureDate").isEqualTo("2022-08-14")
       .jsonPath("$.notes").isEqualTo("Hello")
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
   }
 
   @Test
@@ -730,6 +733,7 @@ class BookingTest : IntegrationTestBase() {
       }
       withArrivalDate(LocalDate.parse("2022-08-10"))
       withDepartureDate(LocalDate.parse("2022-08-30"))
+      withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -774,6 +778,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.departureDate").isEqualTo("2022-08-30")
       .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
       .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
   }
 
   @Test
@@ -804,6 +809,7 @@ class BookingTest : IntegrationTestBase() {
       withServiceName(ServiceName.temporaryAccommodation)
       withArrivalDate(LocalDate.parse("2022-08-10"))
       withDepartureDate(LocalDate.parse("2022-08-30"))
+      withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -848,6 +854,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.departureDate").isEqualTo("2022-08-14")
       .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
       .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
   }
 
   @Test
@@ -903,6 +910,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
       .jsonPath("$.destinationProvider.id").isEqualTo(destinationProvider.id.toString())
       .jsonPath("$.notes").isEqualTo("Hello")
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
   }
 
   @Test
@@ -925,6 +933,7 @@ class BookingTest : IntegrationTestBase() {
       withServiceName(ServiceName.approvedPremises)
       withArrivalDate(LocalDate.parse("2022-08-10"))
       withDepartureDate(LocalDate.parse("2022-08-30"))
+      withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
     }
 
     val reason = departureReasonEntityFactory.produceAndPersist {
@@ -977,6 +986,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.departureDate").isEqualTo("2022-08-30")
       .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
       .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
   }
 
   @Test
@@ -998,6 +1008,7 @@ class BookingTest : IntegrationTestBase() {
       withServiceName(ServiceName.temporaryAccommodation)
       withArrivalDate(LocalDate.parse("2022-08-10"))
       withDepartureDate(LocalDate.parse("2022-08-30"))
+      withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
     }
 
     val reason = departureReasonEntityFactory.produceAndPersist {
@@ -1050,6 +1061,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.departureDate").isEqualTo("2022-09-01")
       .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
       .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
   }
 
   @Test
@@ -1107,6 +1119,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
       .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
       .jsonPath(".reason.isActive").isEqualTo(true)
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
   }
 
   @Test
@@ -1235,6 +1248,7 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath(".previousDepartureDate").isEqualTo("2022-08-20")
       .jsonPath(".newDepartureDate").isEqualTo("2022-08-22")
       .jsonPath(".notes").isEqualTo("notes")
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
 
     val actualBooking = bookingRepository.findByIdOrNull(booking.id)!!
 
@@ -1272,26 +1286,6 @@ class BookingTest : IntegrationTestBase() {
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-    val matcher: Matcher<OffsetDateTime> = object : BaseMatcher<OffsetDateTime>() {
-      override fun describeTo(description: Description?) {
-        description?.appendText("within the last five seconds")
-      }
-
-      override fun matches(actual: Any?): Boolean {
-        val actualDateTime = when (actual) {
-          is String -> OffsetDateTime.parse(actual)
-          is OffsetDateTime -> actual
-          else -> return false
-        }
-
-        val now = OffsetDateTime.now()
-
-        if (now.isBefore(actualDateTime)) return false
-
-        return actualDateTime.plusSeconds(5L).isAfter(now)
-      }
-    }
-
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
       .header("Authorization", "Bearer $jwt")
@@ -1305,7 +1299,32 @@ class BookingTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
-      .jsonPath("$.dateTime").value(matcher, OffsetDateTime::class.java)
+      .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
       .jsonPath("$.notes").isEqualTo(null)
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+  }
+
+  fun withinSeconds(seconds: Long): Matcher<OffsetDateTime> {
+    val matcher: Matcher<OffsetDateTime> = object : BaseMatcher<OffsetDateTime>() {
+      private val now: OffsetDateTime = OffsetDateTime.now()
+
+      override fun describeTo(description: Description?) {
+        description?.appendText("within the last $seconds seconds (now: $now)")
+      }
+
+      override fun matches(actual: Any?): Boolean {
+        val actualDateTime = when (actual) {
+          is String -> OffsetDateTime.parse(actual)
+          is OffsetDateTime -> actual
+          else -> return false
+        }
+
+        if (now.isBefore(actualDateTime)) return false
+
+        return actualDateTime.plusSeconds(seconds).isAfter(now)
+      }
+    }
+
+    return matcher
   }
 }

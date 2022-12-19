@@ -41,6 +41,7 @@ class BookingTransformer(
     bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
     originalArrivalDate = jpa.originalArrivalDate,
     originalDepartureDate = jpa.originalDepartureDate,
+    createdAt = jpa.createdAt,
   )
 
   private fun determineStatus(jpa: BookingEntity) = when {

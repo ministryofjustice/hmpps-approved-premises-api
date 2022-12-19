@@ -11,7 +11,8 @@ class ArrivalTransformer() {
       bookingId = jpa.booking.id,
       arrivalDate = jpa.arrivalDate,
       expectedDepartureDate = jpa.expectedDepartureDate,
-      notes = jpa.notes
+      notes = jpa.notes,
+      createdAt = jpa.createdAt,
     )
   }
 }

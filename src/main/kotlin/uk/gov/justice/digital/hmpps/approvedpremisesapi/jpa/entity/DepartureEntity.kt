@@ -31,6 +31,7 @@ data class DepartureEntity(
   @JoinColumn(name = "destination_provider_id")
   val destinationProvider: DestinationProviderEntity?,
   val notes: String?,
+  val createdAt: OffsetDateTime,
   @OneToOne
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity
@@ -45,11 +46,12 @@ data class DepartureEntity(
     if (moveOnCategory != other.moveOnCategory) return false
     if (destinationProvider != other.destinationProvider) return false
     if (notes != other.notes) return false
+    if (createdAt != other.createdAt) return false
 
     return true
   }
 
-  override fun hashCode() = Objects.hash(dateTime, reason, moveOnCategory, destinationProvider, notes)
+  override fun hashCode() = Objects.hash(dateTime, reason, moveOnCategory, destinationProvider, notes, createdAt)
 
   override fun toString() = "DepartureEntity:$id"
 }

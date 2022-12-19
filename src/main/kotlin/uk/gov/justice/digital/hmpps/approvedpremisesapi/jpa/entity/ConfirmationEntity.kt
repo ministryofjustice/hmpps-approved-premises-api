@@ -21,6 +21,7 @@ data class ConfirmationEntity(
   val id: UUID,
   val dateTime: OffsetDateTime,
   val notes: String?,
+  val createdAt: OffsetDateTime,
   @OneToOne
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity
@@ -32,11 +33,12 @@ data class ConfirmationEntity(
     if (id != other.id) return false
     if (dateTime != other.dateTime) return false
     if (notes != other.notes) return false
+    if (createdAt != other.createdAt) return false
 
     return true
   }
 
-  override fun hashCode() = Objects.hash(dateTime, notes)
+  override fun hashCode() = Objects.hash(dateTime, notes, createdAt)
 
   override fun toString() = "ConfirmationEntity:$id"
 }

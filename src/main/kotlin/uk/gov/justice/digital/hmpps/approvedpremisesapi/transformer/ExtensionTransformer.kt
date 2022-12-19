@@ -11,6 +11,7 @@ class ExtensionTransformer() {
     bookingId = jpa.booking.id,
     previousDepartureDate = jpa.previousDepartureDate,
     newDepartureDate = jpa.newDepartureDate,
-    notes = jpa.notes
+    notes = jpa.notes,
+    createdAt = jpa.createdAt,
   )
 }
