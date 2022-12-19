@@ -545,6 +545,10 @@ components:
           type: string
           example: 'M2'
           readOnly: true
+        sentenceLengthInMonths:
+          type: integer
+          example: 57
+          readOnly: true
         targetLocation:
           type: string
           example: LS2
