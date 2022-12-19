@@ -510,7 +510,7 @@ components:
           $ref: '#/components/schemas/DeliusEventNumber'
         targetLocation:
           type: string
-          example: Gateshead
+          example: LS2
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
         applicationCru:
