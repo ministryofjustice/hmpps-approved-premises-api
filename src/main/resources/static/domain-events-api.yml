@@ -629,11 +629,14 @@ components:
           format: date-time
           readOnly: true
         assessedBy:
-          $ref: '#/components/schemas/StaffMember'
-        assessmentArea:
-          $ref: '#/components/schemas/ProbationArea'
-        assessmentCru:
-          $ref: '#/components/schemas/Cru'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            probationArea:
+              $ref: '#/components/schemas/ProbationArea'
+            cru:
+              $ref: '#/components/schemas/Cru'
         decision:
           type: string
           example: Rejected
