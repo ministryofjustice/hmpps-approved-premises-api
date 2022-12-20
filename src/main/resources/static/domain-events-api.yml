@@ -663,9 +663,12 @@ components:
           format: date-time
           readOnly: true
         bookedBy:
-          $ref: '#/components/schemas/StaffMember'
-        bookingCru:
-          $ref: '#/components/schemas/Cru'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            cru:
+              $ref: '#/components/schemas/Cru'
         premises:
           $ref: '#/components/schemas/Premises'
         arrivalOn:
@@ -698,9 +701,12 @@ components:
           format: date-time
           readOnly: true
         attemptedBy:
-          $ref: '#/components/schemas/StaffMember'
-        matchingCru:
-          $ref: '#/components/schemas/Cru'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            cru:
+              $ref: '#/components/schemas/Cru'
         failureDescription:
           type: string
           example: No availability
