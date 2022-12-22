@@ -14,3 +14,6 @@ spring:
     password: ""
 
 log-client-credentials-jwt-info: true
+
+seed:
+  file-prefix: "./seed"
