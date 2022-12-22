@@ -26,13 +26,13 @@ class OASysSectionsTransformer : OASysTransformer() {
       dateStarted = offenceDetails.initiationDate,
       dateCompleted = offenceDetails.dateCompleted,
       offenceDetails = listOf(
-        oASysQuestionWithSingleAnswer("Offence analysis", "2.1", offenceDetails.offenceDetails?.offenceAnalysis),
-        oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offenceDetails?.victimInfo),
-        oASysQuestionWithSingleAnswer("Other victim information", "2.4.2", offenceDetails.offenceDetails?.victimPerpetratorRel),
-        oASysQuestionWithSingleAnswer("Impact on the victim", "2.5", offenceDetails.offenceDetails?.victimImpact),
-        oASysQuestionWithSingleAnswer("Motivation and triggers", "2.8.3", offenceDetails.offenceDetails?.offenceMotivation),
-        oASysQuestionWithSingleAnswer("Issues contributing to risks", "2.98", offenceDetails.offenceDetails?.issueContributingToRisk),
-        oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offenceDetails?.patternOffending)
+        oASysQuestionWithSingleAnswer("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
+        oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimInfo),
+        oASysQuestionWithSingleAnswer("Other victim information", "2.4.2", offenceDetails.offence?.victimPerpetratorRel),
+        oASysQuestionWithSingleAnswer("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
+        oASysQuestionWithSingleAnswer("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
+        oASysQuestionWithSingleAnswer("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
+        oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending)
       ),
       roshSummary = listOf(
         oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoAtRisk),
