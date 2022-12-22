@@ -13,6 +13,10 @@ class CharacteristicEntityFactory : Factory<CharacteristicEntity> {
   private var serviceScope: Yielded<String> = { randomStringUpperCase(4) }
   private var modelScope: Yielded<String> = { randomStringUpperCase(4) }
 
+  fun withId(id: UUID) = apply {
+    this.id = { id }
+  }
+
   fun withServiceScope(serviceScope: String) = apply {
     this.serviceScope = { serviceScope }
   }
