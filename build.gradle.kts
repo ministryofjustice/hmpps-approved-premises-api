@@ -9,7 +9,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val springDocVersion = "1.6.13"
+val springDocVersion = "1.6.14"
 val sentryVersion = "6.9.0"
 
 dependencies {
