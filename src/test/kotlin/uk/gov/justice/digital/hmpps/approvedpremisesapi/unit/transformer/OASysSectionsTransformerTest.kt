@@ -89,37 +89,37 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Offence analysis",
           questionNumber = "2.1",
-          answer = offenceDetailsApiResponse.offenceDetails?.offenceAnalysis
+          answer = offenceDetailsApiResponse.offence?.offenceAnalysis
         ),
         OASysQuestion(
           label = "Pattern of offending",
           questionNumber = "2.12",
-          answer = offenceDetailsApiResponse.offenceDetails?.patternOffending
+          answer = offenceDetailsApiResponse.offence?.patternOffending
         ),
         OASysQuestion(
           label = "Victim - perpetrator relationship",
           questionNumber = "2.4.1",
-          answer = offenceDetailsApiResponse.offenceDetails?.victimInfo
+          answer = offenceDetailsApiResponse.offence?.victimInfo
         ),
         OASysQuestion(
           label = "Other victim information",
           questionNumber = "2.4.2",
-          answer = offenceDetailsApiResponse.offenceDetails?.victimPerpetratorRel
+          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel
         ),
         OASysQuestion(
           label = "Impact on the victim",
           questionNumber = "2.5",
-          answer = offenceDetailsApiResponse.offenceDetails?.victimImpact
+          answer = offenceDetailsApiResponse.offence?.victimImpact
         ),
         OASysQuestion(
           label = "Motivation and triggers",
           questionNumber = "2.8.3",
-          answer = offenceDetailsApiResponse.offenceDetails?.offenceMotivation
+          answer = offenceDetailsApiResponse.offence?.offenceMotivation
         ),
         OASysQuestion(
           label = "Issues contributing to risks",
           questionNumber = "2.98",
-          answer = offenceDetailsApiResponse.offenceDetails?.issueContributingToRisk
+          answer = offenceDetailsApiResponse.offence?.issueContributingToRisk
         )
       )
     )
