@@ -75,5 +75,5 @@ sonar-project.properties
 
 nomis-db/
 
-test-seed-csvs/
-seed/
+test-seed-csvs/**
+seed/**
