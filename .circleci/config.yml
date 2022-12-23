@@ -34,6 +34,18 @@ workflows:
           requires:
             - build_docker
             - helm_lint
+      - request-test-approval:
+          type: approval
+          requires:
+            - deploy_dev
+      - hmpps/deploy_env:
+          name: deploy_test
+          env: "test"
+          context:
+            - hmpps-common-vars
+            - hmpps-approved-premises-api-stage
+          requires:
+            - request-test-approval
       - request-preprod-approval:
           type: approval
           requires:
