@@ -5,7 +5,7 @@ ENV BUILD_NUMBER ${BUILD_NUMBER:-1_0_0}
 
 WORKDIR /app
 ADD . .
-RUN ./gradlew -v --no-daemon assemble
+RUN ./gradlew --no-daemon assemble
 
 FROM openjdk:17-slim
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
