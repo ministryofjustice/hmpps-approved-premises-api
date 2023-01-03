@@ -33,9 +33,9 @@ class ApprovedPremisesSeedJob(
     postcode = columns["postcode"]!!,
     totalBeds = Integer.parseInt(columns["totalBeds"]!!),
     notes = columns["notes"]!!,
-    probationRegionId = UUID.fromString(columns["probationRegionId"]!!),
-    localAuthorityAreaId = UUID.fromString(columns["localAuthorityAreaId"]),
-    characteristicIds = columns["characteristicIds"]!!.split(",").filter { it.isNotBlank() }.map { UUID.fromString(it.trim()) },
+    probationRegion = columns["probationRegionId"]!!,
+    localAuthorityArea = columns["localAuthorityAreaId"]!!,
+    characteristics = columns["characteristicIds"]!!.split(",").filter { it.isNotBlank() }.map { it.trim() },
     status = PropertyStatus.valueOf(columns["status"]!!),
     apCode = columns["apCode"]!!,
     qCode = columns["qCode"]!!
@@ -48,13 +48,13 @@ class ApprovedPremisesSeedJob(
       throw RuntimeException("Premises ${row.id} is of type ${existingPremises::class.qualifiedName}, cannot be updated with Approved Premises Seed Job")
     }
 
-    val probationRegion = probationRegionRepository.findByIdOrNull(row.probationRegionId)
-      ?: throw RuntimeException("Probation Region ${row.probationRegionId} does not exist")
+    val probationRegion = probationRegionRepository.findByName(row.probationRegion)
+      ?: throw RuntimeException("Probation Region ${row.probationRegion} does not exist")
 
-    val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(row.localAuthorityAreaId)
-      ?: throw RuntimeException("Local Authority Area ${row.localAuthorityAreaId} does not exist")
+    val localAuthorityArea = localAuthorityAreaRepository.findByName(row.localAuthorityArea)
+      ?: throw RuntimeException("Local Authority Area ${row.localAuthorityArea} does not exist")
 
-    val characteristics = row.characteristicIds.map {
+    val characteristics = row.characteristics.map {
       characteristicService.getCharacteristic(it)
         ?: throw RuntimeException("Characteristic $it does not exist")
     }
@@ -156,9 +156,9 @@ data class ApprovedPremisesSeedCsvRow(
   val postcode: String,
   val totalBeds: Int,
   val notes: String,
-  val probationRegionId: UUID,
-  val localAuthorityAreaId: UUID,
-  val characteristicIds: List<UUID>,
+  val probationRegion: String,
+  val localAuthorityArea: String,
+  val characteristics: List<String>,
   val status: PropertyStatus,
   val apCode: String,
   val qCode: String

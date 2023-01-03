@@ -11,7 +11,9 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
-interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID>
+interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID> {
+  fun findByName(name: String): ProbationRegionEntity?
+}
 
 @Entity
 @Table(name = "probation_regions")

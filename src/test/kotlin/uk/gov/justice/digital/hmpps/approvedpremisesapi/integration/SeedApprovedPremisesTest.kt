@@ -17,13 +17,13 @@ import java.util.UUID
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedApprovedPremisesTest : SeedTestBase() {
   @Test
-  fun `Attempting to create an Approved Premises with an invalid Probation Region Id logs an error`() {
+  fun `Attempting to create an Approved Premises with an invalid Probation Region logs an error`() {
     withCsv(
       "invalid-probation",
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
-            .withProbationRegionId(UUID.fromString("012ec12b-a915-40d4-800a-8c89cc801486"))
+            .withProbationRegion("Not Real Region")
             .produce()
         )
       )
@@ -35,7 +35,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       it.level == "error" &&
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Probation Region 012ec12b-a915-40d4-800a-8c89cc801486 does not exist"
+        it.throwable.cause!!.message == "Probation Region Not Real Region does not exist"
     }
   }
 
@@ -50,8 +50,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
-            .withProbationRegionId(probationRegion.id)
-            .withLocalAuthorityAreaId(UUID.fromString("79aa2e39-3c88-4957-be74-a2047694195d"))
+            .withProbationRegion(probationRegion.name)
+            .withLocalAuthorityArea("Not Real Authority")
             .produce()
         )
       )
@@ -63,7 +63,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       it.level == "error" &&
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Local Authority Area 79aa2e39-3c88-4957-be74-a2047694195d does not exist"
+        it.throwable.cause!!.message == "Local Authority Area Not Real Authority does not exist"
     }
   }
 
@@ -76,25 +76,25 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
     withCsv(
-      "invalid-probation",
+      "invalid-characteristic",
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
-            .withProbationRegionId(probationRegion.id)
-            .withLocalAuthorityAreaId(localAuthorityArea.id)
-            .withCharacteristicIds(listOf(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73")))
+            .withProbationRegion(probationRegion.name)
+            .withLocalAuthorityArea(localAuthorityArea.name)
+            .withCharacteristics(listOf("Not Real Characteristic"))
             .produce()
         )
       )
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-probation")
+    seedService.seedData(SeedFileType.approvedPremises, "invalid-characteristic")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Characteristic 8e04628f-2cdd-4d9a-8ae7-27689d7daa73 does not exist"
+        it.throwable.cause!!.message == "Characteristic Not Real Characteristic does not exist"
     }
   }
 
@@ -116,9 +116,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
-            .withProbationRegionId(probationRegion.id)
-            .withLocalAuthorityAreaId(localAuthorityArea.id)
-            .withCharacteristicIds(listOf(characteristic.id))
+            .withProbationRegion(probationRegion.name)
+            .withLocalAuthorityArea(localAuthorityArea.name)
+            .withCharacteristics(listOf(characteristic.name))
             .produce()
         )
       )
@@ -153,9 +153,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
-            .withProbationRegionId(probationRegion.id)
-            .withLocalAuthorityAreaId(localAuthorityArea.id)
-            .withCharacteristicIds(listOf(characteristic.id))
+            .withProbationRegion(probationRegion.name)
+            .withLocalAuthorityArea(localAuthorityArea.name)
+            .withCharacteristics(listOf(characteristic.name))
             .produce()
         )
       )
@@ -187,9 +187,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     val csvRow = ApprovedPremisesSeedCsvRowFactory()
       .withId(UUID.randomUUID())
-      .withProbationRegionId(probationRegion.id)
-      .withLocalAuthorityAreaId(localAuthorityArea.id)
-      .withCharacteristicIds(listOf(characteristic.id))
+      .withProbationRegion(probationRegion.name)
+      .withLocalAuthorityArea(localAuthorityArea.name)
+      .withCharacteristics(listOf(characteristic.name))
       .produce()
 
     withCsv(
@@ -212,9 +212,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.postcode).isEqualTo(csvRow.postcode)
     assertThat(persistedApprovedPremises.totalBeds).isEqualTo(csvRow.totalBeds)
     assertThat(persistedApprovedPremises.notes).isEqualTo(csvRow.notes)
-    assertThat(persistedApprovedPremises.probationRegion.id).isEqualTo(csvRow.probationRegionId)
-    assertThat(persistedApprovedPremises.localAuthorityArea.id).isEqualTo(csvRow.localAuthorityAreaId)
-    assertThat(persistedApprovedPremises.characteristics.map { it.id }).isEqualTo(csvRow.characteristicIds)
+    assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
+    assertThat(persistedApprovedPremises.localAuthorityArea.name).isEqualTo(csvRow.localAuthorityArea)
+    assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
   }
 
@@ -241,9 +241,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     val csvRow = ApprovedPremisesSeedCsvRowFactory()
       .withId(existingApprovedPremises.id)
-      .withProbationRegionId(updatedProbationRegion.id)
-      .withLocalAuthorityAreaId(updatedLocalAuthorityArea.id)
-      .withCharacteristicIds(emptyList())
+      .withProbationRegion(updatedProbationRegion.name)
+      .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
+      .withCharacteristics(emptyList())
       .produce()
 
     withCsv(
@@ -266,9 +266,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.postcode).isEqualTo(csvRow.postcode)
     assertThat(persistedApprovedPremises.totalBeds).isEqualTo(csvRow.totalBeds)
     assertThat(persistedApprovedPremises.notes).isEqualTo(csvRow.notes)
-    assertThat(persistedApprovedPremises.probationRegion.id).isEqualTo(csvRow.probationRegionId)
-    assertThat(persistedApprovedPremises.localAuthorityArea.id).isEqualTo(csvRow.localAuthorityAreaId)
-    assertThat(persistedApprovedPremises.characteristics.map { it.id }).isEqualTo(csvRow.characteristicIds)
+    assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
+    assertThat(persistedApprovedPremises.localAuthorityArea.name).isEqualTo(csvRow.localAuthorityArea)
+    assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
   }
 
@@ -298,9 +298,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.postcode)
         .withUnquotedField(it.totalBeds)
         .withQuotedFields(it.notes)
-        .withQuotedField(it.probationRegionId)
-        .withQuotedField(it.localAuthorityAreaId)
-        .withQuotedField(it.characteristicIds.joinToString(","))
+        .withQuotedField(it.probationRegion)
+        .withQuotedField(it.localAuthorityArea)
+        .withQuotedField(it.characteristics.joinToString(","))
         .withQuotedField(it.status.value)
         .withQuotedField(it.apCode)
         .withQuotedField(it.qCode)
@@ -318,9 +318,9 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var postcode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var totalBeds: Yielded<Int> = { randomInt(5, 50) }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
-  private var probationRegionId: Yielded<UUID> = { UUID.randomUUID() }
-  private var localAuthorityAreaId: Yielded<UUID> = { UUID.randomUUID() }
-  private var characteristicIds: Yielded<List<UUID>> = { listOf() }
+  private var probationRegion: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
+  private var localAuthorityArea: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
+  private var characteristics: Yielded<List<String>> = { listOf() }
   private var status: Yielded<PropertyStatus> = { PropertyStatus.active }
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
@@ -349,16 +349,16 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     this.notes = { notes }
   }
 
-  fun withProbationRegionId(probationRegionId: UUID) = apply {
-    this.probationRegionId = { probationRegionId }
+  fun withProbationRegion(probationRegion: String) = apply {
+    this.probationRegion = { probationRegion }
   }
 
-  fun withLocalAuthorityAreaId(localAuthorityAreaId: UUID) = apply {
-    this.localAuthorityAreaId = { localAuthorityAreaId }
+  fun withLocalAuthorityArea(localAuthorityArea: String) = apply {
+    this.localAuthorityArea = { localAuthorityArea }
   }
 
-  fun withCharacteristicIds(characteristicIds: List<UUID>) = apply {
-    this.characteristicIds = { characteristicIds }
+  fun withCharacteristics(characteristics: List<String>) = apply {
+    this.characteristics = { characteristics }
   }
 
   fun withStatus(status: PropertyStatus) = apply {
@@ -380,9 +380,9 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     postcode = this.postcode(),
     totalBeds = this.totalBeds(),
     notes = this.notes(),
-    probationRegionId = this.probationRegionId(),
-    localAuthorityAreaId = this.localAuthorityAreaId(),
-    characteristicIds = this.characteristicIds(),
+    probationRegion = this.probationRegion(),
+    localAuthorityArea = this.localAuthorityArea(),
+    characteristics = this.characteristics(),
     status = this.status(),
     apCode = this.apCode(),
     qCode = this.qCode()

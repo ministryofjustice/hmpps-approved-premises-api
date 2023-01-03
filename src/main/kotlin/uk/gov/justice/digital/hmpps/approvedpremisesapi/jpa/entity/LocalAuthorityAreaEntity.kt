@@ -8,7 +8,9 @@ import javax.persistence.Id
 import javax.persistence.OneToMany
 import javax.persistence.Table
 @Repository
-interface LocalAuthorityAreaRepository : JpaRepository<LocalAuthorityAreaEntity, UUID>
+interface LocalAuthorityAreaRepository : JpaRepository<LocalAuthorityAreaEntity, UUID> {
+  fun findByName(name: String): LocalAuthorityAreaEntity?
+}
 
 @Entity
 @Table(name = "local_authority_areas")
