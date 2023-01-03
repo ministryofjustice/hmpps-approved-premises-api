@@ -74,3 +74,5 @@ sonar-project.properties
 .trivyignore
 
 nomis-db/
+
+test-seed-csvs/

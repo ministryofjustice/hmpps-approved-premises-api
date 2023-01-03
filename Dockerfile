@@ -5,7 +5,7 @@ ENV BUILD_NUMBER ${BUILD_NUMBER:-1_0_0}
 
 WORKDIR /app
 ADD . .
-RUN ./gradlew --no-daemon assemble
+RUN ./gradlew -v --no-daemon assemble
 
 FROM openjdk:17-slim
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
@@ -29,6 +29,9 @@ COPY --from=builder --chown=appuser:appgroup /app/build/libs/approved-premises-a
 COPY --from=builder --chown=appuser:appgroup /app/build/libs/applicationinsights-agent*.jar /app/agent.jar
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.json /app
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.dev.json /app
+
+COPY --from=builder --chown=appuser:appgroup /app/script/run_seed_job /app
+RUN mkdir /seed
 
 USER 2000
 

@@ -41,12 +41,20 @@ dependencies {
   implementation("com.networknt:json-schema-validator:1.0.73")
   implementation("io.github.jamsesso:json-logic-java:1.0.7")
 
+  implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.7.0")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.3")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
+  testImplementation("org.springframework.boot:spring-boot-starter-test") {
+    exclude(module = "mockito-core")
+  }
+
+  testImplementation("com.ninja-squad:springmockk:4.0.0")
 }
 
 java {

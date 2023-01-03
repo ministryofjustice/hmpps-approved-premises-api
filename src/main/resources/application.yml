@@ -155,3 +155,6 @@ caches:
     expiry-seconds: 1200
   inmateDetails:
     expiry-seconds: 1200
+
+seed:
+  file-prefix: "/seed"
