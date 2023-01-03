@@ -50,6 +50,7 @@ data class UserEntity(
   val qualifications: MutableList<UserQualificationAssignmentEntity>
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
+  fun hasQualification(userQualification: UserQualification) = qualifications.any { it.qualification === userQualification }
 }
 
 @Repository
