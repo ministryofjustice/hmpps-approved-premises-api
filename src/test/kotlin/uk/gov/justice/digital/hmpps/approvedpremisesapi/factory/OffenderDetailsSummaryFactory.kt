@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.PreviousConviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
@@ -124,10 +123,6 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       sexualOrientation = null,
       offenderDetails = null,
       remandStatus = null,
-      previousConviction = PreviousConviction(
-        convictionDate = null,
-        detail = null
-      ),
       riskColour = null,
       disabilities = listOf(),
       genderIdentity = this.genderIdentity(),

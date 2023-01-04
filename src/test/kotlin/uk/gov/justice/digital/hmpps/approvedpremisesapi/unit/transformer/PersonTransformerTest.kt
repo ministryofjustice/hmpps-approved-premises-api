@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.PreviousConviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -54,10 +53,6 @@ class PersonTransformerTest {
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = PreviousConviction(
-          convictionDate = null,
-          detail = null
-        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = null,
@@ -132,10 +127,6 @@ class PersonTransformerTest {
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = PreviousConviction(
-          convictionDate = null,
-          detail = null
-        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = "Female",
@@ -210,10 +201,6 @@ class PersonTransformerTest {
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = PreviousConviction(
-          convictionDate = null,
-          detail = null
-        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = "Female",
@@ -288,10 +275,6 @@ class PersonTransformerTest {
         sexualOrientation = null,
         offenderDetails = null,
         remandStatus = null,
-        previousConviction = PreviousConviction(
-          convictionDate = null,
-          detail = null
-        ),
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = null,
