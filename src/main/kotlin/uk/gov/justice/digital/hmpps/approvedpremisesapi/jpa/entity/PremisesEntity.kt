@@ -80,8 +80,8 @@ class ApprovedPremisesEntity(
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>,
-  val apCode: String,
-  val qCode: String,
+  var apCode: String,
+  var qCode: String,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus

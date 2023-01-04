@@ -18,6 +18,9 @@ class CharacteristicService(
   fun getCharacteristic(characteristicId: UUID): CharacteristicEntity? =
     characteristicRepository.findByIdOrNull(characteristicId)
 
+  fun getCharacteristic(characteristicName: String): CharacteristicEntity? =
+    characteristicRepository.findByName(characteristicName)
+
   fun serviceScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean {
     val targetService = getServiceForTarget(target) ?: return false
 

@@ -7,7 +7,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
@@ -29,7 +31,10 @@ class SeedService(
       val job = when (seedFileType) {
         SeedFileType.approvedPremises -> ApprovedPremisesSeedJob(
           filename,
-          applicationContext.getBean(PremisesRepository::class.java)
+          applicationContext.getBean(PremisesRepository::class.java),
+          applicationContext.getBean(ProbationRegionRepository::class.java),
+          applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
+          applicationContext.getBean(CharacteristicService::class.java)
         )
       }
 
@@ -48,17 +53,14 @@ class SeedService(
   }
 
   private fun <T> processCsv(job: SeedJob<T>) {
-    var rowNumber = 0
+    var rowNumber = 1
 
     try {
       csvReader().open("$seedFilePrefix/${job.fileName}.csv") {
         readAllWithHeaderAsSequence().forEach { row ->
+          val deserializedRow = job.deserializeRow(row)
 
-          if (rowNumber != 0) {
-            val deserializedRow = job.deserializeRow(row)
-
-            job.processRow(deserializedRow)
-          }
+          job.processRow(deserializedRow)
 
           rowNumber += 1
         }
@@ -70,16 +72,14 @@ class SeedService(
 
   private fun <T> ensureCsvCanBeDeserialized(job: SeedJob<T>) {
     seedLogger.info("Validating that CSV can be fully read")
-    var rowNumber = 0
+    var rowNumber = 1
     val errors = mutableListOf<String>()
 
     try {
       csvReader().open("$seedFilePrefix/${job.fileName}.csv") {
         readAllWithHeaderAsSequence().forEach { row ->
           try {
-            if (rowNumber != 0) {
-              job.deserializeRow(row)
-            }
+            job.deserializeRow(row)
           } catch (exception: Exception) {
             errors += "Unable to deserialize CSV at row: $rowNumber: ${exception.printStackTrace()}"
           }
