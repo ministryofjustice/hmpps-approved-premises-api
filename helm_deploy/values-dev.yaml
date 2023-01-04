@@ -36,6 +36,16 @@ generic-service:
     unilink-aovpn10: "78.33.32.108/32"
     unilink-aovpn11: "217.138.45.109/32"
     unilink-aovpn12: "217.138.45.110/32"
+    ncc-tsc-team-1: "5.148.32.192/26"
+    ncc-tsc-team-2: "5.148.69.16/28"
+    ncc-tsc-team-3: "31.221.110.80/29"
+    ncc-tsc-team-4: "154.51.64.64/27"
+    ncc-tsc-team-5: "154.51.128.224/27"
+    ncc-tsc-team-6: "167.98.1.160/28"
+    ncc-tsc-team-7: "167.98.25.176/28"
+    ncc-tsc-team-8: "167.98.200.192/27"
+    ncc-tsc-team-9: "195.95.131.0/24"
+    ncc-mvss-team-1: "5.148.8.192/26"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
