@@ -43,7 +43,6 @@ data class OffenderProfile(
   val sexualOrientation: String?,
   val offenderDetails: String?,
   val remandStatus: String?,
-  val previousConviction: PreviousConviction,
   val riskColour: String?,
   val disabilities: List<Disability>?,
   val genderIdentity: String?,
@@ -55,11 +54,6 @@ data class OffenderLanguages(
   val otherLanguages: List<String>?,
   val languageConcerns: String?,
   val requiresInterpreter: Boolean?
-)
-
-data class PreviousConviction(
-  val convictionDate: LocalDate?,
-  val detail: Map<String, String>?
 )
 
 data class Disability(
