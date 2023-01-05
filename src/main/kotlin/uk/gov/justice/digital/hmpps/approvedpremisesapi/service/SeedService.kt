@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 
 @Service
 class SeedService(
@@ -28,13 +29,17 @@ class SeedService(
     seedLogger.info("Starting seed request: $seedFileType - $filename")
 
     try {
-      val job = when (seedFileType) {
+      val job: SeedJob<*> = when (seedFileType) {
         SeedFileType.approvedPremises -> ApprovedPremisesSeedJob(
           filename,
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(ProbationRegionRepository::class.java),
           applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
           applicationContext.getBean(CharacteristicService::class.java)
+        )
+        SeedFileType.user -> UsersSeedJob(
+          filename,
+          applicationContext.getBean(UserService::class.java)
         )
       }
 
@@ -44,7 +49,7 @@ class SeedService(
     }
   }
 
-  private inline fun <reified T> processJob(job: SeedJob<T>) {
+  private fun <T> processJob(job: SeedJob<T>) {
     // During processing, the CSV file is processed one row at a time to avoid OOM issues.
     // It is preferable to fail fast rather than processing half of a file before stopping,
     // so we first do a full pass but only deserializing each row
@@ -81,7 +86,7 @@ class SeedService(
           try {
             job.deserializeRow(row)
           } catch (exception: Exception) {
-            errors += "Unable to deserialize CSV at row: $rowNumber: ${exception.printStackTrace()}"
+            errors += "Unable to deserialize CSV at row: $rowNumber: ${exception.message} ${exception.stackTrace.joinToString("\n")}"
           }
 
           rowNumber += 1

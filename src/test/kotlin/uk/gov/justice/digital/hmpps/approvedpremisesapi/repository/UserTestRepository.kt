@@ -8,7 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import java.util.UUID
 
 @Repository
-interface UserTestRepository : JpaRepository<UserEntity, UUID>
+interface UserTestRepository : JpaRepository<UserEntity, UUID> {
+  fun findByDeliusUsername(deliusUsername: String): UserEntity?
+}
 
 @Repository
 interface UserRoleAssignmentTestRepository : JpaRepository<UserRoleAssignmentEntity, UUID>

@@ -395,4 +395,13 @@ abstract class IntegrationTestBase {
           )
       )
   )
+
+  fun mockStaffUserInfoCommunityApiCallNotFound(username: String) = wiremockServer.stubFor(
+    WireMock.get(urlEqualTo("/secure/staff/username/$username"))
+      .willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(404)
+      )
+  )
 }

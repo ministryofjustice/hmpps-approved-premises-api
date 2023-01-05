@@ -12,7 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
@@ -20,8 +22,16 @@ class UserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockUserRepository = mockk<UserRepository>()
+  private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
+  private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
 
-  private val userService = UserService(mockHttpAuthService, mockCommunityApiClient, mockUserRepository)
+  private val userService = UserService(
+    mockHttpAuthService,
+    mockCommunityApiClient,
+    mockUserRepository,
+    mockUserRoleAssignmentRepository,
+    mockUserQualificationAssignmentRepository
+  )
 
   @Test
   fun `getUserForRequest returns existing User when exists, does not call Community API or save`() {

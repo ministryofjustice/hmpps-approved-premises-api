@@ -3595,3 +3595,4 @@ components:
       type: string
       enum:
         - approved_premises
+        - user
