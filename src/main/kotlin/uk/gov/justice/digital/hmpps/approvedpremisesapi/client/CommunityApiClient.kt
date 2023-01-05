@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import java.io.OutputStream
 
@@ -38,6 +39,7 @@ class CommunityApiClient(
     path = "/secure/offenders/crn/$crn/registrations?activeOnly=true"
   }
 
+  @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {
     path = "/secure/staff/username/$deliusUsername"
   }
@@ -67,5 +69,10 @@ class CommunityApiClient(
     } catch (exception: Exception) {
       ClientResult.Failure.Other(HttpMethod.GET, path, exception)
     }
+  }
+
+  @Cacheable(value = ["teamCaseloadCache"], unless = IS_NOT_SUCCESSFUL)
+  fun getCaseloadForTeam(teamCode: String) = getRequest<TeamCaseLoad> {
+    path = "/secure/team/$teamCode/caseload"
   }
 }

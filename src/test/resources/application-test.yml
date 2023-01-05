@@ -85,6 +85,10 @@ caches:
     expiry-seconds: 1200
   inmateDetails:
     expiry-seconds: 1200
+  staffDetails:
+    expiry-seconds: 1200
+  teamCaseload:
+    expiry-seconds: 1200
 
 seed:
   file-prefix: "./test-seed-csvs"
