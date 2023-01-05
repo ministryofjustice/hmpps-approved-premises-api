@@ -25,6 +25,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
+  private var pdu: Yielded<String> = { randomStringUpperCase(15) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -73,6 +74,11 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   fun withStatus(status: PropertyStatus) = apply {
     this.status = { status }
   }
+
+  fun withPdu(pdu: String) = apply {
+    this.pdu = { pdu }
+  }
+
   override fun produce(): TemporaryAccommodationPremisesEntity = TemporaryAccommodationPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -86,6 +92,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     notes = this.notes(),
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
-    status = this.status()
+    status = this.status(),
+    pdu = this.pdu(),
   )
 }

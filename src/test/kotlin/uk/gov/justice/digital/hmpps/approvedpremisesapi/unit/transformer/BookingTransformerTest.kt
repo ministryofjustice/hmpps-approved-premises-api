@@ -105,7 +105,8 @@ class BookingTransformerTest {
     notes = "",
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
-    status = PropertyStatus.active
+    status = PropertyStatus.active,
+    pdu = ""
   )
 
   private val baseBookingEntity = BookingEntity(

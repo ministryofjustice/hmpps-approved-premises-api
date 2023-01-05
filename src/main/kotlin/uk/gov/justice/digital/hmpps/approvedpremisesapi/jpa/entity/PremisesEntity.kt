@@ -118,7 +118,8 @@ class TemporaryAccommodationPremisesEntity(
   lostBeds: MutableList<LostBedsEntity>,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
-  status: PropertyStatus
+  status: PropertyStatus,
+  var pdu: String,
 ) : PremisesEntity(
   id,
   name,
