@@ -1949,6 +1949,33 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /reports/bookings:
+    get:
+      tags:
+        - Reports
+      summary: Returns a spreadsheet of all bookings for the specified service and (optional) region.
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only bookings for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - name: probationRegionId
+          in: query
+          required: false
+          description: If provided, only bookings for this region will be returned
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
 components:
   responses:
     401Response:

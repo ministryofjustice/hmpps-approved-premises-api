@@ -43,6 +43,8 @@ dependencies {
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.7.0")
 
+  implementation("org.jetbrains.kotlinx:dataframe:0.8.1")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.3")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
