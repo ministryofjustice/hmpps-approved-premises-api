@@ -16,7 +16,7 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var createdBy: Yielded<UserEntity>? = null
   private var query: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
-  private var response: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+  private var response: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

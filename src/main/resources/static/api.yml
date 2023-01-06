@@ -3166,6 +3166,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
+        status:
+          $ref: '#/components/schemas/AssessmentStatus'
       discriminator:
         propertyName: service
         mapping:
@@ -3179,6 +3181,12 @@ components:
         - createdAt
         - allocatedAt
         - clarificationNotes
+    AssessmentStatus:
+      type: string
+      enum:
+        - pending
+        - active
+        - completed
     ApprovedPremisesAssessment:
       allOf:
         - $ref: '#/components/schemas/Assessment'

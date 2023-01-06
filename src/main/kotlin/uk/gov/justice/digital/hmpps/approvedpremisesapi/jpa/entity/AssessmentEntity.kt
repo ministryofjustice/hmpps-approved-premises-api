@@ -54,7 +54,7 @@ data class AssessmentEntity(
   var rejectionRationale: String?,
 
   @OneToMany(mappedBy = "assessment")
-  val clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
+  var clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
 
   @Transient
   var schemaUpToDate: Boolean
