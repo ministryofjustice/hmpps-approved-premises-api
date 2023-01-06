@@ -1836,6 +1836,46 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/notes/{noteId}:
+    put:
+      tags:
+        - Assessment data
+      summary: Updates an assessment's clarification note
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: noteId
+          required: true
+          description: Id of the clarification note
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Clarification note
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdatedClarificationNote'
+        required: true
+      responses:
+        201:
+          description: successfully updated a clarification note
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ClarificationNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments/{assessmentId}/acceptance:
     post:
       tags:
@@ -3238,6 +3278,13 @@ components:
         - createdAt
         - createdByStaffMemberId
         - query
+    UpdatedClarificationNote:
+      type: object
+      properties:
+        response:
+          type: string
+      required:
+        - response
     NewClarificationNote:
       type: object
       properties:
