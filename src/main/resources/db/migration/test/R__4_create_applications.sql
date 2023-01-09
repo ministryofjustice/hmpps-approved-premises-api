@@ -24,8 +24,8 @@ BEGIN
   )
   values
     (
-      '0b4bd15b-1eb8-427d-a7e2-911e60822034',
-      CURRENT_DATE + 5,
+      '72c34c52-d3b1-4619-81a1-3eb52dca885c',
+      CURRENT_DATE + 28,
       '68715a03-06af-49ee-bae5-039c824ab9af',
       '315VWWC',
       applicationData,
@@ -40,7 +40,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 17
+      CURRENT_DATE + 25
     );
   
 
@@ -57,7 +57,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '0b4bd15b-1eb8-427d-a7e2-911e60822034',
+      '72c34c52-d3b1-4619-81a1-3eb52dca885c',
       false,
       false,
       'M2500295343',
@@ -76,173 +76,9 @@ BEGIN
   )
   VALUES
     (
-      '0ea2e3ac-6d4d-4542-8a16-d77d1b26e566',
-      '0b4bd15b-1eb8-427d-a7e2-911e60822034',
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      'b7509760-2f66-44c6-8128-0bd007d4ab2d',
-      CURRENT_DATE + 3,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      '4Y29R9P',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 17
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'b7509760-2f66-44c6-8128-0bd007d4ab2d',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '5a5df43b-52d1-4be6-bbb1-4ca128033eb5',
-      'b7509760-2f66-44c6-8128-0bd007d4ab2d',
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '970f3797-3c97-42dc-afad-c39c7ea34f01',
-      CURRENT_DATE + 7,
+      '9da90e0d-adbd-40d0-811e-0455eb18ec66',
+      '72c34c52-d3b1-4619-81a1-3eb52dca885c',
       '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      '4ZUIHFX',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 12
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '970f3797-3c97-42dc-afad-c39c7ea34f01',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '09622d89-9368-47dc-9644-a113f4fb14cc',
-      '970f3797-3c97-42dc-afad-c39c7ea34f01',
-      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -270,830 +106,10 @@ BEGIN
   )
   values
     (
-      'd7e6e7d4-a3a7-4304-94ce-0bcaca1ea9ee',
+      'd4ace00b-ace5-42a2-82af-cb7389cc7cc3',
       CURRENT_DATE + 6,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      '52W7TQG',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 0
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'd7e6e7d4-a3a7-4304-94ce-0bcaca1ea9ee',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '6d31a41a-4fb7-4cbf-a08b-76b9b0fa4d83',
-      'd7e6e7d4-a3a7-4304-94ce-0bcaca1ea9ee',
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '20d16431-7a55-4630-b167-7a2c6180b105',
-      CURRENT_DATE + 24,
       '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      '5EC66UT',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 28
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '20d16431-7a55-4630-b167-7a2c6180b105',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '531e6db5-27b4-41dd-95f1-2fbf41791d7d',
-      '20d16431-7a55-4630-b167-7a2c6180b105',
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      'fa4221f3-32dd-4f88-9440-288134c4fb3b',
-      CURRENT_DATE + 29,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
-      '8LO3HSH',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 29
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'fa4221f3-32dd-4f88-9440-288134c4fb3b',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      'bbc7c2df-7cfc-442f-99c8-88218fe93661',
-      'fa4221f3-32dd-4f88-9440-288134c4fb3b',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '58ed5b26-d269-4229-86d6-32f56fda569b',
-      CURRENT_DATE + 25,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      'BWEFOI7',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 14
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '58ed5b26-d269-4229-86d6-32f56fda569b',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      'cb347843-8b4b-4574-82a1-f3027e227541',
-      '58ed5b26-d269-4229-86d6-32f56fda569b',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      'e80ce66a-af3a-4297-873f-b9a7201888c0',
-      CURRENT_DATE + 14,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
-      'GSR1T2F',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 8
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'e80ce66a-af3a-4297-873f-b9a7201888c0',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '5f4f11f2-4774-4a36-97e7-5ea475c0c115',
-      'e80ce66a-af3a-4297-873f-b9a7201888c0',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      'b9d63e08-b2ba-4e8d-91ef-dc880dabb182',
-      CURRENT_DATE + 9,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      'HRV83TE',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 24
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'b9d63e08-b2ba-4e8d-91ef-dc880dabb182',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '87d010f0-06af-4229-8d71-49862519e776',
-      'b9d63e08-b2ba-4e8d-91ef-dc880dabb182',
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '5069dc5a-1232-4f9a-aa6d-17f2342f08dd',
-      CURRENT_DATE + 25,
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      'HTVI42B',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 6
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '5069dc5a-1232-4f9a-aa6d-17f2342f08dd',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '1d08eb61-7c08-437e-b9aa-04a6614c3150',
-      '5069dc5a-1232-4f9a-aa6d-17f2342f08dd',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      'c8deb1aa-cb34-48d5-9011-b2417e6352fc',
-      CURRENT_DATE + 15,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      'HUN3BN0',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 1
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'c8deb1aa-cb34-48d5-9011-b2417e6352fc',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '894cbc76-8cfa-4258-9cad-78ca4c59d026',
-      'c8deb1aa-cb34-48d5-9011-b2417e6352fc',
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      'e4fffc71-a51a-4318-9364-fb9e53f67f59',
-      CURRENT_DATE + 26,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
-      'IHGHXYM',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 9
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'e4fffc71-a51a-4318-9364-fb9e53f67f59',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '69d11f31-a07d-4f98-b6df-25c89ba4fdf9',
-      'e4fffc71-a51a-4318-9364-fb9e53f67f59',
-      '68715a03-06af-49ee-bae5-039c824ab9af',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '764b21c2-f116-4806-b378-2bbed887a999',
-      CURRENT_DATE + 9,
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      'JCRH9V5',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 0
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '764b21c2-f116-4806-b378-2bbed887a999',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      'ddd4f043-bba1-4e45-b79b-811810650ed0',
-      '764b21c2-f116-4806-b378-2bbed887a999',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '220598b5-331b-487e-8ba5-74f7f1164da0',
-      CURRENT_DATE + 2,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      'N6OUTAY',
+      '4Y29R9P',
       applicationData,
       applicationDocument,
       (
@@ -1123,7 +139,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '220598b5-331b-487e-8ba5-74f7f1164da0',
+      'd4ace00b-ace5-42a2-82af-cb7389cc7cc3',
       false,
       false,
       'M2500295343',
@@ -1142,8 +158,8 @@ BEGIN
   )
   VALUES
     (
-      'e6f95a23-7b4b-484a-9d05-f042e076d9ac',
-      '220598b5-331b-487e-8ba5-74f7f1164da0',
+      '2418e9ad-ef90-4309-8d4b-fd91fa47fca8',
+      'd4ace00b-ace5-42a2-82af-cb7389cc7cc3',
       '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -1172,10 +188,10 @@ BEGIN
   )
   values
     (
-      '7572eb99-c814-4c82-bc73-112f6a001f9c',
-      CURRENT_DATE + 25,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
-      'PI251LM',
+      'd9d8b63e-be5d-4842-9dec-408d1784c99e',
+      CURRENT_DATE + 23,
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      '4ZUIHFX',
       applicationData,
       applicationDocument,
       (
@@ -1188,7 +204,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 21
+      CURRENT_DATE + 6
     );
   
 
@@ -1205,7 +221,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '7572eb99-c814-4c82-bc73-112f6a001f9c',
+      'd9d8b63e-be5d-4842-9dec-408d1784c99e',
       false,
       false,
       'M2500295343',
@@ -1224,9 +240,9 @@ BEGIN
   )
   VALUES
     (
-      'f157b84a-0c49-46b0-8d95-94f983d257f2',
-      '7572eb99-c814-4c82-bc73-112f6a001f9c',
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '672a6095-5817-49e6-9764-bd01ec166206',
+      'd9d8b63e-be5d-4842-9dec-408d1784c99e',
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1254,92 +270,584 @@ BEGIN
   )
   values
     (
-      'cadddfec-6e5c-4a21-a902-fddab067426e',
-      CURRENT_DATE + 22,
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      'PR5E5Y2',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 14
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      'cadddfec-6e5c-4a21-a902-fddab067426e',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '393245b0-c14f-46a1-b4dc-e1bfafa87f8a',
-      'cadddfec-6e5c-4a21-a902-fddab067426e',
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      'f86c4679-cefe-453b-b18f-a8ed806b2b58',
+      '8a2a1a51-a84e-40f4-a1e7-61ba50758bb3',
       CURRENT_DATE + 28,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      '52W7TQG',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 20
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '8a2a1a51-a84e-40f4-a1e7-61ba50758bb3',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '8b48a5a9-cfc7-4870-b7d8-6f475eb70d15',
+      '8a2a1a51-a84e-40f4-a1e7-61ba50758bb3',
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      '193bd990-fc59-44c9-bc5c-8f05b309b929',
+      CURRENT_DATE + 12,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '5EC66UT',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 26
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '193bd990-fc59-44c9-bc5c-8f05b309b929',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'aa9c0982-a119-44c1-99b9-58682864f88e',
+      '193bd990-fc59-44c9-bc5c-8f05b309b929',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      'da1c66e7-8766-4a79-889d-8e67d8f2f2ed',
+      CURRENT_DATE + 4,
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '8LO3HSH',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 11
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'da1c66e7-8766-4a79-889d-8e67d8f2f2ed',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '6a851824-93a6-4761-ad47-18043782f1aa',
+      'da1c66e7-8766-4a79-889d-8e67d8f2f2ed',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      'ac92bbf3-f0ad-4319-b542-91a2766ee324',
+      CURRENT_DATE + 15,
       '68715a03-06af-49ee-bae5-039c824ab9af',
-      'QA93YYK',
+      'BWEFOI7',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 19
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'ac92bbf3-f0ad-4319-b542-91a2766ee324',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '9d8e16d1-2858-43e2-a660-f5a9409bd084',
+      'ac92bbf3-f0ad-4319-b542-91a2766ee324',
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      'e7586e95-aef8-43bb-b772-c069dced0a7b',
+      CURRENT_DATE + 24,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      'GSR1T2F',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 20
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'e7586e95-aef8-43bb-b772-c069dced0a7b',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '31b70771-76f4-4442-8f29-1759582f981a',
+      'e7586e95-aef8-43bb-b772-c069dced0a7b',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      '3ebf7735-e184-4cb5-9c5a-db9e3bc27160',
+      CURRENT_DATE + 19,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      'HRV83TE',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 23
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '3ebf7735-e184-4cb5-9c5a-db9e3bc27160',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'af692bf5-f23a-4211-bb6a-6f1ae61e5cb7',
+      '3ebf7735-e184-4cb5-9c5a-db9e3bc27160',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      'a4cb19b0-4019-438f-a929-293fb330e37d',
+      CURRENT_DATE + 22,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
+      'HTVI42B',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 0
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'a4cb19b0-4019-438f-a929-293fb330e37d',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'ac8fcb77-8318-49b5-ba69-e4c69ac0466d',
+      'a4cb19b0-4019-438f-a929-293fb330e37d',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      '8c5c2f36-87fe-45dc-952b-75ca8b700460',
+      CURRENT_DATE + 25,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'HUN3BN0',
       applicationData,
       applicationDocument,
       (
@@ -1369,7 +877,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'f86c4679-cefe-453b-b18f-a8ed806b2b58',
+      '8c5c2f36-87fe-45dc-952b-75ca8b700460',
       false,
       false,
       'M2500295343',
@@ -1388,9 +896,9 @@ BEGIN
   )
   VALUES
     (
-      '6809a836-7b20-4b4c-b8da-30681f9c67cd',
-      'f86c4679-cefe-453b-b18f-a8ed806b2b58',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      '5b7287ad-643b-492b-8e21-b4862335fb34',
+      '8c5c2f36-87fe-45dc-952b-75ca8b700460',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1418,10 +926,10 @@ BEGIN
   )
   values
     (
-      'b58e9fba-4e65-42dc-95d3-4e7048599c32',
-      CURRENT_DATE + 18,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
-      'XCMSG3I',
+      'f6a34de1-1b20-4fca-a2b3-3c62f2d3f386',
+      CURRENT_DATE + 14,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      'IHGHXYM',
       applicationData,
       applicationDocument,
       (
@@ -1434,7 +942,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 1
+      CURRENT_DATE + 21
     );
   
 
@@ -1451,7 +959,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'b58e9fba-4e65-42dc-95d3-4e7048599c32',
+      'f6a34de1-1b20-4fca-a2b3-3c62f2d3f386',
       false,
       false,
       'M2500295343',
@@ -1470,8 +978,90 @@ BEGIN
   )
   VALUES
     (
-      '7f5db2da-a9d4-47c5-9ae8-4d26fcf85516',
-      'b58e9fba-4e65-42dc-95d3-4e7048599c32',
+      '6cc5bdb9-dd7c-4759-94e7-361bc75ed3d8',
+      'f6a34de1-1b20-4fca-a2b3-3c62f2d3f386',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      '3df02403-0e7f-4100-8c34-541ed4f6654a',
+      CURRENT_DATE + 10,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
+      'JCRH9V5',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 15
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '3df02403-0e7f-4100-8c34-541ed4f6654a',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '48d7bd0d-b5ed-472b-8da4-7b23105f007c',
+      '3df02403-0e7f-4100-8c34-541ed4f6654a',
       '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -1500,10 +1090,256 @@ BEGIN
   )
   values
     (
-      'f2a23d68-221d-45ab-9b9a-c7bdf8a9f2ce',
-      CURRENT_DATE + 8,
+      '9f2f801e-8639-4d3f-8b9f-dac5ab7c40db',
+      CURRENT_DATE + 20,
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      'N6OUTAY',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 10
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '9f2f801e-8639-4d3f-8b9f-dac5ab7c40db',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'f66615ec-6642-405f-a91d-96802b76543c',
+      '9f2f801e-8639-4d3f-8b9f-dac5ab7c40db',
       '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      'YRPARSH',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      'aee1ef89-607c-4a86-8c09-f166eb54c763',
+      CURRENT_DATE + 29,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'PI251LM',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 27
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'aee1ef89-607c-4a86-8c09-f166eb54c763',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'e82b732f-649b-43a2-8ae9-9ec986463eea',
+      'aee1ef89-607c-4a86-8c09-f166eb54c763',
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      'ba3338a4-c4b9-4bac-9b62-d4f27c2a76da',
+      CURRENT_DATE + 2,
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      'PR5E5Y2',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 20
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'ba3338a4-c4b9-4bac-9b62-d4f27c2a76da',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '707e2b54-f8f2-4456-9d13-186d90c33453',
+      'ba3338a4-c4b9-4bac-9b62-d4f27c2a76da',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      '2f5a65c9-5d45-45dc-97c2-e27d7d2df43e',
+      CURRENT_DATE + 10,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      'QA93YYK',
       applicationData,
       applicationDocument,
       (
@@ -1533,7 +1369,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'f2a23d68-221d-45ab-9b9a-c7bdf8a9f2ce',
+      '2f5a65c9-5d45-45dc-97c2-e27d7d2df43e',
       false,
       false,
       'M2500295343',
@@ -1552,9 +1388,9 @@ BEGIN
   )
   VALUES
     (
-      '356938d8-3394-4198-afc4-e9b14087f722',
-      'f2a23d68-221d-45ab-9b9a-c7bdf8a9f2ce',
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '9164c1e7-2692-42b5-95ff-6d45f4654e2d',
+      '2f5a65c9-5d45-45dc-97c2-e27d7d2df43e',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1582,10 +1418,10 @@ BEGIN
   )
   values
     (
-      '38db6fb6-2c7e-4cff-8176-71c955a77161',
-      CURRENT_DATE + 4,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      'Z33A1BU',
+      '330895c3-57e9-4647-b8e1-55c120ef6d16',
+      CURRENT_DATE + 5,
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      'XCMSG3I',
       applicationData,
       applicationDocument,
       (
@@ -1598,7 +1434,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 24
+      CURRENT_DATE + 14
     );
   
 
@@ -1615,7 +1451,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '38db6fb6-2c7e-4cff-8176-71c955a77161',
+      '330895c3-57e9-4647-b8e1-55c120ef6d16',
       false,
       false,
       'M2500295343',
@@ -1634,8 +1470,172 @@ BEGIN
   )
   VALUES
     (
-      '821dd769-6f9d-4b72-a8ac-6d6cde57d4e2',
-      '38db6fb6-2c7e-4cff-8176-71c955a77161',
+      '95cdc8e4-ac68-4e53-98d0-1f4d8e6a29a2',
+      '330895c3-57e9-4647-b8e1-55c120ef6d16',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      '3e0c6368-42c6-433d-b6c3-70ce2eb52f7d',
+      CURRENT_DATE + 17,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
+      'YRPARSH',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 20
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '3e0c6368-42c6-433d-b6c3-70ce2eb52f7d',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'd9ee1706-ddea-469f-a1f1-657039719f38',
+      '3e0c6368-42c6-433d-b6c3-70ce2eb52f7d',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at"
+  )
+  values
+    (
+      'feaa0e0a-3107-4c93-8a9c-5bec42700e4c',
+      CURRENT_DATE + 23,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      'Z33A1BU',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 11
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'feaa0e0a-3107-4c93-8a9c-5bec42700e4c',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'f9522df8-0106-4d1d-81be-30e924c26a12',
+      'feaa0e0a-3107-4c93-8a9c-5bec42700e4c',
       '8a39870c-3a1f-4e05-ad45-a450e15b242d',
       CURRENT_DATE,
       CURRENT_DATE,
