@@ -3274,6 +3274,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        responseReceivedOn:
+          type: string
+          format: date
         createdByStaffMemberId:
           type: string
           format: uuid

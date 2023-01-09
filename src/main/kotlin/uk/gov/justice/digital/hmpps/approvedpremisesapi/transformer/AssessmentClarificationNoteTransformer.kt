@@ -12,5 +12,6 @@ class AssessmentClarificationNoteTransformer {
     createdByStaffMemberId = jpa.createdByUser.id,
     query = jpa.query,
     response = jpa.response,
+    responseReceivedOn = jpa.responseReceivedOn,
   )
 }

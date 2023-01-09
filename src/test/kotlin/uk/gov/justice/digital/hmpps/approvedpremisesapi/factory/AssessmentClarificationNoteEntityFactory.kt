@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -17,6 +18,7 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
   private var createdBy: Yielded<UserEntity>? = null
   private var query: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var response: Yielded<String?> = { null }
+  private var responseReceivedOn: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -42,12 +44,17 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     this.response = { response }
   }
 
+  fun withResponseReceivedOn(responseReceivedOn: LocalDate) = apply {
+    this.responseReceivedOn = { responseReceivedOn }
+  }
+
   override fun produce(): AssessmentClarificationNoteEntity = AssessmentClarificationNoteEntity(
     id = this.id(),
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an assessment"),
     createdAt = this.createdAt(),
     createdByUser = this.createdBy?.invoke() ?: throw RuntimeException("Must provide a createdBy"),
     query = this.query(),
-    response = this.response()
+    response = this.response(),
+    responseReceivedOn = this.responseReceivedOn()
   )
 }

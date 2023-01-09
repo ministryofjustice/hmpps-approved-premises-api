@@ -228,7 +228,8 @@ class AssessmentService(
         createdByUser = user,
         createdAt = OffsetDateTime.now(),
         query = text,
-        response = null
+        response = null,
+        responseReceivedOn = null,
       )
     )
 
