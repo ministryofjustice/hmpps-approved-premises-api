@@ -15,7 +15,8 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
   private var assessment: Yielded<AssessmentEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var createdBy: Yielded<UserEntity>? = null
-  private var text: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+  private var query: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+  private var response: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -33,8 +34,12 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     this.createdBy = { createdBy }
   }
 
-  fun withText(text: String) = apply {
-    this.text = { text }
+  fun withQuery(query: String) = apply {
+    this.query = { query }
+  }
+
+  fun withResponse(response: String) = apply {
+    this.response = { response }
   }
 
   override fun produce(): AssessmentClarificationNoteEntity = AssessmentClarificationNoteEntity(
@@ -42,6 +47,7 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an assessment"),
     createdAt = this.createdAt(),
     createdByUser = this.createdBy?.invoke() ?: throw RuntimeException("Must provide a createdBy"),
-    text = this.text()
+    query = this.query(),
+    response = this.response()
   )
 }

@@ -201,7 +201,7 @@ class AssessmentController(
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
 
-    val clarificiationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.text)
+    val clarificiationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
     val clarificiationNote = when (clarificiationNoteResult) {
       is AuthorisableActionResult.Success -> clarificiationNoteResult.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")

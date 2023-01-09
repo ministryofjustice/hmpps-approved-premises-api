@@ -3229,20 +3229,22 @@ components:
         createdByStaffMemberId:
           type: string
           format: uuid
-        text:
+        query:
+          type: string
+        response:
           type: string
       required:
         - id
         - createdAt
         - createdByStaffMemberId
-        - text
+        - query
     NewClarificationNote:
       type: object
       properties:
-        text:
+        query:
           type: string
       required:
-        - text
+        - query
     Reallocation:
       type: object
       properties:

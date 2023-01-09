@@ -83,5 +83,7 @@ data class AssessmentClarificationNoteEntity(
   val createdByUser: UserEntity,
   val createdAt: OffsetDateTime,
 
-  val text: String
+  val query: String,
+
+  val response: String?
 )

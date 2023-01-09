@@ -10,6 +10,7 @@ class AssessmentClarificationNoteTransformer {
     id = jpa.id,
     createdAt = jpa.createdAt,
     createdByStaffMemberId = jpa.createdByUser.id,
-    text = jpa.text
+    query = jpa.query,
+    response = jpa.response,
   )
 }

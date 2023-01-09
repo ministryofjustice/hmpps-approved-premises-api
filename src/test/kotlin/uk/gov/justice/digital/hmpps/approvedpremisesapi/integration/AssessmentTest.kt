@@ -355,13 +355,13 @@ class AssessmentTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewClarificationNote(
-          text = "some text"
+          query = "some text"
         )
       )
       .exchange()
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("$.text").isEqualTo("some text")
+      .jsonPath("$.query").isEqualTo("some text")
   }
 }
