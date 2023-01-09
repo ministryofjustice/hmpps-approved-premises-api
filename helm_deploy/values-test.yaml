@@ -12,12 +12,12 @@ generic-service:
     SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
-    SERVICES_COMMUNITY-API_BASE-URL: https://community-api-secure.test.delius.probation.hmpps.dsd.io
-    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.test.probation.service.justice.gov.uk
-    SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-dev.hmpps.service.justice.gov.uk
-    SERVICES_PRISONS-API_BASE-URL: https://api-dev.prison.service.justice.gov.uk
-    SERVICES_CASE-NOTES_BASE-URL: https://dev.offender-case-notes.service.justice.gov.uk
-    SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys-dev.hmpps.service.justice.gov.uk
+    SERVICES_COMMUNITY-API_BASE-URL: https://community-accommodation-wiremock.hmpps.service.justice.gov.uk
+    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://community-accommodation-wiremock.hmpps.service.justice.gov.uk
+    SERVICES_HMPPS-TIER_BASE-URL: https://community-accommodation-wiremock.hmpps.service.justice.gov.uk
+    SERVICES_PRISONS-API_BASE-URL: https://community-accommodation-wiremock.hmpps.service.justice.gov.uk
+    SERVICES_CASE-NOTES_BASE-URL: https://community-accommodation-wiremock.hmpps.service.justice.gov.uk
+    SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://community-accommodation-wiremock.hmpps.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev,classpath:db/migration/test
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
     SENTRY_ENVIRONMENT: test
