@@ -21,12 +21,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
@@ -612,6 +616,128 @@ class OffenderServiceTest {
       .produce()
 
     every { mockCommunityApiClient.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+  }
+
+  @Test
+  fun `getTeamCaseLoad returns Not Found when staff details cannot be found`() {
+    val username = "ADeliusUser"
+
+    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/", HttpStatus.NOT_FOUND, null)
+
+    assertThat(offenderService.getTeamCaseLoad(username) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `getTeamCaseLoad returns Unauthorised when staff details not permitted to view`() {
+    val username = "ADeliusUser"
+
+    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/", HttpStatus.FORBIDDEN, null)
+
+    assertThat(offenderService.getTeamCaseLoad(username) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getTeamCaseLoad returns Not Found when team caseload cannot be found`() {
+    val username = "ADeliusUser"
+    val teamCode = "TEAMCODE"
+
+    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+      HttpStatus.OK,
+      StaffUserDetailsFactory()
+        .withStaffIdentifier(12345)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode(teamCode)
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    every { mockCommunityApiClient.getCaseloadForTeam(teamCode) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/", HttpStatus.NOT_FOUND, null)
+
+    assertThat(offenderService.getTeamCaseLoad(username) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `getTeamCaseLoad returns Unauthorised when team caseload cannot be accessed`() {
+    val username = "ADeliusUser"
+    val teamCode = "TEAMCODE"
+
+    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+      HttpStatus.OK,
+      StaffUserDetailsFactory()
+        .withStaffIdentifier(12345)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode(teamCode)
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    every { mockCommunityApiClient.getCaseloadForTeam(teamCode) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/", HttpStatus.FORBIDDEN, null)
+
+    assertThat(offenderService.getTeamCaseLoad(username) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getTeamCaseLoad returns Success`() {
+    val username = "ADeliusUser"
+    val teamCode1 = "TEAMCODE1"
+    val teamCode2 = "TEAMCODE2"
+
+    val team1Offender = ManagedOffenderFactory()
+      .withOffenderCrn("CRN1")
+      .produce()
+
+    val team2Offender = ManagedOffenderFactory()
+      .withOffenderCrn("CRN2")
+      .produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+      HttpStatus.OK,
+      StaffUserDetailsFactory()
+        .withStaffIdentifier(12345)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode(teamCode1)
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withCode(teamCode2)
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    every { mockCommunityApiClient.getCaseloadForTeam(teamCode1) } returns ClientResult.Success(
+      HttpStatus.OK,
+      TeamCaseLoad(
+        managedOffenders = listOf(team1Offender)
+      )
+    )
+
+    every { mockCommunityApiClient.getCaseloadForTeam(teamCode2) } returns ClientResult.Success(
+      HttpStatus.OK,
+      TeamCaseLoad(
+        managedOffenders = listOf(team2Offender)
+      )
+    )
+
+    val result = offenderService.getTeamCaseLoad(username)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity).containsExactlyInAnyOrder(
+      team1Offender,
+      team2Offender
+    )
   }
 
   private fun mock404RoSH(crn: String, jwt: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)
