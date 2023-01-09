@@ -3294,8 +3294,13 @@ components:
       properties:
         response:
           type: string
+        responseReceivedOn:
+          type: string
+          format: date
+          example: 2022-07-28
       required:
         - response
+        - responseReceivedOn
     NewClarificationNote:
       type: object
       properties:

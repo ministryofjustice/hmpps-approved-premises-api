@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class AssessmentTest : IntegrationTestBase() {
@@ -417,7 +418,8 @@ class AssessmentTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdatedClarificationNote(
-          response = "some text"
+          response = "some text",
+          responseReceivedOn = LocalDate.parse("2022-03-04")
         )
       )
       .exchange()
@@ -425,5 +427,6 @@ class AssessmentTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.response").isEqualTo("some text")
+      .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
   }
 }

@@ -220,15 +220,22 @@ class AssessmentController(
     updatedClarificationNote: UpdatedClarificationNote
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
+    val clarificiationNoteResult = assessmentService.updateAssessmentClarificationNote(
+      user,
+      assessmentId,
+      noteId,
+      updatedClarificationNote.response,
+      updatedClarificationNote.responseReceivedOn
+    )
 
-    val clarificiationNoteResult = when (val clarificiationNoteResult = assessmentService.updateAssessmentClarificationNote(user, assessmentId, noteId, updatedClarificationNote.response)) {
+    val clarificiationNoteEntityResult = when (clarificiationNoteResult) {
       is AuthorisableActionResult.Success -> clarificiationNoteResult.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val updatedClarificationNote = when (clarificiationNoteResult) {
-      is ValidatableActionResult.Success -> clarificiationNoteResult.entity
+    val updatedClarificationNote = when (clarificiationNoteEntityResult) {
+      is ValidatableActionResult.Success -> clarificiationNoteEntityResult.entity
       else -> throw InternalServerErrorProblem("You must provide a response")
     }
 

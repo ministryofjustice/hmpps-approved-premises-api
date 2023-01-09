@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -832,7 +833,8 @@ class AssessmentServiceTest {
         user,
         assessment.id,
         assessmentClarificationNoteEntity.id,
-        "Some response"
+        "Some response",
+        LocalDate.parse("2022-03-03")
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -858,7 +860,8 @@ class AssessmentServiceTest {
         user,
         assessment.id,
         assessmentClarificationNoteEntity.id,
-        "Some response"
+        "Some response",
+        LocalDate.parse("2022-03-03")
       )
 
       assertThat(result is AuthorisableActionResult.NotFound).isTrue
@@ -881,7 +884,8 @@ class AssessmentServiceTest {
         user,
         assessment.id,
         assessmentClarificationNoteEntity.id,
-        "Some response"
+        "Some response",
+        LocalDate.parse("2022-03-03")
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue

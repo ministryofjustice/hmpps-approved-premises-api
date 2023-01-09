@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -236,7 +237,7 @@ class AssessmentService(
     return AuthorisableActionResult.Success(clarificationNoteEntity)
   }
 
-  fun updateAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, id: UUID, response: String): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
+  fun updateAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, id: UUID, response: String, responseReceivedOn: LocalDate): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
     val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
@@ -254,6 +255,7 @@ class AssessmentService(
     }
 
     clarificationNoteEntity.response = response
+    clarificationNoteEntity.responseReceivedOn = responseReceivedOn
 
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
 
