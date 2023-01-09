@@ -5,10 +5,13 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -764,5 +767,124 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+  }
+
+  @Nested
+  class UpdateAsssessmentClarificationNote {
+    private val userRepositoryMock = mockk<UserRepository>()
+    private val assessmentRepositoryMock = mockk<AssessmentRepository>()
+    private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
+    private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
+
+    private val assessmentService = AssessmentService(
+      userRepositoryMock,
+      assessmentRepositoryMock,
+      assessmentClarificationNoteRepositoryMock,
+      jsonSchemaServiceMock
+    )
+
+    private val user = UserEntityFactory()
+      .produce()
+
+    private val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    private val assessment = AssessmentEntityFactory()
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .produce()
+
+    private val assessmentClarificationNoteEntity = AssessmentClarificationNoteEntityFactory()
+      .withAssessment(assessment)
+      .withCreatedBy(user)
+      .produce()
+
+    @BeforeEach
+    fun setup() {
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+      every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
+    }
+
+    @Test
+    fun `updateAssessmentClarificationNote returns updated clarification note`() {
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+      every {
+        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
+          assessment.id,
+          assessmentClarificationNoteEntity.id
+        )
+      } returns assessmentClarificationNoteEntity
+
+      every { assessmentClarificationNoteRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentClarificationNoteEntity }
+
+      val result = assessmentService.updateAssessmentClarificationNote(
+        user,
+        assessment.id,
+        assessmentClarificationNoteEntity.id,
+        "Some response"
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+      assertThat(validationResult is ValidatableActionResult.Success)
+
+      val updatedAssessmentClarificationNote = (validationResult as ValidatableActionResult.Success).entity
+      assertThat(updatedAssessmentClarificationNote.response contentEquals "Some response")
+    }
+
+    @Test
+    fun `updateAssessmentClarificationNote returns not found if the note is not found`() {
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+      every {
+        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
+          assessment.id,
+          assessmentClarificationNoteEntity.id
+        )
+      } returns null
+
+      val result = assessmentService.updateAssessmentClarificationNote(
+        user,
+        assessment.id,
+        assessmentClarificationNoteEntity.id,
+        "Some response"
+      )
+
+      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `updateAssessmentClarificationNote returns unauthorised if the note is not owned by the requesting user`() {
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+      every {
+        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
+          assessment.id,
+          assessmentClarificationNoteEntity.id
+        )
+      } returns AssessmentClarificationNoteEntityFactory()
+        .withAssessment(assessment)
+        .withCreatedBy(UserEntityFactory().produce())
+        .produce()
+
+      val result = assessmentService.updateAssessmentClarificationNote(
+        user,
+        assessment.id,
+        assessmentClarificationNoteEntity.id,
+        "Some response"
+      )
+
+      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    }
   }
 }

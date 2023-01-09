@@ -66,7 +66,9 @@ enum class AssessmentDecision {
 }
 
 @Repository
-interface AssessmentClarificationNoteRepository : JpaRepository<AssessmentClarificationNoteEntity, UUID>
+interface AssessmentClarificationNoteRepository : JpaRepository<AssessmentClarificationNoteEntity, UUID> {
+  fun findByAssessmentIdAndId(assessmentId: UUID, id: UUID): AssessmentClarificationNoteEntity?
+}
 
 @Entity
 @Table(name = "assessment_clarification_notes")
@@ -85,5 +87,5 @@ data class AssessmentClarificationNoteEntity(
 
   val query: String,
 
-  val response: String?
+  var response: String?
 )

@@ -235,6 +235,32 @@ class AssessmentService(
     return AuthorisableActionResult.Success(clarificationNoteEntity)
   }
 
+  fun updateAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, id: UUID, response: String): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
+    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    var clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
+
+    if (clarificationNoteEntity === null) {
+      return AuthorisableActionResult.NotFound()
+    }
+
+    if (clarificationNoteEntity.createdByUser.id !== user.id) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    clarificationNoteEntity.response = response
+
+    val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedNote)
+    )
+  }
+
   private fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
   private fun getRequiredQualificationsForApprovedPremisesApplication(application: ApprovedPremisesApplicationEntity): List<UserQualification> {
     val requiredQualifications = mutableListOf<UserQualification>()
