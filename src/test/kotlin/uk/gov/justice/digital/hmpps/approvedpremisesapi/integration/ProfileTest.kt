@@ -35,6 +35,8 @@ class ProfileTest : IntegrationTestBase() {
   @Test
   fun `Getting own profile returns OK with correct body`() {
     val deliusUsername = "JimJimmerson"
+    val email = "foo@bar.com"
+    val telephoneNumber = "123445677"
 
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = deliusUsername,
@@ -44,6 +46,8 @@ class ProfileTest : IntegrationTestBase() {
 
     val userEntity = userEntityFactory.produceAndPersist {
       withDeliusUsername(deliusUsername)
+      withEmail(email)
+      withTelephoneNumber(telephoneNumber)
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -67,6 +71,8 @@ class ProfileTest : IntegrationTestBase() {
         objectMapper.writeValueAsString(
           User(
             deliusUsername = deliusUsername,
+            email = email,
+            telephoneNumber = telephoneNumber,
             roles = listOf(ApiUserRole.assessor),
             qualifications = listOf(ApiUserQualification.pipe)
           )

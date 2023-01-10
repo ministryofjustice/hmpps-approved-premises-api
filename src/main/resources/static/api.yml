@@ -3319,6 +3319,10 @@ components:
       properties:
         deliusUsername:
           type: string
+        email:
+          type: string
+        telephoneNumber:
+          type: string
         roles:
           type: array
           items:
@@ -3329,6 +3333,7 @@ components:
             $ref: '#/components/schemas/UserQualification'
       required:
         - deliusUsername
+        - email
         - roles
         - qualifications
     UserRole:
