@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
@@ -15,6 +16,7 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
   private var staffIdentifier: Yielded<Long> = { randomInt(1000, 10000).toLong() }
   private var forenames: Yielded<String> = { randomStringUpperCase(8) }
   private var surname: Yielded<String> = { randomStringUpperCase(8) }
+  private var teams: Yielded<List<StaffUserTeamMembership>> = { listOf() }
 
   fun withUsername(username: String) = apply {
     this.username = { username }
@@ -44,6 +46,10 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
     this.surname = { surname }
   }
 
+  fun withTeams(teams: List<StaffUserTeamMembership>) = apply {
+    this.teams = { teams }
+  }
+
   override fun produce(): StaffUserDetails = StaffUserDetails(
     username = this.username(),
     email = this.email(),
@@ -53,6 +59,7 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
     staff = StaffNames(
       forenames = this.forenames(),
       surname = this.surname()
-    )
+    ),
+    teams = this.teams()
   )
 }

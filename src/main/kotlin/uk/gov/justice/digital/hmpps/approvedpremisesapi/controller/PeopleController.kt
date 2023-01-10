@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CaseLoadPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -180,6 +182,34 @@ class PeopleController(
     return ResponseEntity.ok(
       activeConvictions.flatMap(convictionTransformer::transformToApi)
     )
+  }
+
+  override fun peopleTeamCaseloadGet(): ResponseEntity<List<CaseLoadPerson>> {
+    val principal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = principal.name
+
+    val teamCaseloadResult = offenderService.getTeamCaseLoad(username)
+    val teamCaseload = when (teamCaseloadResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(username, "Caseload")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> teamCaseloadResult.entity
+    }
+
+    val caseloadPeople = teamCaseload.map {
+      val offenderDetailResult = offenderService.getOffenderByCrn(it.offenderCrn, username)
+      val offenderDetail = when (offenderDetailResult) {
+        is AuthorisableActionResult.Success -> offenderDetailResult.entity
+        else -> null
+      }
+
+      CaseLoadPerson(
+        crn = it.offenderCrn,
+        firstName = offenderDetail?.firstName,
+        surname = offenderDetail?.surname
+      )
+    }
+
+    return ResponseEntity(caseloadPeople, HttpStatus.OK)
   }
 
   private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {
