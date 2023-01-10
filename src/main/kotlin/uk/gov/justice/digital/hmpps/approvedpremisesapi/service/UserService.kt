@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
 
 @Service
@@ -26,6 +28,25 @@ class UserService(
     val username = deliusPrincipal.name
 
     return getUserForUsername(username)
+  }
+
+  fun getUserForId(id: java.util.UUID): AuthorisableActionResult<UserEntity> {
+    var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
+
+    val deliusUser = when (staffUserDetailsResponse) {
+      is ClientResult.Success -> staffUserDetailsResponse.body
+      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+    }
+
+    if (deliusUser.email !== user.email || deliusUser.telephoneNumber !== user.telephoneNumber) {
+      user.email = deliusUser.email
+      user.telephoneNumber = deliusUser.telephoneNumber
+
+      user = userRepository.save(user)
+    }
+
+    return AuthorisableActionResult.Success(user)
   }
 
   fun getUserForUsername(username: String): UserEntity {

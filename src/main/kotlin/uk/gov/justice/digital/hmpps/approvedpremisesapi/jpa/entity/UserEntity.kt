@@ -42,8 +42,8 @@ data class UserEntity(
   val name: String,
   val deliusUsername: String,
   val deliusStaffIdentifier: Long,
-  val email: String,
-  val telephoneNumber: String?,
+  var email: String,
+  var telephoneNumber: String?,
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<ApplicationEntity>,
   @OneToMany(mappedBy = "user")
