@@ -9,6 +9,7 @@ import kotlin.random.Random
 
 private val charPoolMultiCaseNumbers = ('a'..'z') + ('A'..'Z') + ('0'..'9')
 private val charPoolUpperCase = ('A'..'Z').toList()
+private val charPoolLowerCase = ('a'..'z').toList()
 private val charPoolNumbers = ('0'..'9').toList()
 
 private fun randomWithCharPool(charPool: List<Char>, length: Int) = (1..length)
@@ -19,6 +20,8 @@ private fun randomWithCharPool(charPool: List<Char>, length: Int) = (1..length)
 fun randomStringMultiCaseWithNumbers(length: Int) = randomWithCharPool(charPoolMultiCaseNumbers, length)
 
 fun randomStringUpperCase(length: Int) = randomWithCharPool(charPoolUpperCase, length)
+
+fun randomEmailAddress() = randomWithCharPool(charPoolLowerCase, 5) + "." + randomWithCharPool(charPoolLowerCase, 8) + "@" + randomWithCharPool(charPoolLowerCase, 6) + ".com"
 
 fun randomNumberChars(length: Int) = randomWithCharPool(charPoolNumbers, length)
 

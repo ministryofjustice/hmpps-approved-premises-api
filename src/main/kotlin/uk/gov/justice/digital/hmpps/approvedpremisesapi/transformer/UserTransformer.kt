@@ -15,6 +15,8 @@ class UserTransformer {
   fun transformJpaToApi(jpa: UserEntity) = User(
     deliusUsername = jpa.deliusUsername,
     roles = jpa.roles.map(::transformRoleToApi),
+    email = jpa.email,
+    telephoneNumber = jpa.telephoneNumber,
     qualifications = jpa.qualifications.map(::transformQualificationToApi)
   )
 

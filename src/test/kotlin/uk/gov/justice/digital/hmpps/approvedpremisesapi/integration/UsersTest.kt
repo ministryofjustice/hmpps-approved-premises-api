@@ -2,30 +2,30 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRole as ApiUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import java.util.UUID
 
-class ProfileTest : IntegrationTestBase() {
+class UsersTest : IntegrationTestBase() {
+  val id: UUID = UUID.fromString("aff9a4dc-e208-4e4b-abe6-99aff7f6af8a")
+
   @Test
-  fun `Getting own profile without a JWT returns 401`() {
+  fun `Getting a user without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/profile")
+      .uri("/users/$id")
       .exchange()
       .expectStatus()
       .isUnauthorized
   }
 
   @Test
-  fun `Getting own profile with a non-Delius JWT returns 403`() {
+  fun `Getting a user with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
       authSource = "nomis"
     )
 
     webTestClient.get()
-      .uri("/profile")
+      .uri("/users/$id")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -33,7 +33,7 @@ class ProfileTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting own profile returns OK with correct body`() {
+  fun `Getting a user returns OK with correct body`() {
     val deliusUsername = "JimJimmerson"
     val email = "foo@bar.com"
     val telephoneNumber = "123445677"
@@ -44,24 +44,25 @@ class ProfileTest : IntegrationTestBase() {
       roles = listOf("ROLE_PROBATION")
     )
 
-    val userEntity = userEntityFactory.produceAndPersist {
+    userEntityFactory.produceAndPersist {
+      withId(id)
       withDeliusUsername(deliusUsername)
       withEmail(email)
       withTelephoneNumber(telephoneNumber)
     }
 
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(userEntity)
-      withRole(UserRole.ASSESSOR)
-    }
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(deliusUsername)
+        .withEmail(email)
+        .withTelephoneNumber(telephoneNumber)
+        .produce()
+    )
 
-    userQualificationAssignmentEntityFactory.produceAndPersist {
-      withUser(userEntity)
-      withQualification(UserQualification.PIPE)
-    }
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
 
     webTestClient.get()
-      .uri("/profile")
+      .uri("/users/$id")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -73,8 +74,8 @@ class ProfileTest : IntegrationTestBase() {
             deliusUsername = deliusUsername,
             email = email,
             telephoneNumber = telephoneNumber,
-            roles = listOf(ApiUserRole.assessor),
-            qualifications = listOf(ApiUserQualification.pipe)
+            roles = emptyList(),
+            qualifications = emptyList(),
           )
         )
       )

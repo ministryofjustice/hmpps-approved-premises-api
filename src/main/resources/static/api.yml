@@ -1989,6 +1989,30 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /users/{id}:
+    get:
+      summary: Get information about a specific user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the user
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved information on user
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /seed:
     post:
       summary: Starts the data seeding process, can only be called from a local connection
@@ -3319,6 +3343,10 @@ components:
       properties:
         deliusUsername:
           type: string
+        email:
+          type: string
+        telephoneNumber:
+          type: string
         roles:
           type: array
           items:
@@ -3329,6 +3357,7 @@ components:
             $ref: '#/components/schemas/UserQualification'
       required:
         - deliusUsername
+        - email
         - roles
         - qualifications
     UserRole:
