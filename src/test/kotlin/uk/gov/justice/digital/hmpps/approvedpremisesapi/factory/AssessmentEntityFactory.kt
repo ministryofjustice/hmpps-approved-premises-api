@@ -28,7 +28,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var allocatedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
-  private var decision: Yielded<AssessmentDecision> = { AssessmentDecision.ACCEPTED }
+  private var decision: Yielded<AssessmentDecision?> = { AssessmentDecision.ACCEPTED }
   private var allocatedToUser: Yielded<UserEntity>? = null
   private var rejectionRationale: Yielded<String?> = { null }
   private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
@@ -65,7 +65,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     this.submittedAt = { submittedAt }
   }
 
-  fun withDecision(decision: AssessmentDecision) = apply {
+  fun withDecision(decision: AssessmentDecision?) = apply {
     this.decision = { decision }
   }
 

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -15,7 +16,9 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
   private var assessment: Yielded<AssessmentEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var createdBy: Yielded<UserEntity>? = null
-  private var text: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+  private var query: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+  private var response: Yielded<String?> = { null }
+  private var responseReceivedOn: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -33,8 +36,16 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     this.createdBy = { createdBy }
   }
 
-  fun withText(text: String) = apply {
-    this.text = { text }
+  fun withQuery(query: String) = apply {
+    this.query = { query }
+  }
+
+  fun withResponse(response: String) = apply {
+    this.response = { response }
+  }
+
+  fun withResponseReceivedOn(responseReceivedOn: LocalDate) = apply {
+    this.responseReceivedOn = { responseReceivedOn }
   }
 
   override fun produce(): AssessmentClarificationNoteEntity = AssessmentClarificationNoteEntity(
@@ -42,6 +53,8 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an assessment"),
     createdAt = this.createdAt(),
     createdByUser = this.createdBy?.invoke() ?: throw RuntimeException("Must provide a createdBy"),
-    text = this.text()
+    query = this.query(),
+    response = this.response(),
+    responseReceivedOn = this.responseReceivedOn()
   )
 }

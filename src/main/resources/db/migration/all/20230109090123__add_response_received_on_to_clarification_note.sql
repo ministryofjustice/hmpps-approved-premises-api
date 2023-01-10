@@ -1,0 +1,1 @@
+ALTER TABLE assessment_clarification_notes ADD COLUMN response_received_on DATE;

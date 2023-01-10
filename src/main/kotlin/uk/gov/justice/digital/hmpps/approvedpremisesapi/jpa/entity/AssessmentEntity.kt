@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
@@ -54,7 +55,7 @@ data class AssessmentEntity(
   var rejectionRationale: String?,
 
   @OneToMany(mappedBy = "assessment")
-  val clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
+  var clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
 
   @Transient
   var schemaUpToDate: Boolean
@@ -66,7 +67,9 @@ enum class AssessmentDecision {
 }
 
 @Repository
-interface AssessmentClarificationNoteRepository : JpaRepository<AssessmentClarificationNoteEntity, UUID>
+interface AssessmentClarificationNoteRepository : JpaRepository<AssessmentClarificationNoteEntity, UUID> {
+  fun findByAssessmentIdAndId(assessmentId: UUID, id: UUID): AssessmentClarificationNoteEntity?
+}
 
 @Entity
 @Table(name = "assessment_clarification_notes")
@@ -83,5 +86,9 @@ data class AssessmentClarificationNoteEntity(
   val createdByUser: UserEntity,
   val createdAt: OffsetDateTime,
 
-  val text: String
+  val query: String,
+
+  var response: String?,
+
+  var responseReceivedOn: LocalDate?
 )

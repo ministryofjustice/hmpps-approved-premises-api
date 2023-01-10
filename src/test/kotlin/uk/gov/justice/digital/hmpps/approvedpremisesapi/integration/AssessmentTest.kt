@@ -8,10 +8,12 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class AssessmentTest : IntegrationTestBase() {
@@ -355,13 +357,76 @@ class AssessmentTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewClarificationNote(
-          text = "some text"
+          query = "some text"
         )
       )
       .exchange()
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("$.text").isEqualTo("some text")
+      .jsonPath("$.query").isEqualTo("some text")
+  }
+
+  @Test
+  fun `Update clarification note returns 201 with correct body`() {
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN123")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+
+    val inmateDetails = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockInmateDetailPrisonsApiCall(inmateDetails)
+
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
+    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
+    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withCrn("CRN123")
+      withCreatedByUser(user)
+      withApplicationSchema(applicationSchema)
+    }
+
+    val assessment = assessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(user)
+      withApplication(application)
+      withAssessmentSchema(assessmentSchema)
+    }
+
+    val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
+      withAssessment(assessment)
+      withCreatedBy(user)
+    }
+
+    webTestClient.put()
+      .uri("/assessments/${assessment.id}/notes/${clarificationNote.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatedClarificationNote(
+          response = "some text",
+          responseReceivedOn = LocalDate.parse("2022-03-04")
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.response").isEqualTo("some text")
+      .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
   }
 }

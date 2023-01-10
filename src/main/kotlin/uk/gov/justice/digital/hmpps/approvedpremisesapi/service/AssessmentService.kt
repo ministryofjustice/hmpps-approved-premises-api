@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -227,11 +228,46 @@ class AssessmentService(
         assessment = assessment,
         createdByUser = user,
         createdAt = OffsetDateTime.now(),
-        text = text
+        query = text,
+        response = null,
+        responseReceivedOn = null,
       )
     )
 
     return AuthorisableActionResult.Success(clarificationNoteEntity)
+  }
+
+  fun updateAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, id: UUID, response: String, responseReceivedOn: LocalDate): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
+    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    var clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
+
+    if (clarificationNoteEntity === null) {
+      return AuthorisableActionResult.NotFound()
+    }
+
+    if (clarificationNoteEntity.createdByUser.id !== user.id) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (clarificationNoteEntity.response !== null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("A response has already been added to this note")
+      )
+    }
+
+    clarificationNoteEntity.response = response
+    clarificationNoteEntity.responseReceivedOn = responseReceivedOn
+
+    val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedNote)
+    )
   }
 
   private fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -201,7 +202,7 @@ class AssessmentController(
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
 
-    val clarificiationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.text)
+    val clarificiationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
     val clarificiationNote = when (clarificiationNoteResult) {
       is AuthorisableActionResult.Success -> clarificiationNoteResult.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
@@ -210,6 +211,36 @@ class AssessmentController(
 
     return ResponseEntity.ok(
       assessmentClarificationNoteTransformer.transformJpaToApi(clarificiationNote)
+    )
+  }
+
+  override fun assessmentsAssessmentIdNotesNoteIdPut(
+    assessmentId: UUID,
+    noteId: UUID,
+    updatedClarificationNote: UpdatedClarificationNote
+  ): ResponseEntity<ClarificationNote> {
+    val user = userService.getUserForRequest()
+    val clarificiationNoteResult = assessmentService.updateAssessmentClarificationNote(
+      user,
+      assessmentId,
+      noteId,
+      updatedClarificationNote.response,
+      updatedClarificationNote.responseReceivedOn
+    )
+
+    val clarificiationNoteEntityResult = when (clarificiationNoteResult) {
+      is AuthorisableActionResult.Success -> clarificiationNoteResult.entity
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    val updatedClarificationNote = when (clarificiationNoteEntityResult) {
+      is ValidatableActionResult.Success -> clarificiationNoteEntityResult.entity
+      else -> throw InternalServerErrorProblem("You must provide a response")
+    }
+
+    return ResponseEntity.ok(
+      assessmentClarificationNoteTransformer.transformJpaToApi(updatedClarificationNote)
     )
   }
 }

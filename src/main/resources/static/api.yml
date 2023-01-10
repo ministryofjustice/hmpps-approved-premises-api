@@ -1836,6 +1836,46 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/notes/{noteId}:
+    put:
+      tags:
+        - Assessment data
+      summary: Updates an assessment's clarification note
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: noteId
+          required: true
+          description: Id of the clarification note
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Clarification note
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdatedClarificationNote'
+        required: true
+      responses:
+        201:
+          description: successfully updated a clarification note
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ClarificationNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments/{assessmentId}/acceptance:
     post:
       tags:
@@ -3126,6 +3166,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
+        status:
+          $ref: '#/components/schemas/AssessmentStatus'
       discriminator:
         propertyName: service
         mapping:
@@ -3139,6 +3181,12 @@ components:
         - createdAt
         - allocatedAt
         - clarificationNotes
+    AssessmentStatus:
+      type: string
+      enum:
+        - pending
+        - active
+        - completed
     ApprovedPremisesAssessment:
       allOf:
         - $ref: '#/components/schemas/Assessment'
@@ -3226,23 +3274,40 @@ components:
         createdAt:
           type: string
           format: date-time
+        responseReceivedOn:
+          type: string
+          format: date
         createdByStaffMemberId:
           type: string
           format: uuid
-        text:
+        query:
+          type: string
+        response:
           type: string
       required:
         - id
         - createdAt
         - createdByStaffMemberId
-        - text
+        - query
+    UpdatedClarificationNote:
+      type: object
+      properties:
+        response:
+          type: string
+        responseReceivedOn:
+          type: string
+          format: date
+          example: 2022-07-28
+      required:
+        - response
+        - responseReceivedOn
     NewClarificationNote:
       type: object
       properties:
-        text:
+        query:
           type: string
       required:
-        - text
+        - query
     Reallocation:
       type: object
       properties:

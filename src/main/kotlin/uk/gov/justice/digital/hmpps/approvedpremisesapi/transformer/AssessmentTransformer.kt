@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -33,7 +34,8 @@ class AssessmentTransformer(
       allocatedToStaffMemberId = jpa.allocatedToUser.id,
       submittedAt = jpa.submittedAt,
       decision = transformJpaDecisionToApi(jpa.decision),
-      rejectionRationale = jpa.rejectionRationale
+      rejectionRationale = jpa.rejectionRationale,
+      status = getStatus(jpa)
     )
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationAssessment(
       id = jpa.id,
@@ -47,7 +49,8 @@ class AssessmentTransformer(
       allocatedToStaffMemberId = jpa.allocatedToUser.id,
       submittedAt = jpa.submittedAt,
       decision = transformJpaDecisionToApi(jpa.decision),
-      rejectionRationale = jpa.rejectionRationale
+      rejectionRationale = jpa.rejectionRationale,
+      status = getStatus(jpa)
     )
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
@@ -56,5 +59,11 @@ class AssessmentTransformer(
     JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
     JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
     null -> null
+  }
+
+  private fun getStatus(entity: AssessmentEntity) = when {
+    entity.decision !== null -> AssessmentStatus.completed
+    entity.clarificationNotes.any { it.response == null } -> AssessmentStatus.pending
+    else -> AssessmentStatus.active
   }
 }
