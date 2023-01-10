@@ -126,7 +126,8 @@ class PremisesService(
     name: String,
     notes: String?,
     characteristicIds: List<UUID>,
-    status: PropertyStatus
+    status: PropertyStatus,
+    pdu: String?,
   ) = validated<PremisesEntity> {
 
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
@@ -162,6 +163,10 @@ class PremisesService(
       "$.name" hasValidationError "notUnique"
     }
 
+    if (pdu.isNullOrBlank()) {
+      "$.pdu" hasValidationError "empty"
+    }
+
     if (validationErrors.any()) {
       return fieldValidationError
     }
@@ -179,7 +184,8 @@ class PremisesService(
       totalBeds = 0,
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
-      status = status
+      status = status,
+      pdu = pdu!!,
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -217,7 +223,8 @@ class PremisesService(
     probationRegionId: UUID,
     characteristicIds: List<UUID>,
     notes: String?,
-    status: PropertyStatus
+    status: PropertyStatus,
+    pdu: String?,
   ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
 
     val premises = premisesRepository.findByIdOrNull(premisesId)
@@ -235,6 +242,10 @@ class PremisesService(
 
     if (probationRegion == null) {
       validationErrors["$.probationRegionId"] = "doesNotExist"
+    }
+
+    if (premises is TemporaryAccommodationPremisesEntity && pdu.isNullOrBlank()) {
+      validationErrors["$.pdu"] = "empty"
     }
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -268,6 +279,9 @@ class PremisesService(
       it.characteristics = characteristicEntities.map { it!! }.toMutableList()
       it.notes = if (notes.isNullOrEmpty()) "" else notes
       it.status = status
+      if (it is TemporaryAccommodationPremisesEntity) {
+        it.pdu = pdu!!
+      }
     }
 
     val savedPremises = premisesRepository.save(premises)

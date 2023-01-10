@@ -47,7 +47,8 @@ class PremisesTest : IntegrationTestBase() {
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
-          status = PropertyStatus.pending
+          status = PropertyStatus.pending,
+          pdu = "Some Location"
         )
       )
       .exchange()
@@ -72,7 +73,8 @@ class PremisesTest : IntegrationTestBase() {
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
-          status = PropertyStatus.pending
+          status = PropertyStatus.pending,
+          pdu = "Some Location",
         )
       )
       .exchange()
@@ -87,10 +89,11 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
       .jsonPath("probationRegion.id").isEqualTo("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891")
       .jsonPath("status").isEqualTo("pending")
+      .jsonPath("pdu").isEqualTo("Some Location")
   }
 
   @Test
-  fun `When a premises is updated then all field data is persisted`() {
+  fun `When an Approved Premises is updated then all field data is persisted`() {
 
     val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -129,6 +132,51 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("probationRegion.id").isEqualTo("a02b7727-63aa-46f2-80f1-e0b05b31903c")
       .jsonPath("probationRegion.name").isEqualTo("North West")
       .jsonPath("status").isEqualTo("archived")
+  }
+
+  @Test
+  fun `When a Temporary Accommodation Premises is updated then all field data is persisted`() {
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+      withPdu("Some Location")
+    }
+
+    val premisesToGet = premises[0]
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.put()
+      .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePremises(
+          addressLine1 = "1 somewhere updated",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes updated",
+          localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+          probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.archived,
+          pdu = "Some New Location",
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
+      .jsonPath("postcode").isEqualTo("AB456CD")
+      .jsonPath("notes").isEqualTo("some arbitrary notes updated")
+      .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
+      .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
+      .jsonPath("probationRegion.id").isEqualTo("a02b7727-63aa-46f2-80f1-e0b05b31903c")
+      .jsonPath("probationRegion.name").isEqualTo("North West")
+      .jsonPath("status").isEqualTo("archived")
+      .jsonPath("pdu").isEqualTo("Some New Location")
   }
 
   @Test
@@ -230,6 +278,43 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Trying to update a Temporary Accommodation Premises without a PDU returns 400`() {
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val premisesToGet = premises[0]
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.put()
+      .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePremises(
+          addressLine1 = "1 somewhere updated",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes updated",
+          localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+          probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.archived,
+          pdu = null,
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
   fun `Trying to create a new premises with a non-unique name returns 400`() {
     temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -281,7 +366,8 @@ class PremisesTest : IntegrationTestBase() {
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           characteristicIds = mutableListOf(),
-          status = PropertyStatus.active
+          status = PropertyStatus.active,
+          pdu = "Some Location"
         )
       )
       .exchange()
@@ -431,6 +517,35 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Trying to create a Temporary Accommodation Premises without a PDU returns 400`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .bodyValue(
+        NewPremises(
+          addressLine1 = "1 somewhere",
+          postcode = "AB123CD",
+          notes = "some arbitrary notes",
+          name = "some arbitrary name",
+          localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.pending,
+          pdu = null,
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
   fun `Get all Premises returns OK with correct body`() {
     val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -519,6 +634,7 @@ class PremisesTest : IntegrationTestBase() {
       }
       withService("CAS3")
       withTotalBeds(20)
+      withPdu("Some Location")
     }
 
     // Add some extra premises for the other service that shouldn't be returned

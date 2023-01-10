@@ -2147,6 +2147,12 @@ components:
     TemporaryAccommodationPremises:
       allOf:
         - $ref: '#/components/schemas/Premises'
+        - type: object
+          properties:
+            pdu:
+              type: string
+      required:
+        - pdu
     NewPremises:
       type: object
       properties:
@@ -2172,6 +2178,8 @@ components:
             format: uuid
         status:
           $ref: '#/components/schemas/PropertyStatus'
+        pdu:
+          type: string
       required:
         - name
         - addressLine1
@@ -3256,6 +3264,8 @@ components:
             format: uuid
         status:
           $ref: '#/components/schemas/PropertyStatus'
+        pdu:
+          type: string
       required:
         - addressLine1
         - postcode
