@@ -38,7 +38,7 @@ class PremisesTransformer(
       name = jpa.name,
       addressLine1 = jpa.addressLine1,
       postcode = jpa.postcode,
-      bedCount = jpa.totalBeds,
+      bedCount = jpa.rooms.flatMap { it.beds }.size,
       service = ServiceName.temporaryAccommodation.value,
       notes = jpa.notes,
       availableBedsForToday = availableBedsForToday,
