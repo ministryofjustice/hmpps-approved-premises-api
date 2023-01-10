@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -157,6 +158,10 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
+    every { mockOffenderService.getTeamCaseLoad(username) } returns AuthorisableActionResult.Success(
+      emptyList()
+    )
+
     val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
@@ -165,11 +170,57 @@ class ApplicationServiceTest {
   }
 
   @Test
+  fun `createApplication returns general error when team case load cannot be retrieved`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce()
+    )
+
+    every { mockOffenderService.getTeamCaseLoad(username) } returns AuthorisableActionResult.Unauthorised()
+
+    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
+
+    assertThat(result is ValidatableActionResult.GeneralValidationError).isTrue
+    result as ValidatableActionResult.GeneralValidationError
+    assertThat(result.message).isEqualTo("Unable to check whether CRN is in team(s) case load")
+  }
+
+  @Test
+  fun `createApplication returns FieldValidationError when CRN is not in team caseload`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce()
+    )
+
+    every { mockOffenderService.getTeamCaseLoad(username) } returns AuthorisableActionResult.Success(
+      emptyList()
+    )
+
+    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "notInCaseload")
+  }
+
+  @Test
   fun `createApplication returns FieldValidationError when CRN is LAO restricted`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
+
+    every { mockOffenderService.getTeamCaseLoad(username) } returns AuthorisableActionResult.Success(
+      listOf(
+        ManagedOffenderFactory()
+          .withOffenderCrn(crn)
+          .produce()
+      )
+    )
 
     val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
 
@@ -185,6 +236,14 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce()
+    )
+
+    every { mockOffenderService.getTeamCaseLoad(username) } returns AuthorisableActionResult.Success(
+      listOf(
+        ManagedOffenderFactory()
+          .withOffenderCrn(crn)
+          .produce()
+      )
     )
 
     val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", null, null, null)
@@ -203,6 +262,14 @@ class ApplicationServiceTest {
 
     val user = UserEntityFactory().produce()
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    every { mockOffenderService.getTeamCaseLoad(username) } returns AuthorisableActionResult.Success(
+      listOf(
+        ManagedOffenderFactory()
+          .withOffenderCrn(crn)
+          .produce()
+      )
+    )
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce()

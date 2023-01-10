@@ -59,6 +59,15 @@ class ApplicationService(
       return fieldValidationError
     }
 
+    val teamCaseload = when (val teamCaseloadResult = offenderService.getTeamCaseLoad(username)) {
+      is AuthorisableActionResult.Success -> teamCaseloadResult.entity
+      else -> return generalError("Unable to check whether CRN is in team(s) case load")
+    }
+
+    if (teamCaseload.none { it.offenderCrn == crn }) {
+      "$.crn" hasValidationError "notInCaseload"
+    }
+
     when (offenderService.getOffenderByCrn(crn, username)) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
