@@ -868,6 +868,37 @@ class AssessmentServiceTest {
     }
 
     @Test
+    fun `updateAssessmentClarificationNote returns an error if the note already has a response`() {
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+      every {
+        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
+          assessment.id,
+          assessmentClarificationNoteEntity.id
+        )
+      } returns AssessmentClarificationNoteEntityFactory()
+        .withAssessment(assessment)
+        .withCreatedBy(user)
+        .withResponse("I already have a response!")
+        .produce()
+
+      val result = assessmentService.updateAssessmentClarificationNote(
+        user,
+        assessment.id,
+        assessmentClarificationNoteEntity.id,
+        "Some response",
+        LocalDate.parse("2022-03-03")
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+      assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+
+      val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+      assertThat(generalValidationError.message).isEqualTo("A response has already been added to this note")
+    }
+
+    @Test
     fun `updateAssessmentClarificationNote returns unauthorised if the note is not owned by the requesting user`() {
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every {

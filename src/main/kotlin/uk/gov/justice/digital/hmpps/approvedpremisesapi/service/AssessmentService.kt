@@ -254,6 +254,12 @@ class AssessmentService(
       return AuthorisableActionResult.Unauthorised()
     }
 
+    if (clarificationNoteEntity.response !== null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("A response has already been added to this note")
+      )
+    }
+
     clarificationNoteEntity.response = response
     clarificationNoteEntity.responseReceivedOn = responseReceivedOn
 
