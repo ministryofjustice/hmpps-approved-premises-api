@@ -355,7 +355,7 @@ class OffenderService(
       is ClientResult.Failure.Other -> staffDetailsResult.throwException()
     }
 
-    val uniqueManagedOffenders = staffDetails.teams.flatMap {
+    val uniqueManagedOffenders = staffDetails.teams?.flatMap {
       val caseloadResult = communityApiClient.getCaseloadForTeam(it.code)
 
       val caseload = when (caseloadResult) {
@@ -370,9 +370,9 @@ class OffenderService(
       }
 
       caseload.managedOffenders
-    }.distinctBy {
+    }?.distinctBy {
       it.offenderCrn
-    }
+    } ?: emptyList()
 
     return AuthorisableActionResult.Success(
       uniqueManagedOffenders
