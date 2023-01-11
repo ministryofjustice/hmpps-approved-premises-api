@@ -15,7 +15,7 @@ val sentryVersion = "6.9.0"
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("com.vladmihalcea:hibernate-types-55:2.21.0")
+  implementation("com.vladmihalcea:hibernate-types-55:2.21.1")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
