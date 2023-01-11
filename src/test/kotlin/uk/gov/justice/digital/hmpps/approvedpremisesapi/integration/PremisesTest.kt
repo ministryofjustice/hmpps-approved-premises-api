@@ -953,6 +953,35 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `The total bedspaces on a Temporary Accommodation Premises is equal to the sum of the bedspaces in all Rooms attached to the Premises`() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val room = roomEntityFactory.produceAndPersist {
+      withYieldedPremises { premises }
+    }
+
+    bedEntityFactory.produceAndPersistMultiple(5) {
+      withYieldedRoom { room }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.bedCount").isEqualTo(5)
+  }
+
+  @Test
   fun `Create new Room for Premises returns 201 Created with correct body when given valid data`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
