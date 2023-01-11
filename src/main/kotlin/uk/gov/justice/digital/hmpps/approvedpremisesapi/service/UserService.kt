@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
 
@@ -39,7 +40,8 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    if (deliusUser.email !== user.email || deliusUser.telephoneNumber !== user.telephoneNumber) {
+    if (userHasChanged(user, deliusUser)) {
+      user.name = deliusUser.staff.fullName
       user.email = deliusUser.email
       user.telephoneNumber = deliusUser.telephoneNumber
 
@@ -109,5 +111,9 @@ class UserService(
 
   fun clearQualifications(user: UserEntity) {
     userQualificationAssignmentRepository.deleteAllById(user.qualifications.map(UserQualificationAssignmentEntity::id))
+  }
+
+  private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
+    return (deliusUser.email !== user.email) || (deliusUser.telephoneNumber !== user.telephoneNumber) || (deliusUser.staff.fullName != user.name)
   }
 }

@@ -3351,6 +3351,8 @@ components:
     User:
       type: object
       properties:
+        name:
+          type: string
         deliusUsername:
           type: string
         email:
@@ -3366,6 +3368,7 @@ components:
           items:
             $ref: '#/components/schemas/UserQualification'
       required:
+        - name
         - deliusUsername
         - email
         - roles

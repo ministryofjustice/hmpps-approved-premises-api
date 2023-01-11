@@ -72,6 +72,7 @@ class ProfileTest : IntegrationTestBase() {
           User(
             deliusUsername = deliusUsername,
             email = email,
+            name = userEntity.name,
             telephoneNumber = telephoneNumber,
             roles = listOf(ApiUserRole.assessor),
             qualifications = listOf(ApiUserQualification.pipe)

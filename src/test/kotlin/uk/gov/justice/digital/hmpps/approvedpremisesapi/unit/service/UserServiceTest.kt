@@ -145,7 +145,7 @@ class UserServiceTest {
       var entity = result.entity
 
       assertThat(entity.id).isEqualTo(user.id)
-      assertThat(entity.name).isEqualTo(user.name)
+      assertThat(entity.name).isEqualTo("$forename $surname")
       assertThat(entity.deliusUsername).isEqualTo(user.deliusUsername)
       assertThat(entity.email).isEqualTo(deliusUser.email)
       assertThat(entity.telephoneNumber).isEqualTo(deliusUser.telephoneNumber)
@@ -160,11 +160,14 @@ class UserServiceTest {
       val telephoneNumber = "0123456789"
 
       val user = userFactory
+        .withName("$forename $surname")
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
         .produce()
 
       val deliusUser = staffUserDetailsFactory
+        .withForenames(forename)
+        .withSurname(surname)
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
         .produce()

@@ -16,6 +16,7 @@ class UserTransformer {
     deliusUsername = jpa.deliusUsername,
     roles = jpa.roles.map(::transformRoleToApi),
     email = jpa.email,
+    name = jpa.name,
     telephoneNumber = jpa.telephoneNumber,
     qualifications = jpa.qualifications.map(::transformQualificationToApi)
   )
