@@ -9,7 +9,7 @@ data class StaffUserDetails(
   val staffCode: String,
   val staffIdentifier: Long,
   val staff: StaffNames,
-  val teams: List<StaffUserTeamMembership>
+  val teams: List<StaffUserTeamMembership>?
 )
 
 data class StaffNames(
