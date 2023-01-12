@@ -23,6 +23,9 @@ import javax.persistence.Table
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
+
+  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn IN (:crns)")
+  fun <T : ApplicationEntity> findByCrnIn(crns: List<String>, type: Class<T>): List<ApplicationEntity>
 }
 
 @Entity

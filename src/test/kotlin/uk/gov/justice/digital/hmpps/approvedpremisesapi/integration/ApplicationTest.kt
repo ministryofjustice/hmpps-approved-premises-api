@@ -38,6 +38,11 @@ class ApplicationTest : IntegrationTestBase() {
     .withNomsNumber("NOMS321")
     .produce()
 
+  private val otherOffenderDetails = OffenderDetailsSummaryFactory()
+    .withCrn("OTHERCRN")
+    .withNomsNumber("OTHERNOMS")
+    .produce()
+
   @BeforeEach
   fun setup() {
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
@@ -46,8 +51,15 @@ class ApplicationTest : IntegrationTestBase() {
       .withOffenderNo("NOMS321")
       .produce()
 
+    val otherInmateDetail = InmateDetailFactory()
+      .withOffenderNo("OTHERNOMS")
+      .produce()
+
     mockOffenderDetailsCommunityApiCall(offenderDetails)
     mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    mockOffenderDetailsCommunityApiCall(otherOffenderDetails)
+    mockInmateDetailPrisonsApiCall(otherInmateDetail)
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
   }
@@ -62,7 +74,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all applications returns 200 with correct body`() {
+  fun `Get all applications returns 200 with correct body - when user does not have roles returns applications within caseload`() {
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -103,9 +115,10 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
+    val username = "PROBATIONPERSON"
+    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
 
-    val upToDateApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val upToDateApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
@@ -118,14 +131,47 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val outdatedApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val outdatedApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCreatedByUser(user)
       withCrn(offenderDetails.otherIds.crn)
       withData("{}")
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val outdatedApplicationEntityNotInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(olderJsonSchema)
+      withCreatedByUser(user)
+      withCrn(otherOffenderDetails.otherIds.crn)
+      withData("{}")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(offenderDetails.otherIds.crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
 
     val rawResponseBody = webTestClient.get()
       .uri("/applications")
@@ -140,34 +186,217 @@ class ApplicationTest : IntegrationTestBase() {
     val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
 
     assertThat(responseBody).anyMatch {
-      outdatedApplicationEntity.id == it.id &&
-        outdatedApplicationEntity.crn == it.person?.crn &&
-        outdatedApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        outdatedApplicationEntity.createdByUser.id == it.createdByUserId &&
-        outdatedApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(outdatedApplicationEntity.data) == serializableToJsonNode(it.data) &&
+      outdatedApplicationEntityInCaseload.id == it.id &&
+        outdatedApplicationEntityInCaseload.crn == it.person?.crn &&
+        outdatedApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
+        outdatedApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
+        outdatedApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(outdatedApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
     }
 
     assertThat(responseBody).anyMatch {
-      upToDateApplicationEntity.id == it.id &&
-        upToDateApplicationEntity.crn == it.person?.crn &&
-        upToDateApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upToDateApplicationEntity.createdByUser.id == it.createdByUserId &&
-        upToDateApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(upToDateApplicationEntity.data) == serializableToJsonNode(it.data) &&
+      upToDateApplicationEntityInCaseload.id == it.id &&
+        upToDateApplicationEntityInCaseload.crn == it.person?.crn &&
+        upToDateApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
+        upToDateApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
+        upToDateApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(upToDateApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+    }
+
+    assertThat(responseBody).noneMatch {
+      outdatedApplicationEntityNotInCaseload.id == it.id
+    }
+  }
+
+  @Test
+  fun `Get all applications returns 200 with correct body - when user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns all applications`() {
+    val username = "PROBATIONPERSON"
+    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
+
+    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+
+    val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+      withSchema(
+        """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """
+      )
+    }
+
+    val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
+      withSchema(
+        """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": { }
+        }
+        """
+      )
+    }
+
+    val upToDateApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(newestJsonSchema)
+      withCrn(offenderDetails.otherIds.crn)
+      withCreatedByUser(user)
+      withData(
+        """
+          {
+             "thingId": 123
+          }
+          """
+      )
+    }
+
+    val outdatedApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(olderJsonSchema)
+      withCreatedByUser(user)
+      withCrn(offenderDetails.otherIds.crn)
+      withData("{}")
+    }
+
+    val outdatedApplicationEntityNotInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(olderJsonSchema)
+      withCreatedByUser(user)
+      withCrn(otherOffenderDetails.otherIds.crn)
+      withData("{}")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    listOf(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER).forEach { role ->
+      userRoleAssignmentRepository.deleteAll()
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(user)
+        withRole(role)
+      }
+
+      mockStaffUserInfoCommunityApiCall(
+        StaffUserDetailsFactory()
+          .withUsername(username)
+          .withTeams(
+            listOf(
+              StaffUserTeamMembershipFactory()
+                .withCode("TEAM1")
+                .produce()
+            )
+          )
+          .produce()
+      )
+
+      mockTeamCaseloadCall(
+        "TEAM1",
+        TeamCaseLoad(
+          managedOffenders = listOf(
+            ManagedOffenderFactory()
+              .withOffenderCrn(offenderDetails.otherIds.crn)
+              .produce()
+          )
+        )
+      )
+
+      mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+      mockOffenderUserAccessCommunityApiCall(username, otherOffenderDetails.otherIds.crn, false, false)
+
+      val rawResponseBody = webTestClient.get()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
+
+      assertThat(responseBody).anyMatch {
+        outdatedApplicationEntityInCaseload.id == it.id &&
+          outdatedApplicationEntityInCaseload.crn == it.person?.crn &&
+          outdatedApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
+          outdatedApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
+          outdatedApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+          serializableToJsonNode(outdatedApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
+          olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+      }
+
+      assertThat(responseBody).anyMatch {
+        upToDateApplicationEntityInCaseload.id == it.id &&
+          upToDateApplicationEntityInCaseload.crn == it.person?.crn &&
+          upToDateApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
+          upToDateApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
+          upToDateApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+          serializableToJsonNode(upToDateApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
+          newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+      }
+
+      assertThat(responseBody).anyMatch {
+        outdatedApplicationEntityNotInCaseload.id == it.id &&
+          outdatedApplicationEntityNotInCaseload.crn == it.person?.crn &&
+          outdatedApplicationEntityNotInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
+          outdatedApplicationEntityNotInCaseload.createdByUser.id == it.createdByUserId &&
+          outdatedApplicationEntityNotInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+          serializableToJsonNode(outdatedApplicationEntityNotInCaseload.data) == serializableToJsonNode(it.data) &&
+          olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+      }
     }
   }
 
   @Test
   fun `Get list of applications returns 500 when a person cannot be found`() {
     val crn = "X1234"
+    val username = "PROBATIONPERSON"
 
     produceAndPersistBasicApplication(crn)
     mockOffenderDetailsCommunityApiCall404(crn)
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
 
     webTestClient.get()
       .uri("/applications")
@@ -182,6 +411,7 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Get list of applications returns 500 when a person has no NOMS number`() {
     val crn = "X1234"
+    val username = "PROBATIONPERSON"
 
     produceAndPersistBasicApplication(crn)
 
@@ -190,6 +420,31 @@ class ApplicationTest : IntegrationTestBase() {
       .withoutNomsNumber()
       .produce()
 
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
     mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
@@ -207,6 +462,7 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Get list of applications returns 500 when the person cannot be fetched from the prisons API`() {
     val crn = "X1234"
+    val username = "PROBATIONPERSON"
 
     produceAndPersistBasicApplication(crn)
 
@@ -215,10 +471,36 @@ class ApplicationTest : IntegrationTestBase() {
       .withNomsNumber("ABC123")
       .produce()
 
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(offenderDetails.otherIds.crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+
     mockOffenderDetailsCommunityApiCall(offenderDetails)
     offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     webTestClient.get()
       .uri("/applications")

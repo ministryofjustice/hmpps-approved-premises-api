@@ -90,8 +90,21 @@ class ApplicationServiceTest {
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
+    every { mockApplicationRepository.findByCrnIn(applicationEntities.map { it.crn }, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockOffenderService.getTeamCaseLoad(any()) } answers {
+      AuthorisableActionResult.Success(
+        applicationEntities.map {
+          ManagedOffenderFactory()
+            .withOffenderCrn(it.crn)
+            .produce()
+        }
+      )
+    }
+
+    applicationEntities.forEach {
+      every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
+    }
 
     assertThat(applicationService.getAllApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).containsAll(applicationEntities)
   }
