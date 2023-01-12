@@ -464,16 +464,60 @@ components:
         username:
           type: string
           example: JohnSmithNPS
+    Cru:
+      type: object
+      properties:
+        code:
+          type: string
+          example: N02
+          readOnly: true
+        name:
+          type: string
+          example: NPS North East
+          readOnly: true
+    Ldu:
+      type: object
+      properties:
+        code:
+          type: string
+          example: N54PPU
+          readOnly: true
+        name:
+          type: string
+          example: Public Protection NE
+          readOnly: true
+    Region:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NE
+          readOnly: true
+        name:
+          type: string
+          example: North East
+          readOnly: true
+    Team:
+      type: object
+      properties:
+        code:
+          type: string
+          example: N54NGH
+          readOnly: true
+        name:
+          type: string
+          example: Gateshead 1
+          readOnly: true
     ProbationArea:
       type: object
       properties:
         code:
           type: string
-          example: N54
+          example: N02
           readOnly: true
         name:
           type: string
-          example: North East Region
+          example: NPS North East
           readOnly: true
     PersonReference:
       type: object
@@ -497,18 +541,55 @@ components:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
           $ref: '#/components/schemas/DeliusEventNumber'
+        mappaCategories:
+          type: string
+          example: 'M2'
+          readOnly: true
+        sentenceLengthInMonths:
+          type: integer
+          example: 57
+          readOnly: true
+        offenceDescription:
+          type: string
+          example: 'Wounding or inflicting grievous bodily harm (inflicting bodily injury with or without weapon) (S20) - 00801'
+          readOnly: true
+        releaseType:
+          type: string
+          example: 'Release on Temporary Licence (ROTL)'
+          readOnly: true
+        age:
+          type: integer
+          example: 43
+          readOnly: true
+        gender:
+          type: string
+          readOnly: true
+          enum:
+            - Male
+            - Female
         targetLocation:
           type: string
-          example: Gateshead
-        probationArea:
-          $ref: '#/components/schemas/ProbationArea'
+          example: LS2
         submittedAt:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
           readOnly: true
         submittedBy:
-          $ref: '#/components/schemas/StaffMember'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            probationArea:
+              $ref: '#/components/schemas/ProbationArea'
+            cru:
+              $ref: '#/components/schemas/Cru'
+            team:
+              $ref: '#/components/schemas/Team'
+            ldu:
+              $ref: '#/components/schemas/Ldu'
+            region:
+              $ref: '#/components/schemas/Region'
 
     ApplicationWithdrawn:
       type: object
@@ -548,9 +629,14 @@ components:
           format: date-time
           readOnly: true
         assessedBy:
-          $ref: '#/components/schemas/StaffMember'
-        assessmentArea:
-          $ref: '#/components/schemas/ProbationArea'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            probationArea:
+              $ref: '#/components/schemas/ProbationArea'
+            cru:
+              $ref: '#/components/schemas/Cru'
         decision:
           type: string
           example: Rejected
@@ -577,7 +663,12 @@ components:
           format: date-time
           readOnly: true
         bookedBy:
-          $ref: '#/components/schemas/StaffMember'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            cru:
+              $ref: '#/components/schemas/Cru'
         premises:
           $ref: '#/components/schemas/Premises'
         arrivalOn:
@@ -610,7 +701,12 @@ components:
           format: date-time
           readOnly: true
         attemptedBy:
-          $ref: '#/components/schemas/StaffMember'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            cru:
+              $ref: '#/components/schemas/Cru'
         failureDescription:
           type: string
           example: No availability
