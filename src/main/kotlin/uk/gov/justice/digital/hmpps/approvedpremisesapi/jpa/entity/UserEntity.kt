@@ -39,7 +39,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID> {
 data class UserEntity(
   @Id
   val id: UUID,
-  val name: String,
+  var name: String,
   val deliusUsername: String,
   val deliusStaffIdentifier: Long,
   var email: String,

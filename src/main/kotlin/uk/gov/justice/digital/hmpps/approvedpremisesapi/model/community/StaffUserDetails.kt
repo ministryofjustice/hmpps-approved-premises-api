@@ -14,7 +14,8 @@ data class StaffUserDetails(
 
 data class StaffNames(
   val forenames: String,
-  val surname: String
+  val surname: String,
+  val fullName: String = "$forenames $surname"
 )
 
 data class StaffUserTeamMembership(
