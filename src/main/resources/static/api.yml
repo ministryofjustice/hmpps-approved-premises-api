@@ -2091,6 +2091,12 @@ components:
         addressLine1:
           type: string
           example: one something street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        town:
+          type: string
+          example: Braintree
         postcode:
           type: string
           example: LS1 3AD
@@ -2159,6 +2165,10 @@ components:
         name:
           type: string
         addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        town:
           type: string
         postcode:
           type: string
@@ -3245,6 +3255,10 @@ components:
       type: object
       properties:
         addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        town:
           type: string
         postcode:
           type: string
