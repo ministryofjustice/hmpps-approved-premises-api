@@ -22,6 +22,8 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var postcode: Yielded<String> = { randomPostCode() }
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
+  private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
+  private var town: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
@@ -37,6 +39,14 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
 
   fun withAddressLine1(addressLine1: String) = apply {
     this.addressLine1 = { addressLine1 }
+  }
+
+  fun withAddressLine2(addressLine2: String) = apply {
+    this.addressLine2 = { addressLine2 }
+  }
+
+  fun withTown(town: String) = apply {
+    this.town = { town }
   }
 
   fun withNotes(notes: String) = apply {
@@ -89,6 +99,8 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     bookings = mutableListOf(),
     lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
+    addressLine2 = this.addressLine2(),
+    town = this.town(),
     notes = this.notes(),
     rooms = mutableListOf(),
     characteristics = mutableListOf(),

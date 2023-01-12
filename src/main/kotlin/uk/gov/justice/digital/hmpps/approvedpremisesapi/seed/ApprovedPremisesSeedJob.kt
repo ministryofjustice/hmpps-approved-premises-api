@@ -79,6 +79,8 @@ class ApprovedPremisesSeedJob(
         id = row.id,
         name = row.name,
         addressLine1 = row.addressLine1,
+        addressLine2 = null,
+        town = null,
         postcode = row.postcode,
         totalBeds = row.totalBeds,
         notes = row.notes,

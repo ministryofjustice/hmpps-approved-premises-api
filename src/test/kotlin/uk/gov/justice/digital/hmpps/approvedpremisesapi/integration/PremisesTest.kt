@@ -43,6 +43,8 @@ class PremisesTest : IntegrationTestBase() {
         NewPremises(
           name = "test-premises",
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB123CD",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
@@ -67,6 +69,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         NewPremises(
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           name = "some arbitrary name",
@@ -82,6 +86,8 @@ class PremisesTest : IntegrationTestBase() {
       .isCreated
       .expectBody()
       .jsonPath("addressLine1").isEqualTo("1 somewhere")
+      .jsonPath("addressLine2").isEqualTo("Some district")
+      .jsonPath("town").isEqualTo("Somewhere")
       .jsonPath("postcode").isEqualTo("AB123CD")
       .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
       .jsonPath("notes").isEqualTo("some arbitrary notes")
@@ -112,6 +118,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdatePremises(
           addressLine1 = "1 somewhere updated",
+          addressLine2 = "Some other district",
+          town = "Somewhere Else",
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
@@ -125,6 +133,8 @@ class PremisesTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
+      .jsonPath("addressLine2").isEqualTo("Some other district")
+      .jsonPath("town").isEqualTo("Somewhere Else")
       .jsonPath("postcode").isEqualTo("AB456CD")
       .jsonPath("notes").isEqualTo("some arbitrary notes updated")
       .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
@@ -155,6 +165,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdatePremises(
           addressLine1 = "1 somewhere updated",
+          addressLine2 = "Some other district",
+          town = "Somewhere Else",
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
@@ -169,6 +181,8 @@ class PremisesTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
+      .jsonPath("addressLine2").isEqualTo("Some other district")
+      .jsonPath("town").isEqualTo("Somewhere Else")
       .jsonPath("postcode").isEqualTo("AB456CD")
       .jsonPath("notes").isEqualTo("some arbitrary notes updated")
       .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
@@ -191,6 +205,8 @@ class PremisesTest : IntegrationTestBase() {
         NewPremises(
           name = "",
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
@@ -226,6 +242,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdatePremises(
           addressLine1 = "1 somewhere updated",
+          addressLine2 = "Some other district",
+          town = "Somewhere Else",
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
@@ -297,6 +315,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdatePremises(
           addressLine1 = "1 somewhere updated",
+          addressLine2 = "Some other district",
+          town = "Somewhere Else",
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
@@ -333,6 +353,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         UpdatePremises(
           addressLine1 = "1 somewhere updated",
+          addressLine2 = "Some other district",
+          town = "Somewhere Else",
           postcode = "AB456CD",
           notes = "some arbitrary notes updated",
           localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
@@ -370,6 +392,8 @@ class PremisesTest : IntegrationTestBase() {
         NewPremises(
           name = "premises-name-conflict",
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
@@ -397,6 +421,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         NewPremises(
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB123CD",
           name = "some arbitrary name",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
@@ -426,6 +452,8 @@ class PremisesTest : IntegrationTestBase() {
           name = "arbitrary_test_name",
           postcode = "AB123CD",
           addressLine1 = "",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           notes = "some notes",
@@ -454,6 +482,8 @@ class PremisesTest : IntegrationTestBase() {
           name = "arbitrary_test_name",
           postcode = "",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           notes = "some notes",
@@ -481,6 +511,8 @@ class PremisesTest : IntegrationTestBase() {
           name = "arbitrary_test_name",
           postcode = "AB123CD",
           addressLine1 = "FIRST LINE OF THE ADDRESS",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
           probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
           notes = "some notes",
@@ -508,6 +540,8 @@ class PremisesTest : IntegrationTestBase() {
         NewPremises(
           name = "arbitrary_test_name",
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB456CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
@@ -564,6 +598,8 @@ class PremisesTest : IntegrationTestBase() {
         NewPremises(
           name = "arbitrary_test_name",
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB456CD",
           notes = "some arbitrary notes",
           localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
@@ -591,6 +627,8 @@ class PremisesTest : IntegrationTestBase() {
       .bodyValue(
         NewPremises(
           addressLine1 = "1 somewhere",
+          addressLine2 = "Some district",
+          town = "Somewhere",
           postcode = "AB123CD",
           notes = "some arbitrary notes",
           name = "some arbitrary name",
