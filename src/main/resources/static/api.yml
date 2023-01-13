@@ -2132,7 +2132,6 @@ components:
         - availableBedsForToday
         - probationRegion
         - apArea
-        - localAuthorityArea
         - status
     ApprovedPremises:
       allOf:
@@ -2144,6 +2143,7 @@ components:
               example: NEHOPE1
       required:
         - apCode
+        - localAuthorityArea
     TemporaryAccommodationPremises:
       allOf:
         - $ref: '#/components/schemas/Premises'
@@ -2184,7 +2184,6 @@ components:
         - name
         - addressLine1
         - postcode
-        - localAuthorityAreaId
         - probationRegionId
         - characteristicIds
         - status
@@ -3269,7 +3268,6 @@ components:
       required:
         - addressLine1
         - postcode
-        - localAuthorityAreaId
         - probationRegionId
         - characteristicIds
         - status
