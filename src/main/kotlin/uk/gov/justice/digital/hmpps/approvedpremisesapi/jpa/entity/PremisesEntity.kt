@@ -47,7 +47,7 @@ abstract class PremisesEntity(
   var probationRegion: ProbationRegionEntity,
   @ManyToOne
   @JoinColumn(name = "local_authority_area_id")
-  var localAuthorityArea: LocalAuthorityAreaEntity,
+  var localAuthorityArea: LocalAuthorityAreaEntity?,
   @OneToMany(mappedBy = "premises")
   val bookings: MutableList<BookingEntity>,
   @OneToMany(mappedBy = "premises")
@@ -113,7 +113,7 @@ class TemporaryAccommodationPremisesEntity(
   totalBeds: Int,
   notes: String,
   probationRegion: ProbationRegionEntity,
-  localAuthorityArea: LocalAuthorityAreaEntity,
+  localAuthorityArea: LocalAuthorityAreaEntity?,
   bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<LostBedsEntity>,
   rooms: MutableList<RoomEntity>,

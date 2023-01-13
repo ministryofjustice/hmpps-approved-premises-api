@@ -29,7 +29,7 @@ class PremisesTransformer(
       availableBedsForToday = availableBedsForToday,
       probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
-      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea),
+      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea!!),
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
       status = jpa.status,
     )
@@ -44,7 +44,7 @@ class PremisesTransformer(
       availableBedsForToday = availableBedsForToday,
       probationRegion = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
-      localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(jpa.localAuthorityArea),
+      localAuthorityArea = jpa.localAuthorityArea?.let { localAuthorityAreaTransformer.transformJpaToApi(it) },
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
       status = jpa.status,
       pdu = jpa.pdu,

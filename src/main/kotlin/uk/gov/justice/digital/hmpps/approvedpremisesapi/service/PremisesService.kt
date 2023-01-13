@@ -121,7 +121,7 @@ class PremisesService(
     addressLine1: String,
     postcode: String,
     service: String,
-    localAuthorityAreaId: UUID,
+    localAuthorityAreaId: UUID?,
     probationRegionId: UUID,
     name: String,
     notes: String?,
@@ -135,9 +135,17 @@ class PremisesService(
       "$.probationRegionId" hasValidationError "doesNotExist"
     }
 
-    val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
-    if (localAuthorityArea == null) {
-      "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+    val localAuthorityArea = if (localAuthorityAreaId == null) {
+      if (service == ServiceName.approvedPremises.value) {
+        "$.localAuthorityAreaId" hasValidationError "empty"
+      }
+      null
+    } else {
+      val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
+      if (localAuthorityArea == null) {
+        "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+      }
+      localAuthorityArea
     }
 
     // start of validation
@@ -177,7 +185,7 @@ class PremisesService(
       addressLine1 = addressLine1,
       postcode = postcode,
       probationRegion = probationRegion!!,
-      localAuthorityArea = localAuthorityArea!!,
+      localAuthorityArea = localAuthorityArea,
       bookings = mutableListOf(),
       lostBeds = mutableListOf(),
       notes = if (notes.isNullOrEmpty()) "" else notes,
@@ -219,7 +227,7 @@ class PremisesService(
     premisesId: UUID,
     addressLine1: String,
     postcode: String,
-    localAuthorityAreaId: UUID,
+    localAuthorityAreaId: UUID?,
     probationRegionId: UUID,
     characteristicIds: List<UUID>,
     notes: String?,
@@ -232,10 +240,17 @@ class PremisesService(
 
     val validationErrors = ValidationErrors()
 
-    val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
-
-    if (localAuthorityArea == null) {
-      validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
+    val localAuthorityArea = if (localAuthorityAreaId == null) {
+      if (premises is ApprovedPremisesEntity) {
+        validationErrors["$.localAuthorityAreaId"] = "empty"
+      }
+      null
+    } else {
+      val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
+      if (localAuthorityArea == null) {
+        validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
+      }
+      localAuthorityArea
     }
 
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
@@ -274,7 +289,7 @@ class PremisesService(
     premises.let {
       it.addressLine1 = addressLine1
       it.postcode = postcode
-      it.localAuthorityArea = localAuthorityArea!!
+      it.localAuthorityArea = localAuthorityArea
       it.probationRegion = probationRegion!!
       it.characteristics = characteristicEntities.map { it!! }.toMutableList()
       it.notes = if (notes.isNullOrEmpty()) "" else notes

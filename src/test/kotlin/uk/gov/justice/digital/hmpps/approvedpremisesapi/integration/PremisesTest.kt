@@ -243,6 +243,42 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Trying to update an Approved Premises with no local authority area id returns 400`() {
+
+    val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+      withTotalBeds(20)
+    }
+
+    val premisesToGet = premises[0]
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.put()
+      .uri("/premises/${premisesToGet.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePremises(
+          addressLine1 = "1 somewhere updated",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes updated",
+          localAuthorityAreaId = null,
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+  }
+
+  @Test
   fun `Trying to update a premises with an invalid probation region id returns 400`() {
     val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -486,6 +522,34 @@ class PremisesTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
       .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+  }
+
+  @Test
+  fun `Trying to create a new Approved Premises with no local authority area id returns 400`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+
+    webTestClient.post()
+      .uri("/premises")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .bodyValue(
+        NewPremises(
+          name = "arbitrary_test_name",
+          addressLine1 = "1 somewhere",
+          postcode = "AB456CD",
+          notes = "some arbitrary notes",
+          localAuthorityAreaId = null,
+          probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
+          characteristicIds = mutableListOf(),
+          status = PropertyStatus.active
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectBody()
+      .jsonPath("title").isEqualTo("Bad Request")
+      .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
   }
 
   @Test
