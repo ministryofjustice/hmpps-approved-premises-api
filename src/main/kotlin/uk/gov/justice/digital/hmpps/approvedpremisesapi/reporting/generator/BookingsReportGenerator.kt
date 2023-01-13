@@ -19,7 +19,11 @@ class BookingsReportGenerator : ReportGenerator<BookingEntity, BookingsReportRow
     BookingsReportRow::endDate from { it.arrival?.expectedDepartureDate }
     BookingsReportRow::actualEndDate from { it.departure?.dateTime?.toLocalDate() }
     BookingsReportRow::currentNightsStayed from { entity ->
-      entity.arrival?.arrivalDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
+      if (entity.departure != null) {
+        null
+      } else {
+        entity.arrival?.arrivalDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
+      }
     }
     BookingsReportRow::actualNightsStayed from { entity ->
       val arrivalDate = entity.arrival?.arrivalDate ?: return@from null

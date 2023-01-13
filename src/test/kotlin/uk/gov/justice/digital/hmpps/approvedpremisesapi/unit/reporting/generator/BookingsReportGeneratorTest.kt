@@ -448,6 +448,55 @@ class BookingsReportGeneratorTest {
   }
 
   @Test
+  fun `The number of nights stayed so far is not returned in the report if the booking has a departure`() {
+    val now = OffsetDateTime.now()
+    val today = now.toLocalDate()
+    val expectedDepartureDate = today.minusDays(3L)
+    val arrivalDate = expectedDepartureDate.minusDays(84L)
+
+    val booking = BookingEntityFactory()
+      .withServiceName(ServiceName.approvedPremises)
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+          .produce()
+      }
+      .produce()
+
+    booking.arrival = ArrivalEntityFactory()
+      .withArrivalDate(arrivalDate)
+      .withExpectedDepartureDate(expectedDepartureDate)
+      .withBooking(booking)
+      .produce()
+
+    booking.departure = DepartureEntityFactory()
+      .withDateTime(now)
+      .withYieldedReason {
+        DepartureReasonEntityFactory()
+          .produce()
+      }
+      .withYieldedMoveOnCategory {
+        MoveOnCategoryEntityFactory()
+          .produce()
+      }
+      .withYieldedDestinationProvider {
+        DestinationProviderEntityFactory()
+          .produce()
+      }
+      .withBooking(booking)
+      .produce()
+
+    val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null))
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::currentNightsStayed]).isNull()
+  }
+
+  @Test
   fun `The actual number of nights stayed is returned in the report if the booking has a departure`() {
     val now = OffsetDateTime.now()
     val today = now.toLocalDate()
