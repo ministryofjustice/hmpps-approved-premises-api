@@ -600,6 +600,7 @@ class PremisesController(
     premises.bookings
       .filter { it.id != thisBookingId }
       .filter { it.bed?.id == bedId }
+      .filter { it.cancellation == null }
       .map { it to (it.arrivalDate..it.departureDate) }
       .find { (_, range) -> range overlaps desiredRange }
       ?.first

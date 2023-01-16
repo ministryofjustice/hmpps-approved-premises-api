@@ -580,6 +580,93 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled bookings for the same bed overlap`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withName("test-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("test-room")
+          withYieldedPremises { premises }
+        }
+      }
+    }
+
+    val existingBooking = bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
+      withCrn("CRN123")
+      withYieldedPremises { premises }
+      withYieldedBed { bed }
+      withArrivalDate(LocalDate.parse("2022-07-15"))
+      withDepartureDate(LocalDate.parse("2022-08-15"))
+    }
+
+    existingBooking.cancellation = cancellationEntityFactory.produceAndPersist {
+      withYieldedBooking { existingBooking }
+      withDate(LocalDate.parse("2022-07-01"))
+      withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn("CRN321")
+      .withFirstName("Mock")
+      .withLastName("Person")
+      .withNomsNumber("NOMS321")
+      .produce()
+
+    val inmateDetail = InmateDetailFactory()
+      .withOffenderNo("NOMS321")
+      .produce()
+
+    mockOffenderDetailsCommunityApiCall(offenderDetails)
+    mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewTemporaryAccommodationBooking(
+          crn = "CRN321",
+          arrivalDate = LocalDate.parse("2022-08-01"),
+          departureDate = LocalDate.parse("2022-08-30"),
+          serviceName = ServiceName.temporaryAccommodation,
+          bedId = bed.id,
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.person.crn").isEqualTo("CRN321")
+      .jsonPath("$.person.name").isEqualTo("Mock Person")
+      .jsonPath("$.arrivalDate").isEqualTo("2022-08-01")
+      .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-01")
+      .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+      .jsonPath("$.keyWorker").isEqualTo(null)
+      .jsonPath("$.status").isEqualTo("provisional")
+      .jsonPath("$.arrival").isEqualTo(null)
+      .jsonPath("$.departure").isEqualTo(null)
+      .jsonPath("$.nonArrival").isEqualTo(null)
+      .jsonPath("$.cancellation").isEqualTo(null)
+      .jsonPath("$.confirmation").isEqualTo(null)
+      .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+      .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+      .jsonPath("$.bed.name").isEqualTo("test-bed")
+  }
+
+  @Test
   fun `Create Arrival without JWT returns 401`() {
     webTestClient.post()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/arrivals")
