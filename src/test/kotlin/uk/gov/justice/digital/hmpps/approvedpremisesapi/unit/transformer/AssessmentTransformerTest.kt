@@ -106,12 +106,25 @@ class AssessmentTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi sets an active status when there is no decision`() {
+  fun `transformJpaToApi sets a deallocated status when there is a deallocated timestamp`() {
     val assessment = assessmentFactory
+      .withDecision(null)
+      .withReallocatedAt(OffsetDateTime.now())
       .produce()
 
     val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
-    assertThat(result.status).isEqualTo(AssessmentStatus.completed)
+    assertThat(result.status).isEqualTo(AssessmentStatus.reallocated)
+  }
+
+  @Test
+  fun `transformJpaToApi sets an active status when there is no decision`() {
+    val assessment = assessmentFactory
+      .withDecision(null)
+      .produce()
+
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+
+    assertThat(result.status).isEqualTo(AssessmentStatus.active)
   }
 }
