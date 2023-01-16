@@ -148,6 +148,12 @@ class AssessmentService(
       )
     }
 
+    if (assessment.reallocatedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+      )
+    }
+
     val validationErrors = ValidationErrors()
     val assessmentData = assessment.data
 
