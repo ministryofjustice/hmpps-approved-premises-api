@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.github.tomakehurst.wiremock.client.WireMock
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CaseLoadPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderFactory
@@ -122,16 +121,4 @@ class TeamCaseloadTest : IntegrationTestBase() {
         )
       )
   }
-
-  fun mockTeamCaseloadCall(teamCode: String, caseload: TeamCaseLoad) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/team/$teamCode/caseload"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(caseload)
-          )
-      )
-  )
 }

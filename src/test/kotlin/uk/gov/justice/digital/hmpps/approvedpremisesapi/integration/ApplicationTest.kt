@@ -15,12 +15,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -571,13 +574,32 @@ class ApplicationTest : IntegrationTestBase() {
         .withSelfDescribedGenderIdentity("This is a self described identity")
         .produce()
     )
+
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
         .withUsername("PROBATIONPERSON")
         .withForenames("Jim")
         .withSurname("Jimmerson")
         .withStaffIdentifier(5678)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
         .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(crn)
+            .produce()
+        )
+      )
     )
 
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
