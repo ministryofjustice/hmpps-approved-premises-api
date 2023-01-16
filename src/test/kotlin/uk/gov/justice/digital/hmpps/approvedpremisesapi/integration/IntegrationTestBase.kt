@@ -82,6 +82,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
@@ -356,6 +357,47 @@ abstract class IntegrationTestBase {
           )
       )
   )
+
+  fun mockOffenderUserAccessCommunityApiCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) {
+    if (!inclusion && !exclusion) {
+      wiremockServer.stubFor(
+        WireMock.get(urlEqualTo("/secure/offenders/crn/$crn/user/$username/userAccess"))
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(200)
+              .withBody(
+                objectMapper.writeValueAsString(
+                  UserOffenderAccess(
+                    userRestricted = false,
+                    userExcluded = false,
+                    restrictionMessage = null
+                  )
+                )
+              )
+          )
+      )
+      return
+    }
+
+    wiremockServer.stubFor(
+      WireMock.get(urlEqualTo("/secure/offenders/crn/$crn/user/$username/userAccess"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(403)
+            .withBody(
+              objectMapper.writeValueAsString(
+                UserOffenderAccess(
+                  userRestricted = inclusion,
+                  userExcluded = exclusion,
+                  restrictionMessage = null
+                )
+              )
+            )
+        )
+    )
+  }
 
   fun mockStaffMembersContextApiCall(staffMember: StaffMember, qCode: String) = wiremockServer.stubFor(
     WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))

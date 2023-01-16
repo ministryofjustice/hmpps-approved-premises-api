@@ -8,8 +8,12 @@ import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 
@@ -36,14 +40,38 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get application documents where application was not created by user returns 403`() {
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+  fun `Get application documents where application not in caseload and user not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns 403`() {
+    val username = "PROBATIONPERSON"
+    val crn = "CRN123"
+
+    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
     val owner = userEntityFactory.produceAndPersist { withDeliusUsername("DIFFERENTPROBATIONPERSON") }
+
+    mockClientCredentialsJwtRequest()
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = emptyList()
+      )
+    )
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(owner)
-      withCrn("CRN123")
+      withCrn(crn)
       withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
     }
 
@@ -57,12 +85,41 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
 
   @Test
   fun `Get application documents returns 200`() {
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val username = "PROBATIONPERSON"
+    val crn = "CRN123"
+
+    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
-      withCrn("CRN123")
+      withCrn(crn)
       withConvictionId(12345)
       withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
     }

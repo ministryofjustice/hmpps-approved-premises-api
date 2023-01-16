@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -36,8 +37,24 @@ class ApplicationService(
       TemporaryAccommodationApplicationEntity::class.java
     }
 
-    return applicationRepository.findAllByCreatedByUser_Id(userEntity.id, entityType)
+    val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+      applicationRepository.findAll()
+    } else {
+      val teamCaseload = when (val teamCaseloadResult = offenderService.getTeamCaseLoad(userDistinguishedName)) {
+        is AuthorisableActionResult.Success -> teamCaseloadResult.entity
+        else -> throw RuntimeException("Unable to get caseload CRNs")
+      }
+
+      val teamCaseloadCrns = teamCaseload.map { it.offenderCrn }
+
+      applicationRepository.findByCrnIn(teamCaseloadCrns, entityType)
+    }
+
+    return applications
       .map(jsonSchemaService::checkSchemaOutdated)
+      .filter {
+        offenderService.canAccessOffender(userDistinguishedName, it.crn)
+      }
   }
 
   fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<ApplicationEntity> {
@@ -45,12 +62,22 @@ class ApplicationService(
       ?: return AuthorisableActionResult.NotFound()
 
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
+      ?: throw RuntimeException("Could not get user")
 
-    if (userEntity != applicationEntity.createdByUser) {
-      return AuthorisableActionResult.Unauthorised()
+    if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+      return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
     }
 
-    return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    val teamCaseload = when (val teamCaseloadResult = offenderService.getTeamCaseLoad(userDistinguishedName)) {
+      is AuthorisableActionResult.Success -> teamCaseloadResult.entity
+      else -> throw RuntimeException("Unable to get caseload CRNs")
+    }
+
+    if (teamCaseload.any { it.offenderCrn == applicationEntity.crn }) {
+      return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    }
+
+    return AuthorisableActionResult.Unauthorised()
   }
 
   fun createApplication(crn: String, username: String, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?) = validated<ApplicationEntity> {

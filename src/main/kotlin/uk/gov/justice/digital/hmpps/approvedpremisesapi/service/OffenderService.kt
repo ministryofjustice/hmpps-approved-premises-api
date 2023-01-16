@@ -109,6 +109,25 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
+  fun canAccessOffender(username: String, crn: String): Boolean {
+    return when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(username, crn)) {
+      is ClientResult.Success -> ! accessResponse.body.userExcluded && ! accessResponse.body.userRestricted
+      is ClientResult.Failure.StatusCode -> {
+        if (accessResponse.status == HttpStatus.FORBIDDEN) {
+          try {
+            accessResponse.deserializeTo<UserOffenderAccess>()
+            return false
+          } catch (exception: Exception) {
+            accessResponse.throwException()
+          }
+        }
+
+        accessResponse.throwException()
+      }
+      is ClientResult.Failure -> accessResponse.throwException()
+    }
+  }
+
   fun getInmateDetailByNomsNumber(nomsNumber: String): AuthorisableActionResult<InmateDetail> {
     val inmateDetail = when (val offenderResponse = prisonsApiClient.getInmateDetails(nomsNumber)) {
       is ClientResult.Success -> offenderResponse.body
