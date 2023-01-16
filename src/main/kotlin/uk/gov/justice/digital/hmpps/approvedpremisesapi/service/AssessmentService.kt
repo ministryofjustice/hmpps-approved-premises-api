@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -29,8 +28,6 @@ class AssessmentService(
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService
 ) {
-  private val log = LoggerFactory.getLogger(this::class.java)
-
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
 
@@ -39,15 +36,11 @@ class AssessmentService(
     val assessments = if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
       assessmentRepository.findAll()
     } else {
-      log.info("Finding assessments allocated to user id: ${user.id}")
       assessmentRepository.findAllByAllocatedToUser_Id(user.id)
     }
 
-    log.info("Found ${assessments.count()} assessments for user")
-
     assessments.forEach {
       it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
-      log.info("Assessment ${it.id} schema up to date?: ${it.schemaUpToDate}")
     }
 
     return assessments
