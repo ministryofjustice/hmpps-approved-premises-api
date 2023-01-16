@@ -113,6 +113,12 @@ class AssessmentService(
       )
     }
 
+    if (assessment.reallocatedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+      )
+    }
+
     assessment.data = data
 
     val savedAssessment = assessmentRepository.save(assessment)
