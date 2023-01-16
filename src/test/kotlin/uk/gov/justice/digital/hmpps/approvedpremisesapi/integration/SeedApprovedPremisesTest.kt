@@ -213,7 +213,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.totalBeds).isEqualTo(csvRow.totalBeds)
     assertThat(persistedApprovedPremises.notes).isEqualTo(csvRow.notes)
     assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
-    assertThat(persistedApprovedPremises.localAuthorityArea.name).isEqualTo(csvRow.localAuthorityArea)
+    assertThat(persistedApprovedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
     assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
   }
@@ -267,7 +267,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.totalBeds).isEqualTo(csvRow.totalBeds)
     assertThat(persistedApprovedPremises.notes).isEqualTo(csvRow.notes)
     assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
-    assertThat(persistedApprovedPremises.localAuthorityArea.name).isEqualTo(csvRow.localAuthorityArea)
+    assertThat(persistedApprovedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
     assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
   }
