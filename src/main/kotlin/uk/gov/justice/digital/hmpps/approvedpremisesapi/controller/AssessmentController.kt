@@ -41,39 +41,45 @@ class AssessmentController(
   override fun assessmentsGet(): ResponseEntity<List<Assessment>> {
     val user = userService.getUserForRequest()
 
+    log.info("For get assessments request, user is: ${user.id} - ${user.deliusUsername}")
+
     val assessments = assessmentService.getVisibleAssessmentsForUser(user)
 
-    return ResponseEntity.ok(
-      assessments.mapNotNull {
-        val applicationCrn = it.application.crn
+    val mappedAssessments = assessments.mapNotNull {
+      val applicationCrn = it.application.crn
 
-        val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
-        val offenderDetails = when (offenderDetailsResult) {
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          is AuthorisableActionResult.NotFound -> {
-            log.error("Could not get Offender Details for CRN: $applicationCrn")
-            return@mapNotNull null
-          }
-          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
-        }
-
-        if (offenderDetails.otherIds.nomsNumber == null) {
-          log.error("No NOMS number for CRN: $applicationCrn")
+      val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
+      val offenderDetails = when (offenderDetailsResult) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.NotFound -> {
+          log.error("Could not get Offender Details for CRN: $applicationCrn")
           return@mapNotNull null
         }
-
-        val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
-        val inmateDetails = when (inmateDetailsResult) {
-          is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-          is AuthorisableActionResult.NotFound -> {
-            log.error("Could not get Inmate Details for NOMS number: ${offenderDetails.otherIds.nomsNumber}")
-            return@mapNotNull null
-          }
-          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
-        }
-
-        assessmentTransformer.transformJpaToApi(it, offenderDetails, inmateDetails)
+        is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
       }
+
+      if (offenderDetails.otherIds.nomsNumber == null) {
+        log.error("No NOMS number for CRN: $applicationCrn")
+        return@mapNotNull null
+      }
+
+      val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
+      val inmateDetails = when (inmateDetailsResult) {
+        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+        is AuthorisableActionResult.NotFound -> {
+          log.error("Could not get Inmate Details for NOMS number: ${offenderDetails.otherIds.nomsNumber}")
+          return@mapNotNull null
+        }
+        is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
+      }
+
+      assessmentTransformer.transformJpaToApi(it, offenderDetails, inmateDetails)
+    }
+
+    log.info("Assessments remaining after mapping ${mappedAssessments.count()}: \n${mappedAssessments.joinToString("\n") { it.id.toString() }}")
+
+    return ResponseEntity.ok(
+      mappedAssessments
     )
   }
 
