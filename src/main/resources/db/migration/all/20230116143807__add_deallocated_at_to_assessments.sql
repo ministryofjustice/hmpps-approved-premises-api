@@ -1,0 +1,1 @@
+ALTER TABLE assessments ADD COLUMN reallocated_at TIMESTAMP WITH TIME ZONE;
