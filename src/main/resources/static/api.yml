@@ -3361,6 +3361,8 @@ components:
         userId:
           type: string
           format: uuid
+      required:
+        - userId
     User:
       type: object
       properties:
