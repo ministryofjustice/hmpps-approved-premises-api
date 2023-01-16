@@ -523,6 +523,8 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 200 with correct body`() {
+    val username = "PROBATIONPERSON"
+
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -562,7 +564,33 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(offenderDetails.otherIds.crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
 
     val rawResponseBody = webTestClient.get()
       .uri("/applications/${applicationEntity.id}")
@@ -588,27 +616,53 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get single application returns 500 when a person cannot be found`() {
+  fun `Get single application returns 403 when person not in case load and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
     val crn = "X1234"
+    val username = "PROBATIONPERSON"
 
     val application = produceAndPersistBasicApplication(crn)
     mockOffenderDetailsCommunityApiCall404(crn)
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(offenderDetails.otherIds.crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
 
     webTestClient.get()
       .uri("/applications/${application.id}")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+      .isForbidden
   }
 
   @Test
   fun `Get single application returns 500 when a person has no NOMS number`() {
     val crn = "X1234"
+    val username = "PROBATIONPERSON"
 
     val application = produceAndPersistBasicApplication(crn)
 
@@ -619,7 +673,33 @@ class ApplicationTest : IntegrationTestBase() {
 
     mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
 
     webTestClient.get()
       .uri("/applications/${application.id}")
@@ -634,6 +714,7 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Get single application returns 500 when the person cannot be fetched from the prisons API`() {
     val crn = "X1234"
+    val username = "PROBATIONPERSON"
 
     val application = produceAndPersistBasicApplication(crn)
 
@@ -645,7 +726,33 @@ class ApplicationTest : IntegrationTestBase() {
     mockOffenderDetailsCommunityApiCall(offenderDetails)
     offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(offenderDetails.otherIds.crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
 
     webTestClient.get()
       .uri("/applications/${application.id}")
@@ -659,6 +766,8 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 200 with correct body, non-upgradable outdated application marked as such`() {
+    val username = "PROBATIONPERSON"
+
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -708,7 +817,33 @@ class ApplicationTest : IntegrationTestBase() {
       withData("{}")
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockTeamCaseloadCall(
+      "TEAM1",
+      TeamCaseLoad(
+        managedOffenders = listOf(
+          ManagedOffenderFactory()
+            .withOffenderCrn(offenderDetails.otherIds.crn)
+            .produce()
+        )
+      )
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
 
     val rawResponseBody = webTestClient.get()
       .uri("/applications/${nonUpgradableApplicationEntity.id}")

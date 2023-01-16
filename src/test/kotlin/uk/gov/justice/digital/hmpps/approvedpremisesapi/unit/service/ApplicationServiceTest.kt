@@ -14,11 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
@@ -120,9 +122,13 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `getApplicationForUsername where application does not belong to user returns Unauthorised result`() {
+  fun `getApplicationForUsername where application is for an Offender not in team caseload and where caller is not one of one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+    every { mockOffenderService.getTeamCaseLoad(distinguishedName) } returns AuthorisableActionResult.Success(
+      emptyList()
+    )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory().produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApprovedPremisesApplicationEntityFactory()
@@ -133,7 +139,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `getApplicationForUsername where application belongs to user returns Success result with entity from db`() {
+  fun `getApplicationForUsername where application is for Offender managed by team returns Success result with entity from db`() {
     val distinguishedName = "SOMEPERSON"
     val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
@@ -152,6 +158,14 @@ class ApplicationServiceTest {
       .withApplicationSchema(newestJsonSchema)
       .produce()
 
+    every { mockOffenderService.getTeamCaseLoad(distinguishedName) } returns AuthorisableActionResult.Success(
+      listOf(
+        ManagedOffenderFactory()
+          .withOffenderCrn(applicationEntity.crn)
+          .produce()
+      )
+    )
+
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
@@ -162,6 +176,51 @@ class ApplicationServiceTest {
     result as AuthorisableActionResult.Success
 
     assertThat(result.entity).isEqualTo(applicationEntity)
+  }
+
+  @Test
+  fun `getApplicationForUsername where application is for Offender not managed by team but user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Success result with entity from db`() {
+    listOf(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER).forEach { role ->
+      val distinguishedName = "SOMEPERSON"
+      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
+        .withSchema("{}")
+        .produce()
+
+      val userEntity = UserEntityFactory()
+        .withId(userId)
+        .withDeliusUsername(distinguishedName)
+        .produce()
+
+      userEntity.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(userEntity)
+          .withRole(role)
+          .produce()
+      )
+
+      val applicationEntity = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(userEntity)
+        .withApplicationSchema(newestJsonSchema)
+        .produce()
+
+      every { mockOffenderService.getTeamCaseLoad(distinguishedName) } returns AuthorisableActionResult.Success(
+        emptyList()
+      )
+
+      every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
+      every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+
+      val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity).isEqualTo(applicationEntity)
+    }
   }
 
   @Test

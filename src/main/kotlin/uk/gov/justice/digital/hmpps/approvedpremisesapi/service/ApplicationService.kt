@@ -62,12 +62,22 @@ class ApplicationService(
       ?: return AuthorisableActionResult.NotFound()
 
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
+      ?: throw RuntimeException("Could not get user")
 
-    if (userEntity != applicationEntity.createdByUser) {
-      return AuthorisableActionResult.Unauthorised()
+    if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+      return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
     }
 
-    return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    val teamCaseload = when (val teamCaseloadResult = offenderService.getTeamCaseLoad(userDistinguishedName)) {
+      is AuthorisableActionResult.Success -> teamCaseloadResult.entity
+      else -> throw RuntimeException("Unable to get caseload CRNs")
+    }
+
+    if (teamCaseload.any { it.offenderCrn == applicationEntity.crn }) {
+      return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    }
+
+    return AuthorisableActionResult.Unauthorised()
   }
 
   fun createApplication(crn: String, username: String, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?) = validated<ApplicationEntity> {
