@@ -46,6 +46,7 @@ data class AssessmentEntity(
   val allocatedToUser: UserEntity,
 
   val allocatedAt: OffsetDateTime,
+  var reallocatedAt: OffsetDateTime?,
 
   val createdAt: OffsetDateTime,
 

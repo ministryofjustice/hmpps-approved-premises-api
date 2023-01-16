@@ -27,6 +27,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var allocatedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
+  private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<AssessmentDecision?> = { AssessmentDecision.ACCEPTED }
   private var allocatedToUser: Yielded<UserEntity>? = null
@@ -61,6 +62,10 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     this.allocatedAt = { allocatedAt }
   }
 
+  fun withReallocatedAt(reallocatedAt: OffsetDateTime?) = apply {
+    this.reallocatedAt = { reallocatedAt }
+  }
+
   fun withSubmittedAt(submittedAt: OffsetDateTime?) = apply {
     this.submittedAt = { submittedAt }
   }
@@ -93,6 +98,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     allocatedToUser = this.allocatedToUser?.invoke() ?: throw RuntimeException("Must provide an allocatedToUser"),
     allocatedAt = this.allocatedAt(),
+    reallocatedAt = this.reallocatedAt(),
     rejectionRationale = this.rejectionRationale(),
     clarificationNotes = this.clarificationNotes()
   )

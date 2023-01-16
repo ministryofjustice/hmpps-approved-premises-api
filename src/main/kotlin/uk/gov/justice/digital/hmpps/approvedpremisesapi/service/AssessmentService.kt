@@ -82,6 +82,7 @@ class AssessmentService(
         data = null, document = null, schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
         allocatedToUser = allocatedUser,
         allocatedAt = dateTimeNow,
+        reallocatedAt = null,
         createdAt = dateTimeNow,
         submittedAt = null,
         decision = null,
