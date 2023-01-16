@@ -762,6 +762,44 @@ class AssessmentServiceTest {
   }
 
   @Test
+  fun `rejectAssessment returns general validation error for Assessment where assessment has been deallocated`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().produce())
+          .produce()
+      )
+      .withSubmittedAt(null)
+      .withDecision(null)
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withReallocatedAt(OffsetDateTime.now())
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("The application has been reallocated, this assessment is read only")
+  }
+
+  @Test
   fun `rejectAssessment returns field validation error when JSON schema not satisfied by data`() {
     val assessmentId = UUID.randomUUID()
 
