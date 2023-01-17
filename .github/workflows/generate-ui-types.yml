@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Trigger AP UI Type Generation Workflow
         if: ${{ github.ref == 'refs/heads/main' }}
-        id: trigger-ui-workflow
+        id: ap-trigger-ui-workflow
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.UI_REPO_ACCESS_TOKEN }}
@@ -26,7 +26,7 @@ jobs:
             })
       - name: Trigger TA UI Type Generation Workflow
         if: ${{ github.ref == 'refs/heads/main' }}
-        id: trigger-ui-workflow
+        id: ta-trigger-ui-workflow
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.UI_REPO_ACCESS_TOKEN }}
