@@ -828,6 +828,11 @@ components:
           $ref: '#/components/schemas/ApplicationId'
         applicationUrl:
           $ref: '#/components/schemas/ApplicationUrl'
+        applicationSubmittedOn:
+          type: string
+          example: '2022-08-21'
+          format: date
+          readOnly: true
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
