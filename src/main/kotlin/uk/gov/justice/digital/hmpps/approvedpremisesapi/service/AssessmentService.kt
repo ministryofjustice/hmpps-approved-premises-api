@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
@@ -26,7 +27,9 @@ class AssessmentService(
   private val userRepository: UserRepository,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
-  private val jsonSchemaService: JsonSchemaService
+  private val jsonSchemaService: JsonSchemaService,
+  private val applicationRepository: ApplicationRepository,
+  private val userService: UserService
 ) {
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
@@ -230,6 +233,78 @@ class AssessmentService(
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment)
+    )
+  }
+
+  fun reallocateAssessment(requestUser: UserEntity, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    if (! requestUser.hasRole(UserRole.WORKFLOW_MANAGER)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val assigneeUserResult = userService.getUserForId(userToAllocateToId)
+
+    val assigneeUser = when (assigneeUserResult) {
+      is AuthorisableActionResult.Success -> assigneeUserResult.entity
+      else -> return AuthorisableActionResult.NotFound()
+    }
+
+    val application = applicationRepository.findByIdOrNull(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw RuntimeException("Only CAS1 Applications are currently supported")
+    }
+
+    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationId)
+
+    if (currentAssessment.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+      )
+    }
+
+    val requiredQualifications = getRequiredQualificationsForApprovedPremisesApplication(application)
+
+    if (! assigneeUser.hasRole(UserRole.ASSESSOR)) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" })
+      )
+    }
+
+    if (! assigneeUser.hasAllQualifications(requiredQualifications)) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingQualifications" })
+      )
+    }
+
+    currentAssessment.reallocatedAt = OffsetDateTime.now()
+    assessmentRepository.save(currentAssessment)
+
+    val dateTimeNow = OffsetDateTime.now()
+
+    val newAssessment = assessmentRepository.save(
+      AssessmentEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
+        allocatedToUser = assigneeUser,
+        allocatedAt = dateTimeNow,
+        reallocatedAt = null,
+        createdAt = dateTimeNow,
+        submittedAt = null,
+        decision = null,
+        schemaUpToDate = true,
+        rejectionRationale = null,
+        clarificationNotes = mutableListOf()
+      )
+    )
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        newAssessment
+      )
     )
   }
 

@@ -19,6 +19,7 @@ import javax.persistence.Table
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun findAllByAllocatedToUser_Id(userId: UUID): List<AssessmentEntity>
+  fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity
 }
 
 @Entity

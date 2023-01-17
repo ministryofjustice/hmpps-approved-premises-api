@@ -54,6 +54,9 @@ data class UserEntity(
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)
   fun hasQualification(userQualification: UserQualification) = qualifications.any { it.qualification === userQualification }
+  fun hasAllQualifications(requiredQualifications: List<UserQualification>) = requiredQualifications.all(::hasQualification)
+
+  override fun toString() = "User $id"
 }
 
 @Repository

@@ -14,19 +14,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -36,12 +40,16 @@ class AssessmentServiceTest {
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
+  private val applicationRepositoryMock = mockk<ApplicationRepository>()
+  private val userServiceMock = mockk<UserService>()
 
   private val assessmentService = AssessmentService(
     userRepositoryMock,
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
-    jsonSchemaServiceMock
+    jsonSchemaServiceMock,
+    applicationRepositoryMock,
+    userServiceMock
   )
 
   @Test
@@ -884,18 +892,287 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
   }
 
+  @Test
+  fun `reallocateAssessment returns Unauthorised when requestUser does not have WORKFLOW_MANAGER role`() {
+    val requestUser = UserEntityFactory()
+      .produce()
+
+    val result = assessmentService.reallocateAssessment(requestUser, UUID.randomUUID(), UUID.randomUUID())
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `reallocateAssessment returns Not Found when assignee user does not exist`() {
+    val requestUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withRole(UserRole.WORKFLOW_MANAGER)
+          .withUser(this)
+          .produce()
+      }
+
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+
+    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.NotFound()
+
+    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, UUID.randomUUID())
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `reallocateAssessment returns Not Found when application does not exist`() {
+    val requestUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withRole(UserRole.WORKFLOW_MANAGER)
+          .withUser(this)
+          .produce()
+      }
+
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+
+    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+      UserEntityFactory()
+        .produce()
+    )
+
+    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
+
+    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns null
+
+    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `reallocateAssessment returns General Validation Error when application already has a submitted assessment`() {
+    val requestUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withRole(UserRole.WORKFLOW_MANAGER)
+          .withUser(this)
+          .produce()
+      }
+
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+
+    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+      UserEntityFactory()
+        .produce()
+    )
+
+    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().produce())
+      .produce()
+
+    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
+
+    val previousAssessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(UserEntityFactory().produce())
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+
+    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
+    validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(validationResult.message).isEqualTo("A decision has already been taken on this assessment")
+  }
+
+  @Test
+  fun `reallocateAssessment returns Field Validation Error when user to assign to is not an ASSESSOR`() {
+    val requestUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withRole(UserRole.WORKFLOW_MANAGER)
+          .withUser(this)
+          .produce()
+      }
+
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+
+    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+      UserEntityFactory()
+        .produce()
+    )
+
+    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().produce())
+      .produce()
+
+    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
+
+    val previousAssessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(UserEntityFactory().produce())
+      .produce()
+
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+
+    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
+    validationResult as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingAssessorRole")
+  }
+
+  @Test
+  fun `reallocateAssessment returns Field Validation Error when user to assign to does not have relevant qualifications`() {
+    val requestUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withRole(UserRole.WORKFLOW_MANAGER)
+          .withUser(this)
+          .produce()
+      }
+
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+
+    val assigneeUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.ASSESSOR)
+          .produce()
+      }
+
+    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+      assigneeUser
+    )
+
+    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().produce())
+      .withIsPipeApplication(true)
+      .produce()
+
+    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
+
+    val previousAssessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(UserEntityFactory().produce())
+      .produce()
+
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+
+    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
+    validationResult as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingQualifications")
+  }
+
+  @Test
+  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one`() {
+    val requestUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withRole(UserRole.WORKFLOW_MANAGER)
+          .withUser(this)
+          .produce()
+      }
+
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+
+    val assigneeUser = UserEntityFactory()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.ASSESSOR)
+          .produce()
+
+        qualifications += UserQualificationAssignmentEntityFactory()
+          .withUser(this)
+          .withQualification(UserQualification.PIPE)
+          .produce()
+      }
+
+    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+      assigneeUser
+    )
+
+    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().produce())
+      .withIsPipeApplication(true)
+      .produce()
+
+    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
+
+    val previousAssessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(UserEntityFactory().produce())
+      .produce()
+
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}"
+    )
+
+    every { assessmentRepositoryMock.save(previousAssessment) } answers { it.invocation.args[0] as AssessmentEntity }
+    every { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    validationResult as ValidatableActionResult.Success
+
+    assertThat(previousAssessment.reallocatedAt).isNotNull
+
+    verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+  }
+
   @Nested
   class UpdateAsssessmentClarificationNote {
     private val userRepositoryMock = mockk<UserRepository>()
     private val assessmentRepositoryMock = mockk<AssessmentRepository>()
     private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
+    private val applicationRepositoryMock = mockk<ApplicationRepository>()
+    private val userServiceMock = mockk<UserService>()
 
     private val assessmentService = AssessmentService(
       userRepositoryMock,
       assessmentRepositoryMock,
       assessmentClarificationNoteRepositoryMock,
-      jsonSchemaServiceMock
+      jsonSchemaServiceMock,
+      applicationRepositoryMock,
+      userServiceMock
     )
 
     private val user = UserEntityFactory()

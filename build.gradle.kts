@@ -85,6 +85,10 @@ tasks.register("bootRunLocal") {
   finalizedBy("bootRun")
 }
 
+tasks.test {
+  jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+}
+
 openApiGenerate {
   generatorName.set("kotlin-spring")
   inputSpec.set("$rootDir/src/main/resources/static/api.yml")
