@@ -40,57 +40,85 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get a booking for an Approved Premises returns OK with the correct body`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+  fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`() {
+    listOf(UserRole.MANAGER, UserRole.MATCHER).forEach { role ->
+      val username = "PROBATIONPERSON-${role.name}"
+      val crn = "CRN123-${role.name}"
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+      val user = userEntityFactory.produceAndPersist {
+        withDeliusUsername(username)
+      }
 
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-    }
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(user)
+        withRole(role)
+      }
 
-    val keyWorker = ContextStaffMemberFactory().produce()
-    mockStaffMembersContextApiCall(keyWorker, premises.qCode)
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    val booking = bookingEntityFactory.produceAndPersist {
-      withPremises(premises)
-      withStaffKeyWorkerCode(keyWorker.code)
-      withCrn("CRN123")
-      withServiceName(ServiceName.approvedPremises)
-    }
+      mockClientCredentialsJwtRequest(username, listOf("ROLE_COMMUNITY"), authSource = "delius")
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn("CRN123")
-      .withNomsNumber("NOMS321")
-      .produce()
-
-    val inmateDetail = InmateDetailFactory()
-      .withOffenderNo("NOMS321")
-      .produce()
-
-    mockOffenderDetailsCommunityApiCall(offenderDetails)
-    mockInmateDetailPrisonsApiCall(inmateDetail)
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/bookings/${booking.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetail, keyWorker)
-        )
+      mockStaffUserInfoCommunityApiCall(
+        StaffUserDetailsFactory()
+          .withUsername(username)
+          .produce()
       )
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+      }
+
+      val keyWorker = ContextStaffMemberFactory().produce()
+      mockStaffMembersContextApiCall(keyWorker, premises.qCode)
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStaffKeyWorkerCode(keyWorker.code)
+        withCrn(crn)
+        withServiceName(ServiceName.approvedPremises)
+      }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withNomsNumber("NOMS321")
+        .produce()
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo("NOMS321")
+        .produce()
+
+      mockOffenderDetailsCommunityApiCall(offenderDetails)
+      mockInmateDetailPrisonsApiCall(inmateDetail)
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/bookings/${booking.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetail, keyWorker)
+          )
+        )
+    }
   }
 
   @Test
   fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val username = "PROBATIONPERSON"
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockClientCredentialsJwtRequest(username, listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -840,8 +868,25 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival does not update arrival or departure date for an Approved Premises booking`() {
+    val username = "PROBATIONPERSON"
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(UserRole.MANAGER)
+    }
+
     val keyWorker = ContextStaffMemberFactory().produce()
     mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     val booking = bookingEntityFactory.produceAndPersist {
       withYieldedPremises {
@@ -860,7 +905,7 @@ class BookingTest : IntegrationTestBase() {
       withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn(booking.crn)
@@ -876,6 +921,8 @@ class BookingTest : IntegrationTestBase() {
     mockOffenderDetailsCommunityApiCall(offenderDetails)
     mockInmateDetailPrisonsApiCall(inmateDetail)
 
+    mockClientCredentialsJwtRequest()
+
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
       .header("Authorization", "Bearer $jwt")
@@ -890,8 +937,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-
-    mockClientCredentialsJwtRequest()
 
     webTestClient.get()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
@@ -909,8 +954,17 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival updates arrival and departure date for a Temporary Accommodation booking`() {
+    val username = "PROBATIONPERSON"
+
     val keyWorker = ContextStaffMemberFactory().produce()
     mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    mockClientCredentialsJwtRequest()
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -938,7 +992,7 @@ class BookingTest : IntegrationTestBase() {
       withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn(booking.crn)
@@ -1041,6 +1095,17 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure does not update departure date for an Approved Premises booking`() {
+    val username = "PROBATIONPERSON"
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(UserRole.MANAGER)
+    }
+
     val keyWorker = ContextStaffMemberFactory().produce()
     mockStaffMembersContextApiCall(keyWorker, "QCODE")
 
@@ -1070,7 +1135,15 @@ class BookingTest : IntegrationTestBase() {
     }
     val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockClientCredentialsJwtRequest()
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn(booking.crn)
       .withFirstName("Mock")
@@ -1117,6 +1190,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure updates the departure date for a Temporary Accommodation booking`() {
+    val username = "PROBATIONUSER"
+
     val keyWorker = ContextStaffMemberFactory().produce()
     mockStaffMembersContextApiCall(keyWorker, "QCODE")
 
@@ -1144,7 +1219,7 @@ class BookingTest : IntegrationTestBase() {
       withServiceScope("temporary-accommodation")
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn(booking.crn)
@@ -1157,8 +1232,16 @@ class BookingTest : IntegrationTestBase() {
       .withOffenderNo("NOMS321")
       .produce()
 
+    mockClientCredentialsJwtRequest()
+
     mockOffenderDetailsCommunityApiCall(offenderDetails)
     mockInmateDetailPrisonsApiCall(inmateDetail)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")

@@ -223,7 +223,13 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val offenderResult = offenderService.getOffenderByCrn(booking.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
+    val offenderResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)
 
     if (offenderResult !is AuthorisableActionResult.Success) {
       throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
