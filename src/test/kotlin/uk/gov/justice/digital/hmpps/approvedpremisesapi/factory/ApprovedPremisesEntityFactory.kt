@@ -22,6 +22,8 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var postcode: Yielded<String> = { randomPostCode() }
   private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
+  private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
+  private var town: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { "CAS1" }
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
@@ -40,6 +42,14 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
 
   fun withAddressLine1(addressLine1: String) = apply {
     this.addressLine1 = { addressLine1 }
+  }
+
+  fun withAddressLine2(addressLine2: String) = apply {
+    this.addressLine2 = { addressLine2 }
+  }
+
+  fun withTown(town: String) = apply {
+    this.town = { town }
   }
 
   fun withNotes(notes: String) = apply {
@@ -93,6 +103,8 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     bookings = mutableListOf(),
     lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
+    addressLine2 = this.addressLine2(),
+    town = this.town(),
     notes = this.notes(),
     qCode = this.qCode(),
     rooms = mutableListOf(),

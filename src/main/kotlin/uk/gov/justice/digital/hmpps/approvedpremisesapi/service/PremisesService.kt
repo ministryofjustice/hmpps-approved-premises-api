@@ -119,6 +119,8 @@ class PremisesService(
 
   fun createNewPremises(
     addressLine1: String,
+    addressLine2: String?,
+    town: String?,
     postcode: String,
     service: String,
     localAuthorityAreaId: UUID?,
@@ -183,6 +185,8 @@ class PremisesService(
       id = UUID.randomUUID(),
       name = name,
       addressLine1 = addressLine1,
+      addressLine2 = addressLine2,
+      town = town,
       postcode = postcode,
       probationRegion = probationRegion!!,
       localAuthorityArea = localAuthorityArea,
@@ -226,6 +230,8 @@ class PremisesService(
   fun updatePremises(
     premisesId: UUID,
     addressLine1: String,
+    addressLine2: String?,
+    town: String?,
     postcode: String,
     localAuthorityAreaId: UUID?,
     probationRegionId: UUID,
@@ -288,6 +294,8 @@ class PremisesService(
 
     premises.let {
       it.addressLine1 = addressLine1
+      it.addressLine2 = addressLine2
+      it.town = town
       it.postcode = postcode
       it.localAuthorityArea = localAuthorityArea
       it.probationRegion = probationRegion!!

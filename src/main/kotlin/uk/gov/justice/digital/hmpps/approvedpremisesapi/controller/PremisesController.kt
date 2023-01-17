@@ -92,6 +92,8 @@ class PremisesController(
       .updatePremises(
         premisesId,
         body.addressLine1,
+        body.addressLine2,
+        body.town,
         body.postcode,
         body.localAuthorityAreaId,
         body.probationRegionId,
@@ -143,6 +145,8 @@ class PremisesController(
     val premises = extractResultEntityOrThrow(
       premisesService.createNewPremises(
         addressLine1 = body.addressLine1,
+        addressLine2 = body.addressLine2,
+        town = body.town,
         postcode = body.postcode,
         service = serviceName,
         localAuthorityAreaId = body.localAuthorityAreaId,

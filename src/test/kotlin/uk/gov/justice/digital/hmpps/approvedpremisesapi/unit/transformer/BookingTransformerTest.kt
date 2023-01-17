@@ -80,7 +80,6 @@ class BookingTransformerTest {
   private val premisesEntity = TemporaryAccommodationPremisesEntity(
     id = UUID.fromString("9703eaaf-164f-4f35-b038-f4de79e4847b"),
     name = "AP",
-    postcode = "ST8ST8",
     totalBeds = 50,
     probationRegion = ProbationRegionEntity(
       id = UUID.fromString("4eae0059-af28-4436-a4d8-7106523866d9"),
@@ -102,6 +101,9 @@ class BookingTransformerTest {
     bookings = mutableListOf(),
     lostBeds = mutableListOf(),
     addressLine1 = "1 somewhere",
+    addressLine2 = "Some district",
+    town = "Somewhere",
+    postcode = "ST8ST8",
     notes = "",
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
