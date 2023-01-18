@@ -1365,8 +1365,20 @@ class BookingTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
-  @Test
-  fun `Create Cancellation on Booking returns OK with correct body`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Create Cancellation on Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val booking = bookingEntityFactory.produceAndPersist {
       withYieldedPremises {
         approvedPremisesEntityFactory.produceAndPersist {
@@ -1382,7 +1394,7 @@ class BookingTest : IntegrationTestBase() {
       withServiceScope("*")
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
