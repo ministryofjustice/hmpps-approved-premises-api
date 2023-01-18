@@ -519,6 +519,12 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     val result = premisesService.createLostBeds(
       premises = premises,
       startDate = body.startDate,
