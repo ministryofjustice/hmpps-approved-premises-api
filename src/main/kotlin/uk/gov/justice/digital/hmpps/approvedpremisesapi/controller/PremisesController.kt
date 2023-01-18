@@ -490,6 +490,12 @@ class PremisesController(
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     if (booking.service == ServiceName.temporaryAccommodation.value) {
       // TODO: Extensions will likely need to check for overlaps once bed-level bookings are implemented for AP
       val bedId = booking.bed?.id
