@@ -1113,8 +1113,19 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
   }
 
-  @Test
-  fun `Create Departure on Booking returns 200 with correct body`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Create Departure on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val keyWorker = ContextStaffMemberFactory().produce()
     mockStaffMembersContextApiCall(keyWorker, "QCODE")
 
@@ -1143,7 +1154,13 @@ class BookingTest : IntegrationTestBase() {
     }
     val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
