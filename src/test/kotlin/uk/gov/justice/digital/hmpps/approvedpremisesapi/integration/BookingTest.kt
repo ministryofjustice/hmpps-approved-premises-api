@@ -341,16 +341,24 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Booking returns OK with correct body`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val username = "PROBATIONUSER"
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    mockClientCredentialsJwtRequest()
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN321")
@@ -401,7 +409,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val username = "PROBATIONPERSON"
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -418,7 +428,13 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
 
@@ -473,16 +489,24 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 400 when bed does not exist on the premises`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val username = "PROBATIONPERSON"
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest()
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN321")
@@ -520,7 +544,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking returns 400 when the departure date is before the arrival date`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val username = "PROBATIONPERSON"
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -537,9 +563,15 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    mockClientCredentialsJwtRequest()
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN321")
@@ -577,7 +609,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed overlaps`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val username = "PROBATIONUSER"
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -603,9 +637,14 @@ class BookingTest : IntegrationTestBase() {
       withDepartureDate(LocalDate.parse("2022-08-15"))
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    mockClientCredentialsJwtRequest()
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN321")
@@ -644,7 +683,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val username = "PROBATIONUSER"
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -676,9 +717,15 @@ class BookingTest : IntegrationTestBase() {
       withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest()
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN321")
