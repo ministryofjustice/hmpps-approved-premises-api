@@ -439,6 +439,12 @@ class PremisesController(
   ): ResponseEntity<Confirmation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     val result = bookingService.createConfirmation(
       booking = booking,
       dateTime = OffsetDateTime.now(),
