@@ -544,6 +544,12 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     return ResponseEntity.ok(premises.lostBeds.map(lostBedsTransformer::transformJpaToApi))
   }
 
