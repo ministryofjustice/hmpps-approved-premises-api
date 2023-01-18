@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
@@ -1586,6 +1587,69 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
       .jsonPath("$.notes").isEqualTo(null)
       .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Create Non Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+    mockStaffMembersContextApiCall(keyWorker, "QCODE")
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withYieldedPremises {
+        approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+      }
+    }
+
+    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewNonarrival(
+          date = LocalDate.parse("2023-01-18"),
+          reason = nonArrivalReason.id,
+          notes = "Notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+      .jsonPath("$.date").isEqualTo("2023-01-18")
+      .jsonPath("$.reason.id").isEqualTo(nonArrivalReason.id.toString())
+      .jsonPath("$.notes").isEqualTo("Notes")
   }
 
   fun withinSeconds(seconds: Long): Matcher<OffsetDateTime> {
