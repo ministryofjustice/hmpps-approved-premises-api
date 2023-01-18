@@ -19,7 +19,7 @@ INSERT INTO
   )
 VALUES
   (
-    'e8b04ceb-95a4-41be-b147-f34bd11393a9',
+    'afcabcb9-7abe-495c-a67e-381380fbcc2d',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     '315VWWC',
@@ -47,7 +47,7 @@ INSERT INTO
   )
 VALUES
   (
-    '84bb08e8-2c36-461a-8f32-1ab55af07d8a',
+    '21b99116-6e7e-4c90-afa0-a1be915fb36c',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     '4Y29R9P',
@@ -75,7 +75,7 @@ INSERT INTO
   )
 VALUES
   (
-    '731e55f3-628d-4492-8927-0174e496c092',
+    '480a0b60-e486-4333-aad0-4e33432a7081',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     '4ZUIHFX',
@@ -104,10 +104,10 @@ INSERT INTO
   )
 VALUES
   (
-    'e88604c0-ed8d-4a8b-b7c0-e9954559ab82',
+    '29fe043d-2a15-42f7-9a1e-fdeca535e893',
     CURRENT_DATE,
     CURRENT_DATE + 84,
-    'PR5E5Y2',
+    'QA93YYK',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
@@ -132,10 +132,10 @@ INSERT INTO
   )
 VALUES
   (
-    '30484627-f3c5-4866-aee9-13488f1b2ac5',
+    '963d2738-2420-4595-83d5-0b11aa2e4a06',
     CURRENT_DATE,
     CURRENT_DATE + 84,
-    'N6OUTAY',
+    '315VWWC',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
@@ -160,7 +160,7 @@ INSERT INTO
   )
 VALUES
   (
-    '8f65b158-2371-40d4-a2e2-c3d60b5d5558',
+    '7e56bed8-8675-4359-8b74-96dd76af599c',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     '52W7TQG',
@@ -188,10 +188,10 @@ INSERT INTO
   )
 VALUES
   (
-    'd8bdae03-7f6a-4674-be0d-9ea081526b62',
+    'fcbec43a-8186-43d0-bfb2-f607e6126ffc',
     CURRENT_DATE,
     CURRENT_DATE + 84,
-    'IHGHXYM',
+    '5EC66UT',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
@@ -216,7 +216,7 @@ INSERT INTO
   )
 VALUES
   (
-    '8a374cd1-f985-4a14-81e2-d2bd4423b037',
+    '3c2e85f6-6fde-4417-91ec-c343d66d0287',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     'Z33A1BU',
@@ -245,10 +245,38 @@ INSERT INTO
   )
 VALUES
   (
-    '5d3a2a8e-85d8-48ca-8722-8e0c00a45210',
-    CURRENT_DATE + 3,
+    'a5f250a6-bdf1-4cdd-b0e7-ceeb888c934d',
+    CURRENT_DATE + 4,
     CURRENT_DATE + 84,
     '52W7TQG',
+    CURRENT_DATE + 4,
+    CURRENT_DATE + 84,
+    '459eeaba-55ac-4a1f-bae2-bad810d4016b',
+    NULL,
+    'approved-premises',
+    CURRENT_DATE
+  );
+
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at"
+  )
+VALUES
+  (
+    'b1e57e3a-254c-452a-846e-681911718789',
+    CURRENT_DATE + 3,
+    CURRENT_DATE + 84,
+    '5EC66UT',
     CURRENT_DATE + 3,
     CURRENT_DATE + 84,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
@@ -273,35 +301,7 @@ INSERT INTO
   )
 VALUES
   (
-    'b884d51b-64cb-46ed-b238-3d05f64bf32f',
-    CURRENT_DATE + 2,
-    CURRENT_DATE + 84,
-    '5EC66UT',
-    CURRENT_DATE + 2,
-    CURRENT_DATE + 84,
-    '459eeaba-55ac-4a1f-bae2-bad810d4016b',
-    NULL,
-    'approved-premises',
-    CURRENT_DATE
-  );
-
-
-INSERT INTO
-  bookings (
-    "id",
-    "arrival_date",
-    "departure_date",
-    "crn",
-    "original_arrival_date",
-    "original_departure_date",
-    "premises_id",
-    "bed_id",
-    "service",
-    "created_at"
-  )
-VALUES
-  (
-    '8fe80127-0af7-4b4c-875f-4949642837c9',
+    '13e80c7e-05f4-4582-9737-afee19f286ef',
     CURRENT_DATE + 2,
     CURRENT_DATE + 84,
     'BWEFOI7',
@@ -329,11 +329,11 @@ INSERT INTO
   )
 VALUES
   (
-    '594a5a6f-3e8b-4041-9ac2-d0940e1c88e2',
-    CURRENT_DATE + 2,
+    '8431d276-a7a8-4836-96d6-9d7cf2625ae4',
+    CURRENT_DATE + 4,
     CURRENT_DATE + 84,
     'GSR1T2F',
-    CURRENT_DATE + 2,
+    CURRENT_DATE + 4,
     CURRENT_DATE + 84,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
@@ -358,7 +358,7 @@ INSERT INTO
   )
 VALUES
   (
-    '9a928d61-a81e-4b05-81d9-bdf0cdfae87e',
+    '16e7f3fb-5353-42fe-b3c1-e6874733d899',
     CURRENT_DATE - 84,
     CURRENT_DATE,
     'HRV83TE',
@@ -383,10 +383,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    '9a928d61-a81e-4b05-81d9-bdf0cdfae87e',
+    '16e7f3fb-5353-42fe-b3c1-e6874733d899',
     CURRENT_DATE,
     CURRENT_DATE,
-    'fb031350-cbc1-4806-b655-961423834a51',
+    'e9543cc9-a253-422a-8a61-0b14de8d1bcc',
     NULL
   );
   
@@ -406,7 +406,7 @@ INSERT INTO
   )
 VALUES
   (
-    '84429449-620d-4c54-a96b-1737405d5d19',
+    'aad04043-9702-474c-a617-bcdf18729d3e',
     CURRENT_DATE - 84,
     CURRENT_DATE,
     'HTVI42B',
@@ -431,10 +431,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    '84429449-620d-4c54-a96b-1737405d5d19',
+    'aad04043-9702-474c-a617-bcdf18729d3e',
     CURRENT_DATE,
     CURRENT_DATE,
-    '05128d6f-0857-4878-a068-65b4792c3055',
+    '2d6e14c7-1c04-4f8e-aec6-e5910a68f33d',
     NULL
   );
   
@@ -455,12 +455,12 @@ INSERT INTO
   )
 VALUES
   (
-    '67ecea03-8714-4b4e-84e3-53ceda7ff950',
+    '26844b1a-d847-4c5b-b8cc-1e3e50c04438',
     CURRENT_DATE - 84,
-    CURRENT_DATE + 2,
+    CURRENT_DATE + 4,
     'HRV83TE',
     CURRENT_DATE - 84,
-    CURRENT_DATE + 2,
+    CURRENT_DATE + 4,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
@@ -480,10 +480,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    '67ecea03-8714-4b4e-84e3-53ceda7ff950',
+    '26844b1a-d847-4c5b-b8cc-1e3e50c04438',
     CURRENT_DATE,
-    CURRENT_DATE + 2,
-    'c496d038-0646-48a2-bfc6-1abe7c7fa3e0',
+    CURRENT_DATE + 4,
+    'db3ef90d-7c78-46bc-a3b4-e80b3b326b48',
     NULL
   );
   
@@ -503,7 +503,7 @@ INSERT INTO
   )
 VALUES
   (
-    '7a3849e1-10ed-4b7c-bf30-e4c53b63c9d8',
+    'c060600b-0e5b-475f-acfd-74a79a7bbd7e',
     CURRENT_DATE - 84,
     CURRENT_DATE + 4,
     'HTVI42B',
@@ -528,10 +528,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    '7a3849e1-10ed-4b7c-bf30-e4c53b63c9d8',
+    'c060600b-0e5b-475f-acfd-74a79a7bbd7e',
     CURRENT_DATE,
     CURRENT_DATE + 4,
-    'e65f0e9a-0d46-4547-86ec-0124853d8ba4',
+    'dc43f4e0-5e09-44af-a7a3-a5482122a6cb',
     NULL
   );
   
@@ -552,12 +552,12 @@ INSERT INTO
   )
 VALUES
   (
-    'd3a4dc33-5915-4e75-a647-ba15801a6071',
+    '78ca5657-1797-46bd-9fc3-3cec04fd8263',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 46,
+    CURRENT_DATE + 48,
     'HUN3BN0',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 46,
+    CURRENT_DATE + 48,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
@@ -577,10 +577,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    'd3a4dc33-5915-4e75-a647-ba15801a6071',
+    '78ca5657-1797-46bd-9fc3-3cec04fd8263',
     CURRENT_DATE,
-    CURRENT_DATE + 46,
-    '75448ffc-10a1-4639-aa11-7882e3e81c7e',
+    CURRENT_DATE + 48,
+    'f15cb65e-79f1-408e-8764-fbe71e9e709f',
     NULL
   );
   
@@ -600,12 +600,12 @@ INSERT INTO
   )
 VALUES
   (
-    'e8723a18-3da2-4b24-9c98-da56f36b07c5',
+    '76b32d8e-1913-4c05-9433-a22f0357a3a4',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 15,
+    CURRENT_DATE + 25,
     'IHGHXYM',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 15,
+    CURRENT_DATE + 25,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
@@ -625,10 +625,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    'e8723a18-3da2-4b24-9c98-da56f36b07c5',
+    '76b32d8e-1913-4c05-9433-a22f0357a3a4',
     CURRENT_DATE,
-    CURRENT_DATE + 15,
-    'f19733aa-dac5-4b52-8781-1434f7b6ec1c',
+    CURRENT_DATE + 25,
+    '819ebbf3-6f88-4b67-a7e9-8ecfe2b8a136',
     NULL
   );
   
@@ -648,12 +648,12 @@ INSERT INTO
   )
 VALUES
   (
-    '3d35aa22-25c0-40b7-9174-e64dd7aa9e27',
+    'f1b73388-93ec-4bcf-9d27-601099015621',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 17,
+    CURRENT_DATE + 8,
     'JCRH9V5',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 17,
+    CURRENT_DATE + 8,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
@@ -673,10 +673,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    '3d35aa22-25c0-40b7-9174-e64dd7aa9e27',
+    'f1b73388-93ec-4bcf-9d27-601099015621',
     CURRENT_DATE,
-    CURRENT_DATE + 17,
-    'e43a91aa-2f94-462b-bfb8-f085a8f69f51',
+    CURRENT_DATE + 8,
+    '75507b9f-d95c-4ed6-baee-1368546a98e5',
     NULL
   );
   
@@ -696,12 +696,12 @@ INSERT INTO
   )
 VALUES
   (
-    '3562ae4e-c1ff-413e-885c-483e7f91a046',
+    '42305942-8b3d-4e98-af0f-4ce0edd40693',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 21,
+    CURRENT_DATE + 60,
     'N6OUTAY',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 21,
+    CURRENT_DATE + 60,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
@@ -721,10 +721,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    '3562ae4e-c1ff-413e-885c-483e7f91a046',
+    '42305942-8b3d-4e98-af0f-4ce0edd40693',
     CURRENT_DATE,
-    CURRENT_DATE + 21,
-    '9aba40a4-508e-4074-b191-ddddf46c0a49',
+    CURRENT_DATE + 60,
+    '4f48352d-d671-4ddf-baef-dc7693dc4d42',
     NULL
   );
   
@@ -744,12 +744,12 @@ INSERT INTO
   )
 VALUES
   (
-    '525c4773-b6a8-41f2-b543-2a613be69a61',
+    '55aa555a-84a9-4aeb-a81d-bdc7a6888c74',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 43,
+    CURRENT_DATE + 52,
     'PR5E5Y2',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 43,
+    CURRENT_DATE + 52,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
@@ -769,10 +769,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    '525c4773-b6a8-41f2-b543-2a613be69a61',
+    '55aa555a-84a9-4aeb-a81d-bdc7a6888c74',
     CURRENT_DATE,
-    CURRENT_DATE + 43,
-    '5a0eb398-95da-4da0-be0e-862b295fe82b',
+    CURRENT_DATE + 52,
+    '06f64391-0f46-4759-862c-d97b4cdeface',
     NULL
   );
   
