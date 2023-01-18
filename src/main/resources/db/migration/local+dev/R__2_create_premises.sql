@@ -10,3 +10,8 @@ insert into "premises" ("address_line1", "id", "local_authority_area_id", "name"
 INSERT INTO approved_premises (premises_id, q_code, ap_code) VALUES
     ('459eeaba-55ac-4a1f-bae2-bad810d4016b', 'Q022', 'BCKNHAM'),
     ('e03c82e9-f335-414a-87a0-866060397d4a', 'Q005', 'BDFORD');
+
+INSERT INTO temporary_accommodation_premises (premises_id, pdu) VALUES
+    ('d33006b7-55d9-4a8e-b722-5e18093dbcdf', 'Cumbria'),
+    ('ada106c7-e1fb-409a-a38e-0002ea8e7e45', 'Camden and Islington'),
+    ('36c7b1f2-5a4b-467b-838c-2970c9c253cf', 'Swansea, Neath Port Talbot');
