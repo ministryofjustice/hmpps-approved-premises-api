@@ -5,6 +5,8 @@ import org.hamcrest.BaseMatcher
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -795,7 +797,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Arrival returns 409 Conflict when another booking for the same bed overlaps with the arrival and expected departure dates`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val username = "PROBATIONUSER"
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -830,9 +834,15 @@ class BookingTest : IntegrationTestBase() {
       withDepartureDate(LocalDate.parse("2022-07-14"))
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest()
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn("CRN321")
@@ -868,8 +878,20 @@ class BookingTest : IntegrationTestBase() {
       .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
   }
 
-  @Test
-  fun `Create Arrival on Booking returns 200 with correct body`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Create Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val keyWorker = ContextStaffMemberFactory().produce()
     mockStaffMembersContextApiCall(keyWorker, "QCODE")
 
@@ -887,7 +909,13 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     mockClientCredentialsJwtRequest()
 
