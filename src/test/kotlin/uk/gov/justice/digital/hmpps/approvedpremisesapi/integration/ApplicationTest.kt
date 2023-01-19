@@ -7,6 +7,8 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
@@ -16,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
@@ -24,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -75,7 +75,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all applications returns 200 with correct body - when user does not have roles returns applications within caseload`() {
+  fun `Get all applications returns 200 with correct body - when user does not have roles returns applications they created`() {
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -116,10 +116,11 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val username = "PROBATIONPERSON"
+    val username = "PROBATIONPERSON2"
+    val otherUser = userEntityFactory.produceAndPersist()
     val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
 
-    val upToDateApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
@@ -132,16 +133,16 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val outdatedApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCreatedByUser(user)
       withCrn(offenderDetails.otherIds.crn)
       withData("{}")
     }
 
-    val outdatedApplicationEntityNotInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
-      withCreatedByUser(user)
+      withCreatedByUser(otherUser)
       withCrn(otherOffenderDetails.otherIds.crn)
       withData("{}")
     }
@@ -161,17 +162,6 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
     )
 
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(offenderDetails.otherIds.crn)
-            .produce()
-        )
-      )
-    )
-
     mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
 
     val rawResponseBody = webTestClient.get()
@@ -187,33 +177,35 @@ class ApplicationTest : IntegrationTestBase() {
     val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
 
     assertThat(responseBody).anyMatch {
-      outdatedApplicationEntityInCaseload.id == it.id &&
-        outdatedApplicationEntityInCaseload.crn == it.person?.crn &&
-        outdatedApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
-        outdatedApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
-        outdatedApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(outdatedApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
+      outdatedApplicationEntityCreatedByUser.id == it.id &&
+        outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
+        outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+        outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+        outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
     }
 
     assertThat(responseBody).anyMatch {
-      upToDateApplicationEntityInCaseload.id == it.id &&
-        upToDateApplicationEntityInCaseload.crn == it.person?.crn &&
-        upToDateApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upToDateApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
-        upToDateApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(upToDateApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
+      upToDateApplicationEntityCreatedByUser.id == it.id &&
+        upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
+        upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+        upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+        upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
         newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
     }
 
     assertThat(responseBody).noneMatch {
-      outdatedApplicationEntityNotInCaseload.id == it.id
+      outdatedApplicationEntityNotCreatedByUser.id == it.id
     }
   }
 
-  @Test
-  fun `Get all applications returns 200 with correct body - when user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns all applications`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER" ])
+  fun `Get all applications returns 200 with correct body - when user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns all applications`(role: UserRole) {
     val username = "PROBATIONPERSON"
+    val otherUser = userEntityFactory.produceAndPersist()
     val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
 
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
@@ -256,7 +248,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val upToDateApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
@@ -269,97 +261,83 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val outdatedApplicationEntityInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
       withCreatedByUser(user)
       withCrn(offenderDetails.otherIds.crn)
       withData("{}")
     }
 
-    val outdatedApplicationEntityNotInCaseload = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
-      withCreatedByUser(user)
+      withCreatedByUser(otherUser)
       withCrn(otherOffenderDetails.otherIds.crn)
       withData("{}")
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    listOf(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER).forEach { role ->
-      userRoleAssignmentRepository.deleteAll()
-      userRoleAssignmentEntityFactory.produceAndPersist {
-        withUser(user)
-        withRole(role)
-      }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
 
-      mockStaffUserInfoCommunityApiCall(
-        StaffUserDetailsFactory()
-          .withUsername(username)
-          .withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory()
-                .withCode("TEAM1")
-                .produce()
-            )
-          )
-          .produce()
-      )
-
-      mockTeamCaseloadCall(
-        "TEAM1",
-        TeamCaseLoad(
-          managedOffenders = listOf(
-            ManagedOffenderFactory()
-              .withOffenderCrn(offenderDetails.otherIds.crn)
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
               .produce()
           )
         )
-      )
+        .produce()
+    )
 
-      mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
-      mockOffenderUserAccessCommunityApiCall(username, otherOffenderDetails.otherIds.crn, false, false)
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+    mockOffenderUserAccessCommunityApiCall(username, otherOffenderDetails.otherIds.crn, false, false)
 
-      val rawResponseBody = webTestClient.get()
-        .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .returnResult<String>()
-        .responseBody
-        .blockFirst()
+    val rawResponseBody = webTestClient.get()
+      .uri("/applications")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult<String>()
+      .responseBody
+      .blockFirst()
 
-      val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
+    val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
 
-      assertThat(responseBody).anyMatch {
-        outdatedApplicationEntityInCaseload.id == it.id &&
-          outdatedApplicationEntityInCaseload.crn == it.person?.crn &&
-          outdatedApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
-          outdatedApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
-          outdatedApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-          serializableToJsonNode(outdatedApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
-          olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
-      }
+    assertThat(responseBody).anyMatch {
+      outdatedApplicationEntityCreatedByUser.id == it.id &&
+        outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
+        outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+        outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+        outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+    }
 
-      assertThat(responseBody).anyMatch {
-        upToDateApplicationEntityInCaseload.id == it.id &&
-          upToDateApplicationEntityInCaseload.crn == it.person?.crn &&
-          upToDateApplicationEntityInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
-          upToDateApplicationEntityInCaseload.createdByUser.id == it.createdByUserId &&
-          upToDateApplicationEntityInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-          serializableToJsonNode(upToDateApplicationEntityInCaseload.data) == serializableToJsonNode(it.data) &&
-          newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
-      }
+    assertThat(responseBody).anyMatch {
+      upToDateApplicationEntityCreatedByUser.id == it.id &&
+        upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
+        upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+        upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+        upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+        newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+    }
 
-      assertThat(responseBody).anyMatch {
-        outdatedApplicationEntityNotInCaseload.id == it.id &&
-          outdatedApplicationEntityNotInCaseload.crn == it.person?.crn &&
-          outdatedApplicationEntityNotInCaseload.createdAt.toInstant() == it.createdAt.toInstant() &&
-          outdatedApplicationEntityNotInCaseload.createdByUser.id == it.createdByUserId &&
-          outdatedApplicationEntityNotInCaseload.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-          serializableToJsonNode(outdatedApplicationEntityNotInCaseload.data) == serializableToJsonNode(it.data) &&
-          olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
-      }
+    assertThat(responseBody).anyMatch {
+      outdatedApplicationEntityNotCreatedByUser.id == it.id &&
+        outdatedApplicationEntityNotCreatedByUser.crn == it.person?.crn &&
+        outdatedApplicationEntityNotCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+        outdatedApplicationEntityNotCreatedByUser.createdByUser.id == it.createdByUserId &&
+        outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+        serializableToJsonNode(outdatedApplicationEntityNotCreatedByUser.data) == serializableToJsonNode(it.data) &&
+        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
     }
   }
 
@@ -384,17 +362,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
@@ -432,17 +399,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
@@ -483,17 +439,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(offenderDetails.otherIds.crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
@@ -580,17 +525,6 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
     )
 
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(offenderDetails.otherIds.crn)
-            .produce()
-        )
-      )
-    )
-
     mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
 
     val rawResponseBody = webTestClient.get()
@@ -617,9 +551,12 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get single application returns 403 when person not in case load and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
+  fun `Get single application returns 403 when caller did not create application and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
     val crn = "X1234"
-    val username = "PROBATIONPERSON"
+    val username = "PROBATIONPERSON2"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
 
     val application = produceAndPersistBasicApplication(crn)
     mockOffenderDetailsCommunityApiCall404(crn)
@@ -637,17 +574,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(offenderDetails.otherIds.crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
@@ -687,17 +613,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
@@ -740,17 +655,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(offenderDetails.otherIds.crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
@@ -831,17 +735,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(offenderDetails.otherIds.crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
@@ -1007,17 +900,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(crn)
-            .produce()
-        )
-      )
     )
 
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {

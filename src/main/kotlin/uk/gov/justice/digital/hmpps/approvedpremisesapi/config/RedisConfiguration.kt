@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -35,8 +34,7 @@ class RedisConfiguration {
     @Value("\${caches.userAccess.expiry-seconds}") userAccessExpirySeconds: Long,
     @Value("\${caches.offenderDetails.expiry-seconds}") offenderDetailsExpirySeconds: Long,
     @Value("\${caches.inmateDetails.expiry-seconds}") inmateDetailsExpirySeconds: Long,
-    @Value("\${caches.staffDetails.expiry-seconds}") staffDetailsExpirySeconds: Long,
-    @Value("\${caches.teamCaseload.expiry-seconds}") teamCaseloadExpirySeconds: Long
+    @Value("\${caches.staffDetails.expiry-seconds}") staffDetailsExpirySeconds: Long
   ): RedisCacheManagerBuilderCustomizer? {
     val time = buildProperties.time.epochSecond.toString()
 
@@ -46,7 +44,6 @@ class RedisConfiguration {
         .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
         .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofSeconds(inmateDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<StaffUserDetails>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
-        .clientCacheFor<TeamCaseLoad>("teamCaseloadCache", Duration.ofSeconds(teamCaseloadExpirySeconds), time, objectMapper)
     }
   }
 

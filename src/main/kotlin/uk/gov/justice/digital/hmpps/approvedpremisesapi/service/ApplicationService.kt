@@ -40,14 +40,7 @@ class ApplicationService(
     val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
       applicationRepository.findAll()
     } else {
-      val teamCaseload = when (val teamCaseloadResult = offenderService.getTeamCaseLoad(userDistinguishedName)) {
-        is AuthorisableActionResult.Success -> teamCaseloadResult.entity
-        else -> throw RuntimeException("Unable to get caseload CRNs")
-      }
-
-      val teamCaseloadCrns = teamCaseload.map { it.offenderCrn }
-
-      applicationRepository.findByCrnIn(teamCaseloadCrns, entityType)
+      applicationRepository.findAllByCreatedByUser_Id(userEntity.id, entityType)
     }
 
     return applications
@@ -64,16 +57,7 @@ class ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
 
-    if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
-      return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
-    }
-
-    val teamCaseload = when (val teamCaseloadResult = offenderService.getTeamCaseLoad(userDistinguishedName)) {
-      is AuthorisableActionResult.Success -> teamCaseloadResult.entity
-      else -> throw RuntimeException("Unable to get caseload CRNs")
-    }
-
-    if (teamCaseload.any { it.offenderCrn == applicationEntity.crn }) {
+    if (userEntity.id == applicationEntity.createdByUser.id || userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
       return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
     }
 
@@ -84,15 +68,6 @@ class ApplicationService(
     if (service != ServiceName.approvedPremises.value) {
       "$.service" hasValidationError "onlyCas1Supported"
       return fieldValidationError
-    }
-
-    val teamCaseload = when (val teamCaseloadResult = offenderService.getTeamCaseLoad(username)) {
-      is AuthorisableActionResult.Success -> teamCaseloadResult.entity
-      else -> return generalError("Unable to check whether CRN is in team(s) case load")
-    }
-
-    if (teamCaseload.none { it.offenderCrn == crn }) {
-      "$.crn" hasValidationError "notInCaseload"
     }
 
     when (offenderService.getOffenderByCrn(crn, username)) {
