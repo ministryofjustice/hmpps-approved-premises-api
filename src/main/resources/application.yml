@@ -162,4 +162,4 @@ caches:
     expiry-seconds: 1200
 
 seed:
-  file-prefix: "/seed"
+  file-prefix: "/tmp/seed"
