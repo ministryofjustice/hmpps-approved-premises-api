@@ -84,8 +84,8 @@ class SeedScaffoldingTest : SeedTestBase() {
     withCsv(
       "malformed",
       """
-id,name,addressLine1,postcode,totalBeds,notes,probationRegionId,localAuthorityAreaId,characteristicIds,status,apCode,qCode
-f5fb56ad-54ed-46e9-8c0e-c1e8581cfd5d,An AP,Address 1,PC1PC2,12,Notes,384b8abb-f335-499e-b41d-dc3d852f0761,cdd12e06-8cc7-4ae5-bcdc-23271f2492db,,status,APCODE,QCODE
+id,name,addressLine1,postcode,totalBeds,notes,probationRegion,localAuthorityArea,characteristics,status,apCode,qCode
+f5fb56ad-54ed-46e9-8c0e-c1e8581cfd5d,An AP,Address 1,PC1PC2,12,Notes,North East,Middlesbrough,,status,APCODE,QCODE
 ,,,
       """.trimIndent()
     )
