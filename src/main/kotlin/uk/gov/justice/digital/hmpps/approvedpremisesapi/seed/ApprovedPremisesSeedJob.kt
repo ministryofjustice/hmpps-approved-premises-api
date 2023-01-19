@@ -33,9 +33,9 @@ class ApprovedPremisesSeedJob(
     postcode = columns["postcode"]!!,
     totalBeds = Integer.parseInt(columns["totalBeds"]!!),
     notes = columns["notes"]!!,
-    probationRegion = columns["probationRegionId"]!!,
-    localAuthorityArea = columns["localAuthorityAreaId"]!!,
-    characteristics = columns["characteristicIds"]!!.split(",").filter { it.isNotBlank() }.map { it.trim() },
+    probationRegion = columns["probationRegion"]!!,
+    localAuthorityArea = columns["localAuthorityArea"]!!,
+    characteristics = columns["characteristics"]!!.split(",").filter { it.isNotBlank() }.map { it.trim() },
     status = PropertyStatus.valueOf(columns["status"]!!),
     apCode = columns["apCode"]!!,
     qCode = columns["qCode"]!!

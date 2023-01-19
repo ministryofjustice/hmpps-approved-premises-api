@@ -40,7 +40,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
   }
 
   @Test
-  fun `Attempting to create an Approved Premises with an invalid Local Authority Area Id logs an error`() {
+  fun `Attempting to create an Approved Premises with an invalid Local Authority Area logs an error`() {
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withApArea(apAreaEntityFactory.produceAndPersist())
     }
@@ -281,9 +281,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "postcode",
         "totalBeds",
         "notes",
-        "probationRegionId",
-        "localAuthorityAreaId",
-        "characteristicIds",
+        "probationRegion",
+        "localAuthorityArea",
+        "characteristics",
         "status",
         "apCode",
         "qCode"
