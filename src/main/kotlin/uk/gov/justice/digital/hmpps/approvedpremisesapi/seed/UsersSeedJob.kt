@@ -17,9 +17,9 @@ class UsersSeedJob(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun deserializeRow(columns: Map<String, String>) = UsersSeedCsvRow(
-    deliusUsername = columns["deliusUsername"]!!,
-    roles = parseAllRolesOrThrow(columns["roles"]!!.split(",").filter(String::isNotBlank)),
-    qualifications = parseAllQualificationsOrThrow(columns["qualifications"]!!.split(",").filter(String::isNotBlank))
+    deliusUsername = columns["deliusUsername"]!!.trim().uppercase(),
+    roles = parseAllRolesOrThrow(columns["roles"]!!.split(",").filter(String::isNotBlank).map(String::trim)),
+    qualifications = parseAllQualificationsOrThrow(columns["qualifications"]!!.split(",").filter(String::isNotBlank).map(String::trim))
   )
 
   private fun parseAllRolesOrThrow(roleNames: List<String>): List<UserRole> {

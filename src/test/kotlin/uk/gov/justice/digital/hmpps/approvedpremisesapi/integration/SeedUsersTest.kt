@@ -18,14 +18,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 class SeedUserRoleAssignmentsTest : SeedTestBase() {
   @Test
   fun `Attempting to seed a non existent user logs an error`() {
-    mockStaffUserInfoCommunityApiCallNotFound("invalid-user")
+    mockStaffUserInfoCommunityApiCallNotFound("INVALID-USER")
 
     withCsv(
       "invalid-user",
       userRoleAssignmentSeedCsvRowsToCsv(
         listOf(
           UserRoleAssignmentsSeedCsvRowFactory()
-            .withDeliusUsername("invalid-user")
+            .withDeliusUsername("INVALID-USER")
             .produce()
         )
       )
@@ -38,7 +38,7 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
         it.throwable.cause != null &&
-        it.throwable.cause!!.message == "Could not get user invalid-user"
+        it.throwable.cause!!.message == "Could not get user INVALID-USER"
     }
   }
 
@@ -47,7 +47,7 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
     mockClientCredentialsJwtRequest()
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
-        .withUsername("unknown-user")
+        .withUsername("UNKNOWN-USER")
         .withStaffIdentifier(6789)
         .produce()
     )
@@ -67,7 +67,7 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.user, "unknown-user")
 
-    val persistedUser = userRepository.findByDeliusUsername("unknown-user")
+    val persistedUser = userRepository.findByDeliusUsername("UNKNOWN-USER")
 
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.deliusStaffIdentifier).isEqualTo(6789)
@@ -83,7 +83,7 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
   @Test
   fun `Attempting to assign roles to a currently known user succeeds`() {
     userEntityFactory.produceAndPersist {
-      withDeliusUsername("known-user")
+      withDeliusUsername("KNOWN-USER")
     }
 
     withCsv(
@@ -91,7 +91,7 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
       userRoleAssignmentSeedCsvRowsToCsv(
         listOf(
           UserRoleAssignmentsSeedCsvRowFactory()
-            .withDeliusUsername("known-user")
+            .withDeliusUsername("KNOWN-USER")
             .withTypedRoles(listOf(UserRole.ASSESSOR, UserRole.WORKFLOW_MANAGER))
             .withTypedQualifications(listOf(UserQualification.PIPE))
             .produce()
@@ -101,7 +101,7 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.user, "known-user")
 
-    val persistedUser = userRepository.findByDeliusUsername("known-user")
+    val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
