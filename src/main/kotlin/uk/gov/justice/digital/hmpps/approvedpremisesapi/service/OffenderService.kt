@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.ManagedOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
@@ -360,43 +359,6 @@ class OffenderService(
   }
 
   fun getDocument(crn: String, documentId: String, outputStream: OutputStream) = communityApiClient.getDocument(crn, documentId, outputStream)
-
-  fun getTeamCaseLoad(deliusUsername: String): AuthorisableActionResult<List<ManagedOffender>> {
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure.StatusCode -> when (staffDetailsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> staffDetailsResult.throwException()
-      }
-
-      is ClientResult.Failure.Other -> staffDetailsResult.throwException()
-    }
-
-    val uniqueManagedOffenders = staffDetails.teams?.flatMap {
-      val caseloadResult = communityApiClient.getCaseloadForTeam(it.code)
-
-      val caseload = when (caseloadResult) {
-        is ClientResult.Success -> caseloadResult.body
-        is ClientResult.Failure.StatusCode -> when (caseloadResult.status) {
-          HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-          HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-          else -> caseloadResult.throwException()
-        }
-
-        is ClientResult.Failure.Other -> caseloadResult.throwException()
-      }
-
-      caseload.managedOffenders
-    }?.distinctBy {
-      it.offenderCrn
-    } ?: emptyList()
-
-    return AuthorisableActionResult.Success(
-      uniqueManagedOffenders
-    )
-  }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
     when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {

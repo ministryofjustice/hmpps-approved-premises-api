@@ -841,24 +841,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /people/team-caseload:
-    get:
-      summary: Returns a list of People that are in the caseloads of all users in the teams of which the requester is a member
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CaseLoadPerson'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /people/search:
     get:
       summary: Searches for a Person by their CRN
@@ -3763,14 +3745,3 @@ components:
       enum:
         - approved_premises
         - user
-    CaseLoadPerson:
-      type: object
-      properties:
-        crn:
-          type: string
-        firstName:
-          type: string
-        surname:
-          type: string
-      required:
-        - crn

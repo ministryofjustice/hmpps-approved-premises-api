@@ -158,8 +158,6 @@ caches:
     expiry-seconds: 1200
   staffDetails:
     expiry-seconds: 1200
-  teamCaseload:
-    expiry-seconds: 1200
 
 seed:
   file-prefix: "/tmp/seed"

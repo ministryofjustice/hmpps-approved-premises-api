@@ -81,7 +81,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
@@ -449,18 +448,6 @@ abstract class IntegrationTestBase {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(404)
-      )
-  )
-
-  fun mockTeamCaseloadCall(teamCode: String, caseload: TeamCaseLoad) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/team/$teamCode/caseload"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(caseload)
-          )
       )
   )
 }

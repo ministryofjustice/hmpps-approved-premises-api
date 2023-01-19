@@ -8,12 +8,10 @@ import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagedOffenderFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.TeamCaseLoad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 
@@ -40,7 +38,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get application documents where application not in caseload and user not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns 403`() {
+  fun `Get application documents where user did not create application and user not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns 403`() {
     val username = "PROBATIONPERSON"
     val crn = "CRN123"
 
@@ -60,13 +58,6 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = emptyList()
-      )
     )
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -102,17 +93,6 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           )
         )
         .produce()
-    )
-
-    mockTeamCaseloadCall(
-      "TEAM1",
-      TeamCaseLoad(
-        managedOffenders = listOf(
-          ManagedOffenderFactory()
-            .withOffenderCrn(crn)
-            .produce()
-        )
-      )
     )
 
     mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
