@@ -5,6 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
@@ -14,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
@@ -858,8 +862,18 @@ class PremisesTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
-  @Test
-  fun `Get Premises Staff where delius team cannot be found returns 500`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val qCode = "NOTFOUND"
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -870,9 +884,15 @@ class PremisesTest : IntegrationTestBase() {
       withQCode(qCode)
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     mockClientCredentialsJwtRequest()
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     wiremockServer.stubFor(
       WireMock.get(WireMock.urlEqualTo("/secure/teams/$qCode/staff"))
@@ -893,7 +913,6 @@ class PremisesTest : IntegrationTestBase() {
       .jsonPath("$.detail").isEqualTo("No team found for QCode: ${premises.qCode}")
   }
 
-  @Test
   fun `Get Premises Staff for Temporary Accommodation Premises returns 501`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -912,8 +931,18 @@ class PremisesTest : IntegrationTestBase() {
       .isEqualTo(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  @Test
-  fun `Get Premises Staff for Approved Premises returns 200 with correct body`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Approved Premises Staff for Approved Premises returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val qCode = "FOUND"
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -932,9 +961,15 @@ class PremisesTest : IntegrationTestBase() {
       ContextStaffMemberFactory().produce()
     )
 
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
     mockClientCredentialsJwtRequest()
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     wiremockServer.stubFor(
       WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
@@ -966,8 +1001,18 @@ class PremisesTest : IntegrationTestBase() {
       )
   }
 
-  @Test
-  fun `Get Premises Staff caches response`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Approved Premises Staff caches response when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val qCode = "FOUND"
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -988,7 +1033,13 @@ class PremisesTest : IntegrationTestBase() {
 
     mockClientCredentialsJwtRequest()
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
 
     wiremockServer.stubFor(
       WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))

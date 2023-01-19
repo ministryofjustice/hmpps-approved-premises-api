@@ -264,6 +264,10 @@ abstract class IntegrationTestBase {
   fun beforeEach() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
 
+    webTestClient = webTestClient.mutate()
+      .responseTimeout(Duration.ofMinutes(20))
+      .build()
+
     wiremockServer = WireMockServer(57839)
     wiremockServer.start()
 

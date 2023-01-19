@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -49,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
@@ -68,6 +70,7 @@ import java.util.UUID
 @Service
 class PremisesController(
   private val httpAuthService: HttpAuthService,
+  private val usersService: UserService,
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
@@ -175,12 +178,15 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = deliusPrincipal.name
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
 
     return ResponseEntity.ok(
       premises.bookings.map {
-        val offenderResult = offenderService.getOffenderByCrn(it.crn, username)
+        val offenderResult = offenderService.getOffenderByCrn(it.crn, user.deliusUsername)
 
         if (offenderResult !is AuthorisableActionResult.Success) {
           throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
@@ -217,7 +223,13 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val offenderResult = offenderService.getOffenderByCrn(booking.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
+    val offenderResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)
 
     if (offenderResult !is AuthorisableActionResult.Success) {
       throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
@@ -254,6 +266,12 @@ class PremisesController(
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
 
     val validationErrors = ValidationErrors()
 
@@ -337,6 +355,12 @@ class PremisesController(
   ): ResponseEntity<Arrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     if (booking.service == ServiceName.temporaryAccommodation.value) {
       // TODO: Arrivals will likely need to check for overlaps once bed-level bookings are implemented for AP
       val bedId = booking.bed?.id
@@ -365,6 +389,12 @@ class PremisesController(
   ): ResponseEntity<Nonarrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     val result = bookingService.createNonArrival(
       booking = booking,
       date = body.date,
@@ -383,6 +413,12 @@ class PremisesController(
     body: NewCancellation
   ): ResponseEntity<Cancellation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
 
     val result = bookingService.createCancellation(
       booking = booking,
@@ -403,6 +439,12 @@ class PremisesController(
   ): ResponseEntity<Confirmation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     val result = bookingService.createConfirmation(
       booking = booking,
       dateTime = OffsetDateTime.now(),
@@ -420,6 +462,12 @@ class PremisesController(
     body: NewDeparture
   ): ResponseEntity<Departure> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
 
     val result = bookingService.createDeparture(
       booking = booking,
@@ -441,6 +489,12 @@ class PremisesController(
     body: NewExtension
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+
+    val user = usersService.getUserForRequest()
+
+    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
 
     if (booking.service == ServiceName.temporaryAccommodation.value) {
       // TODO: Extensions will likely need to check for overlaps once bed-level bookings are implemented for AP
@@ -465,6 +519,12 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     val result = premisesService.createLostBeds(
       premises = premises,
       startDate = body.startDate,
@@ -484,12 +544,24 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
     return ResponseEntity.ok(premises.lostBeds.map(lostBedsTransformer::transformJpaToApi))
   }
 
   override fun premisesPremisesIdCapacityGet(premisesId: UUID): ResponseEntity<List<DateCapacity>> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
 
     val lastBookingDate = premisesService.getLastBookingDate(premises)
     val lastLostBedsDate = premisesService.getLastLostBedsDate(premises)
@@ -517,6 +589,12 @@ class PremisesController(
   override fun premisesPremisesIdStaffGet(premisesId: UUID): ResponseEntity<List<StaffMember>> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
 
     if (premises !is ApprovedPremisesEntity) {
       throw NotImplementedProblem("Fetching staff for non-AP Premises is not currently supported")

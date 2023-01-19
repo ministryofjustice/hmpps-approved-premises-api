@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 
 class CapacityTest : IntegrationTestBase() {
@@ -35,8 +39,18 @@ class CapacityTest : IntegrationTestBase() {
       .isNotFound
   }
 
-  @Test
-  fun `Get Capacity with no bookings or lost beds returns OK with empty list body`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Capacity with no bookings or lost beds on Approved Premises returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withTotalBeds(30)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -47,7 +61,15 @@ class CapacityTest : IntegrationTestBase() {
       }
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/capacity")
@@ -59,8 +81,18 @@ class CapacityTest : IntegrationTestBase() {
       .hasSize(0)
   }
 
-  @Test
-  fun `Get Capacity with booking in past returns OK with empty list body`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Capacity for Approved Premises with booking in past returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withTotalBeds(30)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -78,7 +110,15 @@ class CapacityTest : IntegrationTestBase() {
         .withPremises(premises)
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/capacity")
@@ -90,8 +130,18 @@ class CapacityTest : IntegrationTestBase() {
       .hasSize(0)
   }
 
-  @Test
-  fun `Get Capacity with booking in future returns OK with list entry for each day until the booking ends`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Capacity for Approved Premises with booking in future returns OK with list entry for each day until the booking ends when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    val username = "PROBATIONUSER"
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withTotalBeds(30)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -110,7 +160,15 @@ class CapacityTest : IntegrationTestBase() {
       withPremises(premises)
     }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest()
 
     webTestClient.get()
       .uri("/premises/${premises.id}/capacity")
