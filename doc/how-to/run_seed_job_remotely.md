@@ -12,11 +12,11 @@ To process a seed CSV against a non-local environment:
 - Run the helper script from within the container to trigger the seed job:
   ```
   kubectl exec --stdin --tty {pod name} -- /bin/bash
-  /app/script/run_seed_job {seed type} {file name without extension}
+  /app/run_seed_job {seed type} {file name without extension}
   ```
   Where `seed type` is a value from the `SeedFileType` enum in the OpenAPI spec.  e.g.
   ```
   kubectl exec --stdin --tty {pod name} -- /bin/bash
-  /app/script/run_seed_job approved_premises ap_seed_file
+  /app/run_seed_job approved_premises ap_seed_file
   ```
 - Check the logs via `kubectl logs {pod name}` to see how processing is progressing.
