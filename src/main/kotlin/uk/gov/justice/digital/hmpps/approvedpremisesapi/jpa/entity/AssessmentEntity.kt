@@ -19,6 +19,7 @@ import javax.persistence.Table
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun findAllByAllocatedToUser_Id(userId: UUID): List<AssessmentEntity>
+  fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity
 }
 
 @Entity
@@ -46,6 +47,7 @@ data class AssessmentEntity(
   val allocatedToUser: UserEntity,
 
   val allocatedAt: OffsetDateTime,
+  var reallocatedAt: OffsetDateTime?,
 
   val createdAt: OffsetDateTime,
 

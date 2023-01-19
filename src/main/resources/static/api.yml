@@ -3228,6 +3228,7 @@ components:
         - pending
         - active
         - completed
+        - reallocated
     ApprovedPremisesAssessment:
       allOf:
         - $ref: '#/components/schemas/Assessment'
@@ -3360,6 +3361,8 @@ components:
         userId:
           type: string
           format: uuid
+      required:
+        - userId
     User:
       type: object
       properties:

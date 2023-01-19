@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDeleg
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
@@ -22,8 +23,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.net.URI
@@ -37,7 +40,9 @@ class ApplicationsController(
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
-  private val documentTransformer: DocumentTransformer
+  private val documentTransformer: DocumentTransformer,
+  private val assessmentService: AssessmentService,
+  private val userService: UserService
 ) : ApplicationsApiDelegate {
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
@@ -153,6 +158,27 @@ class ApplicationsController(
     }
 
     return ResponseEntity(documentTransformer.transformToApi(documents, application.convictionId), HttpStatus.OK)
+  }
+
+  @Transactional
+  override fun applicationsApplicationIdAllocationsPost(applicationId: UUID, body: Reallocation): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val authorisationResult = assessmentService.reallocateAssessment(user, body.userId, applicationId)
+
+    val validationResult = when (authorisationResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> authorisationResult.entity
+    }
+
+    when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.Success -> Unit
+    }
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {

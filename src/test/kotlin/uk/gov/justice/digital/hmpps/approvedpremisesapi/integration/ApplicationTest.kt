@@ -12,6 +12,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
@@ -1266,6 +1267,125 @@ class ApplicationTest : IntegrationTestBase() {
 
     val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
     assertThat(createdAssessment.allocatedToUser.id).isEqualTo(assessor.id)
+  }
+
+  @Test
+  fun `Reallocate application to different assessor without JWT returns 401`() {
+    webTestClient.post()
+      .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+      .bodyValue(
+        Reallocation(
+          userId = UUID.randomUUID()
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Reallocate application to different assessor without WORKFLOW_MANAGER role returns 403`() {
+    val username = "PROBATIONPERSON"
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
+        .produce()
+    )
+
+    webTestClient.post()
+      .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        Reallocation(
+          userId = UUID.randomUUID()
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Reallocate application to different assessor returns 200, creates new assessment, deallocates old one`() {
+    val requestUsername = "PROBATIONPERSON"
+    val otherUsername = "OTHERUSER"
+    val assigneeUsername = "ASSIGNEEUSER"
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(requestUsername)
+
+    val requestUser = userEntityFactory.produceAndPersist {
+      withDeliusUsername(requestUsername)
+    }
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(requestUser)
+      withRole(UserRole.WORKFLOW_MANAGER)
+    }
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(requestUsername)
+        .produce()
+    )
+
+    val otherUser = userEntityFactory.produceAndPersist {
+      withDeliusUsername(otherUsername)
+    }
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(otherUsername)
+        .produce()
+    )
+
+    val assigneeUser = userEntityFactory.produceAndPersist {
+      withDeliusUsername(assigneeUsername)
+    }
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(assigneeUsername)
+        .produce()
+    )
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(assigneeUser)
+      withRole(UserRole.ASSESSOR)
+    }
+
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
+
+    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withCreatedByUser(otherUser)
+      withApplicationSchema(applicationSchema)
+    }
+
+    val existingAssessment = assessmentEntityFactory.produceAndPersist {
+      withApplication(application)
+      withAllocatedToUser(otherUser)
+      withAssessmentSchema(assessmentSchema)
+    }
+
+    webTestClient.post()
+      .uri("/applications/${application.id}/allocations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        Reallocation(
+          userId = assigneeUser.id
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    val assessments = assessmentRepository.findAll()
+
+    assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
+    assertThat(assessments).anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
