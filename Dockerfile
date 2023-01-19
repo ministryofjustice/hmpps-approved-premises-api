@@ -31,7 +31,7 @@ COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.json /app
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.dev.json /app
 
 COPY --from=builder --chown=appuser:appgroup /app/script/run_seed_job /app
-RUN mkdir /seed
+RUN mkdir /tmp/seed
 
 USER 2000
 
