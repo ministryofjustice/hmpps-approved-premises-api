@@ -1995,6 +1995,22 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /users/me:
+    get:
+      summary: Get information about the current logged in user
+      responses:
+        200:
+          description: successfully retrieved information on user
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/schemas/401Response'
+        403:
+          $ref: '#/components/schemas/403Response'
+        500:
+          $ref: '#/components/schemas/500Response'
   /seed:
     post:
       summary: Starts the data seeding process, can only be called from a local connection
