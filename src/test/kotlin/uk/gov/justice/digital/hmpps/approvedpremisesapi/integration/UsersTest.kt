@@ -87,4 +87,84 @@ class UsersTest : IntegrationTestBase() {
         )
       )
   }
+
+  @Test
+  fun `Getting the curernt user without a JWT returns 401`() {
+    webTestClient.get()
+      .uri("/users/me")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Getting the current user with a non-Delius JWT returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      authSource = "nomis"
+    )
+
+    webTestClient.get()
+      .uri("/users/me")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Getting the current user returns OK with correct body`() {
+    val deliusUsername = "JimJimmerson"
+    val forename = "Jim"
+    val surname = "Jimmerson"
+    val name = "$forename $surname"
+    val email = "foo@bar.com"
+    val telephoneNumber = "123445677"
+
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = deliusUsername,
+      authSource = "delius",
+      roles = listOf("ROLE_PROBATION")
+    )
+
+    userEntityFactory.produceAndPersist {
+      withId(id)
+      withDeliusUsername(deliusUsername)
+      withName(name)
+      withEmail(email)
+      withTelephoneNumber(telephoneNumber)
+    }
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withForenames(forename)
+        .withSurname(surname)
+        .withUsername(deliusUsername)
+        .withEmail(email)
+        .withTelephoneNumber(telephoneNumber)
+        .produce()
+    )
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    webTestClient.get()
+      .uri("/users/me")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(
+        objectMapper.writeValueAsString(
+          User(
+            deliusUsername = deliusUsername,
+            name = name,
+            email = email,
+            telephoneNumber = telephoneNumber,
+            roles = emptyList(),
+            qualifications = emptyList(),
+          )
+        )
+      )
+  }
 }

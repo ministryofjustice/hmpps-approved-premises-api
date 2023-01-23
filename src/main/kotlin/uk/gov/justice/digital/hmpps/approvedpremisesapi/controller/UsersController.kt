@@ -27,4 +27,8 @@ class UsersController(
 
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity), HttpStatus.OK)
   }
+
+  override fun usersMeGet(): ResponseEntity<User> {
+    return ResponseEntity(userTransformer.transformJpaToApi(userService.getUserForRequest()), HttpStatus.OK)
+  }
 }
