@@ -1927,6 +1927,13 @@ paths:
       tags:
         - Auth
       summary: Returns information on the logged in user
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successfully retrieved information on user
@@ -1962,6 +1969,12 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/UserQualification'
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successfully retrieved users
@@ -1988,6 +2001,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successfully retrieved information on user
@@ -3374,27 +3393,55 @@ components:
     User:
       type: object
       properties:
-        name:
+        id:
           type: string
-        deliusUsername:
-          type: string
-        email:
-          type: string
-        telephoneNumber:
-          type: string
+          format: uuid
+        region:
+          $ref: '#/components/schemas/ProbationRegion'
         roles:
           type: array
           items:
             $ref: '#/components/schemas/UserRole'
-        qualifications:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserQualification'
+        service:
+          type: string
+          example: CAS1
+      discriminator:
+        propertyName: service
+        mapping:
+          CAS1: '#/components/schemas/ApprovedPremisesUser'
+          CAS3: '#/components/schemas/TemporaryAccommodationUser'
       required:
-        - name
-        - deliusUsername
+        - id
+        - region
         - roles
-        - qualifications
+        - service
+    ApprovedPremisesUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            name:
+              type: string
+            deliusUsername:
+              type: string
+            email:
+              type: string
+            telephoneNumber:
+              type: string
+            qualifications:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserQualification'
+          required:
+            - name
+            - deliusUsername
+            - qualifications
+    TemporaryAccommodationUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties: {}
+          required: []
     UserRole:
       type: string
       enum:
