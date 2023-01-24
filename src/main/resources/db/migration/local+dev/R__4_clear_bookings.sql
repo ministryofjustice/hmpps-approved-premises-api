@@ -1,2 +1,2 @@
 -- ${flyway:timestamp}
-TRUNCATE TABLE bookings CASCADE;
+-- This file intentionally left blank for historical reasons.
