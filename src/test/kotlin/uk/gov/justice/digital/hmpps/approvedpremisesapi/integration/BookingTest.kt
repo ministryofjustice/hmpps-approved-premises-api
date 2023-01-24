@@ -1749,7 +1749,7 @@ class BookingTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewNonarrival(
-          date = LocalDate.parse("2023-01-18"),
+          date = booking.arrivalDate,
           reason = nonArrivalReason.id,
           notes = "Notes"
         )
@@ -1759,7 +1759,7 @@ class BookingTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
-      .jsonPath("$.date").isEqualTo("2023-01-18")
+      .jsonPath("$.date").isEqualTo(booking.arrivalDate.toString())
       .jsonPath("$.reason.id").isEqualTo(nonArrivalReason.id.toString())
       .jsonPath("$.notes").isEqualTo("Notes")
   }
