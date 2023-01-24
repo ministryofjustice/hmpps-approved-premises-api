@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -59,12 +60,22 @@ class ApplicationsController(
     val username = deliusPrincipal.name
 
     val application = when (val applicationResult = applicationService.getApplicationForUsername(applicationId, username)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.NotFound -> null
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(application))
+    if (application != null) {
+      return ResponseEntity.ok(getPersonDetailAndTransform(application))
+    }
+
+    val offlineApplication = when (val offlineApplicationResult = applicationService.getOfflineApplicationForUsername(applicationId, username)) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Success -> offlineApplicationResult.entity
+    }
+
+    return ResponseEntity.ok(getPersonDetailAndTransform(offlineApplication))
   }
 
   @Transactional
@@ -208,5 +219,11 @@ class ApplicationsController(
     val (offender, inmate) = getPersonDetail(application.crn)
 
     return applicationsTransformer.transformJpaToApi(application, offender, inmate)
+  }
+
+  private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity): Application {
+    val (offender, inmate) = getPersonDetail(offlineApplication.crn)
+
+    return applicationsTransformer.transformJpaToApi(offlineApplication, offender, inmate)
   }
 }

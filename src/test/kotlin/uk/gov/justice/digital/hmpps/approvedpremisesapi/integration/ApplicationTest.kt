@@ -15,6 +15,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
@@ -671,7 +672,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get single application returns 200 with correct body, non-upgradable outdated application marked as such`() {
+  fun `Get single online application returns 200 with correct body, non-upgradable outdated application marked as such`() {
     val username = "PROBATIONPERSON"
 
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
@@ -760,6 +761,60 @@ class ApplicationTest : IntegrationTestBase() {
         nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
         serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
         olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+    }
+  }
+
+  @Test
+  fun `Get single offline application returns 200 with correct body`() {
+    val username = "PROBATIONPERSON"
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(UserRole.MANAGER)
+    }
+
+    val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
+      withCrn(offenderDetails.otherIds.crn)
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+
+    val rawResponseBody = webTestClient.get()
+      .uri("/applications/${offlineApplicationEntity.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult<String>()
+      .responseBody
+      .blockFirst()
+
+    val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
+
+    assertThat(responseBody).matches {
+      offlineApplicationEntity.id == it.id &&
+        offlineApplicationEntity.crn == it.person.crn &&
+        offlineApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+        offlineApplicationEntity.submittedAt.toInstant() == it.submittedAt?.toInstant()
     }
   }
 

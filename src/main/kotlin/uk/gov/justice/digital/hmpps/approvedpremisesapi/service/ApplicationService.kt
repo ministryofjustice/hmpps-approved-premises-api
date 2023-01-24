@@ -58,7 +58,7 @@ class ApplicationService(
       ?: return emptyList()
 
     val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
-      offlineApplicationRepository.findAllWhereService(serviceName.value)
+      offlineApplicationRepository.findAllByService(serviceName.value)
     } else {
       emptyList()
     }

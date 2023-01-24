@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -52,7 +53,7 @@ class AssessmentTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockApplicationsTransformer.transformJpaToApi(any(), any(), any()) } returns mockk<ApprovedPremisesApplication>()
+    every { mockApplicationsTransformer.transformJpaToApi(any<ApplicationEntity>(), any(), any()) } returns mockk<ApprovedPremisesApplication>()
     every { mockAssessmentClarificationNoteTransformer.transformJpaToApi(any()) } returns mockk()
   }
 

@@ -623,7 +623,7 @@ class ApplicationServiceTest {
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockOfflineApplicationRepository.findAllWhereService("approved-premises") } returns offlineApplicationEntities
+    every { mockOfflineApplicationRepository.findAllByService("approved-premises") } returns offlineApplicationEntities
 
     offlineApplicationEntities.forEach {
       every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
@@ -657,7 +657,7 @@ class ApplicationServiceTest {
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockOfflineApplicationRepository.findAllWhereService("approved-premises") } returns offlineApplicationEntities
+    every { mockOfflineApplicationRepository.findAllByService("approved-premises") } returns offlineApplicationEntities
 
     offlineApplicationEntities.forEach {
       every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
@@ -671,7 +671,7 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+    every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns null
 
     assertThat(applicationService.getOfflineApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.NotFound).isTrue
   }
