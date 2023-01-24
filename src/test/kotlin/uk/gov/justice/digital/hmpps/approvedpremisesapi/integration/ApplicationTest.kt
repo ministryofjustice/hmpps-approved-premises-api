@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
@@ -174,7 +175,7 @@ class ApplicationTest : IntegrationTestBase() {
       .responseBody
       .blockFirst()
 
-    val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
+    val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
 
     assertThat(responseBody).anyMatch {
       outdatedApplicationEntityCreatedByUser.id == it.id &&
@@ -308,7 +309,7 @@ class ApplicationTest : IntegrationTestBase() {
       .responseBody
       .blockFirst()
 
-    val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Application>>() {})
+    val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
 
     assertThat(responseBody).anyMatch {
       outdatedApplicationEntityCreatedByUser.id == it.id &&
@@ -537,7 +538,7 @@ class ApplicationTest : IntegrationTestBase() {
       .responseBody
       .blockFirst()
 
-    val responseBody = objectMapper.readValue(rawResponseBody, Application::class.java)
+    val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
     assertThat(responseBody).matches {
       applicationEntity.id == it.id &&
@@ -749,7 +750,7 @@ class ApplicationTest : IntegrationTestBase() {
       .responseBody
       .blockFirst()
 
-    val responseBody = objectMapper.readValue(rawResponseBody, Application::class.java)
+    val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
     assertThat(responseBody).matches {
       nonUpgradableApplicationEntity.id == it.id &&
@@ -921,7 +922,7 @@ class ApplicationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
-      .returnResult(Application::class.java)
+      .returnResult(ApprovedPremisesApplication::class.java)
 
     assertThat(result.responseHeaders["Location"]).anyMatch {
       it.matches(Regex("/applications/.+"))

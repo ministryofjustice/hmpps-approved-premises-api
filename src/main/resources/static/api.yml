@@ -3015,38 +3015,28 @@ components:
           format: uuid
         person:
           $ref: '#/components/schemas/Person'
-        createdByUserId:
-          type: string
-          format: uuid
-        schemaVersion:
-          type: string
-          format: uuid
-        outdatedSchema:
-          type: boolean
         createdAt:
           type: string
           format: date-time
         submittedAt:
           type: string
           format: date-time
-        data:
-          $ref: '#/components/schemas/AnyValue'
-        document:
-          $ref: '#/components/schemas/AnyValue'
       discriminator:
-        propertyName: service
+        propertyName: type
         mapping:
+          Offline: '#/components/schemas/OfflineApplication'
           CAS1: '#/components/schemas/ApprovedPremisesApplication'
           CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
         - id
-        - crn
-        - createdByUserId
-        - schemaVersion
-        - outdatedSchema
-        - createdAt
         - person
-        - service
+        - createdAt
+        - type
+    OfflineApplication:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          properties: { }
     ApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -3058,13 +3048,44 @@ components:
               type: boolean
             risks:
               $ref: '#/components/schemas/PersonRisks'
+            createdByUserId:
+              type: string
+              format: uuid
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            data:
+              $ref: '#/components/schemas/AnyValue'
+            document:
+              $ref: '#/components/schemas/AnyValue'
           required:
             - risks
+            - createdByUserId
+            - schemaVersion
+            - outdatedSchema
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
         - type: object
-          properties: {}
+          properties:
+            createdByUserId:
+              type: string
+              format: uuid
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            data:
+              $ref: '#/components/schemas/AnyValue'
+            document:
+              $ref: '#/components/schemas/AnyValue'
+          required:
+            - createdByUserId
+            - schemaVersion
+            - outdatedSchema
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
