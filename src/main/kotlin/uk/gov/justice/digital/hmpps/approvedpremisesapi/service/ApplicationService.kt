@@ -83,6 +83,22 @@ class ApplicationService(
     return AuthorisableActionResult.Unauthorised()
   }
 
+  fun getOfflineApplicationForUsername(applicationId: UUID, deliusUsername: String): AuthorisableActionResult<OfflineApplicationEntity> {
+    val applicationEntity = offlineApplicationRepository.findByIdOrNull(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val userEntity = userRepository.findByDeliusUsername(deliusUsername)
+      ?: throw RuntimeException("Could not get user")
+
+    if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER) &&
+      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
+    ) {
+      return AuthorisableActionResult.Success(applicationEntity)
+    }
+
+    return AuthorisableActionResult.Unauthorised()
+  }
+
   fun createApplication(crn: String, username: String, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?) = validated<ApplicationEntity> {
     if (service != ServiceName.approvedPremises.value) {
       "$.service" hasValidationError "onlyCas1Supported"
