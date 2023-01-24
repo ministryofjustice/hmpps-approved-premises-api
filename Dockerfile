@@ -28,7 +28,7 @@ WORKDIR /app
 COPY --from=builder --chown=appuser:appgroup /app/build/libs/approved-premises-api*.jar /app/app.jar
 COPY --from=builder --chown=appuser:appgroup /app/build/libs/applicationinsights-agent*.jar /app/agent.jar
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.json /app
-COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.dev.json /app
+COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.nonprod.json /app
 
 COPY --from=builder --chown=appuser:appgroup /app/script/run_seed_job /app
 RUN mkdir /tmp/seed && chown appuser:appgroup /tmp/seed && chmod +x /app/run_seed_job
