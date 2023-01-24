@@ -9,7 +9,9 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Repository
-interface OfflineApplicationRepository : JpaRepository<OfflineApplicationEntity, UUID>
+interface OfflineApplicationRepository : JpaRepository<OfflineApplicationEntity, UUID> {
+  fun findAllWhereService(name: String): List<OfflineApplicationEntity>
+}
 
 @Entity
 @Table(name = "offline_applications")

@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -25,7 +27,8 @@ class ApplicationService(
   private val offenderService: OffenderService,
   private val userService: UserService,
   private val assessmentService: AssessmentService,
-  private val jsonLogicService: JsonLogicService
+  private val jsonLogicService: JsonLogicService,
+  private val offlineApplicationRepository: OfflineApplicationRepository
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -47,6 +50,22 @@ class ApplicationService(
       .map(jsonSchemaService::checkSchemaOutdated)
       .filter {
         offenderService.canAccessOffender(userDistinguishedName, it.crn)
+      }
+  }
+
+  fun getAllOfflineApplicationsForUsername(deliusUsername: String, serviceName: ServiceName): List<OfflineApplicationEntity> {
+    val userEntity = userRepository.findByDeliusUsername(deliusUsername)
+      ?: return emptyList()
+
+    val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+      offlineApplicationRepository.findAllWhereService(serviceName.value)
+    } else {
+      emptyList()
+    }
+
+    return applications
+      .filter {
+        offenderService.canAccessOffender(deliusUsername, it.crn)
       }
   }
 
