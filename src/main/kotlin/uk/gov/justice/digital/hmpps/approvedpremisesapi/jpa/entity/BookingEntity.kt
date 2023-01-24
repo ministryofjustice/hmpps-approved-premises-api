@@ -43,6 +43,12 @@ data class BookingEntity(
   var cancellation: CancellationEntity?,
   @OneToOne(mappedBy = "booking")
   var confirmation: ConfirmationEntity?,
+  @OneToOne
+  @JoinColumn(name = "application_id")
+  var application: ApplicationEntity?,
+  @OneToOne
+  @JoinColumn(name = "offline_application_id")
+  var offlineApplication: OfflineApplicationEntity?,
   @OneToMany(mappedBy = "booking")
   var extensions: MutableList<ExtensionEntity>,
   @ManyToOne
