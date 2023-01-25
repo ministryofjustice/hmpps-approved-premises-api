@@ -59,19 +59,27 @@ class SeedService(
 
   private fun <T> processCsv(job: SeedJob<T>) {
     var rowNumber = 1
+    val errors = mutableListOf<String>()
 
     try {
       csvReader().open("$seedFilePrefix/${job.fileName}.csv") {
         readAllWithHeaderAsSequence().forEach { row ->
           val deserializedRow = job.deserializeRow(row)
-
-          job.processRow(deserializedRow)
+          try {
+            job.processRow(deserializedRow)
+          } catch (exception: RuntimeException) {
+            errors.add("Error on row $rowNumber: ${exception.message}")
+            seedLogger.error("Error on row $rowNumber:", exception)
+          }
 
           rowNumber += 1
         }
       }
     } catch (exception: Exception) {
       throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
+    }
+    if (errors.isNotEmpty()) {
+      seedLogger.error("The following row-level errors were raised: ${errors.joinToString("\n")}")
     }
   }
 
