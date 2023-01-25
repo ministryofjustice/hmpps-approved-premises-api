@@ -42,7 +42,7 @@ data class UserEntity(
   var name: String,
   val deliusUsername: String,
   val deliusStaffIdentifier: Long,
-  var email: String,
+  var email: String?,
   var telephoneNumber: String?,
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<ApplicationEntity>,

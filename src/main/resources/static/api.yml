@@ -3393,7 +3393,6 @@ components:
       required:
         - name
         - deliusUsername
-        - email
         - roles
         - qualifications
     UserRole:

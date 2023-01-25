@@ -42,7 +42,7 @@ class UserService(
 
     if (userHasChanged(user, deliusUser)) {
       user.name = deliusUser.staff.fullName
-      user.email = deliusUser.email
+      user.email = deliusUser.email.toString()
       user.telephoneNumber = deliusUser.telephoneNumber
 
       user = userRepository.save(user)

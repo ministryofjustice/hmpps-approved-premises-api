@@ -155,6 +155,36 @@ class UserServiceTest {
     }
 
     @Test
+    fun `it stores a null email address if missing from Community API`() {
+      val user = userFactory.produce()
+      val deliusUser = staffUserDetailsFactory
+        .withTelephoneNumber("0123456789")
+        .withoutEmail()
+        .produce()
+
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser
+      )
+
+      val result = userService.getUserForId(id)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      result as AuthorisableActionResult.Success
+
+      var entity = result.entity
+
+      assertThat(entity.id).isEqualTo(user.id)
+      assertThat(entity.name).isEqualTo("$forename $surname")
+      assertThat(entity.deliusUsername).isEqualTo(user.deliusUsername)
+      assertThat(entity.email).isEqualTo("null")
+      assertThat(entity.telephoneNumber).isEqualTo(deliusUser.telephoneNumber)
+
+      verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
+      verify(exactly = 1) { mockUserRepository.save(any()) }
+    }
+    @Test
     fun `it does not save the object if the email and telephone number are the same as Delius`() {
       val email = "foo@example.com"
       val telephoneNumber = "0123456789"
