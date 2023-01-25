@@ -5,12 +5,15 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -18,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -43,6 +47,7 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockJsonLogicService = mockk<JsonLogicService>()
+  private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -51,7 +56,8 @@ class ApplicationServiceTest {
     mockOffenderService,
     mockUserService,
     mockAssessmentService,
-    mockJsonLogicService
+    mockJsonLogicService,
+    mockOfflineApplicationRepository
   )
 
   @Test
@@ -588,5 +594,161 @@ class ApplicationServiceTest {
 
     verify { mockApplicationRepository.save(any()) }
     verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
+  }
+
+  @Test
+  fun `Get all offline applications where Probation Officer with provided distinguished name does not exist returns empty list`() {
+    val distinguishedName = "SOMEPERSON"
+
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns null
+
+    assertThat(applicationService.getAllOfflineApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).isEmpty()
+  }
+
+  @Test
+  fun `Get all offline applications where Probation Officer exists returns empty list for user without any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
+    val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
+    val distinguishedName = "SOMEPERSON"
+    val userEntity = UserEntityFactory()
+      .withId(userId)
+      .withDeliusUsername(distinguishedName)
+      .produce()
+    val offlineApplicationEntities = listOf(
+      OfflineApplicationEntityFactory()
+        .produce(),
+      OfflineApplicationEntityFactory()
+        .produce(),
+      OfflineApplicationEntityFactory()
+        .produce()
+    )
+
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockOfflineApplicationRepository.findAllByService("approved-premises") } returns offlineApplicationEntities
+
+    offlineApplicationEntities.forEach {
+      every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
+    }
+
+    assertThat(applicationService.getAllOfflineApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).isEmpty()
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER" ])
+  fun `Get all offline applications where Probation Officer exists returns repository results for user with any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`(role: UserRole) {
+    val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
+    val distinguishedName = "SOMEPERSON"
+    val userEntity = UserEntityFactory()
+      .withId(userId)
+      .withDeliusUsername(distinguishedName)
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(role)
+          .produce()
+      }
+    val offlineApplicationEntities = listOf(
+      OfflineApplicationEntityFactory()
+        .produce(),
+      OfflineApplicationEntityFactory()
+        .produce(),
+      OfflineApplicationEntityFactory()
+        .produce()
+    )
+
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockOfflineApplicationRepository.findAllByService("approved-premises") } returns offlineApplicationEntities
+
+    offlineApplicationEntities.forEach {
+      every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
+    }
+
+    assertThat(applicationService.getAllOfflineApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).containsAll(offlineApplicationEntities)
+  }
+
+  @Test
+  fun `getOfflineApplicationForUsername where application does not exist returns NotFound result`() {
+    val distinguishedName = "SOMEPERSON"
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+    every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+    assertThat(applicationService.getOfflineApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `getOfflineApplicationForUsername where where caller is not one of one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
+    val distinguishedName = "SOMEPERSON"
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory().produce()
+    every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns OfflineApplicationEntityFactory()
+      .produce()
+
+    assertThat(applicationService.getOfflineApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER" ])
+  fun `getOfflineApplicationForUsername where user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER but does not pass LAO check returns Unauthorised result`(role: UserRole) {
+    val distinguishedName = "SOMEPERSON"
+    val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+    val userEntity = UserEntityFactory()
+      .withId(userId)
+      .withDeliusUsername(distinguishedName)
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(role)
+          .produce()
+      }
+
+    val applicationEntity = OfflineApplicationEntityFactory()
+      .produce()
+
+    every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockOffenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns false
+
+    val result = applicationService.getOfflineApplicationForUsername(applicationId, distinguishedName)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getOfflineApplicationForUsername where user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER and passes LAO check returns Success result with entity from db`() {
+    listOf(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER).forEach { role ->
+      val distinguishedName = "SOMEPERSON"
+      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      val userEntity = UserEntityFactory()
+        .withId(userId)
+        .withDeliusUsername(distinguishedName)
+        .produce()
+        .apply {
+          roles += UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(role)
+            .produce()
+        }
+
+      val applicationEntity = OfflineApplicationEntityFactory()
+        .produce()
+
+      every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
+      every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+      every { mockOffenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns true
+
+      val result = applicationService.getOfflineApplicationForUsername(applicationId, distinguishedName)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity).isEqualTo(applicationEntity)
+    }
   }
 }

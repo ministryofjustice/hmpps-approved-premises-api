@@ -342,6 +342,8 @@ class PremisesController(
         originalArrivalDate = body.arrivalDate,
         originalDepartureDate = body.departureDate,
         createdAt = OffsetDateTime.now(),
+        application = null,
+        offlineApplication = null
       )
     )
 

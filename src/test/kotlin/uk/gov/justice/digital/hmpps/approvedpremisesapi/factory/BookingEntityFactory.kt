@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import kotlin.RuntimeException
 
 class BookingEntityFactory : Factory<BookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
@@ -155,5 +154,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     originalArrivalDate = this.originalArrivalDate?.invoke() ?: this.arrivalDate(),
     originalDepartureDate = this.originalDepartureDate?.invoke() ?: this.departureDate(),
     createdAt = this.createdAt(),
+    application = null,
+    offlineApplication = null
   )
 }
