@@ -35,10 +35,11 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
+        it.message.contains("Error on row 1:") &&
         it.throwable != null &&
         it.throwable.cause != null &&
-        it.throwable.cause!!.message == "Could not get user INVALID-USER"
+        it.throwable.message!!.contains("Could not get user INVALID-USER") &&
+        it.throwable.cause!!.message!!.contains("Unable to complete GET request to /secure/staff/username/INVALID-USER")
     }
   }
 

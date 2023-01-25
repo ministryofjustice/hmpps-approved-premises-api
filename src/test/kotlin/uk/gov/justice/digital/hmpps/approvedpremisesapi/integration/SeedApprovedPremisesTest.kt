@@ -33,9 +33,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
+        it.message == "Error on row 1:" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Probation Region Not Real Region does not exist"
+        it.throwable.message == "Probation Region Not Real Region does not exist"
     }
   }
 
@@ -61,9 +61,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
+        it.message == "Error on row 1:" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Local Authority Area Not Real Authority does not exist"
+        it.throwable.message == "Local Authority Area Not Real Authority does not exist"
     }
   }
 
@@ -92,9 +92,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
+        it.message == "Error on row 1:" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Characteristic Not Real Characteristic does not exist"
+        it.throwable.message == "Characteristic Not Real Characteristic does not exist"
     }
   }
 
@@ -128,9 +128,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
+        it.message == "Error on row 1:" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Service scope does not match for Characteristic ${characteristic.id}"
+        it.throwable.message == "Service scope does not match for Characteristic ${characteristic.id}"
     }
   }
 
@@ -165,9 +165,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
+        it.message == "Error on row 1:" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Model scope does not match for Characteristic ${characteristic.id}"
+        it.throwable.message == "Model scope does not match for Characteristic ${characteristic.id}"
     }
   }
 
