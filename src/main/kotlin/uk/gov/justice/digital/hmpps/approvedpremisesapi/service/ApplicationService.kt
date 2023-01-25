@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -99,7 +100,7 @@ class ApplicationService(
     return AuthorisableActionResult.Unauthorised()
   }
 
-  fun createApplication(crn: String, username: String, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?) = validated<ApplicationEntity> {
+  fun createApplication(crn: String, username: String, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?, createWithRisks: Boolean? = true) = validated<ApplicationEntity> {
     if (service != ServiceName.approvedPremises.value) {
       "$.service" hasValidationError "onlyCas1Supported"
       return fieldValidationError
@@ -128,13 +129,16 @@ class ApplicationService(
     }
 
     val user = userService.getUserForRequest()
+    var riskRatings: PersonRisks? = null
 
-    val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, username)
+    if (createWithRisks == true) {
+      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, username)
 
-    val riskRatings = when (riskRatingsResult) {
-      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> riskRatingsResult.entity
+      riskRatings = when (riskRatingsResult) {
+        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+        is AuthorisableActionResult.Success -> riskRatingsResult.entity
+      }
     }
 
     val createdApplication = applicationRepository.save(

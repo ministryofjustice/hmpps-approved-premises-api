@@ -79,7 +79,7 @@ class ApprovedPremisesApplicationEntity(
   val offenceId: String,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   @Convert(disableConversion = true)
-  val riskRatings: PersonRisks
+  val riskRatings: PersonRisks?
 ) : ApplicationEntity(
   id,
   crn,

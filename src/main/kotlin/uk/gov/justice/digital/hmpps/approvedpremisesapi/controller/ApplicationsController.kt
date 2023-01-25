@@ -79,7 +79,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?): ResponseEntity<Application> {
+  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?): ResponseEntity<Application> {
     val serviceName = xServiceName?.value ?: ServiceName.approvedPremises.value
 
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
@@ -87,7 +87,7 @@ class ApplicationsController(
 
     val (offender, inmate) = getPersonDetail(body.crn)
 
-    val application = when (val applicationResult = applicationService.createApplication(body.crn, username, deliusPrincipal.token.tokenValue, serviceName, body.convictionId, body.deliusEventNumber, body.offenceId)) {
+    val application = when (val applicationResult = applicationService.createApplication(body.crn, username, deliusPrincipal.token.tokenValue, serviceName, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.Success -> applicationResult.entity

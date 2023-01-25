@@ -990,6 +990,76 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create new application without risks returns 201 with correct body and Location header`() {
+    val crn = offenderDetails.otherIds.crn
+    val username = "PROBATIONPERSON"
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+
+    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    mockOffenderDetailsCommunityApiCall(
+      OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withDateOfBirth(LocalDate.parse("1985-05-05"))
+        .withNomsNumber("NOMS321")
+        .withFirstName("James")
+        .withLastName("Someone")
+        .withGender("Male")
+        .withNationality("English")
+        .withReligionOrBelief("Judaism")
+        .withGenderIdentity("Prefer to self-describe")
+        .withSelfDescribedGenderIdentity("This is a self described identity")
+        .produce()
+    )
+
+    mockStaffUserInfoCommunityApiCall(
+      StaffUserDetailsFactory()
+        .withUsername("PROBATIONPERSON")
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+
+    val result = webTestClient.post()
+      .uri("/applications?createWithRisks=false")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewApplication(
+          crn = crn,
+          convictionId = 123,
+          deliusEventNumber = "1",
+          offenceId = "789"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ApprovedPremisesApplication::class.java)
+
+    assertThat(result.responseHeaders["Location"]).anyMatch {
+      it.matches(Regex("/applications/.+"))
+    }
+
+    assertThat(result.responseBody.blockFirst()).matches {
+      it.person.crn == crn &&
+        it.schemaVersion == applicationSchema.id
+    }
+  }
+
+  @Test
   fun `Update existing application returns 200 with correct body`() {
     val username = "PROBATIONPERSON"
     val crn = offenderDetails.otherIds.crn

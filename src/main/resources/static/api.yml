@@ -1192,6 +1192,12 @@ paths:
           description: Which service the application will belong to, defaults to approved-premises
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: createWithRisks
+          in: query
+          required: false
+          description: Instructs the API to create and return risk information from the OASys API (defaults to true)
+          schema:
+            type: boolean
       requestBody:
         description: Information to create a blank application with
         content:
@@ -3061,7 +3067,6 @@ components:
             document:
               $ref: '#/components/schemas/AnyValue'
           required:
-            - risks
             - createdByUserId
             - schemaVersion
             - outdatedSchema

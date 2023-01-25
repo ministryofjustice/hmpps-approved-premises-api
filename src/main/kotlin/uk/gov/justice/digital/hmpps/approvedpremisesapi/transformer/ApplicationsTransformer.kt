@@ -32,7 +32,7 @@ class ApplicationsTransformer(
       isPipeApplication = jpa.isPipeApplication,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      risks = risksTransformer.transformDomainToApi(jpa.riskRatings, jpa.crn)
+      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null
     )
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
       id = jpa.id,
