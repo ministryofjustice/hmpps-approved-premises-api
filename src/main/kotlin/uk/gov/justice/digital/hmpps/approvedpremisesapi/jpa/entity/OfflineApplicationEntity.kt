@@ -11,6 +11,7 @@ import javax.persistence.Table
 @Repository
 interface OfflineApplicationRepository : JpaRepository<OfflineApplicationEntity, UUID> {
   fun findAllByService(name: String): List<OfflineApplicationEntity>
+  fun findAllByServiceAndCrn(name: String, crn: String): List<OfflineApplicationEntity>
 }
 
 @Entity

@@ -249,6 +249,37 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Approved Premises Booking returns Bad Request when no application exists for CRN`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApprovedPremisesBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              departureDate = LocalDate.parse("2022-08-30"),
+              serviceName = ServiceName.approvedPremises,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotHaveApplication")
+      }
+    }
+  }
+
+  @Test
   fun `Create Approved Premises Booking returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
@@ -257,6 +288,13 @@ class BookingTest : IntegrationTestBase() {
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
           }
+        }
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+          withSubmittedAt(OffsetDateTime.now())
         }
 
         webTestClient.post()

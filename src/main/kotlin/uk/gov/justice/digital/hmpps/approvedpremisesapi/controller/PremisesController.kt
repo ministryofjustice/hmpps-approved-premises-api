@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
@@ -43,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -86,7 +88,8 @@ class PremisesController(
   private val staffMemberTransformer: StaffMemberTransformer,
   private val staffMemberService: StaffMemberService,
   private val roomService: RoomService,
-  private val roomTransformer: RoomTransformer
+  private val roomTransformer: RoomTransformer,
+  private val applicationService: ApplicationService
 ) : PremisesApiDelegate {
 
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
@@ -320,9 +323,30 @@ class PremisesController(
     }
     inmateDetailResult as AuthorisableActionResult.Success
 
+    val serviceName = when (body) {
+      is NewApprovedPremisesBooking -> ServiceName.approvedPremises
+      is NewTemporaryAccommodationBooking -> ServiceName.temporaryAccommodation
+      else -> throw BadRequestProblem(errorDetail = "Unsupported Booking type")
+    }
+
+    val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(body.crn, serviceName)
+      .filter { it.submittedAt != null }
+      .maxByOrNull { it.submittedAt!! }
+    val newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(body.crn, serviceName)
+      .maxByOrNull { it.submittedAt }
+
+    if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null && serviceName == ServiceName.approvedPremises) {
+      validationErrors["$.crn"] = "doesNotHaveApplication"
+    }
+
     if (validationErrors.any()) {
       throw BadRequestProblem(validationErrors)
     }
+
+    val associateWithOfflineApplication = (newestOfflineApplication != null && newestSubmittedOnlineApplication == null) ||
+      (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.submittedAt > newestSubmittedOnlineApplication.submittedAt)
+
+    val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && ! associateWithOfflineApplication
 
     val booking = bookingService.createBooking(
       BookingEntity(
@@ -343,8 +367,8 @@ class PremisesController(
         originalArrivalDate = body.arrivalDate,
         originalDepartureDate = body.departureDate,
         createdAt = OffsetDateTime.now(),
-        application = null,
-        offlineApplication = null
+        application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
+        offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null
       )
     )
 
