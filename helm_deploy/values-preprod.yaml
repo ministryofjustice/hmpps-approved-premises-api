@@ -11,7 +11,7 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     HMPPS_AUTH_URL: https://sign-in-preprod.hmpps.service.justice.gov.uk/auth
     SERVICES_COMMUNITY-API_BASE-URL: https://community-api.pre-prod.delius.probation.hmpps.dsd.io
-    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.pre-prod.delius.probation.hmpps.dsd.io
+    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-preprod.hmpps.service.justice.gov.uk
     SERVICES_ASSESS-RISKS-AND-NEEDS-API_BASE-URL: https://assess-risks-and-needs-preprod.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-preprod.hmpps.service.justice.gov.uk
     SERVICES_PRISONS-API_BASE-URL: https://api-preprod.prison.service.justice.gov.uk
