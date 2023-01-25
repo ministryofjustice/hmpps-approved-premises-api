@@ -6,12 +6,15 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.UsersApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole as JpaUserRole
 
 @Service
 class UsersController(
@@ -27,5 +30,17 @@ class UsersController(
     }
 
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
+  }
+
+  override fun usersGet(xServiceName: ServiceName, roles: List<UserRole>?, qualifications: List<UserQualification>?): ResponseEntity<List<User>> {
+    val user = userService.getUserForRequest()
+    if (!user.hasAnyRole(JpaUserRole.ROLE_ADMIN)) {
+      throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(
+      userService.getAllUsers()
+        .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
+    )
   }
 }

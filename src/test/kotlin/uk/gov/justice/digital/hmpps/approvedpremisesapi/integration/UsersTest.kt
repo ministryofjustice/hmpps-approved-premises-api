@@ -1,14 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
 
 class UsersTest : IntegrationTestBase() {
+  @Autowired
+  lateinit var userTransformer: UserTransformer
+
   val id: UUID = UUID.fromString("aff9a4dc-e208-4e4b-abe6-99aff7f6af8a")
 
   @Test
@@ -207,6 +213,68 @@ class UsersTest : IntegrationTestBase() {
             roles = emptyList(),
             service = ServiceName.temporaryAccommodation.value,
           )
+        )
+      )
+  }
+
+  @Test
+  fun `GET to users with ROLE_ADMIN role returns full list ordered by name`() {
+    val deliusUsername = "ArthurAdmin"
+
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = deliusUsername,
+      authSource = "delius",
+      roles = listOf("ROLE_PROBATION")
+    )
+
+    val region = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
+    val arthurAdmin = userEntityFactory.produceAndPersist {
+      withDeliusUsername(deliusUsername)
+      withName("Arthur Admin")
+      withYieldedProbationRegion { region }
+    }
+
+    arthurAdmin.roles += userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(arthurAdmin)
+      withRole(UserRole.ROLE_ADMIN)
+    }
+
+    val ben = userEntityFactory.produceAndPersist {
+      withDeliusUsername("BenJones")
+      withName("Ben Jones")
+      withYieldedProbationRegion { region }
+    }
+
+    val cary = userEntityFactory.produceAndPersist {
+      withDeliusUsername("CaryJones")
+      withName("Cary Jones")
+      withYieldedProbationRegion { region }
+    }
+
+    val avril = userEntityFactory.produceAndPersist {
+      withDeliusUsername("AvrilJones")
+      withName("Avril Jones")
+      withYieldedProbationRegion { region }
+    }
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    webTestClient.get()
+      .uri("/users")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(
+        objectMapper.writeValueAsString(
+          listOf(arthurAdmin, avril, ben, cary).map {
+            userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
+          }
         )
       )
   }

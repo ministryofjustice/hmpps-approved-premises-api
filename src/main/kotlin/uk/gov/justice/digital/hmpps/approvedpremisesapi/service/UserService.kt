@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -37,6 +38,10 @@ class UserService(
     val username = deliusPrincipal.name
 
     return getUserForUsername(username)
+  }
+
+  fun getAllUsers(): List<UserEntity> {
+    return userRepository.findAll(Sort.by(Sort.Direction.ASC, "name"))
   }
 
   fun getUserForId(id: java.util.UUID): AuthorisableActionResult<UserEntity> {
