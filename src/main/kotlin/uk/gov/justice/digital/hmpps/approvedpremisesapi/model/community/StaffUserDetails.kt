@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 data class StaffUserDetails(
   val username: String,
-  val email: String,
+  val email: String?,
   val telephoneNumber: String?,
   val staffCode: String,
   val staffIdentifier: Long,
