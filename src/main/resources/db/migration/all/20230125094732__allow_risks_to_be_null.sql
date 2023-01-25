@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises_applications ALTER COLUMN risk_ratings DROP NOT NULL;
