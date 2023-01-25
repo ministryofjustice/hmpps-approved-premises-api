@@ -267,6 +267,8 @@ abstract class IntegrationTestBase {
   lateinit var roomEntityFactory: PersistedFactory<RoomEntity, UUID, RoomEntityFactory>
   lateinit var bedEntityFactory: PersistedFactory<BedEntity, UUID, BedEntityFactory>
 
+  private var clientCredentialsCallMocked = false
+
   @BeforeEach
   fun beforeEach() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -359,7 +361,7 @@ abstract class IntegrationTestBase {
   }
 
   fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
+    WireMock.get(urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
@@ -412,7 +414,7 @@ abstract class IntegrationTestBase {
   }
 
   fun mockStaffMembersContextApiCall(staffMember: StaffMember, qCode: String) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
+    WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
@@ -428,7 +430,7 @@ abstract class IntegrationTestBase {
   )
 
   fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
+    WireMock.get(urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
@@ -468,4 +470,29 @@ abstract class IntegrationTestBase {
           .withStatus(404)
       )
   )
+
+  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        WireMock.get(urlEqualTo(url))
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(responseStatus)
+              .withBody(
+                objectMapper.writeValueAsString(responseBody)
+              )
+          )
+      )
+    }
+
+  private fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit) {
+    if (! clientCredentialsCallMocked) {
+      mockClientCredentialsJwtRequest()
+
+      clientCredentialsCallMocked = true
+    }
+
+    block()
+  }
 }
