@@ -85,6 +85,11 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
   fun `Attempting to assign roles to a currently known user succeeds`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("KNOWN-USER")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     withCsv(
@@ -118,6 +123,11 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
   fun `Attempting to assign a non-existent role logs an error`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("known-user")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     withCsv(
@@ -148,6 +158,11 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
   fun `Attempting to assign a non-existent qualification logs an error`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("known-user")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     withCsv(

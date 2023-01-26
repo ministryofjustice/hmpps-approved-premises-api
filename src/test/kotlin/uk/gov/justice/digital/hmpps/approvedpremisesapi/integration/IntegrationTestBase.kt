@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -438,17 +439,26 @@ abstract class IntegrationTestBase {
       )
   )
 
-  fun mockStaffUserInfoCommunityApiCall(staffUserDetails: StaffUserDetails) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/staff/username/${staffUserDetails.username}"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(staffUserDetails)
-          )
-      )
-  )
+  fun mockStaffUserInfoCommunityApiCall(staffUserDetails: StaffUserDetails, createProbationRegionForStaffAreaCode: Boolean = true): StubMapping? {
+    if (createProbationRegionForStaffAreaCode) {
+      probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        withDeliusCode(staffUserDetails.probationArea.code)
+      }
+    }
+
+    return wiremockServer.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/secure/staff/username/${staffUserDetails.username}"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withBody(
+              objectMapper.writeValueAsString(staffUserDetails)
+            )
+        )
+    )
+  }
 
   fun mockStaffUserInfoCommunityApiCallNotFound(username: String) = wiremockServer.stubFor(
     WireMock.get(urlEqualTo("/secure/staff/username/$username"))

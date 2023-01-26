@@ -119,8 +119,21 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     val username = "PROBATIONPERSON2"
-    val otherUser = userEntityFactory.produceAndPersist()
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
+    val otherUser = userEntityFactory.produceAndPersist {
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(newestJsonSchema)
@@ -207,8 +220,21 @@ class ApplicationTest : IntegrationTestBase() {
   @EnumSource(value = UserRole::class, names = [ "WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER" ])
   fun `Get all applications returns 200 with correct body - when user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns all applications`(role: UserRole) {
     val username = "PROBATIONPERSON"
-    val otherUser = userEntityFactory.produceAndPersist()
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
+    val otherUser = userEntityFactory.produceAndPersist {
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
@@ -497,7 +523,14 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(newestJsonSchema)
@@ -558,6 +591,11 @@ class ApplicationTest : IntegrationTestBase() {
     val username = "PROBATIONPERSON2"
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     val application = produceAndPersistBasicApplication(crn)
@@ -715,7 +753,14 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(olderJsonSchema)
@@ -770,6 +815,11 @@ class ApplicationTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -1088,10 +1138,18 @@ class ApplicationTest : IntegrationTestBase() {
         .withForenames("Jim")
         .withSurname("Jimmerson")
         .withStaffIdentifier(5678)
-        .produce()
+        .produce(),
+      false
     )
 
-    val assessor = userEntityFactory.produceAndPersist { withDeliusUsername("ASSESSOR") }
+    val assessor = userEntityFactory.produceAndPersist {
+      withDeliusUsername("ASSESSOR")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(assessor)
@@ -1128,6 +1186,11 @@ class ApplicationTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -1188,10 +1251,18 @@ class ApplicationTest : IntegrationTestBase() {
         .withForenames("Jim")
         .withSurname("Jimmerson")
         .withStaffIdentifier(5678)
-        .produce()
+        .produce(),
+      false
     )
 
-    val assessor = userEntityFactory.produceAndPersist { withDeliusUsername("ASSESSOR") }
+    val assessor = userEntityFactory.produceAndPersist {
+      withDeliusUsername("ASSESSOR")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(assessor)
@@ -1239,6 +1310,11 @@ class ApplicationTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -1327,6 +1403,11 @@ class ApplicationTest : IntegrationTestBase() {
 
     val requestUser = userEntityFactory.produceAndPersist {
       withDeliusUsername(requestUsername)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(requestUser)
@@ -1336,21 +1417,33 @@ class ApplicationTest : IntegrationTestBase() {
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
         .withUsername(requestUsername)
-        .produce()
+        .produce(),
+      false
     )
 
     val otherUser = userEntityFactory.produceAndPersist {
       withDeliusUsername(otherUsername)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
         .withUsername(otherUsername)
-        .produce()
+        .produce(),
+      false
     )
 
     val assigneeUser = userEntityFactory.produceAndPersist {
       withDeliusUsername(assigneeUsername)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     mockStaffUserInfoCommunityApiCall(
@@ -1444,7 +1537,14 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)

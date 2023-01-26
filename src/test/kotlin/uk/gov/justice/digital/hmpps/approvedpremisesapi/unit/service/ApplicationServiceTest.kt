@@ -9,12 +9,14 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -80,6 +82,11 @@ class ApplicationServiceTest {
     val userEntity = UserEntityFactory()
       .withId(userId)
       .withDeliusUsername(distinguishedName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
     val applicationEntities = listOf(
       ApprovedPremisesApplicationEntityFactory()
@@ -122,9 +129,23 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory().produce()
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory().produce())
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
@@ -143,6 +164,11 @@ class ApplicationServiceTest {
     val userEntity = UserEntityFactory()
       .withId(userId)
       .withDeliusUsername(distinguishedName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val applicationEntity = ApprovedPremisesApplicationEntityFactory()
@@ -176,9 +202,20 @@ class ApplicationServiceTest {
       val userEntity = UserEntityFactory()
         .withId(userId)
         .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
         .produce()
 
-      val otherUserEntity = UserEntityFactory().produce()
+      val otherUserEntity = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
       userEntity.roles.add(
         UserRoleAssignmentEntityFactory()
@@ -256,7 +293,13 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
-    val user = UserEntityFactory().produce()
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
@@ -326,11 +369,24 @@ class ApplicationServiceTest {
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withId(applicationId)
-      .withYieldedCreatedByUser { UserEntityFactory().produce() }
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      }
       .produce()
 
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
@@ -345,6 +401,11 @@ class ApplicationServiceTest {
 
     val user = UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val application = ApprovedPremisesApplicationEntityFactory()
@@ -380,6 +441,11 @@ class ApplicationServiceTest {
 
     val user = UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val application = ApprovedPremisesApplicationEntityFactory()
@@ -414,6 +480,11 @@ class ApplicationServiceTest {
 
     val user = UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
@@ -467,11 +538,24 @@ class ApplicationServiceTest {
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withId(applicationId)
-      .withYieldedCreatedByUser { UserEntityFactory().produce() }
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      }
       .produce()
 
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
@@ -486,6 +570,11 @@ class ApplicationServiceTest {
 
     val user = UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val application = ApprovedPremisesApplicationEntityFactory()
@@ -521,6 +610,11 @@ class ApplicationServiceTest {
 
     val user = UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val application = ApprovedPremisesApplicationEntityFactory()
@@ -557,6 +651,11 @@ class ApplicationServiceTest {
 
     val user = UserEntityFactory()
       .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val application = ApprovedPremisesApplicationEntityFactory()
@@ -612,6 +711,11 @@ class ApplicationServiceTest {
     val userEntity = UserEntityFactory()
       .withId(userId)
       .withDeliusUsername(distinguishedName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
     val offlineApplicationEntities = listOf(
       OfflineApplicationEntityFactory()
@@ -640,6 +744,11 @@ class ApplicationServiceTest {
     val userEntity = UserEntityFactory()
       .withId(userId)
       .withDeliusUsername(distinguishedName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -681,7 +790,13 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory().produce()
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
     every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns OfflineApplicationEntityFactory()
       .produce()
 
@@ -698,6 +813,11 @@ class ApplicationServiceTest {
     val userEntity = UserEntityFactory()
       .withId(userId)
       .withDeliusUsername(distinguishedName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -728,6 +848,11 @@ class ApplicationServiceTest {
       val userEntity = UserEntityFactory()
         .withId(userId)
         .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
         .produce()
         .apply {
           roles += UserRoleAssignmentEntityFactory()

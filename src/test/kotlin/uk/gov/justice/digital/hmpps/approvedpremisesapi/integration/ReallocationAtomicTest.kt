@@ -61,6 +61,11 @@ class ReallocationAtomicTest : IntegrationTestBase() {
 
     val requestUser = userEntityFactory.produceAndPersist {
       withDeliusUsername(requestUsername)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(requestUser)
@@ -70,27 +75,40 @@ class ReallocationAtomicTest : IntegrationTestBase() {
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
         .withUsername(requestUsername)
-        .produce()
+        .produce(),
+      false
     )
 
     val otherUser = userEntityFactory.produceAndPersist {
       withDeliusUsername(otherUsername)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
         .withUsername(otherUsername)
-        .produce()
+        .produce(),
+      false
     )
 
     val assigneeUser = userEntityFactory.produceAndPersist {
       withDeliusUsername(assigneeUsername)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
         .withUsername(assigneeUsername)
-        .produce()
+        .produce(),
+      false
     )
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -179,7 +197,14 @@ class ReallocationAtomicTest : IntegrationTestBase() {
       )
     }
 
-    val userEntity = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
+    val userEntity = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)

@@ -868,6 +868,11 @@ class PremisesTest : IntegrationTestBase() {
     val username = "PROBATIONUSER"
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
@@ -937,6 +942,11 @@ class PremisesTest : IntegrationTestBase() {
     val username = "PROBATIONUSER"
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
@@ -1007,6 +1017,11 @@ class PremisesTest : IntegrationTestBase() {
     val username = "PROBATIONUSER"
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
