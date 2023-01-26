@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
@@ -248,6 +250,42 @@ class UsersTest : IntegrationTestBase() {
       .isForbidden
   }
 
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER", "WORKFLOW_MANAGER" ])
+  fun `GET to users with a role other than ROLE_ADMIN is forbidden`(role: UserRole) {
+    val deliusUsername = "AnyUser"
+
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = deliusUsername,
+      authSource = "delius",
+      roles = listOf("ROLE_PROBATION")
+    )
+
+    val region = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(deliusUsername)
+      withName("Any User")
+      withYieldedProbationRegion { region }
+    }
+
+    user.roles += userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(role)
+    }
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    webTestClient.get()
+      .uri("/users")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
 
   @Test
   fun `GET to users with ROLE_ADMIN role returns full list ordered by name`() {
