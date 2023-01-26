@@ -218,6 +218,38 @@ class UsersTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `GET to users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+    val deliusUsername = "ProbationPractitioner"
+
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = deliusUsername,
+      authSource = "delius",
+      roles = listOf("ROLE_PROBATION")
+    )
+
+    val region = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(deliusUsername)
+      withName("Probation Practitioner")
+      withYieldedProbationRegion { region }
+    }
+
+    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+    webTestClient.get()
+      .uri("/users")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+
+  @Test
   fun `GET to users with ROLE_ADMIN role returns full list ordered by name`() {
     val deliusUsername = "ArthurAdmin"
 
