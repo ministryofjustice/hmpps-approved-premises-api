@@ -3450,7 +3450,7 @@ components:
         - manager
         - workflow_manager
         - applicant
-        - admin
+        - role_admin
     UserQualification:
       type: string
       enum:

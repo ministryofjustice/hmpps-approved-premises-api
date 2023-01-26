@@ -37,7 +37,7 @@ class UserTransformer(
   }
 
   private fun transformRoleToApi(userRole: UserRoleAssignmentEntity): ApiUserRole = when (userRole.role) {
-    UserRole.ADMIN -> ApiUserRole.admin
+    UserRole.ROLE_ADMIN -> ApiUserRole.roleAdmin
     UserRole.ASSESSOR -> ApiUserRole.assessor
     UserRole.MATCHER -> ApiUserRole.matcher
     UserRole.MANAGER -> ApiUserRole.manager
