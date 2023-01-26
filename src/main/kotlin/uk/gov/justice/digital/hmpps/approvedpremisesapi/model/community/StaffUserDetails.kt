@@ -9,7 +9,8 @@ data class StaffUserDetails(
   val staffCode: String,
   val staffIdentifier: Long,
   val staff: StaffNames,
-  val teams: List<StaffUserTeamMembership>?
+  val teams: List<StaffUserTeamMembership>?,
+  val probationArea: StaffProbationArea,
 )
 
 data class StaffNames(
@@ -34,4 +35,8 @@ data class StaffUserTeamMembership(
 data class KeyValue(
   val code: String,
   val description: String
+)
+
+data class StaffProbationArea(
+  val code: String,
 )

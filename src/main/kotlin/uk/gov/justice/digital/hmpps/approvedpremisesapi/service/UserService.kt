@@ -4,6 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
 
@@ -22,7 +24,8 @@ class UserService(
   private val communityApiClient: CommunityApiClient,
   private val userRepository: UserRepository,
   private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
-  private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository
+  private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
+  private val probationRegionRepository: ProbationRegionRepository,
 ) {
   fun getUserForRequest(): UserEntity {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
@@ -62,6 +65,12 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
+    val staffProbationRegion = probationRegionRepository.findByDeliusCode(staffUserDetails.probationArea.code)
+
+    if (staffProbationRegion == null) {
+      throw BadRequestProblem(errorDetail = "Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$username'")
+    }
+
     return userRepository.save(
       UserEntity(
         id = UUID.randomUUID(),
@@ -72,7 +81,8 @@ class UserService(
         telephoneNumber = staffUserDetails.telephoneNumber,
         applications = mutableListOf(),
         roles = mutableListOf(),
-        qualifications = mutableListOf()
+        qualifications = mutableListOf(),
+        probationRegion = staffProbationRegion,
       )
     )
   }

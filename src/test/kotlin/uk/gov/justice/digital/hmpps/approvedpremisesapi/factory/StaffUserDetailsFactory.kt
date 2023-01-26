@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNames
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
 class StaffUserDetailsFactory : Factory<StaffUserDetails> {
@@ -17,6 +19,7 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
   private var forenames: Yielded<String> = { randomStringUpperCase(8) }
   private var surname: Yielded<String> = { randomStringUpperCase(8) }
   private var teams: Yielded<List<StaffUserTeamMembership>> = { listOf() }
+  private var probationAreaCode: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
 
   fun withUsername(username: String) = apply {
     this.username = { username }
@@ -54,6 +57,10 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
     this.teams = { teams }
   }
 
+  fun withProbationAreaCode(probationAreaCode: String) = apply {
+    this.probationAreaCode = { probationAreaCode }
+  }
+
   override fun produce(): StaffUserDetails = StaffUserDetails(
     username = this.username(),
     email = this.email(),
@@ -64,6 +71,7 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
       forenames = this.forenames(),
       surname = this.surname()
     ),
-    teams = this.teams()
+    teams = this.teams(),
+    probationArea = StaffProbationArea(this.probationAreaCode()),
   )
 }

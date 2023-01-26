@@ -13,6 +13,7 @@ import javax.persistence.Table
 @Repository
 interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID> {
   fun findByName(name: String): ProbationRegionEntity?
+  fun findByDeliusCode(deliusCode: String): ProbationRegionEntity?
 }
 
 @Entity
@@ -25,5 +26,6 @@ data class ProbationRegionEntity(
   @JoinColumn(name = "ap_area_id")
   val apArea: ApAreaEntity,
   @OneToMany(mappedBy = "probationRegion")
-  val premises: MutableList<PremisesEntity>
+  val premises: MutableList<PremisesEntity>,
+  val deliusCode: String,
 )
