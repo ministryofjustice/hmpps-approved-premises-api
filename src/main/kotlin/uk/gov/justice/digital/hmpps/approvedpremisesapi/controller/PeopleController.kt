@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 class PeopleController(
   private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
+  private val personService: PersonService,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
@@ -41,20 +43,17 @@ class PeopleController(
   private val convictionTransformer: ConvictionTransformer
 ) : PeopleApiDelegate {
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
-    val offenderDetails = getOffenderDetails(crn)
+    val principal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = principal.name
 
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
-
-    val inmateDetail = when (val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(offenderDetails.otherIds.nomsNumber, "Inmate")
+    val personDetails = when (val personDetailResult = personService.getPersonByCrn(crn, username)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(personDetailResult.id!!, personDetailResult.entityType!!)
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> inmateDetailResult.entity
+      is AuthorisableActionResult.Success -> personDetailResult.entity
     }
 
     return ResponseEntity.ok(
-      personTransformer.transformModelToApi(offenderDetails, inmateDetail)
+      personTransformer.transformModelToApi(personDetails.first, personDetails.second)
     )
   }
 
