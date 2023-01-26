@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -21,7 +20,6 @@ class UserEntityFactory : Factory<UserEntity> {
   private var deliusUsername: Yielded<String> = { randomStringUpperCase(12) }
   private var deliusStaffIdentifier: Yielded<Long> = { randomInt(1000, 10000).toLong() }
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
-  private var roles: Yielded<MutableList<UserRoleAssignmentEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
 
@@ -43,14 +41,6 @@ class UserEntityFactory : Factory<UserEntity> {
 
   fun withApplications(applications: MutableList<ApplicationEntity>) = apply {
     this.applications = { applications }
-  }
-
-  fun withYieldedRoles(roles: Yielded<MutableList<UserRoleAssignmentEntity>>) = apply {
-    this.roles = roles
-  }
-
-  fun withRoles(roles: MutableList<UserRoleAssignmentEntity>) = apply {
-    this.roles = { roles }
   }
 
   fun withYieldedQualifications(qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>>) = apply {
@@ -85,8 +75,8 @@ class UserEntityFactory : Factory<UserEntity> {
     deliusUsername = this.deliusUsername(),
     deliusStaffIdentifier = this.deliusStaffIdentifier(),
     applications = this.applications(),
-    roles = this.roles(),
+    roles = mutableListOf(),
     qualifications = this.qualifications(),
-    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
+    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided")
   )
 }
