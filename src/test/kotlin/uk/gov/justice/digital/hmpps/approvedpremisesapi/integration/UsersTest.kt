@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -219,133 +220,136 @@ class UsersTest : IntegrationTestBase() {
       )
   }
 
-  @Test
-  fun `GET to users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-    val deliusUsername = "ProbationPractitioner"
+  @Nested
+  inner class GetUsers {
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER", "WORKFLOW_MANAGER"])
+    fun `GET to users with a role other than ROLE_ADMIN is forbidden`(role: UserRole) {
+      val deliusUsername = "AnyUser"
 
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = deliusUsername,
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-    }
-
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(deliusUsername)
-      withName("Probation Practitioner")
-      withYieldedProbationRegion { region }
-    }
-
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
-
-    webTestClient.get()
-      .uri("/users")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.approvedPremises.value)
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER", "WORKFLOW_MANAGER" ])
-  fun `GET to users with a role other than ROLE_ADMIN is forbidden`(role: UserRole) {
-    val deliusUsername = "AnyUser"
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = deliusUsername,
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-    }
-
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(deliusUsername)
-      withName("Any User")
-      withYieldedProbationRegion { region }
-    }
-
-    user.roles += userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
-
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
-
-    webTestClient.get()
-      .uri("/users")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.approvedPremises.value)
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `GET to users with ROLE_ADMIN role returns full list ordered by name`() {
-    val deliusUsername = "ArthurAdmin"
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = deliusUsername,
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-    }
-
-    val arthurAdmin = userEntityFactory.produceAndPersist {
-      withDeliusUsername(deliusUsername)
-      withName("Arthur Admin")
-      withYieldedProbationRegion { region }
-    }
-
-    arthurAdmin.roles += userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(arthurAdmin)
-      withRole(UserRole.ROLE_ADMIN)
-    }
-
-    val ben = userEntityFactory.produceAndPersist {
-      withDeliusUsername("BenJones")
-      withName("Ben Jones")
-      withYieldedProbationRegion { region }
-    }
-
-    val cary = userEntityFactory.produceAndPersist {
-      withDeliusUsername("CaryJones")
-      withName("Cary Jones")
-      withYieldedProbationRegion { region }
-    }
-
-    val avril = userEntityFactory.produceAndPersist {
-      withDeliusUsername("AvrilJones")
-      withName("Avril Jones")
-      withYieldedProbationRegion { region }
-    }
-
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
-
-    webTestClient.get()
-      .uri("/users")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.approvedPremises.value)
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          listOf(arthurAdmin, avril, ben, cary).map {
-            userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
-          }
-        )
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION")
       )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val user = userEntityFactory.produceAndPersist {
+        withDeliusUsername(deliusUsername)
+        withName("Any User")
+        withYieldedProbationRegion { region }
+      }
+
+      user.roles += userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(user)
+        withRole(role)
+      }
+
+      mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+      webTestClient.get()
+        .uri("/users")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `GET to users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+      val deliusUsername = "ProbationPractitioner"
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION")
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val user = userEntityFactory.produceAndPersist {
+        withDeliusUsername(deliusUsername)
+        withName("Probation Practitioner")
+        withYieldedProbationRegion { region }
+      }
+
+      mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+      webTestClient.get()
+        .uri("/users")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `GET to users with ROLE_ADMIN role returns full list ordered by name`() {
+      val deliusUsername = "ArthurAdmin"
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION")
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val arthurAdmin = userEntityFactory.produceAndPersist {
+        withDeliusUsername(deliusUsername)
+        withName("Arthur Admin")
+        withYieldedProbationRegion { region }
+      }
+
+      arthurAdmin.roles += userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(arthurAdmin)
+        withRole(UserRole.ROLE_ADMIN)
+      }
+
+      val ben = userEntityFactory.produceAndPersist {
+        withDeliusUsername("BenJones")
+        withName("Ben Jones")
+        withYieldedProbationRegion { region }
+      }
+
+      val cary = userEntityFactory.produceAndPersist {
+        withDeliusUsername("CaryJones")
+        withName("Cary Jones")
+        withYieldedProbationRegion { region }
+      }
+
+      val avril = userEntityFactory.produceAndPersist {
+        withDeliusUsername("AvrilJones")
+        withName("Avril Jones")
+        withYieldedProbationRegion { region }
+      }
+
+      mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+      webTestClient.get()
+        .uri("/users")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            listOf(arthurAdmin, avril, ben, cary).map {
+              userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
+            }
+          )
+        )
+    }
   }
 }
