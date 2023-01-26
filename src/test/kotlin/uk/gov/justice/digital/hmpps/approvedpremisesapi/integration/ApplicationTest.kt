@@ -441,7 +441,7 @@ class ApplicationTest : IntegrationTestBase() {
       .expectStatus()
       .is5xxServerError
       .expectBody()
-      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN: `$crn`")
   }
 
   @Test
@@ -664,7 +664,7 @@ class ApplicationTest : IntegrationTestBase() {
       .expectStatus()
       .is5xxServerError
       .expectBody()
-      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN: `$crn`")
   }
 
   @Test
@@ -936,7 +936,7 @@ class ApplicationTest : IntegrationTestBase() {
       .expectStatus()
       .is5xxServerError
       .expectBody()
-      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN: `$crn`")
   }
 
   @Test

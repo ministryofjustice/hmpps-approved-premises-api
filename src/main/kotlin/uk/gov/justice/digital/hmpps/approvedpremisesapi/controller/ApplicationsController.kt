@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
@@ -43,7 +44,8 @@ class ApplicationsController(
   private val offenderService: OffenderService,
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
-  private val userService: UserService
+  private val userService: UserService,
+  private val personService: PersonService,
 ) : ApplicationsApiDelegate {
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
@@ -196,23 +198,25 @@ class ApplicationsController(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
-    val offenderResult = offenderService.getOffenderByCrn(crn, username)
-
-    if (offenderResult !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
+    val personDetails = when (val personDetailResult = personService.getPersonByCrn(crn, username)) {
+      is AuthorisableActionResult.NotFound -> {
+        when (personDetailResult.entityType) {
+          "Person" -> throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
+          "Inmate" -> throw InternalServerErrorProblem("Unable to get InmateDetail via crn: $crn")
+          else -> throw InternalServerErrorProblem("Unexpected NotFound error thrown for crn: $crn")
+        }
+      }
+      is AuthorisableActionResult.Unauthorised -> {
+        when (personDetailResult.entityType) {
+          "Person" -> throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
+          "Inmate" -> throw InternalServerErrorProblem("Unable to get InmateDetail via crn: $crn")
+          else -> throw InternalServerErrorProblem("Unexpected Unauthorised error thrown for crn: $crn")
+        }
+      }
+      is AuthorisableActionResult.Success -> personDetailResult.entity
     }
 
-    if (offenderResult.entity.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
-
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
-
-    if (inmateDetailResult !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("Unable to get InmateDetail via crn: $crn")
-    }
-
-    return Pair(offenderResult.entity, inmateDetailResult.entity)
+    return personDetails
   }
 
   private fun getPersonDetailAndTransform(application: ApplicationEntity): Application {
