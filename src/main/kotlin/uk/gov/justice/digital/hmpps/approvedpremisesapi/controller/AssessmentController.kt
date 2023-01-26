@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -20,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PersonService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -32,9 +34,9 @@ class AssessmentController(
   private val objectMapper: ObjectMapper,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
-  private val offenderService: OffenderService,
   private val assessmentTransformer: AssessmentTransformer,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer
+  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
+  private val personService: PersonService
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -47,32 +49,17 @@ class AssessmentController(
       assessments.mapNotNull {
         val applicationCrn = it.application.crn
 
-        val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
-        val offenderDetails = when (offenderDetailsResult) {
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          is AuthorisableActionResult.NotFound -> {
-            log.error("Could not get Offender Details for CRN: $applicationCrn")
-            return@mapNotNull null
-          }
-          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
-        }
+        try {
+          val personDetail = getPersonDetail(applicationCrn, user.deliusUsername)
 
-        if (offenderDetails.otherIds.nomsNumber == null) {
-          log.error("No NOMS number for CRN: $applicationCrn")
+          assessmentTransformer.transformJpaToApi(it, personDetail.first, personDetail.second)
+        } catch (e: NotFoundProblem) {
+          log.error(e.message)
+          return@mapNotNull null
+        } catch (e: ForbiddenProblem) {
+          log.error(e.message)
           return@mapNotNull null
         }
-
-        val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
-        val inmateDetails = when (inmateDetailsResult) {
-          is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-          is AuthorisableActionResult.NotFound -> {
-            log.error("Could not get Inmate Details for NOMS number: ${offenderDetails.otherIds.nomsNumber}")
-            return@mapNotNull null
-          }
-          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
-        }
-
-        assessmentTransformer.transformJpaToApi(it, offenderDetails, inmateDetails)
       }
     )
   }
@@ -89,24 +76,10 @@ class AssessmentController(
 
     val applicationCrn = assessment.application.crn
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")
-    }
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
-    }
-
-    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
-    val inmateDetails = when (inmateDetailsResult) {
-      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")
-    }
+    val personDetails = getPersonDetail(applicationCrn, user.deliusUsername)
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
+      assessmentTransformer.transformJpaToApi(assessment, personDetails.first, personDetails.second)
     )
   }
 
@@ -131,24 +104,10 @@ class AssessmentController(
 
     val applicationCrn = assessment.application.crn
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")
-    }
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
-    }
-
-    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
-    val inmateDetails = when (inmateDetailsResult) {
-      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")
-    }
+    val personDetail = getPersonDetail(applicationCrn, user.deliusUsername)
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
+      assessmentTransformer.transformJpaToApi(assessment, personDetail.first, personDetail.second)
     )
   }
 
@@ -242,5 +201,15 @@ class AssessmentController(
     return ResponseEntity.ok(
       assessmentClarificationNoteTransformer.transformJpaToApi(updatedClarificationNote)
     )
+  }
+
+  private fun getPersonDetail(crn: String, username: String): Pair<OffenderDetailSummary, InmateDetail> {
+    val personDetails = when (val personDetailResult = personService.getPersonByCrn(crn, username)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(personDetailResult.id!!, personDetailResult.entityType!!)
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> personDetailResult.entity
+    }
+
+    return personDetails
   }
 }
