@@ -11,6 +11,7 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var apArea: Yielded<ApAreaEntity>? = null
+  private var deliusCode: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -28,10 +29,15 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
     this.apArea = { apArea }
   }
 
+  fun withDeliusCode(deliusCode: String) = apply {
+    this.deliusCode = { deliusCode }
+  }
+
   override fun produce(): ProbationRegionEntity = ProbationRegionEntity(
     id = this.id(),
     name = this.name(),
     premises = mutableListOf(),
-    apArea = this.apArea?.invoke() ?: throw RuntimeException("Must provide an ApArea")
+    apArea = this.apArea?.invoke() ?: throw RuntimeException("Must provide an ApArea"),
+    deliusCode = this.deliusCode(),
   )
 }

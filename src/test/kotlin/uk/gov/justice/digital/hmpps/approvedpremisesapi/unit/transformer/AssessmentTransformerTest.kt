@@ -8,8 +8,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -32,7 +34,13 @@ class AssessmentTransformerTest {
     mockAssessmentClarificationNoteTransformer
   )
 
-  private val allocatedToUser = UserEntityFactory().produce()
+  private val allocatedToUser = UserEntityFactory()
+    .withYieldedProbationRegion {
+      ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+    }
+    .produce()
 
   private val assessmentFactory = AssessmentEntityFactory()
     .withApplication(mockk<ApprovedPremisesApplicationEntity>())
@@ -80,11 +88,27 @@ class AssessmentTransformerTest {
       AssessmentClarificationNoteEntityFactory()
         .withAssessment(assessment)
         .withResponse("Some text")
-        .withCreatedBy(UserEntityFactory().produce())
+        .withCreatedBy(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce()
+        )
         .produce(),
       AssessmentClarificationNoteEntityFactory()
         .withAssessment(assessment)
-        .withCreatedBy(UserEntityFactory().produce())
+        .withCreatedBy(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce()
+        )
         .produce()
     )
 

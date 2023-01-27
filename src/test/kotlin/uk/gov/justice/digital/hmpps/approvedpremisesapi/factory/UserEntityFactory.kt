@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
@@ -22,6 +23,7 @@ class UserEntityFactory : Factory<UserEntity> {
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
   private var roles: Yielded<MutableList<UserRoleAssignmentEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
+  private var probationRegion: Yielded<ProbationRegionEntity>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -67,6 +69,14 @@ class UserEntityFactory : Factory<UserEntity> {
     this.telephoneNumber = { telephoneNumber }
   }
 
+  fun withProbationRegion(probationRegion: ProbationRegionEntity) = apply {
+    this.probationRegion = { probationRegion }
+  }
+
+  fun withYieldedProbationRegion(probationRegion: Yielded<ProbationRegionEntity>) = apply {
+    this.probationRegion = probationRegion
+  }
+
   override fun produce(): UserEntity = UserEntity(
     id = this.id(),
     name = this.name(),
@@ -76,6 +86,7 @@ class UserEntityFactory : Factory<UserEntity> {
     deliusStaffIdentifier = this.deliusStaffIdentifier(),
     applications = this.applications(),
     roles = this.roles(),
-    qualifications = this.qualifications()
+    qualifications = this.qualifications(),
+    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
   )
 }

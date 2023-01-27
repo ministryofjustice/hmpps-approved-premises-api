@@ -27,6 +27,11 @@ class AllocationQueryTest : IntegrationTestBase() {
   private fun `Given a User that is not an Assessor`(): UserEntity {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("NON-ASSESSOR")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     return user
@@ -35,6 +40,11 @@ class AllocationQueryTest : IntegrationTestBase() {
   private fun `Given a User that is an Assessor with no Qualifications`(): UserEntity {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("ASSESSOR-NO-QUALIFICATIONS")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -48,6 +58,11 @@ class AllocationQueryTest : IntegrationTestBase() {
   private fun `Given a User that is an Assessor with both Qualifications and one pending allocated Assessment`(): UserEntity {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("ASSESSOR-ONE-ALLOCATION")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -83,6 +98,11 @@ class AllocationQueryTest : IntegrationTestBase() {
   private fun `Given a User that is an Assessor with both Qualifications and zero pending allocated Assessments`(): UserEntity {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("ASSESSOR-ZERO-ALLOCATIONS")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {

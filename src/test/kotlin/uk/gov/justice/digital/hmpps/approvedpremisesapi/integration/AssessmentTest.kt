@@ -52,6 +52,11 @@ class AssessmentTest : IntegrationTestBase() {
   fun `Get all assessments returns 200 with correct body`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
@@ -121,6 +126,11 @@ class AssessmentTest : IntegrationTestBase() {
   fun `Get assessment by ID returns 200 with correct body`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
@@ -189,6 +199,11 @@ class AssessmentTest : IntegrationTestBase() {
   fun `Accept assessment returns 200, persists decision`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
@@ -257,6 +272,11 @@ class AssessmentTest : IntegrationTestBase() {
   fun `Reject assessment returns 200, persists decision`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
@@ -315,6 +335,11 @@ class AssessmentTest : IntegrationTestBase() {
   fun `Create clarification note returns 200 with correct body`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
@@ -371,6 +396,11 @@ class AssessmentTest : IntegrationTestBase() {
   fun `Update clarification note returns 201 with correct body`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")

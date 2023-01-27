@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -50,6 +51,11 @@ class BookingTest : IntegrationTestBase() {
 
       val user = userEntityFactory.produceAndPersist {
         withDeliusUsername(username)
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
       }
 
       userRoleAssignmentEntityFactory.produceAndPersist {
@@ -64,7 +70,8 @@ class BookingTest : IntegrationTestBase() {
       mockStaffUserInfoCommunityApiCall(
         StaffUserDetailsFactory()
           .withUsername(username)
-          .produce()
+          .produce(),
+        false
       )
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -125,7 +132,12 @@ class BookingTest : IntegrationTestBase() {
 
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          withDeliusCode(randomStringMultiCaseWithNumbers(3))
+        }
+      }
     }
 
     val bed = bedEntityFactory.produceAndPersist {
@@ -200,7 +212,13 @@ class BookingTest : IntegrationTestBase() {
         withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
       }
 
-      val user = userEntityFactory.produceAndPersist()
+      val user = userEntityFactory.produceAndPersist {
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
 
       userRoleAssignmentEntityFactory.produceAndPersist {
         withUser(user)
@@ -214,7 +232,8 @@ class BookingTest : IntegrationTestBase() {
       mockStaffUserInfoCommunityApiCall(
         StaffUserDetailsFactory()
           .withUsername(user.deliusUsername)
-          .produce()
+          .produce(),
+        false
       )
 
       webTestClient.get()
@@ -232,7 +251,13 @@ class BookingTest : IntegrationTestBase() {
   fun `Get all Bookings returns OK with correct body when user has one of roles MANAGER, MATCHER`() {
     listOf(UserRole.MANAGER, UserRole.MATCHER).forEach { role ->
       val crn = "CRN123-${role.name}"
-      val user = userEntityFactory.produceAndPersist()
+      val user = userEntityFactory.produceAndPersist {
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
 
       userRoleAssignmentEntityFactory.produceAndPersist {
         withUser(user)
@@ -252,7 +277,8 @@ class BookingTest : IntegrationTestBase() {
       mockStaffUserInfoCommunityApiCall(
         StaffUserDetailsFactory()
           .withUsername(user.deliusUsername)
-          .produce()
+          .produce(),
+        false
       )
 
       val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
@@ -886,6 +912,11 @@ class BookingTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -948,6 +979,11 @@ class BookingTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -961,7 +997,8 @@ class BookingTest : IntegrationTestBase() {
     mockStaffUserInfoCommunityApiCall(
       StaffUserDetailsFactory()
         .withUsername(username)
-        .produce()
+        .produce(),
+      false
     )
 
     val booking = bookingEntityFactory.produceAndPersist {
@@ -1047,6 +1084,7 @@ class BookingTest : IntegrationTestBase() {
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {
           withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          withDeliusCode(randomStringMultiCaseWithNumbers(3))
         }
       }
     }
@@ -1119,6 +1157,11 @@ class BookingTest : IntegrationTestBase() {
     val username = "PROBATIONUSER"
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -1192,6 +1235,11 @@ class BookingTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -1389,6 +1437,11 @@ class BookingTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {
@@ -1538,6 +1591,11 @@ class BookingTest : IntegrationTestBase() {
     val username = "PROBATIONUSER"
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
@@ -1613,6 +1671,11 @@ class BookingTest : IntegrationTestBase() {
     val username = "PROBATIONUSER"
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
@@ -1708,6 +1771,11 @@ class BookingTest : IntegrationTestBase() {
 
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
     }
 
     userRoleAssignmentEntityFactory.produceAndPersist {

@@ -12,8 +12,11 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -29,13 +32,15 @@ class UserServiceTest {
   private val mockUserRepository = mockk<UserRepository>()
   private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
   private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
+  private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
 
   private val userService = UserService(
     mockHttpAuthService,
     mockCommunityApiClient,
     mockUserRepository,
     mockUserRoleAssignmentRepository,
-    mockUserQualificationAssignmentRepository
+    mockUserQualificationAssignmentRepository,
+    mockProbationRegionRepository,
   )
 
   @Test
@@ -46,7 +51,13 @@ class UserServiceTest {
     every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
     every { mockPrincipal.name } returns username
 
-    val user = UserEntityFactory().produce()
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
 
     every { mockUserRepository.findByDeliusUsername(username) } returns user
 
@@ -77,12 +88,17 @@ class UserServiceTest {
         .produce()
     )
 
+    every { mockProbationRegionRepository.findByDeliusCode(any()) } returns ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
     assertThat(userService.getUserForRequest()).matches {
       it.name == "Jim Jimmerson"
     }
 
     verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
     verify(exactly = 1) { mockUserRepository.save(any()) }
+    verify(exactly = 1) { mockProbationRegionRepository.findByDeliusCode(any()) }
   }
 
   @Nested
@@ -92,13 +108,15 @@ class UserServiceTest {
     private val mockUserRepository = mockk<UserRepository>()
     private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
+    private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
 
     private val userService = UserService(
       mockHttpAuthService,
       mockCommunityApiClient,
       mockUserRepository,
       mockUserRoleAssignmentRepository,
-      mockUserQualificationAssignmentRepository
+      mockUserQualificationAssignmentRepository,
+      mockProbationRegionRepository,
     )
 
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
@@ -111,6 +129,11 @@ class UserServiceTest {
       .withDeliusUsername(username)
       .withName("$forename $surname")
       .withDeliusStaffIdentifier(staffIdentifier.toLong())
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
 
     private val staffUserDetailsFactory = StaffUserDetailsFactory()
       .withUsername(username)

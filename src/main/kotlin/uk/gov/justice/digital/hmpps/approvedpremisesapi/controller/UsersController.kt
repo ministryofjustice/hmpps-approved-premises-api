@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.UsersApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -18,13 +19,13 @@ class UsersController(
   private val userTransformer: UserTransformer
 ) : UsersApiDelegate {
 
-  override fun usersIdGet(id: UUID): ResponseEntity<User> {
+  override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
     val userEntity = when (val result = userService.getUserForId(id)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> result.entity
     }
 
-    return ResponseEntity(userTransformer.transformJpaToApi(userEntity), HttpStatus.OK)
+    return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
   }
 }

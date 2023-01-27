@@ -9,10 +9,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -55,6 +57,11 @@ class AssessmentServiceTest {
   @Test
   fun `getVisibleAssessmentsForUser fetches all assessments for workflow managers`() {
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     user.roles.add(
@@ -67,11 +74,25 @@ class AssessmentServiceTest {
     val allAssessments = listOf(
       AssessmentEntityFactory()
         .withAllocatedToUser(
-          UserEntityFactory().produce()
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce()
         )
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().produce())
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce()
+            )
             .produce()
         )
         .produce()
@@ -90,6 +111,11 @@ class AssessmentServiceTest {
   @Test
   fun `getVisibleAssessmentsForUser fetches only allocated assessments`() {
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val allocatedAssessments = listOf(
@@ -97,7 +123,15 @@ class AssessmentServiceTest {
         .withAllocatedToUser(user)
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().produce())
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce()
+            )
             .produce()
         )
         .produce()
@@ -118,6 +152,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     user.roles.add(
@@ -131,11 +170,25 @@ class AssessmentServiceTest {
       AssessmentEntityFactory()
         .withId(assessmentId)
         .withAllocatedToUser(
-          UserEntityFactory().produce()
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce()
         )
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().produce())
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce()
+            )
             .produce()
         )
         .produce()
@@ -155,17 +208,36 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val assessment =
       AssessmentEntityFactory()
         .withId(assessmentId)
         .withAllocatedToUser(
-          UserEntityFactory().produce()
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce()
         )
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().produce())
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce()
+            )
             .produce()
         )
         .produce()
@@ -183,6 +255,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
@@ -198,6 +275,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
@@ -213,16 +295,37 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
@@ -237,6 +340,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     user.roles.add(
@@ -250,10 +358,26 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
@@ -274,13 +398,26 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withAllocatedToUser(user)
@@ -304,16 +441,37 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
@@ -328,13 +486,26 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(OffsetDateTime.now())
@@ -358,6 +529,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -370,7 +546,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(OffsetDateTime.now())
@@ -395,6 +579,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -407,7 +596,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(null)
@@ -433,6 +630,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -445,7 +647,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withAllocatedToUser(user)
@@ -470,16 +680,37 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
@@ -494,13 +725,26 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(OffsetDateTime.now())
@@ -524,6 +768,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -536,7 +785,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(OffsetDateTime.now())
@@ -561,6 +818,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -573,7 +835,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(null)
@@ -599,6 +869,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -611,7 +886,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withAllocatedToUser(user)
@@ -641,6 +924,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -653,7 +941,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withAllocatedToUser(user)
@@ -683,16 +979,37 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
@@ -707,13 +1024,26 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(OffsetDateTime.now())
@@ -737,6 +1067,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -749,7 +1084,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(OffsetDateTime.now())
@@ -774,6 +1117,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -786,7 +1134,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withSubmittedAt(null)
@@ -812,6 +1168,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -824,7 +1185,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withAllocatedToUser(user)
@@ -854,6 +1223,11 @@ class AssessmentServiceTest {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -866,7 +1240,15 @@ class AssessmentServiceTest {
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withAllocatedToUser(user)
@@ -895,6 +1277,11 @@ class AssessmentServiceTest {
   @Test
   fun `reallocateAssessment returns Unauthorised when requestUser does not have WORKFLOW_MANAGER role`() {
     val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     val result = assessmentService.reallocateAssessment(requestUser, UUID.randomUUID(), UUID.randomUUID())
@@ -905,6 +1292,11 @@ class AssessmentServiceTest {
   @Test
   fun `reallocateAssessment returns Not Found when assignee user does not exist`() {
     val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -925,6 +1317,11 @@ class AssessmentServiceTest {
   @Test
   fun `reallocateAssessment returns Not Found when application does not exist`() {
     val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -937,6 +1334,11 @@ class AssessmentServiceTest {
 
     every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
       UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
         .produce()
     )
 
@@ -952,6 +1354,11 @@ class AssessmentServiceTest {
   @Test
   fun `reallocateAssessment returns General Validation Error when application already has a submitted assessment`() {
     val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -964,20 +1371,41 @@ class AssessmentServiceTest {
 
     every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
       UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
         .produce()
     )
 
     val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
 
     val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory().produce())
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
@@ -996,6 +1424,11 @@ class AssessmentServiceTest {
   @Test
   fun `reallocateAssessment returns Field Validation Error when user to assign to is not an ASSESSOR`() {
     val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -1008,20 +1441,41 @@ class AssessmentServiceTest {
 
     every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
       UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
         .produce()
     )
 
     val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
 
     val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory().produce())
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
@@ -1039,6 +1493,11 @@ class AssessmentServiceTest {
   @Test
   fun `reallocateAssessment returns Field Validation Error when user to assign to does not have relevant qualifications`() {
     val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -1050,6 +1509,11 @@ class AssessmentServiceTest {
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
 
     val assigneeUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -1065,7 +1529,15 @@ class AssessmentServiceTest {
     val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
 
     val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory().produce())
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .withIsPipeApplication(true)
       .produce()
 
@@ -1073,7 +1545,15 @@ class AssessmentServiceTest {
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
@@ -1091,6 +1571,11 @@ class AssessmentServiceTest {
   @Test
   fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one`() {
     val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -1102,6 +1587,11 @@ class AssessmentServiceTest {
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
 
     val assigneeUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
       .apply {
         roles += UserRoleAssignmentEntityFactory()
@@ -1122,7 +1612,15 @@ class AssessmentServiceTest {
     val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
 
     val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory().produce())
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .withIsPipeApplication(true)
       .produce()
 
@@ -1130,7 +1628,15 @@ class AssessmentServiceTest {
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAllocatedToUser(UserEntityFactory().produce())
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      )
       .produce()
 
     every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
@@ -1176,6 +1682,11 @@ class AssessmentServiceTest {
     )
 
     private val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
       .produce()
 
     private val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -1187,7 +1698,15 @@ class AssessmentServiceTest {
     private val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(UserEntityFactory().produce())
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce()
+          )
           .produce()
       )
       .withAllocatedToUser(user)
@@ -1299,7 +1818,15 @@ class AssessmentServiceTest {
         )
       } returns AssessmentClarificationNoteEntityFactory()
         .withAssessment(assessment)
-        .withCreatedBy(UserEntityFactory().produce())
+        .withCreatedBy(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce()
+        )
         .produce()
 
       val result = assessmentService.updateAssessmentClarificationNote(

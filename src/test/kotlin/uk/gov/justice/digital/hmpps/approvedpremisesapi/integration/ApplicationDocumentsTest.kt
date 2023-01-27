@@ -42,7 +42,14 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
     val username = "PROBATIONPERSON"
     val crn = "CRN123"
 
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
     val owner = userEntityFactory.produceAndPersist { withDeliusUsername("DIFFERENTPROBATIONPERSON") }
 
@@ -79,7 +86,14 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
     val username = "PROBATIONPERSON"
     val crn = "CRN123"
 
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername(username) }
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername(username)
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
     mockStaffUserInfoCommunityApiCall(
@@ -147,7 +161,14 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
 
   @Test
   fun `Download document returns 404 when not found in documents meta data`() {
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -194,7 +215,14 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
 
   @Test
   fun `Download document returns 200 with correct body and headers`() {
-    val user = userEntityFactory.produceAndPersist { withDeliusUsername("PROBATIONPERSON") }
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PROBATIONPERSON")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
