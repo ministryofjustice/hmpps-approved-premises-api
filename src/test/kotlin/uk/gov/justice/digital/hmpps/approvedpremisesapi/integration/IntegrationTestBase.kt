@@ -486,7 +486,7 @@ abstract class IntegrationTestBase {
       )
     }
 
-  private fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit) {
+  fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit) {
     if (! clientCredentialsCallMocked) {
       mockClientCredentialsJwtRequest()
 

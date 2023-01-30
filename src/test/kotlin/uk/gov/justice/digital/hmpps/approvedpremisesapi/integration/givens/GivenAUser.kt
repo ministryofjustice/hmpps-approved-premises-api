@@ -23,6 +23,11 @@ fun IntegrationTestBase.`Given a User`(
 
   val user = userEntityFactory.produceAndPersist {
     withDeliusUsername(staffUserDetails.username)
+    withYieldedProbationRegion {
+      probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+    }
   }
 
   roles.forEach { role ->
