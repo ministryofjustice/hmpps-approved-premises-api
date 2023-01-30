@@ -1,18 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CaseNotesAPI_mockSuccessfulCaseNotesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 
 class CaseNotesTest : IntegrationTestBase() {
   @Autowired
@@ -59,97 +56,61 @@ class CaseNotesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting case notes for a CRN that does not exist returns 404`() {
-    val crn = "CRN345"
+    `Given a User` { userEntity, jwt ->
+      val crn = "CRN345"
 
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+      wiremockServer.stubFor(
+        WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn"))
+          .willReturn(
+            WireMock.aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(404)
+          )
+      )
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/secure/offenders/crn/$crn"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(404)
-        )
-    )
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    webTestClient.get()
-      .uri("/people/$crn/prison-case-notes")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
+      webTestClient.get()
+        .uri("/people/$crn/prison-case-notes")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
   }
 
   @Test
   fun `Getting case notes returns OK with correct body`() {
-    val crn = "CRN345"
-    val nomsNumber = "NOMS789"
-
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-    mockOffenderDetailsCommunityApiCall(
-      OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withDateOfBirth(LocalDate.parse("1985-05-05"))
-        .withNomsNumber(nomsNumber)
-        .produce()
-    )
-
-    val caseNotes = listOf(
-      CaseNoteFactory().produce(),
-      CaseNoteFactory().produce(),
-      CaseNoteFactory().produce(),
-      CaseNoteFactory().produce()
-    )
-
-    mockCaseNotesPrisonApiCall(
-      0,
-      LocalDate.now().minusDays(365),
-      nomsNumber,
-      CaseNotesPage(
-        totalElements = 4,
-        totalPages = 1,
-        number = 1,
-        content = caseNotes
-      )
-    )
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    webTestClient.get()
-      .uri("/people/$crn/prison-case-notes")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(caseNotes.map(caseNoteTransformer::transformModelToApi))
-      )
-  }
-
-  private fun mockCaseNotesPrisonApiCall(page: Int, from: LocalDate, nomsNumber: String, result: CaseNotesPage): StubMapping? {
-    val fromLocalDateTime = LocalDateTime.of(from, LocalTime.MIN)
-
-    return wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/case-notes/$nomsNumber?startDate=$fromLocalDateTime&page=$page&size=30"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(result)
-            )
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val caseNotes = listOf(
+          CaseNoteFactory().produce(),
+          CaseNoteFactory().produce(),
+          CaseNoteFactory().produce(),
+          CaseNoteFactory().produce()
         )
-    )
+
+        CaseNotesAPI_mockSuccessfulCaseNotesCall(
+          0,
+          LocalDate.now().minusDays(365),
+          offenderDetails.otherIds.nomsNumber!!,
+          CaseNotesPage(
+            totalElements = 4,
+            totalPages = 1,
+            number = 1,
+            content = caseNotes
+          )
+        )
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(caseNotes.map(caseNoteTransformer::transformModelToApi))
+          )
+      }
+    }
   }
 }
