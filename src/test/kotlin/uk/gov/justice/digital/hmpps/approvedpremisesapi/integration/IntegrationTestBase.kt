@@ -486,6 +486,17 @@ abstract class IntegrationTestBase {
       )
     }
 
+  fun mockUnsuccessfulGetCall(url: String, responseStatus: Int) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        WireMock.get(urlEqualTo(url))
+          .willReturn(
+            aResponse()
+              .withStatus(responseStatus)
+          )
+      )
+    }
+
   fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit) {
     if (! clientCredentialsCallMocked) {
       mockClientCredentialsJwtRequest()

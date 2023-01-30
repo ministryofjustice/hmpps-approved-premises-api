@@ -8,3 +8,9 @@ fun IntegrationTestBase.PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail: 
     url = "/api/offenders/${inmateDetail.offenderNo}",
     responseBody = inmateDetail
   )
+
+fun IntegrationTestBase.PrisonAPI_mockNotFoundInmateDetailsCall(offenderNo: String) =
+  mockUnsuccessfulGetCall(
+    url = "/api/offenders/$offenderNo",
+    responseStatus = 404
+  )
