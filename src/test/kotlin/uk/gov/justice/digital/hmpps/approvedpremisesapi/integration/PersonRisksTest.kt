@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Mappa
@@ -13,9 +10,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoshRatingsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.HMPPSTier_mockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
@@ -67,166 +69,106 @@ class PersonRisksTest : IntegrationTestBase() {
 
   @Test
   fun `Getting risks for a CRN that does not exist returns 404`() {
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    `Given a User` { userEntity, jwt ->
+      val crn = "CRN123"
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(404)
-        )
-    )
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
 
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    webTestClient.get()
-      .uri("/people/CRN/risks")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
+      webTestClient.get()
+        .uri("/people/CRN/risks")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
   }
 
   @Test
   fun `Getting risks for a CRN returns OK with correct body`() {
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                OffenderDetailsSummaryFactory()
-                  .withCrn("CRN")
-                  .withFirstName("James")
-                  .withLastName("Someone")
-                  .produce()
-              )
-            )
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        APOASysContext_mockSuccessfulRoshRatingsCall(
+          offenderDetails.otherIds.crn,
+          RoshRatingsFactory().apply {
+            withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
+            withAssessmentId(34853487)
+            withRiskChildrenCommunity(RiskLevel.LOW)
+            withRiskPublicCommunity(RiskLevel.MEDIUM)
+            withRiskKnownAdultCommunity(RiskLevel.HIGH)
+            withRiskStaffCommunity(RiskLevel.VERY_HIGH)
+          }.produce()
         )
-    )
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/rosh/CRN"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                RoshRatingsFactory().apply {
-                  withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
-                  withAssessmentId(34853487)
-                  withRiskChildrenCommunity(RiskLevel.LOW)
-                  withRiskPublicCommunity(RiskLevel.MEDIUM)
-                  withRiskKnownAdultCommunity(RiskLevel.HIGH)
-                  withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-                }.produce()
-              )
-            )
+        HMPPSTier_mockSuccessfulTierCall(
+          offenderDetails.otherIds.crn,
+          Tier(
+            tierScore = "M2",
+            calculationId = UUID.randomUUID(),
+            calculationDate = LocalDateTime.parse("2022-09-06T14:59:00")
+          )
         )
-    )
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/crn/CRN/tier"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                Tier(
-                  tierScore = "M2",
-                  calculationId = UUID.randomUUID(),
-                  calculationDate = LocalDateTime.parse("2022-09-06T14:59:00")
-                )
-              )
+        CommunityAPI_mockSuccessfulRegistrationsCall(
+          offenderDetails.otherIds.crn,
+          Registrations(
+            registrations = listOf(
+              RegistrationClientResponseFactory()
+                .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
+                .withRegisterCategory(RegistrationKeyValue(code = "C1", description = "C1"))
+                .withRegisterLevel(RegistrationKeyValue(code = "L1", description = "L1"))
+                .withStartDate(LocalDate.parse("2022-09-06"))
+                .produce(),
+              RegistrationClientResponseFactory()
+                .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
+                .produce()
             )
+          )
         )
-    )
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/secure/offenders/crn/CRN/registrations?activeOnly=true"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                Registrations(
-                  registrations = listOf(
-                    RegistrationClientResponseFactory()
-                      .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-                      .withRegisterCategory(RegistrationKeyValue(code = "C1", description = "C1"))
-                      .withRegisterLevel(RegistrationKeyValue(code = "L1", description = "L1"))
-                      .withStartDate(LocalDate.parse("2022-09-06"))
-                      .produce(),
-                    RegistrationClientResponseFactory()
-                      .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-                      .produce()
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/risks")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              PersonRisks(
+                crn = offenderDetails.otherIds.crn,
+                roshRisks = RoshRisksEnvelope(
+                  status = RiskEnvelopeStatus.retrieved,
+                  value = RoshRisks(
+                    overallRisk = "Very High",
+                    riskToChildren = "Low",
+                    riskToPublic = "Medium",
+                    riskToKnownAdult = "High",
+                    riskToStaff = "Very High",
+                    lastUpdated = LocalDate.parse("2022-09-06")
+                  )
+                ),
+                tier = RiskTierEnvelope(
+                  status = RiskEnvelopeStatus.retrieved,
+                  value = RiskTier(
+                    level = "M2",
+                    lastUpdated = LocalDate.parse("2022-09-06")
+                  )
+                ),
+                flags = FlagsEnvelope(
+                  status = RiskEnvelopeStatus.retrieved,
+                  value = listOf("RISK FLAG")
+                ),
+                mappa = MappaEnvelope(
+                  status = RiskEnvelopeStatus.retrieved,
+                  value = Mappa(
+                    level = "CAT C1/LEVEL L1",
+                    lastUpdated = LocalDate.parse("2022-09-06")
                   )
                 )
               )
             )
-        )
-    )
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    webTestClient.get()
-      .uri("/people/CRN/risks")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          PersonRisks(
-            crn = "CRN",
-            roshRisks = RoshRisksEnvelope(
-              status = RiskEnvelopeStatus.retrieved,
-              value = RoshRisks(
-                overallRisk = "Very High",
-                riskToChildren = "Low",
-                riskToPublic = "Medium",
-                riskToKnownAdult = "High",
-                riskToStaff = "Very High",
-                lastUpdated = LocalDate.parse("2022-09-06")
-              )
-            ),
-            tier = RiskTierEnvelope(
-              status = RiskEnvelopeStatus.retrieved,
-              value = RiskTier(
-                level = "M2",
-                lastUpdated = LocalDate.parse("2022-09-06")
-              )
-            ),
-            flags = FlagsEnvelope(
-              status = RiskEnvelopeStatus.retrieved,
-              value = listOf("RISK FLAG")
-            ),
-            mappa = MappaEnvelope(
-              status = RiskEnvelopeStatus.retrieved,
-              value = Mappa(
-                level = "CAT C1/LEVEL L1",
-                lastUpdated = LocalDate.parse("2022-09-06")
-              )
-            )
           )
-        )
-      )
+      }
+    }
   }
 }

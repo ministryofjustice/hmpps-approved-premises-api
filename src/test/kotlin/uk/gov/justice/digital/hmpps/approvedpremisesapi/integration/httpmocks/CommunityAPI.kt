@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
@@ -48,6 +49,12 @@ fun IntegrationTestBase.CommunityAPI_mockNotFoundOffenderDetailsCall(crn: String
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulConvictionsCall(crn: String, response: List<Conviction>) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/convictions",
+    responseBody = response
+  )
+
+fun IntegrationTestBase.CommunityAPI_mockSuccessfulRegistrationsCall(crn: String, response: Registrations) =
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/secure/offenders/crn/$crn/registrations?activeOnly=true",
     responseBody = response
   )
 
