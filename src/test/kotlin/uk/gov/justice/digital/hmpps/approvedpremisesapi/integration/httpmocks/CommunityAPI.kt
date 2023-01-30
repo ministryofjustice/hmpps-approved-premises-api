@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
@@ -42,6 +43,12 @@ fun IntegrationTestBase.CommunityAPI_mockNotFoundOffenderDetailsCall(crn: String
   mockUnsuccessfulGetCall(
     url = "/secure/offenders/crn/$crn",
     responseStatus = 404
+  )
+
+fun IntegrationTestBase.CommunityAPI_mockSuccessfulConvictionsCall(crn: String, response: List<Conviction>) =
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/secure/offenders/crn/$crn/convictions",
+    responseBody = response
   )
 
 fun IntegrationTestBase.CommunityAPI_mockOffenderUserAccessCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) =
