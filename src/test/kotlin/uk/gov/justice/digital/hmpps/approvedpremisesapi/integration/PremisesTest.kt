@@ -16,7 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -809,7 +810,7 @@ class PremisesTest : IntegrationTestBase() {
 
     val keyWorker = ContextStaffMemberFactory().produce()
     premises.forEach {
-      mockStaffMembersContextApiCall(keyWorker, it.qCode)
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, it.qCode)
     }
 
     bookingEntityFactory.produceAndPersist {
@@ -865,57 +866,35 @@ class PremisesTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
   fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(role: UserRole) {
-    val username = "PROBATIONUSER"
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val qCode = "NOTFOUND"
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+        withQCode(qCode)
       }
+
+      wiremockServer.stubFor(
+        WireMock.get(WireMock.urlEqualTo("/secure/teams/$qCode/staff"))
+          .willReturn(
+            WireMock.aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(404)
+          )
+      )
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/staff")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("No team found for QCode: ${premises.qCode}")
     }
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
-
-    val qCode = "NOTFOUND"
-
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
-      withQCode(qCode)
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockClientCredentialsJwtRequest()
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .produce()
-    )
-
-    wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/secure/teams/$qCode/staff"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(404)
-        )
-    )
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/staff")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("No team found for QCode: ${premises.qCode}")
   }
 
   fun `Get Premises Staff for Temporary Accommodation Premises returns 501`() {
@@ -939,140 +918,41 @@ class PremisesTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
   fun `Get Approved Premises Staff for Approved Premises returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    val username = "PROBATIONUSER"
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val qCode = "FOUND"
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+        withQCode(qCode)
       }
-    }
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
 
-    val qCode = "FOUND"
-
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
-      withQCode(qCode)
-    }
-
-    val staffMembers = listOf(
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce()
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockClientCredentialsJwtRequest()
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .produce()
-    )
-
-    wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                StaffMembersPage(
-                  content = staffMembers
-                )
-              )
-            )
-        )
-    )
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/staff")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          staffMembers.map(staffMemberTransformer::transformDomainToApi)
-        )
+      val staffMembers = listOf(
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce()
       )
-  }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
-  fun `Get Approved Premises Staff caches response when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    val username = "PROBATIONUSER"
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
-
-    val qCode = "FOUND"
-
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
-      withQCode(qCode)
-    }
-
-    val staffMembers = listOf(
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce(),
-      ContextStaffMemberFactory().produce()
-    )
-
-    mockClientCredentialsJwtRequest()
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .produce()
-    )
-
-    wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                StaffMembersPage(
-                  content = staffMembers
+      wiremockServer.stubFor(
+        WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
+          .willReturn(
+            WireMock.aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(200)
+              .withBody(
+                objectMapper.writeValueAsString(
+                  StaffMembersPage(
+                    content = staffMembers
+                  )
                 )
               )
-            )
-        )
-    )
+          )
+      )
 
-    repeat(2) {
       webTestClient.get()
         .uri("/premises/${premises.id}/staff")
         .header("Authorization", "Bearer $jwt")
@@ -1086,8 +966,63 @@ class PremisesTest : IntegrationTestBase() {
           )
         )
     }
+  }
 
-    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/approved-premises/$qCode/staff")))
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Approved Premises Staff caches response when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val qCode = "FOUND"
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+        withQCode(qCode)
+      }
+
+      val staffMembers = listOf(
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce(),
+        ContextStaffMemberFactory().produce()
+      )
+
+      wiremockServer.stubFor(
+        WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
+          .willReturn(
+            WireMock.aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(200)
+              .withBody(
+                objectMapper.writeValueAsString(
+                  StaffMembersPage(
+                    content = staffMembers
+                  )
+                )
+              )
+          )
+      )
+
+      repeat(2) {
+        webTestClient.get()
+          .uri("/premises/${premises.id}/staff")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              staffMembers.map(staffMemberTransformer::transformDomainToApi)
+            )
+          )
+      }
+
+      wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/approved-premises/$qCode/staff")))
+    }
   }
 
   @Test
