@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -15,10 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class SeedUserRoleAssignmentsTest : SeedTestBase() {
+class SeedUsersTest : SeedTestBase() {
   @Test
   fun `Attempting to seed a non existent user logs an error`() {
-    mockStaffUserInfoCommunityApiCallNotFound("INVALID-USER")
+    CommunityAPI_mockNotFoundOffenderDetailsCall("INVALID-USER")
 
     withCsv(
       "invalid-user",
@@ -45,11 +47,15 @@ class SeedUserRoleAssignmentsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to seed a real but currently unknown user succeeds`() {
-    mockClientCredentialsJwtRequest()
-    mockStaffUserInfoCommunityApiCall(
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername("UNKNOWN-USER")
         .withStaffIdentifier(6789)
+        .withProbationAreaCode(probationRegion.deliusCode)
         .produce()
     )
 
