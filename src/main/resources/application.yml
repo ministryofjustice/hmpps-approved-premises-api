@@ -161,3 +161,5 @@ caches:
 
 seed:
   file-prefix: "/tmp/seed"
+
+assign-default-region-to-users-with-unknown-region: false

@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -20,6 +22,7 @@ import java.util.UUID
 
 @Service
 class UserService(
+  @Value("\${assign-default-region-to-users-with-unknown-region}") private val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
   private val httpAuthService: HttpAuthService,
   private val communityApiClient: CommunityApiClient,
   private val userRepository: UserRepository,
@@ -27,6 +30,8 @@ class UserService(
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
   private val probationRegionRepository: ProbationRegionRepository,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun getUserForRequest(): UserEntity {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
@@ -65,10 +70,15 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    val staffProbationRegion = probationRegionRepository.findByDeliusCode(staffUserDetails.probationArea.code)
+    var staffProbationRegion = probationRegionRepository.findByDeliusCode(staffUserDetails.probationArea.code)
 
     if (staffProbationRegion == null) {
-      throw BadRequestProblem(errorDetail = "Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$username'")
+      if (assignDefaultRegionToUsersWithUnknownRegion) {
+        log.warn("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$username', assigning a default region of 'North West'.")
+        staffProbationRegion = probationRegionRepository.findByName("North West")!!
+      } else {
+        throw BadRequestProblem(errorDetail = "Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$username'")
+      }
     }
 
     return userRepository.save(
