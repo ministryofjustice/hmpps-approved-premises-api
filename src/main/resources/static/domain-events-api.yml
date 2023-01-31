@@ -279,6 +279,7 @@ components:
     EventId:
       description: The UUID of an event
       type: string
+      format: uuid
       example: 364145f9-0af8-488e-9901-b4c46cd9ba37
     DeliusEventNumber:
       description: Used in Delius to identify the 'event' via the first active conviction's 'index'
@@ -287,6 +288,7 @@ components:
     ApplicationId:
       description: The UUID of an application for an AP place
       type: string
+      format: uuid
       example: 484b8b5e-6c3b-4400-b200-425bbe410713
     ApplicationUrl:
       description: The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
@@ -295,6 +297,7 @@ components:
     BookingId:
       description: The UUID of booking for an AP place
       type: string
+      format: uuid
       example: 14c80733-4b6d-4f35-b724-66955aac320c
     LegacyApCode:
       description: The 'Q code' used in Delius to identify an Approved Premises
