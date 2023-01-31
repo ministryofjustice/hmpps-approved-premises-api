@@ -3,13 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
@@ -19,54 +16,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var applicationsTransformer: ApplicationsTransformer
-
-  private val offenderDetails = OffenderDetailsSummaryFactory()
-    .withCrn("CRN123")
-    .withNomsNumber("NOMS321")
-    .produce()
-
-  private val otherOffenderDetails = OffenderDetailsSummaryFactory()
-    .withCrn("OTHERCRN")
-    .withNomsNumber("OTHERNOMS")
-    .produce()
-
-  @BeforeEach
-  fun setup() {
-    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
-    val inmateDetail = InmateDetailFactory()
-      .withOffenderNo("NOMS321")
-      .produce()
-
-    val otherInmateDetail = InmateDetailFactory()
-      .withOffenderNo("OTHERNOMS")
-      .produce()
-
-    mockOffenderDetailsCommunityApiCall(offenderDetails)
-    mockInmateDetailPrisonsApiCall(inmateDetail)
-
-    mockOffenderDetailsCommunityApiCall(otherOffenderDetails)
-    mockInmateDetailPrisonsApiCall(otherInmateDetail)
-
-    mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
-  }
-
   @Test
   fun `Get all applications without JWT returns 401`() {
     webTestClient.get()
@@ -78,170 +43,133 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get all applications returns 200 with correct body - when user does not have roles returns applications they created`() {
-    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+    `Given a User` { userEntity, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { otherOffenderDetails, otherInmateDetails ->
+            approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-    val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """
-      )
-    }
-
-    val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-      withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": { }
-        }
-        """
-      )
-    }
-
-    val username = "PROBATIONPERSON2"
-    val otherUser = userEntityFactory.produceAndPersist {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-
-    val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(newestJsonSchema)
-      withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(user)
-      withData(
-        """
+            val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema(
+                """
           {
-             "thingId": 123
+            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+            "${"\$id"}": "https://example.com/product.schema.json",
+            "title": "Thing",
+            "description": "A thing",
+            "type": "object",
+            "properties": {
+              "thingId": {
+                "description": "The unique identifier for a thing",
+                "type": "integer"
+              }
+            },
+            "required": [ "thingId" ]
           }
           """
-      )
-    }
+              )
+            }
 
-    val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(olderJsonSchema)
-      withCreatedByUser(user)
-      withCrn(offenderDetails.otherIds.crn)
-      withData("{}")
-    }
+            val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
+              withSchema(
+                """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": { }
+              }
+            """
+              )
+            }
 
-    val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(olderJsonSchema)
-      withCreatedByUser(otherUser)
-      withCrn(otherOffenderDetails.otherIds.crn)
-      withData("{}")
-    }
+            val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withData(
+                """
+                {
+                   "thingId": 123
+                }
+              """
+              )
+            }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+            val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(olderJsonSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+            }
 
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
+            val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(olderJsonSchema)
+              withCreatedByUser(otherUser)
+              withCrn(otherOffenderDetails.otherIds.crn)
+              withData("{}")
+            }
 
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-    val rawResponseBody = webTestClient.get()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult<String>()
-      .responseBody
-      .blockFirst()
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
 
-    val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
+            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
 
-    assertThat(responseBody).anyMatch {
-      outdatedApplicationEntityCreatedByUser.id == it.id &&
-        outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
-        outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
-        outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-        outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
-        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
-    }
+            assertThat(responseBody).anyMatch {
+              outdatedApplicationEntityCreatedByUser.id == it.id &&
+                outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
+                outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+                olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+            }
 
-    assertThat(responseBody).anyMatch {
-      upToDateApplicationEntityCreatedByUser.id == it.id &&
-        upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
-        upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-        upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
-        newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
-    }
+            assertThat(responseBody).anyMatch {
+              upToDateApplicationEntityCreatedByUser.id == it.id &&
+                upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
+                upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+            }
 
-    assertThat(responseBody).noneMatch {
-      outdatedApplicationEntityNotCreatedByUser.id == it.id
+            assertThat(responseBody).noneMatch {
+              outdatedApplicationEntityNotCreatedByUser.id == it.id
+            }
+          }
+        }
+      }
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER" ])
+  @EnumSource(value = UserRole::class, names = ["WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER"])
   fun `Get all applications returns 200 with correct body - when user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns all applications`(role: UserRole) {
-    val username = "PROBATIONPERSON"
-    val otherUser = userEntityFactory.produceAndPersist {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { otherOffenderDetails, otherInmateDetails ->
+            approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
-    val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        """
+            val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema(
+                """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -257,13 +185,13 @@ class ApplicationTest : IntegrationTestBase() {
           "required": [ "thingId" ]
         }
         """
-      )
-    }
+              )
+            }
 
-    val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-      withSchema(
-        """
+            val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
+              withSchema(
+                """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -273,217 +201,155 @@ class ApplicationTest : IntegrationTestBase() {
           "properties": { }
         }
         """
-      )
-    }
+              )
+            }
 
-    val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(newestJsonSchema)
-      withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(user)
-      withData(
-        """
+            val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withData(
+                """
           {
              "thingId": 123
           }
           """
-      )
-    }
+              )
+            }
 
-    val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(olderJsonSchema)
-      withCreatedByUser(user)
-      withCrn(offenderDetails.otherIds.crn)
-      withData("{}")
-    }
+            val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(olderJsonSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+            }
 
-    val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(olderJsonSchema)
-      withCreatedByUser(otherUser)
-      withCrn(otherOffenderDetails.otherIds.crn)
-      withData("{}")
-    }
+            val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(olderJsonSchema)
+              withCreatedByUser(otherUser)
+              withCrn(otherOffenderDetails.otherIds.crn)
+              withData("{}")
+            }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, otherOffenderDetails.otherIds.crn, false, false)
 
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
 
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
+            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
 
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
-    mockOffenderUserAccessCommunityApiCall(username, otherOffenderDetails.otherIds.crn, false, false)
+            assertThat(responseBody).anyMatch {
+              outdatedApplicationEntityCreatedByUser.id == it.id &&
+                outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
+                outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+                olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+            }
 
-    val rawResponseBody = webTestClient.get()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult<String>()
-      .responseBody
-      .blockFirst()
+            assertThat(responseBody).anyMatch {
+              upToDateApplicationEntityCreatedByUser.id == it.id &&
+                upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
+                upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
+                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+            }
 
-    val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
-
-    assertThat(responseBody).anyMatch {
-      outdatedApplicationEntityCreatedByUser.id == it.id &&
-        outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
-        outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
-        outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-        outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
-        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
-    }
-
-    assertThat(responseBody).anyMatch {
-      upToDateApplicationEntityCreatedByUser.id == it.id &&
-        upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
-        upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
-        upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-        upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
-        newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
-    }
-
-    assertThat(responseBody).anyMatch {
-      outdatedApplicationEntityNotCreatedByUser.id == it.id &&
-        outdatedApplicationEntityNotCreatedByUser.crn == it.person?.crn &&
-        outdatedApplicationEntityNotCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
-        outdatedApplicationEntityNotCreatedByUser.createdByUser.id == it.createdByUserId &&
-        outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(outdatedApplicationEntityNotCreatedByUser.data) == serializableToJsonNode(it.data) &&
-        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+            assertThat(responseBody).anyMatch {
+              outdatedApplicationEntityNotCreatedByUser.id == it.id &&
+                outdatedApplicationEntityNotCreatedByUser.crn == it.person?.crn &&
+                outdatedApplicationEntityNotCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                outdatedApplicationEntityNotCreatedByUser.createdByUser.id == it.createdByUserId &&
+                outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                serializableToJsonNode(outdatedApplicationEntityNotCreatedByUser.data) == serializableToJsonNode(it.data) &&
+                olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+            }
+          }
+        }
+      }
     }
   }
 
   @Test
   fun `Get list of applications returns 500 when a person cannot be found`() {
-    val crn = "X1234"
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      val crn = "X1234"
 
-    produceAndPersistBasicApplication(crn)
-    mockOffenderDetailsCommunityApiCall404(crn)
+      produceAndPersistBasicApplication(crn, userEntity)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
+      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
 
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
-
-    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
-
-    webTestClient.get()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+      webTestClient.get()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+    }
   }
 
   @Test
   fun `Get list of applications returns 500 when a person has no NOMS number`() {
-    val crn = "X1234"
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = { withoutNomsNumber() }
+      ) { offenderDetails, inmateDetails ->
+        produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity)
 
-    produceAndPersistBasicApplication(crn)
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-    val offenderWithoutNomsNumber = OffenderDetailsSummaryFactory()
-      .withCrn(crn)
-      .withoutNomsNumber()
-      .produce()
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
-
-    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
-    mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
-
-    webTestClient.get()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+        webTestClient.get()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+      }
+    }
   }
 
   @Test
   fun `Get list of applications returns 500 when the person cannot be fetched from the prisons API`() {
-    val crn = "X1234"
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      val crn = "X1234"
 
-    produceAndPersistBasicApplication(crn)
+      produceAndPersistBasicApplication(crn, userEntity)
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(crn)
-      .withNomsNumber("ABC123")
-      .produce()
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withNomsNumber("ABC123")
         .produce()
-    )
 
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-    mockOffenderDetailsCommunityApiCall(offenderDetails)
-    offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
+      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    webTestClient.get()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+      webTestClient.get()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+    }
   }
 
   @Test
@@ -497,14 +363,14 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 200 with correct body`() {
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
-    val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        """
+        val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+          withSchema(
+            """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -520,205 +386,131 @@ class ApplicationTest : IntegrationTestBase() {
           "required": [ "thingId" ]
         }
         """
-      )
-    }
-
-    val userEntity = userEntityFactory.produceAndPersist {
-      withDeliusUsername("PROBATIONPERSON")
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          )
         }
-      }
-    }
 
-    val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(newestJsonSchema)
-      withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(userEntity)
-      withData(
-        """
+        val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(newestJsonSchema)
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withData(
+            """
           {
              "thingId": 123
           }
           """
-      )
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
           )
-        )
-        .produce()
-    )
+        }
 
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-    val rawResponseBody = webTestClient.get()
-      .uri("/applications/${applicationEntity.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult<String>()
-      .responseBody
-      .blockFirst()
+        val rawResponseBody = webTestClient.get()
+          .uri("/applications/${applicationEntity.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
 
-    val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-    assertThat(responseBody).matches {
-      applicationEntity.id == it.id &&
-        applicationEntity.crn == it.person.crn &&
-        applicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        applicationEntity.createdByUser.id == it.createdByUserId &&
-        applicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-        newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+        assertThat(responseBody).matches {
+          applicationEntity.id == it.id &&
+            applicationEntity.crn == it.person.crn &&
+            applicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+            applicationEntity.createdByUser.id == it.createdByUserId &&
+            applicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+            serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
+            newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+        }
+      }
     }
   }
 
   @Test
   fun `Get single application returns 403 when caller did not create application and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
-    val crn = "X1234"
-    val username = "PROBATIONPERSON2"
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User` { userEntity, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val crn = "X1234"
+
+          val application = produceAndPersistBasicApplication(crn, otherUser)
+
+          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+          webTestClient.get()
+            .uri("/applications/${application.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
         }
       }
     }
-
-    val application = produceAndPersistBasicApplication(crn)
-    mockOffenderDetailsCommunityApiCall404(crn)
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
-
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
-
-    webTestClient.get()
-      .uri("/applications/${application.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isForbidden
   }
 
   @Test
   fun `Get single application returns 500 when a person has no NOMS number`() {
-    val crn = "X1234"
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = { withoutNomsNumber() }
+      ) { offenderDetails, inmateDetails ->
+        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity)
 
-    val application = produceAndPersistBasicApplication(crn)
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-    val offenderWithoutNomsNumber = OffenderDetailsSummaryFactory()
-      .withCrn(crn)
-      .withoutNomsNumber()
-      .produce()
-
-    mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
-
-    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
-
-    webTestClient.get()
-      .uri("/applications/${application.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+        webTestClient.get()
+          .uri("/applications/${application.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+      }
+    }
   }
 
   @Test
   fun `Get single application returns 500 when the person cannot be fetched from the prisons API`() {
-    val crn = "X1234"
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      val crn = "X1234"
 
-    val application = produceAndPersistBasicApplication(crn)
+      val application = produceAndPersistBasicApplication(crn, userEntity)
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(crn)
-      .withNomsNumber("ABC123")
-      .produce()
-
-    mockOffenderDetailsCommunityApiCall(offenderDetails)
-    offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withNomsNumber("ABC123")
         .produce()
-    )
 
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
+      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
 
-    webTestClient.get()
-      .uri("/applications/${application.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+      webTestClient.get()
+        .uri("/applications/${application.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+    }
   }
 
   @Test
   fun `Get single online application returns 200 with correct body, non-upgradable outdated application marked as such`() {
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-    approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
-    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        """
+        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+          withSchema(
+            """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -734,13 +526,13 @@ class ApplicationTest : IntegrationTestBase() {
           "required": [ "thingId" ]
         }
         """
-      )
-    }
+          )
+        }
 
-    val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-      withSchema(
-        """
+        val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
+          withSchema(
+            """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -750,121 +542,72 @@ class ApplicationTest : IntegrationTestBase() {
           "properties": { }
         }
         """
-      )
-    }
+          )
+        }
 
-    val userEntity = userEntityFactory.produceAndPersist {
-      withDeliusUsername("PROBATIONPERSON")
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(olderJsonSchema)
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withData("{}")
+        }
+
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+        val rawResponseBody = webTestClient.get()
+          .uri("/applications/${nonUpgradableApplicationEntity.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+        assertThat(responseBody).matches {
+          nonUpgradableApplicationEntity.id == it.id &&
+            nonUpgradableApplicationEntity.crn == it.person?.crn &&
+            nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+            nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
+            nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+            serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
+            olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
         }
       }
-    }
-
-    val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(olderJsonSchema)
-      withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(userEntity)
-      withData("{}")
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
-
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
-
-    val rawResponseBody = webTestClient.get()
-      .uri("/applications/${nonUpgradableApplicationEntity.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult<String>()
-      .responseBody
-      .blockFirst()
-
-    val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-    assertThat(responseBody).matches {
-      nonUpgradableApplicationEntity.id == it.id &&
-        nonUpgradableApplicationEntity.crn == it.person?.crn &&
-        nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
-        nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-        serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-        olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
     }
   }
 
   @Test
   fun `Get single offline application returns 200 with correct body`() {
-    val username = "PROBATIONPERSON"
+    `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+        }
 
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+        val rawResponseBody = webTestClient.get()
+          .uri("/applications/${offlineApplicationEntity.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
+
+        assertThat(responseBody).matches {
+          offlineApplicationEntity.id == it.id &&
+            offlineApplicationEntity.crn == it.person.crn &&
+            offlineApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+            offlineApplicationEntity.submittedAt.toInstant() == it.submittedAt?.toInstant()
         }
       }
-    }
-
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(UserRole.MANAGER)
-    }
-
-    val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
-      withCrn(offenderDetails.otherIds.crn)
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
-
-    mockOffenderUserAccessCommunityApiCall(username, offenderDetails.otherIds.crn, false, false)
-
-    val rawResponseBody = webTestClient.get()
-      .uri("/applications/${offlineApplicationEntity.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult<String>()
-      .responseBody
-      .blockFirst()
-
-    val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
-
-    assertThat(responseBody).matches {
-      offlineApplicationEntity.id == it.id &&
-        offlineApplicationEntity.crn == it.person.crn &&
-        offlineApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-        offlineApplicationEntity.submittedAt.toInstant() == it.submittedAt?.toInstant()
     }
   }
 
@@ -882,8 +625,7 @@ class ApplicationTest : IntegrationTestBase() {
     val crn = "X1234"
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
 
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-    mockOffenderDetailsCommunityApiCall404(crn)
+    CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
 
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
@@ -907,450 +649,267 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns 500 when a person has no NOMS number`() {
-    val crn = "X1234"
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = { withoutNomsNumber() }
+      ) { offenderDetails, inmateDetails ->
+        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
 
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-
-    val offenderWithoutNomsNumber = OffenderDetailsSummaryFactory()
-      .withCrn(crn)
-      .withoutNomsNumber()
-      .produce()
-
-    mockOffenderDetailsCommunityApiCall(offenderWithoutNomsNumber)
-
-    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
+        webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+      }
     }
-
-    webTestClient.post()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewApplication(
-          crn = crn
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
   }
 
   @Test
   fun `Create new application returns 500 when the person cannot be fetched from the prisons API`() {
-    val crn = "X1234"
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    `Given a User` { userEntity, jwt ->
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withNomsNumber("ABC123")
+        .produce()
 
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(crn)
-      .withNomsNumber("ABC123")
-      .produce()
-
-    mockOffenderDetailsCommunityApiCall(offenderDetails)
-    offenderDetails.otherIds.nomsNumber?.let { mockInmateDetailPrisonsApiCall404(it) }
-
-    webTestClient.post()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewApplication(
-          crn = crn
+      webTestClient.post()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewApplication(
+            crn = offenderDetails.otherIds.crn
+          )
         )
-      )
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: ${offenderDetails.otherIds.crn}")
+    }
   }
 
   @Test
   fun `Create new application returns 201 with correct body and Location header`() {
-    val crn = offenderDetails.otherIds.crn
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-    mockOffenderDetailsCommunityApiCall(
-      OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withDateOfBirth(LocalDate.parse("1985-05-05"))
-        .withNomsNumber("NOMS321")
-        .withFirstName("James")
-        .withLastName("Someone")
-        .withGender("Male")
-        .withNationality("English")
-        .withReligionOrBelief("Judaism")
-        .withGenderIdentity("Prefer to self-describe")
-        .withSelfDescribedGenderIdentity("This is a self described identity")
-        .produce()
-    )
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername("PROBATIONPERSON")
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789"
+            )
           )
-        )
-        .produce()
-    )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(ApprovedPremisesApplication::class.java)
 
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
 
-    val result = webTestClient.post()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewApplication(
-          crn = crn,
-          convictionId = 123,
-          deliusEventNumber = "1",
-          offenceId = "789"
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isCreated
-      .returnResult(ApprovedPremisesApplication::class.java)
-
-    assertThat(result.responseHeaders["Location"]).anyMatch {
-      it.matches(Regex("/applications/.+"))
-    }
-
-    assertThat(result.responseBody.blockFirst()).matches {
-      it.person.crn == crn &&
-        it.schemaVersion == applicationSchema.id
+        assertThat(result.responseBody.blockFirst()).matches {
+          it.person.crn == offenderDetails.otherIds.crn &&
+            it.schemaVersion == applicationSchema.id
+        }
+      }
     }
   }
 
   @Test
   fun `Create new application without risks returns 201 with correct body and Location header`() {
-    val crn = offenderDetails.otherIds.crn
-    val username = "PROBATIONPERSON"
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-    mockOffenderDetailsCommunityApiCall(
-      OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withDateOfBirth(LocalDate.parse("1985-05-05"))
-        .withNomsNumber("NOMS321")
-        .withFirstName("James")
-        .withLastName("Someone")
-        .withGender("Male")
-        .withNationality("English")
-        .withReligionOrBelief("Judaism")
-        .withGenderIdentity("Prefer to self-describe")
-        .withSelfDescribedGenderIdentity("This is a self described identity")
-        .produce()
-    )
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername("PROBATIONPERSON")
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
+        val result = webTestClient.post()
+          .uri("/applications?createWithRisks=false")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789"
+            )
           )
-        )
-        .produce()
-    )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(ApprovedPremisesApplication::class.java)
 
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
 
-    val result = webTestClient.post()
-      .uri("/applications?createWithRisks=false")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewApplication(
-          crn = crn,
-          convictionId = 123,
-          deliusEventNumber = "1",
-          offenceId = "789"
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isCreated
-      .returnResult(ApprovedPremisesApplication::class.java)
-
-    assertThat(result.responseHeaders["Location"]).anyMatch {
-      it.matches(Regex("/applications/.+"))
-    }
-
-    assertThat(result.responseBody.blockFirst()).matches {
-      it.person.crn == crn &&
-        it.schemaVersion == applicationSchema.id
+        assertThat(result.responseBody.blockFirst()).matches {
+          it.person.crn == offenderDetails.otherIds.crn &&
+            it.schemaVersion == applicationSchema.id
+        }
+      }
     }
   }
 
   @Test
   fun `Update existing application returns 200 with correct body`() {
-    val username = "PROBATIONPERSON"
-    val crn = offenderDetails.otherIds.crn
-    val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+    `Given a User` { submittingUser, jwt ->
+      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE)) { assessorUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-    mockOffenderDetailsCommunityApiCall(
-      OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withDateOfBirth(LocalDate.parse("1985-05-05"))
-        .withNomsNumber("NOMS321")
-        .withFirstName("James")
-        .withLastName("Someone")
-        .withGender("Male")
-        .withNationality("English")
-        .withReligionOrBelief("Judaism")
-        .withGenderIdentity("Prefer to self-describe")
-        .withSelfDescribedGenderIdentity("This is a self described identity")
-        .produce()
-    )
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername("PROBATIONPERSON")
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .produce(),
-      false
-    )
-
-    val assessor = userEntityFactory.produceAndPersist {
-      withDeliusUsername("ASSESSOR")
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(assessor)
-      withRole(UserRole.ASSESSOR)
-    }
-
-    userQualificationAssignmentEntityFactory.produceAndPersist {
-      withUser(assessor)
-      withQualification(UserQualification.PIPE)
-    }
-
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-      withSchema(
-        """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(
+              """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {
+                  "thingId": {
+                    "description": "The unique identifier for a thing",
+                    "type": "integer"
+                  }
+                },
+                "required": [ "thingId" ]
               }
-            },
-            "required": [ "thingId" ]
+            """
+            )
           }
-        """
-      )
-    }
 
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+          }
+
+          val resultBody = webTestClient.put()
+            .uri("/applications/$applicationId")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              UpdateApplication(
+                data = mapOf("thingId" to 123),
+                isWomensApplication = false,
+                isPipeApplication = true
+              )
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(String::class.java)
+            .responseBody
+            .blockFirst()
+
+          val result = objectMapper.readValue(resultBody, Application::class.java)
+
+          assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
         }
       }
     }
-
-    approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCrn(crn)
-      withId(applicationId)
-      withApplicationSchema(applicationSchema)
-      withCreatedByUser(user)
-    }
-
-    val resultBody = webTestClient.put()
-      .uri("/applications/$applicationId")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        UpdateApplication(
-          data = mapOf("thingId" to 123),
-          isWomensApplication = false,
-          isPipeApplication = true
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(String::class.java)
-      .responseBody
-      .blockFirst()
-
-    val result = objectMapper.readValue(resultBody, Application::class.java)
-
-    assertThat(result.person.crn).isEqualTo(crn)
   }
 
   @Test
   fun `Submit application returns 200, creates and allocates an assessment`() {
-    val username = "PROBATIONPERSON"
-    val crn = offenderDetails.otherIds.crn
-    val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+    `Given a User` { submittingUser, jwt ->
+      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
-    mockOffenderDetailsCommunityApiCall(
-      OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withDateOfBirth(LocalDate.parse("1985-05-05"))
-        .withNomsNumber("NOMS321")
-        .withFirstName("James")
-        .withLastName("Someone")
-        .withGender("Male")
-        .withNationality("English")
-        .withReligionOrBelief("Judaism")
-        .withGenderIdentity("Prefer to self-describe")
-        .withSelfDescribedGenderIdentity("This is a self described identity")
-        .produce()
-    )
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername("PROBATIONPERSON")
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .produce(),
-      false
-    )
-
-    val assessor = userEntityFactory.produceAndPersist {
-      withDeliusUsername("ASSESSOR")
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(assessor)
-      withRole(UserRole.ASSESSOR)
-    }
-
-    userQualificationAssignmentEntityFactory.produceAndPersist {
-      withUser(assessor)
-      withQualification(UserQualification.PIPE)
-    }
-
-    userQualificationAssignmentEntityFactory.produceAndPersist {
-      withUser(assessor)
-      withQualification(UserQualification.WOMENS)
-    }
-
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-      withSchema(
-        """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "isWomensApplication": {
-                "description": "whether this is a womens application",
-                "type": "boolean"
-              },
-              "isPipeApplication": {
-                "description": "whether this is a PIPE application",
-                "type": "boolean"
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(
+              """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {
+                  "isWomensApplication": {
+                    "description": "whether this is a womens application",
+                    "type": "boolean"
+                  },
+                  "isPipeApplication": {
+                    "description": "whether this is a PIPE application",
+                    "type": "boolean"
+                  }
+                },
+                "required": [ "isWomensApplication", "isPipeApplication" ]
               }
-            },
-            "required": [ "isWomensApplication", "isPipeApplication" ]
+            """
+            )
+            withIsPipeJsonLogicRule("""{"var": "isPipeApplication"}""")
+            withIsWomensJsonLogicRule("""{"var": "isWomensApplication"}""")
           }
-        """
-      )
-      withIsPipeJsonLogicRule("""{"var": "isPipeApplication"}""")
-      withIsWomensJsonLogicRule("""{"var": "isWomensApplication"}""")
-    }
 
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
+              {
+                 "isWomensApplication": true,
+                 "isPipeApplication": true
+              }
+            """
+            )
+          }
+
+          webTestClient.post()
+            .uri("/applications/$applicationId/submission")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              SubmitApplication(
+                translatedDocument = mapOf("isWomensApplication" to true, "isPipeApplication" to true)
+              )
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+
+          assertThat(persistedApplication.isWomensApplication).isTrue
+          assertThat(persistedApplication.isPipeApplication).isTrue
+
+          val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
+          assertThat(createdAssessment.allocatedToUser.id).isEqualTo(assessorUser.id)
         }
       }
     }
-
-    approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCrn(crn)
-      withId(applicationId)
-      withApplicationSchema(applicationSchema)
-      withCreatedByUser(user)
-      withData(
-        """
-          {
-             "isWomensApplication": true,
-             "isPipeApplication": true
-          }
-        """
-      )
-    }
-
-    webTestClient.post()
-      .uri("/applications/$applicationId/submission")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        SubmitApplication(
-          translatedDocument = mapOf("isWomensApplication" to true, "isPipeApplication" to true)
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
-
-    assertThat(persistedApplication.isWomensApplication).isTrue
-    assertThat(persistedApplication.isPipeApplication).isTrue
-
-    val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
-    assertThat(createdAssessment.allocatedToUser.id).isEqualTo(assessor.id)
   }
 
   @Test
@@ -1369,124 +928,59 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Reallocate application to different assessor without WORKFLOW_MANAGER role returns 403`() {
-    val username = "PROBATIONPERSON"
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .produce()
-    )
-
-    webTestClient.post()
-      .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        Reallocation(
-          userId = UUID.randomUUID()
+    `Given a User` { userEntity, jwt ->
+      webTestClient.post()
+        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Reallocation(
+            userId = UUID.randomUUID()
+          )
         )
-      )
-      .exchange()
-      .expectStatus()
-      .isForbidden
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
   }
 
   @Test
   fun `Reallocate application to different assessor returns 200, creates new assessment, deallocates old one`() {
-    val requestUsername = "PROBATIONPERSON"
-    val otherUsername = "OTHERUSER"
-    val assigneeUsername = "ASSIGNEEUSER"
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(requestUsername)
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { requestUser, jwt ->
+      `Given a User`(roles = listOf(UserRole.ASSESSOR)) { otherUser, _ ->
+        `Given a User`(roles = listOf(UserRole.ASSESSOR)) { assigneeUser, _ ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 
-    val requestUser = userEntityFactory.produceAndPersist {
-      withDeliusUsername(requestUsername)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(otherUser)
+            withApplicationSchema(applicationSchema)
+          }
+
+          val existingAssessment = assessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(otherUser)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          webTestClient.post()
+            .uri("/applications/${application.id}/allocations")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Reallocation(
+                userId = assigneeUser.id
+              )
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val assessments = assessmentRepository.findAll()
+
+          assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
+          assertThat(assessments).anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
         }
       }
     }
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(requestUser)
-      withRole(UserRole.WORKFLOW_MANAGER)
-    }
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(requestUsername)
-        .produce(),
-      false
-    )
-
-    val otherUser = userEntityFactory.produceAndPersist {
-      withDeliusUsername(otherUsername)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(otherUsername)
-        .produce(),
-      false
-    )
-
-    val assigneeUser = userEntityFactory.produceAndPersist {
-      withDeliusUsername(assigneeUsername)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(assigneeUsername)
-        .produce()
-    )
-
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(assigneeUser)
-      withRole(UserRole.ASSESSOR)
-    }
-
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
-
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(otherUser)
-      withApplicationSchema(applicationSchema)
-    }
-
-    val existingAssessment = assessmentEntityFactory.produceAndPersist {
-      withApplication(application)
-      withAllocatedToUser(otherUser)
-      withAssessmentSchema(assessmentSchema)
-    }
-
-    webTestClient.post()
-      .uri("/applications/${application.id}/allocations")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        Reallocation(
-          userId = assigneeUser.id
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val assessments = assessmentRepository.findAll()
-
-    assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
-    assertThat(assessments).anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
@@ -1496,25 +990,7 @@ class ApplicationTest : IntegrationTestBase() {
     return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 
-  private fun mockOffenderDetailsCommunityApiCall404(crn: String) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(404)
-      )
-  )
-
-  private fun mockInmateDetailPrisonsApiCall404(offenderNo: String) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/api/offenders/$offenderNo"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(404)
-      )
-  )
-
-  private fun produceAndPersistBasicApplication(crn: String): ApplicationEntity {
+  private fun produceAndPersistBasicApplication(crn: String, userEntity: UserEntity): ApplicationEntity {
     val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
@@ -1535,15 +1011,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
         """
       )
-    }
-
-    val userEntity = userEntityFactory.produceAndPersist {
-      withDeliusUsername("PROBATIONPERSON")
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
     }
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {

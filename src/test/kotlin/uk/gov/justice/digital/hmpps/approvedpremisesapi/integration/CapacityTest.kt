@@ -6,7 +6,8 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 
@@ -42,164 +43,98 @@ class CapacityTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
   fun `Get Capacity with no bookings or lost beds on Approved Premises returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    val username = "PROBATIONUSER"
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withTotalBeds(30)
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
         }
       }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<DateCapacity>()
+        .hasSize(0)
     }
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
-
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withTotalBeds(30)
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .produce()
-    )
-
-    mockClientCredentialsJwtRequest()
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/capacity")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBodyList<DateCapacity>()
-      .hasSize(0)
   }
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
   fun `Get Capacity for Approved Premises with booking in past returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    val username = "PROBATIONUSER"
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withTotalBeds(30)
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
       }
-    }
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
 
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withTotalBeds(30)
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+      bookingEntityFactory.produceAndPersist {
+        withDepartureDate(LocalDate.now().minusDays(1))
+          .withStaffKeyWorkerCode(keyWorker.code)
+          .withPremises(premises)
       }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<DateCapacity>()
+        .hasSize(0)
     }
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-    mockStaffMembersContextApiCall(keyWorker, premises.qCode)
-
-    bookingEntityFactory.produceAndPersist {
-      withDepartureDate(LocalDate.now().minusDays(1))
-        .withStaffKeyWorkerCode(keyWorker.code)
-        .withPremises(premises)
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .produce()
-    )
-
-    mockClientCredentialsJwtRequest()
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/capacity")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBodyList<DateCapacity>()
-      .hasSize(0)
   }
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
   fun `Get Capacity for Approved Premises with booking in future returns OK with list entry for each day until the booking ends when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    val username = "PROBATIONUSER"
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withTotalBeds(30)
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
       }
-    }
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(user)
-      withRole(role)
-    }
 
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withTotalBeds(30)
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+      bookingEntityFactory.produceAndPersist {
+        withArrivalDate(LocalDate.now().plusDays(4))
+        withDepartureDate(LocalDate.now().plusDays(6))
+        withStaffKeyWorkerCode(keyWorker.code)
+        withPremises(premises)
       }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<DateCapacity>()
+        .hasSize(6)
+        .contains(
+          DateCapacity(date = LocalDate.now(), availableBeds = 30),
+          DateCapacity(date = LocalDate.now().plusDays(1), availableBeds = 30),
+          DateCapacity(date = LocalDate.now().plusDays(2), availableBeds = 30),
+          DateCapacity(date = LocalDate.now().plusDays(3), availableBeds = 30),
+          DateCapacity(date = LocalDate.now().plusDays(4), availableBeds = 29),
+          DateCapacity(date = LocalDate.now().plusDays(5), availableBeds = 29)
+        )
     }
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-    mockStaffMembersContextApiCall(keyWorker, premises.qCode)
-
-    bookingEntityFactory.produceAndPersist {
-      withArrivalDate(LocalDate.now().plusDays(4))
-      withDepartureDate(LocalDate.now().plusDays(6))
-      withStaffKeyWorkerCode(keyWorker.code)
-      withPremises(premises)
-    }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .produce()
-    )
-
-    mockClientCredentialsJwtRequest()
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/capacity")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBodyList<DateCapacity>()
-      .hasSize(6)
-      .contains(
-        DateCapacity(date = LocalDate.now(), availableBeds = 30),
-        DateCapacity(date = LocalDate.now().plusDays(1), availableBeds = 30),
-        DateCapacity(date = LocalDate.now().plusDays(2), availableBeds = 30),
-        DateCapacity(date = LocalDate.now().plusDays(3), availableBeds = 30),
-        DateCapacity(date = LocalDate.now().plusDays(4), availableBeds = 29),
-        DateCapacity(date = LocalDate.now().plusDays(5), availableBeds = 29)
-      )
   }
 }

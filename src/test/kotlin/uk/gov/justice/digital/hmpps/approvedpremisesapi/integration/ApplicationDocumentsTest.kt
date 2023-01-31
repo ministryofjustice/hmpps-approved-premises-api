@@ -1,32 +1,21 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentDownloadCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 
 class ApplicationDocumentsTest : IntegrationTestBase() {
   @Autowired
   lateinit var documentTransformer: DocumentTransformer
-
-  private val offenderDetails = OffenderDetailsSummaryFactory()
-    .withCrn("CRN123")
-    .withNomsNumber("NOMS321")
-    .produce()
-
-  private val inmateDetail = InmateDetailFactory()
-    .withOffenderNo("NOMS321")
-    .produce()
 
   @Test
   fun `Get application documents without JWT returns 401`() {
@@ -39,269 +28,180 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
 
   @Test
   fun `Get application documents where user did not create application and user not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns 403`() {
-    val username = "PROBATIONPERSON"
-    val crn = "CRN123"
+    `Given a User` { userEntity, jwt ->
+      `Given a User` { ownerUserEntity, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(ownerUserEntity)
+            withCrn(offenderDetails.otherIds.crn)
+            withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+          }
 
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          webTestClient.get()
+            .uri("/applications/${application.id}/documents")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
         }
       }
     }
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
-    val owner = userEntityFactory.produceAndPersist { withDeliusUsername("DIFFERENTPROBATIONPERSON") }
-
-    mockClientCredentialsJwtRequest()
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce()
-          )
-        )
-        .produce()
-    )
-
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(owner)
-      withCrn(crn)
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
-    }
-
-    webTestClient.get()
-      .uri("/applications/${application.id}/documents")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isForbidden
   }
 
   @Test
   fun `Get application documents returns 200`() {
-    val username = "PROBATIONPERSON"
-    val crn = "CRN123"
-
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername(username)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
-      }
-    }
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(username)
 
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
+        val groupedDocuments = GroupedDocumentsFactory()
+          .withOffenderLevelDocument(
+            DocumentFactory()
+              .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
+              .withDocumentName("offender_level_doc.pdf")
+              .withTypeCode("TYPE-1")
+              .withTypeDescription("Type 1 Description")
+              .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
+              .withExtendedDescription("Extended Description 1")
               .produce()
           )
-        )
-        .produce()
-    )
+          .withConvictionLevelDocument(
+            "12345",
+            DocumentFactory()
+              .withId("457af8a5-82b1-449a-ad03-032b39435865")
+              .withDocumentName("conviction_level_doc.pdf")
+              .withTypeCode("TYPE-2")
+              .withTypeDescription("Type 2 Description")
+              .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
+              .withExtendedDescription("Extended Description 2")
+              .produce()
+          )
+          .produce()
 
-    mockOffenderUserAccessCommunityApiCall(username, crn, false, false)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(user)
-      withCrn(crn)
-      withConvictionId(12345)
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+        webTestClient.get()
+          .uri("/applications/${application.id}/documents")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              documentTransformer.transformToApi(groupedDocuments, 12345)
+            )
+          )
+      }
     }
-
-    val groupedDocuments = GroupedDocumentsFactory()
-      .withOffenderLevelDocument(
-        DocumentFactory()
-          .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
-          .withDocumentName("offender_level_doc.pdf")
-          .withTypeCode("TYPE-1")
-          .withTypeDescription("Type 1 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
-          .withExtendedDescription("Extended Description 1")
-          .produce()
-      )
-      .withConvictionLevelDocument(
-        "12345",
-        DocumentFactory()
-          .withId("457af8a5-82b1-449a-ad03-032b39435865")
-          .withDocumentName("conviction_level_doc.pdf")
-          .withTypeCode("TYPE-2")
-          .withTypeDescription("Type 2 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
-          .withExtendedDescription("Extended Description 2")
-          .produce()
-      )
-      .produce()
-
-    mockClientCredentialsJwtRequest()
-    mockCommunityApiDocumentsCall("CRN123", groupedDocuments)
-
-    webTestClient.get()
-      .uri("/applications/${application.id}/documents")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          documentTransformer.transformToApi(groupedDocuments, 12345)
-        )
-      )
   }
 
   @Test
   fun `Download document returns 404 when not found in documents meta data`() {
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername("PROBATIONPERSON")
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
+
+        val groupedDocuments = GroupedDocumentsFactory()
+          .withOffenderLevelDocument(
+            DocumentFactory()
+              .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
+              .withDocumentName("offender_level_doc.pdf")
+              .withTypeCode("TYPE-1")
+              .withTypeDescription("Type 1 Description")
+              .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
+              .withExtendedDescription("Extended Description 1")
+              .produce()
+          )
+          .withConvictionLevelDocument(
+            "12345",
+            DocumentFactory()
+              .withId("457af8a5-82b1-449a-ad03-032b39435865")
+              .withDocumentName("conviction_level_doc.pdf")
+              .withTypeCode("TYPE-2")
+              .withTypeDescription("Type 2 Description")
+              .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
+              .withExtendedDescription("Extended Description 2")
+              .produce()
+          )
+          .produce()
+
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+
+        webTestClient.get()
+          .uri("/documents/${application.crn}/ace0baaf-d7ee-4ea0-9010-da588387c880")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
       }
     }
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
-
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(user)
-      withCrn("CRN123")
-      withConvictionId(12345)
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
-    }
-
-    val groupedDocuments = GroupedDocumentsFactory()
-      .withOffenderLevelDocument(
-        DocumentFactory()
-          .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
-          .withDocumentName("offender_level_doc.pdf")
-          .withTypeCode("TYPE-1")
-          .withTypeDescription("Type 1 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
-          .withExtendedDescription("Extended Description 1")
-          .produce()
-      )
-      .withConvictionLevelDocument(
-        "12345",
-        DocumentFactory()
-          .withId("457af8a5-82b1-449a-ad03-032b39435865")
-          .withDocumentName("conviction_level_doc.pdf")
-          .withTypeCode("TYPE-2")
-          .withTypeDescription("Type 2 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
-          .withExtendedDescription("Extended Description 2")
-          .produce()
-      )
-      .produce()
-
-    mockClientCredentialsJwtRequest()
-    mockCommunityApiDocumentsCall("CRN123", groupedDocuments)
-
-    webTestClient.get()
-      .uri("/documents/${application.crn}/ace0baaf-d7ee-4ea0-9010-da588387c880")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
   }
 
   @Test
   fun `Download document returns 200 with correct body and headers`() {
-    val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername("PROBATIONPERSON")
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
+
+        val groupedDocuments = GroupedDocumentsFactory()
+          .withOffenderLevelDocument(
+            DocumentFactory()
+              .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
+              .withDocumentName("offender_level_doc.pdf")
+              .withTypeCode("TYPE-1")
+              .withTypeDescription("Type 1 Description")
+              .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
+              .withExtendedDescription("Extended Description 1")
+              .produce()
+          )
+          .withConvictionLevelDocument(
+            "12345",
+            DocumentFactory()
+              .withId("457af8a5-82b1-449a-ad03-032b39435865")
+              .withDocumentName("conviction_level_doc.pdf")
+              .withTypeCode("TYPE-2")
+              .withTypeDescription("Type 2 Description")
+              .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
+              .withExtendedDescription("Extended Description 2")
+              .produce()
+          )
+          .produce()
+
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+
+        val fileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
+
+        CommunityAPI_mockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
+
+        val result = webTestClient.get()
+          .uri("/documents/${application.crn}/457af8a5-82b1-449a-ad03-032b39435865")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader()
+          .contentDisposition(ContentDisposition.parse("attachment; filename=\"conviction_level_doc.pdf\""))
+          .expectBody()
+          .returnResult()
+
+        assertThat(result.responseBody).isEqualTo(fileContents)
       }
     }
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
-
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(user)
-      withCrn("CRN123")
-      withConvictionId(12345)
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
-    }
-
-    val groupedDocuments = GroupedDocumentsFactory()
-      .withOffenderLevelDocument(
-        DocumentFactory()
-          .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
-          .withDocumentName("offender_level_doc.pdf")
-          .withTypeCode("TYPE-1")
-          .withTypeDescription("Type 1 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
-          .withExtendedDescription("Extended Description 1")
-          .produce()
-      )
-      .withConvictionLevelDocument(
-        "12345",
-        DocumentFactory()
-          .withId("457af8a5-82b1-449a-ad03-032b39435865")
-          .withDocumentName("conviction_level_doc.pdf")
-          .withTypeCode("TYPE-2")
-          .withTypeDescription("Type 2 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
-          .withExtendedDescription("Extended Description 2")
-          .produce()
-      )
-      .produce()
-
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn("CRN123")
-      .withNomsNumber("NOMS321")
-      .produce()
-
-    mockClientCredentialsJwtRequest()
-    mockOffenderDetailsCommunityApiCall(offenderDetails)
-    mockCommunityApiDocumentsCall("CRN123", groupedDocuments)
-
-    val fileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
-
-    mockCommunityApiDocumentDownloadCall("CRN123", "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
-
-    val result = webTestClient.get()
-      .uri("/documents/${application.crn}/457af8a5-82b1-449a-ad03-032b39435865")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectHeader()
-      .contentDisposition(ContentDisposition.parse("attachment; filename=\"conviction_level_doc.pdf\""))
-      .expectBody()
-      .returnResult()
-
-    assertThat(result.responseBody).isEqualTo(fileContents)
   }
-
-  private fun mockCommunityApiDocumentDownloadCall(crn: String, documentId: String, fileContents: ByteArray) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn/documents/$documentId"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/octet-stream")
-          .withStatus(200)
-          .withBody(fileContents)
-      )
-  )
-
-  private fun mockCommunityApiDocumentsCall(crn: String, groupedDocuments: GroupedDocuments) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn/documents/grouped"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(groupedDocuments)
-          )
-      )
-  )
 }

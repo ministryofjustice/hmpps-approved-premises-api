@@ -267,6 +267,8 @@ abstract class IntegrationTestBase {
   lateinit var roomEntityFactory: PersistedFactory<RoomEntity, UUID, RoomEntityFactory>
   lateinit var bedEntityFactory: PersistedFactory<BedEntity, UUID, BedEntityFactory>
 
+  private var clientCredentialsCallMocked = false
+
   @BeforeEach
   fun beforeEach() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -293,36 +295,36 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setupFactories() {
-    probationRegionEntityFactory = PersistedFactory(ProbationRegionEntityFactory(), probationRegionRepository)
-    apAreaEntityFactory = PersistedFactory(ApAreaEntityFactory(), apAreaRepository)
-    localAuthorityEntityFactory = PersistedFactory(LocalAuthorityEntityFactory(), localAuthorityAreaRepository)
-    approvedPremisesEntityFactory = PersistedFactory(ApprovedPremisesEntityFactory(), approvedPremisesRepository)
-    temporaryAccommodationPremisesEntityFactory = PersistedFactory(TemporaryAccommodationPremisesEntityFactory(), temporaryAccommodationPremisesRepository)
-    bookingEntityFactory = PersistedFactory(BookingEntityFactory(), bookingRepository)
-    arrivalEntityFactory = PersistedFactory(ArrivalEntityFactory(), arrivalRepository)
-    departureEntityFactory = PersistedFactory(DepartureEntityFactory(), departureRepository)
-    destinationProviderEntityFactory = PersistedFactory(DestinationProviderEntityFactory(), destinationProviderRepository)
-    departureReasonEntityFactory = PersistedFactory(DepartureReasonEntityFactory(), departureReasonRepository)
-    moveOnCategoryEntityFactory = PersistedFactory(MoveOnCategoryEntityFactory(), moveOnCategoryRepository)
-    nonArrivalEntityFactory = PersistedFactory(NonArrivalEntityFactory(), nonArrivalRepository)
-    cancellationEntityFactory = PersistedFactory(CancellationEntityFactory(), cancellationRepository)
-    cancellationReasonEntityFactory = PersistedFactory(CancellationReasonEntityFactory(), cancellationReasonRepository)
-    lostBedsEntityFactory = PersistedFactory(LostBedsEntityFactory(), lostBedsRepository)
-    lostBedReasonEntityFactory = PersistedFactory(LostBedReasonEntityFactory(), lostBedReasonRepository)
-    extensionEntityFactory = PersistedFactory(ExtensionEntityFactory(), extensionRepository)
-    nonArrivalReasonEntityFactory = PersistedFactory(NonArrivalReasonEntityFactory(), nonArrivalReasonRepository)
-    approvedPremisesApplicationEntityFactory = PersistedFactory(ApprovedPremisesApplicationEntityFactory(), approvedPremisesApplicationRepository)
-    offlineApplicationEntityFactory = PersistedFactory(OfflineApplicationEntityFactory(), offlineApplicationRepository)
-    approvedPremisesApplicationJsonSchemaEntityFactory = PersistedFactory(ApprovedPremisesApplicationJsonSchemaEntityFactory(), approvedPremisesApplicationJsonSchemaRepository)
-    approvedPremisesAssessmentJsonSchemaEntityFactory = PersistedFactory(ApprovedPremisesAssessmentJsonSchemaEntityFactory(), approvedPremisesAssessmentJsonSchemaRepository)
-    userEntityFactory = PersistedFactory(UserEntityFactory(), userRepository)
-    userRoleAssignmentEntityFactory = PersistedFactory(UserRoleAssignmentEntityFactory(), userRoleAssignmentRepository)
-    userQualificationAssignmentEntityFactory = PersistedFactory(UserQualificationAssignmentEntityFactory(), userQualificationAssignmentRepository)
-    assessmentEntityFactory = PersistedFactory(AssessmentEntityFactory(), assessmentRepository)
-    assessmentClarificationNoteEntityFactory = PersistedFactory(AssessmentClarificationNoteEntityFactory(), assessmentClarificationNoteRepository)
-    characteristicEntityFactory = PersistedFactory(CharacteristicEntityFactory(), characteristicRepository)
-    roomEntityFactory = PersistedFactory(RoomEntityFactory(), roomRepository)
-    bedEntityFactory = PersistedFactory(BedEntityFactory(), bedRepository)
+    probationRegionEntityFactory = PersistedFactory({ ProbationRegionEntityFactory() }, probationRegionRepository)
+    apAreaEntityFactory = PersistedFactory({ ApAreaEntityFactory() }, apAreaRepository)
+    localAuthorityEntityFactory = PersistedFactory({ LocalAuthorityEntityFactory() }, localAuthorityAreaRepository)
+    approvedPremisesEntityFactory = PersistedFactory({ ApprovedPremisesEntityFactory() }, approvedPremisesRepository)
+    temporaryAccommodationPremisesEntityFactory = PersistedFactory({ TemporaryAccommodationPremisesEntityFactory() }, temporaryAccommodationPremisesRepository)
+    bookingEntityFactory = PersistedFactory({ BookingEntityFactory() }, bookingRepository)
+    arrivalEntityFactory = PersistedFactory({ ArrivalEntityFactory() }, arrivalRepository)
+    departureEntityFactory = PersistedFactory({ DepartureEntityFactory() }, departureRepository)
+    destinationProviderEntityFactory = PersistedFactory({ DestinationProviderEntityFactory() }, destinationProviderRepository)
+    departureReasonEntityFactory = PersistedFactory({ DepartureReasonEntityFactory() }, departureReasonRepository)
+    moveOnCategoryEntityFactory = PersistedFactory({ MoveOnCategoryEntityFactory() }, moveOnCategoryRepository)
+    nonArrivalEntityFactory = PersistedFactory({ NonArrivalEntityFactory() }, nonArrivalRepository)
+    cancellationEntityFactory = PersistedFactory({ CancellationEntityFactory() }, cancellationRepository)
+    cancellationReasonEntityFactory = PersistedFactory({ CancellationReasonEntityFactory() }, cancellationReasonRepository)
+    lostBedsEntityFactory = PersistedFactory({ LostBedsEntityFactory() }, lostBedsRepository)
+    lostBedReasonEntityFactory = PersistedFactory({ LostBedReasonEntityFactory() }, lostBedReasonRepository)
+    extensionEntityFactory = PersistedFactory({ ExtensionEntityFactory() }, extensionRepository)
+    nonArrivalReasonEntityFactory = PersistedFactory({ NonArrivalReasonEntityFactory() }, nonArrivalReasonRepository)
+    approvedPremisesApplicationEntityFactory = PersistedFactory({ ApprovedPremisesApplicationEntityFactory() }, approvedPremisesApplicationRepository)
+    offlineApplicationEntityFactory = PersistedFactory({ OfflineApplicationEntityFactory() }, offlineApplicationRepository)
+    approvedPremisesApplicationJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesApplicationJsonSchemaEntityFactory() }, approvedPremisesApplicationJsonSchemaRepository)
+    approvedPremisesAssessmentJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesAssessmentJsonSchemaEntityFactory() }, approvedPremisesAssessmentJsonSchemaRepository)
+    userEntityFactory = PersistedFactory({ UserEntityFactory() }, userRepository)
+    userRoleAssignmentEntityFactory = PersistedFactory({ UserRoleAssignmentEntityFactory() }, userRoleAssignmentRepository)
+    userQualificationAssignmentEntityFactory = PersistedFactory({ UserQualificationAssignmentEntityFactory() }, userQualificationAssignmentRepository)
+    assessmentEntityFactory = PersistedFactory({ AssessmentEntityFactory() }, assessmentRepository)
+    assessmentClarificationNoteEntityFactory = PersistedFactory({ AssessmentClarificationNoteEntityFactory() }, assessmentClarificationNoteRepository)
+    characteristicEntityFactory = PersistedFactory({ CharacteristicEntityFactory() }, characteristicRepository)
+    roomEntityFactory = PersistedFactory({ RoomEntityFactory() }, roomRepository)
+    bedEntityFactory = PersistedFactory({ BedEntityFactory() }, bedRepository)
   }
 
   fun mockClientCredentialsJwtRequest(
@@ -359,7 +361,7 @@ abstract class IntegrationTestBase {
   }
 
   fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
+    WireMock.get(urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
@@ -412,7 +414,7 @@ abstract class IntegrationTestBase {
   }
 
   fun mockStaffMembersContextApiCall(staffMember: StaffMember, qCode: String) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
+    WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
@@ -428,7 +430,7 @@ abstract class IntegrationTestBase {
   )
 
   fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
-    WireMock.get(WireMock.urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
+    WireMock.get(urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
       .willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
@@ -468,4 +470,40 @@ abstract class IntegrationTestBase {
           .withStatus(404)
       )
   )
+
+  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        WireMock.get(urlEqualTo(url))
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(responseStatus)
+              .withBody(
+                objectMapper.writeValueAsString(responseBody)
+              )
+          )
+      )
+    }
+
+  fun mockUnsuccessfulGetCall(url: String, responseStatus: Int) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        WireMock.get(urlEqualTo(url))
+          .willReturn(
+            aResponse()
+              .withStatus(responseStatus)
+          )
+      )
+    }
+
+  fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit) {
+    if (! clientCredentialsCallMocked) {
+      mockClientCredentialsJwtRequest()
+
+      clientCredentialsCallMocked = true
+    }
+
+    block()
+  }
 }

@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AlertFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAlertsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 
 class PersonAcctAlertsTest : IntegrationTestBase() {
@@ -54,91 +54,45 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
 
   @Test
   fun `Getting ACCT alerts for a CRN that does not exist returns 404`() {
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    `Given a User` { _, jwt ->
+      val crn = "CRN123"
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(404)
-        )
-    )
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
 
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    webTestClient.get()
-      .uri("/people/CRN/acct-alerts")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
+      webTestClient.get()
+        .uri("/people/$crn/acct-alerts")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
   }
 
   @Test
   fun `Getting ACCT alerts for a CRN returns OK with correct body`() {
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    `Given a User` { _, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val alerts = listOf(
+          AlertFactory().produce(),
+          AlertFactory().produce(),
+          AlertFactory().produce()
+        )
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                OffenderDetailsSummaryFactory()
-                  .withCrn("CRN")
-                  .withFirstName("James")
-                  .withLastName("Someone")
-                  .withNomsNumber("NOMS123")
-                  .produce()
-              )
+        PrisonAPI_mockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, alerts)
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              alerts.map(alertTransformer::transformToApi)
             )
-        )
-    )
-
-    val alerts = listOf(
-      AlertFactory().produce(),
-      AlertFactory().produce(),
-      AlertFactory().produce()
-    )
-
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/api/offenders/NOMS123/alerts/v2?alertCodes=HA&sort=dateCreated&direction=DESC"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withBody(
-              objectMapper.writeValueAsString(
-                alerts
-              )
-            )
-        )
-    )
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    webTestClient.get()
-      .uri("/people/CRN/acct-alerts")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          alerts.map(alertTransformer::transformToApi)
-        )
-      )
+          )
+      }
+    }
   }
 }

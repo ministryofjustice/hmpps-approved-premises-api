@@ -5,10 +5,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRole as ApiUserRole
 
 class ProfileTest : IntegrationTestBase() {
@@ -38,46 +38,17 @@ class ProfileTest : IntegrationTestBase() {
 
   @Test
   fun `Getting own profile with no X-Service-Name header returns 400`() {
-    val deliusUsername = "JimJimmerson"
-    val email = "foo@bar.com"
-    val telephoneNumber = "123445677"
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = deliusUsername,
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
-    val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    `Given a User` { userEntity, jwt ->
+      webTestClient.get()
+        .uri("/profile")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("detail").isEqualTo("Required request header 'X-Service-Name' for method parameter type ServiceName is not present")
     }
-
-    val userEntity = userEntityFactory.produceAndPersist {
-      withYieldedProbationRegion { region }
-      withDeliusUsername(deliusUsername)
-      withEmail(email)
-      withTelephoneNumber(telephoneNumber)
-    }
-
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(userEntity)
-      withRole(UserRole.ASSESSOR)
-    }
-
-    userQualificationAssignmentEntityFactory.produceAndPersist {
-      withUser(userEntity)
-      withQualification(UserQualification.PIPE)
-    }
-
-    webTestClient.get()
-      .uri("/profile")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .is4xxClientError
-      .expectBody()
-      .jsonPath("title").isEqualTo("Bad Request")
-      .jsonPath("detail").isEqualTo("Required request header 'X-Service-Name' for method parameter type ServiceName is not present")
   }
 
   @Test
@@ -87,57 +58,45 @@ class ProfileTest : IntegrationTestBase() {
     val email = "foo@bar.com"
     val telephoneNumber = "123445677"
 
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = deliusUsername,
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
-    )
-
     val region = probationRegionEntityFactory.produceAndPersist {
       withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
     }
 
-    val userEntity = userEntityFactory.produceAndPersist {
-      withId(id)
-      withYieldedProbationRegion { region }
-      withDeliusUsername(deliusUsername)
-      withEmail(email)
-      withTelephoneNumber(telephoneNumber)
-    }
-
-    userRoleAssignmentEntityFactory.produceAndPersist {
-      withUser(userEntity)
-      withRole(UserRole.ASSESSOR)
-    }
-
-    userQualificationAssignmentEntityFactory.produceAndPersist {
-      withUser(userEntity)
-      withQualification(UserQualification.PIPE)
-    }
-
-    webTestClient.get()
-      .uri("/profile")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.approvedPremises.value)
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          ApprovedPremisesUser(
-            id = id,
-            region = ProbationRegion(region.id, region.name),
-            deliusUsername = deliusUsername,
-            email = email,
-            name = userEntity.name,
-            telephoneNumber = telephoneNumber,
-            roles = listOf(ApiUserRole.assessor),
-            qualifications = listOf(ApiUserQualification.pipe),
-            service = ServiceName.approvedPremises.value,
+    `Given a User`(
+      id = id,
+      roles = listOf(UserRole.ASSESSOR),
+      qualifications = listOf(UserQualification.PIPE),
+      staffUserDetailsConfigBlock = {
+        withUsername(deliusUsername)
+        withEmail(email)
+        withTelephoneNumber(telephoneNumber)
+      },
+      probationRegion = region
+    ) { userEntity, jwt ->
+      webTestClient.get()
+        .uri("/profile")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            ApprovedPremisesUser(
+              id = id,
+              region = ProbationRegion(region.id, region.name),
+              deliusUsername = deliusUsername,
+              email = email,
+              name = userEntity.name,
+              telephoneNumber = telephoneNumber,
+              roles = listOf(ApiUserRole.assessor),
+              qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
+              service = ServiceName.approvedPremises.value,
+            )
           )
         )
-      )
+    }
   }
 
   @Test
