@@ -35,6 +35,7 @@ class UserServiceTest {
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
 
   private val userService = UserService(
+    false,
     mockHttpAuthService,
     mockCommunityApiClient,
     mockUserRepository,
@@ -111,6 +112,7 @@ class UserServiceTest {
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
 
     private val userService = UserService(
+      false,
       mockHttpAuthService,
       mockCommunityApiClient,
       mockUserRepository,
