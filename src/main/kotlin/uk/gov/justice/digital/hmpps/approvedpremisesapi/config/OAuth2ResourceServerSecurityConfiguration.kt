@@ -44,6 +44,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
         authorize(HttpMethod.POST, "/seed", permitAll)
+        authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
       }
 
