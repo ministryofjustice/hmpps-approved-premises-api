@@ -104,6 +104,23 @@ openApiGenerate {
   }
 }
 
+tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateDomainEvents") {
+  generatorName.set("kotlin-spring")
+  inputSpec.set("$rootDir/src/main/resources/static/domain-events-api.yml")
+  outputDir.set("$buildDir/generated")
+  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
+  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model")
+  configOptions.apply {
+    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
+    put("delegatePattern", "true")
+    put("gradleBuildFile", "false")
+    put("exceptionHandler", "false")
+    put("useBeanValidation", "false")
+  }
+}
+
+tasks.get("openApiGenerate").dependsOn("openApiGenerateDomainEvents")
+
 tasks.get("openApiGenerate").doLast {
   // This is a workaround to allow us to have the `/documents/{crn}/{documentId}` endpoint specified in api.yml but not use
   // OpenAPI Generate for the scaffolding.  This is because we need to properly stream the files
