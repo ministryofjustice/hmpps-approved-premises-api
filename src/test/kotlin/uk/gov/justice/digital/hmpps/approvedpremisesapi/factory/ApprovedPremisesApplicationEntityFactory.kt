@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -36,6 +37,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
+  private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -97,6 +99,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.offenceId = { offenceId }
   }
 
+  fun withAssessments(assessments: MutableList<AssessmentEntity>) = apply {
+    this.assessments = { assessments }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -112,6 +118,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     eventNumber = this.eventNumber(),
     offenceId = this.offenceId(),
     schemaUpToDate = false,
-    riskRatings = this.riskRatings()
+    riskRatings = this.riskRatings(),
+    assessments = this.assessments(),
   )
 }

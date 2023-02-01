@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
@@ -32,7 +33,8 @@ class ApplicationsTransformer(
       isPipeApplication = jpa.isPipeApplication,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null
+      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
+      status = getStatus(jpa)
     )
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
       id = jpa.id,
@@ -43,7 +45,8 @@ class ApplicationsTransformer(
       createdAt = jpa.createdAt,
       submittedAt = jpa.submittedAt,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null
+      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      status = getStatus(jpa)
     )
     else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
   }
@@ -54,4 +57,10 @@ class ApplicationsTransformer(
     createdAt = jpa.createdAt,
     submittedAt = jpa.submittedAt
   )
+
+  private fun getStatus(entity: ApplicationEntity) = when {
+    entity.getLatestAssessment()?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
+    entity.submittedAt !== null -> ApplicationStatus.submitted
+    else -> ApplicationStatus.inProgress
+  }
 }

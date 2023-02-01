@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -30,6 +31,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var isWomensApplication: Yielded<Boolean?> = { null }
   private var isPipeApplication: Yielded<Boolean?> = { null }
+  private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -71,6 +73,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.submittedAt = { submittedAt }
   }
 
+  fun withAssessments(assessments: MutableList<AssessmentEntity>) = apply {
+    this.assessments = { assessments }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -80,6 +86,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
-    schemaUpToDate = false
+    schemaUpToDate = false,
+    assessments = this.assessments(),
   )
 }

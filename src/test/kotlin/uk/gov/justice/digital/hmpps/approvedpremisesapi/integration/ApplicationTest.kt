@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
@@ -231,6 +232,26 @@ class ApplicationTest : IntegrationTestBase() {
               withData("{}")
             }
 
+            val applicationEntityWithAwaitingAnswerState = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+            }
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+            val assessment = assessmentEntityFactory.produceAndPersist {
+              withApplication(applicationEntityWithAwaitingAnswerState)
+              withAssessmentSchema(assessmentSchema)
+              withAllocatedToUser(otherUser)
+            }
+
+            assessmentClarificationNoteEntityFactory.produceAndPersist {
+              withAssessment(assessment)
+              withCreatedBy(otherUser)
+            }
+
             CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
             CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, otherOffenderDetails.otherIds.crn, false, false)
 
@@ -274,6 +295,11 @@ class ApplicationTest : IntegrationTestBase() {
                 outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
                 serializableToJsonNode(outdatedApplicationEntityNotCreatedByUser.data) == serializableToJsonNode(it.data) &&
                 olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+            }
+
+            assertThat(responseBody).anyMatch {
+              applicationEntityWithAwaitingAnswerState.id == it.id &&
+                it.status == ApplicationStatus.requestedFurtherInformation
             }
           }
         }
