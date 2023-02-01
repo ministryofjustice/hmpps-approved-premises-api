@@ -312,6 +312,7 @@ components:
           example: N54A999
         staffIdentifier:
           type: integer
+          format: int64
           example: 1501234567
         forenames:
           type: string
@@ -430,18 +431,18 @@ components:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
           $ref: '#/components/schemas/DeliusEventNumber'
-        mappaCategories:
+        mappa:
           type: string
-          example: 'M2'
+          example: 'CAT C3/LEVEL L2'
         sentenceLengthInMonths:
           type: integer
           example: 57
-        offenceDescription:
+        offenceId:
           type: string
-          example: 'Wounding or inflicting grievous bodily harm (inflicting bodily injury with or without weapon) (S20) - 00801'
+          example: 'AB43782'
         releaseType:
           type: string
-          example: 'Release on Temporary Licence (ROTL)'
+          example: 'rotl'
         age:
           type: integer
           example: 43
