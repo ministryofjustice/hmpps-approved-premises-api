@@ -16,6 +16,7 @@ import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 
@@ -55,8 +56,13 @@ abstract class ApplicationEntity(
   var submittedAt: OffsetDateTime?,
 
   @Transient
-  var schemaUpToDate: Boolean
-)
+  var schemaUpToDate: Boolean,
+
+  @OneToMany(mappedBy = "application")
+  var assessments: MutableList<AssessmentEntity>,
+) {
+  fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
+}
 
 @Entity
 @DiscriminatorValue("approved-premises")
@@ -72,6 +78,7 @@ class ApprovedPremisesApplicationEntity(
   createdAt: OffsetDateTime,
   submittedAt: OffsetDateTime?,
   schemaUpToDate: Boolean,
+  assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
   var isPipeApplication: Boolean?,
   val convictionId: Long,
@@ -89,7 +96,8 @@ class ApprovedPremisesApplicationEntity(
   schemaVersion,
   createdAt,
   submittedAt,
-  schemaUpToDate
+  schemaUpToDate,
+  assessments,
 )
 
 @Entity
@@ -105,7 +113,8 @@ class TemporaryAccommodationApplicationEntity(
   schemaVersion: JsonSchemaEntity,
   createdAt: OffsetDateTime,
   submittedAt: OffsetDateTime?,
-  schemaUpToDate: Boolean
+  schemaUpToDate: Boolean,
+  assessments: MutableList<AssessmentEntity>,
 ) : ApplicationEntity(
   id,
   crn,
@@ -115,5 +124,6 @@ class TemporaryAccommodationApplicationEntity(
   schemaVersion,
   createdAt,
   submittedAt,
-  schemaUpToDate
+  schemaUpToDate,
+  assessments
 )
