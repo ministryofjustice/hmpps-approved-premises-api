@@ -3085,10 +3085,13 @@ components:
               $ref: '#/components/schemas/AnyValue'
             document:
               $ref: '#/components/schemas/AnyValue'
+            status:
+              $ref: '#/components/schemas/ApplicationStatus'
           required:
             - createdByUserId
             - schemaVersion
             - outdatedSchema
+            - status
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -3106,10 +3109,19 @@ components:
               $ref: '#/components/schemas/AnyValue'
             document:
               $ref: '#/components/schemas/AnyValue'
+            status:
+              $ref: '#/components/schemas/ApplicationStatus'
           required:
             - createdByUserId
             - schemaVersion
             - outdatedSchema
+            - status
+    ApplicationStatus:
+      type: string
+      enum:
+        - inProgress
+        - submitted
+        - requestedFurtherInformation
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
