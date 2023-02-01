@@ -82,7 +82,7 @@ enum class UserRole {
   MANAGER,
   WORKFLOW_MANAGER,
   APPLICANT,
-  ADMIN
+  ROLE_ADMIN
 }
 
 @Repository
