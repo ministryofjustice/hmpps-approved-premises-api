@@ -3828,4 +3828,6 @@ components:
       type: string
       enum:
         - approved_premises
+        - temporary_accommodation_premises
+        - temporary_accommodation_bedspace
         - user
