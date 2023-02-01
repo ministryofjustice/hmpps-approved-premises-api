@@ -310,11 +310,9 @@ components:
         staffCode:
           type: string
           example: N54A999
-          readOnly: true
         staffIdentifier:
           type: integer
           example: 1501234567
-          readOnly: true
         forenames:
           type: string
           example: John
@@ -324,72 +322,84 @@ components:
         username:
           type: string
           example: JohnSmithNPS
+      required:
+        - staffCode
+        - staffIdentifier
+        - forenames
+        - surname
+        - username
     Cru:
       type: object
       properties:
         code:
           type: string
           example: N02
-          readOnly: true
         name:
           type: string
           example: NPS North East
-          readOnly: true
+      required:
+        - code
+        - name
     Ldu:
       type: object
       properties:
         code:
           type: string
           example: N54PPU
-          readOnly: true
         name:
           type: string
           example: Public Protection NE
-          readOnly: true
+      required:
+        - code
+        - name
     Region:
       type: object
       properties:
         code:
           type: string
           example: NE
-          readOnly: true
         name:
           type: string
           example: North East
-          readOnly: true
+      required:
+        - code
+        - name
     Team:
       type: object
       properties:
         code:
           type: string
           example: N54NGH
-          readOnly: true
         name:
           type: string
           example: Gateshead 1
-          readOnly: true
+      required:
+        - code
+        - name
     ProbationArea:
       type: object
       properties:
         code:
           type: string
           example: N02
-          readOnly: true
         name:
           type: string
           example: NPS North East
-          readOnly: true
+      required:
+        - code
+        - name
     PersonReference:
       type: object
       properties:
         crn:
           type: string
           example: C123456
-          readOnly: true
         noms:
           type: string
           example: A1234ZX
-          readOnly: true
+      required:
+        - crn
+        - noms
     ApplicationSubmittedEnvelope:
       type: object
       properties:
@@ -402,9 +412,13 @@ components:
         eventType:
           type: string
           example: approved-premises.application.submitted
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/ApplicationSubmitted'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     ApplicationSubmitted:
       type: object
       properties:
@@ -419,26 +433,20 @@ components:
         mappaCategories:
           type: string
           example: 'M2'
-          readOnly: true
         sentenceLengthInMonths:
           type: integer
           example: 57
-          readOnly: true
         offenceDescription:
           type: string
           example: 'Wounding or inflicting grievous bodily harm (inflicting bodily injury with or without weapon) (S20) - 00801'
-          readOnly: true
         releaseType:
           type: string
           example: 'Release on Temporary Licence (ROTL)'
-          readOnly: true
         age:
           type: integer
           example: 43
-          readOnly: true
         gender:
           type: string
-          readOnly: true
           enum:
             - Male
             - Female
@@ -449,7 +457,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         submittedBy:
           type: object
           properties:
@@ -465,6 +472,26 @@ components:
               $ref: '#/components/schemas/Ldu'
             region:
               $ref: '#/components/schemas/Region'
+          required:
+            - staffMember
+            - probationArea
+            - cru
+            - team
+            - ldu
+            - region
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - deliusEventNumber
+        - mappaCategories
+        - offenceDescription
+        - releaseType
+        - age
+        - gender
+        - targetLocation
+        - submittedAt
+        - submittedBy
     ApplicationWithdrawnEnvelope:
       type: object
       properties:
@@ -477,9 +504,13 @@ components:
         eventType:
           type: string
           example: approved-premises.application.withdrawn
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/ApplicationWithdrawn'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     ApplicationWithdrawn:
       type: object
       properties:
@@ -495,11 +526,18 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         withdrawnBy:
           $ref: '#/components/schemas/StaffMember'
         withdrawalReason:
           $ref: '#/components/schemas/CancellationReason'
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - deliusEventNumber
+        - withdrawnAt
+        - withdrawnBy
+        - withdrawalReason
     ApplicationAssessedEnvelope:
       type: object
       properties:
@@ -512,9 +550,13 @@ components:
         eventType:
           type: string
           example: approved-premises.application.assessed
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/ApplicationAssessed'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     ApplicationAssessed:
       type: object
       properties:
@@ -530,7 +572,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         assessedBy:
           type: object
           properties:
@@ -546,6 +587,15 @@ components:
         decisionRationale:
           type: string
           example: Risk too low
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - deliusEventNumber
+        - assessedAt
+        - assessedBy
+        - decision
+        - decisionRationale
     BookingMadeEnvelope:
       type: object
       properties:
@@ -558,9 +608,13 @@ components:
         eventType:
           type: string
           example: approved-premises.booking.made
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/BookingMade'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingMade:
       type: object
       properties:
@@ -578,7 +632,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         bookedBy:
           type: object
           properties:
@@ -592,14 +645,24 @@ components:
           type: string
           example: '2023-01-30'
           format: date
-          readOnly: true
         departureOn:
           type: string
           example: '2023-04-30'
           format: date
-          readOnly: true
         keyWorker:
           $ref: '#/components/schemas/StaffMember'
+      required:
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - personReference
+        - deliusEventNumber
+        - createdAt
+        - bookedBy
+        - premises
+        - arrivalOn
+        - departureOn
+        - keyWorker
     BookingNotMadeEnvelope:
       type: object
       properties:
@@ -612,9 +675,13 @@ components:
         eventType:
           type: string
           example: approved-premises.booking.not-made
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/BookingNotMade'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingNotMade:
       type: object
       properties:
@@ -630,7 +697,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         attemptedBy:
           type: object
           properties:
@@ -641,6 +707,14 @@ components:
         failureDescription:
           type: string
           example: No availability
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - attemptedAt
+        - attemptedBy
+        - failureDescription
     BookingCancelledEnvelope:
       type: object
       properties:
@@ -653,9 +727,13 @@ components:
         eventType:
           type: string
           example: approved-premises.booking.cancelled
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/BookingCancelled'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingCancelled:
       type: object
       properties:
@@ -675,11 +753,20 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         cancelledBy:
           $ref: '#/components/schemas/StaffMember'
         cancellationReason:
           $ref: '#/components/schemas/CancellationReason'
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - premises
+        - cancelledAt
+        - cancelledBy
+        - cancellationReason
     BookingExtendedEnvelope:
       type: object
       properties:
@@ -692,9 +779,13 @@ components:
         eventType:
           type: string
           example: approved-premises.booking.extended
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/BookingExtended'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingExtended:
       type: object
       properties:
@@ -714,7 +805,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         extendedBy:
           $ref: '#/components/schemas/StaffMember'
         extensionReason:
@@ -724,12 +814,22 @@ components:
           type: string
           example: '2023-01-30'
           format: date
-          readOnly: true
         newDepartureOn:
           type: string
           example: '2023-02-12'
           format: date
-          readOnly: true
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - premises
+        - extendedAt
+        - extendedBy
+        - extensionReason
+        - previousDepartureOn
+        - newDepartureOn
     PersonArrivedEnvelope:
       type: object
       properties:
@@ -742,9 +842,13 @@ components:
         eventType:
           type: string
           example: approved-premises.person.arrived
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/PersonArrived'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     PersonArrived:
       type: object
       properties:
@@ -760,7 +864,6 @@ components:
           type: string
           example: '2022-08-21'
           format: date
-          readOnly: true
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -778,6 +881,18 @@ components:
         notes:
           type: string
           example: Arrived a day late due to rail strike. Informed in advance by COM.
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - applicationSubmittedOn
+        - bookingId
+        - premises
+        - keyWorker
+        - arrivedAt
+        - expectedDepartureOn
+        - notes
     PersonNotArrivedEnvelope:
       type: object
       properties:
@@ -790,9 +905,13 @@ components:
         eventType:
           type: string
           example: approved-premises.person.not-arrived
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/PersonNotArrived'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     PersonNotArrived:
       type: object
       properties:
@@ -817,6 +936,16 @@ components:
         notes:
           type: string
           example: We learnt that Mr Smith is in hospital.
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - premises
+        - expectedArrivalOn
+        - recordedBy
+        - notes
     PersonDepartedEnvelope:
       type: object
       properties:
@@ -829,9 +958,13 @@ components:
         eventType:
           type: string
           example: approved-premises.person.departed
-          readOnly: true
         eventDetails:
           $ref: '#/components/schemas/PersonDeparted'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     PersonDeparted:
       type: object
       properties:
@@ -902,6 +1035,18 @@ components:
               $ref: '#/components/schemas/MoveOnCategory'
             destinationProvider:
               $ref: '#/components/schemas/DestinationProvider'
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - keyWorker
+        - premises
+        - departedAt
+        - reason
+        - legacyReasonCode
+        - destination
     Premises:
       type: object
       properties:
@@ -918,6 +1063,12 @@ components:
           $ref: '#/components/schemas/LegacyApCode'
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
+      required:
+        - id
+        - name
+        - apCode
+        - legacyApCode
+        - probationArea
     DestinationPremises:
       type: object
       properties:
@@ -935,6 +1086,12 @@ components:
           example: Q061
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
+      required:
+        - id
+        - name
+        - apCode
+        - legacyApCode
+        - probationArea
     CancellationReason:
       type: object
       properties:
@@ -954,6 +1111,9 @@ components:
             - D
             - 4I
             - C
+      required:
+        - description
+        - legacyCancellationCode
     MoveOnCategory:
       type: object
       properties:
@@ -990,6 +1150,10 @@ components:
         code:
           type: string
           example: ABC123
+      required:
+        - description
+        - legacyMoveOnCategoryCode
+        - code
     DestinationProvider:
       type: object
       properties:
@@ -999,6 +1163,9 @@ components:
         code:
           type: string
           example: XYZ456
+      required:
+        - description
+        - code
     Problem:
       type: object
       properties:
