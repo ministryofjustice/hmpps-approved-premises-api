@@ -163,3 +163,4 @@ seed:
   file-prefix: "/tmp/seed"
 
 assign-default-region-to-users-with-unknown-region: false
+application-url-template: http://localhost:3000/applications/#id

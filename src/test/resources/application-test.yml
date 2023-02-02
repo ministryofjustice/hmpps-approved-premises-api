@@ -90,3 +90,5 @@ caches:
 
 seed:
   file-prefix: "./test-seed-csvs"
+
+application-url-template: http://frontend/applications/#id
