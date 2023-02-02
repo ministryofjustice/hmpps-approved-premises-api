@@ -20,6 +20,7 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
   private var surname: Yielded<String> = { randomStringUpperCase(8) }
   private var teams: Yielded<List<StaffUserTeamMembership>> = { listOf() }
   private var probationAreaCode: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var probationAreaDescription: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
 
   fun withUsername(username: String) = apply {
     this.username = { username }
@@ -61,6 +62,10 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
     this.probationAreaCode = { probationAreaCode }
   }
 
+  fun withProbationAreaDescription(probationAreaDescription: String) = apply {
+    this.probationAreaDescription = { probationAreaDescription }
+  }
+
   override fun produce(): StaffUserDetails = StaffUserDetails(
     username = this.username(),
     email = this.email(),
@@ -72,6 +77,9 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
       surname = this.surname()
     ),
     teams = this.teams(),
-    probationArea = StaffProbationArea(this.probationAreaCode()),
+    probationArea = StaffProbationArea(
+      code = this.probationAreaCode(),
+      description = this.probationAreaDescription()
+    ),
   )
 }

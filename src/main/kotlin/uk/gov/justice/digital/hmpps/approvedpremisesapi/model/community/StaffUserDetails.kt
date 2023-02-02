@@ -39,4 +39,5 @@ data class KeyValue(
 
 data class StaffProbationArea(
   val code: String,
+  val description: String
 )
