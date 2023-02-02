@@ -3,10 +3,8 @@ info:
   version: '0.1.0'
   title: 'AP Domain events'
   description: Get information about events in the Approved Premises domain
-servers:
-  - url: /events
 paths:
-  /application-submitted/{eventId}:
+  /events/application-submitted/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -24,34 +22,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.application.submitted
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/ApplicationSubmitted'
-
+                $ref: '#/components/schemas/ApplicationSubmittedEnvelope'
         404:
           description: No application-submitted event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /application-withdrawn/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/application-withdrawn/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -69,34 +49,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.application.withdrawn
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/ApplicationWithdrawn'
-
+                $ref: '#/components/schemas/ApplicationWithdrawnEnvelope'
         404:
           description: No application-withdrawn event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /application-assessed/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/application-assessed/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -114,34 +76,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.application.assessed
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/ApplicationAssessed'
-
+                $ref: '#/components/schemas/ApplicationAssessedEnvelope'
         404:
           description: No application-assessed event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /booking-made/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/booking-made/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -159,34 +103,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.booking.made
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/BookingMade'
-
+                $ref: '#/components/schemas/BookingMadeEnvelope'
         404:
           description: No 'booking-made' event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /booking-extended/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/booking-extended/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -204,34 +130,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.booking.extended
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/BookingExtended'
-
+                $ref: '#/components/schemas/BookingExtendedEnvelope'
         404:
           description: No 'booking-extended' event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /booking-cancelled/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/booking-cancelled/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -249,34 +157,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.booking.cancelled
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/BookingCancelled'
-
+                $ref: '#/components/schemas/BookingCancelledEnvelope'
         404:
           description: No 'booking-made' event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /booking-not-made/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/booking-not-made/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -294,34 +184,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.booking.not-made
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/BookingNotMade'
-
+                $ref: '#/components/schemas/BookingNotMadeEnvelope'
         404:
           description: No 'booking-not-made' event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /person-arrived/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/person-arrived/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -339,34 +211,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.person.arrived
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/PersonArrived'
-
+                $ref: '#/components/schemas/PersonArrivedEnvelope'
         404:
           description: No 'person-arrived' event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /person-not-arrived/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/person-not-arrived/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -384,34 +238,16 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.person.not-arrived
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/PersonNotArrived'
-
+                $ref: '#/components/schemas/PersonNotArrivedEnvelope'
         404:
           description: No 'person-not-arrived' event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /person-departed/{eventId}:
+          $ref: '#/components/responses/500Response'
+  /events/person-departed/{eventId}:
     parameters:
       - name: eventId
         description: UUID of the event
@@ -429,65 +265,44 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  id:
-                    $ref: '#/components/schemas/EventId'
-                  timestamp:
-                    type: string
-                    example: '2022-11-30T14:53:44'
-                    format: date-time
-                  eventType:
-                    type: string
-                    example: approved-premises.person.departed
-                    readOnly: true
-                  eventDetails:
-                    $ref: '#/components/schemas/PersonDeparted'
-
+                $ref: '#/components/schemas/PersonDepartedEnvelope'
         404:
           description: No 'person-not-arrived' event found for the provided `eventId`
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         500:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
+          $ref: '#/components/responses/500Response'
 components:
   schemas:
     EventId:
       description: The UUID of an event
       type: string
+      format: uuid
       example: 364145f9-0af8-488e-9901-b4c46cd9ba37
-
     DeliusEventNumber:
       description: Used in Delius to identify the 'event' via the first active conviction's 'index'
       type: string
       example: "7"
-
     ApplicationId:
       description: The UUID of an application for an AP place
       type: string
+      format: uuid
       example: 484b8b5e-6c3b-4400-b200-425bbe410713
-
     ApplicationUrl:
       description: The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
       type: string
       example: https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
-
     BookingId:
       description: The UUID of booking for an AP place
       type: string
+      format: uuid
       example: 14c80733-4b6d-4f35-b724-66955aac320c
-
     LegacyApCode:
       description: The 'Q code' used in Delius to identify an Approved Premises
       type: string
       example: Q057
-
     StaffMember:
       description: A member of probation or AP staff
       type: object
@@ -495,11 +310,10 @@ components:
         staffCode:
           type: string
           example: N54A999
-          readOnly: true
         staffIdentifier:
           type: integer
+          format: int64
           example: 1501234567
-          readOnly: true
         forenames:
           type: string
           example: John
@@ -509,72 +323,103 @@ components:
         username:
           type: string
           example: JohnSmithNPS
+      required:
+        - staffCode
+        - staffIdentifier
+        - forenames
+        - surname
+        - username
     Cru:
       type: object
       properties:
         code:
           type: string
           example: N02
-          readOnly: true
         name:
           type: string
           example: NPS North East
-          readOnly: true
+      required:
+        - code
+        - name
     Ldu:
       type: object
       properties:
         code:
           type: string
           example: N54PPU
-          readOnly: true
         name:
           type: string
           example: Public Protection NE
-          readOnly: true
+      required:
+        - code
+        - name
     Region:
       type: object
       properties:
         code:
           type: string
           example: NE
-          readOnly: true
         name:
           type: string
           example: North East
-          readOnly: true
+      required:
+        - code
+        - name
     Team:
       type: object
       properties:
         code:
           type: string
           example: N54NGH
-          readOnly: true
         name:
           type: string
           example: Gateshead 1
-          readOnly: true
+      required:
+        - code
+        - name
     ProbationArea:
       type: object
       properties:
         code:
           type: string
           example: N02
-          readOnly: true
         name:
           type: string
           example: NPS North East
-          readOnly: true
+      required:
+        - code
+        - name
     PersonReference:
       type: object
       properties:
         crn:
           type: string
           example: C123456
-          readOnly: true
         noms:
           type: string
           example: A1234ZX
-          readOnly: true
+      required:
+        - crn
+        - noms
+    ApplicationSubmittedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.application.submitted
+        eventDetails:
+          $ref: '#/components/schemas/ApplicationSubmitted'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     ApplicationSubmitted:
       type: object
       properties:
@@ -586,29 +431,23 @@ components:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
           $ref: '#/components/schemas/DeliusEventNumber'
-        mappaCategories:
+        mappa:
           type: string
-          example: 'M2'
-          readOnly: true
+          example: 'CAT C3/LEVEL L2'
         sentenceLengthInMonths:
           type: integer
           example: 57
-          readOnly: true
-        offenceDescription:
+        offenceId:
           type: string
-          example: 'Wounding or inflicting grievous bodily harm (inflicting bodily injury with or without weapon) (S20) - 00801'
-          readOnly: true
+          example: 'AB43782'
         releaseType:
           type: string
-          example: 'Release on Temporary Licence (ROTL)'
-          readOnly: true
+          example: 'rotl'
         age:
           type: integer
           example: 43
-          readOnly: true
         gender:
           type: string
-          readOnly: true
           enum:
             - Male
             - Female
@@ -619,7 +458,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         submittedBy:
           type: object
           properties:
@@ -635,7 +473,45 @@ components:
               $ref: '#/components/schemas/Ldu'
             region:
               $ref: '#/components/schemas/Region'
-
+          required:
+            - staffMember
+            - probationArea
+            - cru
+            - team
+            - ldu
+            - region
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - deliusEventNumber
+        - mappaCategories
+        - offenceDescription
+        - releaseType
+        - age
+        - gender
+        - targetLocation
+        - submittedAt
+        - submittedBy
+    ApplicationWithdrawnEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.application.withdrawn
+        eventDetails:
+          $ref: '#/components/schemas/ApplicationWithdrawn'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     ApplicationWithdrawn:
       type: object
       properties:
@@ -651,12 +527,37 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         withdrawnBy:
           $ref: '#/components/schemas/StaffMember'
         withdrawalReason:
           $ref: '#/components/schemas/CancellationReason'
-
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - deliusEventNumber
+        - withdrawnAt
+        - withdrawnBy
+        - withdrawalReason
+    ApplicationAssessedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.application.assessed
+        eventDetails:
+          $ref: '#/components/schemas/ApplicationAssessed'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     ApplicationAssessed:
       type: object
       properties:
@@ -672,7 +573,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         assessedBy:
           type: object
           properties:
@@ -688,7 +588,34 @@ components:
         decisionRationale:
           type: string
           example: Risk too low
-
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - deliusEventNumber
+        - assessedAt
+        - assessedBy
+        - decision
+        - decisionRationale
+    BookingMadeEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.booking.made
+        eventDetails:
+          $ref: '#/components/schemas/BookingMade'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingMade:
       type: object
       properties:
@@ -706,7 +633,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         bookedBy:
           type: object
           properties:
@@ -720,15 +646,43 @@ components:
           type: string
           example: '2023-01-30'
           format: date
-          readOnly: true
         departureOn:
           type: string
           example: '2023-04-30'
           format: date
-          readOnly: true
         keyWorker:
           $ref: '#/components/schemas/StaffMember'
-
+      required:
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - personReference
+        - deliusEventNumber
+        - createdAt
+        - bookedBy
+        - premises
+        - arrivalOn
+        - departureOn
+        - keyWorker
+    BookingNotMadeEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.booking.not-made
+        eventDetails:
+          $ref: '#/components/schemas/BookingNotMade'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingNotMade:
       type: object
       properties:
@@ -744,7 +698,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         attemptedBy:
           type: object
           properties:
@@ -755,7 +708,33 @@ components:
         failureDescription:
           type: string
           example: No availability
-
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - attemptedAt
+        - attemptedBy
+        - failureDescription
+    BookingCancelledEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.booking.cancelled
+        eventDetails:
+          $ref: '#/components/schemas/BookingCancelled'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingCancelled:
       type: object
       properties:
@@ -775,12 +754,39 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         cancelledBy:
           $ref: '#/components/schemas/StaffMember'
         cancellationReason:
           $ref: '#/components/schemas/CancellationReason'
-
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - premises
+        - cancelledAt
+        - cancelledBy
+        - cancellationReason
+    BookingExtendedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.booking.extended
+        eventDetails:
+          $ref: '#/components/schemas/BookingExtended'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     BookingExtended:
       type: object
       properties:
@@ -800,7 +806,6 @@ components:
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
-          readOnly: true
         extendedBy:
           $ref: '#/components/schemas/StaffMember'
         extensionReason:
@@ -810,13 +815,41 @@ components:
           type: string
           example: '2023-01-30'
           format: date
-          readOnly: true
         newDepartureOn:
           type: string
           example: '2023-02-12'
           format: date
-          readOnly: true
-
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - premises
+        - extendedAt
+        - extendedBy
+        - extensionReason
+        - previousDepartureOn
+        - newDepartureOn
+    PersonArrivedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.person.arrived
+        eventDetails:
+          $ref: '#/components/schemas/PersonArrived'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     PersonArrived:
       type: object
       properties:
@@ -832,7 +865,6 @@ components:
           type: string
           example: '2022-08-21'
           format: date
-          readOnly: true
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:
@@ -850,7 +882,37 @@ components:
         notes:
           type: string
           example: Arrived a day late due to rail strike. Informed in advance by COM.
-
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - applicationSubmittedOn
+        - bookingId
+        - premises
+        - keyWorker
+        - arrivedAt
+        - expectedDepartureOn
+        - notes
+    PersonNotArrivedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.person.not-arrived
+        eventDetails:
+          $ref: '#/components/schemas/PersonNotArrived'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     PersonNotArrived:
       type: object
       properties:
@@ -875,7 +937,35 @@ components:
         notes:
           type: string
           example: We learnt that Mr Smith is in hospital.
-
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - premises
+        - expectedArrivalOn
+        - recordedBy
+        - notes
+    PersonDepartedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.person.departed
+        eventDetails:
+          $ref: '#/components/schemas/PersonDeparted'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
     PersonDeparted:
       type: object
       properties:
@@ -946,8 +1036,18 @@ components:
               $ref: '#/components/schemas/MoveOnCategory'
             destinationProvider:
               $ref: '#/components/schemas/DestinationProvider'
-
-
+      required:
+        - personReference
+        - deliusEventNumber
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - keyWorker
+        - premises
+        - departedAt
+        - reason
+        - legacyReasonCode
+        - destination
     Premises:
       type: object
       properties:
@@ -964,7 +1064,12 @@ components:
           $ref: '#/components/schemas/LegacyApCode'
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
-
+      required:
+        - id
+        - name
+        - apCode
+        - legacyApCode
+        - probationArea
     DestinationPremises:
       type: object
       properties:
@@ -982,7 +1087,12 @@ components:
           example: Q061
         probationArea:
           $ref: '#/components/schemas/ProbationArea'
-
+      required:
+        - id
+        - name
+        - apCode
+        - legacyApCode
+        - probationArea
     CancellationReason:
       type: object
       properties:
@@ -1002,7 +1112,9 @@ components:
             - D
             - 4I
             - C
-
+      required:
+        - description
+        - legacyCancellationCode
     MoveOnCategory:
       type: object
       properties:
@@ -1039,7 +1151,10 @@ components:
         code:
           type: string
           example: ABC123
-
+      required:
+        - description
+        - legacyMoveOnCategoryCode
+        - code
     DestinationProvider:
       type: object
       properties:
@@ -1049,12 +1164,24 @@ components:
         code:
           type: string
           example: XYZ456
-
-    Error:
-      type: object
       required:
-        - message
+        - description
+        - code
+    Problem:
+      type: object
       properties:
-        message:
-          description: A human readable error message
+        type:
           type: string
+          example: https://example.net/validation-error
+        title:
+          type: string
+          example: Invalid request parameters
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: You provided invalid request parameters
+        instance:
+          type: string
+          example: f7493e12-546d-42c3-b838-06c12671ab5b
