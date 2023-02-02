@@ -69,7 +69,7 @@ workflows:
           slack_channel_name: << pipeline.parameters.releases-slack-channel >>
           context:
             - hmpps-common-vars
-            - approved-premises-api-prod
+            - hmpps-approved-premises-api-prod
           requires:
             - request-prod-approval
 
