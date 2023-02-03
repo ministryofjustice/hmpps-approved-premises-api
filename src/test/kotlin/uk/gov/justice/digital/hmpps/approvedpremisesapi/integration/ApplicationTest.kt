@@ -18,17 +18,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -864,8 +870,16 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Submit application returns 200, creates and allocates an assessment`() {
-    `Given a User` { submittingUser, jwt ->
+  fun `Submit application returns 200, creates and allocates an assessment, saves a domain event`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().produce()
+          )
+        )
+      }
+    ) { submittingUser, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
@@ -914,6 +928,34 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
+          CommunityAPI_mockSuccessfulRegistrationsCall(
+            offenderDetails.otherIds.crn,
+            Registrations(
+              registrations = listOf(
+                RegistrationClientResponseFactory()
+                  .withType(
+                    RegistrationKeyValue(
+                      code = "MAPP",
+                      description = "MAPPA"
+                    )
+                  )
+                  .withRegisterCategory(
+                    RegistrationKeyValue(
+                      code = "A",
+                      description = "A"
+                    )
+                  )
+                  .withRegisterLevel(
+                    RegistrationKeyValue(
+                      code = "1",
+                      description = "1"
+                    )
+                  )
+                  .produce()
+              )
+            )
+          )
+
           webTestClient.post()
             .uri("/applications/$applicationId/submission")
             .header("Authorization", "Bearer $jwt")
@@ -933,6 +975,12 @@ class ApplicationTest : IntegrationTestBase() {
 
           val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
           assertThat(createdAssessment.allocatedToUser.id).isEqualTo(assessorUser.id)
+
+          val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
+
+          assertThat(persistedDomainEvent).isNotNull
+          assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
+          assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
         }
       }
     }
