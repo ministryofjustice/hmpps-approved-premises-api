@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 
 @Service
@@ -40,6 +42,19 @@ class SeedService(
         SeedFileType.user -> UsersSeedJob(
           filename,
           applicationContext.getBean(UserService::class.java)
+        )
+        SeedFileType.temporaryAccommodationPremises -> TemporaryAccommodationPremisesSeedJob(
+          filename,
+          applicationContext.getBean(PremisesRepository::class.java),
+          applicationContext.getBean(ProbationRegionRepository::class.java),
+          applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
+          applicationContext.getBean(CharacteristicService::class.java)
+        )
+        SeedFileType.temporaryAccommodationBedspace -> TemporaryAccommodationBedspaceSeedJob(
+          filename,
+          applicationContext.getBean(PremisesRepository::class.java),
+          applicationContext.getBean(CharacteristicService::class.java),
+          applicationContext.getBean(RoomService::class.java)
         )
       }
 

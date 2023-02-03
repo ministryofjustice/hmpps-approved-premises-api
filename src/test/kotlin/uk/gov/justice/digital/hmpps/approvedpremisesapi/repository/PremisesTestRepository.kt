@@ -14,4 +14,6 @@ interface PremisesTestRepository : JpaRepository<PremisesEntity, UUID>
 interface ApprovedPremisesTestRepository : JpaRepository<ApprovedPremisesEntity, UUID>
 
 @Repository
-interface TemporaryAccommodationPremisesTestRepository : JpaRepository<TemporaryAccommodationPremisesEntity, UUID>
+interface TemporaryAccommodationPremisesTestRepository : JpaRepository<TemporaryAccommodationPremisesEntity, UUID> {
+  fun findByName(name: String): TemporaryAccommodationPremisesEntity?
+}
