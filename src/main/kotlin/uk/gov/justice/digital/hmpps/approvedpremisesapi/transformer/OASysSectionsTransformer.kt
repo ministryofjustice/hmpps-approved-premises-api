@@ -35,7 +35,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending)
       ),
       roshSummary = listOf(
-        oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoAtRisk),
+        oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
         oASysQuestionWithSingleAnswer("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
         oASysQuestionWithSingleAnswer("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
         oASysQuestionWithSingleAnswer("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),

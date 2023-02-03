@@ -24,7 +24,7 @@ class RoshSummary(
 )
 
 data class RoshSummaryInner(
-  val whoAtRisk: String?,
+  val whoIsAtRisk: String?,
   val natureOfRisk: String?,
   val riskGreatest: String?,
   val riskIncreaseLikelyTo: String?,

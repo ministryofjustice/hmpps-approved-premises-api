@@ -129,7 +129,7 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Who is at risk",
           questionNumber = "R10.1",
-          answer = roshSummaryApiResponse.roshSummary?.whoAtRisk
+          answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk
         ),
         OASysQuestion(
           label = "What is the nature of the risk",
