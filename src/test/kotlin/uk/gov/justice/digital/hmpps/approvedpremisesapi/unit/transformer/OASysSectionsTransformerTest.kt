@@ -99,12 +99,12 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Victim - perpetrator relationship",
           questionNumber = "2.4.1",
-          answer = offenceDetailsApiResponse.offence?.victimInfo
+          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel
         ),
         OASysQuestion(
           label = "Other victim information",
           questionNumber = "2.4.2",
-          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel
+          answer = offenceDetailsApiResponse.offence?.victimInfo
         ),
         OASysQuestion(
           label = "Impact on the victim",

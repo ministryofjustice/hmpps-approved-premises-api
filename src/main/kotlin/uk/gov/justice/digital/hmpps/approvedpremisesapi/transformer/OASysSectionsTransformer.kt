@@ -27,8 +27,8 @@ class OASysSectionsTransformer : OASysTransformer() {
       dateCompleted = offenceDetails.dateCompleted,
       offenceDetails = listOf(
         oASysQuestionWithSingleAnswer("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
-        oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimInfo),
-        oASysQuestionWithSingleAnswer("Other victim information", "2.4.2", offenceDetails.offence?.victimPerpetratorRel),
+        oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimPerpetratorRel),
+        oASysQuestionWithSingleAnswer("Other victim information", "2.4.2", offenceDetails.offence?.victimInfo),
         oASysQuestionWithSingleAnswer("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
         oASysQuestionWithSingleAnswer("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
         oASysQuestionWithSingleAnswer("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
