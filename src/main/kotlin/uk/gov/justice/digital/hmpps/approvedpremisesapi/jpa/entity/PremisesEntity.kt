@@ -28,6 +28,9 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
+
+  @Query("SELECT p FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
+  fun <T : PremisesEntity> findByName(name: String, type: Class<T>): PremisesEntity?
 }
 
 @Entity

@@ -13,6 +13,8 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
   fun findAllByServiceScope(serviceName: String): List<CharacteristicEntity>
 
   fun findByName(name: String): CharacteristicEntity?
+
+  fun findAllByName(name: String): List<CharacteristicEntity>
 }
 
 @Entity
