@@ -99,12 +99,12 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Victim - perpetrator relationship",
           questionNumber = "2.4.1",
-          answer = offenceDetailsApiResponse.offence?.victimInfo
+          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel
         ),
         OASysQuestion(
           label = "Other victim information",
           questionNumber = "2.4.2",
-          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel
+          answer = offenceDetailsApiResponse.offence?.victimInfo
         ),
         OASysQuestion(
           label = "Impact on the victim",
@@ -129,7 +129,7 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Who is at risk",
           questionNumber = "R10.1",
-          answer = roshSummaryApiResponse.roshSummary?.whoAtRisk
+          answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk
         ),
         OASysQuestion(
           label = "What is the nature of the risk",
