@@ -40,8 +40,17 @@ class PremisesService(
 
   fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
 
+  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesEntity> = premisesRepository.findAllByProbationRegion_Id(probationRegionId)
+
   fun getAllPremisesForService(service: ServiceName) = serviceNameToEntityType[service]?.let {
     premisesRepository.findAllByType(it)
+  } ?: listOf()
+
+  fun getAllPremisesInRegionForService(
+    probationRegionId: UUID,
+    service: ServiceName
+  ): List<PremisesEntity> = serviceNameToEntityType[service]?.let {
+    premisesRepository.findAllByProbationRegion_IdAndType(probationRegionId, it)
   } ?: listOf()
 
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
