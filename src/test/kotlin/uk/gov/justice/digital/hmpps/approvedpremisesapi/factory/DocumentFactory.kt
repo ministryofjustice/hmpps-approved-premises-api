@@ -12,7 +12,7 @@ import java.util.UUID
 class DocumentFactory : Factory<Document> {
   private var id: Yielded<String> = { UUID.randomUUID().toString() }
   private var documentName: Yielded<String> = { "${randomStringMultiCaseWithNumbers(5)}.pdf" }
-  private var author: Yielded<String> = { randomStringMultiCaseWithNumbers(4) }
+  private var author: Yielded<String?> = { randomStringMultiCaseWithNumbers(4) }
   private var typeCode: Yielded<String> = { randomStringMultiCaseWithNumbers(4) }
   private var typeDescription: Yielded<String> = { randomStringMultiCaseWithNumbers(4) }
   private var extendedDescription: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
@@ -32,6 +32,9 @@ class DocumentFactory : Factory<Document> {
     this.author = { author }
   }
 
+  fun withoutAuthor() = apply {
+    this.author = { null }
+  }
   fun withTypeCode(typeCode: String) = apply {
     this.typeCode = { typeCode }
   }

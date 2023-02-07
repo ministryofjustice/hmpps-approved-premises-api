@@ -32,6 +32,7 @@ class DocumentTransformerTest {
         DocumentFactory()
           .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString())
           .withDocumentName("conviction_level_doc.pdf")
+          .withoutAuthor()
           .withTypeCode("TYPE-2")
           .withTypeDescription("Type 2 Description")
           .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
