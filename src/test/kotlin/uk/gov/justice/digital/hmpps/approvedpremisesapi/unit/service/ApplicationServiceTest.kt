@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -8,7 +10,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -17,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -27,18 +43,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonLogicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.Period
 import java.util.UUID
 
 class ApplicationServiceTest {
@@ -50,6 +69,8 @@ class ApplicationServiceTest {
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockJsonLogicService = mockk<JsonLogicService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
+  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockCommunityApiClient = mockk<CommunityApiClient>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -59,7 +80,10 @@ class ApplicationServiceTest {
     mockUserService,
     mockAssessmentService,
     mockJsonLogicService,
-    mockOfflineApplicationRepository
+    mockOfflineApplicationRepository,
+    mockDomainEventService,
+    mockCommunityApiClient,
+    "http://frontend/applications/#id"
   )
 
   @Test
@@ -528,7 +552,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    assertThat(applicationService.submitApplication(applicationId, "{}", username) is AuthorisableActionResult.NotFound).isTrue
+    assertThat(applicationService.submitApplication(applicationId, "{}", username, "jwt") is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
@@ -560,7 +584,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(applicationService.submitApplication(applicationId, "{}", username) is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(applicationService.submitApplication(applicationId, "{}", username, "jwt") is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
@@ -590,7 +614,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    val result = applicationService.submitApplication(applicationId, "{}", username)
+    val result = applicationService.submitApplication(applicationId, "{}", username, "jwt")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -631,7 +655,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    val result = applicationService.submitApplication(applicationId, "{}", username)
+    val result = applicationService.submitApplication(applicationId, "{}", username, "jwt")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -643,7 +667,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `submitApplication returns Success, runs json logic rules and creates assessment`() {
+  fun `submitApplication returns Success, runs json logic rules for first class fields, creates assessment and stores event`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -680,7 +704,53 @@ class ApplicationServiceTest {
       .withAllocatedToUser(user)
       .produce()
 
-    val result = applicationService.submitApplication(applicationId, "{}", username)
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withGender("male")
+      .withCrn(application.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      offenderDetails
+    )
+
+    val risks = PersonRisksFactory()
+      .withMappa(
+        RiskWithStatus(
+          status = RiskStatus.Retrieved,
+          value = Mappa(
+            level = "CAT C1/LEVEL L1",
+            lastUpdated = LocalDate.now()
+          )
+        )
+      )
+      .produce()
+
+    every { mockOffenderService.getRiskByCrn(application.crn, any(), user.deliusUsername) } returns AuthorisableActionResult.Success(
+      risks
+    )
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withTeams(
+        listOf(
+          StaffUserTeamMembershipFactory()
+            .produce()
+        )
+      )
+      .produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      status = HttpStatus.OK,
+      body = staffUserDetails
+    )
+
+    val schema = application.schemaVersion as ApprovedPremisesApplicationJsonSchemaEntity
+
+    every { mockJsonLogicService.resolveString(schema.releaseTypeJsonLogicRule, application.data!!) } returns "release-type"
+    every { mockJsonLogicService.resolveString(schema.targetLocationJsonLogicRule, application.data!!) } returns "LN1"
+
+    every { mockDomainEventService.save(any()) } just Runs
+
+    val result = applicationService.submitApplication(applicationId, "{}", username, "jwt")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -693,6 +763,56 @@ class ApplicationServiceTest {
 
     verify { mockApplicationRepository.save(any()) }
     verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
+
+    verify(exactly = 1) {
+      mockDomainEventService.save(
+        match {
+          val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
+          val firstTeam = staffUserDetails.teams!!.first()
+
+          it.applicationId == application.id &&
+            it.crn == application.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.releaseType == "release-type" &&
+            data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
+            data.gender == ApplicationSubmitted.Gender.male &&
+            data.submittedBy == ApplicationSubmittedSubmittedBy(
+            staffMember = StaffMember(
+              staffCode = staffUserDetails.staffCode,
+              staffIdentifier = staffUserDetails.staffIdentifier,
+              forenames = staffUserDetails.staff.forenames,
+              surname = staffUserDetails.staff.surname,
+              username = staffUserDetails.username
+            ),
+            probationArea = ProbationArea(
+              code = staffUserDetails.probationArea.code,
+              name = staffUserDetails.probationArea.description
+            ),
+            team = Team(
+              code = firstTeam.code,
+              name = firstTeam.description
+            ),
+            ldu = Ldu(
+              code = firstTeam.teamType.code,
+              name = firstTeam.teamType.description
+            ),
+            region = Region(
+              code = staffUserDetails.probationArea.code,
+              name = staffUserDetails.probationArea.description
+            )
+          ) &&
+            data.mappa == risks.mappa.value!!.level &&
+            data.sentenceLengthInMonths == null &&
+            data.offenceId == application.offenceId
+        }
+      )
+    }
   }
 
   @Test
@@ -737,7 +857,7 @@ class ApplicationServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER" ])
+  @EnumSource(value = UserRole::class, names = ["WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER"])
   fun `Get all offline applications where Probation Officer exists returns repository results for user with any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`(role: UserRole) {
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
@@ -804,7 +924,7 @@ class ApplicationServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER" ])
+  @EnumSource(value = UserRole::class, names = ["WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER"])
   fun `getOfflineApplicationForUsername where user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER but does not pass LAO check returns Unauthorised result`(role: UserRole) {
     val distinguishedName = "SOMEPERSON"
     val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")

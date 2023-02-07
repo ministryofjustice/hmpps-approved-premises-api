@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
@@ -32,7 +31,6 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
   private var submittedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var submittedByStaffMember: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var submittedByProbationArea: Yielded<ProbationArea> = { ProbationAreaFactory().produce() }
-  private var submittedByCru: Yielded<Cru> = { CruFactory().produce() }
   private var submittedByTeam: Yielded<Team> = { TeamFactory().produce() }
   private var submittedByLdu: Yielded<Ldu> = { LduFactory().produce() }
   private var submittedByRegion: Yielded<Region> = { RegionFactory().produce() }
@@ -90,10 +88,6 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
     this.submittedByProbationArea = { probationArea }
   }
 
-  fun withSubmittedByCru(cru: Cru) = apply {
-    this.submittedByCru = { cru }
-  }
-
   fun withSubmittedByTeam(team: Team) = apply {
     this.submittedByTeam = { team }
   }
@@ -125,7 +119,6 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
     submittedBy = ApplicationSubmittedSubmittedBy(
       staffMember = this.submittedByStaffMember(),
       probationArea = this.submittedByProbationArea(),
-      cru = this.submittedByCru(),
       team = this.submittedByTeam(),
       ldu = this.submittedByLdu(),
       region = this.submittedByRegion()

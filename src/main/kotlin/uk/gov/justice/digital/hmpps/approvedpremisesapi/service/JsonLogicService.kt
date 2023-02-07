@@ -10,6 +10,7 @@ class JsonLogicService(private val objectMapper: ObjectMapper) {
   private val jsonLogic = JsonLogic()
 
   fun resolveBoolean(jsonLogicRule: String, data: String): Boolean = resolve(jsonLogicRule, data)
+  fun resolveString(jsonLogicRule: String, data: String): String = resolve(jsonLogicRule, data)
 
   private inline fun <reified T> resolve(jsonLogicRule: String, data: String): T {
     val suitableData = objectMapper.readValue<Map<*, *>>(data)

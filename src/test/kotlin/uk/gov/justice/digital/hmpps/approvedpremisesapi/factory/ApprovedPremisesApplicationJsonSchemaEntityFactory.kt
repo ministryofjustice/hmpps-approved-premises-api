@@ -13,6 +13,8 @@ class ApprovedPremisesApplicationJsonSchemaEntityFactory : Factory<ApprovedPremi
   private var schema: Yielded<String> = { "{}" }
   private var isWomensJsonLogicRule: Yielded<String> = { """{"==": [1, 2]}""" }
   private var isPipeJsonLogicRule: Yielded<String> = { """{"==": [1, 1]}""" }
+  private var targetLocationJsonLogicRule: Yielded<String> = { """{"cat": ["", "AB"]}""" }
+  private var releaseTypeJsonLogicRule: Yielded<String> = { """{"cat": ["", "rotl"]}""" }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -49,11 +51,21 @@ class ApprovedPremisesApplicationJsonSchemaEntityFactory : Factory<ApprovedPremi
     this.isPipeJsonLogicRule = { isPipeJsonLogicRule }
   }
 
+  fun withTargetLocationJsonLogicRule(targetLocationJsonLogicRule: String) = apply {
+    this.targetLocationJsonLogicRule = { targetLocationJsonLogicRule }
+  }
+
+  fun withReleaseTypeJsonLogicRule(releaseTypeJsonLogicRule: String) = apply {
+    this.releaseTypeJsonLogicRule = { releaseTypeJsonLogicRule }
+  }
+
   override fun produce(): ApprovedPremisesApplicationJsonSchemaEntity = ApprovedPremisesApplicationJsonSchemaEntity(
     id = this.id(),
     addedAt = this.addedAt(),
     schema = this.schema(),
     isWomensJsonLogicRule = this.isWomensJsonLogicRule(),
-    isPipeJsonLogicRule = this.isPipeJsonLogicRule()
+    isPipeJsonLogicRule = this.isPipeJsonLogicRule(),
+    targetLocationJsonLogicRule = this.targetLocationJsonLogicRule(),
+    releaseTypeJsonLogicRule = this.releaseTypeJsonLogicRule()
   )
 }

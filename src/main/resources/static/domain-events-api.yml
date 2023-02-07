@@ -465,8 +465,6 @@ components:
               $ref: '#/components/schemas/StaffMember'
             probationArea:
               $ref: '#/components/schemas/ProbationArea'
-            cru:
-              $ref: '#/components/schemas/Cru'
             team:
               $ref: '#/components/schemas/Team'
             ldu:
