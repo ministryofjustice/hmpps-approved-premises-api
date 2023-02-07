@@ -223,8 +223,8 @@ class UsersTest : IntegrationTestBase() {
   @Nested
   inner class GetUsers {
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER", "WORKFLOW_MANAGER"])
-    fun `GET to users with a role other than ROLE_ADMIN is forbidden`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
+    fun `GET to users with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
       val deliusUsername = "AnyUser"
 
       val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
@@ -290,8 +290,9 @@ class UsersTest : IntegrationTestBase() {
         .isForbidden
     }
 
-    @Test
-    fun `GET to users with ROLE_ADMIN role returns full list ordered by name`() {
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["ROLE_ADMIN", "WORKFLOW_MANAGER"])
+    fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns full list ordered by name`(role: UserRole) {
       val deliusUsername = "ArthurAdmin"
 
       val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
@@ -312,7 +313,7 @@ class UsersTest : IntegrationTestBase() {
 
       arthurAdmin.roles += userRoleAssignmentEntityFactory.produceAndPersist {
         withUser(arthurAdmin)
-        withRole(UserRole.ROLE_ADMIN)
+        withRole(role)
       }
 
       val ben = userEntityFactory.produceAndPersist {
