@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersionDetector
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -19,6 +20,8 @@ class JsonSchemaService(
   private val jsonSchemaRepository: JsonSchemaRepository,
   private val applicationRepository: ApplicationRepository
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   private val schemas = synchronizedMap<UUID, JsonSchema>(mutableMapOf())
 
   fun validate(schema: JsonSchemaEntity, json: String): Boolean {
@@ -31,6 +34,10 @@ class JsonSchemaService(
     }
 
     val validationErrors = schemas[schema.id]!!.validate(jsonNode)
+
+    if (validationErrors.isNotEmpty()) {
+      log.warn("Validation errors whilst validating schema: \n\t${validationErrors.joinToString("\n\t,") { "Schema Path: ${it.schemaPath} -> Path: ${it.path}: ${it.message}" }}")
+    }
 
     return validationErrors.isEmpty()
   }
