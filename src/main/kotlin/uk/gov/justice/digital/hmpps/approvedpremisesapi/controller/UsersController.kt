@@ -34,7 +34,7 @@ class UsersController(
 
   override fun usersGet(xServiceName: ServiceName, roles: List<UserRole>?, qualifications: List<UserQualification>?): ResponseEntity<List<User>> {
     val user = userService.getUserForRequest()
-    if (!user.hasAnyRole(JpaUserRole.ROLE_ADMIN)) {
+    if (!user.hasAnyRole(JpaUserRole.ROLE_ADMIN, JpaUserRole.WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
