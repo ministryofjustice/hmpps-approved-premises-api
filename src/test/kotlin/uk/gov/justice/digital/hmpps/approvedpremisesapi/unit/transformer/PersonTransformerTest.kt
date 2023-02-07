@@ -292,10 +292,10 @@ class PersonTransformerTest {
       offenderNo = "NOMS321",
       inOutStatus = InOutStatus.IN,
       assignedLivingUnit = AssignedLivingUnit(
-        agencyId = "SMWH",
+        agencyId = "BRI",
         locationId = 5,
-        description = "SOMEWHERE",
-        agencyName = "SMWH"
+        description = "B-2F-004",
+        agencyName = "HMP Bristol"
       )
     )
 
@@ -312,7 +312,7 @@ class PersonTransformerTest {
         nationality = "Spanish",
         religionOrBelief = "Sikh",
         genderIdentity = null,
-        prisonName = "SOMEWHERE"
+        prisonName = "HMP Bristol"
       )
     )
   }
