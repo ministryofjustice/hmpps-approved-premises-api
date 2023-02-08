@@ -19,6 +19,9 @@ hmpps.sqs:
     domain-events:
       arn: arn:aws:sns:eu-west-2:000000000000:domain-events
 
+domain-events:
+  emit-enabled: true
+
 log-client-credentials-jwt-info: true
 
 seed:
