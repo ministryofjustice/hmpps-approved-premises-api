@@ -11,7 +11,7 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     HMPPS_AUTH_URL: https://sign-in.hmpps.service.justice.gov.uk/auth
     SERVICES_COMMUNITY-API_BASE-URL: https://community-api-secure.probation.service.justice.gov.uk
-    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.delius.probation.hmpps.dsd.io
+    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.hmpps.service.justice.gov.uk
     SERVICES_ASSESS-RISKS-AND-NEEDS-API_BASE-URL: https://assess-risks-and-needs.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier.hmpps.service.justice.gov.uk
     SERVICES_PRISONS-API_BASE-URL: https://api.prison.service.justice.gov.uk
@@ -21,7 +21,6 @@ generic-service:
     LOG-CLIENT-CREDENTIALS-JWT-INFO: false
     SENTRY_ENVIRONMENT: prod
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 300
-    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.hmpps.service.justice.gov.uk#
     APPLICATION-URL-TEMPLATE: https://approved-premises.hmpps.service.justice.gov.uk/applications/#id
     APPLICATION-SUBMITTED-DETAIL-URL-TEMPLATE: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: false
