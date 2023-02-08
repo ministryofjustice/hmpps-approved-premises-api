@@ -3,11 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
@@ -20,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
@@ -28,10 +32,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 class AssessmentTransformerTest {
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
+  private val mockUserTransformer = mockk<UserTransformer>()
   private val assessmentTransformer = AssessmentTransformer(
     jacksonObjectMapper(),
     mockApplicationsTransformer,
-    mockAssessmentClarificationNoteTransformer
+    mockAssessmentClarificationNoteTransformer,
+    mockUserTransformer
   )
 
   private val allocatedToUser = UserEntityFactory()
@@ -59,10 +65,13 @@ class AssessmentTransformerTest {
     .withSubmittedAt(OffsetDateTime.parse("2022-12-14T12:06:00Z"))
     .withAllocatedToUser(allocatedToUser)
 
+  private val user = mockk<User>()
+
   @BeforeEach
   fun setup() {
     every { mockApplicationsTransformer.transformJpaToApi(any<ApplicationEntity>(), any(), any()) } returns mockk<ApprovedPremisesApplication>()
     every { mockAssessmentClarificationNoteTransformer.transformJpaToApi(any()) } returns mockk()
+    every { mockUserTransformer.transformJpaToApi(any(), any()) } returns user
   }
 
   @Test
@@ -77,7 +86,9 @@ class AssessmentTransformerTest {
     assertThat(result.rejectionRationale).isEqualTo("reasoning")
     assertThat(result.createdAt).isEqualTo(OffsetDateTime.parse("2022-12-14T12:05:00Z"))
     assertThat(result.submittedAt).isEqualTo(OffsetDateTime.parse("2022-12-14T12:06:00Z"))
-    assertThat(result.allocatedToStaffMemberId).isEqualTo(allocatedToUser.id)
+    assertThat(result.allocatedToStaffMember).isEqualTo(user)
+
+    verify { mockUserTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) }
   }
 
   @Test

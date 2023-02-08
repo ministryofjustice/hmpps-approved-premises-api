@@ -3219,9 +3219,8 @@ components:
         id:
           type: string
           format: uuid
-        allocatedToStaffMemberId:
-          type: string
-          format: uuid
+        allocatedToStaffMember:
+          $ref: '#/components/schemas/User'
         schemaVersion:
           type: string
           format: uuid

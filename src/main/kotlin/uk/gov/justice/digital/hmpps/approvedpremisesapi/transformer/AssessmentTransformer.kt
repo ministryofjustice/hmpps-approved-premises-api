@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -19,7 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 class AssessmentTransformer(
   private val objectMapper: ObjectMapper,
   private val applicationsTransformer: ApplicationsTransformer,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer
+  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
+  private val userTransformer: UserTransformer
 ) {
   fun transformJpaToApi(jpa: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = when (jpa.application) {
     is ApprovedPremisesApplicationEntity -> ApprovedPremisesAssessment(
@@ -31,7 +33,7 @@ class AssessmentTransformer(
       allocatedAt = jpa.allocatedAt,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-      allocatedToStaffMemberId = jpa.allocatedToUser.id,
+      allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser, ServiceName.approvedPremises),
       submittedAt = jpa.submittedAt,
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
@@ -46,7 +48,7 @@ class AssessmentTransformer(
       allocatedAt = jpa.allocatedAt,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-      allocatedToStaffMemberId = jpa.allocatedToUser.id,
+      allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser, ServiceName.temporaryAccommodation),
       submittedAt = jpa.submittedAt,
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
