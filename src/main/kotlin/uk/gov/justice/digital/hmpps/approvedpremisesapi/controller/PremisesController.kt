@@ -121,11 +121,12 @@ class PremisesController(
     return ResponseEntity.ok(premisesTransformer.transformJpaToApi(updatedPremises, updatedPremises.totalBeds))
   }
 
-  override fun premisesGet(xServiceName: ServiceName?): ResponseEntity<List<Premises>> {
-    val premises = if (xServiceName == null) {
-      premisesService.getAllPremises()
-    } else {
-      premisesService.getAllPremisesForService(xServiceName)
+  override fun premisesGet(xServiceName: ServiceName?, xUserRegion: UUID?): ResponseEntity<List<Premises>> {
+    val premises = when {
+      xServiceName == null && xUserRegion == null -> premisesService.getAllPremises()
+      xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(xUserRegion, xServiceName)
+      xServiceName != null -> premisesService.getAllPremisesForService(xServiceName)
+      else -> premisesService.getAllPremisesInRegion(xUserRegion!!)
     }
 
     return ResponseEntity.ok(

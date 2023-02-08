@@ -23,8 +23,13 @@ import javax.persistence.Table
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
+  fun findAllByProbationRegion_Id(probationRegionId: UUID): List<PremisesEntity>
+
   @Query("SELECT p FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesEntity>
+
+  @Query("SELECT p FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type")
+  fun <T : PremisesEntity> findAllByProbationRegion_IdAndType(probationRegionId: UUID, type: Class<T>): List<PremisesEntity>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
