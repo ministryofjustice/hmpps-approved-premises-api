@@ -43,6 +43,11 @@ hmpps.sqs:
   topics:
     domain-events:
       arn: arn:aws:sns:eu-west-2:000000000000:domain-events-int-test
+  queues:
+    domain-events-queue:
+      dlqName: ${random.uuid}
+      queueName: ${random.uuid}
+      subscribeTopicId: domain-events
 
 domain-events:
   emit-enabled: true
