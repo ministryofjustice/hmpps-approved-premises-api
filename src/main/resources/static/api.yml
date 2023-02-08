@@ -3219,8 +3219,6 @@ components:
         id:
           type: string
           format: uuid
-        allocatedToStaffMember:
-          $ref: '#/components/schemas/User'
         schemaVersion:
           type: string
           format: uuid
@@ -3274,6 +3272,8 @@ components:
           properties:
             application:
               $ref: '#/components/schemas/ApprovedPremisesApplication'
+            allocatedToStaffMember:
+              $ref: '#/components/schemas/ApprovedPremisesUser'
           required:
             - application
     TemporaryAccommodationAssessment:
@@ -3283,6 +3283,8 @@ components:
           properties:
             application:
               $ref: '#/components/schemas/TemporaryAccommodationApplication'
+            allocatedToStaffMember:
+              $ref: '#/components/schemas/TemporaryAccommodationUser'
           required:
             - application
     AssessmentDecision:

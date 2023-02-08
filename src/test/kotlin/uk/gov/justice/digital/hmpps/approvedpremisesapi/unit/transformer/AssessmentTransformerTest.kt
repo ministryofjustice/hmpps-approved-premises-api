@@ -8,9 +8,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
@@ -65,7 +66,7 @@ class AssessmentTransformerTest {
     .withSubmittedAt(OffsetDateTime.parse("2022-12-14T12:06:00Z"))
     .withAllocatedToUser(allocatedToUser)
 
-  private val user = mockk<User>()
+  private val user = mockk<ApprovedPremisesUser>()
 
   @BeforeEach
   fun setup() {
@@ -78,7 +79,7 @@ class AssessmentTransformerTest {
   fun `transformJpaToApi transforms correctly`() {
     val assessment = assessmentFactory.produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk()) as ApprovedPremisesAssessment
 
     assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
     assertThat(result.schemaVersion).isEqualTo(UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"))

@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -33,7 +35,7 @@ class AssessmentTransformer(
       allocatedAt = jpa.allocatedAt,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-      allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser, ServiceName.approvedPremises),
+      allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
       submittedAt = jpa.submittedAt,
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
@@ -48,7 +50,7 @@ class AssessmentTransformer(
       allocatedAt = jpa.allocatedAt,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-      allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser, ServiceName.temporaryAccommodation),
+      allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser, ServiceName.temporaryAccommodation) as TemporaryAccommodationUser,
       submittedAt = jpa.submittedAt,
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
