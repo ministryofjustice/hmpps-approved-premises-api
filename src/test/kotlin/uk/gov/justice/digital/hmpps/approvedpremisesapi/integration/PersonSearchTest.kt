@@ -99,10 +99,10 @@ class PersonSearchTest : IntegrationTestBase() {
           withInOutStatus(InOutStatus.IN)
           withAssignedLivingUnit(
             AssignedLivingUnit(
-              agencyId = "Agency ID",
+              agencyId = "BRI",
               locationId = 5,
-              description = "SOMEPLACE",
-              agencyName = "Agency Name"
+              description = "B-2F-004",
+              agencyName = "HMP Bristol"
             )
           )
         }
@@ -126,7 +126,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 nationality = "English",
                 religionOrBelief = "Judaism",
                 genderIdentity = "This is a self described identity",
-                prisonName = "SOMEPLACE"
+                prisonName = "HMP Bristol"
               )
             )
           )
@@ -155,10 +155,10 @@ class PersonSearchTest : IntegrationTestBase() {
           withInOutStatus(InOutStatus.IN)
           withAssignedLivingUnit(
             AssignedLivingUnit(
-              agencyId = "Agency ID",
+              agencyId = "BRI",
               locationId = 5,
-              description = "SOMEPLACE",
-              agencyName = "Agency Name"
+              description = "B-2F-004",
+              agencyName = "HMP Bristol"
             )
           )
         }
@@ -183,7 +183,7 @@ class PersonSearchTest : IntegrationTestBase() {
                   nationality = "English",
                   religionOrBelief = "Judaism",
                   genderIdentity = "This is a self described identity",
-                  prisonName = "SOMEPLACE"
+                  prisonName = "HMP Bristol"
                 )
               )
             )

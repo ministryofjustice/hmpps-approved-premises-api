@@ -22,7 +22,7 @@ class PersonTransformer {
       else -> offenderDetailSummary.offenderProfile.genderIdentity
     },
     prisonName = inOutStatusToApiStatus(inmateDetail.inOutStatus).takeIf { it == Person.Status.inCustody }?.let {
-      inmateDetail.assignedLivingUnit?.description ?: inmateDetail.assignedLivingUnit?.agencyName
+      inmateDetail.assignedLivingUnit?.agencyName ?: inmateDetail.assignedLivingUnit?.agencyId
     }
   )
 
