@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
@@ -31,6 +32,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
   private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
+  private var teamCodes: Yielded<MutableList<ApplicationTeamCodeEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -96,6 +98,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.assessments = { assessments }
   }
 
+  fun withTeamCodes(teamCodes: MutableList<ApplicationTeamCodeEntity>) = apply {
+    this.teamCodes = { teamCodes }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -113,5 +119,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     schemaUpToDate = false,
     riskRatings = this.riskRatings(),
     assessments = this.assessments(),
+    teamCodes = this.teamCodes()
   )
 }
