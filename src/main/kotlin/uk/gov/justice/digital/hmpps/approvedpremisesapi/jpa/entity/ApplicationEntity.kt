@@ -102,6 +102,9 @@ class ApprovedPremisesApplicationEntity(
   assessments,
 )
 
+@Repository
+interface ApplicationTeamCodeRepository : JpaRepository<ApplicationTeamCodeEntity, UUID>
+
 @Entity
 @Table(name = "approved_premises_application_team_codes")
 data class ApplicationTeamCodeEntity(

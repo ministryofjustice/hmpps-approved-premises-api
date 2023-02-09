@@ -86,11 +86,11 @@ class ApplicationsController(
     val serviceName = xServiceName?.value ?: ServiceName.approvedPremises.value
 
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = deliusPrincipal.name
+    val user = userService.getUserForRequest()
 
     val (offender, inmate) = getPersonDetail(body.crn)
 
-    val application = when (val applicationResult = applicationService.createApplication(body.crn, username, deliusPrincipal.token.tokenValue, serviceName, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
+    val application = when (val applicationResult = applicationService.createApplication(body.crn, user, deliusPrincipal.token.tokenValue, serviceName, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.Success -> applicationResult.entity

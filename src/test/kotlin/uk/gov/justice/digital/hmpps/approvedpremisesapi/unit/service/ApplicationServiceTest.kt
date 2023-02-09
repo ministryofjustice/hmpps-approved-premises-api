@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -37,6 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
@@ -46,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -71,6 +75,8 @@ class ApplicationServiceTest {
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
+  private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
+  private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -83,6 +89,8 @@ class ApplicationServiceTest {
     mockOfflineApplicationRepository,
     mockDomainEventService,
     mockCommunityApiClient,
+    mockApDeliusContextApiClient,
+    mockApplicationTeamCodeRepository,
     "http://frontend/applications/#id"
   )
 
@@ -273,7 +281,9 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
-    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
+    val user = userWithUsername(username)
+
+    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -287,11 +297,38 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
-    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
+    val user = userWithUsername(username)
+
+    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
     assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+  }
+
+  @Test
+  fun `createApplication returns FieldValidationError when CRN is not managed by any teams the user is part of`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce()
+    )
+
+    val user = userWithUsername(username)
+
+    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
+      HttpStatus.OK,
+      ManagingTeamsResponse(
+        teamCodes = emptyList()
+      )
+    )
+
+    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", null, null, null)
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "notInCaseload")
   }
 
   @Test
@@ -303,7 +340,16 @@ class ApplicationServiceTest {
       OffenderDetailsSummaryFactory().produce()
     )
 
-    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", null, null, null)
+    val user = userWithUsername(username)
+
+    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
+      HttpStatus.OK,
+      ManagingTeamsResponse(
+        teamCodes = listOf("TEAMCODE")
+      )
+    )
+
+    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", null, null, null)
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -317,14 +363,16 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val user = userWithUsername(username)
+
+    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
+      HttpStatus.OK,
+      ManagingTeamsResponse(
+        teamCodes = listOf("TEAMCODE")
+      )
+    )
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce()
@@ -332,6 +380,7 @@ class ApplicationServiceTest {
     every { mockUserService.getUserForRequest() } returns user
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
 
     val riskRatings = PersonRisksFactory()
       .withRoshRisks(
@@ -366,7 +415,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
 
-    val result = applicationService.createApplication(crn, username, "jwt", "approved-premises", 123, "1", "A12HI")
+    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.Success).isTrue
     result as ValidatableActionResult.Success
@@ -996,4 +1045,13 @@ class ApplicationServiceTest {
       assertThat(result.entity).isEqualTo(applicationEntity)
     }
   }
+
+  private fun userWithUsername(username: String) = UserEntityFactory()
+    .withDeliusUsername(username)
+    .withProbationRegion(
+      ProbationRegionEntityFactory()
+        .withApArea(ApAreaEntityFactory().produce())
+        .produce()
+    )
+    .produce()
 }
