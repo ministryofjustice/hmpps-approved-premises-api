@@ -87,6 +87,8 @@ caches:
     expiry-seconds: 1200
   staffDetails:
     expiry-seconds: 1200
+  teamManagingCases:
+    expiry-seconds: 21600
 
 seed:
   file-prefix: "./test-seed-csvs"
