@@ -41,7 +41,8 @@ data class UserEntity(
   val id: UUID,
   var name: String,
   val deliusUsername: String,
-  val deliusStaffIdentifier: Long,
+  var deliusStaffCode: String?,
+  var deliusStaffIdentifier: Long,
   var email: String?,
   var telephoneNumber: String?,
   @OneToMany(mappedBy = "createdByUser")

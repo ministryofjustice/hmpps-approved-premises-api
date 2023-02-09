@@ -57,6 +57,7 @@ class UserService(
       user.name = deliusUser.staff.fullName
       user.email = deliusUser.email.toString()
       user.telephoneNumber = deliusUser.telephoneNumber
+      user.deliusStaffCode = deliusUser.staffCode
 
       user = userRepository.save(user)
     }
@@ -66,6 +67,7 @@ class UserService(
 
   fun getUserForUsername(username: String): UserEntity {
     val existingUser = userRepository.findByDeliusUsername(username)
+    if (existingUser != null && existingUser.deliusStaffCode == null) return updateUserFromCommunityApi(existingUser)
     if (existingUser != null) return existingUser
 
     val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(username)
@@ -92,6 +94,7 @@ class UserService(
         name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}",
         deliusUsername = username,
         deliusStaffIdentifier = staffUserDetails.staffIdentifier,
+        deliusStaffCode = staffUserDetails.staffCode,
         email = staffUserDetails.email,
         telephoneNumber = staffUserDetails.telephoneNumber,
         applications = mutableListOf(),
@@ -100,6 +103,25 @@ class UserService(
         probationRegion = staffProbationRegion,
       )
     )
+  }
+
+  private fun updateUserFromCommunityApi(user: UserEntity): UserEntity {
+    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
+
+    val staffUserDetails = when (staffUserDetailsResponse) {
+      is ClientResult.Success -> staffUserDetailsResponse.body
+      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+    }
+
+    user.apply {
+      name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}"
+      deliusStaffIdentifier = staffUserDetails.staffIdentifier
+      deliusStaffCode = staffUserDetails.staffCode
+      email = staffUserDetails.email
+      telephoneNumber = staffUserDetails.telephoneNumber
+    }
+
+    return userRepository.save(user)
   }
 
   fun addRoleToUser(user: UserEntity, role: UserRole) {
@@ -139,6 +161,6 @@ class UserService(
   }
 
   private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
-    return (deliusUser.email !== user.email) || (deliusUser.telephoneNumber !== user.telephoneNumber) || (deliusUser.staff.fullName != user.name)
+    return (deliusUser.email !== user.email) || (deliusUser.telephoneNumber !== user.telephoneNumber) || (deliusUser.staff.fullName != user.name) || (deliusUser.staffCode != user.deliusStaffCode)
   }
 }
