@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -14,7 +15,7 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
-interface UserRepository : JpaRepository<UserEntity, UUID> {
+interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
 
   @Query(

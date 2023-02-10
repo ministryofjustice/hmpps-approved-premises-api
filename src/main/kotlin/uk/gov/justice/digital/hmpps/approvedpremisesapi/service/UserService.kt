@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -40,8 +41,8 @@ class UserService(
     return getUserForUsername(username)
   }
 
-  fun getAllUsers(): List<UserEntity> {
-    return userRepository.findAll(Sort.by(Sort.Direction.ASC, "name"))
+  fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
+    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
   }
 
   fun getUserForId(id: java.util.UUID): AuthorisableActionResult<UserEntity> {
