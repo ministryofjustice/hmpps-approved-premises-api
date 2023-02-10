@@ -1990,7 +1990,7 @@ paths:
         - Auth
       summary: Returns a list of users
       parameters:
-        - in: path
+        - in: query
           name: roles
           required: false
           description: Only return users with the provided role(s)
@@ -1998,7 +1998,7 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/UserRole'
-        - in: path
+        - in: query
           name: qualifications
           required: false
           description: Only return users with the provided qualification(s)
