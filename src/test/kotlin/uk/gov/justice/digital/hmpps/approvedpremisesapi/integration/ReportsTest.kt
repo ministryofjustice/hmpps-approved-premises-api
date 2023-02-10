@@ -14,8 +14,35 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import java.util.UUID
 
 class ReportsTest : IntegrationTestBase() {
+  @Test
+  fun `Get bookings report for all regions returns 403 Forbidden if user does not have all regions access`() {
+    `Given a User` { _, jwt ->
+      webTestClient.get()
+        .uri("/reports/bookings")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get bookings report for a region returns 403 Forbidden if user cannot access the specified region`() {
+    `Given a User` { _, jwt ->
+      webTestClient.get()
+        .uri("/reports/bookings?probationRegionId=${UUID.randomUUID()}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
   @Test
   fun `Get bookings report returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
