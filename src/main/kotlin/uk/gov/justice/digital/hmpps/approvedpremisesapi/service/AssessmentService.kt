@@ -256,7 +256,7 @@ class AssessmentService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val assigneeUserResult = userService.getUserForId(userToAllocateToId)
+    val assigneeUserResult = userService.updateUserFromCommunityApiById(userToAllocateToId)
 
     val assigneeUser = when (assigneeUserResult) {
       is AuthorisableActionResult.Success -> assigneeUserResult.entity

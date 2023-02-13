@@ -1307,7 +1307,7 @@ class AssessmentServiceTest {
 
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
 
-    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.NotFound()
+    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.NotFound()
 
     val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, UUID.randomUUID())
 
@@ -1332,7 +1332,7 @@ class AssessmentServiceTest {
 
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
 
-    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
       UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -1369,7 +1369,7 @@ class AssessmentServiceTest {
 
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
 
-    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
       UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -1439,7 +1439,7 @@ class AssessmentServiceTest {
 
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
 
-    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
       UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -1522,7 +1522,7 @@ class AssessmentServiceTest {
           .produce()
       }
 
-    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
       assigneeUser
     )
 
@@ -1605,7 +1605,7 @@ class AssessmentServiceTest {
           .produce()
       }
 
-    every { userServiceMock.getUserForId(assigneeUserId) } returns AuthorisableActionResult.Success(
+    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
       assigneeUser
     )
 

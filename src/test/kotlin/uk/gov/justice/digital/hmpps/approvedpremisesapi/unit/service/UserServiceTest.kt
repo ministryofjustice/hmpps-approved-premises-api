@@ -145,7 +145,7 @@ class UserServiceTest {
   }
 
   @Nested
-  class GetUserForId {
+  class UpdateUserFromCommunityApiById {
     private val mockHttpAuthService = mockk<HttpAuthService>()
     private val mockCommunityApiClient = mockk<CommunityApiClient>()
     private val mockUserRepository = mockk<UserRepository>()
@@ -205,7 +205,7 @@ class UserServiceTest {
         deliusUser
       )
 
-      val result = userService.getUserForId(id)
+      val result = userService.updateUserFromCommunityApiById(id)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -237,7 +237,7 @@ class UserServiceTest {
         deliusUser
       )
 
-      val result = userService.getUserForId(id)
+      val result = userService.updateUserFromCommunityApiById(id)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -280,7 +280,7 @@ class UserServiceTest {
         deliusUser
       )
 
-      val result = userService.getUserForId(id)
+      val result = userService.updateUserFromCommunityApiById(id)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -297,7 +297,7 @@ class UserServiceTest {
     fun `it returns not found when there is no user for that ID`() {
       every { mockUserRepository.findByIdOrNull(id) } returns null
 
-      val result = userService.getUserForId(id)
+      val result = userService.updateUserFromCommunityApiById(id)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }

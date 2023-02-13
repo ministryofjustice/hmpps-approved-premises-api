@@ -45,7 +45,7 @@ class UserService(
     return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
   }
 
-  fun getUserForId(id: java.util.UUID): AuthorisableActionResult<UserEntity> {
+  fun updateUserFromCommunityApiById(id: UUID): AuthorisableActionResult<UserEntity> {
     var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
 
