@@ -46,7 +46,7 @@ class ApplicationsController(
   private val offenderService: OffenderService,
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
-  private val userService: UserService
+  private val userService: UserService,
 ) : ApplicationsApiDelegate {
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
@@ -209,6 +209,19 @@ class ApplicationsController(
     }
 
     return ResponseEntity(assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails), HttpStatus.CREATED)
+  }
+
+  override fun applicationsApplicationIdAssessmentGet(applicationId: UUID): ResponseEntity<Assessment> {
+    val user = userService.getUserForRequest()
+
+    val assessment = when (val applicationResult = assessmentService.getAssessmentForUserAndApplication(user, applicationId)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Assessment")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> applicationResult.entity
+    }
+
+    val (offender, inmate) = getPersonDetail(assessment.application.crn)
+    return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, offender, inmate))
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {
