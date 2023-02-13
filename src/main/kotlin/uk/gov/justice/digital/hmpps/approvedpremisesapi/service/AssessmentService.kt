@@ -66,6 +66,21 @@ class AssessmentService(
     return AuthorisableActionResult.Success(assessment)
   }
 
+  fun getAssessmentForUserAndApplication(user: UserEntity, applicationID: UUID): AuthorisableActionResult<AssessmentEntity> {
+    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
+
+    val assessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationID)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (!user.hasRole(UserRole.WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
+
+    return AuthorisableActionResult.Success(assessment)
+  }
+
   fun createAssessment(application: ApplicationEntity): AssessmentEntity {
     if (application !is ApprovedPremisesApplicationEntity) {
       throw RuntimeException("Only CAS1 Applications are currently supported")
@@ -255,7 +270,7 @@ class AssessmentService(
       throw RuntimeException("Only CAS1 Applications are currently supported")
     }
 
-    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationId)
+    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationId) ?: return AuthorisableActionResult.NotFound()
 
     if (currentAssessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
