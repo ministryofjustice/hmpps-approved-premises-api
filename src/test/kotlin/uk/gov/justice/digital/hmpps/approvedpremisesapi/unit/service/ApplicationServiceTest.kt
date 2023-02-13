@@ -135,8 +135,21 @@ class ApplicationServiceTest {
         .produce()
     )
 
+    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
+      HttpStatus.OK,
+      StaffUserDetailsFactory()
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
+    every { mockApplicationRepository.findAllByManagingTeam(listOf("TEAM1"), ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     applicationEntities.forEach {
