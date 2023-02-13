@@ -1457,8 +1457,12 @@ paths:
               $ref: '#/components/schemas/Reallocation'
         required: true
       responses:
-        200:
+        201:
           description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Assessment'
         400:
           description: invalid params
           content:
