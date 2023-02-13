@@ -11,6 +11,14 @@ class UpdateAllUsersFromCommunityApiJob(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun process() {
-    // TODO
+    userRepository.findAll().forEach {
+      log.info("Updating user ${it.id}")
+      try {
+        userService.updateUserFromCommunityApiById(it.id)
+      } catch (exception: Exception) {
+        log.error("Unable to update user ${it.id}", exception)
+      }
+      Thread.sleep(500)
+    }
   }
 }
