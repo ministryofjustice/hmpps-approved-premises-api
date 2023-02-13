@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.net.URI
 import java.util.UUID
@@ -39,6 +41,7 @@ class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
+  private val assessmentTransformer: AssessmentTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val documentTransformer: DocumentTransformer,
@@ -172,7 +175,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsApplicationIdAllocationsPost(applicationId: UUID, body: Reallocation): ResponseEntity<Unit> {
+  override fun applicationsApplicationIdAllocationsPost(applicationId: UUID, body: Reallocation): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
 
     val authorisationResult = assessmentService.reallocateAssessment(user, body.userId, applicationId)
@@ -183,13 +186,29 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
 
-    when (validationResult) {
+    val assessment = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.Success -> Unit
+      is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity(HttpStatus.OK)
+    val applicationCrn = assessment.application.crn
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")
+    }
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
+    }
+
+    val inmateDetails = when (val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)) {
+      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+      else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")
+    }
+
+    return ResponseEntity(assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails), HttpStatus.CREATED)
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {

@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
@@ -35,10 +36,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationTest : IntegrationTestBase() {
+  @Autowired
+  lateinit var assessmentTransformer: AssessmentTransformer
   @Test
   fun `Get all applications without JWT returns 401`() {
     webTestClient.get()
@@ -1018,40 +1022,49 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Reallocate application to different assessor returns 200, creates new assessment, deallocates old one`() {
+  fun `Reallocate application to different assessor returns 201, creates new assessment, deallocates old one`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { requestUser, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR)) { otherUser, _ ->
         `Given a User`(roles = listOf(UserRole.ASSESSOR)) { assigneeUser, _ ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(otherUser)
-            withApplicationSchema(applicationSchema)
-          }
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(otherUser)
+              withApplicationSchema(applicationSchema)
+            }
 
-          val existingAssessment = assessmentEntityFactory.produceAndPersist {
-            withApplication(application)
-            withAllocatedToUser(otherUser)
-            withAssessmentSchema(assessmentSchema)
-          }
+            val existingAssessment = assessmentEntityFactory.produceAndPersist {
+              withApplication(application)
+              withAllocatedToUser(otherUser)
+              withAssessmentSchema(assessmentSchema)
+            }
 
-          webTestClient.post()
-            .uri("/applications/${application.id}/allocations")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              Reallocation(
-                userId = assigneeUser.id
+            webTestClient.post()
+              .uri("/applications/${application.id}/allocations")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                Reallocation(
+                  userId = assigneeUser.id
+                )
               )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
+              .exchange()
+              .expectStatus()
+              .isCreated
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  assessmentTransformer.transformJpaToApi(assessmentRepository.findAll().first(), offenderDetails, inmateDetails)
+                )
+              )
 
-          val assessments = assessmentRepository.findAll()
+            val assessments = assessmentRepository.findAll()
 
-          assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
-          assertThat(assessments).anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
+            assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
+            assertThat(assessments).anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
+          }
         }
       }
     }

@@ -280,7 +280,8 @@ class AssessmentService(
     currentAssessment.reallocatedAt = OffsetDateTime.now()
     assessmentRepository.save(currentAssessment)
 
-    val dateTimeNow = OffsetDateTime.now()
+    // Make the timestamp precision less precise, so we don't have any issues with microsecond resolution in tests
+    val dateTimeNow = OffsetDateTime.now().withNano(0)
 
     val newAssessment = assessmentRepository.save(
       AssessmentEntity(
