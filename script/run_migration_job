@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# script/run_migration_job: Run a migration job for given type.  e.g.
+#                           script/run_migration_job update_all_users_from_community_api
+
+set -e
+
+curl --location --request POST 'http://127.0.0.1:8080/migration-job' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "jobType": "'$1'"
+}'
+
+echo "Requested job - check the application logs for processing status"
