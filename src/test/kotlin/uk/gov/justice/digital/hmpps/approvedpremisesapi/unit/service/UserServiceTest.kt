@@ -102,6 +102,48 @@ class UserServiceTest {
     verify(exactly = 1) { mockProbationRegionRepository.findByDeliusCode(any()) }
   }
 
+  @Test
+  fun `getUserForUsername updates from Community API for existing user without staff code`() {
+    val username = "SOMEPERSON"
+
+    every { mockUserRepository.findByDeliusUsername(username) } returns UserEntityFactory()
+      .withDeliusUsername(username)
+      .withDeliusStaffCode(null)
+      .withProbationRegion(
+        ProbationRegionEntityFactory()
+          .withApArea(ApAreaEntityFactory().produce())
+          .produce()
+      )
+      .produce()
+
+    every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+
+    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+      HttpStatus.OK,
+      StaffUserDetailsFactory()
+        .withUsername(username)
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
+        .withStaffCode("STAFFCODE123")
+        .produce()
+    )
+
+    assertThat(userService.getUserForUsername(username)).matches {
+      it.name == "Jim Jimmerson" &&
+        it.deliusStaffCode == "STAFFCODE123"
+    }
+
+    verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
+    verify(exactly = 1) {
+      mockUserRepository.save(
+        match {
+          it.deliusStaffCode == "STAFFCODE123"
+        }
+      )
+    }
+  }
+
   @Nested
   class GetUserForId {
     private val mockHttpAuthService = mockk<HttpAuthService>()
@@ -149,11 +191,12 @@ class UserServiceTest {
     }
 
     @Test
-    fun `it returns the user's details from the Community API and saves the email address`() {
+    fun `it returns the user's details from the Community API and saves the email address, telephone number and staff code`() {
       val user = userFactory.produce()
       val deliusUser = staffUserDetailsFactory
         .withEmail("foo@example.com")
         .withTelephoneNumber("0123456789")
+        .withStaffCode("STAFF1")
         .produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user
@@ -174,6 +217,7 @@ class UserServiceTest {
       assertThat(entity.deliusUsername).isEqualTo(user.deliusUsername)
       assertThat(entity.email).isEqualTo(deliusUser.email)
       assertThat(entity.telephoneNumber).isEqualTo(deliusUser.telephoneNumber)
+      assertThat(entity.deliusStaffCode).isEqualTo(deliusUser.staffCode)
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -210,14 +254,16 @@ class UserServiceTest {
       verify(exactly = 1) { mockUserRepository.save(any()) }
     }
     @Test
-    fun `it does not save the object if the email and telephone number are the same as Delius`() {
+    fun `it does not save the object if the email, telephone number and staff code are the same as Delius`() {
       val email = "foo@example.com"
       val telephoneNumber = "0123456789"
+      val staffCode = "STAFF1"
 
       val user = userFactory
         .withName("$forename $surname")
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
+        .withDeliusStaffCode(staffCode)
         .produce()
 
       val deliusUser = staffUserDetailsFactory
@@ -225,6 +271,7 @@ class UserServiceTest {
         .withSurname(surname)
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
+        .withStaffCode(staffCode)
         .produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user

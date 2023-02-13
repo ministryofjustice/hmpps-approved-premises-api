@@ -86,7 +86,9 @@ class ApprovedPremisesApplicationEntity(
   val offenceId: String,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   @Convert(disableConversion = true)
-  val riskRatings: PersonRisks?
+  val riskRatings: PersonRisks?,
+  @OneToMany(mappedBy = "application")
+  val teamCodes: MutableList<ApplicationTeamCodeEntity>
 ) : ApplicationEntity(
   id,
   crn,
@@ -98,6 +100,20 @@ class ApprovedPremisesApplicationEntity(
   submittedAt,
   schemaUpToDate,
   assessments,
+)
+
+@Repository
+interface ApplicationTeamCodeRepository : JpaRepository<ApplicationTeamCodeEntity, UUID>
+
+@Entity
+@Table(name = "approved_premises_application_team_codes")
+data class ApplicationTeamCodeEntity(
+  @Id
+  val id: UUID,
+  @ManyToOne
+  @JoinColumn(name = "application_id")
+  val application: ApprovedPremisesApplicationEntity,
+  val teamCode: String
 )
 
 @Entity

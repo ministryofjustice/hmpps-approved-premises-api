@@ -13,16 +13,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -49,6 +52,8 @@ class ApplicationService(
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val domainEventService: DomainEventService,
   private val communityApiClient: CommunityApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
@@ -120,16 +125,27 @@ class ApplicationService(
     return AuthorisableActionResult.Unauthorised()
   }
 
-  fun createApplication(crn: String, username: String, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?, createWithRisks: Boolean? = true) = validated<ApplicationEntity> {
+  fun createApplication(crn: String, user: UserEntity, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?, createWithRisks: Boolean? = true) = validated<ApplicationEntity> {
     if (service != ServiceName.approvedPremises.value) {
       "$.service" hasValidationError "onlyCas1Supported"
       return fieldValidationError
     }
 
-    when (offenderService.getOffenderByCrn(crn, username)) {
+    when (offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
       is AuthorisableActionResult.Success -> Unit
+    }
+
+    val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!)
+
+    val managingTeamCodes = when (managingTeamsResult) {
+      is ClientResult.Success -> managingTeamsResult.body.teamCodes
+      is ClientResult.Failure -> managingTeamsResult.throwException()
+    }
+
+    if (managingTeamCodes.isEmpty()) {
+      return "$.crn" hasSingleValidationError "notInCaseload"
     }
 
     if (convictionId == null) {
@@ -148,11 +164,10 @@ class ApplicationService(
       return fieldValidationError
     }
 
-    val user = userService.getUserForRequest()
     var riskRatings: PersonRisks? = null
 
     if (createWithRisks == true) {
-      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, username)
+      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
 
       riskRatings = when (riskRatingsResult) {
         is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -178,9 +193,20 @@ class ApplicationService(
         offenceId = offenceId!!,
         schemaUpToDate = true,
         riskRatings = riskRatings,
-        assessments = mutableListOf<AssessmentEntity>(),
+        assessments = mutableListOf(),
+        teamCodes = mutableListOf()
       )
     )
+
+    managingTeamCodes.forEach {
+      createdApplication.teamCodes += applicationTeamCodeRepository.save(
+        ApplicationTeamCodeEntity(
+          id = UUID.randomUUID(),
+          application = createdApplication,
+          teamCode = it
+        )
+      )
+    }
 
     return success(createdApplication.apply { schemaUpToDate = true })
   }

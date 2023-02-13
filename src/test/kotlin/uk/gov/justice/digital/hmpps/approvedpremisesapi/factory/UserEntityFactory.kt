@@ -18,6 +18,7 @@ class UserEntityFactory : Factory<UserEntity> {
   private var email: Yielded<String?> = { randomEmailAddress() }
   private var telephoneNumber: Yielded<String?> = { randomNumberChars(12) }
   private var deliusUsername: Yielded<String> = { randomStringUpperCase(12) }
+  private var deliusStaffCode: Yielded<String?> = { randomStringUpperCase(6) }
   private var deliusStaffIdentifier: Yielded<Long> = { randomInt(1000, 10000).toLong() }
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
@@ -33,6 +34,10 @@ class UserEntityFactory : Factory<UserEntity> {
 
   fun withDeliusUsername(deliusUsername: String) = apply {
     this.deliusUsername = { deliusUsername }
+  }
+
+  fun withDeliusStaffCode(deliusStaffCode: String?) = apply {
+    this.deliusStaffCode = { deliusStaffCode }
   }
 
   fun withDeliusStaffIdentifier(deliusStaffIdentifier: Long) = apply {
@@ -73,6 +78,7 @@ class UserEntityFactory : Factory<UserEntity> {
     email = this.email(),
     telephoneNumber = this.telephoneNumber(),
     deliusUsername = this.deliusUsername(),
+    deliusStaffCode = this.deliusStaffCode(),
     deliusStaffIdentifier = this.deliusStaffIdentifier(),
     applications = this.applications(),
     roles = mutableListOf(),

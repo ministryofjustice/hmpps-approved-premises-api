@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.ninjasquad.springmockk.SpykBean
+import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -18,17 +20,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -36,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -43,6 +49,10 @@ import java.util.UUID
 class ApplicationTest : IntegrationTestBase() {
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
+
+  @SpykBean
+  lateinit var realApplicationTeamCodeRepository: ApplicationTeamCodeRepository
+
   @Test
   fun `Get all applications without JWT returns 401`() {
     webTestClient.get()
@@ -658,29 +668,30 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns 500 when a person cannot be found`() {
-    val crn = "X1234"
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("PROBATIONPERSON")
+    `Given a User` { userEntity, jwt ->
+      val crn = "X1234"
 
-    CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
 
-    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
+      approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
 
-    webTestClient.post()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewApplication(
-          crn = crn
+      webTestClient.post()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewApplication(
+            crn = crn
+          )
         )
-      )
-      .exchange()
-      .expectStatus()
-      .is5xxServerError
-      .expectBody()
-      .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+    }
   }
 
   @Test
@@ -738,6 +749,86 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create new application returns 400 when CRN not managed by any of User's teams`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          ManagingTeamsResponse(
+            teamCodes = emptyList()
+          )
+        )
+
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789"
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .returnResult<ValidationError>()
+          .responseBody
+          .blockFirst()
+
+        assertThat(result.invalidParams).anyMatch {
+          it.propertyName == "$.crn" &&
+            it.errorType == "notInCaseload"
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          ManagingTeamsResponse(
+            teamCodes = listOf(offenderDetails.otherIds.crn)
+          )
+        )
+
+        every { realApplicationTeamCodeRepository.save(any()) } throws RuntimeException("Database Error")
+
+        webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789"
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+
+        assertThat(approvedPremisesApplicationRepository.findAll().none { it.crn == offenderDetails.otherIds.crn })
+      }
+    }
+  }
+
+  @Test
   fun `Create new application returns 201 with correct body and Location header`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
@@ -745,6 +836,13 @@ class ApplicationTest : IntegrationTestBase() {
           withAddedAt(OffsetDateTime.now())
           withId(UUID.randomUUID())
         }
+
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          ManagingTeamsResponse(
+            teamCodes = listOf("TEAM1")
+          )
+        )
 
         val result = webTestClient.post()
           .uri("/applications")
@@ -782,6 +880,13 @@ class ApplicationTest : IntegrationTestBase() {
           withAddedAt(OffsetDateTime.now())
           withId(UUID.randomUUID())
         }
+
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          ManagingTeamsResponse(
+            teamCodes = listOf("TEAM1")
+          )
+        )
 
         val result = webTestClient.post()
           .uri("/applications?createWithRisks=false")

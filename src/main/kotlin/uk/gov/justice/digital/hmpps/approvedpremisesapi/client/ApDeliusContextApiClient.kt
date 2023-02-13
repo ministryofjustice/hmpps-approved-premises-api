@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 
 @Component
@@ -16,5 +17,10 @@ class ApDeliusContextApiClient(
   @Cacheable(value = ["qCodeStaffMembersCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffMembers(qCode: String) = getRequest<StaffMembersPage> {
     path = "/approved-premises/$qCode/staff"
+  }
+
+  @Cacheable(value = ["teamsManagingCaseCache"], unless = IS_NOT_SUCCESSFUL)
+  fun getTeamsManagingCase(crn: String, staffCode: String) = getRequest<ManagingTeamsResponse> {
+    path = "/teams/managingCase/$crn?staffCode=$staffCode"
   }
 }
