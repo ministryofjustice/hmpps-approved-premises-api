@@ -378,4 +378,17 @@ class ApplicationService(
       )
     )
   }
+
+  fun getApplicationsForCrn(crn: String, serviceName: ServiceName): List<ApplicationEntity> {
+    val entityType = if (serviceName == ServiceName.approvedPremises) {
+      ApprovedPremisesApplicationEntity::class.java
+    } else {
+      TemporaryAccommodationApplicationEntity::class.java
+    }
+
+    return applicationRepository.findByCrn(crn, entityType)
+  }
+
+  fun getOfflineApplicationsForCrn(crn: String, serviceName: ServiceName) =
+    offlineApplicationRepository.findAllByServiceAndCrn(crn, serviceName.value)
 }
