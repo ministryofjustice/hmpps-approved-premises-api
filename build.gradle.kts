@@ -57,8 +57,6 @@ dependencies {
   }
 
   testImplementation("com.ninja-squad:springmockk:4.0.0")
-
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.2.0")
 }
 
 java {
