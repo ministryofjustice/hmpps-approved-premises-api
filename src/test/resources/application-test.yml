@@ -41,13 +41,13 @@ spring:
 hmpps.sqs:
   provider: localstack
   topics:
-    domain-events:
-      arn: arn:aws:sns:eu-west-2:000000000000:domain-events-int-test
+    domainevents:
+      arn: arn:aws:sns:eu-west-2:000000000000:domainevents-int-test
   queues:
-    domain-events-queue:
+    domaineventsqueue:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
-      subscribeTopicId: domain-events
+      subscribeTopicId: domainevents
 
 domain-events:
   emit-enabled: true

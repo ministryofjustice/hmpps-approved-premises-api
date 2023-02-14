@@ -1364,7 +1364,7 @@ class InboundMessageListener(private val objectMapper: ObjectMapper) {
   private val log = LoggerFactory.getLogger(this::class.java)
   val messages = Collections.synchronizedList(mutableListOf<SnsEvent>())
 
-  @JmsListener(destination = "domain-events-queue", containerFactory = "hmppsQueueContainerFactoryProxy")
+  @JmsListener(destination = "domaineventsqueue", containerFactory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(rawMessage: String?) {
     val (Message) = objectMapper.readValue(rawMessage, Message::class.java)
     val event = objectMapper.readValue(Message, SnsEvent::class.java)

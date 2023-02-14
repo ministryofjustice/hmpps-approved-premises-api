@@ -16,8 +16,8 @@ spring:
 hmpps.sqs:
   provider: localstack
   topics:
-    domain-events:
-      arn: arn:aws:sns:eu-west-2:000000000000:domain-events
+    domainevents:
+      arn: arn:aws:sns:eu-west-2:000000000000:domainevents
 
 domain-events:
   emit-enabled: true

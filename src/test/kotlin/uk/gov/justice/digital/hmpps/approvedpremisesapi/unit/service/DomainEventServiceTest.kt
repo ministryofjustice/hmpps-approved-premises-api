@@ -97,7 +97,7 @@ class DomainEventServiceTest {
 
     val mockHmppsTopic = mockk<HmppsTopic>()
 
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
+    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
 
     val domainEventToSave = DomainEvent(
       id = id,

@@ -32,8 +32,8 @@ class DomainEventService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   private val domainTopic by lazy {
-    hmppsQueueService.findByTopicId("domain-events")
-      ?: throw MissingTopicException("domain-events not found")
+    hmppsQueueService.findByTopicId("domainevents")
+      ?: throw MissingTopicException("domainevents not found")
   }
 
   fun getApplicationSubmittedDomainEvent(id: UUID) = get<ApplicationSubmittedEnvelope>(id)

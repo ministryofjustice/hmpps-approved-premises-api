@@ -26,6 +26,12 @@ generic-service:
     APPLICATION-URL-TEMPLATE: https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/#id
     DOMAIN-EVENTS_EMIT-ENABLED: true
 
+  namespace_secrets:
+    hmpps-approved-premises-api:
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "DOMAIN_EVENTS_ARN"
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ACCESS_KEY_ID: "DOMAIN_EVENTS_ACCESS_KEY_ID"
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_SECRET_ACCESS_KEY: "DOMAIN_EVENTS_ACCESS_KEY_SECRET"
+
   allowlist:
     unilink-aovpn1: "194.75.210.216/29"
     unilink-aovpn2: "83.98.63.176/29"
