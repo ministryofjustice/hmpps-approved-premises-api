@@ -4,6 +4,9 @@ generic-service:
 
   replicaCount: 4
 
+  livenessProbe:
+    initialDelaySeconds: 60
+
   image:
     repository: quay.io/hmpps/hmpps-approved-premises-api
     tag: app_version    # override at deployment time
