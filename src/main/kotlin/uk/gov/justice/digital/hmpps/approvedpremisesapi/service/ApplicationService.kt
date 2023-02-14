@@ -343,7 +343,7 @@ class ApplicationService(
     val releaseType = jsonLogicService.resolveString(schema.releaseTypeJsonLogicRule, applicationData)
     val targetLocation = jsonLogicService.resolveString(schema.targetLocationJsonLogicRule, applicationData)
 
-    domainEventService.save(
+    domainEventService.saveApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,

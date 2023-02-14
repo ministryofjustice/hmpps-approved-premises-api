@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
@@ -10,8 +11,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.jms.annotation.JmsListener
+import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
@@ -45,11 +49,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import java.time.OffsetDateTime
+import java.util.Collections
 import java.util.UUID
 
 class ApplicationTest : IntegrationTestBase() {
+  @Autowired
+  lateinit var inboundMessageListener: InboundMessageListener
+
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
 
@@ -982,7 +992,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Submit application returns 200, creates and allocates an assessment, saves a domain event`() {
+  fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(
@@ -1093,6 +1103,25 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedDomainEvent).isNotNull
           assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
           assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+
+          var waitedCount = 0
+          while (inboundMessageListener.messages.isEmpty()) {
+            if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
+
+            Thread.sleep(100)
+            waitedCount += 1
+          }
+
+          val emittedMessage = inboundMessageListener.messages.first()
+
+          assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
+          assertThat(emittedMessage.description).isEqualTo("An application has been submitted for an Approved Premises placement")
+          assertThat(emittedMessage.detailUrl).isEqualTo("http://frontend/applications/$applicationId")
+          assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
+          assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+          )
         }
       }
     }
@@ -1329,3 +1358,26 @@ class ApplicationTest : IntegrationTestBase() {
     return application
   }
 }
+
+@Service
+class InboundMessageListener(private val objectMapper: ObjectMapper) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+  val messages = Collections.synchronizedList(mutableListOf<SnsEvent>())
+
+  @JmsListener(destination = "domain-events-queue", containerFactory = "hmppsQueueContainerFactoryProxy")
+  fun processMessage(rawMessage: String?) {
+    val (Message) = objectMapper.readValue(rawMessage, Message::class.java)
+    val event = objectMapper.readValue(Message, SnsEvent::class.java)
+
+    log.info("Received Domain Event: ", event)
+    messages.add(event)
+  }
+}
+
+data class EventType(val Value: String, val Type: String)
+data class MessageAttributes(val eventType: EventType)
+data class Message(
+  val Message: String,
+  val MessageId: String,
+  val MessageAttributes: MessageAttributes
+)

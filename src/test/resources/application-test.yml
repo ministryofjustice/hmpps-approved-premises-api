@@ -38,6 +38,20 @@ spring:
             client-authentication-method: client_secret_jwt
             authorization-grant-type: client_credentials
 
+hmpps.sqs:
+  provider: localstack
+  topics:
+    domain-events:
+      arn: arn:aws:sns:eu-west-2:000000000000:domain-events-int-test
+  queues:
+    domain-events-queue:
+      dlqName: ${random.uuid}
+      queueName: ${random.uuid}
+      subscribeTopicId: domain-events
+
+domain-events:
+  emit-enabled: true
+
 hmpps:
   auth:
     url: http://localhost:57839/auth
