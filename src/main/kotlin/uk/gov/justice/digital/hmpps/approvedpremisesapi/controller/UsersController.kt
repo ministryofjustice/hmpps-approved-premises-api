@@ -38,9 +38,27 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
+    var roles = roles?.map(::transformApiRole)
+    var qualifications = qualifications?.map(::transformApiQualification)
+
     return ResponseEntity.ok(
-      userService.getAllUsers()
+      userService.getUsersWithQualificationsAndRoles(qualifications, roles)
         .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
     )
+  }
+
+  private fun transformApiRole(apiRole: UserRole): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole = when (apiRole) {
+    UserRole.roleAdmin -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.ROLE_ADMIN
+    UserRole.applicant -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.APPLICANT
+    UserRole.assessor -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.ASSESSOR
+    UserRole.manager -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.MANAGER
+    UserRole.matcher -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.MATCHER
+    UserRole.workflowManager -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.WORKFLOW_MANAGER
+    UserRole.matcher -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.MATCHER
+  }
+
+  private fun transformApiQualification(apiQualification: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification = when (apiQualification) {
+    UserQualification.pipe -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.PIPE
+    UserQualification.womens -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.WOMENS
   }
 }
