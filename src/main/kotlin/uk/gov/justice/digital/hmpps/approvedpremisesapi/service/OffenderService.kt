@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
@@ -50,6 +51,8 @@ class OffenderService(
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
   private val adjudicationsConfig: PrisonAdjudicationsConfig
@@ -147,6 +150,10 @@ class OffenderService(
       is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
       is AuthorisableActionResult.Success -> {
         val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)
+
+        if (registrationsResponse is ClientResult.Failure) {
+          captureAndWarnException("Failed to get registrations when collecting risks") { registrationsResponse.throwException() }
+        }
 
         val risks = PersonRisks(
           roshRisks = getRoshRisksEnvelope(crn, jwt),
@@ -423,6 +430,14 @@ class OffenderService(
       is ClientResult.Failure -> {
         return RiskWithStatus(status = RiskStatus.Error)
       }
+    }
+  }
+
+  private fun captureAndWarnException(message: String, block: () -> Unit) {
+    try {
+      block()
+    } catch (exception: Exception) {
+      log.warn(message, exception)
     }
   }
 
