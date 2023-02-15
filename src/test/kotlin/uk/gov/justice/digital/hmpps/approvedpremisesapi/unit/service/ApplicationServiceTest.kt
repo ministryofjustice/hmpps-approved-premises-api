@@ -797,7 +797,7 @@ class ApplicationServiceTest {
     every { mockJsonLogicService.resolveString(schema.releaseTypeJsonLogicRule, application.data!!) } returns "release-type"
     every { mockJsonLogicService.resolveString(schema.targetLocationJsonLogicRule, application.data!!) } returns "LN1"
 
-    every { mockDomainEventService.save(any()) } just Runs
+    every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
 
     val result = applicationService.submitApplication(applicationId, "{}", username, "jwt")
 
@@ -814,7 +814,7 @@ class ApplicationServiceTest {
     verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
 
     verify(exactly = 1) {
-      mockDomainEventService.save(
+      mockDomainEventService.saveApplicationSubmittedDomainEvent(
         match {
           val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
           val firstTeam = staffUserDetails.teams!!.first()

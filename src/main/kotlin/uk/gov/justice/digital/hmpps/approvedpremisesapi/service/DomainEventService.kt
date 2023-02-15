@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.amazonaws.services.sns.model.MessageAttributeValue
+import com.amazonaws.services.sns.model.PublishRequest
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -8,6 +12,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
+import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -15,8 +25,17 @@ import javax.transaction.Transactional
 @Service
 class DomainEventService(
   private val objectMapper: ObjectMapper,
-  private val domainEventRepository: DomainEventRepository
+  private val domainEventRepository: DomainEventRepository,
+  private val hmppsQueueService: HmppsQueueService,
+  @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
+  private val domainTopic by lazy {
+    hmppsQueueService.findByTopicId("domainevents")
+      ?: throw MissingTopicException("domainevents not found")
+  }
+
   fun getApplicationSubmittedDomainEvent(id: UUID) = get<ApplicationSubmittedEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
@@ -38,7 +57,24 @@ class DomainEventService(
   }
 
   @Transactional
-  fun save(domainEvent: DomainEvent<*>) {
+  fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<ApplicationSubmittedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.application.submitted",
+      typeDescription = "An application has been submitted for an Approved Premises placement",
+      detailUrl = domainEvent.data.eventDetails.applicationUrl,
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+    )
+
+  private fun saveAndEmit(
+    domainEvent: DomainEvent<*>,
+    typeName: String,
+    typeDescription: String,
+    detailUrl: String,
+    crn: String,
+    nomsNumber: String
+  ) {
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
@@ -51,7 +87,31 @@ class DomainEventService(
       )
     )
 
-    // TODO: Emit certain types of event to SNS for downstream consumption
+    if (emitDomainEventsEnabled) {
+      val snsEvent = SnsEvent(
+        eventType = typeName,
+        version = 1,
+        description = typeDescription,
+        detailUrl = detailUrl,
+        occurredAt = domainEvent.occurredAt,
+        additionalInformation = SnsEventAdditionalInformation(
+          applicationId = domainEvent.applicationId
+        ),
+        personReference = SnsEventPersonReferenceCollection(
+          identifiers = listOf(
+            SnsEventPersonReference("CRN", crn),
+            SnsEventPersonReference("NOMS", nomsNumber)
+          )
+        )
+      )
+
+      domainTopic.snsClient.publish(
+        PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
+          .withMessageAttributes(mapOf("eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType)))
+      )
+    } else {
+      log.info("Not emitting SNS event for domain event because domain-events.emit-enabled is not enabled")
+    }
   }
 
   private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {

@@ -22,3 +22,4 @@ generic-service:
     SENTRY_ENVIRONMENT: prod
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 300
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.hmpps.service.justice.gov.uk
+    DOMAIN-EVENTS_EMIT-ENABLED: false
