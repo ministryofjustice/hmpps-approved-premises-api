@@ -98,14 +98,14 @@ class AssessmentServiceTest {
         .produce()
     )
 
-    every { assessmentRepositoryMock.findAll() } returns allAssessments
+    every { assessmentRepositoryMock.findAllByReallocatedAtNull() } returns allAssessments
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getVisibleAssessmentsForUser(user)
 
     assertThat(result).containsAll(allAssessments)
 
-    verify(exactly = 1) { assessmentRepositoryMock.findAll() }
+    verify(exactly = 1) { assessmentRepositoryMock.findAllByReallocatedAtNull() }
   }
 
   @Test
@@ -137,14 +137,14 @@ class AssessmentServiceTest {
         .produce()
     )
 
-    every { assessmentRepositoryMock.findAllByAllocatedToUser_Id(user.id) } returns allocatedAssessments
+    every { assessmentRepositoryMock.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id) } returns allocatedAssessments
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getVisibleAssessmentsForUser(user)
 
     assertThat(result).containsAll(allocatedAssessments)
 
-    verify(exactly = 1) { assessmentRepositoryMock.findAllByAllocatedToUser_Id(user.id) }
+    verify(exactly = 1) { assessmentRepositoryMock.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id) }
   }
 
   @Test

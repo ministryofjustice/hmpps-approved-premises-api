@@ -55,6 +55,15 @@ class AssessmentTest : IntegrationTestBase() {
 
         assessment.schemaUpToDate = true
 
+        val reallocatedAssessment = assessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withReallocatedAt(OffsetDateTime.now())
+        }
+
+        reallocatedAssessment.schemaUpToDate = true
+
         webTestClient.get()
           .uri("/assessments")
           .header("Authorization", "Bearer $jwt")
