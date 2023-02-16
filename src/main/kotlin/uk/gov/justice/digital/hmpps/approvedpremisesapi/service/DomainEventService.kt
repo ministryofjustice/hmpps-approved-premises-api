@@ -106,10 +106,12 @@ class DomainEventService(
         )
       )
 
-      domainTopic.snsClient.publish(
+      val publishResult = domainTopic.snsClient.publish(
         PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
           .withMessageAttributes(mapOf("eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType)))
       )
+
+      log.info("Emitted SNS event (Message Id: ${publishResult.messageId}, Sequence Id: ${publishResult.sequenceNumber}) for Domain Event: ${domainEvent.id} of type: ${snsEvent.eventType}")
     } else {
       log.info("Not emitting SNS event for domain event because domain-events.emit-enabled is not enabled")
     }
