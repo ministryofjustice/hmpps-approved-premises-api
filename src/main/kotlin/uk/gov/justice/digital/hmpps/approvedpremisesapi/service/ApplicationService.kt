@@ -323,7 +323,7 @@ class ApplicationService(
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Not Found")
     }
 
-    val mappaLevel = risks.mappa.value?.level ?: throw RuntimeException("Mappa not present on Risks when creating Application Submitted Domain Event")
+    val mappaLevel = risks.mappa.value?.level
 
     val staffDetailsResult = communityApiClient.getStaffUserDetails(username)
     val staffDetails = when (staffDetailsResult) {
