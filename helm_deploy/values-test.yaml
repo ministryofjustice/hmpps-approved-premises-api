@@ -24,6 +24,7 @@ generic-service:
     SENTRY_ENVIRONMENT: test
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
     APPLICATION-URL-TEMPLATE: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#id
+    APPLICATION-SUBMITTED-DETAIL-URL-TEMPLATE: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: false
 
   allowlist:

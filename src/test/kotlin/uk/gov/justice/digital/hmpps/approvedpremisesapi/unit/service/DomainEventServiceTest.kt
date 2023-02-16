@@ -39,7 +39,8 @@ class DomainEventServiceTest {
     objectMapper = objectMapper,
     domainEventRepository = domainEventRespositoryMock,
     hmppsQueueService = hmppsQueueServieMock,
-    emitDomainEventsEnabled = true
+    emitDomainEventsEnabled = true,
+    applicationSubmittedDetailUrlTemplate = "http://frontend/events/application-submitted/#eventId"
   )
 
   @Test
@@ -137,7 +138,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.application.submitted" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An application has been submitted for an Approved Premises placement" &&
-            deserializedMessage.detailUrl == domainEventToSave.data.eventDetails.applicationUrl &&
+            deserializedMessage.detailUrl.matches(Regex("http://frontend/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
             deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&

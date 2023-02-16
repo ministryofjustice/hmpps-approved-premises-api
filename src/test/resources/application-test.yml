@@ -108,3 +108,5 @@ seed:
   file-prefix: "./test-seed-csvs"
 
 application-url-template: http://frontend/applications/#id
+application-submitted-detail-url-template: http://frontend/events/application-submitted/#eventId
+
