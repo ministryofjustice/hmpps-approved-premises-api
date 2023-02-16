@@ -102,48 +102,6 @@ class UserServiceTest {
     verify(exactly = 1) { mockProbationRegionRepository.findByDeliusCode(any()) }
   }
 
-  @Test
-  fun `getUserForUsername updates from Community API for existing user without staff code`() {
-    val username = "SOMEPERSON"
-
-    every { mockUserRepository.findByDeliusUsername(username) } returns UserEntityFactory()
-      .withDeliusUsername(username)
-      .withDeliusStaffCode(null)
-      .withProbationRegion(
-        ProbationRegionEntityFactory()
-          .withApArea(ApAreaEntityFactory().produce())
-          .produce()
-      )
-      .produce()
-
-    every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
-
-    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
-      HttpStatus.OK,
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .withStaffCode("STAFFCODE123")
-        .produce()
-    )
-
-    assertThat(userService.getUserForUsername(username)).matches {
-      it.name == "Jim Jimmerson" &&
-        it.deliusStaffCode == "STAFFCODE123"
-    }
-
-    verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
-    verify(exactly = 1) {
-      mockUserRepository.save(
-        match {
-          it.deliusStaffCode == "STAFFCODE123"
-        }
-      )
-    }
-  }
-
   @Nested
   class UpdateUserFromCommunityApiById {
     private val mockHttpAuthService = mockk<HttpAuthService>()

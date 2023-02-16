@@ -17,13 +17,13 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
     val userOne = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER1")
-      withDeliusStaffCode(null)
+      withDeliusStaffCode("OLDCODE1")
       withProbationRegion(probationRegion)
     }
 
     val userTwo = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER2")
-      withDeliusStaffCode(null)
+      withDeliusStaffCode("OLDCODE2")
       withProbationRegion(probationRegion)
     }
 
@@ -62,13 +62,13 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
     val userOne = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER1")
-      withDeliusStaffCode(null)
+      withDeliusStaffCode("OLDCODE1")
       withProbationRegion(probationRegion)
     }
 
     val userTwo = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER2")
-      withDeliusStaffCode(null)
+      withDeliusStaffCode("OLDCODE2")
       withProbationRegion(probationRegion)
     }
 
@@ -86,7 +86,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!
 
-    assertThat(userOneAfterUpdate.deliusStaffCode).isEqualTo(null)
+    assertThat(userOneAfterUpdate.deliusStaffCode).isEqualTo("OLDCODE1")
     assertThat(userTwoAfterUpdate.deliusStaffCode).isEqualTo("STAFFCODE2")
   }
 }

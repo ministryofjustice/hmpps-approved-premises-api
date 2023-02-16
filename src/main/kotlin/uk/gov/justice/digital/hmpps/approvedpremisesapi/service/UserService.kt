@@ -68,7 +68,6 @@ class UserService(
 
   fun getUserForUsername(username: String): UserEntity {
     val existingUser = userRepository.findByDeliusUsername(username)
-    if (existingUser != null && existingUser.deliusStaffCode == null) return updateUserFromCommunityApi(existingUser)
     if (existingUser != null) return existingUser
 
     val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(username)
