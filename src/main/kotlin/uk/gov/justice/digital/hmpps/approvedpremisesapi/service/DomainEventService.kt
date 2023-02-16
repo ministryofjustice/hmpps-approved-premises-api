@@ -27,7 +27,8 @@ class DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
-  @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean
+  @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
+  @Value("\${application-submitted-detail-url-template}") private val applicationSubmittedDetailUrlTemplate: String
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -62,7 +63,7 @@ class DomainEventService(
       domainEvent = domainEvent,
       typeName = "approved-premises.application.submitted",
       typeDescription = "An application has been submitted for an Approved Premises placement",
-      detailUrl = domainEvent.data.eventDetails.applicationUrl,
+      detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms
     )

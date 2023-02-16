@@ -21,5 +21,7 @@ generic-service:
     LOG-CLIENT-CREDENTIALS-JWT-INFO: false
     SENTRY_ENVIRONMENT: prod
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 300
-    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.hmpps.service.justice.gov.uk
+    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.hmpps.service.justice.gov.uk#
+    APPLICATION-URL-TEMPLATE: https://approved-premises.hmpps.service.justice.gov.uk/applications/#id
+    APPLICATION-SUBMITTED-DETAIL-URL-TEMPLATE: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: false
