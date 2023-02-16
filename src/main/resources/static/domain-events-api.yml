@@ -483,7 +483,6 @@ components:
         - applicationUrl
         - personReference
         - deliusEventNumber
-        - mappaCategories
         - offenceDescription
         - releaseType
         - age
