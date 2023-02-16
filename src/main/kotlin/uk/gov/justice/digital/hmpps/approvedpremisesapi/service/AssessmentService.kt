@@ -37,9 +37,9 @@ class AssessmentService(
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
 
     val assessments = if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
-      assessmentRepository.findAll()
+      assessmentRepository.findAllByReallocatedAtNull()
     } else {
-      assessmentRepository.findAllByAllocatedToUser_Id(user.id)
+      assessmentRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
     }
 
     assessments.forEach {
