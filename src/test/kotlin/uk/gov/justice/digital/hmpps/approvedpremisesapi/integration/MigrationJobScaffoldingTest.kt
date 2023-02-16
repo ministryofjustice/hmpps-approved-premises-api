@@ -1,0 +1,23 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
+class MigrationJobScaffoldingTest : SeedTestBase() {
+  @Test
+  fun `Requesting a Seed operation returns 202`() {
+    webTestClient.post()
+      .uri("/migration-job")
+      .bodyValue(
+        MigrationJobRequest(
+          jobType = MigrationJobType.updateAllUsersFromCommunityApi
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isAccepted
+  }
+}

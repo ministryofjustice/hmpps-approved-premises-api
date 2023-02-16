@@ -23,7 +23,7 @@ class UsersController(
 ) : UsersApiDelegate {
 
   override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
-    val userEntity = when (val result = userService.getUserForId(id)) {
+    val userEntity = when (val result = userService.updateUserFromCommunityApiById(id)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> result.entity
