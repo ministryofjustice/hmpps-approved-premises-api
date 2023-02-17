@@ -107,7 +107,10 @@ class ApprovedPremisesApplicationEntity(
   submittedAt,
   schemaUpToDate,
   assessments,
-)
+) {
+  fun hasTeamCode(code: String) = teamCodes.any { it.teamCode == code }
+  fun hasAnyTeamCode(codes: List<String>) = codes.any(::hasTeamCode)
+}
 
 @Repository
 interface ApplicationTeamCodeRepository : JpaRepository<ApplicationTeamCodeEntity, UUID>

@@ -114,6 +114,18 @@ class ApplicationService(
       return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
     }
 
+    if (applicationEntity is ApprovedPremisesApplicationEntity) {
+      val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
+      val userDetails = when (userDetailsResult) {
+        is ClientResult.Success -> userDetailsResult.body
+        is ClientResult.Failure -> userDetailsResult.throwException()
+      }
+
+      if (applicationEntity.hasAnyTeamCode(userDetails.teams?.map { it.code } ?: emptyList())) {
+        return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+      }
+    }
+
     return AuthorisableActionResult.Unauthorised()
   }
 
