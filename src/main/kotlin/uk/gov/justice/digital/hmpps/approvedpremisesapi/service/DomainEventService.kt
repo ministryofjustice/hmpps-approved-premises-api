@@ -28,7 +28,8 @@ class DomainEventService(
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
-  @Value("\${application-submitted-detail-url-template}") private val applicationSubmittedDetailUrlTemplate: String
+  @Value("\${application-submitted-detail-url-template}") private val applicationSubmittedDetailUrlTemplate: String,
+  @Value("\${application-assessed-detail-url-template}") private val applicationAssessedDetailUrlTemplate: String
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

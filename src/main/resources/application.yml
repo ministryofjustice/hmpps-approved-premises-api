@@ -167,3 +167,4 @@ seed:
 assign-default-region-to-users-with-unknown-region: false
 application-url-template: http://localhost:3000/applications/#id
 application-submitted-detail-url-template: http://localhost:3000/events/application-submitted/#eventId
+application-assessed-detail-url-template: http://localhost:3000/events/application-assessed/#eventId

@@ -40,7 +40,8 @@ class DomainEventServiceTest {
     domainEventRepository = domainEventRespositoryMock,
     hmppsQueueService = hmppsQueueServieMock,
     emitDomainEventsEnabled = true,
-    applicationSubmittedDetailUrlTemplate = "http://frontend/events/application-submitted/#eventId"
+    applicationSubmittedDetailUrlTemplate = "http://frontend/events/application-submitted/#eventId",
+    applicationAssessedDetailUrlTemplate = "http://frontend/events/application-assessed/#eventId"
   )
 
   @Test
