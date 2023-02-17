@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -22,6 +23,11 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
+
+  @BeforeEach
+  fun clearMessages() {
+    inboundMessageListener.clearMessages()
+  }
 
   @Test
   fun `Get all assessments without JWT returns 401`() {
@@ -196,7 +202,7 @@ class AssessmentTest : IntegrationTestBase() {
           waitedCount += 1
         }
 
-        val emittedMessage = inboundMessageListener.messages.first()
+        val emittedMessage = inboundMessageListener.messages.last()
 
         assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
@@ -221,7 +227,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Reject assessment returns 200, persists decision`() {
+  fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -259,6 +265,25 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
+
+        var waitedCount = 0
+        while (inboundMessageListener.messages.isEmpty()) {
+          if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
+
+          Thread.sleep(100)
+          waitedCount += 1
+        }
+
+        val emittedMessage = inboundMessageListener.messages.last()
+
+        assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
+        assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+        assertThat(emittedMessage.detailUrl).matches("http://frontend/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+        assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+        assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+          SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+        )
       }
     }
   }

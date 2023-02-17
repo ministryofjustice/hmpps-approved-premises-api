@@ -275,6 +275,9 @@ class AssessmentService(
   }
 
   fun rejectAssessment(user: UserEntity, assessmentId: UUID, document: String?, rejectionRationale: String): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val domainEventId = UUID.randomUUID()
+    val rejectedAt = OffsetDateTime.now()
+
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
@@ -316,11 +319,69 @@ class AssessmentService(
     }
 
     assessment.document = document
-    assessment.submittedAt = OffsetDateTime.now()
+    assessment.submittedAt = rejectedAt
     assessment.decision = AssessmentDecision.REJECTED
     assessment.rejectionRationale = rejectionRationale
 
     val savedAssessment = assessmentRepository.save(assessment)
+
+    val application = savedAssessment.application
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = rejectedAt,
+        data = ApplicationAssessedEnvelope(
+          id = domainEventId,
+          timestamp = rejectedAt,
+          eventType = "approved-premises.application.assessed",
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!
+            ),
+            deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+            assessedAt = rejectedAt,
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username
+              ),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description
+              ),
+              cru = Cru(
+                code = "TODO",
+                name = "TODO"
+              )
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale
+          )
+        )
+      )
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment)

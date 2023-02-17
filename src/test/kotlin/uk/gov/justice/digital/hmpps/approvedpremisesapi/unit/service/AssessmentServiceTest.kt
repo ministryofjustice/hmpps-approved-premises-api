@@ -1263,7 +1263,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `rejectAssessment returns updated assessment`() {
+  fun `rejectAssessment returns updated assessment, emits domain event`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -1280,7 +1280,7 @@ class AssessmentServiceTest {
       schema = "{}"
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+    val assessment = AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -1300,11 +1300,23 @@ class AssessmentServiceTest {
       .withData("{\"test\": \"data\"}")
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    val offenderDetails = OffenderDetailsSummaryFactory().produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+    every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
@@ -1316,6 +1328,43 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+
+    verify(exactly = 1) {
+      domainEventServiceMock.saveApplicationAssessedDomainEvent(
+        match {
+          val data = it.data.eventDetails
+
+          it.applicationId == assessment.application.id &&
+            it.crn == assessment.application.crn &&
+            data.applicationId == assessment.application.id &&
+            data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!
+          ) &&
+            data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
+            data.assessedBy == ApplicationAssessedAssessedBy(
+            staffMember = StaffMember(
+              staffCode = staffUserDetails.staffCode,
+              staffIdentifier = staffUserDetails.staffIdentifier,
+              forenames = staffUserDetails.staff.forenames,
+              surname = staffUserDetails.staff.surname,
+              username = staffUserDetails.username
+            ),
+            probationArea = ProbationArea(
+              code = staffUserDetails.probationArea.code,
+              name = staffUserDetails.probationArea.description
+            ),
+            cru = Cru(
+              code = "TODO",
+              name = "TODO"
+            )
+          ) &&
+            data.decision == "REJECTED" &&
+            data.decisionRationale == "reasoning"
+        }
+      )
+    }
   }
 
   @Test
