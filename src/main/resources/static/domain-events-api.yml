@@ -593,7 +593,6 @@ components:
         - assessedAt
         - assessedBy
         - decision
-        - decisionRationale
     BookingMadeEnvelope:
       type: object
       properties:
