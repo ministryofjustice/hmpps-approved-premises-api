@@ -11,11 +11,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class AssessmentTest : IntegrationTestBase() {
+  @Autowired
+  lateinit var inboundMessageListener: InboundMessageListener
+
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
 
@@ -145,7 +149,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Accept assessment returns 200, persists decision`() {
+  fun `Accept assessment returns 200, persists decision, emits SNS domain event message`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -183,6 +187,25 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
+
+        var waitedCount = 0
+        while (inboundMessageListener.messages.isEmpty()) {
+          if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
+
+          Thread.sleep(100)
+          waitedCount += 1
+        }
+
+        val emittedMessage = inboundMessageListener.messages.first()
+
+        assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
+        assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+        assertThat(emittedMessage.detailUrl).matches("http://frontend/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+        assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+        assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+          SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+        )
       }
     }
   }

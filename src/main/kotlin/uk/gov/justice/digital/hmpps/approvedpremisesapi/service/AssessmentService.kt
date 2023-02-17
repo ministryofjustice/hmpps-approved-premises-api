@@ -1,7 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -15,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -29,7 +40,11 @@ class AssessmentService(
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val applicationRepository: ApplicationRepository,
-  private val userService: UserService
+  private val userService: UserService,
+  private val domainEventService: DomainEventService,
+  private val offenderService: OffenderService,
+  private val communityApiClient: CommunityApiClient,
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
@@ -147,6 +162,9 @@ class AssessmentService(
   }
 
   fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val domainEventId = UUID.randomUUID()
+    val acceptedAt = OffsetDateTime.now()
+
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
@@ -188,10 +206,68 @@ class AssessmentService(
     }
 
     assessment.document = document
-    assessment.submittedAt = OffsetDateTime.now()
+    assessment.submittedAt = acceptedAt
     assessment.decision = AssessmentDecision.ACCEPTED
 
     val savedAssessment = assessmentRepository.save(assessment)
+
+    val application = savedAssessment.application
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = acceptedAt,
+        data = ApplicationAssessedEnvelope(
+          id = domainEventId,
+          timestamp = acceptedAt,
+          eventType = "approved-premises.application.assessed",
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!
+            ),
+            deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+            assessedAt = acceptedAt,
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username
+              ),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description
+              ),
+              cru = Cru(
+                code = "TODO",
+                name = "TODO"
+              )
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale
+          )
+        )
+      )
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment)
