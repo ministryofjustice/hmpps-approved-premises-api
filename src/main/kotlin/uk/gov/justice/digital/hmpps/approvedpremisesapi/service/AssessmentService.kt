@@ -258,7 +258,6 @@ class AssessmentService(
                 name = staffDetails.probationArea.description
               ),
               cru = Cru(
-                code = "TODO",
                 name = "TODO"
               )
             ),
@@ -372,7 +371,6 @@ class AssessmentService(
                 name = staffDetails.probationArea.description
               ),
               cru = Cru(
-                code = "TODO",
                 name = "TODO"
               )
             ),

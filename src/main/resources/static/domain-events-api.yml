@@ -332,14 +332,10 @@ components:
     Cru:
       type: object
       properties:
-        code:
-          type: string
-          example: N02
         name:
           type: string
           example: NPS North East
       required:
-        - code
         - name
     Ldu:
       type: object

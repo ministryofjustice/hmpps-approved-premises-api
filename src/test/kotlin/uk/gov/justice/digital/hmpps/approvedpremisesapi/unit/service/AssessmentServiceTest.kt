@@ -1007,7 +1007,6 @@ class AssessmentServiceTest {
               name = staffUserDetails.probationArea.description
             ),
             cru = Cru(
-              code = "TODO",
               name = "TODO"
             )
           ) &&
@@ -1356,7 +1355,6 @@ class AssessmentServiceTest {
               name = staffUserDetails.probationArea.description
             ),
             cru = Cru(
-              code = "TODO",
               name = "TODO"
             )
           ) &&
