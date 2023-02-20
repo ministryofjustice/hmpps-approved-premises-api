@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -46,6 +47,8 @@ class AssessmentService(
   private val communityApiClient: CommunityApiClient,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
 
@@ -258,7 +261,7 @@ class AssessmentService(
                 name = staffDetails.probationArea.description
               ),
               cru = Cru(
-                name = "TODO"
+                name = cruNameFromProbationAreaCode(staffDetails.probationArea.code)
               )
             ),
             decision = assessment.decision.toString(),
@@ -371,7 +374,7 @@ class AssessmentService(
                 name = staffDetails.probationArea.description
               ),
               cru = Cru(
-                name = "TODO"
+                name = cruNameFromProbationAreaCode(staffDetails.probationArea.code)
               )
             ),
             decision = assessment.decision.toString(),
@@ -384,6 +387,29 @@ class AssessmentService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment)
     )
+  }
+
+  private val cruMappings = mutableMapOf<String, List<String>>(
+    "Midlands" to listOf("N31", "N53"),
+    "South East & Eastern incl. Women" to listOf("N34", "N56"),
+    "North West" to listOf("N28", "N50", "MCG", "GMP"),
+    "South East & Eastern incl. Women" to listOf("N35", "N57"),
+    "London" to listOf("N07", "N21", "C17", "LDN"),
+    "North East" to listOf("N32", "N54", "N02", "N23"),
+    "North West" to listOf("N29", "N51", "N24", "N01"),
+    "Wales" to listOf("N03", "C10", "N27", "WPT"),
+    "Midlands" to listOf("MLW", "N30", "N52"),
+    "North West" to listOf("N33", "N55"),
+    "South West & South Central" to listOf("N36", "N58", "N26", "N37", "N59", "N05")
+  )
+
+  private fun cruNameFromProbationAreaCode(code: String): String {
+    cruMappings.forEach {
+      if (it.value.contains(code)) return it.key
+    }
+
+    log.warn("No CRU mapping for Probation Area code: $code")
+    return "Unknown CRU"
   }
 
   fun reallocateAssessment(requestUser: UserEntity, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {

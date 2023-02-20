@@ -156,7 +156,9 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Accept assessment returns 200, persists decision, emits SNS domain event message`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+    ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -228,7 +230,9 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+    ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
