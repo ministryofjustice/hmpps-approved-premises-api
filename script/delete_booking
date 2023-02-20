@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# script/delete_booking:    Use internal endpoint to delete a booking.  e.g.
+#                           script/delete_booking {booking id}
+
+set -e
+
+curl --location --request DELETE "http://127.0.0.1:8080/internal/booking/$1"
