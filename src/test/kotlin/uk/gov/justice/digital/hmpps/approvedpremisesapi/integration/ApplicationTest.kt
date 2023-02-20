@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -76,8 +77,12 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all applications returns 200 with correct body - when user does not have roles returns applications they created`() {
-    `Given a User` { userEntity, jwt ->
+  fun `Get all applications returns 200 with correct body - when user does not have roles returns applications managed by their teams`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+      }
+    ) { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Offender` { otherOffenderDetails, otherInmateDetails ->
@@ -121,7 +126,7 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
@@ -134,14 +139,30 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            upToDateApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
+              ApplicationTeamCodeEntity(
+                id = UUID.randomUUID(),
+                application = upToDateApplicationEntityManagedByTeam,
+                teamCode = "TEAM1"
+              )
+            )
+
+            val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(olderJsonSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
             }
 
-            val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            outdatedApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
+              ApplicationTeamCodeEntity(
+                id = UUID.randomUUID(),
+                application = outdatedApplicationEntityManagedByTeam,
+                teamCode = "TEAM1"
+              )
+            )
+
+            val outdatedApplicationEntityNotManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(olderJsonSchema)
               withCreatedByUser(otherUser)
               withCrn(otherOffenderDetails.otherIds.crn)
@@ -163,27 +184,27 @@ class ApplicationTest : IntegrationTestBase() {
             val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
 
             assertThat(responseBody).anyMatch {
-              outdatedApplicationEntityCreatedByUser.id == it.id &&
-                outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
-                outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
-                outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-                serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+              outdatedApplicationEntityManagedByTeam.id == it.id &&
+                outdatedApplicationEntityManagedByTeam.crn == it.person?.crn &&
+                outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt.toInstant() &&
+                outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
+                outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                serializableToJsonNode(outdatedApplicationEntityManagedByTeam.data) == serializableToJsonNode(it.data) &&
                 olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
             }
 
             assertThat(responseBody).anyMatch {
-              upToDateApplicationEntityCreatedByUser.id == it.id &&
-                upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
-                upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
-                upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
-                serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
+              upToDateApplicationEntityManagedByTeam.id == it.id &&
+                upToDateApplicationEntityManagedByTeam.crn == it.person?.crn &&
+                upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt.toInstant() &&
+                upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
+                upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                serializableToJsonNode(upToDateApplicationEntityManagedByTeam.data) == serializableToJsonNode(it.data) &&
                 newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
             }
 
             assertThat(responseBody).noneMatch {
-              outdatedApplicationEntityNotCreatedByUser.id == it.id
+              outdatedApplicationEntityNotManagedByTeam.id == it.id
             }
           }
         }
@@ -342,10 +363,14 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get list of applications returns 500 when a person cannot be found`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+      }
+    ) { userEntity, jwt ->
       val crn = "X1234"
 
-      produceAndPersistBasicApplication(crn, userEntity)
+      produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
 
       CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
@@ -363,11 +388,15 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get list of applications returns 500 when a person has no NOMS number`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+      }
+    ) { userEntity, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() }
       ) { offenderDetails, inmateDetails ->
-        produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity)
+        produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
         CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
@@ -385,10 +414,14 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get list of applications returns 500 when the person cannot be fetched from the prisons API`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+      }
+    ) { userEntity, jwt ->
       val crn = "X1234"
 
-      produceAndPersistBasicApplication(crn, userEntity)
+      produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withCrn(crn)
@@ -489,13 +522,17 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get single application returns 403 when caller did not create application and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
-    `Given a User` { userEntity, jwt ->
+  fun `Get single application returns 403 when caller not in a managing team and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM2").produce()))
+      }
+    ) { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val crn = "X1234"
 
-          val application = produceAndPersistBasicApplication(crn, otherUser)
+          val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
 
           CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
@@ -512,11 +549,15 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 500 when a person has no NOMS number`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+      }
+    ) { userEntity, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() }
       ) { offenderDetails, inmateDetails ->
-        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity)
+        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
         CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
@@ -534,10 +575,14 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single application returns 500 when the person cannot be fetched from the prisons API`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+      }
+    ) { userEntity, jwt ->
       val crn = "X1234"
 
-      val application = produceAndPersistBasicApplication(crn, userEntity)
+      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withCrn(crn)
@@ -1319,7 +1364,7 @@ class ApplicationTest : IntegrationTestBase() {
     return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 
-  private fun produceAndPersistBasicApplication(crn: String, userEntity: UserEntity): ApplicationEntity {
+  private fun produceAndPersistBasicApplication(crn: String, userEntity: UserEntity, managingTeamCode: String): ApplicationEntity {
     val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
@@ -1354,6 +1399,14 @@ class ApplicationTest : IntegrationTestBase() {
           """
       )
     }
+
+    application.teamCodes += applicationTeamCodeRepository.save(
+      ApplicationTeamCodeEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        teamCode = managingTeamCode
+      )
+    )
 
     return application
   }

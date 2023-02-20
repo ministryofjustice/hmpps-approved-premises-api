@@ -135,8 +135,21 @@ class ApplicationServiceTest {
         .produce()
     )
 
+    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
+      HttpStatus.OK,
+      StaffUserDetailsFactory()
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .produce()
+          )
+        )
+        .produce()
+    )
+
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
+    every { mockApplicationRepository.findAllByManagingTeam(listOf("TEAM1"), ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     applicationEntities.forEach {
@@ -157,17 +170,19 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `getApplicationForUsername where application was not created by calller and where caller is not one of one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
+  fun `getApplicationForUsername where application was not created by caller, not in case load and where caller is not one of one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory()
+      .withDeliusUsername(distinguishedName)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
           .produce()
       }
       .produce()
+
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(
         UserEntityFactory()
@@ -179,6 +194,20 @@ class ApplicationServiceTest {
           .produce()
       )
       .produce()
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withTeams(
+        listOf(
+          StaffUserTeamMembershipFactory()
+            .produce()
+        )
+      )
+      .produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
+      status = HttpStatus.OK,
+      body = staffUserDetails
+    )
 
     assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -211,6 +240,72 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+
+    val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity).isEqualTo(applicationEntity)
+  }
+
+  @Test
+  fun `getApplicationForUsername where application CRN is managed by team caller is in returns Success result with entity from db`() {
+    val distinguishedName = "SOMEPERSON"
+    val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val userEntity = UserEntityFactory()
+      .withId(userId)
+      .withDeliusUsername(distinguishedName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val otherUserEntity = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val applicationEntity = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(otherUserEntity)
+      .withApplicationSchema(newestJsonSchema)
+      .produce()
+
+    applicationEntity.teamCodes += ApplicationTeamCodeEntity(
+      id = UUID.randomUUID(),
+      application = applicationEntity,
+      teamCode = "TEAM1"
+    )
+
+    every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withTeams(
+        listOf(
+          StaffUserTeamMembershipFactory()
+            .withCode("TEAM1")
+            .produce()
+        )
+      )
+      .produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
+      status = HttpStatus.OK,
+      body = staffUserDetails
+    )
 
     val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
 

@@ -66,8 +66,16 @@ class ApplicationService(
       TemporaryAccommodationApplicationEntity::class.java
     }
 
+    val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
+    val userDetails = when (userDetailsResult) {
+      is ClientResult.Success -> userDetailsResult.body
+      is ClientResult.Failure -> userDetailsResult.throwException()
+    }
+
     val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
       applicationRepository.findAll()
+    } else if (serviceName == ServiceName.approvedPremises) {
+      applicationRepository.findAllByManagingTeam(userDetails.teams?.map { it.code } ?: emptyList(), entityType)
     } else {
       applicationRepository.findAllByCreatedByUser_Id(userEntity.id, entityType)
     }
@@ -104,6 +112,18 @@ class ApplicationService(
 
     if (userEntity.id == applicationEntity.createdByUser.id || userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
       return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    }
+
+    if (applicationEntity is ApprovedPremisesApplicationEntity) {
+      val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
+      val userDetails = when (userDetailsResult) {
+        is ClientResult.Success -> userDetailsResult.body
+        is ClientResult.Failure -> userDetailsResult.throwException()
+      }
+
+      if (applicationEntity.hasAnyTeamCode(userDetails.teams?.map { it.code } ?: emptyList())) {
+        return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+      }
     }
 
     return AuthorisableActionResult.Unauthorised()

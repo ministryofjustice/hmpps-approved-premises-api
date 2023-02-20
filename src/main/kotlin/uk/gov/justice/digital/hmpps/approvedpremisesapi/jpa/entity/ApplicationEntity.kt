@@ -25,6 +25,13 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
 
+  @Query(
+    "SELECT a FROM ApplicationEntity a " +
+      "LEFT JOIN ApplicationTeamCodeEntity atc ON a = atc.application " +
+      "WHERE TYPE(a) = :type AND atc.teamCode IN (:managingTeamCodes)"
+  )
+  fun <T : ApplicationEntity> findAllByManagingTeam(managingTeamCodes: List<String>, type: Class<T>): List<ApplicationEntity>
+
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
 }
@@ -100,7 +107,10 @@ class ApprovedPremisesApplicationEntity(
   submittedAt,
   schemaUpToDate,
   assessments,
-)
+) {
+  fun hasTeamCode(code: String) = teamCodes.any { it.teamCode == code }
+  fun hasAnyTeamCode(codes: List<String>) = codes.any(::hasTeamCode)
+}
 
 @Repository
 interface ApplicationTeamCodeRepository : JpaRepository<ApplicationTeamCodeEntity, UUID>
