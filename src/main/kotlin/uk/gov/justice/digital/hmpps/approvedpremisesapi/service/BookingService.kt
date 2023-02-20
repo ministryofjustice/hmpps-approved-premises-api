@@ -318,6 +318,35 @@ class BookingService(
     return GetBookingForPremisesResult.Success(booking)
   }
 
+  @Transactional
+  fun deleteBooking(booking: BookingEntity) {
+    if (booking.arrival != null) {
+      arrivalRepository.delete(booking.arrival!!)
+    }
+
+    if (booking.departure != null) {
+      departureRepository.delete(booking.departure!!)
+    }
+
+    if (booking.nonArrival != null) {
+      nonArrivalRepository.delete(booking.nonArrival!!)
+    }
+
+    if (booking.cancellation != null) {
+      cancellationRepository.delete(booking.cancellation!!)
+    }
+
+    if (booking.confirmation != null) {
+      confirmationRepository.delete(booking.confirmation!!)
+    }
+
+    booking.extensions.forEach {
+      extensionRepository.delete(it)
+    }
+
+    bookingRepository.delete(booking)
+  }
+
   private fun serviceScopeMatches(scope: String, booking: BookingEntity): Boolean {
     return when (scope) {
       "*" -> true
