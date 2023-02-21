@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -61,9 +62,21 @@ class AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val domainEventServiceMock = mockk<DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
+  private val cruServiceMock = mockk<CruService>()
   private val communityApiClientMock = mockk<CommunityApiClient>()
 
-  private val assessmentService = AssessmentService(userRepositoryMock, assessmentRepositoryMock, assessmentClarificationNoteRepositoryMock, jsonSchemaServiceMock, applicationRepositoryMock, userServiceMock, domainEventServiceMock, offenderServiceMock, communityApiClientMock, "http://frontend/applications/#id")
+  private val assessmentService = AssessmentService(
+    userRepositoryMock,
+    assessmentRepositoryMock,
+    assessmentClarificationNoteRepositoryMock,
+    jsonSchemaServiceMock,
+    applicationRepositoryMock,
+    userServiceMock,
+    domainEventServiceMock,
+    offenderServiceMock,
+    communityApiClientMock,
+    cruServiceMock,
+    "http://frontend/applications/#id")
 
   @Test
   fun `getVisibleAssessmentsForUser fetches all assessments for workflow managers`() {
@@ -968,6 +981,8 @@ class AssessmentServiceTest {
       .withProbationAreaCode("N26")
       .produce()
 
+    every { cruServiceMock.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
+
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
     every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
@@ -1317,6 +1332,8 @@ class AssessmentServiceTest {
       .withProbationAreaCode("N26")
       .produce()
 
+    every { cruServiceMock.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
+
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
     every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
@@ -1360,112 +1377,6 @@ class AssessmentServiceTest {
             ),
             cru = Cru(
               name = "South West & South Central"
-            )
-          ) &&
-            data.decision == "REJECTED" &&
-            data.decisionRationale == "reasoning"
-        }
-      )
-    }
-  }
-
-  @Test
-  fun `rejectAssessment returns updated assessment, emits domain event with fallback Cru name when Ap Code for user has no mapping`() {
-    val assessmentId = UUID.randomUUID()
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-      id = UUID.randomUUID(),
-      addedAt = OffsetDateTime.now(),
-      schema = "{}"
-    )
-
-    val assessment = AssessmentEntityFactory()
-      .withId(assessmentId)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce()
-          )
-          .produce()
-      )
-      .withAllocatedToUser(user)
-      .withAssessmentSchema(schema)
-      .withData("{\"test\": \"data\"}")
-      .produce()
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
-
-    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
-
-    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
-
-    val offenderDetails = OffenderDetailsSummaryFactory().produce()
-
-    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withProbationAreaCode("UNKNOWN-PA-CODE")
-      .produce()
-
-    every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-
-    every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
-
-    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.Success)
-    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
-    assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-    assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
-    assertThat(updatedAssessment.submittedAt).isNotNull()
-    assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
-
-    verify(exactly = 1) {
-      domainEventServiceMock.saveApplicationAssessedDomainEvent(
-        match {
-          val data = it.data.eventDetails
-
-          it.applicationId == assessment.application.id &&
-            it.crn == assessment.application.crn &&
-            data.applicationId == assessment.application.id &&
-            data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
-            data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
-          ) &&
-            data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
-            data.assessedBy == ApplicationAssessedAssessedBy(
-            staffMember = StaffMember(
-              staffCode = staffUserDetails.staffCode,
-              staffIdentifier = staffUserDetails.staffIdentifier,
-              forenames = staffUserDetails.staff.forenames,
-              surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username
-            ),
-            probationArea = ProbationArea(
-              code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description
-            ),
-            cru = Cru(
-              name = "Unknown CRU"
             )
           ) &&
             data.decision == "REJECTED" &&
@@ -1875,8 +1786,20 @@ class AssessmentServiceTest {
     private val domainEventServiceMock = mockk<DomainEventService>()
     private val offenderServiceMock = mockk<OffenderService>()
     private val communityApiClientMock = mockk<CommunityApiClient>()
+    private val cruServiceMock = mockk<CruService>()
 
-    private val assessmentService = AssessmentService(userRepositoryMock, assessmentRepositoryMock, assessmentClarificationNoteRepositoryMock, jsonSchemaServiceMock, applicationRepositoryMock, userServiceMock, domainEventServiceMock, offenderServiceMock, communityApiClientMock, "http://frontend/applications/#id")
+    private val assessmentService = AssessmentService(
+      userRepositoryMock,
+      assessmentRepositoryMock,
+      assessmentClarificationNoteRepositoryMock,
+      jsonSchemaServiceMock,
+      applicationRepositoryMock,
+      userServiceMock,
+      domainEventServiceMock,
+      offenderServiceMock,
+      communityApiClientMock,
+      cruServiceMock,
+      "http://frontend/applications/#id")
 
     private val user = UserEntityFactory()
       .withYieldedProbationRegion {
