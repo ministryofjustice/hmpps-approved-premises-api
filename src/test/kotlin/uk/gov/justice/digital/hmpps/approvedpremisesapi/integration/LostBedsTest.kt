@@ -54,7 +54,7 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = approvedPremisesLostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
