@@ -642,8 +642,6 @@ components:
           type: string
           example: '2023-04-30'
           format: date
-        keyWorker:
-          $ref: '#/components/schemas/StaffMember'
       required:
         - applicationId
         - applicationUrl
@@ -655,7 +653,6 @@ components:
         - premises
         - arrivalOn
         - departureOn
-        - keyWorker
     BookingNotMadeEnvelope:
       type: object
       properties:

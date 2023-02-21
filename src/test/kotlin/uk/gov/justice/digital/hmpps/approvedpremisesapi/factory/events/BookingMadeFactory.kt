@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -23,7 +22,6 @@ class BookingMadeFactory : Factory<BookingMade> {
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var arrivalOn: Yielded<LocalDate> = { LocalDate.now() }
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
-  private var keyWorker: Yielded<StaffMember> = { StaffMemberFactory().produce() }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -65,10 +63,6 @@ class BookingMadeFactory : Factory<BookingMade> {
     this.departureOn = { departureOn }
   }
 
-  fun withKeyWorker(keyWorker: StaffMember) = apply {
-    this.keyWorker = { keyWorker }
-  }
-
   override fun produce() = BookingMade(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -79,7 +73,6 @@ class BookingMadeFactory : Factory<BookingMade> {
     bookedBy = this.bookedBy(),
     premises = this.premises(),
     arrivalOn = this.arrivalOn(),
-    departureOn = this.departureOn(),
-    keyWorker = this.keyWorker()
+    departureOn = this.departureOn()
   )
 }
