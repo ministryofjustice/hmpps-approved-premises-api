@@ -11,8 +11,10 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -40,7 +42,8 @@ class DomainEventServiceTest {
     domainEventRepository = domainEventRespositoryMock,
     hmppsQueueService = hmppsQueueServieMock,
     emitDomainEventsEnabled = true,
-    applicationSubmittedDetailUrlTemplate = "http://frontend/events/application-submitted/#eventId"
+    applicationSubmittedDetailUrlTemplate = "http://frontend/events/application-submitted/#eventId",
+    applicationAssessedDetailUrlTemplate = "http://frontend/events/application-assessed/#eventId"
   )
 
   @Test
@@ -138,7 +141,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.application.submitted" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An application has been submitted for an Approved Premises placement" &&
-            deserializedMessage.detailUrl.matches(Regex("http://frontend/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
+            deserializedMessage.detailUrl == "http://frontend/events/application-submitted/$id" &&
             deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -186,6 +189,161 @@ class DomainEventServiceTest {
         match {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        }
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
+    }
+  }
+
+  @Test
+  fun `getApplicationAssessedDomainEvent returns null when no event does not exist`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+
+    assertThat(domainEventService.getApplicationAssessedDomainEvent(id)).isNull()
+  }
+
+  @Test
+  fun `getApplicationAssessedDomainEvent returns event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = ApplicationAssessedEnvelope(
+      id = id,
+      timestamp = occurredAt,
+      eventType = "approved-premises.application.assessed",
+      eventDetails = ApplicationAssessedFactory().produce()
+    )
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getApplicationAssessedDomainEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt,
+        data = data
+      )
+    )
+  }
+
+  @Test
+  fun `saveApplicationAssessedDomainEvent persists event, emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = OffsetDateTime.now(),
+      data = ApplicationAssessedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = "approved-premises.application.assessed",
+        eventDetails = ApplicationAssessedFactory().produce()
+      )
+    )
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        }
+      )
+    }
+
+    verify(exactly = 1) {
+      mockHmppsTopic.snsClient.publish(
+        match {
+          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+
+          deserializedMessage.eventType == "approved-premises.application.assessed" &&
+            deserializedMessage.version == 1 &&
+            deserializedMessage.description == "An application has been assessed for an Approved Premises placement" &&
+            deserializedMessage.detailUrl == "http://frontend/events/application-assessed/$id" &&
+            deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
+            deserializedMessage.additionalInformation.applicationId == applicationId &&
+            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+        }
+      )
+    }
+  }
+
+  @Test
+  fun `saveApplicationAssessedDomainEvent does not emit event to SNS if event fails to persist to database`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = OffsetDateTime.now(),
+      data = ApplicationAssessedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = "approved-premises.application.assessed",
+        eventDetails = ApplicationAssessedFactory().produce()
+      )
+    )
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    try {
+      domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
+    } catch (_: Exception) { }
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)

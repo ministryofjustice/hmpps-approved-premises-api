@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -28,7 +29,8 @@ class DomainEventService(
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
-  @Value("\${application-submitted-detail-url-template}") private val applicationSubmittedDetailUrlTemplate: String
+  @Value("\${application-submitted-detail-url-template}") private val applicationSubmittedDetailUrlTemplate: String,
+  @Value("\${application-assessed-detail-url-template}") private val applicationAssessedDetailUrlTemplate: String
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -38,12 +40,15 @@ class DomainEventService(
   }
 
   fun getApplicationSubmittedDomainEvent(id: UUID) = get<ApplicationSubmittedEnvelope>(id)
+  fun getApplicationAssessedDomainEvent(id: UUID) = get<ApplicationAssessedEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 
     val data = when {
       T::class == ApplicationSubmittedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED ->
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
+      T::class == ApplicationAssessedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
@@ -64,6 +69,17 @@ class DomainEventService(
       typeName = "approved-premises.application.submitted",
       typeDescription = "An application has been submitted for an Approved Premises placement",
       detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+    )
+
+  @Transactional
+  fun saveApplicationAssessedDomainEvent(domainEvent: DomainEvent<ApplicationAssessedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.application.assessed",
+      typeDescription = "An application has been assessed for an Approved Premises placement",
+      detailUrl = applicationAssessedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms
     )
@@ -119,6 +135,7 @@ class DomainEventService(
 
   private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {
     ApplicationSubmittedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
+    ApplicationAssessedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }

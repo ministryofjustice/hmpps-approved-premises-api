@@ -152,6 +152,7 @@ class AssessmentController(
     )
   }
 
+  @Transactional
   override fun assessmentsAssessmentIdAcceptancePost(assessmentId: UUID, assessmentAcceptance: AssessmentAcceptance): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
@@ -174,6 +175,7 @@ class AssessmentController(
     return ResponseEntity(HttpStatus.OK)
   }
 
+  @Transactional
   override fun assessmentsAssessmentIdRejectionPost(assessmentId: UUID, assessmentRejection: AssessmentRejection): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 

@@ -1,7 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -15,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -29,8 +41,14 @@ class AssessmentService(
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val applicationRepository: ApplicationRepository,
-  private val userService: UserService
+  private val userService: UserService,
+  private val domainEventService: DomainEventService,
+  private val offenderService: OffenderService,
+  private val communityApiClient: CommunityApiClient,
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
 
@@ -147,6 +165,9 @@ class AssessmentService(
   }
 
   fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val domainEventId = UUID.randomUUID()
+    val acceptedAt = OffsetDateTime.now()
+
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
@@ -188,10 +209,67 @@ class AssessmentService(
     }
 
     assessment.document = document
-    assessment.submittedAt = OffsetDateTime.now()
+    assessment.submittedAt = acceptedAt
     assessment.decision = AssessmentDecision.ACCEPTED
 
     val savedAssessment = assessmentRepository.save(assessment)
+
+    val application = savedAssessment.application
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = acceptedAt,
+        data = ApplicationAssessedEnvelope(
+          id = domainEventId,
+          timestamp = acceptedAt,
+          eventType = "approved-premises.application.assessed",
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!
+            ),
+            deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+            assessedAt = acceptedAt,
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username
+              ),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description
+              ),
+              cru = Cru(
+                name = cruNameFromProbationAreaCode(staffDetails.probationArea.code)
+              )
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale
+          )
+        )
+      )
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment)
@@ -199,6 +277,9 @@ class AssessmentService(
   }
 
   fun rejectAssessment(user: UserEntity, assessmentId: UUID, document: String?, rejectionRationale: String): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val domainEventId = UUID.randomUUID()
+    val rejectedAt = OffsetDateTime.now()
+
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
@@ -240,15 +321,95 @@ class AssessmentService(
     }
 
     assessment.document = document
-    assessment.submittedAt = OffsetDateTime.now()
+    assessment.submittedAt = rejectedAt
     assessment.decision = AssessmentDecision.REJECTED
     assessment.rejectionRationale = rejectionRationale
 
     val savedAssessment = assessmentRepository.save(assessment)
 
+    val application = savedAssessment.application
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = rejectedAt,
+        data = ApplicationAssessedEnvelope(
+          id = domainEventId,
+          timestamp = rejectedAt,
+          eventType = "approved-premises.application.assessed",
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!
+            ),
+            deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+            assessedAt = rejectedAt,
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username
+              ),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description
+              ),
+              cru = Cru(
+                name = cruNameFromProbationAreaCode(staffDetails.probationArea.code)
+              )
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale
+          )
+        )
+      )
+    )
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment)
     )
+  }
+
+  private val cruMappings = mutableMapOf<String, List<String>>(
+    "Midlands" to listOf("N31", "N53"),
+    "South East & Eastern incl. Women" to listOf("N34", "N56"),
+    "North West" to listOf("N28", "N50", "MCG", "GMP"),
+    "South East & Eastern incl. Women" to listOf("N35", "N57"),
+    "London" to listOf("N07", "N21", "C17", "LDN"),
+    "North East" to listOf("N32", "N54", "N02", "N23"),
+    "North West" to listOf("N29", "N51", "N24", "N01"),
+    "Wales" to listOf("N03", "C10", "N27", "WPT"),
+    "Midlands" to listOf("MLW", "N30", "N52"),
+    "North West" to listOf("N33", "N55"),
+    "South West & South Central" to listOf("N36", "N58", "N26", "N37", "N59", "N05")
+  )
+
+  private fun cruNameFromProbationAreaCode(code: String): String {
+    cruMappings.forEach {
+      if (it.value.contains(code)) return it.key
+    }
+
+    log.warn("No CRU mapping for Probation Area code: $code")
+    return "Unknown CRU"
   }
 
   fun reallocateAssessment(requestUser: UserEntity, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {

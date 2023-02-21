@@ -1425,6 +1425,8 @@ class InboundMessageListener(private val objectMapper: ObjectMapper) {
     log.info("Received Domain Event: ", event)
     messages.add(event)
   }
+
+  fun clearMessages() = messages.clear()
 }
 
 data class EventType(val Value: String, val Type: String)
