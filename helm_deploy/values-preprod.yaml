@@ -24,6 +24,7 @@ generic-service:
     APPLICATION-URL-TEMPLATE: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#id
     APPLICATION-SUBMITTED-DETAIL-URL-TEMPLATE: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
     APPLICATION-ASSESSED-DETAIL-URL-TEMPLATE: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/application-assessed/#eventId
+    BOOKING-MADE-DETAIL-URL-TEMPLATE: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/booking-made/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: false
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
