@@ -24,12 +24,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
+  @Autowired
+  lateinit var inboundMessageListener: InboundMessageListener
+
   @Autowired
   lateinit var bookingTransformer: BookingTransformer
 
@@ -280,17 +284,17 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Approved Premises Booking returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+  fun `Create Approved Premises Booking returns OK with correct body emits domain event`() {
+    `Given a User`(roles = listOf(UserRole.MATCHER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
           }
         }
 
-        approvedPremisesApplicationEntityFactory.produceAndPersist {
+        val linkedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
@@ -328,6 +332,17 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
           .jsonPath("$.bed.id").doesNotHaveJsonPath()
           .jsonPath("$.bed.name").doesNotHaveJsonPath()
+
+        val emittedMessage = inboundMessageListener.blockForMessage()
+
+        assertThat(emittedMessage.eventType).isEqualTo("approved-premises.booking.made")
+        assertThat(emittedMessage.description).isEqualTo("An Approved Premises booking has been made")
+        assertThat(emittedMessage.detailUrl).matches("http://frontend/events/booking-made/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+        assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(linkedApplication.id)
+        assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+          SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+        )
       }
     }
   }

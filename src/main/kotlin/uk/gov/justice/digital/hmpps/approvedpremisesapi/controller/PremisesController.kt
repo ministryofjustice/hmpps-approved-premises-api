@@ -1,9 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
@@ -31,10 +38,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -46,6 +57,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -68,6 +81,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class PremisesController(
@@ -89,7 +103,11 @@ class PremisesController(
   private val staffMemberService: StaffMemberService,
   private val roomService: RoomService,
   private val roomTransformer: RoomTransformer,
-  private val applicationService: ApplicationService
+  private val applicationService: ApplicationService,
+  private val domainEventService: DomainEventService,
+  private val communityApiClient: CommunityApiClient,
+  private val cruService: CruService,
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) : PremisesApiDelegate {
 
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
@@ -267,6 +285,7 @@ class PremisesController(
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity, staffMember))
   }
 
+  @Transactional
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
@@ -348,6 +367,8 @@ class PremisesController(
 
     val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && ! associateWithOfflineApplication
 
+    val bookingCreatedAt = OffsetDateTime.now()
+
     val booking = bookingService.createBooking(
       BookingEntity(
         id = UUID.randomUUID(),
@@ -366,11 +387,79 @@ class PremisesController(
         service = body.serviceName.value,
         originalArrivalDate = body.arrivalDate,
         originalDepartureDate = body.departureDate,
-        createdAt = OffsetDateTime.now(),
+        createdAt = bookingCreatedAt,
         application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
         offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null
       )
     )
+
+    if (body is NewApprovedPremisesBooking && booking.application != null) {
+      val domainEventId = UUID.randomUUID()
+
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
+      }
+
+      val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+      val staffDetails = when (staffDetailsResult) {
+        is ClientResult.Success -> staffDetailsResult.body
+        is ClientResult.Failure -> staffDetailsResult.throwException()
+      }
+
+      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+      domainEventService.saveBookingMadeDomainEvent(
+        DomainEvent(
+          id = domainEventId,
+          applicationId = application.id,
+          crn = booking.crn,
+          occurredAt = bookingCreatedAt,
+          data = BookingMadeEnvelope(
+            id = domainEventId,
+            timestamp = bookingCreatedAt,
+            eventType = "approved-premises.booking.made",
+            eventDetails = BookingMade(
+              applicationId = application.id,
+              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              bookingId = booking.id,
+              personReference = PersonReference(
+                crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!
+              ),
+              deliusEventNumber = application.eventNumber,
+              createdAt = bookingCreatedAt,
+              bookedBy = BookingMadeBookedBy(
+                staffMember = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember(
+                  staffCode = staffDetails.staffCode,
+                  staffIdentifier = staffDetails.staffIdentifier,
+                  forenames = staffDetails.staff.forenames,
+                  surname = staffDetails.staff.surname,
+                  username = staffDetails.username
+                ),
+                cru = Cru(
+                  name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
+                )
+              ),
+              premises = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises(
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                probationArea = ProbationArea(
+                  code = staffDetails.probationArea.code,
+                  name = staffDetails.probationArea.description
+                )
+              ),
+              arrivalOn = booking.arrivalDate,
+              departureOn = booking.departureDate
+            )
+          )
+        )
+      )
+    }
 
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity, null))
   }

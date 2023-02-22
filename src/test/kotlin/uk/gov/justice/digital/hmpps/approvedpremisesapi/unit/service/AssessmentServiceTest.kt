@@ -76,7 +76,8 @@ class AssessmentServiceTest {
     offenderServiceMock,
     communityApiClientMock,
     cruServiceMock,
-    "http://frontend/applications/#id")
+    "http://frontend/applications/#id"
+  )
 
   @Test
   fun `getVisibleAssessmentsForUser fetches all assessments for workflow managers`() {
@@ -1799,7 +1800,8 @@ class AssessmentServiceTest {
       offenderServiceMock,
       communityApiClientMock,
       cruServiceMock,
-      "http://frontend/applications/#id")
+      "http://frontend/applications/#id"
+    )
 
     private val user = UserEntityFactory()
       .withYieldedProbationRegion {

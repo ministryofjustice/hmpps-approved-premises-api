@@ -54,7 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import java.time.OffsetDateTime
-import java.util.Collections
 import java.util.UUID
 
 class ApplicationTest : IntegrationTestBase() {
@@ -1149,15 +1148,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
           assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
-          var waitedCount = 0
-          while (inboundMessageListener.messages.isEmpty()) {
-            if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
-
-            Thread.sleep(100)
-            waitedCount += 1
-          }
-
-          val emittedMessage = inboundMessageListener.messages.first()
+          val emittedMessage = inboundMessageListener.blockForMessage()
 
           assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
           assertThat(emittedMessage.description).isEqualTo("An application has been submitted for an Approved Premises placement")
@@ -1415,7 +1406,7 @@ class ApplicationTest : IntegrationTestBase() {
 @Service
 class InboundMessageListener(private val objectMapper: ObjectMapper) {
   private val log = LoggerFactory.getLogger(this::class.java)
-  val messages = Collections.synchronizedList(mutableListOf<SnsEvent>())
+  private val messages = mutableListOf<SnsEvent>()
 
   @JmsListener(destination = "domaineventsqueue", containerFactory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(rawMessage: String?) {
@@ -1423,10 +1414,31 @@ class InboundMessageListener(private val objectMapper: ObjectMapper) {
     val event = objectMapper.readValue(Message, SnsEvent::class.java)
 
     log.info("Received Domain Event: ", event)
-    messages.add(event)
+    synchronized(messages) {
+      messages.add(event)
+    }
   }
 
   fun clearMessages() = messages.clear()
+  fun blockForMessage(): SnsEvent {
+    var waitedCount = 0
+    while (isEmpty()) {
+      if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
+
+      Thread.sleep(100)
+      waitedCount += 1
+    }
+
+    synchronized(messages) {
+      return messages.first()
+    }
+  }
+
+  fun isEmpty(): Boolean {
+    synchronized(messages) {
+      return messages.isEmpty()
+    }
+  }
 }
 
 data class EventType(val Value: String, val Type: String)
