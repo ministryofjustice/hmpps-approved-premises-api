@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesLostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
@@ -78,7 +79,7 @@ class PremisesService(
         arrivedBookings = bookingsOnDay.count { it.arrival != null },
         nonArrivedBookings = bookingsOnDay.count { it.nonArrival != null },
         cancelledBookings = bookingsOnDay.count { it.cancellation != null },
-        lostBeds = lostBedsOnDay.sumOf { it.numberOfBeds }
+        lostBeds = lostBedsOnDay.filterIsInstance<ApprovedPremisesLostBedsEntity>().sumOf { it.numberOfBeds }
       )
     }.associateBy { it.date }
   }
@@ -111,7 +112,7 @@ class PremisesService(
       }
 
       val lostBedsEntity = lostBedsRepository.save(
-        LostBedsEntity(
+        ApprovedPremisesLostBedsEntity(
           id = UUID.randomUUID(),
           premises = premises,
           startDate = startDate,

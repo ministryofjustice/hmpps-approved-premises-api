@@ -6,11 +6,15 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.Objects
 import java.util.UUID
+import javax.persistence.DiscriminatorColumn
+import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.Inheritance
+import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
-import javax.persistence.OneToOne
+import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 
 @Repository
@@ -24,18 +28,19 @@ interface LostBedsRepository : JpaRepository<LostBedsEntity, UUID> {
 
 @Entity
 @Table(name = "lost_beds")
-data class LostBedsEntity(
+@DiscriminatorColumn(name = "service")
+@Inheritance(strategy = InheritanceType.JOINED)
+abstract class LostBedsEntity(
   @Id
   val id: UUID,
   val startDate: LocalDate,
   val endDate: LocalDate,
-  val numberOfBeds: Int,
   @ManyToOne
   @JoinColumn(name = "lost_bed_reason_id")
   val reason: LostBedReasonEntity,
   val referenceNumber: String?,
   val notes: String?,
-  @OneToOne
+  @ManyToOne
   @JoinColumn(name = "premises_id")
   var premises: PremisesEntity
 ) {
@@ -46,7 +51,6 @@ data class LostBedsEntity(
     if (id != other.id) return false
     if (startDate != other.startDate) return false
     if (endDate != other.endDate) return false
-    if (numberOfBeds != other.numberOfBeds) return false
     if (reason != other.reason) return false
     if (referenceNumber != other.referenceNumber) return false
     if (notes != other.notes) return false
@@ -54,7 +58,75 @@ data class LostBedsEntity(
     return true
   }
 
-  override fun hashCode() = Objects.hash(id, startDate, endDate, numberOfBeds, reason, referenceNumber, notes)
+  override fun hashCode() = Objects.hash(id, startDate, endDate, reason, referenceNumber, notes)
 
   override fun toString() = "ArrivalEntity:$id"
+}
+
+@Entity
+@DiscriminatorValue("approved-premises")
+@Table(name = "approved_premises_lost_beds")
+@PrimaryKeyJoinColumn(name = "lost_bed_id")
+class ApprovedPremisesLostBedsEntity(
+  id: UUID,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  reason: LostBedReasonEntity,
+  referenceNumber: String?,
+  notes: String?,
+  val numberOfBeds: Int,
+  premises: PremisesEntity,
+) : LostBedsEntity(
+  id,
+  startDate,
+  endDate,
+  reason,
+  referenceNumber,
+  notes,
+  premises,
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is ApprovedPremisesLostBedsEntity) return false
+
+    return super.equals(other) && this.numberOfBeds == other.numberOfBeds
+  }
+
+  override fun hashCode() = Objects.hash(id, startDate, endDate, numberOfBeds, reason, referenceNumber, notes)
+
+  override fun toString() = "ApprovedPremisesLostBedsEntity:$id"
+}
+
+@Entity
+@DiscriminatorValue("temporary-accommodation")
+@Table(name = "temporary_accommodation_lost_beds")
+@PrimaryKeyJoinColumn(name = "lost_bed_id")
+class TemporaryAccommodationLostBedEntity(
+  id: UUID,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  reason: LostBedReasonEntity,
+  referenceNumber: String?,
+  notes: String?,
+  premises: PremisesEntity,
+  @ManyToOne
+  @JoinColumn(name = "bed_id")
+  var bed: BedEntity,
+) : LostBedsEntity(
+  id,
+  startDate,
+  endDate,
+  reason,
+  referenceNumber,
+  notes,
+  premises
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is TemporaryAccommodationLostBedEntity) return false
+
+    return super.equals(other)
+  }
+
+  override fun toString() = "TemporaryAccommodationLostBedEntity:$id"
 }

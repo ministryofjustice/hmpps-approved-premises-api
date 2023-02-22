@@ -8,16 +8,17 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesLostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesLostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
@@ -87,7 +88,7 @@ class PremisesServiceTest {
         ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
       }.produce()
 
-    val lostBedEntity = LostBedsEntityFactory()
+    val lostBedEntity = ApprovedPremisesLostBedsEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -227,12 +228,14 @@ class PremisesServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
-    assertThat(result.entity.premises).isEqualTo(premisesEntity)
-    assertThat(result.entity.reason).isEqualTo(lostBedReason)
-    assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-    assertThat(result.entity.numberOfBeds).isEqualTo(5)
-    assertThat(result.entity.referenceNumber).isEqualTo("12345")
-    assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(result.entity).isInstanceOf(ApprovedPremisesLostBedsEntity::class.java)
+    val entity = result.entity as ApprovedPremisesLostBedsEntity
+    assertThat(entity.premises).isEqualTo(premisesEntity)
+    assertThat(entity.reason).isEqualTo(lostBedReason)
+    assertThat(entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+    assertThat(entity.numberOfBeds).isEqualTo(5)
+    assertThat(entity.referenceNumber).isEqualTo("12345")
+    assertThat(entity.notes).isEqualTo("notes")
   }
 }
