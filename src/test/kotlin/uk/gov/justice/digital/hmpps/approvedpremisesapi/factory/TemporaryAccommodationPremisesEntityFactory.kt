@@ -89,6 +89,25 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.pdu = { pdu }
   }
 
+  fun withUnitTestControlTestProbationAreaAndLocalAuthority() = apply {
+    this.withLocalAuthorityArea(
+      LocalAuthorityEntityFactory()
+        .withIdentifier("LOCALAUTHORITY")
+        .produce()
+    )
+
+    this.withProbationRegion(
+      ProbationRegionEntityFactory()
+        .withDeliusCode("REGION")
+        .withApArea(
+          ApAreaEntityFactory()
+            .withIdentifier("APAREA")
+            .produce()
+        )
+        .produce()
+    )
+  }
+
   override fun produce(): TemporaryAccommodationPremisesEntity = TemporaryAccommodationPremisesEntity(
     id = this.id(),
     name = this.name(),

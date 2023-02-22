@@ -92,6 +92,25 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.status = { status }
   }
 
+  fun withUnitTestControlTestProbationAreaAndLocalAuthority() = apply {
+    this.withLocalAuthorityArea(
+      LocalAuthorityEntityFactory()
+        .withIdentifier("LOCALAUTHORITY")
+        .produce()
+    )
+
+    this.withProbationRegion(
+      ProbationRegionEntityFactory()
+        .withDeliusCode("REGION")
+        .withApArea(
+          ApAreaEntityFactory()
+            .withIdentifier("APAREA")
+            .produce()
+        )
+        .produce()
+    )
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),

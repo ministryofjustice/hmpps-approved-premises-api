@@ -72,6 +72,19 @@ class UserEntityFactory : Factory<UserEntity> {
     this.probationRegion = probationRegion
   }
 
+  fun withUnitTestControlProbationRegion() = apply {
+    this.withProbationRegion(
+      ProbationRegionEntityFactory()
+        .withDeliusCode("REGION")
+        .withApArea(
+          ApAreaEntityFactory()
+            .withIdentifier("APAREA")
+            .produce()
+        )
+        .produce()
+    )
+  }
+
   override fun produce(): UserEntity = UserEntity(
     id = this.id(),
     name = this.name(),

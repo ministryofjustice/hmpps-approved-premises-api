@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.BaseMatcher
 import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -36,6 +37,11 @@ class BookingTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var bookingTransformer: BookingTransformer
+
+  @BeforeEach
+  fun clearMessages() {
+    inboundMessageListener.clearMessages()
+  }
 
   @Test
   fun `Get a booking for a premises without JWT returns 401`() {
@@ -254,9 +260,11 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Booking returns Bad Request when no application exists for CRN`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(
+      roles = listOf(UserRole.MATCHER)
+    ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }

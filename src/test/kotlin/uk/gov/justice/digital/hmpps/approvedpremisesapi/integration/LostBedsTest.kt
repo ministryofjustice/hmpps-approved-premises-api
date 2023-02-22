@@ -145,4 +145,39 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".notes").isEqualTo("notes")
     }
   }
+
+  @Test
+  fun `Create Lost Beds on Approved Premises for current day does not break GET all Premises endpoint`() {
+    `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withTotalBeds(3)
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val lostBed = approvedPremisesLostBedsEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStartDate(LocalDate.now().minusDays(2))
+        withEndDate(LocalDate.now().plusDays(2))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withOriginalArrivalDate(LocalDate.now().minusDays(4))
+        withArrivalDate(LocalDate.now().minusDays(4))
+        withOriginalDepartureDate(LocalDate.now().plusDays(6))
+        withDepartureDate(LocalDate.now().plusDays(6))
+      }
+
+      webTestClient.get()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+    }
+  }
 }
