@@ -1641,6 +1641,13 @@ paths:
       tags:
         - Reference Data
       summary: Lists all reasons for losing beds
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only lost bed reasons for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
@@ -2912,10 +2919,13 @@ components:
           example: Double Room with Single Occupancy - Other (Non-FM)
         isActive:
           type: boolean
+        serviceScope:
+          type: string
       required:
         - id
         - name
         - isActive
+        - serviceScope
     CancellationReason:
       type: object
       properties:
