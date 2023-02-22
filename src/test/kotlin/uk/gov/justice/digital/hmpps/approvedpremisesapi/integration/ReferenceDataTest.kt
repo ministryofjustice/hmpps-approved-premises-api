@@ -399,6 +399,58 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get Lost Bed Reasons for only Approved Premises returns 200 with correct body`() {
+    lostBedReasonRepository.deleteAll()
+
+    lostBedReasonEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedLostBedReasons = lostBedReasonEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/lost-bed-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "approved-premises")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Lost Bed Reasons for only Temporary Accommodation returns 200 with correct body`() {
+    lostBedReasonRepository.deleteAll()
+
+    lostBedReasonEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedLostBedReasons = lostBedReasonEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/lost-bed-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "temporary-accommodation")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
   fun `Get Probation Regions returns 200 with correct body`() {
     probationRegionRepository.deleteAll()
 

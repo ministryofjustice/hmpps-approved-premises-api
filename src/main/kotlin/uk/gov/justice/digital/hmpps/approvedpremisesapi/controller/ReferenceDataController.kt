@@ -98,8 +98,11 @@ class ReferenceDataController(
     return ResponseEntity.ok(cancellationReasons.map(cancellationReasonTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataLostBedReasonsGet(): ResponseEntity<List<LostBedReason>> {
-    val lostBedReasons = lostBedReasonRepository.findAll()
+  override fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
+    val lostBedReasons = when (xServiceName != null) {
+      true -> lostBedReasonRepository.findAllByServiceScope(xServiceName.value)
+      false -> lostBedReasonRepository.findAll()
+    }
 
     return ResponseEntity.ok(lostBedReasons.map(lostBedReasonTransformer::transformJpaToApi))
   }
