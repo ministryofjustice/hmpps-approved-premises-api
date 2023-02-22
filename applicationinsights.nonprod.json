@@ -24,7 +24,7 @@
               "matchType": "regexp"
             }
           ],
-          "percentage": 100
+          "percentage": 2
         }
       ]
     }

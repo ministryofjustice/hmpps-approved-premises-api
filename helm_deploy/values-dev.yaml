@@ -10,7 +10,7 @@ generic-service:
 
   env:
     SPRING_PROFILES_ACTIVE: dev
-    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
+    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
     SERVICES_COMMUNITY-API_BASE-URL: https://community-api-secure.test.delius.probation.hmpps.dsd.io
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-dev.hmpps.service.justice.gov.uk
