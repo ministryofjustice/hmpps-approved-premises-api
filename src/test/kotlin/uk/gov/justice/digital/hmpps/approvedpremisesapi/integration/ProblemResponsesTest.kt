@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.reactive.server.returnResult
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -184,6 +185,23 @@ class ProblemResponsesTest : IntegrationTestBase() {
       )
     )
   }
+
+  @Test
+  fun `An unhandled exception will not return a problem response with the exception message in the detail property`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val validationResult = webTestClient.get()
+      .uri("/unhandled-exception")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .returnResult<ValidationError>()
+      .responseBody
+      .blockFirst()
+
+    assertThat(validationResult!!.detail).isEqualTo("There was an unexpected problem")
+  }
 }
 
 @RestController
@@ -196,6 +214,11 @@ class DeserializationTestController {
   @PostMapping(path = ["deserialization-test/array"], consumes = ["application/json"])
   fun testDeserialization(@RequestBody body: List<DeserializationTestBody>): ResponseEntity<Unit> {
     return ResponseEntity.ok(Unit)
+  }
+
+  @GetMapping(path = ["unhandled-exception"])
+  fun unhandledException(): ResponseEntity<Unit> {
+    throw RuntimeException("I am an unhandled exception")
   }
 }
 

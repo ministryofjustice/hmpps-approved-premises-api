@@ -94,7 +94,7 @@ class UsersTest : IntegrationTestBase() {
       .is4xxClientError
       .expectBody()
       .jsonPath("title").isEqualTo("Bad Request")
-      .jsonPath("detail").isEqualTo("Required request header 'X-Service-Name' for method parameter type ServiceName is not present")
+      .jsonPath("detail").isEqualTo("Missing required header X-Service-Name")
   }
 
   @Test

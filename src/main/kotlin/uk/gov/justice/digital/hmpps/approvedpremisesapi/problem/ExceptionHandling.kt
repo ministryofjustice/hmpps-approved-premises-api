@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
+import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.util.ContentCachingRequestWrapper
@@ -18,7 +19,6 @@ import org.zalando.problem.Problem
 import org.zalando.problem.Status
 import org.zalando.problem.StatusType
 import org.zalando.problem.ThrowableProblem
-import org.zalando.problem.spring.common.AdviceTrait
 import org.zalando.problem.spring.web.advice.ProblemHandling
 import org.zalando.problem.spring.web.advice.io.MessageNotReadableAdviceTrait
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeserializationValidationService
@@ -39,7 +39,15 @@ class ExceptionHandling(
       return ForbiddenProblem()
     }
 
-    return AdviceTraitDefault().toProblem(throwable, status)
+    if (throwable is MissingRequestHeaderException) {
+      return BadRequestProblem(
+        errorDetail = "Missing required header ${throwable.headerName}"
+      )
+    }
+
+    return InternalServerErrorProblem(
+      detail = "There was an unexpected problem"
+    )
   }
 
   override fun handleMessageNotReadableException(
@@ -112,5 +120,3 @@ class ExceptionHandling(
   private fun expectedObjectButGotArray(jsonNode: JsonNode, mismatchedInputException: MismatchedInputException) = jsonNode is ArrayNode && !isInputTypeArray(mismatchedInputException)
   private fun rootIsArray(mismatchedInputException: MismatchedInputException) = mismatchedInputException.path[0].from !is Class<*>
 }
-
-private class AdviceTraitDefault : AdviceTrait
