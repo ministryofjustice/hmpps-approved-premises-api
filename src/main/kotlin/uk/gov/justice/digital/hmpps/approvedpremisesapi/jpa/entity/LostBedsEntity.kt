@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.Objects
 import java.util.UUID
+import javax.persistence.Column
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
@@ -42,7 +43,9 @@ abstract class LostBedsEntity(
   val notes: String?,
   @ManyToOne
   @JoinColumn(name = "premises_id")
-  var premises: PremisesEntity
+  var premises: PremisesEntity,
+  @Column(name = "number_of_beds")
+  val numberOfBedsOld: Int,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -84,6 +87,7 @@ class ApprovedPremisesLostBedsEntity(
   referenceNumber,
   notes,
   premises,
+  numberOfBedsOld = numberOfBeds
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -119,7 +123,8 @@ class TemporaryAccommodationLostBedEntity(
   reason,
   referenceNumber,
   notes,
-  premises
+  premises,
+  numberOfBedsOld = 0
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
