@@ -46,7 +46,6 @@ workflows:
             branches:
               only:
                 - main
-                - feature/pipeline-to-pipeline-trigger
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -55,7 +54,6 @@ workflows:
             branches:
               only:
                 - main
-                - feature/pipeline-to-pipeline-trigger
           requires:
             - build_docker
             - helm_lint
