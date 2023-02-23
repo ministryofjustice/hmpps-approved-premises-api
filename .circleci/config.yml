@@ -97,7 +97,7 @@ workflows:
             - request-prod-approval
       - trigger-ui-tests:
           requires:
-            - request-prod-approval
+            - deploy_dev
 
   security:
     triggers:
