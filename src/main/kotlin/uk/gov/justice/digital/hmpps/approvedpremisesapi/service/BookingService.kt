@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -195,10 +194,7 @@ class BookingService(
                   name = approvedPremises.name,
                   apCode = approvedPremises.apCode,
                   legacyApCode = approvedPremises.qCode,
-                  probationArea = ProbationArea(
-                    code = staffDetails.probationArea.code,
-                    name = staffDetails.probationArea.description
-                  )
+                  localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
                 ),
                 arrivalOn = booking.arrivalDate,
                 departureOn = booking.departureDate

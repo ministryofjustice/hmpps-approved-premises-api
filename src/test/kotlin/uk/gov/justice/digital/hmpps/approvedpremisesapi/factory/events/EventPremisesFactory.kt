@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
 class EventPremisesFactory : Factory<Premises> {
@@ -12,7 +12,7 @@ class EventPremisesFactory : Factory<Premises> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var legacyApCode: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
-  private var probationArea: Yielded<ProbationArea> = { ProbationAreaFactory().produce() }
+  private var localAuthorityAreaName: Yielded<String> = { randomStringUpperCase(10) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -30,8 +30,8 @@ class EventPremisesFactory : Factory<Premises> {
     this.legacyApCode = { legacyApCode }
   }
 
-  fun withProbationArea(probationArea: ProbationArea) = apply {
-    this.probationArea = { probationArea }
+  fun withLocalAuthorityAreaName(localAuthorityAreaName: String) = apply {
+    this.localAuthorityAreaName = { localAuthorityAreaName }
   }
 
   override fun produce() = Premises(
@@ -39,6 +39,6 @@ class EventPremisesFactory : Factory<Premises> {
     name = this.name(),
     apCode = this.apCode(),
     legacyApCode = this.legacyApCode(),
-    probationArea = this.probationArea()
+    localAuthorityAreaName = this.localAuthorityAreaName()
   )
 }

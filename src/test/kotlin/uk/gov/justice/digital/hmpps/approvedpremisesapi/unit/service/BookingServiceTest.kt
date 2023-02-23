@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -1401,10 +1400,7 @@ class BookingServiceTest {
             name = premises.name,
             apCode = premises.apCode,
             legacyApCode = premises.qCode,
-            probationArea = ProbationArea(
-              code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description
-            )
+            localAuthorityAreaName = premises.localAuthorityArea!!.name
           )
         }
       )
