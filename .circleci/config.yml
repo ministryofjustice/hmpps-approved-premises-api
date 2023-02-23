@@ -11,6 +11,29 @@ parameters:
     type: string
     default: approved-premises-team-events
 
+jobs:
+  trigger-ui-tests:
+    docker: 
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - run:
+          name: "Approved Premises UI test"
+          command: | 
+              curl --request POST \
+                --url https://circleci.com/api/v2/project/github/ministryofjustice/hmpps-approved-premises-ui/pipeline \
+                --header "Circle-Token: $CIRCLECI_PIPELINE_TOKEN" \
+                --header "content-type: application/json" \
+                --data '{"branch":"main"}'
+      - run:
+          name: "Temporary Accommodation UI test"
+          command: | 
+              curl --request POST \
+                --url https://circleci.com/api/v2/project/github/ministryofjustice/hmpps-temporary-accommodation-ui/pipeline \
+                --header "Circle-Token: $CIRCLECI_PIPELINE_TOKEN" \
+                --header "content-type: application/json" \
+                --data '{"branch":"main"}'
+
 workflows:
   version: 2
   build-test-and-deploy:
@@ -23,6 +46,7 @@ workflows:
             branches:
               only:
                 - main
+                - feature/pipeline-to-pipeline-trigger
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -31,6 +55,7 @@ workflows:
             branches:
               only:
                 - main
+                - feature/pipeline-to-pipeline-trigger
           requires:
             - build_docker
             - helm_lint
@@ -72,6 +97,9 @@ workflows:
             - hmpps-approved-premises-api-prod
           requires:
             - request-prod-approval
+      - trigger-ui-tests:
+          requires:
+            - deploy_dev
 
   security:
     triggers:
