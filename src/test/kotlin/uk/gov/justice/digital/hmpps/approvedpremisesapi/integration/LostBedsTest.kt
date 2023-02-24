@@ -116,6 +116,132 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get Lost Bed without JWT returns 401`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val lostBeds = approvedPremisesLostBedsEntityFactory.produceAndPersist {
+      withStartDate(LocalDate.now().plusDays(2))
+      withEndDate(LocalDate.now().plusDays(4))
+      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withNumberOfBeds(5)
+      withPremises(premises)
+    }
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get Lost Bed for non-existent premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/lost-beds")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Get Lost Bed for non-existent lost bed returns 404`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/premises/${premises.id}/lost-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Lost Bed on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val lostBeds = approvedPremisesLostBedsEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withNumberOfBeds(5)
+        withPremises(premises)
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(lostBedsTransformer.transformJpaToApi(lostBeds))
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Test
+  fun `Get Lost Bed on Temporary Accommodation premises returns OK with correct body`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val lostBeds = temporaryAccommodationLostBedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedBed { bed }
+        withPremises(premises)
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(lostBedsTransformer.transformJpaToApi(lostBeds))
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Test
   fun `Create Lost Beds without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
