@@ -42,7 +42,7 @@ data class UserEntity(
   val id: UUID,
   var name: String,
   val deliusUsername: String,
-  var deliusStaffCode: String?,
+  var deliusStaffCode: String,
   var deliusStaffIdentifier: Long,
   var email: String?,
   var telephoneNumber: String?,
