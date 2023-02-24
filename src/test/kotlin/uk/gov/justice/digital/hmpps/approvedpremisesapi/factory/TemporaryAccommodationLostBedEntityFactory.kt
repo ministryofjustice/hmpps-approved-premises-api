@@ -46,6 +46,10 @@ class TemporaryAccommodationLostBedEntityFactory : Factory<TemporaryAccommodatio
     this.notes = { notes }
   }
 
+  fun withYieldedPremises(premises: Yielded<PremisesEntity>) = apply {
+    this.premises = premises
+  }
+
   fun withPremises(premises: PremisesEntity) = apply {
     this.premises = { premises }
   }
