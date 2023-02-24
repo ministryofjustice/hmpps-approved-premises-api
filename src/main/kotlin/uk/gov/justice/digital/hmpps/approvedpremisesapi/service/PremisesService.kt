@@ -105,6 +105,8 @@ class PremisesService(
       val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
       if (reason == null) {
         "$.reason" hasValidationError "doesNotExist"
+      } else if (!serviceScopeMatches(reason.serviceScope, premises)) {
+        "$.reason" hasValidationError "incorrectLostBedReasonServiceScope"
       }
 
       if (validationErrors.any()) {
@@ -322,5 +324,12 @@ class PremisesService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedPremises)
     )
+  }
+
+  private fun serviceScopeMatches(scope: String, premises: PremisesEntity) = when (scope) {
+    "*" -> true
+    ServiceName.approvedPremises.value -> premises is ApprovedPremisesEntity
+    ServiceName.temporaryAccommodation.value -> premises is TemporaryAccommodationPremisesEntity
+    else -> false
   }
 }

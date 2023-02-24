@@ -9,6 +9,7 @@ class LostBedReasonTransformer() {
   fun transformJpaToApi(jpa: LostBedReasonEntity) = LostBedReason(
     id = jpa.id,
     name = jpa.name,
-    isActive = jpa.isActive
+    isActive = jpa.isActive,
+    serviceScope = jpa.serviceScope,
   )
 }

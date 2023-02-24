@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesLostBedsEntityFactory
@@ -200,6 +201,39 @@ class PremisesServiceTest {
   }
 
   @Test
+  fun `createLostBeds returns FieldValidationError with correct param to message map when a lost bed reason with the incorrect service scope is supplied`() {
+    val premisesEntity = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val reasonId = UUID.randomUUID()
+
+    every { lostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns LostBedReasonEntityFactory()
+      .withServiceScope(ServiceName.temporaryAccommodation.value)
+      .produce()
+
+    val result = premisesService.createLostBeds(
+      premises = premisesEntity,
+      startDate = LocalDate.parse("2022-08-25"),
+      endDate = LocalDate.parse("2022-08-28"),
+      numberOfBeds = 1,
+      reasonId = reasonId,
+      referenceNumber = "12345",
+      notes = "notes"
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.reason", "incorrectLostBedReasonServiceScope")
+    )
+  }
+
+  @Test
   fun `createLostBeds returns Success with correct result when validation passed`() {
     val premisesEntity = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
@@ -210,7 +244,9 @@ class PremisesServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    val lostBedReason = LostBedReasonEntityFactory().produce()
+    val lostBedReason = LostBedReasonEntityFactory()
+      .withServiceScope(ServiceName.approvedPremises.value)
+      .produce()
 
     every { lostBedReasonRepositoryMock.findByIdOrNull(lostBedReason.id) } returns lostBedReason
 
