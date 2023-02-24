@@ -221,7 +221,7 @@ class OASysSectionsTransformerTest {
   }
 
   @Test
-  fun `transformToApi supportingInformation returns only sections explicitly requested and those that are linked to harm`() {
+  fun `transformToApi supportingInformation returns only sections explicitly requested, alcohol and drugs and those that are linked to harm`() {
     val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
     val roshSummaryApiResponse = RoshSummaryFactory().produce()
     val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().produce()
@@ -267,6 +267,22 @@ class OASysSectionsTransformerTest {
         linkedToHarm = true,
         linkedToReOffending = false,
         answer = "Emotional"
+      ),
+      OASysSupportingInformationQuestion(
+        label = "Drug misuse issues contributing to risks of offending and harm",
+        questionNumber = "8.9",
+        sectionNumber = 8,
+        linkedToHarm = needsDetailsApiResponse.linksToHarm?.drugLinkedToHarm,
+        linkedToReOffending = needsDetailsApiResponse.linksToReOffending?.drugLinkedToReOffending,
+        answer = needsDetailsApiResponse.needs?.drugIssuesDetails
+      ),
+      OASysSupportingInformationQuestion(
+        label = "Alcohol misuse issues contributing to risks of offending and harm",
+        questionNumber = "9.9",
+        sectionNumber = 9,
+        linkedToHarm = needsDetailsApiResponse.linksToHarm?.alcoholLinkedToHarm,
+        linkedToReOffending = needsDetailsApiResponse.linksToReOffending?.alcoholLinkedToReOffending,
+        answer = needsDetailsApiResponse.needs?.alcoholIssuesDetails
       )
     )
   }

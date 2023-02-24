@@ -40,8 +40,6 @@ class NeedsDetailsTransformerTest {
 
     assertThat(result).containsExactlyInAnyOrder(
       OASysSection(section = 10, name = "Emotional", linkedToHarm = false, linkedToReOffending = false),
-      OASysSection(section = 8, name = "Drugs", linkedToHarm = true, linkedToReOffending = false),
-      OASysSection(section = 9, name = "Alcohol", linkedToHarm = false, linkedToReOffending = true),
       OASysSection(section = 3, name = "Accommodation", linkedToHarm = null, linkedToReOffending = null),
       OASysSection(section = 4, name = "Education, Training and Employment", linkedToHarm = null, linkedToReOffending = null),
       OASysSection(section = 5, name = "Finance", linkedToHarm = null, linkedToReOffending = null),
