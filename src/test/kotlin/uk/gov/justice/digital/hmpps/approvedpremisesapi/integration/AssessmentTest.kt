@@ -196,15 +196,7 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
 
-        var waitedCount = 0
-        while (inboundMessageListener.messages.isEmpty()) {
-          if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
-
-          Thread.sleep(100)
-          waitedCount += 1
-        }
-
-        val emittedMessage = inboundMessageListener.messages.last()
+        val emittedMessage = inboundMessageListener.blockForMessage()
 
         assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
@@ -270,15 +262,7 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
 
-        var waitedCount = 0
-        while (inboundMessageListener.messages.isEmpty()) {
-          if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
-
-          Thread.sleep(100)
-          waitedCount += 1
-        }
-
-        val emittedMessage = inboundMessageListener.messages.last()
+        val emittedMessage = inboundMessageListener.blockForMessage()
 
         assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")

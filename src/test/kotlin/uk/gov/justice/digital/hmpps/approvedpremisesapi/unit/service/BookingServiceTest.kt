@@ -1,16 +1,30 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
@@ -23,8 +37,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -44,12 +63,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -57,6 +82,11 @@ import java.util.UUID
 class BookingServiceTest {
   private val mockPremisesService = mockk<PremisesService>()
   private val mockStaffMemberService = mockk<StaffMemberService>()
+  private val mockOffenderService = mockk<OffenderService>()
+  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockCruService = mockk<CruService>()
+  private val mockApplicationService = mockk<ApplicationService>()
+  private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
   private val mockCancellationRepository = mockk<CancellationRepository>()
@@ -73,6 +103,11 @@ class BookingServiceTest {
   private val bookingService = BookingService(
     premisesService = mockPremisesService,
     staffMemberService = mockStaffMemberService,
+    offenderService = mockOffenderService,
+    domainEventService = mockDomainEventService,
+    cruService = mockCruService,
+    applicationService = mockApplicationService,
+    communityApiClient = mockCommunityApiClient,
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
     cancellationRepository = mockCancellationRepository,
@@ -84,7 +119,8 @@ class BookingServiceTest {
     moveOnCategoryRepository = mockMoveOnCategoryRepository,
     destinationProviderRepository = mockDestinationProviderRepository,
     nonArrivalReasonRepository = mockNonArrivalReasonRepository,
-    cancellationReasonRepository = mockCancellationReasonRepository
+    cancellationReasonRepository = mockCancellationReasonRepository,
+    applicationUrlTemplate = "http://frontend/applications/#id"
   )
 
   @Test
@@ -1143,5 +1179,371 @@ class BookingServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
     assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createApprovedPremisesBooking returns Unauthorised if user does not have either MANAGER or MATCHER role`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val result = bookingService.createApprovedPremisesBooking(user, premises, "CRN", LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-24"))
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `createApprovedPremisesBooking returns FieldValidationError if Departure Date is before Arrival Date`(role: UserRole) {
+    val crn = "CRN123"
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"))
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.departureDate", "beforeBookingArrivalDate")
+    )
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `createApprovedPremisesBooking returns FieldValidationError if there are no existing Applications for the CRN`(role: UserRole) {
+    val crn = "CRN123"
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"))
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.crn", "doesNotHaveApplication")
+    )
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `createApprovedPremisesBooking throws if unable to get Offender Details`(role: UserRole) {
+    val crn = "CRN123"
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
+
+    val runtimeException = assertThrows<RuntimeException> {
+      bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"))
+    }
+
+    assertThat(runtimeException.message).isEqualTo("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `createApprovedPremisesBooking throws if unable to get Staff Details`(role: UserRole) {
+    val crn = "CRN123"
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/staff-details/${user.deliusUsername}", HttpStatus.NOT_FOUND, null)
+
+    val runtimeException = assertThrows<RuntimeException> {
+      bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"))
+    }
+
+    assertThat(runtimeException.message).isEqualTo("Unable to complete GET request to /staff-details/${user.deliusUsername}: 404 NOT_FOUND")
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `createApprovedPremisesBooking saves Booking and creates Domain Event when associated Application is an Online Application`(role: UserRole) {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-22")
+    val departureDate = LocalDate.parse("2023-02-23")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCrn(crn)
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withUsername(user.deliusUsername)
+      .produce()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+    every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
+    every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, arrivalDate, departureDate)
+    assertThat(authorisableResult is AuthorisableActionResult.Success)
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.Success)
+
+    verify(exactly = 1) {
+      mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate
+        }
+      )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventService.saveBookingMadeDomainEvent(
+        match {
+          val data = (it.data as BookingMadeEnvelope).eventDetails
+
+          it.applicationId == existingApplication.id &&
+            it.crn == crn &&
+            data.applicationId == existingApplication.id &&
+            data.applicationUrl == "http://frontend/applications/${existingApplication.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!
+          ) &&
+            data.deliusEventNumber == existingApplication.eventNumber &&
+            data.premises == Premises(
+            id = premises.id,
+            name = premises.name,
+            apCode = premises.apCode,
+            legacyApCode = premises.qCode,
+            localAuthorityAreaName = premises.localAuthorityArea!!.name
+          )
+        }
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `createApprovedPremisesBooking saves Booking but does not create Domain Event when associated Application is an Offline Application as Event Number is not present`(role: UserRole) {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-22")
+    val departureDate = LocalDate.parse("2023-02-23")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val existingApplication = OfflineApplicationEntityFactory()
+      .withCrn(crn)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, arrivalDate, departureDate)
+    assertThat(authorisableResult is AuthorisableActionResult.Success)
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.Success)
+
+    verify(exactly = 1) {
+      mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate
+        }
+      )
+    }
+
+    verify(exactly = 0) {
+      mockDomainEventService.saveBookingMadeDomainEvent(any())
+    }
+  }
+
+  @Test
+  fun `createTemporaryAccommodationBooking returns FieldValidationError if Departure Date is before Arrival Date`() {
+    val crn = "CRN123"
+    val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"), bedId)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.departureDate", "beforeBookingArrivalDate")
+    )
+  }
+
+  @Test
+  fun `createTemporaryAccommodationBooking returns FieldValidationError if Bed does not exist`() {
+    val crn = "CRN123"
+    val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"), bedId)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.bedId", "doesNotExist")
+    )
+  }
+
+  @Test
+  fun `createTemporaryAccommodationBooking saves Booking`() {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-23")
+    val departureDate = LocalDate.parse("2023-02-24")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    room.beds += bed
+    premises.rooms += room
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, arrivalDate, departureDate, bed.id)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.Success)
+
+    verify(exactly = 1) {
+      mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate
+        }
+      )
+    }
   }
 }

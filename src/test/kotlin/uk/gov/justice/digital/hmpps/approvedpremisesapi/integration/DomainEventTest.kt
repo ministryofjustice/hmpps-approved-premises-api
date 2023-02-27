@@ -4,8 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -120,6 +122,63 @@ class DomainEventTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody(ApplicationAssessedEnvelope::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get Booking Made Event without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/events/booking-made/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get Booking Made Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username"
+    )
+
+    webTestClient.get()
+      .uri("/events/booking-made/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Get Booking Made Event returns 200 with correct body`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = BookingMadeEnvelope(
+      id = eventId,
+      timestamp = OffsetDateTime.now(),
+      eventType = "approved-premises.booking.made",
+      eventDetails = BookingMadeFactory().produce()
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/booking-made/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(BookingMadeEnvelope::class.java)
       .returnResult()
 
     assertThat(response.responseBody).isEqualTo(envelopedData)

@@ -9,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -30,7 +31,8 @@ class DomainEventService(
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${application-submitted-detail-url-template}") private val applicationSubmittedDetailUrlTemplate: String,
-  @Value("\${application-assessed-detail-url-template}") private val applicationAssessedDetailUrlTemplate: String
+  @Value("\${application-assessed-detail-url-template}") private val applicationAssessedDetailUrlTemplate: String,
+  @Value("\${booking-made-detail-url-template}") private val bookingMadeDetailUrlTemplate: String
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -41,6 +43,7 @@ class DomainEventService(
 
   fun getApplicationSubmittedDomainEvent(id: UUID) = get<ApplicationSubmittedEnvelope>(id)
   fun getApplicationAssessedDomainEvent(id: UUID) = get<ApplicationAssessedEnvelope>(id)
+  fun getBookingMadeEvent(id: UUID) = get<BookingMadeEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -49,6 +52,8 @@ class DomainEventService(
       T::class == ApplicationSubmittedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       T::class == ApplicationAssessedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED ->
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
+      T::class == BookingMadeEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
@@ -80,6 +85,17 @@ class DomainEventService(
       typeName = "approved-premises.application.assessed",
       typeDescription = "An application has been assessed for an Approved Premises placement",
       detailUrl = applicationAssessedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+    )
+
+  @Transactional
+  fun saveBookingMadeDomainEvent(domainEvent: DomainEvent<BookingMadeEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.booking.made",
+      typeDescription = "An Approved Premises booking has been made",
+      detailUrl = bookingMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms
     )
@@ -136,6 +152,7 @@ class DomainEventService(
   private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {
     ApplicationSubmittedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
     ApplicationAssessedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
+    BookingMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_MADE
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }

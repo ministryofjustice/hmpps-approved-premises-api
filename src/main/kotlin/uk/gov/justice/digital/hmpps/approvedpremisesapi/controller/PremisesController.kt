@@ -32,10 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -44,10 +43,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
@@ -68,10 +65,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class PremisesController(
-  private val httpAuthService: HttpAuthService,
   private val usersService: UserService,
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
@@ -88,8 +85,7 @@ class PremisesController(
   private val staffMemberTransformer: StaffMemberTransformer,
   private val staffMemberService: StaffMemberService,
   private val roomService: RoomService,
-  private val roomTransformer: RoomTransformer,
-  private val applicationService: ApplicationService
+  private val roomTransformer: RoomTransformer
 ) : PremisesApiDelegate {
 
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
@@ -267,112 +263,73 @@ class PremisesController(
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity, staffMember))
   }
 
+  @Transactional
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
+    val user = usersService.getUserForRequest()
+
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val user = usersService.getUserForRequest()
-
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
-      throw ForbiddenProblem()
+    val offenderResult = offenderService.getOffenderByCrn(body.crn, user.deliusUsername)
+    val offender = when (offenderResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
+      is AuthorisableActionResult.Success -> offenderResult.entity
     }
 
-    val validationErrors = ValidationErrors()
-
-    val bed = when (body) {
-      is NewTemporaryAccommodationBooking -> {
-        val result = premises.rooms
-          .flatMap { it.beds }
-          .find { it.id == body.bedId }
-
-        if (result == null) {
-          validationErrors["$.bedId"] = "doesNotExist"
-        }
-
-        result
-      }
-      else -> null
-    }
-
-    if (body.departureDate.isBefore(body.arrivalDate)) {
-      validationErrors["$.departureDate"] = "beforeBookingArrivalDate"
-    }
-
-    if (body is NewTemporaryAccommodationBooking) {
-      // TODO: NewApprovedPremisesBooking will likely need to check for overlaps once bed-level bookings are implemented for AP
-      throwIfBookingDatesConflict(body.arrivalDate, body.departureDate, null, body.bedId, premises)
-    }
-
-    val offenderResult = offenderService.getOffenderByCrn(body.crn, httpAuthService.getDeliusPrincipalOrThrow().name)
-    if (offenderResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
-    if (offenderResult is AuthorisableActionResult.NotFound) {
-      validationErrors["$.crn"] = "doesNotExist"
-      throw BadRequestProblem(validationErrors)
-    }
-    offenderResult as AuthorisableActionResult.Success
-
-    if (offenderResult.entity.otherIds.nomsNumber == null) {
+    if (offender.otherIds.nomsNumber == null) {
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
     }
 
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
-    if (inmateDetailResult is AuthorisableActionResult.Unauthorised) throw ForbiddenProblem()
-    if (inmateDetailResult is AuthorisableActionResult.NotFound) {
-      validationErrors["$.crn"] = "doesNotExist"
-      throw BadRequestProblem(validationErrors)
-    }
-    inmateDetailResult as AuthorisableActionResult.Success
-
-    val serviceName = when (body) {
-      is NewApprovedPremisesBooking -> ServiceName.approvedPremises
-      is NewTemporaryAccommodationBooking -> ServiceName.temporaryAccommodation
-      else -> throw BadRequestProblem(errorDetail = "Unsupported Booking type")
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offender.otherIds.nomsNumber)
+    val inmate = when (inmateDetailResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
+      is AuthorisableActionResult.Success -> inmateDetailResult.entity
     }
 
-    val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(body.crn, serviceName)
-      .filter { it.submittedAt != null }
-      .maxByOrNull { it.submittedAt!! }
-    val newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(body.crn, serviceName)
-      .maxByOrNull { it.submittedAt }
+    val authorisableResult = when (body) {
+      is NewApprovedPremisesBooking -> {
+        val approvedPremises = premises as? ApprovedPremisesEntity
+          ?: throw BadRequestProblem(errorDetail = "Only Approved Premises Bookings can be created against Approved Premises properties")
+        bookingService.createApprovedPremisesBooking(
+          user = user,
+          premises = approvedPremises,
+          crn = body.crn,
+          arrivalDate = body.arrivalDate,
+          departureDate = body.departureDate
+        )
+      }
 
-    if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null && serviceName == ServiceName.approvedPremises) {
-      validationErrors["$.crn"] = "doesNotHaveApplication"
+      is NewTemporaryAccommodationBooking -> {
+        val temporaryAccommodationPremises = premises as? TemporaryAccommodationPremisesEntity
+          ?: throw BadRequestProblem(errorDetail = "Only Temporary Accommodation Bookings can be created against Temporary Accommodation properties")
+        bookingService.createTemporaryAccommodationBooking(
+          user = user,
+          premises = temporaryAccommodationPremises,
+          crn = body.crn,
+          arrivalDate = body.arrivalDate,
+          departureDate = body.departureDate,
+          bedId = body.bedId
+        )
+      }
+
+      else -> throw RuntimeException("Unsupported New Booking type: ${body::class.qualifiedName}")
     }
 
-    if (validationErrors.any()) {
-      throw BadRequestProblem(validationErrors)
+    val validatableResult = when (authorisableResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(body.crn, "Offender")
+      is AuthorisableActionResult.Success -> authorisableResult.entity
     }
 
-    val associateWithOfflineApplication = (newestOfflineApplication != null && newestSubmittedOnlineApplication == null) ||
-      (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.submittedAt > newestSubmittedOnlineApplication.submittedAt)
+    val createdBooking = when (validatableResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validatableResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validatableResult.validationMessages)
+      is ValidatableActionResult.Success -> validatableResult.entity
+    }
 
-    val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && ! associateWithOfflineApplication
-
-    val booking = bookingService.createBooking(
-      BookingEntity(
-        id = UUID.randomUUID(),
-        crn = offenderResult.entity.otherIds.crn,
-        arrivalDate = body.arrivalDate,
-        departureDate = body.departureDate,
-        keyWorkerStaffCode = null,
-        arrival = null,
-        departure = null,
-        nonArrival = null,
-        cancellation = null,
-        confirmation = null,
-        extensions = mutableListOf(),
-        premises = premises,
-        bed = bed,
-        service = body.serviceName.value,
-        originalArrivalDate = body.arrivalDate,
-        originalDepartureDate = body.departureDate,
-        createdAt = OffsetDateTime.now(),
-        application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
-        offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null
-      )
-    )
-
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity, null))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, offender, inmate, null))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(

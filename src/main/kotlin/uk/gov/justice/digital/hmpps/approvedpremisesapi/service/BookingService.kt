@@ -1,8 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
@@ -23,8 +34,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -35,6 +54,11 @@ import javax.transaction.Transactional
 class BookingService(
   private val premisesService: PremisesService,
   private val staffMemberService: StaffMemberService,
+  private val offenderService: OffenderService,
+  private val domainEventService: DomainEventService,
+  private val cruService: CruService,
+  private val applicationService: ApplicationService,
+  private val communityApiClient: CommunityApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
   private val cancellationRepository: CancellationRepository,
@@ -46,11 +70,203 @@ class BookingService(
   private val destinationProviderRepository: DestinationProviderRepository,
   private val nonArrivalRepository: NonArrivalRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
-  private val cancellationReasonRepository: CancellationReasonRepository
+  private val cancellationReasonRepository: CancellationReasonRepository,
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun createBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
+
+  @Transactional
+  fun createApprovedPremisesBooking(
+    user: UserEntity,
+    premises: ApprovedPremisesEntity,
+    crn: String,
+    arrivalDate: LocalDate,
+    departureDate: LocalDate
+  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
+    if (!user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val validationResult = validated {
+      if (departureDate.isBefore(arrivalDate)) {
+        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
+        .filter { it.submittedAt != null }
+        .maxByOrNull { it.submittedAt!! }
+      val newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+        .maxByOrNull { it.submittedAt }
+
+      if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
+        validationErrors["$.crn"] = "doesNotHaveApplication"
+      }
+
+      if (validationErrors.any()) {
+        return@validated fieldValidationError
+      }
+
+      val associateWithOfflineApplication = (newestOfflineApplication != null && newestSubmittedOnlineApplication == null) ||
+        (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.submittedAt > newestSubmittedOnlineApplication.submittedAt)
+
+      val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && ! associateWithOfflineApplication
+
+      val bookingCreatedAt = OffsetDateTime.now()
+
+      val booking = bookingRepository.save(
+        BookingEntity(
+          id = UUID.randomUUID(),
+          crn = crn,
+          arrivalDate = arrivalDate,
+          departureDate = departureDate,
+          keyWorkerStaffCode = null,
+          arrival = null,
+          departure = null,
+          nonArrival = null,
+          cancellation = null,
+          confirmation = null,
+          extensions = mutableListOf(),
+          premises = premises,
+          bed = null,
+          service = ServiceName.approvedPremises.value,
+          originalArrivalDate = arrivalDate,
+          originalDepartureDate = departureDate,
+          createdAt = bookingCreatedAt,
+          application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
+          offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null
+        )
+      )
+
+      if (associateWithOnlineApplication) {
+        val domainEventId = UUID.randomUUID()
+
+        val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+          is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
+          is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
+        }
+
+        val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+        val staffDetails = when (staffDetailsResult) {
+          is ClientResult.Success -> staffDetailsResult.body
+          is ClientResult.Failure -> staffDetailsResult.throwException()
+        }
+
+        val application = booking.application!! as ApprovedPremisesApplicationEntity
+        val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+        domainEventService.saveBookingMadeDomainEvent(
+          DomainEvent(
+            id = domainEventId,
+            applicationId = application.id,
+            crn = booking.crn,
+            occurredAt = bookingCreatedAt,
+            data = BookingMadeEnvelope(
+              id = domainEventId,
+              timestamp = bookingCreatedAt,
+              eventType = "approved-premises.booking.made",
+              eventDetails = BookingMade(
+                applicationId = application.id,
+                applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+                bookingId = booking.id,
+                personReference = PersonReference(
+                  crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
+                  noms = offenderDetails.otherIds.nomsNumber!!
+                ),
+                deliusEventNumber = application.eventNumber,
+                createdAt = bookingCreatedAt,
+                bookedBy = BookingMadeBookedBy(
+                  staffMember = StaffMember(
+                    staffCode = staffDetails.staffCode,
+                    staffIdentifier = staffDetails.staffIdentifier,
+                    forenames = staffDetails.staff.forenames,
+                    surname = staffDetails.staff.surname,
+                    username = staffDetails.username
+                  ),
+                  cru = Cru(
+                    name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
+                  )
+                ),
+                premises = Premises(
+                  id = approvedPremises.id,
+                  name = approvedPremises.name,
+                  apCode = approvedPremises.apCode,
+                  legacyApCode = approvedPremises.qCode,
+                  localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+                ),
+                arrivalOn = booking.arrivalDate,
+                departureOn = booking.departureDate
+              )
+            )
+          )
+        )
+      }
+
+      success(booking)
+    }
+
+    return AuthorisableActionResult.Success(validationResult)
+  }
+
+  @Transactional
+  fun createTemporaryAccommodationBooking(
+    user: UserEntity,
+    premises: TemporaryAccommodationPremisesEntity,
+    crn: String,
+    arrivalDate: LocalDate,
+    departureDate: LocalDate,
+    bedId: UUID
+  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
+    throwIfBookingDatesConflict(arrivalDate, departureDate, null, bedId, premises)
+
+    val validationResult = validated {
+      val bed = premises.rooms
+        .flatMap { it.beds }
+        .find { it.id == bedId }
+
+      if (bed == null) "$.bedId" hasValidationError "doesNotExist"
+
+      if (departureDate.isBefore(arrivalDate)) {
+        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      if (validationErrors.any()) {
+        return@validated fieldValidationError
+      }
+
+      val bookingCreatedAt = OffsetDateTime.now()
+
+      val booking = bookingRepository.save(
+        BookingEntity(
+          id = UUID.randomUUID(),
+          crn = crn,
+          arrivalDate = arrivalDate,
+          departureDate = departureDate,
+          keyWorkerStaffCode = null,
+          arrival = null,
+          departure = null,
+          nonArrival = null,
+          cancellation = null,
+          confirmation = null,
+          extensions = mutableListOf(),
+          premises = premises,
+          bed = bed,
+          service = ServiceName.temporaryAccommodation.value,
+          originalArrivalDate = arrivalDate,
+          originalDepartureDate = departureDate,
+          createdAt = bookingCreatedAt,
+          application = null,
+          offlineApplication = null
+        )
+      )
+
+      success(booking)
+    }
+
+    return AuthorisableActionResult.Success(validationResult)
+  }
 
   @Transactional
   fun createArrival(
@@ -353,6 +569,32 @@ class BookingService(
       booking.service -> true
       else -> return false
     }
+  }
+
+  private fun throwIfBookingDatesConflict(
+    arrivalDate: LocalDate,
+    departureDate: LocalDate,
+    thisBookingId: UUID?,
+    bedId: UUID,
+    premises: PremisesEntity,
+  ) {
+    // TODO: Ideally we wouldn't throw ConflictProblem from the service layer as its HTTP specific
+
+    val desiredRange = arrivalDate..departureDate
+    premises.bookings
+      .filter { it.id != thisBookingId }
+      .filter { it.bed?.id == bedId }
+      .filter { it.cancellation == null }
+      .map { it to (it.arrivalDate..it.departureDate) }
+      .find { (_, range) -> range overlaps desiredRange }
+      ?.first
+      ?.let {
+        throw ConflictProblem(
+          it.id,
+          "Booking",
+          "dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+        )
+      }
   }
 }
 

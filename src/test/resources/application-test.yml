@@ -110,4 +110,4 @@ seed:
 application-url-template: http://frontend/applications/#id
 application-submitted-detail-url-template: http://frontend/events/application-submitted/#eventId
 application-assessed-detail-url-template: http://frontend/events/application-assessed/#eventId
-
+booking-made-detail-url-template: http://frontend/events/booking-made/#eventId
