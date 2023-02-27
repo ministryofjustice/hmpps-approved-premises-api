@@ -580,6 +580,22 @@ class PremisesController(
     return ResponseEntity.ok(premises.lostBeds.map(lostBedsTransformer::transformJpaToApi))
   }
 
+  override fun premisesPremisesIdLostBedsLostBedIdGet(premisesId: UUID, lostBedId: UUID): ResponseEntity<LostBed> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId }
+      ?: throw NotFoundProblem(lostBedId, "LostBed")
+
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
+  }
+
   override fun premisesPremisesIdCapacityGet(premisesId: UUID): ResponseEntity<List<DateCapacity>> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
