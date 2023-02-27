@@ -381,6 +381,7 @@ class PremisesController(
     }
 
     val result = bookingService.createNonArrival(
+      user = user,
       booking = booking,
       date = body.date,
       reasonId = body.reason,

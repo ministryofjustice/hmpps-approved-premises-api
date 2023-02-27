@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
@@ -386,11 +388,14 @@ class BookingService(
   }
 
   fun createNonArrival(
+    user: UserEntity,
     booking: BookingEntity,
     date: LocalDate,
     reasonId: UUID,
     notes: String?
   ) = validated<NonArrivalEntity> {
+    val occurredAt = OffsetDateTime.now()
+
     if (booking.nonArrival != null) {
       return generalError("This Booking already has a Non Arrival set")
     }
@@ -415,9 +420,68 @@ class BookingService(
         notes = notes,
         reason = reason!!,
         booking = booking,
-        createdAt = OffsetDateTime.now(),
+        createdAt = occurredAt,
       )
     )
+
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+      val domainEventId = UUID.randomUUID()
+
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
+      }
+
+      val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+      val staffDetails = when (staffDetailsResult) {
+        is ClientResult.Success -> staffDetailsResult.body
+        is ClientResult.Failure -> staffDetailsResult.throwException()
+      }
+
+      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+      domainEventService.savePersonNotArrivedEvent(
+        DomainEvent(
+          id = domainEventId,
+          applicationId = application.id,
+          crn = booking.crn,
+          occurredAt = date.toLocalDateTime(),
+          data = PersonNotArrivedEnvelope(
+            id = domainEventId,
+            timestamp = occurredAt,
+            eventType = "approved-premises.person.not-arrived",
+            eventDetails = PersonNotArrived(
+              applicationId = application.id,
+              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              bookingId = booking.id,
+              personReference = PersonReference(
+                crn = booking.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!
+              ),
+              deliusEventNumber = application.eventNumber,
+              premises = Premises(
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+              ),
+              expectedArrivalOn = booking.originalArrivalDate,
+              recordedBy = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username
+              ),
+              notes = notes
+            )
+          )
+        )
+      )
+    }
 
     return success(nonArrivalEntity)
   }
