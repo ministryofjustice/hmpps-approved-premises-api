@@ -170,3 +170,4 @@ application-submitted-detail-url-template: http://localhost:3000/events/applicat
 application-assessed-detail-url-template: http://localhost:3000/events/application-assessed/#eventId
 booking-made-detail-url-template: http://localhost:3000/events/booking-made/#eventId
 person-arrived-detail-url-template: http://localhost:3000/events/person-arrived/#eventId
+person-not-arrived-detail-url-template: http://localhost:3000/events/person-not-arrived/#eventId
