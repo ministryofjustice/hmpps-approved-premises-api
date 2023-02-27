@@ -3223,6 +3223,19 @@ components:
       properties:
         translatedDocument:
           $ref: '#/components/schemas/AnyValue'
+        isPipeApplication:
+          type: boolean
+        isWomensApplication:
+          type: boolean
+        targetLocation:
+          type: string
+        releaseType:
+          type: string
+          enum:
+            - licence
+            - rotl
+            - hdc
+            - pss
       required:
         - translatedDocument
     PrisonCaseNote:
