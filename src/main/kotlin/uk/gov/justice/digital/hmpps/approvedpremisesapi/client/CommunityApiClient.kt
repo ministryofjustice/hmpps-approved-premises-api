@@ -43,6 +43,10 @@ class CommunityApiClient(
     path = "/secure/staff/username/$deliusUsername"
   }
 
+  fun getStaffUserDetailsForStaffCode(staffCode: String) = getRequest<StaffUserDetails> {
+    path = "/secure/staff/staffCode/$staffCode"
+  }
+
   fun getConvictions(crn: String) = getRequest<List<Conviction>> {
     path = "/secure/offenders/crn/$crn/convictions"
   }

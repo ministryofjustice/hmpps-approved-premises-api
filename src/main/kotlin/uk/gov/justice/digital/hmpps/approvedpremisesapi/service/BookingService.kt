@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
@@ -270,6 +272,7 @@ class BookingService(
 
   @Transactional
   fun createArrival(
+    user: UserEntity,
     booking: BookingEntity,
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
@@ -277,6 +280,7 @@ class BookingService(
     keyWorkerStaffCode: String?,
   ) = validated<ArrivalEntity> {
     val premises = booking.premises
+    val occurredAt = OffsetDateTime.now()
 
     if (booking.arrival != null) {
       return generalError("This Booking already has an Arrival set")
@@ -307,7 +311,7 @@ class BookingService(
         expectedDepartureDate = expectedDepartureDate,
         notes = notes,
         booking = booking,
-        createdAt = OffsetDateTime.now(),
+        createdAt = occurredAt,
       )
     )
 
@@ -315,6 +319,67 @@ class BookingService(
       booking.arrivalDate = arrivalDate
       booking.departureDate = expectedDepartureDate
       updateBooking(booking)
+    }
+
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+      val domainEventId = UUID.randomUUID()
+
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
+      }
+
+      val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(keyWorkerStaffCode!!)
+      val keyWorkerStaffDetails = when (keyWorkerStaffDetailsResult) {
+        is ClientResult.Success -> keyWorkerStaffDetailsResult.body
+        is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
+      }
+
+      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+      domainEventService.savePersonArrivedEvent(
+        DomainEvent(
+          id = domainEventId,
+          applicationId = application.id,
+          crn = booking.crn,
+          occurredAt = arrivalDate.toLocalDateTime(), // TODO: Endpoint should accept a date-time instead
+          data = PersonArrivedEnvelope(
+            id = domainEventId,
+            timestamp = occurredAt,
+            eventType = "approved-premises.person.arrived",
+            eventDetails = PersonArrived(
+              applicationId = application.id,
+              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              bookingId = booking.id,
+              personReference = PersonReference(
+                crn = booking.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!
+              ),
+              deliusEventNumber = application.eventNumber,
+              premises = Premises(
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+              ),
+              applicationSubmittedOn = occurredAt.toLocalDate(),
+              keyWorker = StaffMember(
+                staffCode = keyWorkerStaffCode,
+                staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
+                forenames = keyWorkerStaffDetails.staff.forenames,
+                surname = keyWorkerStaffDetails.staff.surname,
+                username = keyWorkerStaffDetails.username
+              ),
+              arrivedAt = arrivalDate.toLocalDateTime(), // TODO: Endpoint should accept a date-time instead
+              expectedDepartureOn = expectedDepartureDate,
+              notes = notes
+            )
+          )
+        )
+      )
     }
 
     return success(arrivalEntity)
