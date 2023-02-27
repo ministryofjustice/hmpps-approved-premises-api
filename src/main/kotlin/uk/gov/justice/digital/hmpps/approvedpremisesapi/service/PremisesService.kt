@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationLostBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -88,18 +89,30 @@ class PremisesService(
     premises: PremisesEntity,
     startDate: LocalDate,
     endDate: LocalDate,
-    numberOfBeds: Int,
     reasonId: UUID,
     referenceNumber: String?,
-    notes: String?
+    notes: String?,
+    service: ServiceName,
+    numberOfBeds: Int?,
+    bedId: UUID?,
   ): ValidatableActionResult<LostBedsEntity> =
     validated {
       if (endDate.isBefore(startDate)) {
         "$.endDate" hasValidationError "beforeStartDate"
       }
 
-      if (numberOfBeds <= 0) {
+      if (service == ServiceName.approvedPremises && numberOfBeds!! <= 0) {
         "$.numberOfBeds" hasValidationError "isZero"
+      }
+
+      val bed = if (service == ServiceName.temporaryAccommodation) {
+        val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
+        if (bed == null) {
+          "$.bedId" hasValidationError "doesNotExist"
+        }
+        bed
+      } else {
+        null
       }
 
       val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
@@ -113,18 +126,32 @@ class PremisesService(
         return fieldValidationError
       }
 
-      val lostBedsEntity = lostBedsRepository.save(
-        ApprovedPremisesLostBedsEntity(
-          id = UUID.randomUUID(),
-          premises = premises,
-          startDate = startDate,
-          endDate = endDate,
-          numberOfBeds = numberOfBeds,
-          reason = reason!!,
-          referenceNumber = referenceNumber,
-          notes = notes
+      val lostBedsEntity = when (service) {
+        ServiceName.approvedPremises -> lostBedsRepository.save(
+          ApprovedPremisesLostBedsEntity(
+            id = UUID.randomUUID(),
+            premises = premises,
+            startDate = startDate,
+            endDate = endDate,
+            numberOfBeds = numberOfBeds!!,
+            reason = reason!!,
+            referenceNumber = referenceNumber,
+            notes = notes
+          )
         )
-      )
+        ServiceName.temporaryAccommodation -> lostBedsRepository.save(
+          TemporaryAccommodationLostBedEntity(
+            id = UUID.randomUUID(),
+            premises = premises,
+            startDate = startDate,
+            endDate = endDate,
+            bed = bed!!,
+            reason = reason!!,
+            referenceNumber = referenceNumber,
+            notes = notes,
+          )
+        )
+      }
 
       return success(lostBedsEntity)
     }

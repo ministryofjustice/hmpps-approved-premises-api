@@ -189,7 +189,9 @@ class PremisesServiceTest {
       numberOfBeds = 0,
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+      bedId = null,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -224,7 +226,9 @@ class PremisesServiceTest {
       numberOfBeds = 1,
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+      bedId = null,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -259,7 +263,9 @@ class PremisesServiceTest {
       numberOfBeds = 5,
       reasonId = lostBedReason.id,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+      bedId = null,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)

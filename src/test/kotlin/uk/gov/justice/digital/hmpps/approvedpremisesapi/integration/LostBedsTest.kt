@@ -4,7 +4,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -253,18 +254,60 @@ class LostBedsTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises/${premises.id}/lost-beds")
       .bodyValue(
-        NewLostBed(
+        NewApprovedPremisesLostBed(
           startDate = LocalDate.parse("2022-08-15"),
           endDate = LocalDate.parse("2022-08-18"),
           numberOfBeds = 1,
           reason = UUID.randomUUID(),
           referenceNumber = "REF-123",
-          notes = null
+          notes = null,
+          serviceName = ServiceName.approvedPremises,
         )
       )
       .exchange()
       .expectStatus()
       .isUnauthorized
+  }
+
+  @Test
+  fun `Create Lost Beds on Temporary Accommodation premises returns 400 Bad Request if the bed ID does not reference a bed on the premises`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/lost-beds")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewTemporaryAccommodationLostBed(
+            startDate = LocalDate.parse("2022-08-17"),
+            endDate = LocalDate.parse("2022-08-18"),
+            reason = reason.id,
+            referenceNumber = "REF-123",
+            notes = "notes",
+            bedId = UUID.randomUUID(),
+            serviceName = ServiceName.temporaryAccommodation,
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.bedId")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+    }
   }
 
   @ParameterizedTest
@@ -287,13 +330,14 @@ class LostBedsTest : IntegrationTestBase() {
         .uri("/premises/${premises.id}/lost-beds")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          NewLostBed(
+          NewApprovedPremisesLostBed(
             startDate = LocalDate.parse("2022-08-17"),
             endDate = LocalDate.parse("2022-08-18"),
             numberOfBeds = 3,
             reason = reason.id,
             referenceNumber = "REF-123",
-            notes = "notes"
+            notes = "notes",
+            serviceName = ServiceName.approvedPremises,
           )
         )
         .exchange()
@@ -303,6 +347,63 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".startDate").isEqualTo("2022-08-17")
         .jsonPath(".endDate").isEqualTo("2022-08-18")
         .jsonPath(".numberOfBeds").isEqualTo(3)
+        .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+        .jsonPath(".reason.name").isEqualTo(reason.name)
+        .jsonPath(".reason.isActive").isEqualTo(true)
+        .jsonPath(".referenceNumber").isEqualTo("REF-123")
+        .jsonPath(".notes").isEqualTo("notes")
+    }
+  }
+
+  @Test
+  fun `Create Lost Beds on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises {
+              premises
+            }
+          }
+        }
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/lost-beds")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewTemporaryAccommodationLostBed(
+            startDate = LocalDate.parse("2022-08-17"),
+            endDate = LocalDate.parse("2022-08-18"),
+            reason = reason.id,
+            referenceNumber = "REF-123",
+            notes = "notes",
+            bedId = bed.id,
+            serviceName = ServiceName.temporaryAccommodation,
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath(".startDate").isEqualTo("2022-08-17")
+        .jsonPath(".endDate").isEqualTo("2022-08-18")
+        .jsonPath(".bedId").isEqualTo(bed.id.toString())
         .jsonPath(".reason.id").isEqualTo(reason.id.toString())
         .jsonPath(".reason.name").isEqualTo(reason.name)
         .jsonPath(".reason.isActive").isEqualTo(true)
