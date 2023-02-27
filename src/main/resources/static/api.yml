@@ -2864,8 +2864,6 @@ components:
         endDate:
           type: string
           format: date
-        numberOfBeds:
-          type: integer
         reason:
           type: string
           format: uuid
@@ -2873,11 +2871,37 @@ components:
           type: string
         notes:
           type: string
+        serviceName:
+          $ref: '#/components/schemas/ServiceName'
       required:
         - startDate
         - endDate
-        - numberOfBeds
         - reason
+        - serviceName
+      discriminator:
+        propertyName: serviceName
+        mapping:
+          approved-premises: '#/components/schemas/NewApprovedPremisesLostBed'
+          temporary-accommodation: '#/components/schemas/NewTemporaryAccommodationLostBed'
+    NewApprovedPremisesLostBed:
+      allOf:
+        - $ref: '#/components/schemas/NewLostBed'
+        - type: object
+          properties:
+            numberOfBeds:
+              type: integer
+          required:
+            - numberOfBeds
+    NewTemporaryAccommodationLostBed:
+      allOf:
+        - $ref: '#/components/schemas/NewLostBed'
+        - type: object
+          properties:
+            bedId:
+              type: string
+              format: uuid
+          required:
+            - bedId
     DepartureReason:
       type: object
       properties:
