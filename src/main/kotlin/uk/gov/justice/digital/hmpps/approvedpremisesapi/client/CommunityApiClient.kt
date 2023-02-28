@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import java.io.OutputStream
 
@@ -43,7 +44,7 @@ class CommunityApiClient(
     path = "/secure/staff/username/$deliusUsername"
   }
 
-  fun getStaffUserDetailsForStaffCode(staffCode: String) = getRequest<StaffUserDetails> {
+  fun getStaffUserDetailsForStaffCode(staffCode: String) = getRequest<StaffWithoutUsernameUserDetails> {
     path = "/secure/staff/staffCode/$staffCode"
   }
 
