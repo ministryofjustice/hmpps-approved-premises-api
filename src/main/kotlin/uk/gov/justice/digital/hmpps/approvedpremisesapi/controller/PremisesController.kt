@@ -358,7 +358,8 @@ class PremisesController(
       arrivalDate = body.arrivalDate,
       expectedDepartureDate = body.expectedDepartureDate,
       notes = body.notes,
-      keyWorkerStaffCode = body.keyWorkerStaffCode
+      keyWorkerStaffCode = body.keyWorkerStaffCode,
+      user = user
     )
 
     val arrival = extractResultEntityOrThrow(result)

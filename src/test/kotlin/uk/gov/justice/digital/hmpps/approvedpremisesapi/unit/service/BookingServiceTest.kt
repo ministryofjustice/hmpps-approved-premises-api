@@ -15,6 +15,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -44,6 +45,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -640,7 +643,10 @@ class BookingServiceTest {
       arrivalDate = LocalDate.parse("2022-08-25"),
       expectedDepartureDate = LocalDate.parse("2022-08-26"),
       notes = "notes",
-      keyWorkerStaffCode = "123"
+      keyWorkerStaffCode = "123",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -669,7 +675,10 @@ class BookingServiceTest {
       arrivalDate = LocalDate.parse("2022-08-27"),
       expectedDepartureDate = LocalDate.parse("2022-08-26"),
       notes = "notes",
-      keyWorkerStaffCode = keyWorker.code
+      keyWorkerStaffCode = keyWorker.code,
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -679,7 +688,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createArrival returns Success with correct result when validation passed`() {
+  fun `createArrival returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application as Event Number is not present`() {
     val keyWorker = ContextStaffMemberFactory().produce()
     every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, "QCODE") } returns AuthorisableActionResult.Success(keyWorker)
 
@@ -696,6 +705,7 @@ class BookingServiceTest {
           .produce()
       }
       .withStaffKeyWorkerCode(keyWorker.code)
+      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
       .produce()
 
     every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
@@ -706,7 +716,10 @@ class BookingServiceTest {
       arrivalDate = LocalDate.parse("2022-08-27"),
       expectedDepartureDate = LocalDate.parse("2022-08-29"),
       notes = "notes",
-      keyWorkerStaffCode = keyWorker.code
+      keyWorkerStaffCode = keyWorker.code,
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -714,6 +727,102 @@ class BookingServiceTest {
     assertThat(result.entity.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
     assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
     assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 0) { mockDomainEventService.savePersonArrivedEvent(any()) }
+  }
+
+  @Test
+  fun `createArrival returns Success with correct result when validation passed, saves Domain Event when associated with Online Application`() {
+    val keyWorker = ContextStaffMemberFactory().produce()
+    every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, "QCODE") } returns AuthorisableActionResult.Success(keyWorker)
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withQCode("QCODE")
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withUnitTestControlProbationRegion()
+              .produce()
+          )
+          .produce()
+      )
+      .produce()
+
+    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val keyWorkerStaffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+      HttpStatus.OK,
+      keyWorkerStaffUserDetails
+    )
+
+    every { mockDomainEventService.savePersonArrivedEvent(any()) } just Runs
+
+    val result = bookingService.createArrival(
+      booking = bookingEntity,
+      arrivalDate = LocalDate.parse("2022-08-27"),
+      expectedDepartureDate = LocalDate.parse("2022-08-29"),
+      notes = "notes",
+      keyWorkerStaffCode = keyWorker.code,
+      user = user
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
+    assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 1) {
+      mockDomainEventService.savePersonArrivedEvent(
+        match {
+          val data = (it.data as PersonArrivedEnvelope).eventDetails
+          val application = bookingEntity.application as ApprovedPremisesApplicationEntity
+          val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
+
+          it.applicationId == application.id &&
+            it.crn == bookingEntity.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.premises == Premises(
+            id = approvedPremises.id,
+            name = approvedPremises.name,
+            apCode = approvedPremises.apCode,
+            legacyApCode = approvedPremises.qCode,
+            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+          )
+        }
+      )
+    }
   }
 
   @Test
@@ -740,7 +849,10 @@ class BookingServiceTest {
       arrivalDate = LocalDate.parse("2022-08-27"),
       expectedDepartureDate = LocalDate.parse("2022-08-29"),
       notes = "notes",
-      keyWorkerStaffCode = null
+      keyWorkerStaffCode = null,
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1197,7 +1309,7 @@ class BookingServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
   fun `createApprovedPremisesBooking returns FieldValidationError if Departure Date is before Arrival Date`(role: UserRole) {
     val crn = "CRN123"
 
@@ -1230,7 +1342,7 @@ class BookingServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
   fun `createApprovedPremisesBooking returns FieldValidationError if there are no existing Applications for the CRN`(role: UserRole) {
     val crn = "CRN123"
 
@@ -1258,7 +1370,7 @@ class BookingServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
   fun `createApprovedPremisesBooking throws if unable to get Offender Details`(role: UserRole) {
     val crn = "CRN123"
 
@@ -1290,7 +1402,7 @@ class BookingServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
   fun `createApprovedPremisesBooking throws if unable to get Staff Details`(role: UserRole) {
     val crn = "CRN123"
 
@@ -1327,7 +1439,7 @@ class BookingServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
   fun `createApprovedPremisesBooking saves Booking and creates Domain Event when associated Application is an Online Application`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")
@@ -1401,14 +1513,15 @@ class BookingServiceTest {
             apCode = premises.apCode,
             legacyApCode = premises.qCode,
             localAuthorityAreaName = premises.localAuthorityArea!!.name
-          )
+          ) &&
+            data.arrivalOn == arrivalDate
         }
       )
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
   fun `createApprovedPremisesBooking saves Booking but does not create Domain Event when associated Application is an Offline Application as Event Number is not present`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")

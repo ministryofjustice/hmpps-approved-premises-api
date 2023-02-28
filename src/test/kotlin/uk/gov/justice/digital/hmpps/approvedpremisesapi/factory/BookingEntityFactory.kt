@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -39,6 +41,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var serviceName: Yielded<ServiceName> = { randomOf(ServiceName.values().asList()) }
   private var bed: Yielded<BedEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
+  private var application: Yielded<ApplicationEntity?> = { null }
+  private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -136,6 +140,14 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.createdAt = { createdAt }
   }
 
+  fun withApplication(application: ApplicationEntity?) = apply {
+    this.application = { application }
+  }
+
+  fun withOfflineApplication(offlineApplication: OfflineApplicationEntity?) = apply {
+    this.offlineApplication = { offlineApplication }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -154,7 +166,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     originalArrivalDate = this.originalArrivalDate?.invoke() ?: this.arrivalDate(),
     originalDepartureDate = this.originalDepartureDate?.invoke() ?: this.departureDate(),
     createdAt = this.createdAt(),
-    application = null,
-    offlineApplication = null
+    application = this.application(),
+    offlineApplication = this.offlineApplication()
   )
 }
