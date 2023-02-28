@@ -373,7 +373,7 @@ class BookingService(
                 staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
                 forenames = keyWorkerStaffDetails.staff.forenames,
                 surname = keyWorkerStaffDetails.staff.surname,
-                username = keyWorkerStaffDetails.username
+                username = null
               ),
               arrivedAt = arrivalDate.toLocalDateTime(), // TODO: Endpoint should accept a date-time instead
               expectedDepartureOn = expectedDepartureDate,

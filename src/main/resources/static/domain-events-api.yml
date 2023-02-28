@@ -328,7 +328,6 @@ components:
         - staffIdentifier
         - forenames
         - surname
-        - username
     Cru:
       type: object
       properties:

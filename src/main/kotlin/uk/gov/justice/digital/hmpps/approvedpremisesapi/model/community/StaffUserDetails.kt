@@ -10,7 +10,15 @@ data class StaffUserDetails(
   val staffIdentifier: Long,
   val staff: StaffNames,
   val teams: List<StaffUserTeamMembership>?,
-  val probationArea: StaffProbationArea,
+  val probationArea: StaffProbationArea
+)
+
+data class StaffWithoutUsernameUserDetails(
+  val staffCode: String,
+  val staffIdentifier: Long,
+  val staff: StaffNames,
+  val teams: List<StaffUserTeamMembership>?,
+  val probationArea: StaffProbationArea
 )
 
 data class StaffNames(
