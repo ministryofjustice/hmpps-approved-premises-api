@@ -7,10 +7,12 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CharacteristicsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
@@ -42,6 +44,10 @@ class SeedService(
         SeedFileType.user -> UsersSeedJob(
           filename,
           applicationContext.getBean(UserService::class.java)
+        )
+        SeedFileType.characteristics -> CharacteristicsSeedJob(
+          filename,
+          applicationContext.getBean(CharacteristicRepository::class.java)
         )
         SeedFileType.temporaryAccommodationPremises -> TemporaryAccommodationPremisesSeedJob(
           filename,
