@@ -3310,14 +3310,21 @@ components:
         targetLocation:
           type: string
         releaseType:
-          type: string
-          enum:
-            - licence
-            - rotl
-            - hdc
-            - pss
+          $ref: '#/components/schemas/ReleaseTypeOption'
       required:
         - translatedDocument
+        - isPipeApplication
+        - isWomensApplication
+        - targetLocation
+        - releaseType
+    ReleaseTypeOption:
+      type: string
+      enum:
+        - licence
+        - rotl
+        - hdc
+        - pss
+        - in_community
     PrisonCaseNote:
       type: object
       properties:
