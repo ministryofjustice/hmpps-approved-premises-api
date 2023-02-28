@@ -1076,8 +1076,6 @@ class ApplicationTest : IntegrationTestBase() {
               }
             """
             )
-            withIsPipeJsonLogicRule("""{"var": "isPipeApplication"}""")
-            withIsWomensJsonLogicRule("""{"var": "isWomensApplication"}""")
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {

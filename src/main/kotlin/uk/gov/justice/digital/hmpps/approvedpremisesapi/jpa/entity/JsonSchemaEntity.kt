@@ -39,10 +39,6 @@ class ApprovedPremisesApplicationJsonSchemaEntity(
   id: UUID,
   addedAt: OffsetDateTime,
   schema: String,
-  val isWomensJsonLogicRule: String,
-  val isPipeJsonLogicRule: String,
-  val targetLocationJsonLogicRule: String,
-  val releaseTypeJsonLogicRule: String
 ) : JsonSchemaEntity(id, addedAt, schema)
 
 @Entity
