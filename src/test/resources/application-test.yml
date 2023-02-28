@@ -112,3 +112,4 @@ application-submitted-detail-url-template: http://frontend/events/application-su
 application-assessed-detail-url-template: http://frontend/events/application-assessed/#eventId
 booking-made-detail-url-template: http://frontend/events/booking-made/#eventId
 person-arrived-detail-url-template: http://frontend/events/events/person-arrived/#eventId
+person-not-arrived-detail-url-template: http://frontend/events/events/person-not-arrived/#eventId
