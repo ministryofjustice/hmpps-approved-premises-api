@@ -19,7 +19,7 @@ class PersonArrivedFactory : Factory<PersonArrived> {
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var bookingId: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
-  private var applicationSubmittedOn: Yielded<LocalDate> = { LocalDate.now() }
+  private var applicationSubmittedOn: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var keyWorker: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var arrivedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(5) }
   private var expectedDepartureOn: Yielded<LocalDate> = { LocalDate.now().minusDays(5) }
@@ -49,7 +49,7 @@ class PersonArrivedFactory : Factory<PersonArrived> {
     this.premises = { premises }
   }
 
-  fun withApplicationSubmittedOn(applicationSubmittedOn: LocalDate) = apply {
+  fun withApplicationSubmittedOn(applicationSubmittedOn: OffsetDateTime) = apply {
     this.applicationSubmittedOn = { applicationSubmittedOn }
   }
 

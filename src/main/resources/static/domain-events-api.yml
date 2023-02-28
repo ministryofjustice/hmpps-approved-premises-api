@@ -851,8 +851,8 @@ components:
           $ref: '#/components/schemas/ApplicationUrl'
         applicationSubmittedOn:
           type: string
-          example: '2022-08-21'
-          format: date
+          example: '2022-08-21T15:30:00Z'
+          format: date-time
         bookingId:
           $ref: '#/components/schemas/BookingId'
         premises:

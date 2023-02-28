@@ -754,6 +754,7 @@ class BookingServiceTest {
       .withStaffKeyWorkerCode(keyWorker.code)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
+          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
           .withCreatedByUser(
             UserEntityFactory()
               .withUnitTestControlProbationRegion()
@@ -822,7 +823,8 @@ class BookingServiceTest {
             apCode = approvedPremises.apCode,
             legacyApCode = approvedPremises.qCode,
             localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
-          )
+          ) &&
+            data.applicationSubmittedOn == OffsetDateTime.parse("2023-02-15T15:00:00Z")
         }
       )
     }
