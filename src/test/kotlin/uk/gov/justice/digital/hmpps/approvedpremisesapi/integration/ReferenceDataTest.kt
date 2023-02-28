@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 
@@ -40,6 +41,9 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var probationRegionTransformer: ProbationRegionTransformer
+
+  @Autowired
+  lateinit var nonArrivalReasonTransformer: NonArrivalReasonTransformer
 
   @Test
   fun `Get Characteristics returns 200 with correct body`() {
@@ -465,6 +469,27 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/probation-regions")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get NonArrival Reasons returns 200 with correct body`() {
+    nonArrivalReasonRepository.deleteAll()
+
+    val nonArrivalReasons = nonArrivalReasonEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      nonArrivalReasons.map(nonArrivalReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/non-arrival-reasons")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
