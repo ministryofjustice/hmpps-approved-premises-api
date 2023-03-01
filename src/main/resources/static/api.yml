@@ -858,6 +858,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: checkCaseload
+          in: query
+          description: Additionally check the user's caseload
+          schema:
+            type: boolean
       responses:
         200:
           description: successful operation
