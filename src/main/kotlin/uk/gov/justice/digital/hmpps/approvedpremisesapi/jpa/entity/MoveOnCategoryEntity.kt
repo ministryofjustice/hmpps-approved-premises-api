@@ -22,6 +22,7 @@ data class MoveOnCategoryEntity(
   val name: String,
   val isActive: Boolean,
   val serviceScope: String,
+  val legacyDeliusCategoryCode: String?
 ) {
   override fun toString() = "MoveOnCategoryEntity:$id"
 }

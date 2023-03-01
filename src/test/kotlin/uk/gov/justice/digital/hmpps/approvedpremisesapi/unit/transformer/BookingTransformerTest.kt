@@ -457,7 +457,8 @@ class BookingTransformerTest {
           id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
           name = "Move on Category",
           isActive = true,
-          serviceScope = "*"
+          serviceScope = "*",
+          legacyDeliusCategoryCode = "CAT"
         ),
         destinationProvider = DestinationProviderEntity(
           id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
