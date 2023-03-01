@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -48,12 +50,12 @@ class ApplicationService(
   private val offenderService: OffenderService,
   private val userService: UserService,
   private val assessmentService: AssessmentService,
-  private val jsonLogicService: JsonLogicService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val domainEventService: DomainEventService,
   private val communityApiClient: CommunityApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
+  private val objectMapper: ObjectMapper,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
@@ -263,9 +265,11 @@ class ApplicationService(
   }
 
   @Transactional
-  fun submitApplication(applicationId: UUID, serializedTranslatedDocument: String, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun submitApplication(applicationId: UUID, submitApplication: SubmitApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
+
+    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
     val user = userService.getUserForRequest()
 
@@ -310,8 +314,8 @@ class ApplicationService(
       ?: throw RuntimeException("Incorrect type of JSON schema referenced by AP Application")
 
     application.apply {
-      isWomensApplication = jsonLogicService.resolveBoolean(schema.isWomensJsonLogicRule, applicationData!!)
-      isPipeApplication = jsonLogicService.resolveBoolean(schema.isPipeJsonLogicRule, applicationData)
+      isWomensApplication = submitApplication.isWomensApplication
+      isPipeApplication = submitApplication.isPipeApplication
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
     }
@@ -320,14 +324,14 @@ class ApplicationService(
 
     application = applicationRepository.save(application)
 
-    createApplicationSubmittedEvent(application, username, jwt)
+    createApplicationSubmittedEvent(application, submitApplication, username, jwt)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application)
     )
   }
 
-  private fun createApplicationSubmittedEvent(application: ApprovedPremisesApplicationEntity, username: String, jwt: String) {
+  private fun createApplicationSubmittedEvent(application: ApprovedPremisesApplicationEntity, submitApplication: SubmitApplication, username: String, jwt: String) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
 
@@ -357,12 +361,6 @@ class ApplicationService(
     val team = staffDetails.teams?.firstOrNull()
       ?: throw RuntimeException("No teams present on Staff Details when creating Application Submitted Domain Event")
 
-    val applicationData = application.data!!
-    val schema = application.schemaVersion as ApprovedPremisesApplicationJsonSchemaEntity
-
-    val releaseType = jsonLogicService.resolveString(schema.releaseTypeJsonLogicRule, applicationData)
-    val targetLocation = jsonLogicService.resolveString(schema.targetLocationJsonLogicRule, applicationData)
-
     domainEventService.saveApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
@@ -384,14 +382,14 @@ class ApplicationService(
             deliusEventNumber = application.eventNumber,
             mappa = mappaLevel,
             offenceId = application.offenceId,
-            releaseType = releaseType,
+            releaseType = submitApplication.releaseType.toString(),
             age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
             gender = when (offenderDetails.gender.lowercase()) {
               "male" -> ApplicationSubmitted.Gender.male
               "female" -> ApplicationSubmitted.Gender.female
               else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
             },
-            targetLocation = targetLocation,
+            targetLocation = submitApplication.targetLocation,
             submittedAt = OffsetDateTime.now(),
             submittedBy = ApplicationSubmittedSubmittedBy(
               staffMember = StaffMember(

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
@@ -1075,8 +1076,6 @@ class ApplicationTest : IntegrationTestBase() {
               }
             """
             )
-            withIsPipeJsonLogicRule("""{"var": "isPipeApplication"}""")
-            withIsWomensJsonLogicRule("""{"var": "isWomensApplication"}""")
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -1127,7 +1126,11 @@ class ApplicationTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               SubmitApplication(
-                translatedDocument = mapOf("isWomensApplication" to true, "isPipeApplication" to true)
+                translatedDocument = {},
+                isPipeApplication = true,
+                isWomensApplication = true,
+                targetLocation = "SW1A 1AA",
+                releaseType = ReleaseTypeOption.licence
               )
             )
             .exchange()

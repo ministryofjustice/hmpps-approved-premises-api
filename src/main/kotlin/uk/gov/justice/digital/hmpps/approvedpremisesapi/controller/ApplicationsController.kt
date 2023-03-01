@@ -132,9 +132,7 @@ class ApplicationsController(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
-    val document = objectMapper.writeValueAsString(submitApplication.translatedDocument)
-
-    val submitResult = applicationService.submitApplication(applicationId, document, username, deliusPrincipal.token.tokenValue)
+    val submitResult = applicationService.submitApplication(applicationId, submitApplication, username, deliusPrincipal.token.tokenValue)
 
     val validationResult = when (submitResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
