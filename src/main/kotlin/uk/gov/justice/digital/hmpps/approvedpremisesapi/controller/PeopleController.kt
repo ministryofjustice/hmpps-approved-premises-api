@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
@@ -38,10 +41,12 @@ class PeopleController(
   private val alertTransformer: AlertTransformer,
   private val needsDetailsTransformer: NeedsDetailsTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
-  private val convictionTransformer: ConvictionTransformer
+  private val convictionTransformer: ConvictionTransformer,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val userService: UserService,
 ) : PeopleApiDelegate {
-  override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
-    val offenderDetails = getOffenderDetails(crn)
+  override fun peopleSearchGet(crn: String, checkCaseload: Boolean?): ResponseEntity<Person> {
+    val offenderDetails = getOffenderDetails(crn, checkCaseload === true)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
@@ -188,15 +193,28 @@ class PeopleController(
     is AuthorisableActionResult.Success -> authorisableActionResult.entity
   }
 
-  private fun getOffenderDetails(crn: String): OffenderDetailSummary {
+  private fun getOffenderDetails(crn: String, checkCaseload: Boolean = false): OffenderDetailSummary {
     val principal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = principal.name
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, username)
-    return when (offenderDetailsResult) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, username)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
     }
+
+    if (checkCaseload === true) {
+      val deliusUser = userService.getUserForUsername(username)
+      val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn, deliusUser.deliusUsername)) {
+        is ClientResult.Success -> managingTeamsResult.body.teamCodes
+        is ClientResult.Failure -> managingTeamsResult.throwException()
+      }
+
+      if (managingTeamCodes.isEmpty()) {
+        throw ForbiddenProblem()
+      }
+    }
+
+    return offenderDetails
   }
 }
