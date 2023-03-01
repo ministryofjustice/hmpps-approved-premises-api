@@ -38,18 +38,6 @@ class NeedsDetailsTransformer {
       linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending
     ),
     OASysSection(
-      section = 8,
-      name = "Drugs",
-      linkedToHarm = needsDetails.linksToHarm?.drugLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.drugLinkedToReOffending
-    ),
-    OASysSection(
-      section = 9,
-      name = "Alcohol",
-      linkedToHarm = needsDetails.linksToHarm?.alcoholLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.alcoholLinkedToReOffending
-    ),
-    OASysSection(
       section = 10,
       name = "Emotional",
       linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,

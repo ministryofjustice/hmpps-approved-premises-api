@@ -118,27 +118,23 @@ class OASysSectionsTransformer : OASysTransformer() {
       )
     }
 
-    if (needsDetails.linksToHarm?.drugLinkedToHarm == true || requestedOptionalSections.contains(8)) {
-      supportingInformation += OASysSupportingInformationQuestion(
-        label = "Drug misuse issues contributing to risks of offending and harm",
-        questionNumber = "8.9",
-        sectionNumber = 8,
-        linkedToHarm = needsDetails.linksToHarm?.drugLinkedToHarm,
-        linkedToReOffending = needsDetails.linksToReOffending?.drugLinkedToReOffending,
-        answer = needsDetails.needs?.drugIssuesDetails
-      )
-    }
+    supportingInformation += OASysSupportingInformationQuestion(
+      label = "Drug misuse issues contributing to risks of offending and harm",
+      questionNumber = "8.9",
+      sectionNumber = 8,
+      linkedToHarm = needsDetails.linksToHarm?.drugLinkedToHarm,
+      linkedToReOffending = needsDetails.linksToReOffending?.drugLinkedToReOffending,
+      answer = needsDetails.needs?.drugIssuesDetails
+    )
 
-    if (needsDetails.linksToHarm?.alcoholLinkedToHarm == true || requestedOptionalSections.contains(9)) {
-      supportingInformation += OASysSupportingInformationQuestion(
-        label = "Alcohol misuse issues contributing to risks of offending and harm",
-        questionNumber = "9.9",
-        sectionNumber = 9,
-        linkedToHarm = needsDetails.linksToHarm?.alcoholLinkedToHarm,
-        linkedToReOffending = needsDetails.linksToReOffending?.alcoholLinkedToReOffending,
-        answer = needsDetails.needs?.alcoholIssuesDetails
-      )
-    }
+    supportingInformation += OASysSupportingInformationQuestion(
+      label = "Alcohol misuse issues contributing to risks of offending and harm",
+      questionNumber = "9.9",
+      sectionNumber = 9,
+      linkedToHarm = needsDetails.linksToHarm?.alcoholLinkedToHarm,
+      linkedToReOffending = needsDetails.linksToReOffending?.alcoholLinkedToReOffending,
+      answer = needsDetails.needs?.alcoholIssuesDetails
+    )
 
     if (needsDetails.linksToHarm?.emotionalLinkedToHarm == true || requestedOptionalSections.contains(10)) {
       supportingInformation += OASysSupportingInformationQuestion(
