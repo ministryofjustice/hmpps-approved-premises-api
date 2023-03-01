@@ -29,6 +29,7 @@ generic-service:
     BOOKING-MADE-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/booking-made/#eventId
     PERSON-ARRIVED-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/person-arrived/#eventId
     PERSON-NOT-ARRIVED-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/person-not-arrived/#eventId
+    PERSON-DEPARTED-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/person-departed/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: true
 
   namespace_secrets:
