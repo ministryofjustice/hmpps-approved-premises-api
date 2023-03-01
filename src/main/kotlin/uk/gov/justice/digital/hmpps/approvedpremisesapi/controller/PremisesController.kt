@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
@@ -24,11 +25,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -515,10 +519,12 @@ class PremisesController(
       premises = premises,
       startDate = body.startDate,
       endDate = body.endDate,
-      numberOfBeds = body.numberOfBeds,
       reasonId = body.reason,
       referenceNumber = body.referenceNumber,
-      notes = body.notes
+      notes = body.notes,
+      service = body.serviceName,
+      numberOfBeds = (body as? NewApprovedPremisesLostBed)?.numberOfBeds,
+      bedId = (body as? NewTemporaryAccommodationLostBed)?.bedId,
     )
 
     val lostBeds = extractResultEntityOrThrow(result)
@@ -553,6 +559,43 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
+  }
+
+  override fun premisesPremisesIdLostBedsLostBedIdPut(
+    premisesId: UUID,
+    lostBedId: UUID,
+    body: UpdateLostBed,
+  ): ResponseEntity<LostBed> {
+    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    if (premises.lostBeds.firstOrNull { it.id == lostBedId } == null) {
+      throw NotFoundProblem(lostBedId, "LostBed")
+    }
+
+    val updateLostBedResult = premisesService
+      .updateLostBeds(
+        lostBedId,
+        body.startDate,
+        body.endDate,
+        body.reason,
+        body.referenceNumber,
+        body.notes,
+        body.serviceName,
+        (body as? UpdateApprovedPremisesLostBed)?.numberOfBeds
+      )
+
+    val validationResult = when (updateLostBedResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(lostBedId, "LostBed")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> updateLostBedResult.entity
+    }
+
+    val updatedLostBed = when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(updatedLostBed))
   }
 
   override fun premisesPremisesIdCapacityGet(premisesId: UUID): ResponseEntity<List<DateCapacity>> {

@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -189,7 +190,9 @@ class PremisesServiceTest {
       numberOfBeds = 0,
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+      bedId = null,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -224,7 +227,9 @@ class PremisesServiceTest {
       numberOfBeds = 1,
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+      bedId = null,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -259,13 +264,161 @@ class PremisesServiceTest {
       numberOfBeds = 5,
       reasonId = lostBedReason.id,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+      bedId = null,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
     assertThat(result.entity).isInstanceOf(ApprovedPremisesLostBedsEntity::class.java)
     val entity = result.entity as ApprovedPremisesLostBedsEntity
+    assertThat(entity.premises).isEqualTo(premisesEntity)
+    assertThat(entity.reason).isEqualTo(lostBedReason)
+    assertThat(entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+    assertThat(entity.numberOfBeds).isEqualTo(5)
+    assertThat(entity.referenceNumber).isEqualTo("12345")
+    assertThat(entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `updateLostBeds returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    val premisesEntity = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val reasonId = UUID.randomUUID()
+
+    val lostBedsEntity = ApprovedPremisesLostBedsEntityFactory()
+      .withYieldedPremises { premisesEntity }
+      .withYieldedReason {
+        LostBedReasonEntityFactory()
+          .withServiceScope(ServiceName.approvedPremises.value)
+          .produce()
+      }
+      .produce()
+
+    every { lostBedsRepositoryMock.findByIdOrNull(lostBedsEntity.id) } returns lostBedsEntity
+    every { lostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns null
+
+    val result = premisesService.updateLostBeds(
+      lostBedId = lostBedsEntity.id,
+      startDate = LocalDate.parse("2022-08-28"),
+      endDate = LocalDate.parse("2022-08-25"),
+      numberOfBeds = 0,
+      reasonId = reasonId,
+      referenceNumber = "12345",
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+    )
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+    val resultEntity = (result as AuthorisableActionResult.Success).entity
+    assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.endDate", "beforeStartDate"),
+      entry("$.numberOfBeds", "isZero"),
+      entry("$.reason", "doesNotExist")
+    )
+  }
+
+  @Test
+  fun `updateLostBeds returns FieldValidationError with correct param to message map when a lost bed reason with the incorrect service scope is supplied`() {
+    val premisesEntity = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val reasonId = UUID.randomUUID()
+
+    val lostBedsEntity = ApprovedPremisesLostBedsEntityFactory()
+      .withYieldedPremises { premisesEntity }
+      .withYieldedReason {
+        LostBedReasonEntityFactory()
+          .withServiceScope(ServiceName.approvedPremises.value)
+          .produce()
+      }
+      .produce()
+
+    every { lostBedsRepositoryMock.findByIdOrNull(lostBedsEntity.id) } returns lostBedsEntity
+    every { lostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns LostBedReasonEntityFactory()
+      .withServiceScope(ServiceName.temporaryAccommodation.value)
+      .produce()
+
+    val result = premisesService.updateLostBeds(
+      lostBedId = lostBedsEntity.id,
+      startDate = LocalDate.parse("2022-08-25"),
+      endDate = LocalDate.parse("2022-08-28"),
+      numberOfBeds = 1,
+      reasonId = reasonId,
+      referenceNumber = "12345",
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+    )
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+    val resultEntity = (result as AuthorisableActionResult.Success).entity
+    assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.reason", "incorrectLostBedReasonServiceScope")
+    )
+  }
+
+  @Test
+  fun `updateLostBeds returns Success with correct result when validation passed`() {
+    val premisesEntity = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val lostBedReason = LostBedReasonEntityFactory()
+      .withServiceScope(ServiceName.approvedPremises.value)
+      .produce()
+
+    val lostBedsEntity = ApprovedPremisesLostBedsEntityFactory()
+      .withYieldedPremises { premisesEntity }
+      .withYieldedReason {
+        LostBedReasonEntityFactory()
+          .withServiceScope(ServiceName.approvedPremises.value)
+          .produce()
+      }
+      .produce()
+
+    every { lostBedsRepositoryMock.findByIdOrNull(lostBedsEntity.id) } returns lostBedsEntity
+    every { lostBedReasonRepositoryMock.findByIdOrNull(lostBedReason.id) } returns lostBedReason
+
+    every { lostBedsRepositoryMock.save(any()) } answers { it.invocation.args[0] as LostBedsEntity }
+
+    val result = premisesService.updateLostBeds(
+      lostBedId = lostBedsEntity.id,
+      startDate = LocalDate.parse("2022-08-25"),
+      endDate = LocalDate.parse("2022-08-28"),
+      numberOfBeds = 5,
+      reasonId = lostBedReason.id,
+      referenceNumber = "12345",
+      notes = "notes",
+      service = ServiceName.approvedPremises,
+    )
+    assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+    val resultEntity = (result as AuthorisableActionResult.Success).entity
+    assertThat(resultEntity).isInstanceOf(ValidatableActionResult.Success::class.java)
+    resultEntity as ValidatableActionResult.Success
+    assertThat(resultEntity.entity).isInstanceOf(ApprovedPremisesLostBedsEntity::class.java)
+    val entity = resultEntity.entity as ApprovedPremisesLostBedsEntity
     assertThat(entity.premises).isEqualTo(premisesEntity)
     assertThat(entity.reason).isEqualTo(lostBedReason)
     assertThat(entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
