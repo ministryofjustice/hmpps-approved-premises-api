@@ -15,7 +15,9 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
@@ -253,7 +255,10 @@ class BookingServiceTest {
       reasonId = UUID.randomUUID(),
       moveOnCategoryId = UUID.randomUUID(),
       destinationProviderId = UUID.randomUUID(),
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -293,7 +298,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -335,7 +343,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -381,7 +392,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -423,7 +437,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -470,7 +487,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -512,7 +532,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -553,7 +576,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = null,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -563,7 +589,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createDeparture returns Success with correct result when validation passed`() {
+  fun `createDeparture returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application as Event Number is not present`() {
     val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
@@ -572,6 +598,7 @@ class BookingServiceTest {
 
     val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-22"))
+      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
       .withYieldedPremises {
         ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
@@ -605,7 +632,10 @@ class BookingServiceTest {
       reasonId = departureReasonId,
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
-      notes = "notes"
+      notes = "notes",
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -617,6 +647,133 @@ class BookingServiceTest {
     assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
     assertThat(result.entity.reason).isEqualTo(reasonEntity)
     assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 0) { mockDomainEventService.savePersonDepartedEvent(any()) }
+  }
+
+  @Test
+  fun `createDeparture returns Success with correct result when validation passed, saves Domain Event when associated with Online Application`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-22"))
+      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withUnitTestControlProbationRegion()
+              .produce()
+          )
+          .produce()
+      )
+      .produce()
+
+    val reasonEntity = DepartureReasonEntityFactory()
+      .withServiceScope("approved-premises")
+      .produce()
+    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
+      .withServiceScope("approved-premises")
+      .produce()
+    val destinationProviderEntity = DestinationProviderEntityFactory().produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns destinationProviderEntity
+
+    every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+
+    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+
+    every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+      HttpStatus.OK,
+      keyWorkerStaffUserDetails
+    )
+
+    every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = destinationProviderId,
+      notes = "notes",
+      user = user
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.booking).isEqualTo(bookingEntity)
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+    assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 1) {
+      mockDomainEventService.savePersonDepartedEvent(
+        match {
+          val data = (it.data as PersonDepartedEnvelope).eventDetails
+          val application = bookingEntity.application as ApprovedPremisesApplicationEntity
+          val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
+
+          it.applicationId == application.id &&
+            it.crn == bookingEntity.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.premises == Premises(
+            id = approvedPremises.id,
+            name = approvedPremises.name,
+            apCode = approvedPremises.apCode,
+            legacyApCode = approvedPremises.qCode,
+            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+          ) &&
+            data.departedAt == OffsetDateTime.parse("2022-08-24T15:00:00+01:00") &&
+            data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
+            data.destination.destinationProvider == DestinationProvider(
+            description = destinationProviderEntity.name,
+            id = destinationProviderEntity.id
+          ) &&
+            data.reason == reasonEntity.name
+        }
+      )
+    }
   }
 
   @Test
