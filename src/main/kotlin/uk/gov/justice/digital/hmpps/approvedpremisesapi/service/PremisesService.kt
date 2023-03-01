@@ -156,6 +156,78 @@ class PremisesService(
       return success(lostBedsEntity)
     }
 
+  fun updateLostBeds(
+    lostBedId: UUID,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    reasonId: UUID,
+    referenceNumber: String?,
+    notes: String?,
+    service: ServiceName,
+    numberOfBeds: Int?,
+  ): AuthorisableActionResult<ValidatableActionResult<LostBedsEntity>> {
+    val lostBed = lostBedsRepository.findByIdOrNull(lostBedId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    return AuthorisableActionResult.Success(
+      validated {
+        if ((lostBed is ApprovedPremisesLostBedsEntity && service != ServiceName.approvedPremises) ||
+          (lostBed is TemporaryAccommodationLostBedEntity && service != ServiceName.temporaryAccommodation)
+        ) {
+          "$.serviceName" hasValidationError "incorrectLostBedServiceScope"
+        }
+
+        if (endDate.isBefore(startDate)) {
+          "$.endDate" hasValidationError "beforeStartDate"
+        }
+
+        if (service == ServiceName.approvedPremises && numberOfBeds!! <= 0) {
+          "$.numberOfBeds" hasValidationError "isZero"
+        }
+
+        val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
+        if (reason == null) {
+          "$.reason" hasValidationError "doesNotExist"
+        } else if (!serviceScopeMatches(reason.serviceScope, lostBed.premises)) {
+          "$.reason" hasValidationError "incorrectLostBedReasonServiceScope"
+        }
+
+        if (validationErrors.any()) {
+          return@validated fieldValidationError
+        }
+
+        val updatedLostBedsEntity = when (service) {
+          ServiceName.approvedPremises -> lostBedsRepository.save(
+            ApprovedPremisesLostBedsEntity(
+              id = lostBedId,
+              premises = lostBed.premises,
+              startDate = startDate,
+              endDate = endDate,
+              numberOfBeds = numberOfBeds!!,
+              reason = reason!!,
+              referenceNumber = referenceNumber,
+              notes = notes
+            )
+          )
+          ServiceName.temporaryAccommodation -> lostBedsRepository.save(
+            TemporaryAccommodationLostBedEntity(
+              id = lostBedId,
+              premises = lostBed.premises,
+              startDate = startDate,
+              endDate = endDate,
+              bed = (lostBed as TemporaryAccommodationLostBedEntity).bed,
+              reason = reason!!,
+              referenceNumber = referenceNumber,
+              notes = notes,
+            )
+          )
+        }
+
+        success(updatedLostBedsEntity)
+      }
+    )
+  }
+
   fun createNewPremises(
     addressLine1: String,
     addressLine2: String?,
