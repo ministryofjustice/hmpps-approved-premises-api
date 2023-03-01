@@ -367,7 +367,7 @@ class BookingService(
                 legacyApCode = approvedPremises.qCode,
                 localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
               ),
-              applicationSubmittedOn = occurredAt.toLocalDate(),
+              applicationSubmittedOn = application.submittedAt!!.toLocalDate(),
               keyWorker = StaffMember(
                 staffCode = keyWorkerStaffCode,
                 staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
