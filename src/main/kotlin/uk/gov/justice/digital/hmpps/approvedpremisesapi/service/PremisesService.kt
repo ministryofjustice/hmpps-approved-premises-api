@@ -136,7 +136,8 @@ class PremisesService(
             numberOfBeds = numberOfBeds!!,
             reason = reason!!,
             referenceNumber = referenceNumber,
-            notes = notes
+            notes = notes,
+            lostBedCancellation = null,
           )
         )
         ServiceName.temporaryAccommodation -> lostBedsRepository.save(
@@ -149,6 +150,7 @@ class PremisesService(
             reason = reason!!,
             referenceNumber = referenceNumber,
             notes = notes,
+            lostBedCancellation = null,
           )
         )
       }
@@ -206,7 +208,8 @@ class PremisesService(
               numberOfBeds = numberOfBeds!!,
               reason = reason!!,
               referenceNumber = referenceNumber,
-              notes = notes
+              notes = notes,
+              lostBedCancellation = null,
             )
           )
           ServiceName.temporaryAccommodation -> lostBedsRepository.save(
@@ -219,6 +222,7 @@ class PremisesService(
               reason = reason!!,
               referenceNumber = referenceNumber,
               notes = notes,
+              lostBedCancellation = null,
             )
           )
         }

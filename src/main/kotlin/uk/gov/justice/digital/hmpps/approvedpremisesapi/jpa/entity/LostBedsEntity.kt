@@ -14,6 +14,7 @@ import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToOne
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 
@@ -42,7 +43,9 @@ abstract class LostBedsEntity(
   val notes: String?,
   @ManyToOne
   @JoinColumn(name = "premises_id")
-  var premises: PremisesEntity
+  var premises: PremisesEntity,
+  @OneToOne(mappedBy = "lostBed")
+  var cancellation: LostBedCancellationEntity?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -76,6 +79,7 @@ class ApprovedPremisesLostBedsEntity(
   notes: String?,
   val numberOfBeds: Int,
   premises: PremisesEntity,
+  lostBedCancellation: LostBedCancellationEntity?,
 ) : LostBedsEntity(
   id,
   startDate,
@@ -84,6 +88,7 @@ class ApprovedPremisesLostBedsEntity(
   referenceNumber,
   notes,
   premises,
+  lostBedCancellation,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -112,6 +117,7 @@ class TemporaryAccommodationLostBedEntity(
   @ManyToOne
   @JoinColumn(name = "bed_id")
   var bed: BedEntity,
+  lostBedCancellation: LostBedCancellationEntity?,
 ) : LostBedsEntity(
   id,
   startDate,
@@ -119,7 +125,8 @@ class TemporaryAccommodationLostBedEntity(
   reason,
   referenceNumber,
   notes,
-  premises
+  premises,
+  lostBedCancellation,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

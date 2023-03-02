@@ -354,6 +354,8 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".reason.isActive").isEqualTo(true)
         .jsonPath(".referenceNumber").isEqualTo("REF-123")
         .jsonPath(".notes").isEqualTo("notes")
+        .jsonPath(".status").isEqualTo("active")
+        .jsonPath(".cancellation").isEqualTo(null)
     }
   }
 
@@ -411,6 +413,8 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".reason.isActive").isEqualTo(true)
         .jsonPath(".referenceNumber").isEqualTo("REF-123")
         .jsonPath(".notes").isEqualTo("notes")
+        .jsonPath(".status").isEqualTo("active")
+        .jsonPath(".cancellation").isEqualTo(null)
     }
   }
 
@@ -587,6 +591,8 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".reason.isActive").isEqualTo(true)
         .jsonPath(".referenceNumber").isEqualTo("REF-123")
         .jsonPath(".notes").isEqualTo("notes")
+        .jsonPath(".status").isEqualTo("active")
+        .jsonPath(".cancellation").isEqualTo(null)
     }
   }
 
@@ -649,6 +655,8 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".reason.isActive").isEqualTo(true)
         .jsonPath(".referenceNumber").isEqualTo("REF-123")
         .jsonPath(".notes").isEqualTo("notes")
+        .jsonPath(".status").isEqualTo("active")
+        .jsonPath(".cancellation").isEqualTo(null)
     }
   }
 }
