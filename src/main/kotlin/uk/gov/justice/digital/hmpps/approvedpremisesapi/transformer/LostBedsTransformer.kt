@@ -9,7 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationLostBedEntity
 
 @Component
-class LostBedsTransformer(private val lostBedReasonTransformer: LostBedReasonTransformer) {
+class LostBedsTransformer(
+  private val lostBedReasonTransformer: LostBedReasonTransformer,
+  private val lostBedCancellationTransformer: LostBedCancellationTransformer,
+) {
   fun transformJpaToApi(jpa: LostBedsEntity) = when (jpa) {
     is ApprovedPremisesLostBedsEntity -> ApprovedPremisesLostBed(
       id = jpa.id,
@@ -19,7 +22,8 @@ class LostBedsTransformer(private val lostBedReasonTransformer: LostBedReasonTra
       reason = lostBedReasonTransformer.transformJpaToApi(jpa.reason),
       referenceNumber = jpa.referenceNumber,
       notes = jpa.notes,
-      status = LostBedStatus.active,
+      status = determineStatus(jpa),
+      cancellation = jpa.cancellation?.let { lostBedCancellationTransformer.transformJpaToApi(it) },
     )
     is TemporaryAccommodationLostBedEntity -> TemporaryAccommodationLostBed(
       id = jpa.id,
@@ -29,8 +33,14 @@ class LostBedsTransformer(private val lostBedReasonTransformer: LostBedReasonTra
       referenceNumber = jpa.referenceNumber,
       bedId = jpa.bed.id,
       notes = jpa.notes,
-      status = LostBedStatus.active,
+      status = determineStatus(jpa),
+      cancellation = jpa.cancellation?.let { lostBedCancellationTransformer.transformJpaToApi(it) },
     )
     else -> throw RuntimeException("Unsupported LostBedsEntity type: ${jpa::class.qualifiedName}")
+  }
+
+  private fun determineStatus(jpa: LostBedsEntity) = when {
+    jpa.cancellation != null -> LostBedStatus.cancelled
+    else -> LostBedStatus.active
   }
 }

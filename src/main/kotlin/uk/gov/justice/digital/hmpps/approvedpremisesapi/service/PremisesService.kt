@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesLostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -33,6 +36,7 @@ class PremisesService(
   private val lostBedReasonRepository: LostBedReasonRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
+  private val lostBedCancellationRepository: LostBedCancellationRepository,
   private val characteristicService: CharacteristicService
 ) {
   private val serviceNameToEntityType = mapOf(
@@ -230,6 +234,26 @@ class PremisesService(
         success(updatedLostBedsEntity)
       }
     )
+  }
+
+  fun cancelLostBed(
+    lostBed: LostBedsEntity,
+    notes: String?
+  ) = validated<LostBedCancellationEntity> {
+    if (lostBed.cancellation != null) {
+      return generalError("This Lost Bed already has a cancellation set")
+    }
+
+    val cancellationEntity = lostBedCancellationRepository.save(
+      LostBedCancellationEntity(
+        id = UUID.randomUUID(),
+        lostBed = lostBed,
+        notes = notes,
+        createdAt = OffsetDateTime.now(),
+      )
+    )
+
+    return success(cancellationEntity)
   }
 
   fun createNewPremises(

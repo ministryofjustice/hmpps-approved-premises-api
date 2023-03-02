@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesLostBed
@@ -12,7 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class LostBedsTest : IntegrationTestBase() {
@@ -657,6 +660,168 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".notes").isEqualTo("notes")
         .jsonPath(".status").isEqualTo("active")
         .jsonPath(".cancellation").isEqualTo(null)
+    }
+  }
+
+  @Test
+  fun `Cancel Lost Bed without JWT returns 401`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val lostBeds = approvedPremisesLostBedsEntityFactory.produceAndPersist {
+      withStartDate(LocalDate.now().plusDays(2))
+      withEndDate(LocalDate.now().plusDays(4))
+      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withNumberOfBeds(5)
+      withPremises(premises)
+    }
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
+      .bodyValue(
+        NewLostBedCancellation(
+          notes = "Unauthorized"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Cancel Lost Bed for non-existent premises returns 404`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/lost-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewLostBedCancellation(
+          notes = "Non-existent premises"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
+  fun `Cancel Lost Bed for non-existent lost bed returns 404`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/lost-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewLostBedCancellation(
+          notes = "Non-existent lost bed"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Cancel Lost Bed on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withTotalBeds(3)
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val lostBeds = approvedPremisesLostBedsEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withNumberOfBeds(5)
+        withPremises(premises)
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.approvedPremises.value)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewLostBedCancellation(
+            notes = "Some cancellation notes"
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.notes").isEqualTo("Some cancellation notes")
+        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+    }
+  }
+
+  @Test
+  fun `Cancel Lost Bed on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val lostBeds = temporaryAccommodationLostBedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedBed { bed }
+        withPremises(premises)
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewLostBedCancellation(
+            notes = "Some cancellation notes"
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.notes").isEqualTo("Some cancellation notes")
+        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
     }
   }
 }

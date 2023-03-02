@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.BaseMatcher
-import org.hamcrest.Description
-import org.hamcrest.Matcher
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -27,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -1344,29 +1342,5 @@ class BookingTest : IntegrationTestBase() {
         .jsonPath("$.reason.id").isEqualTo(nonArrivalReason.id.toString())
         .jsonPath("$.notes").isEqualTo("Notes")
     }
-  }
-
-  fun withinSeconds(seconds: Long): Matcher<OffsetDateTime> {
-    val matcher: Matcher<OffsetDateTime> = object : BaseMatcher<OffsetDateTime>() {
-      private val now: OffsetDateTime = OffsetDateTime.now()
-
-      override fun describeTo(description: Description?) {
-        description?.appendText("within the last $seconds seconds (now: $now)")
-      }
-
-      override fun matches(actual: Any?): Boolean {
-        val actualDateTime = when (actual) {
-          is String -> OffsetDateTime.parse(actual)
-          is OffsetDateTime -> actual
-          else -> return false
-        }
-
-        if (now.isBefore(actualDateTime)) return false
-
-        return actualDateTime.plusSeconds(seconds).isAfter(now)
-      }
-    }
-
-    return matcher
   }
 }
