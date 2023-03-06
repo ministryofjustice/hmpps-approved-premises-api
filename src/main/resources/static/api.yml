@@ -2440,8 +2440,16 @@ components:
           type: string
         serviceScope:
           type: string
+          enum:
+            - approved-premises
+            - temporary-accommodation
+            - "*"
         modelScope:
           type: string
+          enum:
+            - premises
+            - room
+            - "*"
       required:
         - id
         - name
@@ -4121,6 +4129,7 @@ components:
         - temporary_accommodation_premises
         - temporary_accommodation_bedspace
         - user
+        - characteristics
     MigrationJobRequest:
       type: object
       properties:

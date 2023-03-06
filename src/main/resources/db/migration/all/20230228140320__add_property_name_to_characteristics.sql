@@ -1,0 +1,1 @@
+ALTER TABLE characteristics ADD COLUMN property_name TEXT;
