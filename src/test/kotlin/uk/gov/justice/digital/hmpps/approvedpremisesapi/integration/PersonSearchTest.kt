@@ -142,7 +142,7 @@ class PersonSearchTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusUsername,
+          offenderDetails.otherIds.crn, userEntity.deliusStaffCode,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1")
           )
@@ -164,7 +164,7 @@ class PersonSearchTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusUsername,
+          offenderDetails.otherIds.crn, userEntity.deliusStaffCode,
           ManagingTeamsResponse(
             teamCodes = emptyList()
           )

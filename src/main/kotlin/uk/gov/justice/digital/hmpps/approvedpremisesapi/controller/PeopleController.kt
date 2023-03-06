@@ -203,9 +203,9 @@ class PeopleController(
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
     }
 
-    if (checkCaseload === true) {
+    if (checkCaseload) {
       val deliusUser = userService.getUserForUsername(username)
-      val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn, deliusUser.deliusUsername)) {
+      val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn, deliusUser.deliusStaffCode)) {
         is ClientResult.Success -> managingTeamsResult.body.teamCodes
         is ClientResult.Failure -> managingTeamsResult.throwException()
       }
