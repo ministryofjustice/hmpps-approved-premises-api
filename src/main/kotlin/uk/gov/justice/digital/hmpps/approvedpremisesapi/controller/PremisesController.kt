@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
@@ -60,6 +62,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -89,7 +92,8 @@ class PremisesController(
   private val staffMemberTransformer: StaffMemberTransformer,
   private val staffMemberService: StaffMemberService,
   private val roomService: RoomService,
-  private val roomTransformer: RoomTransformer
+  private val roomTransformer: RoomTransformer,
+  private val lostBedCancellationTransformer: LostBedCancellationTransformer,
 ) : PremisesApiDelegate {
 
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
@@ -599,6 +603,34 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(updatedLostBed))
+  }
+
+  override fun premisesPremisesIdLostBedsLostBedIdCancellationsPost(
+    premisesId: UUID,
+    lostBedId: UUID,
+    body: NewLostBedCancellation,
+  ): ResponseEntity<LostBedCancellation> {
+    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
+
+    val user = usersService.getUserForRequest()
+
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
+    val cancelLostBedResult = premisesService.cancelLostBed(
+      lostBed = lostBed,
+      notes = body.notes,
+    )
+
+    val cancellation = when (cancelLostBedResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = cancelLostBedResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelLostBedResult.validationMessages)
+      is ValidatableActionResult.Success -> cancelLostBedResult.entity
+    }
+
+    return ResponseEntity.ok(lostBedCancellationTransformer.transformJpaToApi(cancellation))
   }
 
   override fun premisesPremisesIdCapacityGet(premisesId: UUID): ResponseEntity<List<DateCapacity>> {

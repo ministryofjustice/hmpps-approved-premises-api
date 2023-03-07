@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesLostBedsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -21,6 +22,7 @@ class ApprovedPremisesLostBedsEntityFactory : Factory<ApprovedPremisesLostBedsEn
   private var referenceNumber: Yielded<String?> = { UUID.randomUUID().toString() }
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var premises: Yielded<PremisesEntity>? = null
+  private var lostBedCancellation: Yielded<LostBedCancellationEntity>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -58,6 +60,14 @@ class ApprovedPremisesLostBedsEntityFactory : Factory<ApprovedPremisesLostBedsEn
     this.premises = { premises }
   }
 
+  fun withYieldedLostBedCancellation(lostBedCancellation: Yielded<LostBedCancellationEntity>) = apply {
+    this.lostBedCancellation = lostBedCancellation
+  }
+
+  fun withLostBedCancellation(lostBedCancellation: LostBedCancellationEntity) = apply {
+    this.lostBedCancellation = { lostBedCancellation }
+  }
+
   override fun produce(): ApprovedPremisesLostBedsEntity = ApprovedPremisesLostBedsEntity(
     id = this.id(),
     startDate = this.startDate(),
@@ -67,5 +77,6 @@ class ApprovedPremisesLostBedsEntityFactory : Factory<ApprovedPremisesLostBedsEn
     referenceNumber = this.referenceNumber(),
     notes = this.notes(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
+    lostBedCancellation = this.lostBedCancellation?.invoke(),
   )
 }

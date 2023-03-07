@@ -11,17 +11,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesLostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationLostBedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesLostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -42,6 +48,7 @@ class PremisesServiceTest {
   private val lostBedReasonRepositoryMock = mockk<LostBedReasonRepository>()
   private val localAuthorityAreaRepositoryMock = mockk<LocalAuthorityAreaRepository>()
   private val probationRegionRepositoryMock = mockk<ProbationRegionRepository>()
+  private val lostBedCancellationRepositoryMock = mockk<LostBedCancellationRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
 
   private val premisesService = PremisesService(
@@ -51,6 +58,7 @@ class PremisesServiceTest {
     lostBedReasonRepositoryMock,
     localAuthorityAreaRepositoryMock,
     probationRegionRepositoryMock,
+    lostBedCancellationRepositoryMock,
     characteristicServiceMock
   )
 
@@ -161,6 +169,146 @@ class PremisesServiceTest {
     assertThat(result).containsValues(
       Availability(date = startDate, pendingBookings = 0, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 5),
+      Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0)
+    )
+  }
+
+  @Test
+  fun `getAvailabilityForRange returns correctly when there are cancelled lost beds`() {
+    val startDate = LocalDate.now()
+    val endDate = LocalDate.now().plusDays(6)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withTotalBeds(30)
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+      }.produce()
+
+    val lostBedEntity = ApprovedPremisesLostBedsEntityFactory()
+      .withPremises(premises)
+      .withStartDate(startDate.plusDays(1))
+      .withEndDate(startDate.plusDays(2))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withNumberOfBeds(5)
+      .produce()
+
+    val lostBedCancellation = LostBedCancellationEntityFactory()
+      .withYieldedLostBed { lostBedEntity }
+      .produce()
+
+    lostBedEntity.cancellation = lostBedCancellation
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
+      lostBedEntity
+    )
+
+    val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
+
+    assertThat(result).containsValues(
+      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(1), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(2), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0)
+    )
+  }
+
+  @Test
+  fun `getAvailabilityForRange returns correctly for Temporary Accommodation premises`() {
+    val startDate = LocalDate.now()
+    val endDate = LocalDate.now().plusDays(6)
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+      }.produce()
+
+    val room = RoomEntityFactory()
+      .withYieldedPremises { premises }
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withYieldedRoom { room }
+      .produce()
+
+    val lostBedEntity = TemporaryAccommodationLostBedEntityFactory()
+      .withPremises(premises)
+      .withStartDate(startDate.plusDays(1))
+      .withEndDate(startDate.plusDays(2))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedBed { bed }
+      .produce()
+
+    val pendingBookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withArrivalDate(startDate.plusDays(1))
+      .withDepartureDate(startDate.plusDays(3))
+      .withStaffKeyWorkerCode(null)
+      .produce()
+
+    val arrivedBookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withArrivalDate(startDate)
+      .withDepartureDate(startDate.plusDays(2))
+      .withStaffKeyWorkerCode("123")
+      .produce()
+
+    val arrivalEntity = ArrivalEntityFactory()
+      .withBooking(arrivedBookingEntity)
+      .produce()
+
+    arrivedBookingEntity.arrival = arrivalEntity
+
+    val nonArrivedBookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withArrivalDate(startDate.plusDays(3))
+      .withDepartureDate(startDate.plusDays(5))
+      .withStaffKeyWorkerCode(null)
+      .produce()
+
+    val nonArrivalEntity = NonArrivalEntityFactory()
+      .withBooking(nonArrivedBookingEntity)
+      .withYieldedReason { NonArrivalReasonEntityFactory().produce() }
+      .produce()
+
+    nonArrivedBookingEntity.nonArrival = nonArrivalEntity
+
+    val cancelledBookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withArrivalDate(startDate.plusDays(4))
+      .withDepartureDate(startDate.plusDays(6))
+      .withStaffKeyWorkerCode(null)
+      .produce()
+
+    val cancelledArrivalEntity = CancellationEntityFactory()
+      .withYieldedReason { CancellationReasonEntityFactory().produce() }
+      .withBooking(cancelledBookingEntity)
+      .produce()
+
+    cancelledBookingEntity.cancellation = cancelledArrivalEntity
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
+      pendingBookingEntity,
+      arrivedBookingEntity,
+      nonArrivedBookingEntity,
+      cancelledBookingEntity
+    )
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
+      lostBedEntity
+    )
+
+    val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
+
+    assertThat(result).containsValues(
+      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 1),
       Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
