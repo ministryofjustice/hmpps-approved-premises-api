@@ -111,6 +111,7 @@ class BookingTransformerTest {
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
     status = PropertyStatus.active,
+    point = null,
     pdu = ""
   )
 

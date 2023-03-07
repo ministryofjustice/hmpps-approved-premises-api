@@ -104,6 +104,7 @@ class TemporaryAccommodationPremisesSeedJob(
         characteristics = mutableListOf(),
         pdu = row.pdu,
         status = PropertyStatus.active,
+        point = null
       )
     )
 

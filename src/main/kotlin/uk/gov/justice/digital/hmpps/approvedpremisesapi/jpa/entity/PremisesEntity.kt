@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -77,7 +78,8 @@ abstract class PremisesEntity(
   )
   var characteristics: MutableList<CharacteristicEntity>,
   @Enumerated(value = EnumType.STRING)
-  var status: PropertyStatus
+  var status: PropertyStatus,
+  val point: Point?
 )
 
 @Entity
@@ -103,6 +105,7 @@ class ApprovedPremisesEntity(
   var qCode: String,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
+  point: Point?,
   status: PropertyStatus
 ) : PremisesEntity(
   id,
@@ -121,7 +124,8 @@ class ApprovedPremisesEntity(
   lostBeds,
   rooms,
   characteristics,
-  status
+  status,
+  point
 )
 
 @Entity
@@ -146,6 +150,7 @@ class TemporaryAccommodationPremisesEntity(
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
+  point: Point?,
   var pdu: String,
 ) : PremisesEntity(
   id,
@@ -164,5 +169,6 @@ class TemporaryAccommodationPremisesEntity(
   lostBeds,
   rooms,
   characteristics,
-  status
+  status,
+  point
 )

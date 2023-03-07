@@ -2,6 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Point
+import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -28,6 +31,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var pdu: Yielded<String> = { randomStringUpperCase(15) }
+  private var point: Yielded<Point> = { Point(Coordinate(1.0, 2.0), PrecisionModel(PrecisionModel.Type("FLOATING")), 4326) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -108,6 +112,10 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     )
   }
 
+  fun withPoint(point: Point) = apply {
+    this.point = { point }
+  }
+
   override fun produce(): TemporaryAccommodationPremisesEntity = TemporaryAccommodationPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -127,5 +135,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     characteristics = mutableListOf(),
     status = this.status(),
     pdu = this.pdu(),
+    point = this.point()
   )
 }

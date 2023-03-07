@@ -340,7 +340,8 @@ class PremisesService(
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
       status = status,
-      pdu = pdu!!,
+      point = null,
+      pdu = pdu!!
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->

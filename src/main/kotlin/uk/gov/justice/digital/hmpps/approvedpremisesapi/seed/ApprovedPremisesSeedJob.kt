@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.PrecisionModel
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -127,6 +130,8 @@ class ApprovedPremisesSeedJob(
   ) {
     log.info("Creating new Approved Premises: ${row.apCode} ${row.name}")
 
+    val geometryFactory = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
+
     val approvedPremises = premisesRepository.save(
       ApprovedPremisesEntity(
         id = UUID.randomUUID(),
@@ -147,7 +152,8 @@ class ApprovedPremisesSeedJob(
         characteristics = mutableListOf(),
         status = row.status,
         longitude = row.longitude,
-        latitude = row.latitude
+        latitude = row.latitude,
+        point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.longitude, row.latitude)) else null
       )
     )
 

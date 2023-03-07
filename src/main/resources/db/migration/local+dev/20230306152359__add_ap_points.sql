@@ -1,0 +1,2 @@
+UPDATE approved_premises SET point = ST_MakePoint(51.910871, -1.832088) WHERE id = '459eeaba-55ac-4a1f-bae2-bad810d4016b';
+UPDATE approved_premises SET point = ST_MakePoint(55.285697, -2.505115) WHERE id = 'e03c82e9-f335-414a-87a0-866060397d4a';
