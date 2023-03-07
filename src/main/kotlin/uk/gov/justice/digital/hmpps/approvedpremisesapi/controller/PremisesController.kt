@@ -294,6 +294,8 @@ class PremisesController(
 
   @Transactional
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
+    // TODO: Change CAS1 Bookings to be made against a specific bed
+
     val user = usersService.getUserForRequest()
 
     val premises = premisesService.getPremises(premisesId)
