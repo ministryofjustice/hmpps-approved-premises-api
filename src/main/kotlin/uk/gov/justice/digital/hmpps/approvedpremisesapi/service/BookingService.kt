@@ -7,8 +7,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDeparted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedDestination
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
@@ -544,6 +549,7 @@ class BookingService(
   }
 
   fun createDeparture(
+    user: UserEntity,
     booking: BookingEntity,
     dateTime: OffsetDateTime,
     reasonId: UUID,
@@ -551,6 +557,8 @@ class BookingService(
     destinationProviderId: UUID?,
     notes: String?
   ) = validated<DepartureEntity> {
+    val occurredAt = OffsetDateTime.now()
+
     if (booking.departure != null) {
       return generalError("This Booking already has a Departure set")
     }
@@ -612,6 +620,78 @@ class BookingService(
     if (booking.service == ServiceName.temporaryAccommodation.value) {
       booking.departureDate = dateTime.toLocalDate()
       updateBooking(booking)
+    }
+
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+      val domainEventId = UUID.randomUUID()
+
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
+      }
+
+      val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(booking.keyWorkerStaffCode!!)
+      val keyWorkerStaffDetails = when (keyWorkerStaffDetailsResult) {
+        is ClientResult.Success -> keyWorkerStaffDetailsResult.body
+        is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
+      }
+
+      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+      domainEventService.savePersonDepartedEvent(
+        DomainEvent(
+          id = domainEventId,
+          applicationId = application.id,
+          crn = booking.crn,
+          occurredAt = dateTime,
+          data = PersonDepartedEnvelope(
+            id = domainEventId,
+            timestamp = occurredAt,
+            eventType = "approved-premises.person.departed",
+            eventDetails = PersonDeparted(
+              applicationId = application.id,
+              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              bookingId = booking.id,
+              personReference = PersonReference(
+                crn = booking.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!
+              ),
+              deliusEventNumber = application.eventNumber,
+              premises = Premises(
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+              ),
+              keyWorker = StaffMember(
+                staffCode = booking.keyWorkerStaffCode!!,
+                staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
+                forenames = keyWorkerStaffDetails.staff.forenames,
+                surname = keyWorkerStaffDetails.staff.surname,
+                username = null
+              ),
+              departedAt = dateTime,
+              reason = reason.name,
+              legacyReasonCode = reason.legacyDeliusReasonCode!!,
+              destination = PersonDepartedDestination(
+                moveOnCategory = MoveOnCategory(
+                  description = moveOnCategory.name,
+                  legacyMoveOnCategoryCode = moveOnCategory.legacyDeliusCategoryCode!!,
+                  id = moveOnCategory.id
+                ),
+                destinationProvider = DestinationProvider(
+                  description = destinationProvider!!.name,
+                  id = destinationProvider.id
+                ),
+                premises = null
+              )
+            )
+          )
+        )
+      )
     }
 
     return success(departureEntity)

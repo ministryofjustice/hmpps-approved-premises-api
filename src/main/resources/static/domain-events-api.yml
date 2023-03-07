@@ -975,44 +975,10 @@ components:
           format: date-time
         reason:
           type: string
-          enum:
-            - Absconded, still at large
-            - Admitted to Hospital
-            - Arrested, remanded in custody, or sentenced
-            - Bed Withdrawn
-            - Breach / recall (abscond)
-            - Breach / recall (behaviour / increasing risk)
-            - Breach / recall (curfew)
-            - Breach / recall (house rules)
-            - Breach / recall (licence or bail condition)
-            - Breach / recall (other)
-            - Breach / recall (positive drugs test)
-            - Died
-            - End of ROTL
-            - Left of own volition
-            - Order / licence expired
-            - Other
-            - Planned move-on
+          example: Arrested, remanded in custody, or sentenced
         legacyReasonCode:
           type: string
-          enum:
-            - J
-            - Q
-            - H
-            - X
-            - A
-            - D
-            - F
-            - B
-            - E
-            - G
-            - C
-            - P
-            - V
-            - K
-            - N
-            - W
-            - O
+          example: Q
         destination:
           type: object
           properties:
@@ -1022,6 +988,9 @@ components:
               $ref: '#/components/schemas/MoveOnCategory'
             destinationProvider:
               $ref: '#/components/schemas/DestinationProvider'
+          required:
+            - moveOnCategory
+            - destinationProvider
       required:
         - personReference
         - deliusEventNumber
@@ -1106,53 +1075,31 @@ components:
       properties:
         description:
           type: string
-          enum:
-            - B&B / Temp / Short-Term Housing
-            - Custody
-            - Deported/ Detention Centre/IRC
-            - Housing Association - Rented
-            - Living with Family/ Partner/ Other
-            - Local Authority - Rented
-            - No Fixed Abode
-            - Not Applicable
-            - Owner Occupied
-            - Private Rented
-            - Supported Housing
-            - Transferred to different AP
+          example: B&B / Temp / Short-Term Housing
         legacyMoveOnCategoryCode:
           type: string
-          enum:
-            - MC05
-            - MC19
-            - MC10
-            - MC03
-            - MC07
-            - MC02
-            - MC14
-            - MCNA
-            - MC08
-            - MC04
-            - MC06
-            - P
-        code:
+          example: MC05
+        id:
           type: string
-          example: ABC123
+          format: uuid
+          example: a3c3d3df-1e27-4ee5-aef6-8a0f0471075f
       required:
         - description
         - legacyMoveOnCategoryCode
-        - code
+        - id
     DestinationProvider:
       type: object
       properties:
         description:
           type: string
           example: Ext - North East Region
-        code:
+        id:
           type: string
-          example: XYZ456
+          format: uuid
+          example: f0703382-3e8f-49ff-82bc-b970c9fe1b35
       required:
         - description
-        - code
+        - id
     Problem:
       type: object
       properties:

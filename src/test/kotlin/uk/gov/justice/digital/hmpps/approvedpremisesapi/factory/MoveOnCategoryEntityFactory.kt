@@ -12,6 +12,7 @@ class MoveOnCategoryEntityFactory : Factory<MoveOnCategoryEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var isActive: Yielded<Boolean> = { true }
   private var serviceScope: Yielded<String> = { randomStringUpperCase(4) }
+  private var legacyDeliusCategoryCode: Yielded<String?> = { randomStringMultiCaseWithNumbers(5) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -29,10 +30,15 @@ class MoveOnCategoryEntityFactory : Factory<MoveOnCategoryEntity> {
     this.serviceScope = { serviceScope }
   }
 
+  fun withLegacyDeliusCategoryCode(legacyDeliusCategoryCode: String?) = apply {
+    this.legacyDeliusCategoryCode = { legacyDeliusCategoryCode }
+  }
+
   override fun produce(): MoveOnCategoryEntity = MoveOnCategoryEntity(
     id = this.id(),
     name = this.name(),
     isActive = this.isActive(),
     serviceScope = this.serviceScope(),
+    legacyDeliusCategoryCode = this.legacyDeliusCategoryCode()
   )
 }

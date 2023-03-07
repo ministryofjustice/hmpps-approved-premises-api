@@ -460,6 +460,7 @@ class PremisesController(
     }
 
     val result = bookingService.createDeparture(
+      user = user,
       booking = booking,
       dateTime = body.dateTime,
       reasonId = body.reasonId,
