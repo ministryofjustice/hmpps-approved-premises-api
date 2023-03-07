@@ -67,10 +67,12 @@ class UserService(
   }
 
   fun getUserForUsername(username: String): UserEntity {
-    val existingUser = userRepository.findByDeliusUsername(username)
+    val normalisedUsername = username.uppercase()
+
+    val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
     if (existingUser != null) return existingUser
 
-    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(username)
+    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(normalisedUsername)
 
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
@@ -81,10 +83,10 @@ class UserService(
 
     if (staffProbationRegion == null) {
       if (assignDefaultRegionToUsersWithUnknownRegion) {
-        log.warn("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$username', assigning a default region of 'North West'.")
+        log.warn("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername', assigning a default region of 'North West'.")
         staffProbationRegion = probationRegionRepository.findByName("North West")!!
       } else {
-        throw BadRequestProblem(errorDetail = "Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$username'")
+        throw BadRequestProblem(errorDetail = "Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername'")
       }
     }
 
@@ -92,7 +94,7 @@ class UserService(
       UserEntity(
         id = UUID.randomUUID(),
         name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}",
-        deliusUsername = username,
+        deliusUsername = normalisedUsername,
         deliusStaffIdentifier = staffUserDetails.staffIdentifier,
         deliusStaffCode = staffUserDetails.staffCode,
         email = staffUserDetails.email,

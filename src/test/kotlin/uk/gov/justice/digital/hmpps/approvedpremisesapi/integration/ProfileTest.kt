@@ -54,7 +54,7 @@ class ProfileTest : IntegrationTestBase() {
   @Test
   fun `Getting own Approved Premises profile returns OK with correct body`() {
     val id = UUID.randomUUID()
-    val deliusUsername = "JimJimmerson"
+    val deliusUsername = "JIMJIMMERSON"
     val email = "foo@bar.com"
     val telephoneNumber = "123445677"
 
@@ -102,7 +102,7 @@ class ProfileTest : IntegrationTestBase() {
   @Test
   fun `Getting own Temporary Accommodation profile returns OK with correct body`() {
     val id = UUID.randomUUID()
-    val deliusUsername = "JimJimmerson"
+    val deliusUsername = "JIMJIMMERSON"
     val email = "foo@bar.com"
     val telephoneNumber = "123445677"
 
