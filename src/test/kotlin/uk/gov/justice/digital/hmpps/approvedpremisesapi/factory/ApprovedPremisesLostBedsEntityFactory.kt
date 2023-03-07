@@ -60,7 +60,7 @@ class ApprovedPremisesLostBedsEntityFactory : Factory<ApprovedPremisesLostBedsEn
     this.premises = { premises }
   }
 
-  fun withYieledLostBedCancellation(lostBedCancellation: Yielded<LostBedCancellationEntity>) = apply {
+  fun withYieldedLostBedCancellation(lostBedCancellation: Yielded<LostBedCancellationEntity>) = apply {
     this.lostBedCancellation = lostBedCancellation
   }
 

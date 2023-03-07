@@ -76,7 +76,7 @@ class PremisesService(
 
     return startDate.getDaysUntilExclusiveEnd(endDate).map { date ->
       val bookingsOnDay = bookings.filter { booking -> booking.arrivalDate <= date && booking.departureDate > date }
-      val lostBedsOnDay = lostBeds.filter { lostBed -> lostBed.startDate <= date && lostBed.endDate > date }
+      val lostBedsOnDay = lostBeds.filter { lostBed -> lostBed.startDate <= date && lostBed.endDate > date && lostBed.cancellation == null }
 
       Availability(
         date = date,
@@ -84,7 +84,7 @@ class PremisesService(
         arrivedBookings = bookingsOnDay.count { it.arrival != null },
         nonArrivedBookings = bookingsOnDay.count { it.nonArrival != null },
         cancelledBookings = bookingsOnDay.count { it.cancellation != null },
-        lostBeds = lostBedsOnDay.filterIsInstance<ApprovedPremisesLostBedsEntity>().sumOf { it.numberOfBeds }
+        lostBeds = lostBedsOnDay.sumOf { if (it is ApprovedPremisesLostBedsEntity) it.numberOfBeds else 1 }
       )
     }.associateBy { it.date }
   }
