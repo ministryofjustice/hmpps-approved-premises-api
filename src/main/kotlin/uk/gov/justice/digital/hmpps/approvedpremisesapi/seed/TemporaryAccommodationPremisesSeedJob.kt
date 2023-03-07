@@ -88,6 +88,8 @@ class TemporaryAccommodationPremisesSeedJob(
         addressLine2 = row.addressLine2,
         town = row.town,
         postcode = row.postcode,
+        latitude = null,
+        longitude = null,
         totalBeds = 0,
         notes = row.notes,
         probationRegion = probationRegion,

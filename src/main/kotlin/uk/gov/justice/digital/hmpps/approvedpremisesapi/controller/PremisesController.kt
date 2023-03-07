@@ -155,6 +155,8 @@ class PremisesController(
         addressLine2 = body.addressLine2,
         town = body.town,
         postcode = body.postcode,
+        latitude = null,
+        longitude = null,
         service = serviceName,
         localAuthorityAreaId = body.localAuthorityAreaId,
         probationRegionId = body.probationRegionId,

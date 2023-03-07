@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
@@ -190,6 +191,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       .withProbationRegion(probationRegion.name)
       .withLocalAuthorityArea(localAuthorityArea.name)
       .withCharacteristics(listOf(characteristic.name))
+      .withLongitude(-1.1169752)
+      .withLatitude(53.9634721)
       .produce()
 
     withCsv(
@@ -210,6 +213,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.name).isEqualTo(csvRow.name)
     assertThat(persistedApprovedPremises.addressLine1).isEqualTo(csvRow.addressLine1)
     assertThat(persistedApprovedPremises.postcode).isEqualTo(csvRow.postcode)
+    assertThat(persistedApprovedPremises.latitude).isEqualTo(csvRow.latitude)
+    assertThat(persistedApprovedPremises.longitude).isEqualTo(csvRow.longitude)
     assertThat(persistedApprovedPremises.totalBeds).isEqualTo(csvRow.totalBeds)
     assertThat(persistedApprovedPremises.notes).isEqualTo(csvRow.notes)
     assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
@@ -279,6 +284,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "name",
         "addressLine1",
         "postcode",
+        "latitude",
+        "longitude",
         "totalBeds",
         "notes",
         "probationRegion",
@@ -296,6 +303,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.name)
         .withQuotedField(it.addressLine1)
         .withQuotedField(it.postcode)
+        .withQuotedField(it.latitude!!)
+        .withQuotedField(it.longitude!!)
         .withUnquotedField(it.totalBeds)
         .withQuotedFields(it.notes)
         .withQuotedField(it.probationRegion)
@@ -316,6 +325,8 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var addressLine1: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var postcode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
+  private var latitude: Yielded<Double> = { randomDouble(53.50, 54.99) }
+  private var longitude: Yielded<Double> = { randomDouble(-1.56, 1.10) }
   private var totalBeds: Yielded<Int> = { randomInt(5, 50) }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var probationRegion: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
@@ -339,6 +350,13 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
 
   fun withPostcode(postcode: String) = apply {
     this.postcode = { postcode }
+  }
+
+  fun withLatitude(latitude: Double) = apply {
+    this.latitude = { latitude }
+  }
+  fun withLongitude(longitude: Double) = apply {
+    this.longitude = { longitude }
   }
 
   fun withTotalBeds(totalBeds: Int) = apply {
@@ -378,6 +396,8 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     name = this.name(),
     addressLine1 = this.addressLine1(),
     postcode = this.postcode(),
+    latitude = this.latitude(),
+    longitude = this.longitude(),
     totalBeds = this.totalBeds(),
     notes = this.notes(),
     probationRegion = this.probationRegion(),
