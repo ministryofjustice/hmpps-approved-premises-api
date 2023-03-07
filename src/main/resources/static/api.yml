@@ -1651,6 +1651,43 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /beds/search:
+    post:
+      summary: Searches for available Beds within the given parameters
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only Beds for this service will be considered in the search
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/BedSearchParameters'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BedSearchResult'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/departure-reasons:
     get:
       tags:
@@ -4231,6 +4268,67 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
+    BedSearchParameters:
+      type: object
+      properties:
+        postcode_district:
+          type: string
+          description: The postcode district to search outwards from
+        required_premises_characteristics:
+          type: array
+          items:
+            type: string
+        required_bed_characteristics:
+          type: array
+          items:
+            type: string
+        max_distance_miles:
+          type: integer
+          description: Maximum number of miles from the postcode district to search, only required if more than 50 miles which is the default
+        start_date:
+          type: string
+          format: date
+          description: The date the Bed will need to be free from
+        duration_days:
+          type: integer
+          description: The number of days the Bed will need to be free from the start_date until
+      required:
+        - postcode_district
+        - required_premises_characteristics
+        - required_bed_characteristics
+        - start_date
+        - duration_days
+    BedSearchResult:
+      type: object
+      properties:
+        premises_id:
+          type: string
+          format: uuid
+        premises_name:
+          type: string
+        premises_characteristic_property_names:
+          type: array
+          items:
+            type: string
+        bed_id:
+          type: string
+          format: uuid
+        bed_name:
+          type: string
+        room_characteristic_property_names:
+          type: array
+          items:
+            type: string
+        distance_miles:
+          type: number
+      required:
+        - premises_id
+        - premises_name
+        - premises_characteristic_property_names
+        - bed_id
+        - bed_name
+        - room_characteristic_property_names
+        - distance_miles
     PlacementRequest:
       type: object
       properties:
