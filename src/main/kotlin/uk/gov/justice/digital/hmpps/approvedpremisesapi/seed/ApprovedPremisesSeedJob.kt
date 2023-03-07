@@ -38,7 +38,9 @@ class ApprovedPremisesSeedJob(
     characteristics = columns["characteristics"]!!.split(",").filter { it.isNotBlank() }.map { it.trim() },
     status = PropertyStatus.valueOf(columns["status"]!!),
     apCode = columns["apCode"]!!,
-    qCode = columns["qCode"]!!
+    qCode = columns["qCode"]!!,
+    latitude = columns["latitude"]!!.toDoubleOrNull(),
+    longitude = columns["longitude"]!!.toDoubleOrNull()
   )
 
   override fun processRow(row: ApprovedPremisesSeedCsvRow) {
@@ -92,7 +94,9 @@ class ApprovedPremisesSeedJob(
         qCode = row.qCode,
         rooms = mutableListOf(),
         characteristics = mutableListOf(),
-        status = row.status
+        status = row.status,
+        longitude = row.longitude,
+        latitude = row.latitude
       )
     )
 
@@ -126,6 +130,8 @@ class ApprovedPremisesSeedJob(
       this.qCode = row.qCode
       this.addressLine1 = row.addressLine1
       this.postcode = row.postcode
+      this.longitude = row.longitude
+      this.latitude = row.latitude
       this.totalBeds = row.totalBeds
       this.notes = row.notes
       this.probationRegion = probationRegion
@@ -163,5 +169,7 @@ data class ApprovedPremisesSeedCsvRow(
   val characteristics: List<String>,
   val status: PropertyStatus,
   val apCode: String,
-  val qCode: String
+  val qCode: String,
+  val latitude: Double?,
+  val longitude: Double?
 )

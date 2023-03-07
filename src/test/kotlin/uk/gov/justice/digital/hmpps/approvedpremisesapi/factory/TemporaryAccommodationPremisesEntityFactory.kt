@@ -112,6 +112,8 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     id = this.id(),
     name = this.name(),
     postcode = this.postcode(),
+    latitude = null,
+    longitude = null,
     totalBeds = this.totalBeds(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),

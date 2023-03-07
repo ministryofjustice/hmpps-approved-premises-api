@@ -105,6 +105,8 @@ class BookingTransformerTest {
     addressLine2 = "Some district",
     town = "Somewhere",
     postcode = "ST8ST8",
+    latitude = null,
+    longitude = null,
     notes = "",
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
