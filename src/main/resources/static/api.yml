@@ -3022,6 +3022,9 @@ components:
         endDate:
           type: string
           format: date
+        bedId:
+          type: string
+          format: uuid
         reason:
           $ref: '#/components/schemas/LostBedReason'
         referenceNumber:
@@ -3038,32 +3041,9 @@ components:
         - id
         - startDate
         - endDate
+        - bedId
         - reason
         - status
-      discriminator:
-        propertyName: service
-        mapping:
-          approved-premises: '#/components/schemas/ApprovedPremisesLostBed'
-          temporary-accommodation: '#/components/schemas/TemporaryAccommodationLostBed'
-    ApprovedPremisesLostBed:
-      allOf:
-        - $ref: "#/components/schemas/LostBed"
-        - type: object
-          properties:
-            numberOfBeds:
-              type: integer
-          required:
-            - numberOfBeds
-    TemporaryAccommodationLostBed:
-      allOf:
-        - $ref: "#/components/schemas/LostBed"
-        - type: object
-          properties:
-            bedId:
-              type: string
-              format: uuid
-          required:
-            - bedId
     NewLostBed:
       type: object
       properties:
@@ -3080,37 +3060,14 @@ components:
           type: string
         notes:
           type: string
-        serviceName:
-          $ref: '#/components/schemas/ServiceName'
+        bedId:
+          type: string
+          format: uuid
       required:
         - startDate
         - endDate
         - reason
-        - serviceName
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          approved-premises: '#/components/schemas/NewApprovedPremisesLostBed'
-          temporary-accommodation: '#/components/schemas/NewTemporaryAccommodationLostBed'
-    NewApprovedPremisesLostBed:
-      allOf:
-        - $ref: '#/components/schemas/NewLostBed'
-        - type: object
-          properties:
-            numberOfBeds:
-              type: integer
-          required:
-            - numberOfBeds
-    NewTemporaryAccommodationLostBed:
-      allOf:
-        - $ref: '#/components/schemas/NewLostBed'
-        - type: object
-          properties:
-            bedId:
-              type: string
-              format: uuid
-          required:
-            - bedId
+        - bedId
     UpdateLostBed:
       type: object
       properties:
@@ -3127,32 +3084,10 @@ components:
           type: string
         notes:
           type: string
-        serviceName:
-          $ref: '#/components/schemas/ServiceName'
       required:
         - startDate
         - endDate
         - reason
-        - serviceName
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          approved-premises: '#/components/schemas/UpdateApprovedPremisesLostBed'
-          temporary-accommodation: '#/components/schemas/UpdateTemporaryAccommodationLostBed'
-    UpdateApprovedPremisesLostBed:
-      allOf:
-        - $ref: '#/components/schemas/UpdateLostBed'
-        - type: object
-          properties:
-            numberOfBeds:
-              type: integer
-          required:
-            - numberOfBeds
-    UpdateTemporaryAccommodationLostBed:
-      allOf:
-        - $ref: '#/components/schemas/UpdateLostBed'
-        - type: object
-          properties: {}
     LostBedCancellation:
       type: object
       properties:
