@@ -7,6 +7,9 @@
 .gradle/
 build/
 
+# Mac
+*.DS_Store
+
 # CMake
 cmake-build-debug/
 
@@ -77,3 +80,6 @@ nomis-db/
 
 test-seed-csvs/**
 seed/**
+
+# Git patch files
+*.patch
