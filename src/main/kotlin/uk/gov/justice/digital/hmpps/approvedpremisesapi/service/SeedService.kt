@@ -39,7 +39,7 @@ class SeedService(
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(ProbationRegionRepository::class.java),
           applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
-          applicationContext.getBean(CharacteristicService::class.java)
+          applicationContext.getBean(CharacteristicRepository::class.java)
         )
         SeedFileType.user -> UsersSeedJob(
           filename,

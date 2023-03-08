@@ -80,39 +80,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
   }
 
   @Test
-  fun `Attempting to create an Approved Premises with an invalid characteristic logs an error`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
-
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-
-    withCsv(
-      "invalid-characteristic",
-      approvedPremisesSeedCsvRowsToCsv(
-        listOf(
-          ApprovedPremisesSeedCsvRowFactory()
-            .withProbationRegion(probationRegion.name)
-            .withLocalAuthorityArea(localAuthorityArea.name)
-            .withCharacteristics(listOf("Not Real Characteristic"))
-            .produce()
-        )
-      )
-    )
-
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-characteristic")
-
-    assertThat(logEntries)
-      .withFailMessage("-> logEntries actually contains: $logEntries")
-      .anyMatch {
-        it.level == "error" &&
-          it.message == "Error on row 1:" &&
-          it.throwable != null &&
-          it.throwable.message == "Characteristic Not Real Characteristic does not exist"
-      }
-  }
-
-  @Test
   fun `Attempting to create an Approved Premises with an incorrectly service-scoped characteristic logs an error`() {
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withApArea(apAreaEntityFactory.produceAndPersist())
@@ -120,8 +87,10 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    val characteristic = characteristicEntityFactory.produceAndPersist {
+    characteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
+      withPropertyName("isCatered")
+      withModelScope("premises")
       withServiceScope("temporary-accommodation")
     }
 
@@ -132,7 +101,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
           ApprovedPremisesSeedCsvRowFactory()
             .withProbationRegion(probationRegion.name)
             .withLocalAuthorityArea(localAuthorityArea.name)
-            .withCharacteristics(listOf(characteristic.name))
+            .withIsCatered("yes")
             .produce()
         )
       )
@@ -146,7 +115,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         it.level == "error" &&
           it.message == "Error on row 1:" &&
           it.throwable != null &&
-          it.throwable.message == "Service scope does not match for Characteristic ${characteristic.id}"
+          it.throwable.message == "Characteristic 'isCatered' does not exist for AP premises"
       }
   }
 
@@ -160,8 +129,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     val characteristic = characteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
+      withPropertyName("isCatered")
       withServiceScope("approved-premises")
-      withModelScope("booking")
+      withModelScope("room")
     }
 
     withCsv(
@@ -171,7 +141,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
           ApprovedPremisesSeedCsvRowFactory()
             .withProbationRegion(probationRegion.name)
             .withLocalAuthorityArea(localAuthorityArea.name)
-            .withCharacteristics(listOf(characteristic.name))
+            .withIsCatered("yes")
             .produce()
         )
       )
@@ -185,7 +155,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         it.level == "error" &&
           it.message == "Error on row 1:" &&
           it.throwable != null &&
-          it.throwable.message == "Model scope does not match for Characteristic ${characteristic.id}"
+          it.throwable.message == "Characteristic 'isCatered' does not exist for AP premises"
       }
   }
 
@@ -224,17 +194,26 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    val characteristic = characteristicEntityFactory.produceAndPersist {
-      withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
+    characteristicEntityFactory.produceAndPersist {
       withServiceScope("approved-premises")
       withModelScope("premises")
+      withName("Is this premises catered?")
+      withPropertyName("isCatered")
+    }
+
+    characteristicEntityFactory.produceAndPersist {
+      withServiceScope("approved-premises")
+      withModelScope("premises")
+      withName("Is this an IAP?")
+      withPropertyName("isIAP")
     }
 
     val csvRow = ApprovedPremisesSeedCsvRowFactory()
       .withId(UUID.randomUUID())
       .withProbationRegion(probationRegion.name)
       .withLocalAuthorityArea(localAuthorityArea.name)
-      .withCharacteristics(listOf(characteristic.name))
+      .withIsCatered("yes")
+      .withIsIAP("no")
       .withLongitude(-1.1169752)
       .withLatitude(53.9634721)
       .produce()
@@ -263,7 +242,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.notes).isEqualTo(csvRow.notes)
     assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
     assertThat(persistedApprovedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
-    assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
+    assertThat(persistedApprovedPremises.characteristics.map { it.propertyName }).isEqualTo(listOf("isCatered"))
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
   }
 
@@ -292,7 +271,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       .withId(existingApprovedPremises.id)
       .withProbationRegion(updatedProbationRegion.name)
       .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
-      .withCharacteristics(emptyList())
       .produce()
 
     withCsv(
@@ -462,6 +440,10 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
 
   fun withIsCatered(value: String) = apply {
     this.isCatered = { value }
+  }
+
+  fun withIsIAP(value: String) = apply {
+    this.isIAP = { value }
   }
 
   fun withTotalBeds(totalBeds: Int) = apply {

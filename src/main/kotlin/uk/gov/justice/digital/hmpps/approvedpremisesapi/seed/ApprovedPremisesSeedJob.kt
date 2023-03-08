@@ -5,12 +5,12 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import java.util.UUID
 
 class ApprovedPremisesSeedJob(
@@ -18,7 +18,7 @@ class ApprovedPremisesSeedJob(
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
-  private val characteristicService: CharacteristicService
+  private val characteristicRepository: CharacteristicRepository
 ) : SeedJob<ApprovedPremisesSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
@@ -36,25 +36,25 @@ class ApprovedPremisesSeedJob(
     probationRegion = columns["probationRegion"]!!,
     localAuthorityArea = columns["localAuthorityArea"]!!,
     characteristics = columns["characteristics"]!!.split(",").filter { it.isNotBlank() }.map { it.trim() },
-    isIAP = parseBooleanOrThrow(columns["isIAP"]!!, "isIAP"),
-    isPIPE = parseBooleanOrThrow(columns["isPIPE"]!!, "isPIPE"),
-    isESAP = parseBooleanOrThrow(columns["isESAP"]!!, "isESAP"),
-    isSemiSpecialistMentalHealth = parseBooleanOrThrow(columns["isSemiSpecialistMentalHealth"]!!, "isSemiSpecialistMentalHealth"),
-    isRecoveryFocussed = parseBooleanOrThrow(columns["isRecoveryFocussed"]!!, "isRecoveryFocussed"),
-    isSuitableForVulnerable = parseBooleanOrThrow(columns["isSuitableForVulnerable"]!!, "isSuitableForVulnerable"),
-    acceptsSexOffenders = parseBooleanOrThrow(columns["acceptsSexOffenders"]!!, "acceptsSexOffenders"),
-    acceptsChildSexOffenders = parseBooleanOrThrow(columns["acceptsChildSexOffenders"]!!, "acceptsChildSexOffenders"),
-    acceptsNonSexualChildOffenders = parseBooleanOrThrow(columns["acceptsNonSexualChildOffenders"]!!, "acceptsNonSexualChildOffenders"),
-    acceptsHateCrimeOffenders = parseBooleanOrThrow(columns["acceptsHateCrimeOffenders"]!!, "acceptsHateCrimeOffenders"),
-    isCatered = parseBooleanOrThrow(columns["isCatered"]!!, "isCatered"),
-    hasWideStepFreeAccess = parseBooleanOrThrow(columns["hasWideStepFreeAccess"]!!, "hasWideStepFreeAccess"),
-    hasWideAccessToCommunalAreas = parseBooleanOrThrow(columns["hasWideAccessToCommunalAreas"]!!, "hasWideAccessToCommunalAreas"),
-    hasStepFreeAccessToCommunalAreas = parseBooleanOrThrow(columns["hasStepFreeAccessToCommunalAreas"]!!, "hasStepFreeAccessToCommunalAreas"),
-    hasWheelChairAccessibleBathrooms = parseBooleanOrThrow(columns["hasWheelChairAccessibleBathrooms"]!!, "hasWheelChairAccessibleBathrooms"),
-    hasLift = parseBooleanOrThrow(columns["hasLift"]!!, "hasLift"),
-    hasTactileFlooring = parseBooleanOrThrow(columns["hasTactileFlooring"]!!, "hasTactileFlooring"),
-    hasBrailleSignage = parseBooleanOrThrow(columns["hasBrailleSignage"]!!, "hasBrailleSignage"),
-    hasHearingLoop = parseBooleanOrThrow(columns["hasHearingLoop"]!!, "hasHearingLoop"),
+    isIAP = parseBooleanStringOrThrow(columns["isIAP"]!!, "isIAP"),
+    isPIPE = parseBooleanStringOrThrow(columns["isPIPE"]!!, "isPIPE"),
+    isESAP = parseBooleanStringOrThrow(columns["isESAP"]!!, "isESAP"),
+    isSemiSpecialistMentalHealth = parseBooleanStringOrThrow(columns["isSemiSpecialistMentalHealth"]!!, "isSemiSpecialistMentalHealth"),
+    isRecoveryFocussed = parseBooleanStringOrThrow(columns["isRecoveryFocussed"]!!, "isRecoveryFocussed"),
+    isSuitableForVulnerable = parseBooleanStringOrThrow(columns["isSuitableForVulnerable"]!!, "isSuitableForVulnerable"),
+    acceptsSexOffenders = parseBooleanStringOrThrow(columns["acceptsSexOffenders"]!!, "acceptsSexOffenders"),
+    acceptsChildSexOffenders = parseBooleanStringOrThrow(columns["acceptsChildSexOffenders"]!!, "acceptsChildSexOffenders"),
+    acceptsNonSexualChildOffenders = parseBooleanStringOrThrow(columns["acceptsNonSexualChildOffenders"]!!, "acceptsNonSexualChildOffenders"),
+    acceptsHateCrimeOffenders = parseBooleanStringOrThrow(columns["acceptsHateCrimeOffenders"]!!, "acceptsHateCrimeOffenders"),
+    isCatered = parseBooleanStringOrThrow(columns["isCatered"]!!, "isCatered"),
+    hasWideStepFreeAccess = parseBooleanStringOrThrow(columns["hasWideStepFreeAccess"]!!, "hasWideStepFreeAccess"),
+    hasWideAccessToCommunalAreas = parseBooleanStringOrThrow(columns["hasWideAccessToCommunalAreas"]!!, "hasWideAccessToCommunalAreas"),
+    hasStepFreeAccessToCommunalAreas = parseBooleanStringOrThrow(columns["hasStepFreeAccessToCommunalAreas"]!!, "hasStepFreeAccessToCommunalAreas"),
+    hasWheelChairAccessibleBathrooms = parseBooleanStringOrThrow(columns["hasWheelChairAccessibleBathrooms"]!!, "hasWheelChairAccessibleBathrooms"),
+    hasLift = parseBooleanStringOrThrow(columns["hasLift"]!!, "hasLift"),
+    hasTactileFlooring = parseBooleanStringOrThrow(columns["hasTactileFlooring"]!!, "hasTactileFlooring"),
+    hasBrailleSignage = parseBooleanStringOrThrow(columns["hasBrailleSignage"]!!, "hasBrailleSignage"),
+    hasHearingLoop = parseBooleanStringOrThrow(columns["hasHearingLoop"]!!, "hasHearingLoop"),
     status = PropertyStatus.valueOf(columns["status"]!!),
     apCode = columns["apCode"]!!,
     qCode = columns["qCode"]!!,
@@ -75,16 +75,41 @@ class ApprovedPremisesSeedJob(
     val localAuthorityArea = localAuthorityAreaRepository.findByName(row.localAuthorityArea)
       ?: throw RuntimeException("Local Authority Area ${row.localAuthorityArea} does not exist")
 
-    val characteristics = row.characteristics.map {
-      characteristicService.getCharacteristic(it)
-        ?: throw RuntimeException("Characteristic $it does not exist")
-    }
+    val characteristics = characteristicsFromRow(row)
 
     if (existingPremises != null) {
       updateExistingApprovedPremises(row, existingPremises as ApprovedPremisesEntity, probationRegion, localAuthorityArea, characteristics)
     } else {
       createNewApprovedPremises(row, probationRegion, localAuthorityArea, characteristics)
     }
+  }
+
+  private fun characteristicsFromRow(row: ApprovedPremisesSeedCsvRow): List<CharacteristicEntity> {
+    return listOf(
+      CharacteristicValue("isIAP", castBooleanString(row.isIAP)),
+      CharacteristicValue("isPIPE", castBooleanString(row.isPIPE)),
+      CharacteristicValue("isESAP", castBooleanString(row.isESAP)),
+      CharacteristicValue("isSemiSpecialistMentalHealth", castBooleanString(row.isSemiSpecialistMentalHealth)),
+      CharacteristicValue("isRecoveryFocussed", castBooleanString(row.isRecoveryFocussed)),
+      CharacteristicValue("isSuitableForVulnerable", castBooleanString(row.isSuitableForVulnerable)),
+      CharacteristicValue("acceptsSexOffenders", castBooleanString(row.acceptsSexOffenders)),
+      CharacteristicValue("acceptsChildSexOffenders", castBooleanString(row.acceptsChildSexOffenders)),
+      CharacteristicValue("acceptsNonSexualChildOffenders", castBooleanString(row.acceptsNonSexualChildOffenders)),
+      CharacteristicValue("acceptsHateCrimeOffenders", castBooleanString(row.acceptsHateCrimeOffenders)),
+      CharacteristicValue("isCatered", castBooleanString(row.isCatered)),
+      CharacteristicValue("hasWideStepFreeAccess", castBooleanString(row.hasWideStepFreeAccess)),
+      CharacteristicValue("hasWideAccessToCommunalAreas", castBooleanString(row.hasWideAccessToCommunalAreas)),
+      CharacteristicValue("hasStepFreeAccessToCommunalAreas", castBooleanString(row.hasStepFreeAccessToCommunalAreas)),
+      CharacteristicValue("hasWheelChairAccessibleBathrooms", castBooleanString(row.hasWheelChairAccessibleBathrooms)),
+      CharacteristicValue("hasLift", castBooleanString(row.hasLift)),
+      CharacteristicValue("hasTactileFlooring", castBooleanString(row.hasTactileFlooring)),
+      CharacteristicValue("hasBrailleSignage", castBooleanString(row.hasBrailleSignage)),
+      CharacteristicValue("hasHearingLoop", castBooleanString(row.hasHearingLoop)),
+    ).filter { it.value }
+      .map {
+        characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
+          ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
+      }
   }
 
   private fun createNewApprovedPremises(
@@ -119,26 +144,20 @@ class ApprovedPremisesSeedJob(
       )
     )
 
-    characteristics.forEach {
-      if (! characteristicService.serviceScopeMatches(it, approvedPremises)) {
-        throw RuntimeException("Service scope does not match for Characteristic ${it.id}")
-      }
-
-      if (! characteristicService.modelScopeMatches(it, approvedPremises)) {
-        throw RuntimeException("Model scope does not match for Characteristic ${it.id}")
-      }
-
-      approvedPremises.characteristics.add(it)
-    }
+    approvedPremises.characteristics.addAll(characteristics)
 
     premisesRepository.save(approvedPremises)
   }
 
-  private fun parseBooleanOrThrow(value: String, fieldName: String): String {
+  private fun parseBooleanStringOrThrow(value: String, fieldName: String): String {
     val booleanString = listOf("YES", "NO").find { it == value.trim().uppercase() }
       ?: throw RuntimeException("'$value' is not a recognised boolean for '$fieldName' (use yes | no)")
 
     return if (booleanString == "YES") "YES" else "NO"
+  }
+
+  private fun castBooleanString(booleanString: String): Boolean {
+    return booleanString == "YES"
   }
 
   private fun updateExistingApprovedPremises(
@@ -166,14 +185,6 @@ class ApprovedPremisesSeedJob(
     }
 
     characteristics.forEach {
-      if (! characteristicService.serviceScopeMatches(it, existingApprovedPremises)) {
-        throw RuntimeException("Service scope does not match for Characteristic $it")
-      }
-
-      if (! characteristicService.modelScopeMatches(it, existingApprovedPremises)) {
-        throw RuntimeException("Model scope does not match for Characteristic $it")
-      }
-
       if (existingApprovedPremises.characteristics.none { existingCharacteristic -> existingCharacteristic.id == it.id }) {
         existingApprovedPremises.characteristics.add(it)
       }
@@ -182,6 +193,11 @@ class ApprovedPremisesSeedJob(
     premisesRepository.save(existingApprovedPremises)
   }
 }
+
+data class CharacteristicValue(
+  val propertyName: String,
+  val value: Boolean
+)
 
 data class ApprovedPremisesSeedCsvRow(
   val id: UUID,
