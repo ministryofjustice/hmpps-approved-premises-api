@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
@@ -27,13 +26,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
@@ -544,9 +541,7 @@ class PremisesController(
       reasonId = body.reason,
       referenceNumber = body.referenceNumber,
       notes = body.notes,
-      service = body.serviceName,
-      numberOfBeds = (body as? NewApprovedPremisesLostBed)?.numberOfBeds,
-      bedId = (body as? NewTemporaryAccommodationLostBed)?.bedId,
+      bedId = body.bedId,
     )
 
     val lostBeds = extractResultEntityOrThrow(result)
@@ -606,9 +601,7 @@ class PremisesController(
         body.endDate,
         body.reason,
         body.referenceNumber,
-        body.notes,
-        body.serviceName,
-        (body as? UpdateApprovedPremisesLostBed)?.numberOfBeds
+        body.notes
       )
 
     val validationResult = when (updateLostBedResult) {
