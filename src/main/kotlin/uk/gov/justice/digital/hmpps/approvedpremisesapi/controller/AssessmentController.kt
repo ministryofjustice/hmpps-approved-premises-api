@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessments
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -44,36 +45,13 @@ class AssessmentController(
     val assessments = assessmentService.getVisibleAssessmentsForUser(user)
 
     return ResponseEntity.ok(
-      assessments.mapNotNull {
-        val applicationCrn = it.application.crn
-
-        val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
-        val offenderDetails = when (offenderDetailsResult) {
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          is AuthorisableActionResult.NotFound -> {
-            log.error("Could not get Offender Details for CRN: $applicationCrn")
-            return@mapNotNull null
-          }
-          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
-        }
-
-        if (offenderDetails.otherIds.nomsNumber == null) {
-          log.error("No NOMS number for CRN: $applicationCrn")
-          return@mapNotNull null
-        }
-
-        val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
-        val inmateDetails = when (inmateDetailsResult) {
-          is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-          is AuthorisableActionResult.NotFound -> {
-            log.error("Could not get Inmate Details for NOMS number: ${offenderDetails.otherIds.nomsNumber}")
-            return@mapNotNull null
-          }
-          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
-        }
-
-        assessmentTransformer.transformJpaToApi(it, offenderDetails, inmateDetails)
-      }
+      mapAndTransformAssessments(
+        log,
+        assessments,
+        user.deliusUsername,
+        offenderService,
+        assessmentTransformer::transformJpaToApi
+      ) as List<Assessment>
     )
   }
 
