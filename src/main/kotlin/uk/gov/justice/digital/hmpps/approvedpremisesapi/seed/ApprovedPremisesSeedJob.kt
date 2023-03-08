@@ -36,6 +36,25 @@ class ApprovedPremisesSeedJob(
     probationRegion = columns["probationRegion"]!!,
     localAuthorityArea = columns["localAuthorityArea"]!!,
     characteristics = columns["characteristics"]!!.split(",").filter { it.isNotBlank() }.map { it.trim() },
+    isIAP = parseBooleanOrThrow(columns["isIAP"]!!, "isIAP"),
+    isPIPE = parseBooleanOrThrow(columns["isPIPE"]!!, "isPIPE"),
+    isESAP = parseBooleanOrThrow(columns["isESAP"]!!, "isESAP"),
+    isSemiSpecialistMentalHealth = parseBooleanOrThrow(columns["isSemiSpecialistMentalHealth"]!!, "isSemiSpecialistMentalHealth"),
+    isRecoveryFocussed = parseBooleanOrThrow(columns["isRecoveryFocussed"]!!, "isRecoveryFocussed"),
+    isSuitableForVulnerable = parseBooleanOrThrow(columns["isSuitableForVulnerable"]!!, "isSuitableForVulnerable"),
+    acceptsSexOffenders = parseBooleanOrThrow(columns["acceptsSexOffenders"]!!, "acceptsSexOffenders"),
+    acceptsChildSexOffenders = parseBooleanOrThrow(columns["acceptsChildSexOffenders"]!!, "acceptsChildSexOffenders"),
+    acceptsNonSexualChildOffenders = parseBooleanOrThrow(columns["acceptsNonSexualChildOffenders"]!!, "acceptsNonSexualChildOffenders"),
+    acceptsHateCrimeOffenders = parseBooleanOrThrow(columns["acceptsHateCrimeOffenders"]!!, "acceptsHateCrimeOffenders"),
+    isCatered = parseBooleanOrThrow(columns["isCatered"]!!, "isCatered"),
+    hasWideStepFreeAccess = parseBooleanOrThrow(columns["hasWideStepFreeAccess"]!!, "hasWideStepFreeAccess"),
+    hasWideAccessToCommunalAreas = parseBooleanOrThrow(columns["hasWideAccessToCommunalAreas"]!!, "hasWideAccessToCommunalAreas"),
+    hasStepFreeAccessToCommunalAreas = parseBooleanOrThrow(columns["hasStepFreeAccessToCommunalAreas"]!!, "hasStepFreeAccessToCommunalAreas"),
+    hasWheelChairAccessibleBathrooms = parseBooleanOrThrow(columns["hasWheelChairAccessibleBathrooms"]!!, "hasWheelChairAccessibleBathrooms"),
+    hasLift = parseBooleanOrThrow(columns["hasLift"]!!, "hasLift"),
+    hasTactileFlooring = parseBooleanOrThrow(columns["hasTactileFlooring"]!!, "hasTactileFlooring"),
+    hasBrailleSignage = parseBooleanOrThrow(columns["hasBrailleSignage"]!!, "hasBrailleSignage"),
+    hasHearingLoop = parseBooleanOrThrow(columns["hasHearingLoop"]!!, "hasHearingLoop"),
     status = PropertyStatus.valueOf(columns["status"]!!),
     apCode = columns["apCode"]!!,
     qCode = columns["qCode"]!!,
@@ -115,6 +134,13 @@ class ApprovedPremisesSeedJob(
     premisesRepository.save(approvedPremises)
   }
 
+  private fun parseBooleanOrThrow(value: String, fieldName: String): String {
+    val booleanString = listOf("YES", "NO").find { it == value.trim().uppercase() }
+      ?: throw RuntimeException("'$value' is not a recognised boolean for '$fieldName' (use yes | no)")
+
+    return if (booleanString == "YES") "YES" else "NO"
+  }
+
   private fun updateExistingApprovedPremises(
     row: ApprovedPremisesSeedCsvRow,
     existingApprovedPremises: ApprovedPremisesEntity,
@@ -167,6 +193,25 @@ data class ApprovedPremisesSeedCsvRow(
   val probationRegion: String,
   val localAuthorityArea: String,
   val characteristics: List<String>,
+  val isIAP: String,
+  val isPIPE: String,
+  val isESAP: String,
+  val isSemiSpecialistMentalHealth: String,
+  val isRecoveryFocussed: String,
+  val isSuitableForVulnerable: String,
+  val acceptsSexOffenders: String,
+  val acceptsChildSexOffenders: String,
+  val acceptsNonSexualChildOffenders: String,
+  val acceptsHateCrimeOffenders: String,
+  val isCatered: String,
+  val hasWideStepFreeAccess: String,
+  val hasWideAccessToCommunalAreas: String,
+  val hasStepFreeAccessToCommunalAreas: String,
+  val hasWheelChairAccessibleBathrooms: String,
+  val hasLift: String,
+  val hasTactileFlooring: String,
+  val hasBrailleSignage: String,
+  val hasHearingLoop: String,
   val status: PropertyStatus,
   val apCode: String,
   val qCode: String,

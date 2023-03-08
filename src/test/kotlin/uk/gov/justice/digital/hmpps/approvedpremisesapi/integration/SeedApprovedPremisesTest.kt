@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
@@ -17,6 +18,12 @@ import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedApprovedPremisesTest : SeedTestBase() {
+
+  @BeforeEach
+  fun removeDefaultCharacteristicsFromDatabaseMigrations() {
+    characteristicRepository.deleteAll()
+  }
+
   @Test
   fun `Attempting to create an Approved Premises with an invalid Probation Region logs an error`() {
     withCsv(
@@ -173,6 +180,31 @@ class SeedApprovedPremisesTest : SeedTestBase() {
   }
 
   @Test
+  fun `Attempting to create an Approved Premises with an incorrect boolean value logs an error`() {
+    val csvRow = ApprovedPremisesSeedCsvRowFactory()
+      .withIsCatered("Catered")
+      .produce()
+
+    withCsv(
+      "new-ap-invalid-boolean",
+      approvedPremisesSeedCsvRowsToCsv(
+        listOf(
+          csvRow
+        )
+      )
+    )
+
+    seedService.seedData(SeedFileType.approvedPremises, "new-ap-invalid-boolean")
+
+    assertThat(logEntries).anyMatch {
+      it.level == "error" &&
+        it.message == "Unable to complete Seed Job" &&
+        it.throwable != null &&
+        it.throwable.message!!.contains("'Catered' is not a recognised boolean for 'isCatered' (use yes | no)")
+    }
+  }
+
+  @Test
   fun `Creating a new Approved Premises persists correctly`() {
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withApArea(apAreaEntityFactory.produceAndPersist())
@@ -291,6 +323,25 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "probationRegion",
         "localAuthorityArea",
         "characteristics",
+        "isIAP",
+        "isPIPE",
+        "isESAP",
+        "isSemiSpecialistMentalHealth",
+        "isRecoveryFocussed",
+        "isSuitableForVulnerable",
+        "acceptsSexOffenders",
+        "acceptsChildSexOffenders",
+        "acceptsNonSexualChildOffenders",
+        "acceptsHateCrimeOffenders",
+        "isCatered",
+        "hasWideStepFreeAccess",
+        "hasWideAccessToCommunalAreas",
+        "hasStepFreeAccessToCommunalAreas",
+        "hasWheelChairAccessibleBathrooms",
+        "hasLift",
+        "hasTactileFlooring",
+        "hasBrailleSignage",
+        "hasHearingLoop",
         "status",
         "apCode",
         "qCode"
@@ -310,6 +361,25 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.probationRegion)
         .withQuotedField(it.localAuthorityArea)
         .withQuotedField(it.characteristics.joinToString(","))
+        .withQuotedField(it.isIAP)
+        .withQuotedField(it.isPIPE)
+        .withQuotedField(it.isESAP)
+        .withQuotedField(it.isSemiSpecialistMentalHealth)
+        .withQuotedField(it.isRecoveryFocussed)
+        .withQuotedField(it.isSuitableForVulnerable)
+        .withQuotedField(it.acceptsSexOffenders)
+        .withQuotedField(it.acceptsChildSexOffenders)
+        .withQuotedField(it.acceptsNonSexualChildOffenders)
+        .withQuotedField(it.acceptsHateCrimeOffenders)
+        .withQuotedField(it.isCatered)
+        .withQuotedField(it.hasWideStepFreeAccess)
+        .withQuotedField(it.hasWideAccessToCommunalAreas)
+        .withQuotedField(it.hasStepFreeAccessToCommunalAreas)
+        .withQuotedField(it.hasWheelChairAccessibleBathrooms)
+        .withQuotedField(it.hasLift)
+        .withQuotedField(it.hasTactileFlooring)
+        .withQuotedField(it.hasBrailleSignage)
+        .withQuotedField(it.hasHearingLoop)
         .withQuotedField(it.status.value)
         .withQuotedField(it.apCode)
         .withQuotedField(it.qCode)
@@ -332,6 +402,25 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var probationRegion: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var localAuthorityArea: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var characteristics: Yielded<List<String>> = { listOf() }
+  private var isIAP: Yielded<String> = { listOf("yes", "no").random() }
+  private var isPIPE: Yielded<String> = { listOf("yes", "no").random() }
+  private var isESAP: Yielded<String> = { listOf("yes", "no").random() }
+  private var isSemiSpecialistMentalHealth: Yielded<String> = { listOf("yes", "no").random() }
+  private var isRecoveryFocussed: Yielded<String> = { listOf("yes", "no").random() }
+  private var isSuitableForVulnerable: Yielded<String> = { listOf("yes", "no").random() }
+  private var acceptsSexOffenders: Yielded<String> = { listOf("yes", "no").random() }
+  private var acceptsChildSexOffenders: Yielded<String> = { listOf("yes", "no").random() }
+  private var acceptsNonSexualChildOffenders: Yielded<String> = { listOf("yes", "no").random() }
+  private var acceptsHateCrimeOffenders: Yielded<String> = { listOf("yes", "no").random() }
+  private var isCatered: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasWideStepFreeAccess: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasWideAccessToCommunalAreas: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasStepFreeAccessToCommunalAreas: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasWheelChairAccessibleBathrooms: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasLift: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasTactileFlooring: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasBrailleSignage: Yielded<String> = { listOf("yes", "no").random() }
+  private var hasHearingLoop: Yielded<String> = { listOf("yes", "no").random() }
   private var status: Yielded<PropertyStatus> = { PropertyStatus.active }
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
@@ -357,6 +446,10 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   }
   fun withLongitude(longitude: Double) = apply {
     this.longitude = { longitude }
+  }
+
+  fun withIsCatered(value: String) = apply {
+    this.isCatered = { value }
   }
 
   fun withTotalBeds(totalBeds: Int) = apply {
@@ -403,6 +496,25 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     probationRegion = this.probationRegion(),
     localAuthorityArea = this.localAuthorityArea(),
     characteristics = this.characteristics(),
+    isIAP = this.isIAP(),
+    isPIPE = this.isPIPE(),
+    isESAP = this.isESAP(),
+    isSemiSpecialistMentalHealth = this.isSemiSpecialistMentalHealth(),
+    isRecoveryFocussed = this.isRecoveryFocussed(),
+    isSuitableForVulnerable = this.isSuitableForVulnerable(),
+    acceptsSexOffenders = this.acceptsSexOffenders(),
+    acceptsChildSexOffenders = this.acceptsChildSexOffenders(),
+    acceptsNonSexualChildOffenders = this.acceptsNonSexualChildOffenders(),
+    acceptsHateCrimeOffenders = this.acceptsHateCrimeOffenders(),
+    isCatered = this.isCatered(),
+    hasWideStepFreeAccess = this.hasWideStepFreeAccess(),
+    hasWideAccessToCommunalAreas = this.hasWideAccessToCommunalAreas(),
+    hasStepFreeAccessToCommunalAreas = this.hasStepFreeAccessToCommunalAreas(),
+    hasWheelChairAccessibleBathrooms = this.hasWheelChairAccessibleBathrooms(),
+    hasLift = this.hasLift(),
+    hasTactileFlooring = this.hasTactileFlooring(),
+    hasBrailleSignage = this.hasBrailleSignage(),
+    hasHearingLoop = this.hasHearingLoop(),
     status = this.status(),
     apCode = this.apCode(),
     qCode = this.qCode()
