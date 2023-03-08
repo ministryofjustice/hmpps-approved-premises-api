@@ -7,6 +7,9 @@
 .gradle/
 build/
 
+# Mac
+*.DS_Store
+
 # CMake
 cmake-build-debug/
 
