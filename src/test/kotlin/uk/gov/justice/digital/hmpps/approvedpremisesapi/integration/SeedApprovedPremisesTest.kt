@@ -39,12 +39,14 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-probation")
 
-    assertThat(logEntries).anyMatch {
-      it.level == "error" &&
-        it.message == "Error on row 1:" &&
-        it.throwable != null &&
-        it.throwable.message == "Probation Region Not Real Region does not exist"
-    }
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message == "Probation Region Not Real Region does not exist"
+      }
   }
 
   @Test
@@ -67,12 +69,14 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-local-authority")
 
-    assertThat(logEntries).anyMatch {
-      it.level == "error" &&
-        it.message == "Error on row 1:" &&
-        it.throwable != null &&
-        it.throwable.message == "Local Authority Area Not Real Authority does not exist"
-    }
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message == "Local Authority Area Not Real Authority does not exist"
+      }
   }
 
   @Test
@@ -98,12 +102,14 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-characteristic")
 
-    assertThat(logEntries).anyMatch {
-      it.level == "error" &&
-        it.message == "Error on row 1:" &&
-        it.throwable != null &&
-        it.throwable.message == "Characteristic Not Real Characteristic does not exist"
-    }
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message == "Characteristic Not Real Characteristic does not exist"
+      }
   }
 
   @Test
@@ -134,12 +140,14 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-service-scope")
 
-    assertThat(logEntries).anyMatch {
-      it.level == "error" &&
-        it.message == "Error on row 1:" &&
-        it.throwable != null &&
-        it.throwable.message == "Service scope does not match for Characteristic ${characteristic.id}"
-    }
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message == "Service scope does not match for Characteristic ${characteristic.id}"
+      }
   }
 
   @Test
@@ -171,12 +179,14 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-model-scope")
 
-    assertThat(logEntries).anyMatch {
-      it.level == "error" &&
-        it.message == "Error on row 1:" &&
-        it.throwable != null &&
-        it.throwable.message == "Model scope does not match for Characteristic ${characteristic.id}"
-    }
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message == "Model scope does not match for Characteristic ${characteristic.id}"
+      }
   }
 
   @Test
@@ -196,12 +206,14 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "new-ap-invalid-boolean")
 
-    assertThat(logEntries).anyMatch {
-      it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
-        it.throwable != null &&
-        it.throwable.message!!.contains("'Catered' is not a recognised boolean for 'isCatered' (use yes | no)")
-    }
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Seed Job" &&
+          it.throwable != null &&
+          it.throwable.message!!.contains("'Catered' is not a recognised boolean for 'isCatered' (use yes | no)")
+      }
   }
 
   @Test
