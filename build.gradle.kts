@@ -55,7 +55,7 @@ dependencies {
     exclude(module = "mockito-core")
   }
 
-  testImplementation("com.ninja-squad:springmockk:4.0.0")
+  testImplementation("com.ninja-squad:springmockk:4.0.1")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.2.0")
 }
