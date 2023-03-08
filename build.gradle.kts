@@ -10,7 +10,7 @@ configurations {
 }
 
 val springDocVersion = "1.6.14"
-val sentryVersion = "6.9.0"
+val sentryVersion = "6.15.0"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
