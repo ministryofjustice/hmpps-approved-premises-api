@@ -1926,6 +1926,26 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /tasks:
+    get:
+      tags:
+        - Task data
+      summary: List all tasks
+      responses:
+        200:
+          description: successfully retrieved tasks
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -2435,6 +2455,33 @@ components:
         - probationRegionId
         - characteristicIds
         - status
+    Task:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+          example: 6abb5fa3-e93f-4445-887b-30d081688f44
+        person:
+          $ref: '#/components/schemas/Person'
+        dueDate:
+          type: string
+          format: date
+        allocatedToStaffMember:
+          $ref: '#/components/schemas/ApprovedPremisesUser'
+        status:
+          type: string
+          enum:
+            - not_started
+            - in_progress
+            - complete
+        taskType:
+          type: string
+          enum:
+            - Assessment
+            - PlacementRequest
+            - PlacementRequestReview
+            - BookingAppeal
     LocalAuthorityArea:
       type: object
       properties:
