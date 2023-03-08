@@ -80,3 +80,6 @@ nomis-db/
 
 test-seed-csvs/**
 seed/**
+
+# Git patch files
+*.patch
