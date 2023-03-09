@@ -136,6 +136,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.bed = bed
   }
 
+  fun withBed(bed: BedEntity) = apply {
+    this.bed = { bed }
+  }
+
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
   }

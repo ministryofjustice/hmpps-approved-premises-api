@@ -110,7 +110,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.characteristics = { characteristics }
   }
 
-  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
+  fun withCharacteristicsList(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
 
   fun withStatus(status: PropertyStatus) = apply {
     this.status = { status }
