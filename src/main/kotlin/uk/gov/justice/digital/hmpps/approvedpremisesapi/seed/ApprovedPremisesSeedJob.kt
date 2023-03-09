@@ -38,6 +38,8 @@ class ApprovedPremisesSeedJob(
     id = UUID.fromString(columns["id"]!!),
     name = columns["name"]!!,
     addressLine1 = columns["addressLine1"]!!,
+    addressLine2 = columns["addressLine2"]!!,
+    town = columns["town"]!!,
     postcode = columns["postcode"]!!,
     totalBeds = Integer.parseInt(columns["totalBeds"]!!),
     notes = columns["notes"]!!,
@@ -133,8 +135,8 @@ class ApprovedPremisesSeedJob(
         id = row.id,
         name = row.name,
         addressLine1 = row.addressLine1,
-        addressLine2 = null,
-        town = null,
+        addressLine2 = row.addressLine2,
+        town = row.town,
         postcode = row.postcode,
         totalBeds = row.totalBeds,
         notes = row.notes,
@@ -182,6 +184,8 @@ class ApprovedPremisesSeedJob(
       this.apCode = row.apCode
       this.qCode = row.qCode
       this.addressLine1 = row.addressLine1
+      this.addressLine2 = row.addressLine2
+      this.town = row.town
       this.postcode = row.postcode
       this.longitude = row.longitude
       this.latitude = row.latitude
@@ -207,6 +211,8 @@ private fun requiredHeaders(): Set<String> {
     "id",
     "name",
     "addressLine1",
+    "addressLine2",
+    "town",
     "postcode",
     "totalBeds",
     "notes",
@@ -249,6 +255,8 @@ data class ApprovedPremisesSeedCsvRow(
   val id: UUID,
   val name: String,
   val addressLine1: String,
+  val addressLine2: String?,
+  val town: String,
   val postcode: String,
   val totalBeds: Int,
   val notes: String,

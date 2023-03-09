@@ -199,7 +199,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     val expectedErrorMessage = "The headers provided: " +
       "[id, name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
       "did not include required headers: " +
-      "[postcode, totalBeds, notes, characteristics, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
+      "[addressLine2, postcode, totalBeds, notes, characteristics, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
       "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
@@ -264,6 +264,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.apCode).isEqualTo(csvRow.apCode)
     assertThat(persistedApprovedPremises.name).isEqualTo(csvRow.name)
     assertThat(persistedApprovedPremises.addressLine1).isEqualTo(csvRow.addressLine1)
+    assertThat(persistedApprovedPremises.addressLine2).isEqualTo(csvRow.addressLine2)
+    assertThat(persistedApprovedPremises.town).isEqualTo(csvRow.town)
     assertThat(persistedApprovedPremises.postcode).isEqualTo(csvRow.postcode)
     assertThat(persistedApprovedPremises.latitude).isEqualTo(csvRow.latitude)
     assertThat(persistedApprovedPremises.longitude).isEqualTo(csvRow.longitude)
@@ -334,6 +336,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "id",
         "name",
         "addressLine1",
+        "addressLine2",
+        "town",
         "postcode",
         "latitude",
         "longitude",
@@ -372,6 +376,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.id)
         .withQuotedField(it.name)
         .withQuotedField(it.addressLine1)
+        .withQuotedField(it.addressLine2!!)
+        .withQuotedField(it.town)
         .withQuotedField(it.postcode)
         .withQuotedField(it.latitude!!)
         .withQuotedField(it.longitude!!)
@@ -413,6 +419,8 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var addressLine1: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var addressLine2: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
+  private var town: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var postcode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var latitude: Yielded<Double> = { randomDouble(53.50, 54.99) }
   private var longitude: Yielded<Double> = { randomDouble(-1.56, 1.10) }
@@ -511,6 +519,8 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     id = this.id(),
     name = this.name(),
     addressLine1 = this.addressLine1(),
+    addressLine2 = this.addressLine2(),
+    town = this.town(),
     postcode = this.postcode(),
     latitude = this.latitude(),
     longitude = this.longitude(),
