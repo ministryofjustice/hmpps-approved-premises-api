@@ -129,6 +129,50 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get a booking for a Temporary Accommodation Premises not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withId(UUID.randomUUID())
+              withYieldedApArea {
+                apAreaEntityFactory.produceAndPersist()
+              }
+            }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withCrn(offenderDetails.otherIds.crn)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withYieldedBed { bed }
+        }
+
+        webTestClient.get()
+          .uri("/premises/${premises.id}/bookings/${booking.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Test
   fun `Get all Bookings without JWT returns 401`() {
     webTestClient.get()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings")
@@ -228,6 +272,60 @@ class BookingTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(expectedJson)
+      }
+    }
+  }
+
+  @Test
+  fun `Get all Bookings on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { _, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withId(UUID.randomUUID())
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(premises)
+          withCrn(offenderDetails.otherIds.crn)
+        }
+
+        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[2].let {
+          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          it.departure = departureEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }
+        }
+        bookings[3].let {
+          it.cancellation = cancellationEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          }
+        }
+        bookings[4].let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
+
+        webTestClient.get()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
       }
     }
   }
@@ -614,6 +712,50 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Temporary Accommodation Booking on a premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withId(UUID.randomUUID())
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewTemporaryAccommodationBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              departureDate = LocalDate.parse("2022-08-30"),
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Test
   fun `Create Arrival without JWT returns 401`() {
     webTestClient.post()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/arrivals")
@@ -853,6 +995,57 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Create Arrival for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withId(UUID.randomUUID())
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-10"))
+          withDepartureDate(LocalDate.parse("2022-08-30"))
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewArrival(
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              expectedDepartureDate = LocalDate.parse("2022-08-14"),
+              notes = "Hello",
+              keyWorkerStaffCode = null
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
   fun `Create Departure on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
@@ -1038,6 +1231,55 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Departure for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises {
+            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withYieldedProbationRegion {
+                probationRegionEntityFactory.produceAndPersist {
+                  withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+                }
+              }
+            }
+          }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-10"))
+          withDepartureDate(LocalDate.parse("2022-08-30"))
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        val reason = departureReasonEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+        val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewDeparture(
+              dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+              reasonId = reason.id,
+              moveOnCategoryId = moveOnCategory.id,
+              destinationProviderId = null,
+              notes = "Hello",
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Test
   fun `Create Cancellation without JWT returns 401`() {
     webTestClient.post()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/cancellations")
@@ -1093,6 +1335,44 @@ class BookingTest : IntegrationTestBase() {
         .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
         .jsonPath(".reason.isActive").isEqualTo(true)
         .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+    }
+  }
+
+  @Test
+  fun `Create Cancellation on Temporary Accommodation Booking on a premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withId(UUID.randomUUID())
+                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+              }
+            }
+          }
+        }
+      }
+
+      val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+        withServiceScope("*")
+      }
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewCancellation(
+            date = LocalDate.parse("2022-08-17"),
+            reason = cancellationReason.id,
+            notes = null
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 
@@ -1214,6 +1494,40 @@ class BookingTest : IntegrationTestBase() {
 
       assertThat(actualBooking.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
       assertThat(actualBooking.originalDepartureDate).isEqualTo(LocalDate.parse("2022-08-20"))
+    }
+  }
+
+  @Test
+  fun `Create Extension on Temporary Accommodation Booking for a premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withDepartureDate(LocalDate.parse("2022-08-20"))
+        withYieldedPremises {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withId(UUID.randomUUID())
+                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+              }
+            }
+          }
+        }
+      }
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewExtension(
+            newDepartureDate = LocalDate.parse("2022-08-22"),
+            notes = "notes"
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 
@@ -1341,6 +1655,38 @@ class BookingTest : IntegrationTestBase() {
         .jsonPath("$.date").isEqualTo(booking.arrivalDate.toString())
         .jsonPath("$.reason.id").isEqualTo(nonArrivalReason.id.toString())
         .jsonPath("$.notes").isEqualTo("Notes")
+    }
+  }
+  @Test
+  fun `Create Confirmation on Temporary Accommodation Booking for a premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withId(UUID.randomUUID())
+                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+              }
+            }
+          }
+        }
+        withServiceName(ServiceName.temporaryAccommodation)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewConfirmation(
+            notes = null
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 }

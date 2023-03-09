@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -77,6 +78,7 @@ import javax.transaction.Transactional
 @Service
 class PremisesController(
   private val usersService: UserService,
+  private val userAccessService: UserAccessService,
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
@@ -97,6 +99,12 @@ class PremisesController(
 ) : PremisesApiDelegate {
 
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises) || !userAccessService.currentUserCanAccessRegion(body.probationRegionId)) {
+      throw ForbiddenProblem()
+    }
 
     val updatePremisesResult = premisesService
       .updatePremises(
@@ -129,6 +137,10 @@ class PremisesController(
   }
 
   override fun premisesGet(xServiceName: ServiceName?, xUserRegion: UUID?): ResponseEntity<List<Premises>> {
+    if (!userAccessService.currentUserCanAccessRegion(xUserRegion)) {
+      throw ForbiddenProblem()
+    }
+
     val premises = when {
       xServiceName == null && xUserRegion == null -> premisesService.getAllPremises()
       xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(xUserRegion, xServiceName)
@@ -147,6 +159,9 @@ class PremisesController(
   }
 
   override fun premisesPost(body: NewPremises, xServiceName: ServiceName?): ResponseEntity<Premises> {
+    if (!userAccessService.currentUserCanAccessRegion(body.probationRegionId)) {
+      throw ForbiddenProblem()
+    }
 
     val serviceName = when (xServiceName == null) {
       true -> ServiceName.approvedPremises.value
@@ -178,6 +193,10 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
     val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
       .values.first().getFreeCapacity(premises.totalBeds)
 
@@ -190,7 +209,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
       throw ForbiddenProblem()
     }
 
@@ -235,7 +254,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -279,6 +298,10 @@ class PremisesController(
 
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+      throw ForbiddenProblem()
+    }
 
     val offenderResult = offenderService.getOffenderByCrn(body.crn, user.deliusUsername)
     val offender = when (offenderResult) {
@@ -351,7 +374,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -386,7 +409,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -410,9 +433,7 @@ class PremisesController(
   ): ResponseEntity<Cancellation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val user = usersService.getUserForRequest()
-
-    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -435,9 +456,7 @@ class PremisesController(
   ): ResponseEntity<Confirmation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val user = usersService.getUserForRequest()
-
-    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -461,7 +480,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -487,9 +506,7 @@ class PremisesController(
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    val user = usersService.getUserForRequest()
-
-    if (booking.premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -516,9 +533,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val user = usersService.getUserForRequest()
-
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
 
@@ -543,9 +558,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val user = usersService.getUserForRequest()
-
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
 
@@ -555,6 +568,10 @@ class PremisesController(
   override fun premisesPremisesIdLostBedsLostBedIdGet(premisesId: UUID, lostBedId: UUID): ResponseEntity<LostBed> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
+      throw ForbiddenProblem()
+    }
 
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId }
       ?: throw NotFoundProblem(lostBedId, "LostBed")
@@ -576,6 +593,10 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
     if (premises.lostBeds.firstOrNull { it.id == lostBedId } == null) {
       throw NotFoundProblem(lostBedId, "LostBed")
+    }
+
+    if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
+      throw ForbiddenProblem()
     }
 
     val updateLostBedResult = premisesService
@@ -613,9 +634,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
 
-    val user = usersService.getUserForRequest()
-
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
 
@@ -637,9 +656,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val user = usersService.getUserForRequest()
-
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanViewPremisesCapacity(premises)) {
       throw ForbiddenProblem()
     }
 
@@ -670,9 +687,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val user = usersService.getUserForRequest()
-
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!userAccessService.currentUserCanViewPremisesStaff(premises)) {
       throw ForbiddenProblem()
     }
 
@@ -694,11 +709,19 @@ class PremisesController(
   override fun premisesPremisesIdRoomsGet(premisesId: UUID): ResponseEntity<List<Room>> {
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
     return ResponseEntity.ok(premises.rooms.map(roomTransformer::transformJpaToApi))
   }
 
   override fun premisesPremisesIdRoomsPost(premisesId: UUID, newRoom: NewRoom): ResponseEntity<Room> {
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
 
     val room = extractResultEntityOrThrow(
       roomService.createRoom(premises, newRoom.name, newRoom.notes, newRoom.characteristicIds)
@@ -709,6 +732,10 @@ class PremisesController(
 
   override fun premisesPremisesIdRoomsRoomIdGet(premisesId: UUID, roomId: UUID): ResponseEntity<Room> {
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
 
     val room = premises.rooms.find { it.id == roomId } ?: throw NotFoundProblem(roomId, "Room")
 
@@ -721,6 +748,10 @@ class PremisesController(
     updateRoom: UpdateRoom
   ): ResponseEntity<Room> {
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
 
     val updateRoomResult = roomService.updateRoom(premises, roomId, updateRoom.notes, updateRoom.characteristicIds)
 

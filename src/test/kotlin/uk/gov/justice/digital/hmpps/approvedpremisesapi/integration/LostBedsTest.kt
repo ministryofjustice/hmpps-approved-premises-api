@@ -122,6 +122,45 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `List Lost Beds on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      temporaryAccommodationLostBedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedBed { bed }
+        withPremises(premises)
+      }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/lost-beds")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
   fun `Get Lost Bed without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -157,23 +196,24 @@ class LostBedsTest : IntegrationTestBase() {
       .isNotFound
   }
 
-  @Test
-  fun `Get Lost Bed for non-existent lost bed returns 404`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Get Lost Bed for non-existent lost bed returns 404`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
       }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/lost-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
     }
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/premises/${premises.id}/lost-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
   }
 
   @ParameterizedTest
@@ -244,6 +284,47 @@ class LostBedsTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .json(expectedJson)
+    }
+  }
+
+  @Test
+  fun `Get Lost Bed on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val lostBeds = temporaryAccommodationLostBedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedBed { bed }
+        withPremises(premises)
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(lostBedsTransformer.transformJpaToApi(lostBeds))
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 
@@ -418,6 +499,56 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".notes").isEqualTo("notes")
         .jsonPath(".status").isEqualTo("active")
         .jsonPath(".cancellation").isEqualTo(null)
+    }
+  }
+
+  @Test
+  fun `Create Lost Beds on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises {
+              premises
+            }
+          }
+        }
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/lost-beds")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewTemporaryAccommodationLostBed(
+            startDate = LocalDate.parse("2022-08-17"),
+            endDate = LocalDate.parse("2022-08-18"),
+            reason = reason.id,
+            referenceNumber = "REF-123",
+            notes = "notes",
+            bedId = bed.id,
+            serviceName = ServiceName.temporaryAccommodation,
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 
@@ -664,6 +795,61 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Update Lost Beds on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val lostBeds = temporaryAccommodationLostBedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedBed { bed }
+        withPremises(premises)
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          UpdateTemporaryAccommodationLostBed(
+            startDate = LocalDate.parse("2022-08-17"),
+            endDate = LocalDate.parse("2022-08-18"),
+            reason = reason.id,
+            referenceNumber = "REF-123",
+            notes = "notes",
+            serviceName = ServiceName.temporaryAccommodation,
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
   fun `Cancel Lost Bed without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -822,6 +1008,56 @@ class LostBedsTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("$.notes").isEqualTo("Some cancellation notes")
         .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+    }
+  }
+
+  @Test
+  fun `Cancel Lost Bed on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val lostBeds = temporaryAccommodationLostBedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedBed { bed }
+        withPremises(premises)
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewLostBedCancellation(
+            notes = "Some cancellation notes"
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 }

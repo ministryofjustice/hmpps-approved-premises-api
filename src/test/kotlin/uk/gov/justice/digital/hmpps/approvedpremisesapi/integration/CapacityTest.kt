@@ -5,11 +5,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
+import java.util.UUID
 
 class CapacityTest : IntegrationTestBase() {
   @Test
@@ -135,6 +137,29 @@ class CapacityTest : IntegrationTestBase() {
           DateCapacity(date = LocalDate.now().plusDays(4), availableBeds = 29),
           DateCapacity(date = LocalDate.now().plusDays(5), availableBeds = 29)
         )
+    }
+  }
+
+  @Test
+  fun `Get Capacity on a Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 }
