@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
@@ -21,10 +22,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -54,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Mana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -63,6 +68,9 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
+
+  @Autowired
+  lateinit var userTransformer: UserTransformer
 
   @SpykBean
   lateinit var realApplicationTeamCodeRepository: ApplicationTeamCodeRepository
@@ -1171,8 +1179,9 @@ class ApplicationTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
       .bodyValue(
-        Reallocation(
-          userId = UUID.randomUUID()
+        NewReallocation(
+          userId = UUID.randomUUID(),
+          taskType = TaskType.assessment
         )
       )
       .exchange()
@@ -1187,8 +1196,9 @@ class ApplicationTest : IntegrationTestBase() {
         .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          Reallocation(
-            userId = UUID.randomUUID()
+          NewReallocation(
+            userId = UUID.randomUUID(),
+            taskType = TaskType.assessment
           )
         )
         .exchange()
@@ -1198,11 +1208,13 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Reallocate application to different assessor returns 201, creates new assessment, deallocates old one`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { requestUser, jwt ->
+  fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR)) { otherUser, _ ->
-        `Given a User`(roles = listOf(UserRole.ASSESSOR)) { assigneeUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+        `Given a User`(
+          roles = listOf(UserRole.ASSESSOR)
+        ) { assigneeUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
             val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 
@@ -1222,8 +1234,9 @@ class ApplicationTest : IntegrationTestBase() {
               .uri("/applications/${application.id}/allocations")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                Reallocation(
-                  userId = assigneeUser.id
+                NewReallocation(
+                  userId = assigneeUser.id,
+                  taskType = TaskType.assessment
                 )
               )
               .exchange()
@@ -1232,7 +1245,10 @@ class ApplicationTest : IntegrationTestBase() {
               .expectBody()
               .json(
                 objectMapper.writeValueAsString(
-                  assessmentTransformer.transformJpaToApi(assessmentRepository.findAll().first(), offenderDetails, inmateDetails)
+                  Reallocation(
+                    taskType = TaskType.assessment,
+                    user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises)
+                  )
                 )
               )
 
@@ -1243,6 +1259,60 @@ class ApplicationTest : IntegrationTestBase() {
           }
         }
       }
+    }
+  }
+
+  @Test
+  fun `Reallocating a placement request returns a NotAllowedProblem`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      webTestClient.post()
+        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewReallocation(
+            userId = UUID.randomUUID(),
+            taskType = TaskType.placementRequest
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+    }
+  }
+
+  @Test
+  fun `Reallocating a placement request review returns a NotAllowedProblem`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      webTestClient.post()
+        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewReallocation(
+            userId = UUID.randomUUID(),
+            taskType = TaskType.placementRequestReview
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+    }
+  }
+
+  @Test
+  fun `Reallocating a booking appeal returns a NotAllowedProblem`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      webTestClient.post()
+        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewReallocation(
+            userId = UUID.randomUUID(),
+            taskType = TaskType.bookingAppeal
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
     }
   }
 
