@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import org.locationtech.jts.geom.Point
-import java.math.BigDecimal
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.Id
@@ -21,7 +20,7 @@ data class PostCodeDistrictEntity(
   @Id
   val id: UUID,
   val outcode: String,
-  val latitude: BigDecimal,
-  val longitude: BigDecimal,
+  val latitude: Double,
+  val longitude: Double,
   val point: Point
 )
