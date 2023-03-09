@@ -22,6 +22,10 @@ class PostCodeDistrictEntityFactory : Factory<PostCodeDistrictEntity> {
     this.id = { id }
   }
 
+  fun withOutcode(outcode: String) = apply {
+    this.outcode = { outcode }
+  }
+
   fun withLatitude(latitude: BigDecimal) = apply {
     this.latitude = { latitude }
   }
