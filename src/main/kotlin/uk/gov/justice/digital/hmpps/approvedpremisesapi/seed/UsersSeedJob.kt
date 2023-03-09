@@ -16,6 +16,10 @@ class UsersSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  override fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
+    log.info("The list of headers provided ($headers) can now be tested here")
+  }
+
   override fun deserializeRow(columns: Map<String, String>) = UsersSeedCsvRow(
     deliusUsername = columns["deliusUsername"]!!.trim().uppercase(),
     roles = parseAllRolesOrThrow(columns["roles"]!!.split(",").filter(String::isNotBlank).map(String::trim)),

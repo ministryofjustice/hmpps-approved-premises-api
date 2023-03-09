@@ -13,6 +13,7 @@ abstract class SeedJob <RowType> (
     }
   }
 
+  abstract fun verifyPresenceOfRequiredHeaders(headers: Set<String>)
   abstract fun deserializeRow(columns: Map<String, String>): RowType
   abstract fun processRow(row: RowType)
 }

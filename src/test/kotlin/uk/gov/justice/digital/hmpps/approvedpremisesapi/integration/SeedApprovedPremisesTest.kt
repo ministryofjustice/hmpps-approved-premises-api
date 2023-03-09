@@ -187,6 +187,35 @@ class SeedApprovedPremisesTest : SeedTestBase() {
   }
 
   @Test
+  fun `Attempting to create an Approved Premises missing required headers lists missing fields`() {
+    withCsv(
+      "new-ap-missing-headers",
+      "id,name,apCode,qCode,apArea,pdu,probationRegion,localAuthorityArea,town,addressLine1\n" +
+        "123,HOPE,Q00,North East,Leeds,Yorkshire & The Humber,Leeds,Leeds,1 The Street, Leeds"
+    )
+
+    seedService.seedData(SeedFileType.approvedPremises, "new-ap-missing-headers")
+
+    val expectedErrorMessage = "The headers provided: " +
+      "[id, name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
+      "did not include required headers: " +
+      "[postcode, totalBeds, notes, characteristics, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
+      "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
+      "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
+      "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
+      "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude]"
+
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Seed Job" &&
+          it.throwable != null &&
+          it.throwable.message!!.contains(expectedErrorMessage)
+      }
+  }
+
+  @Test
   fun `Creating a new Approved Premises persists correctly`() {
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withApArea(apAreaEntityFactory.produceAndPersist())

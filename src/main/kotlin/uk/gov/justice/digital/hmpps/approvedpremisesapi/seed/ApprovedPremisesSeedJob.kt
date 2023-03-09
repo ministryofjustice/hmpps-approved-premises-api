@@ -26,6 +26,14 @@ class ApprovedPremisesSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  override fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
+    val missingHeaders = requiredHeaders() - headers
+
+    if (missingHeaders.any()) {
+      throw RuntimeException("required headers: $missingHeaders")
+    }
+  }
+
   override fun deserializeRow(columns: Map<String, String>) = ApprovedPremisesSeedCsvRow(
     id = UUID.fromString(columns["id"]!!),
     name = columns["name"]!!,
@@ -192,6 +200,44 @@ class ApprovedPremisesSeedJob(
 
     premisesRepository.save(existingApprovedPremises)
   }
+}
+
+private fun requiredHeaders(): Set<String> {
+  return setOf(
+    "id",
+    "name",
+    "addressLine1",
+    "postcode",
+    "totalBeds",
+    "notes",
+    "probationRegion",
+    "localAuthorityArea",
+    "characteristics",
+    "isIAP",
+    "isPIPE",
+    "isESAP",
+    "isSemiSpecialistMentalHealth",
+    "isRecoveryFocussed",
+    "isSuitableForVulnerable",
+    "acceptsSexOffenders",
+    "acceptsChildSexOffenders",
+    "acceptsNonSexualChildOffenders",
+    "acceptsHateCrimeOffenders",
+    "isCatered",
+    "hasWideStepFreeAccess",
+    "hasWideAccessToCommunalAreas",
+    "hasStepFreeAccessToCommunalAreas",
+    "hasWheelChairAccessibleBathrooms",
+    "hasLift",
+    "hasTactileFlooring",
+    "hasBrailleSignage",
+    "hasHearingLoop",
+    "status",
+    "apCode",
+    "qCode",
+    "latitude",
+    "longitude",
+  )
 }
 
 data class CharacteristicValue(

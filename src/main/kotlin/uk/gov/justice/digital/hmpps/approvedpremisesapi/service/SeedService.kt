@@ -74,6 +74,7 @@ class SeedService(
     // During processing, the CSV file is processed one row at a time to avoid OOM issues.
     // It is preferable to fail fast rather than processing half of a file before stopping,
     // so we first do a full pass but only deserializing each row
+    enforcePresenceOfRequiredHeaders(job)
     ensureCsvCanBeDeserialized(job)
     processCsv(job)
   }
@@ -101,6 +102,24 @@ class SeedService(
     }
     if (errors.isNotEmpty()) {
       seedLogger.error("The following row-level errors were raised: ${errors.joinToString("\n")}")
+    }
+  }
+
+  private fun <T> enforcePresenceOfRequiredHeaders(job: SeedJob<T>) {
+    seedLogger.info("Checking that required headers are present...")
+
+    val headerRow = try {
+      csvReader().open("$seedFilePrefix/${job.fileName}.csv") {
+        readAllWithHeaderAsSequence().first().keys
+      }
+    } catch (exception: Exception) {
+      throw RuntimeException("There was an issue opening the CSV file", exception)
+    }
+
+    try {
+      job.verifyPresenceOfRequiredHeaders(headerRow)
+    } catch (exception: Exception) {
+      throw RuntimeException("The headers provided: $headerRow did not include ${exception.message}")
     }
   }
 
