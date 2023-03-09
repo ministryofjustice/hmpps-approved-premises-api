@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -13,6 +14,7 @@ class RoomEntityFactory : Factory<RoomEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var premises: Yielded<PremisesEntity>? = null
+  private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -34,13 +36,19 @@ class RoomEntityFactory : Factory<RoomEntity> {
     this.premises = premises
   }
 
+  fun withCharacteristics(characteristics: MutableList<CharacteristicEntity>) = apply {
+    this.characteristics = { characteristics }
+  }
+
+  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
+
   override fun produce() = RoomEntity(
     id = this.id(),
     name = this.name(),
     notes = this.notes(),
     beds = mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a premises"),
-    characteristics = mutableListOf(),
+    characteristics = this.characteristics(),
   )
 }
 
@@ -64,6 +72,7 @@ class BedEntityFactory : Factory<BedEntity> {
   fun withYieldedRoom(room: Yielded<RoomEntity>) = apply {
     this.room = room
   }
+
   override fun produce() = BedEntity(
     id = this.id(),
     name = this.name(),

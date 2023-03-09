@@ -7,6 +7,7 @@ import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
@@ -33,6 +34,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { "CAS1" }
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
+  private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var point: Yielded<Point> = { Point(Coordinate(1.0, 2.0), PrecisionModel(PrecisionModel.Type("FLOATING")), 4326) }
 
@@ -103,6 +105,12 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.qCode = { qCode }
   }
 
+  fun withCharacteristics(characteristics: MutableList<CharacteristicEntity>) = apply {
+    this.characteristics = { characteristics }
+  }
+
+  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
+
   fun withStatus(status: PropertyStatus) = apply {
     this.status = { status }
   }
@@ -148,7 +156,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     notes = this.notes(),
     qCode = this.qCode(),
     rooms = mutableListOf(),
-    characteristics = mutableListOf(),
+    characteristics = this.characteristics(),
     status = this.status(),
     point = this.point()
   )
