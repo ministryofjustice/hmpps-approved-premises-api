@@ -119,7 +119,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
     assertThat(persistedPremises!!.rooms.size).isEqualTo(1)
     val room = persistedPremises.rooms.first()
     assertThat(room.name).isEqualTo(csvRow.bedspaceName)
-    assertThat(room.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
+    assertThat(room.characteristics.map { it.name }.sorted()).isEqualTo(csvRow.characteristics.sorted())
     assertThat(room.notes).isEqualTo(csvRow.notes)
     assertThat(room.beds.size).isEqualTo(1)
   }
