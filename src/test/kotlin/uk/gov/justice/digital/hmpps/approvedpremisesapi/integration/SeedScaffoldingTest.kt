@@ -84,19 +84,19 @@ class SeedScaffoldingTest : SeedTestBase() {
     withCsv(
       "malformed",
       """
-id,name,addressLine1,postcode,totalBeds,notes,probationRegion,localAuthorityArea,characteristics,status,apCode,qCode
-f5fb56ad-54ed-46e9-8c0e-c1e8581cfd5d,An AP,Address 1,PC1PC2,12,Notes,North East,Middlesbrough,,status,APCODE,QCODE
-,,,
+deliusUsername,roles,qualifications
+RogerSmith,MANAGER,
+,
       """.trimIndent()
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "malformed")
+    seedService.seedData(SeedFileType.user, "malformed")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
-        it.throwable.cause!!.message == "Fields num seems to be 12 on each row, but on 2th csv row, fields num is 4."
+        it.throwable.cause!!.message == "Fields num seems to be 3 on each row, but on 2th csv row, fields num is 2."
     }
   }
 }
