@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.jpa.repository.QueryHints
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import java.util.UUID
@@ -10,6 +11,7 @@ import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
@@ -19,7 +21,9 @@ import javax.persistence.ManyToMany
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
+import javax.persistence.QueryHint
 import javax.persistence.Table
+import javax.persistence.Transient
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
@@ -30,6 +34,30 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 
   @Query("SELECT p FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByProbationRegion_IdAndType(probationRegionId: UUID, type: Class<T>): List<PremisesEntity>
+
+  @Query("SELECT DISTINCT p FROM PremisesEntity p LEFT JOIN FETCH p.probationRegion WHERE p IN (:premises)")
+  @QueryHints(value = [QueryHint(name = org.hibernate.jpa.QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "false")], forCounting = false)
+  fun loadPremisesProbationRegions(premises: List<PremisesEntity>): List<PremisesEntity>
+
+  @Query("SELECT DISTINCT p FROM PremisesEntity p LEFT JOIN FETCH p.localAuthorityArea WHERE p IN (:premises)")
+  @QueryHints(value = [QueryHint(name = org.hibernate.jpa.QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "false")], forCounting = false)
+  fun loadPremisesLocalAuthorityAreas(premises: List<PremisesEntity>): List<PremisesEntity>
+
+  @Query("SELECT DISTINCT p FROM PremisesEntity p LEFT JOIN FETCH p.bookings WHERE p IN (:premises)")
+  @QueryHints(value = [QueryHint(name = org.hibernate.jpa.QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "false")], forCounting = false)
+  fun loadPremisesBookings(premises: List<PremisesEntity>): List<PremisesEntity>
+
+  @Query("SELECT DISTINCT p FROM PremisesEntity p LEFT JOIN FETCH p.lostBeds WHERE p IN (:premises)")
+  @QueryHints(value = [QueryHint(name = org.hibernate.jpa.QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "false")], forCounting = false)
+  fun loadPremisesLostBeds(premises: List<PremisesEntity>): List<PremisesEntity>
+
+  @Query("SELECT DISTINCT p FROM PremisesEntity p LEFT JOIN FETCH p.rooms WHERE p IN (:premises)")
+  @QueryHints(value = [QueryHint(name = org.hibernate.jpa.QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "false")], forCounting = false)
+  fun loadPremisesRooms(premises: List<PremisesEntity>): List<PremisesEntity>
+
+  @Query("SELECT DISTINCT p FROM PremisesEntity p LEFT JOIN FETCH p.characteristics WHERE p IN (:premises)")
+  @QueryHints(value = [QueryHint(name = org.hibernate.jpa.QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "false")], forCounting = false)
+  fun loadPremisesCharacteristics(premises: List<PremisesEntity>): List<PremisesEntity>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
@@ -57,10 +85,10 @@ abstract class PremisesEntity(
   var latitude: Double?,
   var totalBeds: Int,
   var notes: String,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "probation_region_id")
   var probationRegion: ProbationRegionEntity,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
   @OneToMany(mappedBy = "premises")
@@ -77,8 +105,21 @@ abstract class PremisesEntity(
   )
   var characteristics: MutableList<CharacteristicEntity>,
   @Enumerated(value = EnumType.STRING)
-  var status: PropertyStatus
-)
+  var status: PropertyStatus,
+) {
+  @Transient
+  var probationRegionLoaded = false
+  @Transient
+  var localAuthorityAreaLoaded = false
+  @Transient
+  var bookingsLoaded = false
+  @Transient
+  var lostBedsLoaded = false
+  @Transient
+  var roomsLoaded = false
+  @Transient
+  var characteristicsLoaded = false
+}
 
 @Entity
 @DiscriminatorValue("approved-premises")

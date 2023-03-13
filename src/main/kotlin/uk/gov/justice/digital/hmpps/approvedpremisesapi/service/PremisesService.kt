@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationLostBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
@@ -37,6 +38,7 @@ class PremisesService(
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val lostBedCancellationRepository: LostBedCancellationRepository,
+  private val roomRepository: RoomRepository,
   private val characteristicService: CharacteristicService
 ) {
   private val serviceNameToEntityType = mapOf(
@@ -44,22 +46,88 @@ class PremisesService(
     ServiceName.temporaryAccommodation to TemporaryAccommodationPremisesEntity::class.java,
   )
 
-  fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
+  fun getAllPremises(): List<PremisesEntity> {
+    val premises = premisesRepository.findAll()
 
-  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesEntity> = premisesRepository.findAllByProbationRegion_Id(probationRegionId)
+    return loadDependentEntities(
+      premises,
+      loadProbationRegions = true,
+      loadProbationRegionApAreas = true,
+      loadLocalAuthorityAreas = true,
+      loadBookings = true,
+      loadLostBeds = true,
+      loadRooms = true,
+      loadRoomBeds = true,
+      loadCharacteristics = true,
+    )
+  }
 
-  fun getAllPremisesForService(service: ServiceName) = serviceNameToEntityType[service]?.let {
-    premisesRepository.findAllByType(it)
-  } ?: listOf()
+  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesEntity> {
+    val premises = premisesRepository.findAllByProbationRegion_Id(probationRegionId)
+
+    return loadDependentEntities(
+      premises,
+      loadLocalAuthorityAreas = true,
+      loadBookings = true,
+      loadLostBeds = true,
+      loadRooms = true,
+      loadRoomBeds = true,
+      loadCharacteristics = true,
+    )
+  }
+
+  fun getAllPremisesForService(service: ServiceName): List<PremisesEntity> {
+    val premises = serviceNameToEntityType[service]?.let {
+      premisesRepository.findAllByType(it)
+    } ?: listOf()
+
+    return loadDependentEntities(
+      premises,
+      loadProbationRegions = true,
+      loadProbationRegionApAreas = true,
+      loadLocalAuthorityAreas = true,
+      loadBookings = true,
+      loadLostBeds = true,
+      loadRooms = true,
+      loadRoomBeds = true,
+      loadCharacteristics = true,
+    )
+  }
 
   fun getAllPremisesInRegionForService(
     probationRegionId: UUID,
-    service: ServiceName
-  ): List<PremisesEntity> = serviceNameToEntityType[service]?.let {
-    premisesRepository.findAllByProbationRegion_IdAndType(probationRegionId, it)
-  } ?: listOf()
+    service: ServiceName,
+  ): List<PremisesEntity> {
+    val premises = serviceNameToEntityType[service]?.let {
+      premisesRepository.findAllByProbationRegion_IdAndType(probationRegionId, it)
+    } ?: listOf()
 
-  fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
+    return loadDependentEntities(
+      premises,
+      loadLocalAuthorityAreas = true,
+      loadBookings = true,
+      loadLostBeds = true,
+      loadRooms = true,
+      loadRoomBeds = true,
+      loadCharacteristics = true,
+    )
+  }
+
+  fun getPremises(premisesId: UUID): PremisesEntity? {
+    val premises = listOfNotNull(premisesRepository.findByIdOrNull(premisesId))
+
+    return loadDependentEntities(
+      premises,
+      loadProbationRegions = true,
+      loadProbationRegionApAreas = true,
+      loadLocalAuthorityAreas = true,
+      loadBookings = true,
+      loadLostBeds = true,
+      loadRooms = true,
+      loadRoomBeds = true,
+      loadCharacteristics = true,
+    ).firstOrNull()
+  }
 
   fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)
   fun getLastLostBedsDate(premises: PremisesEntity) = lostBedsRepository.getHighestBookingDate(premises.id)
@@ -71,8 +139,15 @@ class PremisesService(
   ): Map<LocalDate, Availability> {
     if (endDate.isBefore(startDate)) throw RuntimeException("startDate must be before endDate when calculating availability for range")
 
-    val bookings = bookingRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
-    val lostBeds = lostBedsRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
+    val bookings = when (premises.bookingsLoaded) {
+      true -> premises.bookings.filter { it.arrivalDate <= endDate && it.departureDate >= startDate }
+      else -> bookingRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
+    }
+
+    val lostBeds = when (premises.lostBedsLoaded) {
+      true -> premises.lostBeds.filter { it.startDate <= endDate && it.endDate >= startDate }
+      false -> lostBedsRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
+    }
 
     return startDate.getDaysUntilExclusiveEnd(endDate).map { date ->
       val bookingsOnDay = bookings.filter { booking -> booking.arrivalDate <= date && booking.departureDate > date }
@@ -455,6 +530,73 @@ class PremisesService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedPremises)
     )
+  }
+
+  private fun loadDependentEntities(
+    premises: List<PremisesEntity>,
+    loadProbationRegions: Boolean = false,
+    loadProbationRegionApAreas: Boolean = false,
+    loadLocalAuthorityAreas: Boolean = false,
+    loadBookings: Boolean = false,
+    loadLostBeds: Boolean = false,
+    loadRooms: Boolean = false,
+    loadRoomBeds: Boolean = false,
+    loadCharacteristics: Boolean = false,
+  ): List<PremisesEntity> {
+    var resultPremises = premises
+
+    if (loadProbationRegions) {
+      resultPremises = premisesRepository.loadPremisesProbationRegions(resultPremises)
+      resultPremises.forEach { it.probationRegionLoaded = true }
+    }
+    if (loadProbationRegionApAreas) {
+      val probationRegions = probationRegionRepository
+        .loadApAreas(resultPremises.map { it.probationRegion })
+        .onEach { it.apAreaLoaded = true }
+        .associateBy { it.id }
+
+      resultPremises.forEach {
+        it.probationRegion = probationRegions[it.probationRegion.id]!!
+      }
+    }
+
+    if (loadLocalAuthorityAreas) {
+      resultPremises = premisesRepository.loadPremisesLocalAuthorityAreas(resultPremises)
+      resultPremises.forEach { it.localAuthorityAreaLoaded = true }
+    }
+
+    if (loadBookings) {
+      resultPremises = premisesRepository.loadPremisesBookings(resultPremises)
+      resultPremises.forEach { it.bookingsLoaded = true }
+    }
+
+    if (loadLostBeds) {
+      resultPremises = premisesRepository.loadPremisesLostBeds(resultPremises)
+      resultPremises.forEach { it.lostBedsLoaded = true }
+    }
+
+    if (loadRooms) {
+      resultPremises = premisesRepository.loadPremisesRooms(resultPremises)
+      resultPremises.forEach { it.roomsLoaded = true }
+    }
+
+    if (loadRoomBeds) {
+      val rooms = roomRepository
+        .loadRoomsBeds(resultPremises.flatMap { it.rooms })
+        .onEach { it.bedsLoaded = true }
+        .associateBy { it.id }
+
+      resultPremises.forEach {
+        it.rooms.replaceAll { r -> rooms[r.id]!! }
+      }
+    }
+
+    if (loadCharacteristics) {
+      resultPremises = premisesRepository.loadPremisesCharacteristics(resultPremises)
+      resultPremises.forEach { it.characteristicsLoaded = true }
+    }
+
+    return resultPremises
   }
 
   private fun serviceScopeMatches(scope: String, premises: PremisesEntity) = when (scope) {
