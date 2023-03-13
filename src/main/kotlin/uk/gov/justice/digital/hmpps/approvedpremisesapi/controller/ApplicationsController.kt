@@ -9,9 +9,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -32,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -47,6 +51,7 @@ class ApplicationsController(
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
+  private val userTransformer: UserTransformer,
 ) : ApplicationsApiDelegate {
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
@@ -173,40 +178,38 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsApplicationIdAllocationsPost(applicationId: UUID, body: Reallocation): ResponseEntity<Assessment> {
+  override fun applicationsApplicationIdAllocationsPost(applicationId: UUID, body: NewReallocation): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
 
-    val authorisationResult = assessmentService.reallocateAssessment(user, body.userId, applicationId)
+    val allocatedToUser = when (body.taskType) {
+      TaskType.assessment -> {
+        val authorisationResult = assessmentService.reallocateAssessment(user, body.userId, applicationId)
 
-    val validationResult = when (authorisationResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> authorisationResult.entity
+        val validationResult = when (authorisationResult) {
+          is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+          is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+          is AuthorisableActionResult.Success -> authorisationResult.entity
+        }
+
+        val assessment = when (validationResult) {
+          is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+          is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+          is ValidatableActionResult.Success -> validationResult.entity
+        }
+
+        assessment.allocatedToUser
+      }
+      else -> {
+        throw NotAllowedProblem(detail = "The Task Type ${body.taskType} is not currently supported")
+      }
     }
 
-    val assessment = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
+    val reallocation = Reallocation(
+      taskType = body.taskType,
+      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises)
+    )
 
-    val applicationCrn = assessment.application.crn
-
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")
-    }
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
-    }
-
-    val inmateDetails = when (val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)) {
-      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")
-    }
-
-    return ResponseEntity(assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails), HttpStatus.CREATED)
+    return ResponseEntity(reallocation, HttpStatus.CREATED)
   }
 
   override fun applicationsApplicationIdAssessmentGet(applicationId: UUID): ResponseEntity<Assessment> {

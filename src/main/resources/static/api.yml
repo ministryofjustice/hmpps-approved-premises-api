@@ -1603,7 +1603,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Reallocation'
+              $ref: '#/components/schemas/NewReallocation'
         required: true
       responses:
         201:
@@ -1611,7 +1611,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Assessment'
+                $ref: '#/components/schemas/Reallocation'
         400:
           description: invalid params
           content:
@@ -2476,12 +2476,14 @@ components:
             - in_progress
             - complete
         taskType:
-          type: string
-          enum:
-            - Assessment
-            - PlacementRequest
-            - PlacementRequestReview
-            - BookingAppeal
+          $ref: '#/components/schemas/TaskType'
+    TaskType:
+      type: string
+      enum:
+        - Assessment
+        - PlacementRequest
+        - PlacementRequestReview
+        - BookingAppeal
     LocalAuthorityArea:
       type: object
       properties:
@@ -3824,14 +3826,27 @@ components:
           type: string
       required:
         - query
-    Reallocation:
+    NewReallocation:
       type: object
       properties:
         userId:
           type: string
           format: uuid
+        taskType:
+          $ref: '#/components/schemas/TaskType'
       required:
         - userId
+        - taskType
+    Reallocation:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        taskType:
+          $ref: '#/components/schemas/TaskType'
+      required:
+        - userId
+        - taskType
     User:
       type: object
       properties:

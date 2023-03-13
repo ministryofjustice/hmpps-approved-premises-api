@@ -30,6 +30,7 @@ fun IntegrationTestBase.`Given a User`(
     withDeliusUsername(staffUserDetails.username)
     withEmail(staffUserDetails.email)
     withTelephoneNumber(staffUserDetails.telephoneNumber)
+    withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
     if (probationRegion == null) {
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {

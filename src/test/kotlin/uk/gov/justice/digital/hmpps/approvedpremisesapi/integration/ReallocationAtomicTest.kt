@@ -4,7 +4,8 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -38,8 +39,9 @@ class ReallocationAtomicTest : IntegrationTestBase() {
             .uri("/applications/${application.id}/allocations")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Reallocation(
-                userId = assigneeUser.id
+              NewReallocation(
+                userId = assigneeUser.id,
+                taskType = TaskType.assessment
               )
             )
             .exchange()
