@@ -16,6 +16,10 @@ class CharacteristicsSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  override fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
+    log.info("The list of headers provided ($headers) can now be tested here")
+  }
+
   override fun deserializeRow(columns: Map<String, String>) = CharacteristicsSeedCsvRow(
     name = throwIfBlank(columns["characteristic_name"]!!, "characteristic_name"),
     propertyName = columns["characteristic_property_name"]!!,

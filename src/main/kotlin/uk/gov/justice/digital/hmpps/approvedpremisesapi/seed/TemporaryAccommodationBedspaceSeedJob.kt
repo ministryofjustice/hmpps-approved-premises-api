@@ -22,6 +22,10 @@ class TemporaryAccommodationBedspaceSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  override fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
+    log.info("The list of headers provided ($headers) can now be tested here")
+  }
+
   override fun deserializeRow(columns: Map<String, String>) = TemporaryAccommodationBedspaceSeedCsvRow(
     premisesName = columns["Property reference"]!!.trim(),
     bedspaceName = columns["Bedspace reference"]!!.trim(),
