@@ -2540,6 +2540,10 @@ components:
           example: 952790c0-21d7-4fd6-a7e1-9018f08d8bb0
         name:
           type: string
+          example: Is this premises catered (rather than self-catered)?
+        propertyName:
+          type: string
+          example: isCatered
         serviceScope:
           type: string
           enum:
