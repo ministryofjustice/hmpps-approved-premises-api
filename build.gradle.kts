@@ -1,8 +1,8 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.6.0"
-  kotlin("plugin.spring") version "1.7.22"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.1.0"
+  kotlin("plugin.spring") version "1.8.10"
   id("org.openapi.generator") version "5.4.0"
-  id("org.jetbrains.kotlin.plugin.jpa") version "1.7.22"
+  id("org.jetbrains.kotlin.plugin.jpa") version "1.8.10"
 }
 
 configurations {
@@ -21,6 +21,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   runtimeOnly("org.postgresql:postgresql:42.5.4")
+  compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 
   implementation("org.springdoc:springdoc-openapi-webmvc-core:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
