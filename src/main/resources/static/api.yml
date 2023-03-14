@@ -3771,8 +3771,11 @@ components:
       properties:
         document:
           $ref: '#/components/schemas/AnyValue'
+        requirements:
+          $ref: '#/components/schemas/PlacementRequest'
       required:
         - document
+        - requirements
     AssessmentRejection:
       type: object
       properties:
