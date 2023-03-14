@@ -33,6 +33,34 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     nativeQuery = true
   )
   fun findQualifiedAssessorWithLeastPendingAllocations(requiredQualifications: List<String>, totalRequiredQualifications: Long): UserEntity?
+
+  @Query(
+    """
+      SELECT
+        *
+      FROM
+        users
+        LEFT JOIN user_role_assignments AS ura ON ura.user_id = users.id
+      WHERE
+        role = 'MATCHER'
+      OFFSET
+        floor(
+          random() * (
+            SELECT
+              COUNT(*)
+            FROM
+              users
+              LEFT JOIN user_role_assignments AS ura ON ura.user_id = users.id
+            WHERE
+              role = 'MATCHER'
+          )
+        )
+      LIMIT
+        1
+    """,
+    nativeQuery = true
+  )
+  fun findRandomMatcher(): UserEntity?
 }
 
 @Entity

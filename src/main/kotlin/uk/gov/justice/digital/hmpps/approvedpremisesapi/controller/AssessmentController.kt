@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -35,7 +36,8 @@ class AssessmentController(
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val assessmentTransformer: AssessmentTransformer,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer
+  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
+  private val placementRequestService: PlacementRequestService
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -144,11 +146,15 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    when (assessmentValidationResult) {
+    val assessment = when (assessmentValidationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.Success -> Unit
+      is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
+
+    extractResultEntityOrThrow(
+      placementRequestService.createPlacementRequest(assessment, assessmentAcceptance.requirements)
+    )
 
     return ResponseEntity(HttpStatus.OK)
   }
@@ -222,5 +228,11 @@ class AssessmentController(
     return ResponseEntity.ok(
       assessmentClarificationNoteTransformer.transformJpaToApi(updatedClarificationNote)
     )
+  }
+
+  private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
+    is ValidatableActionResult.Success -> result.entity
+    is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
+    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
   }
 }
