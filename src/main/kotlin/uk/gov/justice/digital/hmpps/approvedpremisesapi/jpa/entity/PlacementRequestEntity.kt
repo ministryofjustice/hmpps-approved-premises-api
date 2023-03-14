@@ -15,6 +15,11 @@ import javax.persistence.ManyToMany
 import javax.persistence.ManyToOne
 import javax.persistence.Table
 
+@Repository
+interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
+  fun findByApplication(application: ApplicationEntity): PlacementRequestEntity
+}
+
 @Entity
 @Table(name = "placement_requests")
 data class PlacementRequestEntity(

@@ -22,6 +22,12 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
   fun findByPropertyNameAndScopes(propertyName: String, serviceName: String, modelName: String): CharacteristicEntity?
 
   fun findAllByName(name: String): List<CharacteristicEntity>
+
+  @Query(
+    "SELECT c FROM CharacteristicEntity c " +
+      "WHERE c.propertyName IN :names"
+  )
+  fun findAllWherePropertyNameIn(names: List<String>): List<CharacteristicEntity>
 }
 
 @Entity
