@@ -4288,3 +4288,70 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
+    PlacementRequest:
+      type: object
+      properties:
+        gender:
+          $ref: '#/components/schemas/Gender'
+        type:
+          $ref: '#/components/schemas/ApType'
+        expectedArrival:
+          type: string
+          format: date
+        duration:
+          type: integer
+        location:
+          type: string
+          example: B74
+        radius:
+          type: integer
+        essentialCriteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlacementCriteria'
+        desirableCriteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlacementCriteria'
+        mentalHealthSupport:
+          type: boolean
+      required:
+        - gender
+        - type
+        - expectedArrival
+        - duration
+        - location
+        - radius
+        - essentialCriteria
+        - desirableCriteria
+        - mentalHealthSupport
+    PlacementCriteria:
+      type: string
+      enum:
+        - isSemiSpecialistMentalHealth
+        - isRecoveryFocussed
+        - isSuitableForVulnerable
+        - acceptsSexOffenders
+        - acceptsChildSexOffenders
+        - acceptsNonSexualChildOffenders
+        - acceptsHateCrimeOffenders
+        - isCatered
+        - hasWideStepFreeAccess
+        - hasWideAccessToCommunalAreas
+        - hasStepFreeAccessToCommunalAreas
+        - hasWheelChairAccessibleBathrooms
+        - hasLift
+        - hasTactileFlooring
+        - hasBrailleSignage
+        - hasHearingLoop
+    Gender:
+      type: string
+      enum:
+        - male
+        - female
+    ApType:
+      type: string
+      enum:
+        - normal
+        - pipe
+        - esap
