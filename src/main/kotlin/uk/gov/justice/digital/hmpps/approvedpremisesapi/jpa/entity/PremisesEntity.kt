@@ -36,6 +36,9 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 
   @Query("SELECT p FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByName(name: String, type: Class<T>): PremisesEntity?
+
+  @Query("SELECT p FROM PremisesEntity p WHERE ap_code = :apCode AND TYPE(p) = :type")
+  fun <T : PremisesEntity> findByApCode(apCode: String, type: Class<T>): PremisesEntity?
 }
 
 @Entity

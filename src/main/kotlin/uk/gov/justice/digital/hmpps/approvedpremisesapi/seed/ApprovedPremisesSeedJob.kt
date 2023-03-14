@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import org.slf4j.LoggerFactory
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -20,7 +19,6 @@ class ApprovedPremisesSeedJob(
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val characteristicRepository: CharacteristicRepository
 ) : SeedJob<ApprovedPremisesSeedCsvRow>(
-  id = UUID.randomUUID(),
   fileName = fileName,
   requiredColumns = 12
 ) {
@@ -35,7 +33,6 @@ class ApprovedPremisesSeedJob(
   }
 
   override fun deserializeRow(columns: Map<String, String>) = ApprovedPremisesSeedCsvRow(
-    id = UUID.fromString(columns["id"]!!),
     name = columns["name"]!!,
     addressLine1 = columns["addressLine1"]!!,
     addressLine2 = columns["addressLine2"]!!,
@@ -73,10 +70,10 @@ class ApprovedPremisesSeedJob(
   )
 
   override fun processRow(row: ApprovedPremisesSeedCsvRow) {
-    val existingPremises = premisesRepository.findByIdOrNull(row.id)
+    val existingPremises = premisesRepository.findByApCode(row.apCode, ApprovedPremisesEntity::class.java)
 
     if (existingPremises != null && existingPremises !is ApprovedPremisesEntity) {
-      throw RuntimeException("Premises ${row.id} is of type ${existingPremises::class.qualifiedName}, cannot be updated with Approved Premises Seed Job")
+      throw RuntimeException("Premises ${row.apCode} is of type ${existingPremises::class.qualifiedName}, cannot be updated with Approved Premises Seed Job")
     }
 
     val probationRegion = probationRegionRepository.findByName(row.probationRegion)
@@ -128,11 +125,11 @@ class ApprovedPremisesSeedJob(
     localAuthorityArea: LocalAuthorityAreaEntity,
     characteristics: List<CharacteristicEntity>
   ) {
-    log.info("Creating new Approved Premises: ${row.id}")
+    log.info("Creating new Approved Premises: ${row.apCode} ${row.name}")
 
     val approvedPremises = premisesRepository.save(
       ApprovedPremisesEntity(
-        id = row.id,
+        id = UUID.randomUUID(),
         name = row.name,
         addressLine1 = row.addressLine1,
         addressLine2 = row.addressLine2,
@@ -177,7 +174,7 @@ class ApprovedPremisesSeedJob(
     localAuthorityArea: LocalAuthorityAreaEntity,
     characteristics: List<CharacteristicEntity>
   ) {
-    log.info("Updating existing Approved Premises: ${row.id}")
+    log.info("Updating existing Approved Premises: ${row.apCode} ${row.name}")
 
     existingApprovedPremises.apply {
       this.name = row.name
@@ -208,7 +205,6 @@ class ApprovedPremisesSeedJob(
 
 private fun requiredHeaders(): Set<String> {
   return setOf(
-    "id",
     "name",
     "addressLine1",
     "addressLine2",
@@ -252,7 +248,6 @@ data class CharacteristicValue(
 )
 
 data class ApprovedPremisesSeedCsvRow(
-  val id: UUID,
   val name: String,
   val addressLine1: String,
   val addressLine2: String?,
