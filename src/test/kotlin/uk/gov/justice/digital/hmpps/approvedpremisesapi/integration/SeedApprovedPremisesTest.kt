@@ -6,7 +6,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedCsvRow
@@ -190,14 +189,14 @@ class SeedApprovedPremisesTest : SeedTestBase() {
   fun `Attempting to create an Approved Premises missing required headers lists missing fields`() {
     withCsv(
       "new-ap-missing-headers",
-      "id,name,apCode,qCode,apArea,pdu,probationRegion,localAuthorityArea,town,addressLine1\n" +
-        "123,HOPE,Q00,North East,Leeds,Yorkshire & The Humber,Leeds,Leeds,1 The Street, Leeds"
+      "name,apCode,qCode,apArea,pdu,probationRegion,localAuthorityArea,town,addressLine1\n" +
+        "HOPE,Q00,North East,Leeds,Yorkshire & The Humber,Leeds,Leeds,1 The Street, Leeds"
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "new-ap-missing-headers")
 
     val expectedErrorMessage = "The headers provided: " +
-      "[id, name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
+      "[name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
       "did not include required headers: " +
       "[addressLine2, postcode, totalBeds, notes, characteristics, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
       "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
@@ -238,7 +237,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     }
 
     val csvRow = ApprovedPremisesSeedCsvRowFactory()
-      .withId(UUID.randomUUID())
       .withProbationRegion(probationRegion.name)
       .withLocalAuthorityArea(localAuthorityArea.name)
       .withIsCatered("yes")
@@ -258,10 +256,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "new-ap")
 
-    val persistedApprovedPremises = approvedPremisesRepository.findByIdOrNull(csvRow.id)
+    val persistedApprovedPremises = approvedPremisesRepository.findByApCode(csvRow.apCode)
     assertThat(persistedApprovedPremises).isNotNull
-    assertThat(persistedApprovedPremises!!.id).isEqualTo(csvRow.id)
-    assertThat(persistedApprovedPremises.apCode).isEqualTo(csvRow.apCode)
+    assertThat(persistedApprovedPremises!!.apCode).isEqualTo(csvRow.apCode)
     assertThat(persistedApprovedPremises.name).isEqualTo(csvRow.name)
     assertThat(persistedApprovedPremises.addressLine1).isEqualTo(csvRow.addressLine1)
     assertThat(persistedApprovedPremises.addressLine2).isEqualTo(csvRow.addressLine2)
@@ -299,7 +296,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     }
 
     val csvRow = ApprovedPremisesSeedCsvRowFactory()
-      .withId(existingApprovedPremises.id)
+      .withApCode(existingApprovedPremises.apCode)
       .withProbationRegion(updatedProbationRegion.name)
       .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
       .produce()
@@ -315,10 +312,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     seedService.seedData(SeedFileType.approvedPremises, "update-ap")
 
-    val persistedApprovedPremises = approvedPremisesRepository.findByIdOrNull(csvRow.id)
+    val persistedApprovedPremises = approvedPremisesRepository.findByApCode(csvRow.apCode)
     assertThat(persistedApprovedPremises).isNotNull
-    assertThat(persistedApprovedPremises!!.id).isEqualTo(csvRow.id)
-    assertThat(persistedApprovedPremises.apCode).isEqualTo(csvRow.apCode)
+    assertThat(persistedApprovedPremises!!.apCode).isEqualTo(csvRow.apCode)
     assertThat(persistedApprovedPremises.name).isEqualTo(csvRow.name)
     assertThat(persistedApprovedPremises.addressLine1).isEqualTo(csvRow.addressLine1)
     assertThat(persistedApprovedPremises.postcode).isEqualTo(csvRow.postcode)
@@ -333,7 +329,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
   private fun approvedPremisesSeedCsvRowsToCsv(rows: List<ApprovedPremisesSeedCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
-        "id",
         "name",
         "addressLine1",
         "addressLine2",
@@ -373,7 +368,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     rows.forEach {
       builder
-        .withQuotedField(it.id)
         .withQuotedField(it.name)
         .withQuotedField(it.addressLine1)
         .withQuotedField(it.addressLine2!!)
@@ -416,7 +410,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 }
 
 class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
-  private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var addressLine1: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var addressLine2: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
@@ -451,10 +444,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var status: Yielded<PropertyStatus> = { PropertyStatus.active }
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
-
-  fun withId(id: UUID) = apply {
-    this.id = { id }
-  }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -516,7 +505,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   }
 
   override fun produce() = ApprovedPremisesSeedCsvRow(
-    id = this.id(),
     name = this.name(),
     addressLine1 = this.addressLine1(),
     addressLine2 = this.addressLine2(),

@@ -11,7 +11,9 @@ import java.util.UUID
 interface PremisesTestRepository : JpaRepository<PremisesEntity, UUID>
 
 @Repository
-interface ApprovedPremisesTestRepository : JpaRepository<ApprovedPremisesEntity, UUID>
+interface ApprovedPremisesTestRepository : JpaRepository<ApprovedPremisesEntity, UUID> {
+  fun findByApCode(name: String): ApprovedPremisesEntity?
+}
 
 @Repository
 interface TemporaryAccommodationPremisesTestRepository : JpaRepository<TemporaryAccommodationPremisesEntity, UUID> {
