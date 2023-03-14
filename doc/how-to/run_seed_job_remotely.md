@@ -1,5 +1,7 @@
 # How to run a seed job remotely
 
+## Run book
+
 To process a seed CSV against a non-local environment:
 
 - Ensure nobody is deploying a change (or is going to deploy a change shortly.)
@@ -30,3 +32,58 @@ To process a seed CSV against a non-local environment:
   ```
   
 - Check the logs via `kubectl logs {pod name}` to see how processing is progressing.
+
+## CSV reference
+
+### User seed job
+
+Required fields:
+
+- `deliusUsername`
+- `roles`
+- `qualifications`
+
+[Example CSV](./example_csvs/user_seeding_example.csv)
+
+### Approved Premises seed job
+
+Required fields:
+
+- `apCode`
+- `qCode`
+- `apArea`
+- `pdu`
+- `probationRegion`
+- `localAuthorityArea`
+- `town`
+- `addressLine1`
+- `addressLine2`
+- `postcode`
+- `latitude`
+- `longitude`
+- `maleOrFemale`
+- `totalBeds`
+- `characteristics`
+- `status`
+- `isIAP`
+- `isPIPE`
+- `isESAP`
+- `isSemiSpecialistMentalHealth`
+- `isRecoveryFocussed`
+- `isSuitableForVulnerable`
+- `acceptsSexOffenders`
+- `acceptsChildSexOffenders`
+- `acceptsNonSexualChildOffenders`
+- `acceptsHateCrimeOffenders`
+- `isCatered`
+- `hasWideStepFreeAccess`
+- `hasWideAccessToCommunalAreas`
+- `hasStepFreeAccessToCommunalAreas`
+- `hasWheelChairAccessibleBathrooms`
+- `hasLift`
+- `hasTactileFlooring`
+- `hasBrailleSignage`
+- `hasHearingLoop`
+- `notes`
+
+[Example CSV](./example_csvs/approved_premises_seeding_example.csv)
