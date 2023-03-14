@@ -141,3 +141,10 @@ ktlint {
 allOpen {
   annotations("javax.persistence.Entity")
 }
+
+tasks {
+  withType<JavaExec> {
+    jvmArgs!!.plus("--add-opens")
+    jvmArgs!!.plus("java.base/java.lang=ALL-UNNAMED")
+  }
+}
