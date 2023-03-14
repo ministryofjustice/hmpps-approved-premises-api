@@ -62,9 +62,9 @@ ORDER BY distance_miles;
     val params = MapSqlParameterSource().apply {
       addValue("outcode", postcodeDistrictOutcode)
       addValue("max_miles", maxDistanceMiles)
-      addValue("premises_characteristic_ids", requiredPremisesCharacteristics)
+      addValue("premises_characteristic_ids", requiredPremisesCharacteristics.ifEmpty { null })
       addValue("premises_characteristic_ids_count", requiredPremisesCharacteristics.size)
-      addValue("room_characteristic_ids", requiredRoomCharacteristics)
+      addValue("room_characteristic_ids", requiredRoomCharacteristics.ifEmpty { null })
       addValue("room_characteristic_ids_count", requiredRoomCharacteristics.size)
       addValue("start_date", startDate)
       addValue("end_date", startDate.plusDays(durationInDays.toLong()))
