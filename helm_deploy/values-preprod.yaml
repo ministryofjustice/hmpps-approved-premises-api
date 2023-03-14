@@ -28,7 +28,13 @@ generic-service:
     PERSON-ARRIVED-DETAIL-URL-TEMPLATE: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/person-arrived/#eventId
     PERSON-NOT-ARRIVED-DETAIL-URL-TEMPLATE: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/person-not-arrived/#eventId
     PERSON-DEPARTED-DETAIL-URL-TEMPLATE: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/person-departed/#eventId
-    DOMAIN-EVENTS_EMIT-ENABLED: false
+    DOMAIN-EVENTS_EMIT-ENABLED: true
+
+  namespace_secrets:
+    hmpps-domain-events-topic:
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ACCESS_KEY_ID: "access_key_id"
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_SECRET_ACCESS_KEY: "secret_access_key"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
