@@ -10,6 +10,7 @@ class CharacteristicTransformer {
   fun transformJpaToApi(jpa: CharacteristicEntity) = Characteristic(
     id = jpa.id,
     name = jpa.name,
+    propertyName = jpa.propertyName,
     serviceScope = when (jpa.serviceScope) {
       "approved-premises" -> Characteristic.ServiceScope.approvedMinusPremises
       "temporary-accommodation" -> Characteristic.ServiceScope.temporaryMinusAccommodation
