@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCanc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -1130,6 +1131,538 @@ class LostBedsTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isForbidden
+    }
+  }
+
+  @Test
+  fun `Create Lost Bed on a Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val reason = lostBedReasonEntityFactory.produceAndPersist {
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }
+
+        val existingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn("CRN123")
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withArrivalDate(LocalDate.parse("2022-07-15"))
+          withDepartureDate(LocalDate.parse("2022-08-15"))
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/lost-beds")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewLostBed(
+              startDate = LocalDate.parse("2022-08-01"),
+              endDate = LocalDate.parse("2022-08-30"),
+              reason = reason.id,
+              referenceNumber = "REF-123",
+              notes = "notes",
+              bedId = bed.id,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Lost Bed on a Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val reason = lostBedReasonEntityFactory.produceAndPersist {
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }
+
+        val existingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withArrivalDate(LocalDate.parse("2022-07-15"))
+          withDepartureDate(LocalDate.parse("2022-08-15"))
+        }
+
+        existingBooking.cancellation = cancellationEntityFactory.produceAndPersist {
+          withYieldedBooking { existingBooking }
+          withDate(LocalDate.parse("2022-07-01"))
+          withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/lost-beds")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewLostBed(
+              startDate = LocalDate.parse("2022-08-01"),
+              endDate = LocalDate.parse("2022-08-30"),
+              reason = reason.id,
+              referenceNumber = "REF-123",
+              notes = "notes",
+              bedId = bed.id,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".startDate").isEqualTo("2022-08-01")
+          .jsonPath(".endDate").isEqualTo("2022-08-30")
+          .jsonPath(".bedId").isEqualTo(bed.id.toString())
+          .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(reason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath(".referenceNumber").isEqualTo("REF-123")
+          .jsonPath(".notes").isEqualTo("notes")
+          .jsonPath(".status").isEqualTo("active")
+          .jsonPath(".cancellation").isEqualTo(null)
+      }
+    }
+  }
+
+  @Test
+  fun `Create Lost Bed on a Temporary Accommodation premises returns 409 Conflict when a lost bed for the same bed overlaps`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val reason = lostBedReasonEntityFactory.produceAndPersist {
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }
+
+        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+          withBed(bed)
+          withPremises(premises)
+          withStartDate(LocalDate.parse("2022-07-15"))
+          withEndDate(LocalDate.parse("2022-08-15"))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/lost-beds")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewLostBed(
+              startDate = LocalDate.parse("2022-08-01"),
+              endDate = LocalDate.parse("2022-08-30"),
+              reason = reason.id,
+              referenceNumber = "REF-123",
+              notes = "notes",
+              bedId = bed.id,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Lost Bed on a Temporary Accommodation premises returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val reason = lostBedReasonEntityFactory.produceAndPersist {
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }
+
+        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+          withBed(bed)
+          withPremises(premises)
+          withStartDate(LocalDate.parse("2022-07-15"))
+          withEndDate(LocalDate.parse("2022-08-15"))
+          withYieldedReason {
+            lostBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+
+        existingLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+          withLostBed(existingLostBed)
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/lost-beds")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewLostBed(
+              startDate = LocalDate.parse("2022-08-01"),
+              endDate = LocalDate.parse("2022-08-30"),
+              reason = reason.id,
+              referenceNumber = "REF-123",
+              notes = "notes",
+              bedId = bed.id,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".startDate").isEqualTo("2022-08-01")
+          .jsonPath(".endDate").isEqualTo("2022-08-30")
+          .jsonPath(".bedId").isEqualTo(bed.id.toString())
+          .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(reason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath(".referenceNumber").isEqualTo("REF-123")
+          .jsonPath(".notes").isEqualTo("notes")
+          .jsonPath(".status").isEqualTo("active")
+          .jsonPath(".cancellation").isEqualTo(null)
+      }
+    }
+  }
+
+  @Test
+  fun `Update Lost Beds on Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
+    `Given a User` { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.parse("2022-08-16"))
+        withEndDate(LocalDate.parse("2022-08-30"))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedBed { bed }
+        withPremises(premises)
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+
+      val existingBooking = bookingEntityFactory.produceAndPersist {
+        withServiceName(ServiceName.temporaryAccommodation)
+        withCrn("CRN123")
+        withYieldedPremises { premises }
+        withYieldedBed { bed }
+        withArrivalDate(LocalDate.parse("2022-07-15"))
+        withDepartureDate(LocalDate.parse("2022-08-15"))
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateLostBed(
+            startDate = LocalDate.parse("2022-08-01"),
+            endDate = LocalDate.parse("2022-08-30"),
+            reason = reason.id,
+            referenceNumber = "REF-123",
+            notes = "notes",
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Conflict")
+        .jsonPath("status").isEqualTo(409)
+        .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
+    }
+  }
+
+  @Test
+  fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea {
+                apAreaEntityFactory.produceAndPersist()
+              }
+            }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val lostBeds = lostBedsEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-08-16"))
+          withEndDate(LocalDate.parse("2022-08-30"))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedBed { bed }
+          withPremises(premises)
+        }
+
+        val reason = lostBedReasonEntityFactory.produceAndPersist {
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }
+
+        val existingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withArrivalDate(LocalDate.parse("2022-07-15"))
+          withDepartureDate(LocalDate.parse("2022-08-15"))
+        }
+
+        existingBooking.cancellation = cancellationEntityFactory.produceAndPersist {
+          withYieldedBooking { existingBooking }
+          withDate(LocalDate.parse("2022-07-01"))
+          withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+        }
+
+        webTestClient.put()
+          .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateLostBed(
+              startDate = LocalDate.parse("2022-08-01"),
+              endDate = LocalDate.parse("2022-08-30"),
+              reason = reason.id,
+              referenceNumber = "REF-123",
+              notes = "notes",
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".startDate").isEqualTo("2022-08-01")
+          .jsonPath(".endDate").isEqualTo("2022-08-30")
+          .jsonPath(".bedId").isEqualTo(bed.id.toString())
+          .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(reason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath(".referenceNumber").isEqualTo("REF-123")
+          .jsonPath(".notes").isEqualTo("notes")
+          .jsonPath(".status").isEqualTo("active")
+          .jsonPath(".cancellation").isEqualTo(null)
+      }
+    }
+  }
+
+  @Test
+  fun `Update Lost Beds on Temporary Accommodation premises returns 409 Conflict when a lost bed for the same bed overlaps`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val reason = lostBedReasonEntityFactory.produceAndPersist {
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }
+
+        val lostBeds = lostBedsEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-08-16"))
+          withEndDate(LocalDate.parse("2022-08-30"))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedBed { bed }
+          withPremises(premises)
+        }
+
+        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+          withBed(bed)
+          withPremises(premises)
+          withStartDate(LocalDate.parse("2022-07-15"))
+          withEndDate(LocalDate.parse("2022-08-15"))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        }
+
+        webTestClient.put()
+          .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateLostBed(
+              startDate = LocalDate.parse("2022-08-01"),
+              endDate = LocalDate.parse("2022-08-30"),
+              reason = reason.id,
+              referenceNumber = "REF-123",
+              notes = "notes",
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val reason = lostBedReasonEntityFactory.produceAndPersist {
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }
+
+        val lostBeds = lostBedsEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-08-16"))
+          withEndDate(LocalDate.parse("2022-08-30"))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedBed { bed }
+          withPremises(premises)
+        }
+
+        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+          withBed(bed)
+          withPremises(premises)
+          withStartDate(LocalDate.parse("2022-07-15"))
+          withEndDate(LocalDate.parse("2022-08-15"))
+          withYieldedReason {
+            lostBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+
+        existingLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+          withLostBed(existingLostBed)
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        webTestClient.put()
+          .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateLostBed(
+              startDate = LocalDate.parse("2022-08-01"),
+              endDate = LocalDate.parse("2022-08-30"),
+              reason = reason.id,
+              referenceNumber = "REF-123",
+              notes = "notes",
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".startDate").isEqualTo("2022-08-01")
+          .jsonPath(".endDate").isEqualTo("2022-08-30")
+          .jsonPath(".bedId").isEqualTo(bed.id.toString())
+          .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(reason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath(".referenceNumber").isEqualTo("REF-123")
+          .jsonPath(".notes").isEqualTo("notes")
+          .jsonPath(".status").isEqualTo("active")
+          .jsonPath(".cancellation").isEqualTo(null)
+      }
     }
   }
 }
