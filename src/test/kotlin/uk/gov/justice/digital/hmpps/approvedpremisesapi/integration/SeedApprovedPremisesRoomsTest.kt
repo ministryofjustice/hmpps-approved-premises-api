@@ -24,6 +24,29 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an AP room with an incorrect boolean value logs an error`() {
+    val csvRow = ApprovedPremisesRoomsSeedCsvRowFactory()
+      .withIsArsonSuitable("false")
+      .produce()
+
+    withCsv(
+      "new-ap-room-invalid-boolean",
+      approvedPremisesRoomsSeedCsvRowsToCsv(
+        listOf(
+          csvRow,
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-invalid-boolean")
+
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Seed Job" &&
+          it.throwable != null &&
+          it.throwable.message!!.contains("'false' is not a recognised boolean for 'isArsonSuitable' (use yes | no)")
+      }
   }
 
   @Test
@@ -62,7 +85,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Updating an existing AP room persists correctly`() {
   }
 
-  private fun apRoomsSeedCsvRowsToCsv(rows: List<ApprovedPremisesRoomsSeedCsvRow>): String {
+  private fun approvedPremisesRoomsSeedCsvRowsToCsv(rows: List<ApprovedPremisesRoomsSeedCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "apCode",
@@ -159,6 +182,10 @@ class ApprovedPremisesRoomsSeedCsvRowFactory : Factory<ApprovedPremisesRoomsSeed
 
   fun withApCode(apCode: String) = apply {
     this.apCode = { apCode }
+  }
+
+  fun withIsArsonSuitable(boolString: String) = apply {
+    this.isArsonSuitable = { boolString }
   }
 
   override fun produce() = ApprovedPremisesRoomsSeedCsvRow(
