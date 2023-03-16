@@ -18,6 +18,8 @@ import javax.persistence.Table
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
   fun findByApplication(application: ApplicationEntity): PlacementRequestEntity
+
+  fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementRequestEntity>
 }
 
 @Entity
