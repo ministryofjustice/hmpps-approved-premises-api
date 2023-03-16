@@ -2477,6 +2477,8 @@ components:
             - complete
         taskType:
           $ref: '#/components/schemas/TaskType'
+      required: 
+        - applicationId
     TaskType:
       type: string
       enum:
