@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CharacteristicsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
@@ -39,6 +40,11 @@ class SeedService(
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(ProbationRegionRepository::class.java),
           applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
+          applicationContext.getBean(CharacteristicRepository::class.java)
+        )
+        SeedFileType.approvedPremisesRooms -> ApprovedPremisesRoomsSeedJob(
+          filename,
+          applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(CharacteristicRepository::class.java)
         )
         SeedFileType.user -> UsersSeedJob(
