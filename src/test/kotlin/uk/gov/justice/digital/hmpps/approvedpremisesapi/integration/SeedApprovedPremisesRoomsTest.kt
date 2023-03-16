@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
@@ -10,12 +11,46 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
+  @BeforeEach
+  fun removeDefaultCharacteristicsFromDatabaseMigrations() {
+    characteristicRepository.deleteAll()
+  }
+
   @Test
   fun `Attempting to create an AP room with an incorrectly service-scoped characteristic logs an error`() {
+    characteristicEntityFactory.produceAndPersist {
+      withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
+      withPropertyName("isArsonSuitable")
+      withModelScope("room")
+      withServiceScope("temporary-accommodation")
+    }
+
+    withCsv(
+      "invalid-ap-rooms-service-scope",
+      approvedPremisesRoomsSeedCsvRowsToCsv(
+        listOf(
+          ApprovedPremisesRoomsSeedCsvRowFactory()
+            .withIsArsonSuitable("yes")
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-service-scope")
+
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message == "Characteristic 'isArsonSuitable' does not exist for AP room"
+      }
   }
 
   @Test
@@ -54,7 +89,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     withCsv(
       "new-ap-room-missing-headers",
       "apCode,bedCode,roomNumber,bedCount,isSingle,isGroundFloor,isFullyFm,hasCrib7Bedding\n" +
-        "HOPE,NESPU01,1,1,yes,yes,no,no"
+        "HOPE,NESPU01,1,1,yes,yes,no,no",
     )
 
     seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-missing-headers")
@@ -113,7 +148,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
         "hasCallForAssistance",
         "isWheelchairDesignated",
         "isStepFreeDesignated",
-        "notes"
+        "notes",
       )
       .newRow()
 
@@ -157,7 +192,7 @@ class ApprovedPremisesRoomsSeedCsvRowFactory : Factory<ApprovedPremisesRoomsSeed
   private var bedCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var roomNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var bedCount: Yielded<String> = { randomInt(1, 2).toString() }
-  private var isSingle: Yielded<String> = { "yes" }
+  private var isSingle: Yielded<String> = { "no" }
   private var isGroundFloor: Yielded<String> = { "no" }
   private var isFullyFm: Yielded<String> = { "no" }
   private var hasCrib7Bedding: Yielded<String> = { "no" }
@@ -214,6 +249,6 @@ class ApprovedPremisesRoomsSeedCsvRowFactory : Factory<ApprovedPremisesRoomsSeed
     hasCallForAssistance = this.hasCallForAssistance(),
     isWheelchairDesignated = this.isWheelchairDesignated(),
     isStepFreeDesignated = this.isStepFreeDesignated(),
-    notes = this.notes()
+    notes = this.notes(),
   )
 }
