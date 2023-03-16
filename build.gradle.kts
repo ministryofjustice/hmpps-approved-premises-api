@@ -53,6 +53,8 @@ dependencies {
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
+  testImplementation("net.sf.geographiclib:GeographicLib-Java:2.0")
+
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
   }

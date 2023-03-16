@@ -1,12 +1,25 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import net.sf.geographiclib.Geodesic
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedSearchRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.util.Random
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class BedSearchRepositoryTest : IntegrationTestBase() {
   @Autowired
@@ -385,6 +398,284 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       currentDistance = it.distance
     }
   }
+
+  @ParameterizedTest
+  @Disabled("Long running/resource heavy")
+  @CsvSource(
+    value = [
+      "101,25,12,34,25,10,3,84,0.75,7",
+      "101,25,12,34,25,10,3,84,0.75,15",
+      "101,25,12,34,25,10,3,84,0.75,30",
+      "101,25,12,34,25,10,3,84,0.75,60",
+      "101,25,12,34,25,10,3,84,0.75,180",
+      "101,25,12,34,25,10,3,84,0.75,360",
+    ]
+  )
+  fun `Query performance with realistic amount of data`(
+    numberOfApsToCreate: Int,
+    apsWithinDistanceToCreate: Int,
+    characteristicSuitableApsWithinDistanceToCreate: Int,
+    characteristicSuitableApsOutsideDistanceToCreate: Int,
+    bedsPerApToCreate: Int,
+    characteristicSuitableBedsPerApToCreate: Int,
+    availableCharacteristicSuitableBedsPerApToCreate: Int,
+    bookingDurationDaysToCreate: Int,
+    occupancyProbabilityToCreate: Double,
+    generateBookingsEitherSideOfSearchDays: Int
+  ) {
+    val apsOutsideOfDistanceToCreate = numberOfApsToCreate - apsWithinDistanceToCreate
+    val characteristicUnsuitableApsWithinDistanceToCreate = apsWithinDistanceToCreate - characteristicSuitableApsWithinDistanceToCreate
+    val characteristicUnsuitableApsOutsideDistanceToCreate = apsOutsideOfDistanceToCreate - characteristicSuitableApsOutsideDistanceToCreate
+    val characteristicUnsuitableBedsPerApToCreate = bedsPerApToCreate - characteristicSuitableBedsPerApToCreate
+    val unavailableCharacteristicSuitableBedsPerApToCreate = characteristicSuitableBedsPerApToCreate - availableCharacteristicSuitableBedsPerApToCreate
+
+    val searchWindowDays = 12 * 7
+    val searchWindowStart = LocalDate.parse("2023-03-15")
+    val searchWindowEnd = searchWindowStart.plusDays(searchWindowDays.toLong())
+
+    val generateBookingsWindowStart = searchWindowStart.minusDays(generateBookingsEitherSideOfSearchDays.toLong())
+    val generateBookingsWindowEnd = searchWindowEnd.plusDays(generateBookingsEitherSideOfSearchDays.toLong())
+    val totalDaysToPopulateWithGeneratedBookings = ChronoUnit.DAYS.between(generateBookingsWindowStart, generateBookingsWindowEnd)
+    val probabilityOfBookingStartingOnDay = ((totalDaysToPopulateWithGeneratedBookings / bookingDurationDaysToCreate) * occupancyProbabilityToCreate) / 100
+    println("Probability of Booking starting on day is: $probabilityOfBookingStartingOnDay")
+
+    val postcodeDistrictLatLong = LatLong(52.917572, -1.181414)
+
+    val postcodeDistrict = postCodeDistrictFactory.produceAndPersist {
+      withOutcode("AA11")
+      withLatitude(postcodeDistrictLatLong.latitude)
+      withLongitude(postcodeDistrictLatLong.longitude)
+    }
+
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea {
+        apAreaEntityFactory.produceAndPersist()
+      }
+    }
+
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+    val premisesCharacteristics = (1..20).map { characteristicId ->
+      characteristicEntityFactory.produceAndPersist {
+        withPropertyName("premisesCharacteristic$characteristicId")
+        withName("Premises Characteristic $characteristicId")
+        withServiceScope("approved-premises")
+        withModelScope("premises")
+      }
+    }
+
+    val requiredPremisesCharacteristics = listOf(
+      premisesCharacteristics[2],
+      premisesCharacteristics[8],
+      premisesCharacteristics[16]
+    )
+
+    val roomCharacteristics = (1..20).map { characteristicId ->
+      characteristicEntityFactory.produceAndPersist {
+        withPropertyName("roomCharacteristic$characteristicId")
+        withName("Room Characteristic $characteristicId")
+        withServiceScope("approved-premises")
+        withModelScope("room")
+      }
+    }
+
+    val requiredRoomCharacteristics = listOf(
+      roomCharacteristics[1],
+      roomCharacteristics[5],
+      roomCharacteristics[19]
+    )
+
+    fun createBedsWithCharacteristics(amount: Int, premisesEntity: ApprovedPremisesEntity, characteristics: List<CharacteristicEntity>, createInSearchWindow: Boolean?) = (1..amount).map {
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premisesEntity)
+        withCharacteristicsList(characteristics)
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+
+      var day = generateBookingsWindowStart
+      var lastBooking: BookingEntity? = null
+      var occupiedDays = 0
+      while (day != generateBookingsWindowEnd) {
+        val bookingEndDay = day.plusDays(bookingDurationDaysToCreate.toLong())
+        val lastBookingStillActiveOnThisDay = lastBooking != null && lastBooking.arrivalDate.rangeTo(lastBooking.departureDate).contains(day)
+        val inSearchWindow = searchWindowStart.rangeTo(searchWindowEnd).overlaps(day.rangeTo(bookingEndDay))
+
+        if (!lastBookingStillActiveOnThisDay && ((inSearchWindow && createInSearchWindow == true) || (inSearchWindow && randomDouble(0.0, 1.0) <= probabilityOfBookingStartingOnDay && createInSearchWindow != false) || (!inSearchWindow && randomDouble(0.0, 1.0) <= probabilityOfBookingStartingOnDay))) {
+          lastBooking = bookingEntityFactory.produceAndPersist {
+            withBed(bed)
+            withPremises(bed.room.premises)
+            withArrivalDate(day)
+            withDepartureDate(bookingEndDay)
+          }
+
+          occupiedDays += 1
+        }
+
+        if (lastBookingStillActiveOnThisDay) {
+          occupiedDays += 1
+        }
+
+        day = day.plusDays(1)
+      }
+
+      bed
+    }
+
+    fun createCharacteristicUnsuitableBeds(premisesEntity: ApprovedPremisesEntity): List<BedEntity> =
+      createBedsWithCharacteristics(characteristicUnsuitableBedsPerApToCreate, premisesEntity, requiredRoomCharacteristics.dropLast(1), null)
+
+    fun createAvailableCharacteristicSuitableBeds(premisesEntity: ApprovedPremisesEntity): List<BedEntity> =
+      createBedsWithCharacteristics(characteristicUnsuitableBedsPerApToCreate, premisesEntity, requiredRoomCharacteristics, false)
+
+    fun createUnavailableCharacteristicSuitableBeds(premisesEntity: ApprovedPremisesEntity): List<BedEntity> =
+      createBedsWithCharacteristics(unavailableCharacteristicSuitableBedsPerApToCreate, premisesEntity, requiredRoomCharacteristics, true)
+
+    val characteristicUnsuitableApsWithinDistance = (1..characteristicUnsuitableApsWithinDistanceToCreate).map {
+      timedWithMessage("Generating characteristicUnsuitableApsWithinDistance (1/4) Premises $it/$characteristicUnsuitableApsWithinDistanceToCreate") {
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withCharacteristicsList(
+            // All required characteristics except last one
+            requiredPremisesCharacteristics.dropLast(1)
+          )
+          val latLong = randomLatLongInRadius(postcodeDistrictLatLong, 50)
+          withLatitude(latLong.latitude)
+          withLongitude(latLong.longitude)
+        }
+
+        createCharacteristicUnsuitableBeds(premises)
+        createAvailableCharacteristicSuitableBeds(premises)
+        createUnavailableCharacteristicSuitableBeds(premises)
+
+        premises
+      }
+    }
+
+    val characteristicUnsuitableApsOutsideDistance = (1..characteristicUnsuitableApsOutsideDistanceToCreate).map {
+      timedWithMessage("Generating characteristicUnsuitableApsOutsideDistance (2/4) Premises $it/$characteristicUnsuitableApsOutsideDistanceToCreate") {
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withCharacteristicsList(
+            // All required characteristics except last one
+            requiredPremisesCharacteristics.dropLast(1)
+          )
+          val latLong = randomLatLongNotInRadius(postcodeDistrictLatLong, 50, 600)
+          withLatitude(latLong.latitude)
+          withLongitude(latLong.longitude)
+        }
+
+        createCharacteristicUnsuitableBeds(premises)
+        createAvailableCharacteristicSuitableBeds(premises)
+        createUnavailableCharacteristicSuitableBeds(premises)
+
+        premises
+      }
+    }
+
+    val characteristicSuitableApsOutsideDistance = (1..characteristicSuitableApsOutsideDistanceToCreate).map {
+      timedWithMessage("Generating characteristicSuitableApsOutsideDistance (3/4) Premises $it/$characteristicSuitableApsOutsideDistanceToCreate") {
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withCharacteristicsList(requiredPremisesCharacteristics)
+          val latLong = randomLatLongNotInRadius(postcodeDistrictLatLong, 50, 600)
+          withLatitude(latLong.latitude)
+          withLongitude(latLong.longitude)
+        }
+
+        createCharacteristicUnsuitableBeds(premises)
+        createAvailableCharacteristicSuitableBeds(premises)
+        createUnavailableCharacteristicSuitableBeds(premises)
+
+        premises
+      }
+    }
+
+    val characteristicSuitableApsWithinDistance = (1..characteristicSuitableApsWithinDistanceToCreate).map {
+      timedWithMessage("Generating characteristicSuitableApsWithinDistance (4/4) Premises $it/$characteristicSuitableApsWithinDistanceToCreate") {
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withCharacteristicsList(requiredPremisesCharacteristics)
+          val latLong = randomLatLongInRadius(postcodeDistrictLatLong, 50)
+          withLatitude(latLong.latitude)
+          withLongitude(latLong.longitude)
+        }
+
+        createCharacteristicUnsuitableBeds(premises)
+        createAvailableCharacteristicSuitableBeds(premises)
+        createUnavailableCharacteristicSuitableBeds(premises)
+
+        premises
+      }
+    }
+
+    val results = timedWithMessage("Searching for Bed") {
+      bedSearchRepository.findBeds(
+        postcodeDistrictOutcode = postcodeDistrict.outcode,
+        maxDistanceMiles = 50,
+        startDate = searchWindowStart,
+        durationInDays = searchWindowDays,
+        requiredPremisesCharacteristics = requiredPremisesCharacteristics.map(CharacteristicEntity::id),
+        requiredRoomCharacteristics = requiredRoomCharacteristics.map(CharacteristicEntity::id),
+        service = "approved-premises"
+      )
+    }
+
+    println("Found ${results.size} Suitable Beds")
+  }
+
+  fun randomLatLongInRadius(point: LatLong, radiusMiles: Int): LatLong {
+    val radiusMeters = radiusMiles * 1609.34
+
+    val random = Random()
+
+    val radiusInDegrees = radiusMeters / 111000f
+    val u: Double = random.nextDouble()
+    val v: Double = random.nextDouble()
+    val w = radiusInDegrees * sqrt(u)
+    val t = 2 * Math.PI * v
+    val x = w * cos(t)
+    val y = w * sin(t)
+
+    val newX = x / cos(Math.toRadians(point.latitude))
+    val foundLongitude = newX + point.latitude
+    val foundLatitude = y + point.longitude
+
+    return LatLong(
+      foundLongitude,
+      foundLatitude
+    )
+  }
+
+  fun randomLatLongNotInRadius(point: LatLong, excludedRadiusMiles: Int, maxRadiusMiles: Int): LatLong {
+    var otherPoint: LatLong
+    while (true) {
+      otherPoint = randomLatLongInRadius(point, maxRadiusMiles)
+
+      val distanceMeters = Geodesic.WGS84.Inverse(point.latitude, point.longitude, otherPoint.latitude, otherPoint.longitude).s12
+
+      val distanceMiles = distanceMeters / 1609.34
+      if (distanceMiles > excludedRadiusMiles) break
+    }
+
+    return otherPoint
+  }
+
+  private fun <T> timedWithMessage(message: String, block: () -> T): T {
+    val start = System.currentTimeMillis()
+
+    val result = block()
+
+    println("$message - ${(System.currentTimeMillis() - start)}ms")
+
+    return result
+  }
 }
 
 data class LatLong(
@@ -397,4 +688,6 @@ data class LatLong(
       longitude = longitude
     )
   }
+
+  override fun toString() = "$latitude, $longitude"
 }
