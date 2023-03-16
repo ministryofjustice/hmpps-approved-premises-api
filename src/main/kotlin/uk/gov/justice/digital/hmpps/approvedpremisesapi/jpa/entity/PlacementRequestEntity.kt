@@ -66,4 +66,6 @@ data class PlacementRequestEntity(
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   val allocatedToUser: UserEntity,
+
+  val reallocatedAt: OffsetDateTime?
 )

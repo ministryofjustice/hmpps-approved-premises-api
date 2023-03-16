@@ -49,7 +49,8 @@ class PlacementRequestService(
           createdAt = OffsetDateTime.now(),
           application = assessment.application,
           allocatedToUser = user,
-          booking = null
+          booking = null,
+          reallocatedAt = null,
         )
       )
 

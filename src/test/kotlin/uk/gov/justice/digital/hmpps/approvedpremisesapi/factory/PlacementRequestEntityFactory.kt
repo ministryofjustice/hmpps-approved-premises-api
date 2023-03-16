@@ -29,6 +29,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var allocatedToUser: Yielded<UserEntity> = { UserEntityFactory().produce() }
   private var booking: Yielded<BookingEntity?> = { null }
+  private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -43,6 +44,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
 
   fun withApplication(application: ApplicationEntity) = apply {
     this.application = { application }
+  }
+
+  fun withReallocatedAt(reallocatedAt: OffsetDateTime) = apply {
+    this.reallocatedAt = { reallocatedAt }
   }
 
   fun withPostcodeDistrict(postCodeDistrictEntity: PostCodeDistrictEntity) = apply {
@@ -71,6 +76,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     mentalHealthSupport = this.mentalHealthSupport(),
     createdAt = this.createdAt(),
     allocatedToUser = this.allocatedToUser(),
-    booking = this.booking()
+    booking = this.booking(),
+    reallocatedAt = this.reallocatedAt()
   )
 }
