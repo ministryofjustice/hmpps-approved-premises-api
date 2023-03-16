@@ -15,6 +15,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
+      - run: docker-compose -f docker-compose.test.yml up -d
+
       - uses: actions/setup-java@v3
         with:
           distribution: temurin
@@ -23,6 +28,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - name: Run tests
+      - name: Lint
+        id: lint
+        run: ./gradlew ktlintCheck
+
+      - name: Test
         id: test
-        run: script/test
+        run: ./gradlew test
