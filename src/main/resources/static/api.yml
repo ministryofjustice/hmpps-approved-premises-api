@@ -3811,7 +3811,7 @@ components:
         document:
           $ref: '#/components/schemas/AnyValue'
         requirements:
-          $ref: '#/components/schemas/PlacementRequest'
+          $ref: '#/components/schemas/NewPlacementRequest'
       required:
         - document
         - requirements
@@ -4339,7 +4339,7 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
-    PlacementRequest:
+    NewPlacementRequest:
       type: object
       properties:
         gender:
@@ -4376,6 +4376,18 @@ components:
         - essentialCriteria
         - desirableCriteria
         - mentalHealthSupport
+    PlacementRequest:
+      allOf:
+        - $ref: '#/components/schemas/NewPlacementRequest'
+        - type: object
+          properties:
+            person:
+              $ref: '#/components/schemas/Person'
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+      required:
+        - person
+        - risks
     PlacementCriteria:
       type: string
       enum:

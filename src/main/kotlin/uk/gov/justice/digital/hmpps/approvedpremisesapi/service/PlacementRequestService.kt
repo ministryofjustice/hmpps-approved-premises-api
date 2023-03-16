@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
@@ -21,7 +22,7 @@ class PlacementRequestService(
   private val userRepository: UserRepository,
 ) {
 
-  fun createPlacementRequest(assessment: AssessmentEntity, requirements: PlacementRequest): ValidatableActionResult<PlacementRequestEntity> =
+  fun createPlacementRequest(assessment: AssessmentEntity, requirements: NewPlacementRequest): ValidatableActionResult<PlacementRequestEntity> =
     validated {
       val postcodeDistrict = postcodeDistrictRepository.findByOutcode(requirements.location)
 
