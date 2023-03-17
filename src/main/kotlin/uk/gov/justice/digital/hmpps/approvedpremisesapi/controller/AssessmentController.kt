@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentCl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessments
 import java.util.UUID
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 
 @Service
 class AssessmentController(

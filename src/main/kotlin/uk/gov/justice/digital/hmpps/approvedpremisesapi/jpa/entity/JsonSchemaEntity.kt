@@ -5,14 +5,14 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.DiscriminatorColumn
-import javax.persistence.DiscriminatorValue
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.Inheritance
-import javax.persistence.InheritanceType
-import javax.persistence.PrimaryKeyJoinColumn
-import javax.persistence.Table
+import jakarta.persistence.DiscriminatorColumn
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Inheritance
+import jakarta.persistence.InheritanceType
+import jakarta.persistence.PrimaryKeyJoinColumn
+import jakarta.persistence.Table
 
 @Repository
 interface JsonSchemaRepository : JpaRepository<JsonSchemaEntity, UUID> {

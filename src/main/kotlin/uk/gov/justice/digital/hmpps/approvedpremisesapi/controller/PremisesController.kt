@@ -73,7 +73,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 
 @Service
 class PremisesController(

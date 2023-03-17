@@ -1,5 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.Convert
+import jakarta.persistence.DiscriminatorColumn
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Inheritance
+import jakarta.persistence.InheritanceType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.PrimaryKeyJoinColumn
+import jakarta.persistence.Table
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -7,18 +19,6 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.Convert
-import javax.persistence.DiscriminatorColumn
-import javax.persistence.DiscriminatorValue
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.Inheritance
-import javax.persistence.InheritanceType
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.PrimaryKeyJoinColumn
-import javax.persistence.Table
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
@@ -50,10 +50,10 @@ abstract class ApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: UserEntity,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(io.hypersistence.utils.hibernate.type.json.JsonType::class)
   var data: String?,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(io.hypersistence.utils.hibernate.type.json.JsonType::class)
   var document: String?,
 
   @ManyToOne
@@ -91,7 +91,7 @@ class ApprovedPremisesApplicationEntity(
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(io.hypersistence.utils.hibernate.type.json.JsonType::class)
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,
   @OneToMany(mappedBy = "application")

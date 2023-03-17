@@ -1,15 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.Table
 
 @Repository
 interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID>
@@ -25,7 +25,7 @@ data class DomainEventEntity(
   val type: DomainEventType,
   val occurredAt: OffsetDateTime,
   val createdAt: OffsetDateTime,
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(io.hypersistence.utils.hibernate.type.json.JsonType::class)
   val data: String
 )
 

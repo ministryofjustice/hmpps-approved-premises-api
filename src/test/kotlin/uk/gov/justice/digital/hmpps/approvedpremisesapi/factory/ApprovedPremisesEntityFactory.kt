@@ -95,7 +95,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   }
 
   fun withQCode(qCode: String) = apply {
-    this.qCode = { qCode }
+this.qCode = { qCode };
   }
 
   fun withStatus(status: PropertyStatus) = apply {

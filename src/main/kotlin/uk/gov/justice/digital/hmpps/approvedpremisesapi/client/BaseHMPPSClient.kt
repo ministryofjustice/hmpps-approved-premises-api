@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 
@@ -74,11 +74,11 @@ abstract class BaseHMPPSClient(
 }
 
 sealed interface ClientResult<ResponseType> {
-  class Success<ResponseType>(val status: HttpStatus, val body: ResponseType) : ClientResult<ResponseType>
+  class Success<ResponseType>(val status: HttpStatusCode, val body: ResponseType) : ClientResult<ResponseType>
   sealed interface Failure<ResponseType> : ClientResult<ResponseType> {
     fun throwException(): Nothing
 
-    class StatusCode<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatus, val body: String?) : Failure<ResponseType> {
+    class StatusCode<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatusCode, val body: String?) : Failure<ResponseType> {
       override fun throwException(): Nothing {
         throw RuntimeException("Unable to complete $method request to $path: $status")
       }

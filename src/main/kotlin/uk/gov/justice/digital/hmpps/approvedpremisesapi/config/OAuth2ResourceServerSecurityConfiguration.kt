@@ -12,7 +12,6 @@ import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.config.web.servlet.invoke
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -23,7 +22,6 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
-import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import java.util.Base64
 
@@ -32,51 +30,48 @@ class OAuth2ResourceServerSecurityConfiguration {
   @Bean
   @Throws(Exception::class)
   fun securityFilterChain(http: HttpSecurity, @Autowired objectMapper: ObjectMapper): SecurityFilterChain {
-    http {
-      csrf { disable() }
+    http.csrf { it.disable() }
+    http.authorizeHttpRequests {
+      it.requestMatchers(HttpMethod.GET, "/health/**").permitAll()
+      it.requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
+      it.requestMatchers(HttpMethod.GET, "/v3/api-docs/swagger-config").permitAll()
+      it.requestMatchers(HttpMethod.GET, "/api.yml").permitAll()
+      it.requestMatchers(HttpMethod.GET, "/domain-events-api.yml").permitAll()
+      it.requestMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
+      it.requestMatchers(HttpMethod.GET, "/info").permitAll()
+      it.requestMatchers(HttpMethod.POST, "/seed").permitAll()
+      it.requestMatchers(HttpMethod.POST, "/migration-job").permitAll()
+      it.requestMatchers(HttpMethod.DELETE, "/internal/booking/*").permitAll()
+      it.requestMatchers(HttpMethod.GET, "/events/**").hasAuthority("ROLE_APPROVED_PREMISES_EVENTS")
+      it.anyRequest().hasAuthority("ROLE_PROBATION")
+    }
 
-      authorizeHttpRequests {
-        authorize(HttpMethod.GET, "/health/**", permitAll)
-        authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
-        authorize(HttpMethod.GET, "/v3/api-docs/swagger-config", permitAll)
-        authorize(HttpMethod.GET, "/api.yml", permitAll)
-        authorize(HttpMethod.GET, "/domain-events-api.yml", permitAll)
-        authorize(HttpMethod.GET, "/favicon.ico", permitAll)
-        authorize(HttpMethod.GET, "/info", permitAll)
-        authorize(HttpMethod.POST, "/seed", permitAll)
-        authorize(HttpMethod.POST, "/migration-job", permitAll)
-        authorize(HttpMethod.DELETE, "/internal/booking/*", permitAll)
-        authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
-        authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
-      }
+    http.anonymous { it.disable() }
 
-      anonymous { disable() }
+    http.oauth2ResourceServer {
+      it.jwt { jwt -> jwt.jwtAuthenticationConverter(AuthAwareTokenConverter()) }
 
-      oauth2ResourceServer {
-        jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() }
+      it.authenticationEntryPoint { _, response, _ ->
+        response.apply {
+          status = 401
+          contentType = "application/problem+json"
+          characterEncoding = "UTF-8"
 
-        authenticationEntryPoint = AuthenticationEntryPoint { _, response, _ ->
-          response.apply {
-            status = 401
-            contentType = "application/problem+json"
-            characterEncoding = "UTF-8"
-
-            writer.write(
-              objectMapper.writeValueAsString(
-                object {
-                  val title = "Unauthenticated"
-                  val status = 401
-                  val detail =
-                    "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint"
-                }
-              )
+          writer.write(
+            objectMapper.writeValueAsString(
+              object {
+                val title = "Unauthenticated"
+                val status = 401
+                val detail =
+                  "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint"
+              }
             )
-          }
+          )
         }
       }
-
-      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
     }
+
+    http.sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 
     return http.build()
   }

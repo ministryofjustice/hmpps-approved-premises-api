@@ -38,7 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTran
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.net.URI
 import java.util.UUID
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 
 @Service
 class ApplicationsController(

@@ -40,7 +40,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
 import java.util.UUID
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 
 @Service
 class ApplicationService(

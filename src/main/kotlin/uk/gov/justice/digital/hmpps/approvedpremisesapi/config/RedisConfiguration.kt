@@ -14,6 +14,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext.Seria
 import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
@@ -139,7 +140,7 @@ class ClientResultRedisSerializer(
 data class SerializableClientResult(
   val discriminator: ClientResultDiscriminator,
   val type: String?,
-  val status: HttpStatus?,
+  val status: HttpStatusCode?,
   val body: String?,
   val exceptionMessage: String?,
   val method: HttpMethod?,

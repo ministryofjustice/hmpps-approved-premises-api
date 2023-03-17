@@ -1,8 +1,8 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.6.0"
-  kotlin("plugin.spring") version "1.7.22"
-  id("org.openapi.generator") version "5.4.0"
-  id("org.jetbrains.kotlin.plugin.jpa") version "1.7.22"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.1.2"
+  kotlin("plugin.spring") version "1.8.10"
+  id("org.openapi.generator") version "6.4.0"
+  id("org.jetbrains.kotlin.plugin.jpa") version "1.8.10"
 }
 
 configurations {
@@ -12,10 +12,15 @@ configurations {
 val springDocVersion = "1.6.15"
 val sentryVersion = "6.15.0"
 
+repositories {
+  maven { url = uri("https://repo.spring.io/milestone") }
+  mavenCentral()
+}
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("com.vladmihalcea:hibernate-types-55:2.21.1")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.2.0")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -47,7 +52,7 @@ dependencies {
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.4")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
-  testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
+  testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.0-beta-4")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
@@ -57,7 +62,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.2.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0-beta-13")
 }
 
 java {
@@ -102,6 +107,9 @@ openApiGenerate {
     put("gradleBuildFile", "false")
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
+    put("useSpringBoot3", "true")
+    put("annotationLibrary", "none")
+    put("documentationProvider", "none")
   }
 }
 
@@ -117,6 +125,9 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
     put("gradleBuildFile", "false")
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
+    put("useSpringBoot3", "true")
+    put("annotationLibrary", "none")
+    put("documentationProvider", "none")
   }
 }
 
@@ -139,12 +150,5 @@ ktlint {
 }
 
 allOpen {
-  annotations("javax.persistence.Entity")
-}
-
-tasks {
-  withType<JavaExec> {
-    jvmArgs!!.plus("--add-opens")
-    jvmArgs!!.plus("java.base/java.lang=ALL-UNNAMED")
-  }
+  annotations("jakarta.persistence.Entity")
 }
