@@ -218,6 +218,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     val rowRoom4B = ApprovedPremisesRoomsSeedCsvRowFactory()
       .withApCode(premises.apCode)
       .withBedCode("NEABC05")
+      .withIsArsonSuitable("yes")
       .withRoomNumber("4")
       .produce()
 
@@ -257,11 +258,96 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
   }
 
   @Test
-  fun `Updating an existing AP room persists correctly`() {
-  }
+  fun `Updating an existing AP room and beds persists correctly`() {
+    characteristicRepository.deleteAll()
 
-  @Test
-  fun `Updating an existing AP bed persists correctly`() {
+    val arsonCharacteristic = characteristicEntityFactory.produceAndPersist {
+      withPropertyName("isArsonSuitable")
+      withModelScope("room")
+      withServiceScope("approved-premises")
+    }
+
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withApCode("NEABC")
+      withProbationRegion(
+        probationRegionEntityFactory.produceAndPersist {
+          withApArea(apAreaEntityFactory.produceAndPersist())
+        },
+      )
+      withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+    }
+
+    // create a room with one bed
+
+    val preExistingRoom = roomEntityFactory.produceAndPersist {
+      withCode("NEABC-4")
+      withPremises(premises)
+      withNotes("This is small")
+    }
+    preExistingRoom.characteristics.add(arsonCharacteristic)
+    roomRepository.save(preExistingRoom)
+
+    bedEntityFactory.produceAndPersist {
+      withRoom(preExistingRoom)
+      withCode("NEABC04")
+    }
+
+    val reloadedRoom = roomRepository.findByCode("NEABC-4")
+
+    assertThat(reloadedRoom!!.characteristics.map { it.propertyName }).isEqualTo(listOf("isArsonSuitable"))
+    assertThat(reloadedRoom!!.notes).isEqualTo("This is small")
+    assertThat(reloadedRoom!!.beds.count()).isEqualTo(1)
+
+    // update the room with new notes, another characteristic and an additional bed
+
+    characteristicEntityFactory.produceAndPersist {
+      withPropertyName("isGroundFloor")
+      withModelScope("room")
+      withServiceScope("approved-premises")
+    }
+
+    val rowRoom4A = ApprovedPremisesRoomsSeedCsvRowFactory()
+      .withApCode(premises.apCode)
+      .withBedCode("NEABC04")
+      .withIsArsonSuitable("yes")
+      .withIsGroundFloor("yes")
+      .withRoomNumber("4")
+      .withNotes("This is large")
+      .produce()
+
+    val rowRoom4B = ApprovedPremisesRoomsSeedCsvRowFactory()
+      .withApCode(premises.apCode)
+      .withBedCode("NEABC05")
+      .withIsArsonSuitable("yes")
+      .withIsGroundFloor("yes")
+      .withRoomNumber("4")
+      .withNotes("This is large")
+      .produce()
+
+    withCsv(
+      "updated-ap-rooms",
+      approvedPremisesRoomsSeedCsvRowsToCsv(
+        listOf(
+          rowRoom4A,
+          rowRoom4B,
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "updated-ap-rooms")
+
+    val updatedRoom = roomRepository.findByCode("NEABC-4")
+
+    assertThat(updatedRoom).isNotNull
+    assertThat(updatedRoom!!.notes).isEqualTo("This is large")
+
+    assertThat(
+      updatedRoom!!.characteristics
+        .map { it.propertyName }
+        .sortedBy { it },
+    ).isEqualTo(listOf("isArsonSuitable", "isGroundFloor"))
+
+    assertThat(updatedRoom!!.beds.count()).isEqualTo(2)
   }
 
   private fun approvedPremisesRoomsSeedCsvRowsToCsv(rows: List<ApprovedPremisesRoomsSeedCsvRow>): String {
@@ -373,6 +459,10 @@ class ApprovedPremisesRoomsSeedCsvRowFactory : Factory<ApprovedPremisesRoomsSeed
 
   fun withIsArsonSuitable(boolString: String) = apply {
     this.isArsonSuitable = { boolString }
+  }
+
+  fun withIsGroundFloor(boolString: String) = apply {
+    this.isGroundFloor = { boolString }
   }
 
   fun withNotes(string: String) = apply {

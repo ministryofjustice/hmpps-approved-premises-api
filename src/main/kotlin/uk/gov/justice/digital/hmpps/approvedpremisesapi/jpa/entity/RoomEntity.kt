@@ -37,4 +37,7 @@ data class RoomEntity(
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
   val characteristics: MutableList<CharacteristicEntity>,
-)
+) {
+
+  override fun toString() = "RoomEntity: $id"
+}

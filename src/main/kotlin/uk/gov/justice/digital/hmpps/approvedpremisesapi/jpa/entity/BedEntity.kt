@@ -25,5 +25,6 @@ data class BedEntity(
   @JoinColumn(name = "room_id")
   val room: RoomEntity,
 ) {
-  override fun toString() = "BedEntity:$id"
+
+  override fun toString() = "BedEntity: $id"
 }

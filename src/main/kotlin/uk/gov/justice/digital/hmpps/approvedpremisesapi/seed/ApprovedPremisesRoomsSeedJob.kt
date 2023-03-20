@@ -78,11 +78,19 @@ class ApprovedPremisesRoomsSeedJob(
 
     val room = when (val existingRoom = roomRepository.findByCode(roomCode)) {
       null -> createRoom(row = row, roomCode = roomCode, premises = premises)
-      else -> existingRoom
+      else -> updateExistingRoom(room = existingRoom, row = row)
     }
+
+    room!!.characteristics.clear()
     room!!.characteristics.addAll(characteristics)
+    log.info("Adding characteristics to room: ${room.name}: ${characteristics.map { it.propertyName }}")
+    roomRepository.save(room)
 
     return room
+  }
+
+  private fun updateExistingRoom(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): RoomEntity {
+    return room.apply { this!!.notes = row.notes }
   }
 
   private fun createRoom(row: ApprovedPremisesRoomsSeedCsvRow, premises: PremisesEntity, roomCode: String): RoomEntity? {
