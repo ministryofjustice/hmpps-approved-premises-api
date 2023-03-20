@@ -4037,7 +4037,8 @@ components:
     ArrayOfOASysOffenceDetailsQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Offence analysis"
             questionNumber: "2.1"
@@ -4048,7 +4049,8 @@ components:
     ArrayOfOASysRiskContributorsQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Accommodation issues contributing to risks of offending and harm"
             questionNumber: "3.9"
@@ -4059,7 +4061,8 @@ components:
     ArrayOfOASysRiskManagementQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current situation"
             questionNumber: "RM28.1"
@@ -4073,7 +4076,8 @@ components:
     ArrayOfOASysRiskOfSeriousHarmSummaryQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Who is at risk?"
             questionNumber: "R10.1"
@@ -4093,7 +4097,8 @@ components:
     ArrayOfOASysRisksToTheIndividualQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current concerns about self-harm or suicide"
             questionNumber: "R8.1.1"
@@ -4110,7 +4115,8 @@ components:
     ArrayOfOASysRisksToOthersQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current offence details"
             questionNumber: "R6.1 FA1"
@@ -4127,7 +4133,8 @@ components:
     ArrayOfOASysSupportingInformationQuestions:
       type: array
       items:
-        type: OASysSupportingInformationQuestion
+        type: object
+        $ref: '#/components/schemas/OASysSupportingInformationQuestion'
         example:
           - label: "Accommodation issues contributing to risks of offending and harm?"
             questionNumber: "3.9"
@@ -4144,7 +4151,8 @@ components:
     ArrayOfOASysRiskToSelfQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current concerns about self-harm or suicide"
             questionNumber: "R8.1.1"
@@ -4155,7 +4163,8 @@ components:
     ArrayOfOASysRiskManagementPlanQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Key information about current situation"
             questionNumber: "RM28.1"
