@@ -2945,7 +2945,6 @@ components:
       properties:
         notes:
           type: string
-      required: []
     Problem:
       type: object
       properties:
@@ -3124,7 +3123,6 @@ components:
         - $ref: '#/components/schemas/UpdateLostBed'
         - type: object
           properties: {}
-          required: []
     LostBedCancellation:
       type: object
       properties:
@@ -3144,7 +3142,6 @@ components:
       properties:
         notes:
           type: string
-      required: []
     LostBedStatus:
       type: string
       enum:
@@ -3315,7 +3312,8 @@ components:
       type: object
       properties:
         date:
-          type: date
+          type: string
+          format: date
         availableBeds:
           type: integer
           example: 10
@@ -3432,13 +3430,16 @@ components:
       type: object
       properties:
         alertId:
-          type: long
+          type: integer
+          format: int64
         comment:
           type: string
         dateCreated:
-          type: date
+          type: string
+          format: date
         dateExpires:
-          type: date
+          type: string
+          format: date
         expired:
           type: boolean
         active:
@@ -3547,7 +3548,8 @@ components:
         crn:
           type: string
         convictionId:
-          type: long
+          type: integer
+          format: int64
           example: 1502724704
         deliusEventNumber:
           type: string
@@ -3631,7 +3633,8 @@ components:
       type: object
       properties:
         id:
-          type: long
+          type: integer
+          format: int64
         reportedAt:
           type: string
           format: date-time
@@ -3907,7 +3910,6 @@ components:
         - $ref: '#/components/schemas/User'
         - type: object
           properties: {}
-          required: []
     UserRole:
       type: string
       enum:
@@ -3998,7 +4000,8 @@ components:
         - archived
     OASysAssessmentId:
       description: The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.
-      type: long
+      type: integer
+      format: int64
       example: 138985987
     OASysSupportingInformationQuestion:
       type: object
@@ -4033,7 +4036,8 @@ components:
     ArrayOfOASysOffenceDetailsQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Offence analysis"
             questionNumber: "2.1"
@@ -4044,7 +4048,8 @@ components:
     ArrayOfOASysRiskContributorsQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Accommodation issues contributing to risks of offending and harm"
             questionNumber: "3.9"
@@ -4055,7 +4060,8 @@ components:
     ArrayOfOASysRiskManagementQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current situation"
             questionNumber: "RM28.1"
@@ -4069,7 +4075,8 @@ components:
     ArrayOfOASysRiskOfSeriousHarmSummaryQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Who is at risk?"
             questionNumber: "R10.1"
@@ -4089,7 +4096,8 @@ components:
     ArrayOfOASysRisksToTheIndividualQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current concerns about self-harm or suicide"
             questionNumber: "R8.1.1"
@@ -4106,7 +4114,8 @@ components:
     ArrayOfOASysRisksToOthersQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current offence details"
             questionNumber: "R6.1 FA1"
@@ -4123,7 +4132,8 @@ components:
     ArrayOfOASysSupportingInformationQuestions:
       type: array
       items:
-        type: OASysSupportingInformationQuestion
+        type: object
+        $ref: '#/components/schemas/OASysSupportingInformationQuestion'
         example:
           - label: "Accommodation issues contributing to risks of offending and harm?"
             questionNumber: "3.9"
@@ -4140,7 +4150,8 @@ components:
     ArrayOfOASysRiskToSelfQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Current concerns about self-harm or suicide"
             questionNumber: "R8.1.1"
@@ -4151,7 +4162,8 @@ components:
     ArrayOfOASysRiskManagementPlanQuestions:
       type: array
       items:
-        type: OASysQuestion
+        type: object
+        $ref: '#/components/schemas/OASysQuestion'
         example:
           - label: "Key information about current situation"
             questionNumber: "RM28.1"
@@ -4225,7 +4237,8 @@ components:
           type: string
           example: "M1502750438"
         convictionId:
-          type: long
+          type: integer
+          format: int64
           example: 1502724704
         offenceDate:
           type: string
