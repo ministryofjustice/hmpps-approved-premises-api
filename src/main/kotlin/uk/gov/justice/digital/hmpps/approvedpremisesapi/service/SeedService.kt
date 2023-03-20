@@ -7,10 +7,12 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CharacteristicsSeedJob
@@ -25,7 +27,7 @@ class SeedService(
   @Value("\${seed.file-prefix}") private val seedFilePrefix: String,
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
-  private val seedLogger: SeedLogger
+  private val seedLogger: SeedLogger,
 ) {
   @Async
   fun seedDataAsync(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename)
@@ -40,33 +42,35 @@ class SeedService(
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(ProbationRegionRepository::class.java),
           applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
-          applicationContext.getBean(CharacteristicRepository::class.java)
+          applicationContext.getBean(CharacteristicRepository::class.java),
         )
         SeedFileType.approvedPremisesRooms -> ApprovedPremisesRoomsSeedJob(
           filename,
           applicationContext.getBean(PremisesRepository::class.java),
-          applicationContext.getBean(CharacteristicRepository::class.java)
+          applicationContext.getBean(RoomRepository::class.java),
+          applicationContext.getBean(BedRepository::class.java),
+          applicationContext.getBean(CharacteristicRepository::class.java),
         )
         SeedFileType.user -> UsersSeedJob(
           filename,
-          applicationContext.getBean(UserService::class.java)
+          applicationContext.getBean(UserService::class.java),
         )
         SeedFileType.characteristics -> CharacteristicsSeedJob(
           filename,
-          applicationContext.getBean(CharacteristicRepository::class.java)
+          applicationContext.getBean(CharacteristicRepository::class.java),
         )
         SeedFileType.temporaryAccommodationPremises -> TemporaryAccommodationPremisesSeedJob(
           filename,
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(ProbationRegionRepository::class.java),
           applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
-          applicationContext.getBean(CharacteristicService::class.java)
+          applicationContext.getBean(CharacteristicService::class.java),
         )
         SeedFileType.temporaryAccommodationBedspace -> TemporaryAccommodationBedspaceSeedJob(
           filename,
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(CharacteristicService::class.java),
-          applicationContext.getBean(RoomService::class.java)
+          applicationContext.getBean(RoomService::class.java),
         )
       }
 

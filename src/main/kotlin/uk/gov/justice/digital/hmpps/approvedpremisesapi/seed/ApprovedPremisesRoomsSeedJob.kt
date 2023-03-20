@@ -1,13 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import java.util.UUID
 
 class ApprovedPremisesRoomsSeedJob(
   fileName: String,
   private val premisesRepository: PremisesRepository,
+  private val roomRepository: RoomRepository,
+  private val bedRepository: BedRepository,
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesRoomsSeedCsvRow>(
   fileName = fileName,
@@ -53,7 +62,78 @@ class ApprovedPremisesRoomsSeedJob(
   )
 
   override fun processRow(row: ApprovedPremisesRoomsSeedCsvRow) {
-    val characteristics = characteristicsFromRow(row)
+    val premises = findExistingPremisesOrThrow(row)
+
+    val room = createOrUpdateRoom(
+      row = row,
+      characteristics = characteristicsFromRow(row),
+      premises = premises,
+    )
+
+    createBedUnlessPresent(room, row)
+  }
+
+  private fun createOrUpdateRoom(row: ApprovedPremisesRoomsSeedCsvRow, characteristics: List<CharacteristicEntity>, premises: PremisesEntity): RoomEntity {
+    val roomCode = "${row.apCode}-${row.roomNumber}"
+
+    val room = when (val existingRoom = roomRepository.findByCode(roomCode)) {
+      null -> createRoom(row = row, roomCode = roomCode, premises = premises)
+      else -> existingRoom
+    }
+    room!!.characteristics.addAll(characteristics)
+
+    return room
+  }
+
+  private fun createRoom(row: ApprovedPremisesRoomsSeedCsvRow, premises: PremisesEntity, roomCode: String): RoomEntity? {
+    val room = roomRepository.save(
+      RoomEntity(
+        id = UUID.randomUUID(),
+        name = row.roomNumber,
+        code = roomCode,
+        beds = mutableListOf(),
+        premises = premises,
+        characteristics = mutableListOf(),
+        notes = row.notes,
+      ),
+    )
+    log.info("New room created: ${room.code} (AP: ${row.apCode}) ")
+
+    return room
+  }
+
+  private fun createBedUnlessPresent(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): BedEntity {
+    val bed = when (val existingBed = bedRepository.findByCode(row.bedCode)) {
+      null -> createBed(room, row)
+      else -> {
+        log.info("Bed: ${row.bedCode} already exists (AP: ${row.apCode} | Room: ${room.code})")
+        existingBed
+      }
+    }
+
+    return bed
+  }
+
+  private fun createBed(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): BedEntity {
+    val bed = bedRepository.save(
+      BedEntity(
+        id = UUID.randomUUID(),
+        name = row.bedCode,
+        code = row.bedCode,
+        room = room,
+      ),
+    )
+    log.info("New bed created: ${row.bedCode} (AP: ${row.apCode} | Room: ${room.code})")
+
+    return bed
+  }
+
+  private fun findExistingPremisesOrThrow(row: ApprovedPremisesRoomsSeedCsvRow): PremisesEntity {
+    return premisesRepository.findByApCode(row.apCode, ApprovedPremisesEntity::class.java)
+      ?: throw RuntimeException(
+        "Error: no premises with apCode '${row.apCode}' found. " +
+          "Please seed premises before rooms/beds.",
+      )
   }
 
   private fun characteristicsFromRow(row: ApprovedPremisesRoomsSeedCsvRow): List<CharacteristicEntity> {

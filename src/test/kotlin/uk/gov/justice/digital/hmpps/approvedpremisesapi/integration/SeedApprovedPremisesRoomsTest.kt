@@ -23,6 +23,16 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an AP room with an incorrectly service-scoped characteristic logs an error`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withApCode("NEABC")
+      withProbationRegion(
+        probationRegionEntityFactory.produceAndPersist {
+          withApArea(apAreaEntityFactory.produceAndPersist())
+        },
+      )
+      withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+    }
+
     characteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
       withPropertyName("isArsonSuitable")
@@ -35,6 +45,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesRoomsSeedCsvRowFactory()
+            .withApCode(premises.apCode)
             .withIsArsonSuitable("yes")
             .produce(),
         ),
@@ -55,6 +66,16 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an AP room with an incorrectly model-scoped characteristic logs an error`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withApCode("NEABC")
+      withProbationRegion(
+        probationRegionEntityFactory.produceAndPersist {
+          withApArea(apAreaEntityFactory.produceAndPersist())
+        },
+      )
+      withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+    }
+
     characteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
       withPropertyName("isArsonSuitable")
@@ -67,6 +88,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesRoomsSeedCsvRowFactory()
+            .withApCode(premises.apCode)
             .withIsArsonSuitable("yes")
             .produce(),
         ),
@@ -82,6 +104,34 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
           it.message == "Error on row 1:" &&
           it.throwable != null &&
           it.throwable.message == "Characteristic 'isArsonSuitable' does not exist for AP room"
+      }
+  }
+
+  @Test
+  fun `Attempting to create an AP room without an associated premises logs an error`() {
+    withCsv(
+      "invalid-ap-rooms-missing-premises",
+      approvedPremisesRoomsSeedCsvRowsToCsv(
+        listOf(
+          ApprovedPremisesRoomsSeedCsvRowFactory()
+            .withApCode("NON-EXISTENT")
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-missing-premises")
+
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message!!.contains(
+            "Error: no premises with apCode 'NON-EXISTENT' found. " +
+              "Please seed premises before rooms/beds",
+          )
       }
   }
 
@@ -141,11 +191,77 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
   }
 
   @Test
-  fun `Creating a new AP room persists correctly`() {
+  fun `Creating new AP rooms with beds persists correctly`() {
+    characteristicEntityFactory.produceAndPersist {
+      withPropertyName("isArsonSuitable")
+      withModelScope("room")
+      withServiceScope("approved-premises")
+    }
+
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withApCode("NEABC")
+      withProbationRegion(
+        probationRegionEntityFactory.produceAndPersist {
+          withApArea(apAreaEntityFactory.produceAndPersist())
+        },
+      )
+      withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+    }
+
+    val rowRoom4A = ApprovedPremisesRoomsSeedCsvRowFactory()
+      .withApCode(premises.apCode)
+      .withBedCode("NEABC04")
+      .withIsArsonSuitable("yes")
+      .withRoomNumber("4")
+      .produce()
+
+    val rowRoom4B = ApprovedPremisesRoomsSeedCsvRowFactory()
+      .withApCode(premises.apCode)
+      .withBedCode("NEABC05")
+      .withRoomNumber("4")
+      .produce()
+
+    val room5 = ApprovedPremisesRoomsSeedCsvRowFactory()
+      .withApCode(premises.apCode)
+      .withBedCode("NEABC06")
+      .withRoomNumber("5")
+      .withNotes("This room is very small")
+      .produce()
+
+    withCsv(
+      "new-ap-rooms",
+      approvedPremisesRoomsSeedCsvRowsToCsv(
+        listOf(
+          rowRoom4A,
+          rowRoom4B,
+          room5,
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-rooms")
+
+    val persistedRoom5 = roomRepository.findByCode("NEABC-5")
+    val persistedRoom4 = roomRepository.findByCode("NEABC-4")
+
+    assertThat(persistedRoom4).isNotNull
+    assertThat(persistedRoom4!!.characteristics.map { it.propertyName }).contains("isArsonSuitable")
+    assertThat(persistedRoom4!!.beds.count()).isEqualTo(2)
+
+    assertThat(persistedRoom5).isNotNull
+    assertThat(persistedRoom5!!.notes).isEqualTo("This room is very small")
+    assertThat(persistedRoom5!!.beds.count()).isEqualTo(1)
+
+    assertThat(bedRepository.findAll().map { it.code }.sortedBy { it })
+      .isEqualTo(listOf("NEABC04", "NEABC05", "NEABC06"))
   }
 
   @Test
   fun `Updating an existing AP room persists correctly`() {
+  }
+
+  @Test
+  fun `Updating an existing AP bed persists correctly`() {
   }
 
   private fun approvedPremisesRoomsSeedCsvRowsToCsv(rows: List<ApprovedPremisesRoomsSeedCsvRow>): String {
@@ -247,8 +363,20 @@ class ApprovedPremisesRoomsSeedCsvRowFactory : Factory<ApprovedPremisesRoomsSeed
     this.apCode = { apCode }
   }
 
+  fun withBedCode(bedCode: String) = apply {
+    this.bedCode = { bedCode }
+  }
+
+  fun withRoomNumber(roomNumber: String) = apply {
+    this.roomNumber = { roomNumber }
+  }
+
   fun withIsArsonSuitable(boolString: String) = apply {
     this.isArsonSuitable = { boolString }
+  }
+
+  fun withNotes(string: String) = apply {
+    this.notes = { string }
   }
 
   override fun produce() = ApprovedPremisesRoomsSeedCsvRow(
