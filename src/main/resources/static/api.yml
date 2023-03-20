@@ -3312,7 +3312,8 @@ components:
       type: object
       properties:
         date:
-          type: date
+          type: string
+          format: date
         availableBeds:
           type: integer
           example: 10
@@ -3434,9 +3435,11 @@ components:
         comment:
           type: string
         dateCreated:
-          type: date
+          type: string
+          format: date
         dateExpires:
-          type: date
+          type: string
+          format: date
         expired:
           type: boolean
         active:
