@@ -55,6 +55,34 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an AP room with an incorrectly model-scoped characteristic logs an error`() {
+    characteristicEntityFactory.produceAndPersist {
+      withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
+      withPropertyName("isArsonSuitable")
+      withModelScope("premises")
+      withServiceScope("approved-premises")
+    }
+
+    withCsv(
+      "invalid-ap-rooms-model-scope",
+      approvedPremisesRoomsSeedCsvRowsToCsv(
+        listOf(
+          ApprovedPremisesRoomsSeedCsvRowFactory()
+            .withIsArsonSuitable("yes")
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-model-scope")
+
+    assertThat(logEntries)
+      .withFailMessage("-> logEntries actually contains: $logEntries")
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Error on row 1:" &&
+          it.throwable != null &&
+          it.throwable.message == "Characteristic 'isArsonSuitable' does not exist for AP room"
+      }
   }
 
   @Test
