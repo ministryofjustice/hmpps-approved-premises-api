@@ -375,6 +375,7 @@ class PremisesController(
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
     throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId, booking.premises)
+    throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId, booking.premises)
 
     val result = bookingService.createArrival(
       booking = booking,
@@ -504,6 +505,7 @@ class PremisesController(
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
     throwIfBookingDatesConflict(booking.arrivalDate, body.newDepartureDate, bookingId, bedId, booking.premises)
+    throwIfLostBedDatesConflict(booking.arrivalDate, body.newDepartureDate, null, bedId, booking.premises)
 
     val result = bookingService.createExtension(
       booking = booking,
@@ -523,6 +525,9 @@ class PremisesController(
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
+
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId, premises)
+    throwIfLostBedDatesConflict(body.startDate, body.endDate, null, body.bedId, premises)
 
     val result = premisesService.createLostBeds(
       premises = premises,
@@ -576,13 +581,14 @@ class PremisesController(
     body: UpdateLostBed,
   ): ResponseEntity<LostBed> {
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-    if (premises.lostBeds.firstOrNull { it.id == lostBedId } == null) {
-      throw NotFoundProblem(lostBedId, "LostBed")
-    }
+    val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
 
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
+
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, lostBed.bed.id, premises)
+    throwIfLostBedDatesConflict(body.startDate, body.endDate, lostBedId, lostBed.bed.id, premises)
 
     val updateLostBedResult = premisesService
       .updateLostBeds(
@@ -767,12 +773,24 @@ class PremisesController(
   private fun throwIfBookingDatesConflict(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    thisBookingId: UUID?,
+    thisEntityId: UUID?,
     bedId: UUID,
     premises: PremisesEntity,
   ) {
-    bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisBookingId, bedId, premises)?.let {
+    bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedId, premises)?.let {
       throw ConflictProblem(it.id, "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates")
+    }
+  }
+
+  private fun throwIfLostBedDatesConflict(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    thisEntityId: UUID?,
+    bedId: UUID,
+    premises: PremisesEntity,
+  ) {
+    bookingService.getLostBedWithConflictingDates(startDate, endDate, thisEntityId, bedId, premises)?.let {
+      throw ConflictProblem(it.id, "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates")
     }
   }
 }

@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
@@ -237,6 +238,10 @@ class BookingService(
     val validationResult = validated {
       getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId, premises)?.let {
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      }
+
+      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId, premises)?.let {
+        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
       val bed = premises.rooms
@@ -786,16 +791,33 @@ class BookingService(
   fun getBookingWithConflictingDates(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    thisBookingId: UUID?,
+    thisEntityId: UUID?,
     bedId: UUID,
     premises: PremisesEntity,
   ): BookingEntity? {
     val desiredRange = arrivalDate..departureDate
     return premises.bookings
-      .filter { it.id != thisBookingId }
+      .filter { it.id != thisEntityId }
       .filter { it.bed?.id == bedId }
       .filter { it.cancellation == null }
       .map { it to (it.arrivalDate..it.departureDate) }
+      .find { (_, range) -> range overlaps desiredRange }
+      ?.first
+  }
+
+  fun getLostBedWithConflictingDates(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    thisEntityId: UUID?,
+    bedId: UUID,
+    premises: PremisesEntity,
+  ): LostBedsEntity? {
+    val desiredRange = startDate..endDate
+    return premises.lostBeds
+      .filter { it.id != thisEntityId }
+      .filter { it.bed.id == bedId }
+      .filter { it.cancellation == null }
+      .map { it to (it.startDate..it.endDate) }
       .find { (_, range) -> range overlaps desiredRange }
       ?.first
   }
