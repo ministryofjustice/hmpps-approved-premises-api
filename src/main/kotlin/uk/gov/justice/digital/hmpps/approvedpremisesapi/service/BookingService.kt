@@ -49,7 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
@@ -235,9 +234,11 @@ class BookingService(
     departureDate: LocalDate,
     bedId: UUID
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    throwIfBookingDatesConflict(arrivalDate, departureDate, null, bedId, premises)
-
     val validationResult = validated {
+      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId, premises)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      }
+
       val bed = premises.rooms
         .flatMap { it.beds }
         .find { it.id == bedId }
@@ -782,30 +783,21 @@ class BookingService(
     }
   }
 
-  private fun throwIfBookingDatesConflict(
+  fun getBookingWithConflictingDates(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     thisBookingId: UUID?,
     bedId: UUID,
     premises: PremisesEntity,
-  ) {
-    // TODO: Ideally we wouldn't throw ConflictProblem from the service layer as its HTTP specific
-
+  ): BookingEntity? {
     val desiredRange = arrivalDate..departureDate
-    premises.bookings
+    return premises.bookings
       .filter { it.id != thisBookingId }
       .filter { it.bed?.id == bedId }
       .filter { it.cancellation == null }
       .map { it to (it.arrivalDate..it.departureDate) }
       .find { (_, range) -> range overlaps desiredRange }
       ?.first
-      ?.let {
-        throw ConflictProblem(
-          it.id,
-          "Booking",
-          "dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-        )
-      }
   }
 }
 
