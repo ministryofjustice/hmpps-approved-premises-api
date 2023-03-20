@@ -2945,7 +2945,6 @@ components:
       properties:
         notes:
           type: string
-      required: []
     Problem:
       type: object
       properties:
@@ -3124,7 +3123,6 @@ components:
         - $ref: '#/components/schemas/UpdateLostBed'
         - type: object
           properties: {}
-          required: []
     LostBedCancellation:
       type: object
       properties:
@@ -3144,7 +3142,6 @@ components:
       properties:
         notes:
           type: string
-      required: []
     LostBedStatus:
       type: string
       enum:
@@ -3910,7 +3907,6 @@ components:
         - $ref: '#/components/schemas/User'
         - type: object
           properties: {}
-          required: []
     UserRole:
       type: string
       enum:
