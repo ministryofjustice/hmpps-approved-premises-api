@@ -625,6 +625,7 @@ class BookingServiceTest {
     every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns destinationProviderEntity
 
     every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
     val result = bookingService.createDeparture(
       booking = bookingEntity,
@@ -1476,6 +1477,7 @@ class BookingServiceTest {
   @Test
   fun `createExtension returns Success with correct result when validation passed`() {
     val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-20"))
       .withDepartureDate(LocalDate.parse("2022-08-24"))
       .withYieldedPremises {
         ApprovedPremisesEntityFactory()
@@ -1577,7 +1579,7 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
-    val result = bookingService.createApprovedPremisesBooking(user, premises, "CRN", LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-24"))
+    val result = bookingService.createApprovedPremisesBooking(user, premises, "CRN", LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-24"), UUID.randomUUID())
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -1585,6 +1587,49 @@ class BookingServiceTest {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
   fun `createApprovedPremisesBooking returns FieldValidationError if Departure Date is before Arrival Date`(role: UserRole) {
+    val crn = "CRN123"
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    premises.rooms += room
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"), bed.id)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.departureDate", "beforeBookingArrivalDate")
+    )
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
+  fun `createApprovedPremisesBooking returns FieldValidationError if Bed does not exist`(role: UserRole) {
     val crn = "CRN123"
 
     val user = UserEntityFactory()
@@ -1604,14 +1649,14 @@ class BookingServiceTest {
     every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
     every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
 
-    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"))
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"), UUID.randomUUID())
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
 
     assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.departureDate", "beforeBookingArrivalDate")
+      entry("$.bedId", "doesNotExist")
     )
   }
 
@@ -1629,10 +1674,20 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    premises.rooms += room
+
     every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
     every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
 
-    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"))
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"), bed.id)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -1657,6 +1712,17 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    premises.rooms += room
+    room.beds += bed
+
     val existingApplication = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
       .withSubmittedAt(OffsetDateTime.now())
@@ -1669,7 +1735,7 @@ class BookingServiceTest {
     every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
 
     val runtimeException = assertThrows<RuntimeException> {
-      bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"))
+      bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"), bed.id)
     }
 
     assertThat(runtimeException.message).isEqualTo("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
@@ -1689,6 +1755,17 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    premises.rooms += room
+    room.beds += bed
+
     val existingApplication = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
       .withSubmittedAt(OffsetDateTime.now())
@@ -1706,7 +1783,7 @@ class BookingServiceTest {
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/staff-details/${user.deliusUsername}", HttpStatus.NOT_FOUND, null)
 
     val runtimeException = assertThrows<RuntimeException> {
-      bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"))
+      bookingService.createApprovedPremisesBooking(user, premises, crn, LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-23"), bed.id)
     }
 
     assertThat(runtimeException.message).isEqualTo("Unable to complete GET request to /staff-details/${user.deliusUsername}: 404 NOT_FOUND")
@@ -1727,6 +1804,17 @@ class BookingServiceTest {
     val premises = ApprovedPremisesEntityFactory()
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    premises.rooms += room
+    room.beds += bed
 
     val existingApplication = ApprovedPremisesApplicationEntityFactory()
       .withCrn(crn)
@@ -1751,7 +1839,7 @@ class BookingServiceTest {
     every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
     every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
 
-    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, arrivalDate, departureDate)
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, arrivalDate, departureDate, bed.id)
     assertThat(authorisableResult is AuthorisableActionResult.Success)
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
@@ -1810,6 +1898,17 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    premises.rooms += room
+    room.beds += bed
+
     val existingApplication = OfflineApplicationEntityFactory()
       .withCrn(crn)
       .withSubmittedAt(OffsetDateTime.now())
@@ -1820,10 +1919,10 @@ class BookingServiceTest {
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, arrivalDate, departureDate)
-    assertThat(authorisableResult is AuthorisableActionResult.Success)
+    val authorisableResult = bookingService.createApprovedPremisesBooking(user, premises, crn, arrivalDate, departureDate, bed.id)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-    assertThat(validatableResult is ValidatableActionResult.Success)
+    assertThat(validatableResult is ValidatableActionResult.Success).isTrue
 
     verify(exactly = 1) {
       mockBookingRepository.save(

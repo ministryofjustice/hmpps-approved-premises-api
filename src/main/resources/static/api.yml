@@ -2665,31 +2665,17 @@ components:
           type: string
           format: date
           example: 2022-09-30
+        bedId:
+          type: string
+          format: uuid
         serviceName:
           $ref: '#/components/schemas/ServiceName'
       required:
         - crn
         - arrivalDate
         - departureDate
+        - bedId
         - serviceName
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          approved-premises: '#/components/schemas/NewApprovedPremisesBooking'
-          temporary-accommodation: '#/components/schemas/NewTemporaryAccommodationBooking'
-    NewApprovedPremisesBooking:
-      allOf:
-        - $ref: '#/components/schemas/NewBooking'
-    NewTemporaryAccommodationBooking:
-      allOf:
-        - $ref: '#/components/schemas/NewBooking'
-        - type: object
-          properties:
-            bedId:
-              type: string
-              format: uuid
-          required:
-            - bedId
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'

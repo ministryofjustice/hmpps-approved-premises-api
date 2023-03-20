@@ -132,6 +132,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.serviceName = { serviceName }
   }
 
+  fun withBed(bed: BedEntity) = apply {
+    this.bed = { bed }
+  }
+
   fun withYieldedBed(bed: Yielded<BedEntity>) = apply {
     this.bed = bed
   }
