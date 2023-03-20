@@ -8,14 +8,13 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApprovedPremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTemporaryAccommodationBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -342,11 +341,12 @@ class BookingTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
       .bodyValue(
-        NewApprovedPremisesBooking(
+        NewBooking(
           crn = "a crn",
           arrivalDate = LocalDate.parse("2022-08-12"),
           departureDate = LocalDate.parse("2022-08-30"),
-          serviceName = ServiceName.approvedPremises
+          serviceName = ServiceName.approvedPremises,
+          bedId = UUID.randomUUID()
         )
       )
       .exchange()
@@ -367,15 +367,24 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewApprovedPremisesBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
+              bedId = bed.id
             )
           )
           .exchange()
@@ -405,15 +414,24 @@ class BookingTest : IntegrationTestBase() {
           withSubmittedAt(OffsetDateTime.now())
         }
 
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewApprovedPremisesBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
+              bedId = bed.id
             )
           )
           .exchange()
@@ -434,8 +452,8 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.cancellation").isEqualTo(null)
           .jsonPath("$.serviceName").isEqualTo(ServiceName.approvedPremises.value)
           .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
-          .jsonPath("$.bed.id").doesNotHaveJsonPath()
-          .jsonPath("$.bed.name").doesNotHaveJsonPath()
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo(bed.name)
 
         val emittedMessage = inboundMessageListener.blockForMessage()
 
@@ -476,7 +494,7 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewTemporaryAccommodationBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
@@ -524,7 +542,7 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewTemporaryAccommodationBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
@@ -567,7 +585,7 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewTemporaryAccommodationBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-09-30"),
               departureDate = LocalDate.parse("2022-08-30"),
@@ -619,7 +637,7 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewTemporaryAccommodationBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-08-01"),
               departureDate = LocalDate.parse("2022-08-30"),
@@ -678,7 +696,7 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewTemporaryAccommodationBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-08-01"),
               departureDate = LocalDate.parse("2022-08-30"),
@@ -740,7 +758,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
-            NewTemporaryAccommodationBooking(
+            NewBooking(
               crn = offenderDetails.otherIds.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
@@ -840,18 +858,27 @@ class BookingTest : IntegrationTestBase() {
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
-      val booking = bookingEntityFactory.produceAndPersist {
-        withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withQCode("QCODE")
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
           }
         }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withBed(bed)
       }
 
       webTestClient.post()
@@ -878,25 +905,34 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Arrival does not update arrival or departure date for an Approved Premises booking`() {
+  fun `Create Arrival updates arrival and departure date for an Approved Premises booking`() {
     `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
         APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
-        val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withYieldedPremises {
-            approvedPremisesEntityFactory.produceAndPersist {
-              withQCode("QCODE")
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist {
-                  withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-                }
-              }
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
             }
           }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withPremises(premises)
+          withBed(bed)
           withArrivalDate(LocalDate.parse("2022-08-10"))
           withDepartureDate(LocalDate.parse("2022-08-30"))
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
@@ -924,8 +960,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
-          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-14")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1104,25 +1140,34 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Departure does not update departure date for an Approved Premises booking`() {
+  fun `Create Departure updates departure date for an Approved Premises booking`() {
     `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
         APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
-        val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withYieldedPremises {
-            approvedPremisesEntityFactory.produceAndPersist {
-              withQCode("QCODE")
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist {
-                  withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-                }
-              }
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withQCode("QCODE")
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
             }
           }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withPremises(premises)
+          withBed(bed)
           withServiceName(ServiceName.approvedPremises)
           withArrivalDate(LocalDate.parse("2022-08-10"))
           withDepartureDate(LocalDate.parse("2022-08-30"))
@@ -1161,7 +1206,7 @@ class BookingTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
-          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.departureDate").isEqualTo("2022-09-01")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1457,18 +1502,28 @@ class BookingTest : IntegrationTestBase() {
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+
       val booking = bookingEntityFactory.produceAndPersist {
+        withArrivalDate(LocalDate.parse("2022-08-18"))
         withDepartureDate(LocalDate.parse("2022-08-20"))
         withStaffKeyWorkerCode(keyWorker.code)
-        withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withQCode("QCODE")
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-            }
-          }
-        }
+        withPremises(premises)
+        withBed(bed)
       }
 
       webTestClient.post()
