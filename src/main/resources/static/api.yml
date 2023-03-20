@@ -3432,7 +3432,8 @@ components:
       type: object
       properties:
         alertId:
-          type: long
+          type: integer
+          format: int64
         comment:
           type: string
         dateCreated:
@@ -3547,7 +3548,8 @@ components:
         crn:
           type: string
         convictionId:
-          type: long
+          type: integer
+          format: int64
           example: 1502724704
         deliusEventNumber:
           type: string
@@ -3631,7 +3633,8 @@ components:
       type: object
       properties:
         id:
-          type: long
+          type: integer
+          format: int64
         reportedAt:
           type: string
           format: date-time
@@ -3998,7 +4001,8 @@ components:
         - archived
     OASysAssessmentId:
       description: The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.
-      type: long
+      type: integer
+      format: int64
       example: 138985987
     OASysSupportingInformationQuestion:
       type: object
@@ -4225,7 +4229,8 @@ components:
           type: string
           example: "M1502750438"
         convictionId:
-          type: long
+          type: integer
+          format: int64
           example: 1502724704
         offenceDate:
           type: string
