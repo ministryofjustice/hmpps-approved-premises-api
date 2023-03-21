@@ -45,7 +45,7 @@ class RoomEntityFactory : Factory<RoomEntity> {
     this.characteristics = { characteristics }
   }
 
-  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
+  fun withCharacteristicsList(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
 
   override fun produce() = RoomEntity(
     id = this.id(),
