@@ -64,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -125,6 +124,7 @@ class PremisesController(
     val updatedPremises = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -351,6 +351,7 @@ class PremisesController(
     val createdBooking = when (validatableResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validatableResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validatableResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validatableResult.conflictingEntityId, conflictReason = validatableResult.message)
       is ValidatableActionResult.Success -> validatableResult.entity
     }
 
@@ -374,6 +375,7 @@ class PremisesController(
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
     throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId, booking.premises)
+    throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId, booking.premises)
 
     val result = bookingService.createArrival(
       booking = booking,
@@ -503,6 +505,7 @@ class PremisesController(
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
     throwIfBookingDatesConflict(booking.arrivalDate, body.newDepartureDate, bookingId, bedId, booking.premises)
+    throwIfLostBedDatesConflict(booking.arrivalDate, body.newDepartureDate, null, bedId, booking.premises)
 
     val result = bookingService.createExtension(
       booking = booking,
@@ -522,6 +525,9 @@ class PremisesController(
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
+
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId, premises)
+    throwIfLostBedDatesConflict(body.startDate, body.endDate, null, body.bedId, premises)
 
     val result = premisesService.createLostBeds(
       premises = premises,
@@ -575,13 +581,14 @@ class PremisesController(
     body: UpdateLostBed,
   ): ResponseEntity<LostBed> {
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-    if (premises.lostBeds.firstOrNull { it.id == lostBedId } == null) {
-      throw NotFoundProblem(lostBedId, "LostBed")
-    }
+    val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
 
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
+
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, lostBed.bed.id, premises)
+    throwIfLostBedDatesConflict(body.startDate, body.endDate, lostBedId, lostBed.bed.id, premises)
 
     val updateLostBedResult = premisesService
       .updateLostBeds(
@@ -602,6 +609,7 @@ class PremisesController(
     val updatedLostBed = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -628,6 +636,7 @@ class PremisesController(
     val cancellation = when (cancelLostBedResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = cancelLostBedResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelLostBedResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = cancelLostBedResult.conflictingEntityId, conflictReason = cancelLostBedResult.message)
       is ValidatableActionResult.Success -> cancelLostBedResult.entity
     }
 
@@ -758,29 +767,30 @@ class PremisesController(
     is ValidatableActionResult.Success -> result.entity
     is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
     is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+    is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   }
 
   private fun throwIfBookingDatesConflict(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    thisBookingId: UUID?,
+    thisEntityId: UUID?,
     bedId: UUID,
     premises: PremisesEntity,
   ) {
-    val desiredRange = arrivalDate..departureDate
-    premises.bookings
-      .filter { it.id != thisBookingId }
-      .filter { it.bed?.id == bedId }
-      .filter { it.cancellation == null }
-      .map { it to (it.arrivalDate..it.departureDate) }
-      .find { (_, range) -> range overlaps desiredRange }
-      ?.first
-      ?.let {
-        throw ConflictProblem(
-          it.id,
-          "Booking",
-          "dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-        )
-      }
+    bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedId, premises)?.let {
+      throw ConflictProblem(it.id, "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates")
+    }
+  }
+
+  private fun throwIfLostBedDatesConflict(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    thisEntityId: UUID?,
+    bedId: UUID,
+    premises: PremisesEntity,
+  ) {
+    bookingService.getLostBedWithConflictingDates(startDate, endDate, thisEntityId, bedId, premises)?.let {
+      throw ConflictProblem(it.id, "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates")
+    }
   }
 }
