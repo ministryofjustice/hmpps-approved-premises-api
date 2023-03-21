@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -35,6 +35,8 @@ class PlacementRequestService(
       val desirableCriteria = characteristicRepository.findAllWherePropertyNameIn(requirements.desirableCriteria.map { it.toString() })
       val essentialCriteria = characteristicRepository.findAllWherePropertyNameIn(requirements.essentialCriteria.map { it.toString() })
 
+      val application = (assessment.application as? ApprovedPremisesApplicationEntity) ?: throw RuntimeException("Only Approved Premises Assessments are currently supported for Placement Requests")
+
       val placementRequestEntity = placementRequestRepository.save(
         PlacementRequestEntity(
           id = UUID.randomUUID(),
@@ -48,7 +50,7 @@ class PlacementRequestService(
           essentialCriteria = essentialCriteria,
           mentalHealthSupport = requirements.mentalHealthSupport,
           createdAt = OffsetDateTime.now(),
-          application = assessment.application,
+          application = application,
           allocatedToUser = user,
           booking = null,
           reallocatedAt = null,

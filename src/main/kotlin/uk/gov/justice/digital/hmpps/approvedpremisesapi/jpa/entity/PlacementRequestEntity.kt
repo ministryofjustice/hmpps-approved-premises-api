@@ -36,7 +36,7 @@ data class PlacementRequestEntity(
 
   @ManyToOne
   @JoinColumn(name = "application_id")
-  val application: ApplicationEntity,
+  val application: ApprovedPremisesApplicationEntity,
 
   val radius: Int,
 
