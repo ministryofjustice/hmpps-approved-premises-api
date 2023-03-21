@@ -87,3 +87,38 @@ Required fields:
 - `notes`
 
 [Example CSV](./example_csvs/approved_premises_seeding_example.csv)
+
+### Approved Premises rooms and beds job
+
+"seed type": `approved_premises_rooms`
+
+Required fields:
+
+- `apCode`
+- `bedCode`
+- `roomNumber`
+- `bedCount`
+- `isSingle`
+- `isGroundFloor`
+- `isFullyFm`
+- `hasCrib7Bedding`
+- `hasSmokeDetector`
+- `isTopFloorVulnerable`
+- `isGroundFloorNrOffice`
+- `hasNearbySprinkler`
+- `isArsonSuitable`
+- `isArsonDesignated`
+- `hasArsonInsuranceConditions`
+- `isSuitedForSexOffenders`
+- `hasEnSuite`
+- `isWheelchairAccessible`
+- `hasWideDoor`
+- `hasStepFreeAccess`
+- `hasFixedMobilityAids`
+- `hasTurningSpace`
+- `hasCallForAssistance`
+- `isWheelchairDesignated`
+- `isStepFreeDesignated`
+- `notes`
+  
+[Example CSV](./example_csvs/approved_premises_rooms_seeding_example.csv)
