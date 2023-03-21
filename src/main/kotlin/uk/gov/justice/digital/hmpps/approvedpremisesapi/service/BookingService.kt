@@ -92,7 +92,8 @@ class BookingService(
     premises: ApprovedPremisesEntity,
     crn: String,
     arrivalDate: LocalDate,
-    departureDate: LocalDate
+    departureDate: LocalDate,
+    bedId: UUID
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     if (!user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
       return AuthorisableActionResult.Unauthorised()
@@ -102,6 +103,12 @@ class BookingService(
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
+
+      val bed = premises.rooms
+        .flatMap { it.beds }
+        .find { it.id == bedId }
+
+      if (bed == null) "$.bedId" hasValidationError "doesNotExist"
 
       val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
         .filter { it.submittedAt != null }
@@ -138,7 +145,7 @@ class BookingService(
           confirmation = null,
           extensions = mutableListOf(),
           premises = premises,
-          bed = null,
+          bed = bed,
           service = ServiceName.approvedPremises.value,
           originalArrivalDate = arrivalDate,
           originalDepartureDate = departureDate,
@@ -322,11 +329,9 @@ class BookingService(
       )
     )
 
-    if (booking.service == ServiceName.temporaryAccommodation.value) {
-      booking.arrivalDate = arrivalDate
-      booking.departureDate = expectedDepartureDate
-      updateBooking(booking)
-    }
+    booking.arrivalDate = arrivalDate
+    booking.departureDate = expectedDepartureDate
+    updateBooking(booking)
 
     if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
       val domainEventId = UUID.randomUUID()
@@ -617,10 +622,8 @@ class BookingService(
       )
     )
 
-    if (booking.service == ServiceName.temporaryAccommodation.value) {
-      booking.departureDate = dateTime.toLocalDate()
-      updateBooking(booking)
-    }
+    booking.departureDate = dateTime.toLocalDate()
+    updateBooking(booking)
 
     if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
       val domainEventId = UUID.randomUUID()
@@ -703,13 +706,12 @@ class BookingService(
     newDepartureDate: LocalDate,
     notes: String?
   ) = validated<ExtensionEntity> {
-    when (booking.service) {
-      ServiceName.approvedPremises.value -> if (booking.departureDate.isAfter(newDepartureDate)) {
-        return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
-      }
-      ServiceName.temporaryAccommodation.value -> if (booking.arrivalDate.isAfter(newDepartureDate)) {
-        return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
-      }
+    if (booking.premises is ApprovedPremisesEntity && booking.departureDate.isAfter(newDepartureDate)) {
+      return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
+    }
+
+    if (booking.arrivalDate.isAfter(newDepartureDate)) {
+      return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
 
     val extensionEntity = ExtensionEntity(
