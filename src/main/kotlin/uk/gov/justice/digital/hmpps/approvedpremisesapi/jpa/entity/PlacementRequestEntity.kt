@@ -18,6 +18,8 @@ import javax.persistence.Table
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
   fun findByApplication(application: ApplicationEntity): PlacementRequestEntity
+
+  fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementRequestEntity>
 }
 
 @Entity
@@ -36,7 +38,7 @@ data class PlacementRequestEntity(
 
   @ManyToOne
   @JoinColumn(name = "application_id")
-  val application: ApplicationEntity,
+  val application: ApprovedPremisesApplicationEntity,
 
   val radius: Int,
 
@@ -66,4 +68,6 @@ data class PlacementRequestEntity(
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   val allocatedToUser: UserEntity,
+
+  val reallocatedAt: OffsetDateTime?
 )

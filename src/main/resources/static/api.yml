@@ -1976,6 +1976,26 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-requests:
+    get:
+      tags:
+        - Placement requests
+      summary: Gets placement requests for a given user
+      responses:
+        200:
+          description: successfully retrieved placement requests
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlacementRequest'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -3811,7 +3831,7 @@ components:
         document:
           $ref: '#/components/schemas/AnyValue'
         requirements:
-          $ref: '#/components/schemas/PlacementRequest'
+          $ref: '#/components/schemas/NewPlacementRequest'
       required:
         - document
         - requirements
@@ -4339,7 +4359,7 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
-    PlacementRequest:
+    NewPlacementRequest:
       type: object
       properties:
         gender:
@@ -4376,6 +4396,18 @@ components:
         - essentialCriteria
         - desirableCriteria
         - mentalHealthSupport
+    PlacementRequest:
+      allOf:
+        - $ref: '#/components/schemas/NewPlacementRequest'
+        - type: object
+          properties:
+            person:
+              $ref: '#/components/schemas/Person'
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+      required:
+        - person
+        - risks
     PlacementCriteria:
       type: string
       enum:

@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -151,7 +151,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Accept assessment without JWT returns 401`() {
-    val placementRequest = PlacementRequest(
+    val placementRequest = NewPlacementRequest(
       gender = Gender.male,
       type = ApType.normal,
       expectedArrival = LocalDate.now(),
@@ -205,7 +205,7 @@ class AssessmentTest : IntegrationTestBase() {
             val essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift)
             val desirableCriteria = listOf(PlacementCriteria.hasBrailleSignage, PlacementCriteria.acceptsSexOffenders)
 
-            val placementRequest = PlacementRequest(
+            val placementRequest = NewPlacementRequest(
               gender = Gender.male,
               type = ApType.normal,
               expectedArrival = LocalDate.now(),
