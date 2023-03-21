@@ -4205,7 +4205,6 @@ components:
       type: object
       properties:
         assessmentId:
-          type: object
           $ref: '#/components/schemas/OASysAssessmentId'
         assessmentState:
           $ref: '#/components/schemas/OASysAssessmentState'
