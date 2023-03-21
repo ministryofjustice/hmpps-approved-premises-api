@@ -15,9 +15,9 @@ insert into "premises" ("address_line1", "id", "local_authority_area_id", "name"
 insert into "premises" ("address_line1", "id", "local_authority_area_id", "name", "notes", "postcode", "probation_region_id", "service", "status", "total_beds") values ('12 Pavilion Rise', '6aa177cb-617f-4abb-be46-056ea7e4a59d', '0dd9476c-4058-4574-a35d-f846588b047c', 'PAVILION12', NULL, 'SS18 3PK', 'ca979718-b15d-4318-9944-69aaff281cad', 'temporary-accommodation', 'active', 0) ON CONFLICT (id) DO NOTHING;
 insert into "premises" ("address_line1", "id", "local_authority_area_id", "name", "notes", "postcode", "probation_region_id", "service", "status", "total_beds") values ('13 Pavilion Rise', '773431cd-f560-4be8-9e6f-b582a4ebf204', '0dd9476c-4058-4574-a35d-f846588b047c', 'PAVILION13', NULL, 'SS18 3PK', 'ca979718-b15d-4318-9944-69aaff281cad', 'temporary-accommodation', 'active', 0) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO approved_premises (premises_id, q_code, ap_code) VALUES
-    ('459eeaba-55ac-4a1f-bae2-bad810d4016b', 'Q022', 'BCKNHAM'),
-    ('e03c82e9-f335-414a-87a0-866060397d4a', 'Q005', 'BDFORD')
+INSERT INTO approved_premises (premises_id, q_code, ap_code, point) VALUES
+    ('459eeaba-55ac-4a1f-bae2-bad810d4016b', 'Q022', 'BCKNHAM', ST_MakePoint(51.910871, -1.832088)),
+    ('e03c82e9-f335-414a-87a0-866060397d4a', 'Q005', 'BDFORD', ST_MakePoint(55.285697, -2.505115))
 ON CONFLICT (premises_id) DO NOTHING;
 
 

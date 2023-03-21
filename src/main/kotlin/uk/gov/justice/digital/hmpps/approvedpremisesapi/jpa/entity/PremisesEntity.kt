@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -103,7 +104,8 @@ class ApprovedPremisesEntity(
   var qCode: String,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
-  status: PropertyStatus
+  status: PropertyStatus,
+  val point: Point? // TODO: Make not-null once Premises have had point added in all environments
 ) : PremisesEntity(
   id,
   name,
