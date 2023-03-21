@@ -1,3 +1,4 @@
+DELETE FROM approved_premises_lost_beds;
 DELETE FROM lost_beds WHERE id NOT IN (SELECT lost_bed_id FROM temporary_accommodation_lost_beds);
 
 ALTER TABLE lost_beds ADD COLUMN bed_id UUID CONSTRAINT bed_id_fk REFERENCES beds(id);
