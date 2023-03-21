@@ -33,6 +33,24 @@ To process a seed CSV against a non-local environment:
   
 - Check the logs via `kubectl logs {pod name}` to see how processing is progressing.
 
+## Run book
+
+For a full seeding, e.g. in a local development environment, you can follow this process:
+
+```sh
+# characteristics for premises
+./script/run_seed_job characteristics premises_characteristics
+
+# characteristics for rooms
+./script/run_seed_job characteristics room_characteristics
+
+# premises and their characteristics
+./script/run_seed_job approved_premises premises_with_characteristics
+
+# rooms and their characteristics, plus beds
+./script/run_seed_job approved_premises_rooms rooms_with_characteristics
+```
+
 ## CSV reference
 
 ### User seed job
