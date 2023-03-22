@@ -3936,6 +3936,9 @@ components:
           format: uuid
         name:
           type: string
+        code:
+          type: string
+          example: NEABC-4
         notes:
           type: string
         beds:
@@ -3958,6 +3961,9 @@ components:
           format: uuid
         name:
           type: string
+        code:
+          type: string
+          example: NEABC04
       required:
         - id
         - name
