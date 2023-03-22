@@ -14,12 +14,28 @@ fun mapAndTransformAssessments(
   transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> Any
 ): List<Any> {
   return assessments.mapNotNull {
-    val personDetail = getPersonDetailsForCrn(log, it.application.crn, deliusUsername, offenderService)
+    val assessment = transformAssessment(log, it, deliusUsername, offenderService, transformer)
 
-    if (personDetail === null) {
+    if (assessment === null) {
       return@mapNotNull null
     }
 
-    transformer(it, personDetail.first, personDetail.second)
+    assessment
   }
+}
+
+fun transformAssessment(
+  log: Logger,
+  assessment: AssessmentEntity,
+  deliusUsername: String,
+  offenderService: OffenderService,
+  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> Any
+): Any? {
+  val personDetail = getPersonDetailsForCrn(log, assessment.application.crn, deliusUsername, offenderService)
+
+  if (personDetail === null) {
+    return null
+  }
+
+  return transformer(assessment, personDetail.first, personDetail.second)
 }
