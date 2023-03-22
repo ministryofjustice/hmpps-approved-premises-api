@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -115,7 +116,35 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get an non-implemented task type for an application returns 404`() {
+  fun `Get a Placement Request Task for an application returns 200`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User` { user, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given a Placement Request`(
+            allocatedToUser = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn
+          ) { placementRequest, application ->
+            webTestClient.get()
+              .uri("/applications/${application.id}/tasks/placement-request")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  taskTransformer.transformPlacementRequestToTask(placementRequest, offenderDetails, inmateDetails)
+                )
+              )
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get an non-implemented task type for an application returns 405`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         `Given an Assessment`(
@@ -124,7 +153,7 @@ class TasksTest : IntegrationTestBase() {
           crn = offenderDetails.otherIds.crn
         ) { _, application ->
           webTestClient.get()
-            .uri("/applications/${application.id}/tasks/placement-request")
+            .uri("/applications/${application.id}/tasks/booking-appeal")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()

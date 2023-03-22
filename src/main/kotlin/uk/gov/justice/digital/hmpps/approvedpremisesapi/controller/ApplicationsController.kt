@@ -35,12 +35,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformAssessment
 import java.net.URI
@@ -60,7 +62,8 @@ class ApplicationsController(
   private val userService: UserService,
   private val userTransformer: UserTransformer,
   private val taskTransformer: TaskTransformer,
-  private val enumConverterFactory: EnumConverterFactory
+  private val enumConverterFactory: EnumConverterFactory,
+  private val placementRequestService: PlacementRequestService,
 ) : ApplicationsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -265,6 +268,21 @@ class ApplicationsController(
           offenderService,
           taskTransformer::transformAssessmentToTask
         ) as Task
+      }
+      TaskType.placementRequest -> {
+        val placementRequest = when (val result = placementRequestService.getPlacementRequestForUserAndApplication(user, applicationId)) {
+          is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Placement Request")
+          is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+          is AuthorisableActionResult.Success -> result.entity
+        }
+
+        val personDetail = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService)
+
+        if (personDetail === null) {
+          throw NotFoundProblem(placementRequest.application.crn, "Offender")
+        }
+
+        taskTransformer.transformPlacementRequestToTask(placementRequest, personDetail.first, personDetail.second)
       } else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
       }
