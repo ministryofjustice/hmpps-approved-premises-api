@@ -4398,7 +4398,7 @@ components:
               type: array
               items:
                 type: string
-            requiredBedCharacteristics:
+            requiredRoomCharacteristics:
               type: array
               items:
                 type: string
@@ -4406,7 +4406,7 @@ components:
             - postcodeDistrict
             - maxDistanceMiles
             - requiredPremisesCharacteristics
-            - requiredBedCharacteristics
+            - requiredRoomCharacteristics
     TemporaryAccommodationBedSearchParameters:
       allOf:
         - $ref: '#/components/schemas/BedSearchParameters'
