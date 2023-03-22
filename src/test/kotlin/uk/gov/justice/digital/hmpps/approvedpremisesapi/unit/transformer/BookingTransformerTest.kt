@@ -121,9 +121,9 @@ class BookingTransformerTest {
     keyWorkerStaffCode = "789",
     crn = "CRN123",
     arrival = null,
-    departure = null,
+    departures = mutableListOf(),
     nonArrival = null,
-    cancellation = null,
+    cancellations = mutableListOf(),
     confirmation = null,
     extensions = mutableListOf(),
     premises = premisesEntity,
@@ -378,13 +378,15 @@ class BookingTransformerTest {
   @Test
   fun `Cancelled entity is correctly transformed`() {
     val cancellationBooking = baseBookingEntity.copy(id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d")).apply {
-      cancellation = CancellationEntity(
-        id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
-        date = LocalDate.parse("2022-08-10"),
-        reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
-        notes = null,
-        booking = this,
-        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+      cancellations = mutableListOf(
+        CancellationEntity(
+          id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
+          date = LocalDate.parse("2022-08-10"),
+          reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
+          notes = null,
+          booking = this,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        )
       )
     }
 
@@ -445,31 +447,33 @@ class BookingTransformerTest {
         booking = this,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       )
-      departure = DepartureEntity(
-        id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
-        dateTime = OffsetDateTime.parse("2022-08-30T15:30:15+01:00"),
-        reason = DepartureReasonEntity(
-          id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
-          name = "Departure Reason",
-          isActive = true,
-          serviceScope = "*",
-          legacyDeliusReasonCode = "A"
-        ),
-        moveOnCategory = MoveOnCategoryEntity(
-          id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
-          name = "Move on Category",
-          isActive = true,
-          serviceScope = "*",
-          legacyDeliusCategoryCode = "CAT"
-        ),
-        destinationProvider = DestinationProviderEntity(
-          id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
-          name = "Destination Provider",
-          isActive = true
-        ),
-        notes = null,
-        booking = this,
-        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+      departures = mutableListOf(
+        DepartureEntity(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+          dateTime = OffsetDateTime.parse("2022-08-30T15:30:15+01:00"),
+          reason = DepartureReasonEntity(
+            id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+            name = "Departure Reason",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusReasonCode = "A"
+          ),
+          moveOnCategory = MoveOnCategoryEntity(
+            id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+            name = "Move on Category",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusCategoryCode = "CAT"
+          ),
+          destinationProvider = DestinationProviderEntity(
+            id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+            name = "Destination Provider",
+            isActive = true
+          ),
+          notes = null,
+          booking = this,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        )
       )
     }
 

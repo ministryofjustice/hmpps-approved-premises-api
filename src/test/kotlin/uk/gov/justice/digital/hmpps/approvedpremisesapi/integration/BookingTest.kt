@@ -237,18 +237,18 @@ class BookingTest : IntegrationTestBase() {
         bookings[2].let {
           it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
-          it.departure = departureEntityFactory.produceAndPersist {
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
             withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
             withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[3].let {
-          it.cancellation = cancellationEntityFactory.produceAndPersist {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[4].let {
           it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
@@ -298,18 +298,18 @@ class BookingTest : IntegrationTestBase() {
         bookings[2].let {
           it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
-          it.departure = departureEntityFactory.produceAndPersist {
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
             withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
             withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[3].let {
-          it.cancellation = cancellationEntityFactory.produceAndPersist {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[4].let {
           it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
@@ -686,11 +686,11 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        existingBooking.cancellation = cancellationEntityFactory.produceAndPersist {
+        existingBooking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
           withYieldedBooking { existingBooking }
           withDate(LocalDate.parse("2022-07-01"))
           withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-        }
+        }.toMutableList()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")

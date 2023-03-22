@@ -32,9 +32,9 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var originalDepartureDate: Yielded<LocalDate>? = null
   private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var arrival: Yielded<ArrivalEntity>? = null
-  private var departure: Yielded<DepartureEntity>? = null
+  private var departures: Yielded<MutableList<DepartureEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
-  private var cancellation: Yielded<CancellationEntity>? = null
+  private var cancellations: Yielded<MutableList<CancellationEntity>>? = null
   private var confirmation: Yielded<ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
@@ -80,12 +80,12 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.arrival = { arrival }
   }
 
-  fun withYieldedDeparture(departure: Yielded<DepartureEntity>) = apply {
-    this.departure = departure
+  fun withYieldedDepartures(departures: Yielded<MutableList<DepartureEntity>>) = apply {
+    this.departures = departures
   }
 
-  fun withDeparture(departure: DepartureEntity) = apply {
-    this.departure = { departure }
+  fun withDepartures(departures: MutableList<DepartureEntity>) = apply {
+    this.departures = { departures }
   }
 
   fun withYieldedNonArrival(nonArrival: Yielded<NonArrivalEntity>) = apply {
@@ -96,12 +96,12 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.nonArrival = { nonArrival }
   }
 
-  fun withYieldedCancellation(cancellation: Yielded<CancellationEntity>) = apply {
-    this.cancellation = cancellation
+  fun withYieldedCancellations(cancellations: Yielded<MutableList<CancellationEntity>>) = apply {
+    this.cancellations = cancellations
   }
 
-  fun withCancellation(cancellation: CancellationEntity) = apply {
-    this.cancellation = { cancellation }
+  fun withCancellations(cancellations: MutableList<CancellationEntity>) = apply {
+    this.cancellations = { cancellations }
   }
 
   fun withYieldedConfirmation(confirmation: Yielded<ConfirmationEntity>) = apply {
@@ -159,9 +159,9 @@ class BookingEntityFactory : Factory<BookingEntity> {
     departureDate = this.departureDate(),
     keyWorkerStaffCode = this.keyWorkerStaffCode(),
     arrival = this.arrival?.invoke(),
-    departure = this.departure?.invoke(),
+    departures = this.departures?.invoke() ?: mutableListOf(),
     nonArrival = this.nonArrival?.invoke(),
-    cancellation = this.cancellation?.invoke(),
+    cancellations = this.cancellations?.invoke() ?: mutableListOf(),
     confirmation = this.confirmation?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
