@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.cache.CacheManager
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -148,6 +149,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   private lateinit var flyway: Flyway
+
+  @Autowired
+  private lateinit var jdbcTemplate: JdbcTemplate
 
   @Autowired
   private lateinit var cacheManager: CacheManager
@@ -320,6 +324,9 @@ abstract class IntegrationTestBase {
     wiremockServer.start()
 
     flyway.clean()
+
+    jdbcTemplate.execute("CREATE EXTENSION postgis;")
+
     flyway.migrate()
 
     cacheManager.cacheNames.forEach {
