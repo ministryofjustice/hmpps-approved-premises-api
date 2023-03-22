@@ -4320,6 +4320,9 @@ components:
         - $ref: '#/components/schemas/NewPlacementRequest'
         - type: object
           properties:
+            id:
+              type: string
+              format: uuid
             person:
               $ref: '#/components/schemas/Person'
             risks:
@@ -4327,6 +4330,7 @@ components:
       required:
         - person
         - risks
+        - id
     PlacementCriteria:
       type: string
       enum:
