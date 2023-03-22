@@ -7,14 +7,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.TasksApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformPlacementRequests
 
 @Service
 class TasksController(
   private val userService: UserService,
   private val assessmentService: AssessmentService,
+  private val placementRequestService: PlacementRequestService,
   private val taskTransformer: TaskTransformer,
   private val offenderService: OffenderService,
 ) : TasksApiDelegate {
@@ -29,8 +32,16 @@ class TasksController(
       user.deliusUsername,
       offenderService,
       taskTransformer::transformAssessmentToTask
-    ) as List<Task>
+    )
 
-    return ResponseEntity.ok(assessments)
+    val placementRequests = mapAndTransformPlacementRequests(
+      log,
+      placementRequestService.getVisiblePlacementRequestsForUser(user),
+      user.deliusUsername,
+      offenderService,
+      taskTransformer::transformPlacementRequestToTask
+    )
+
+    return ResponseEntity.ok(assessments + placementRequests)
   }
 }

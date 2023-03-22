@@ -54,7 +54,7 @@ class AssessmentController(
         user.deliusUsername,
         offenderService,
         assessmentTransformer::transformJpaToApi
-      ) as List<Assessment>
+      )
     )
   }
 

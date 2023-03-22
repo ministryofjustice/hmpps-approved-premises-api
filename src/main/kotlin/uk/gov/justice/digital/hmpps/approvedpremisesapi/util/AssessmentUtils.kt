@@ -6,36 +6,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
-fun mapAndTransformAssessments(
+fun <T> mapAndTransformAssessments(
   log: Logger,
   assessments: List<AssessmentEntity>,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> Any
-): List<Any> {
+  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> T
+): List<T> {
   return assessments.mapNotNull {
-    val assessment = transformAssessment(log, it, deliusUsername, offenderService, transformer)
-
-    if (assessment === null) {
-      return@mapNotNull null
-    }
+    val assessment = transformAssessment(log, it, deliusUsername, offenderService, transformer) ?: return@mapNotNull null
 
     assessment
   }
 }
 
-fun transformAssessment(
+fun <T> transformAssessment(
   log: Logger,
   assessment: AssessmentEntity,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> Any
-): Any? {
+  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> T
+): T? {
   val personDetail = getPersonDetailsForCrn(log, assessment.application.crn, deliusUsername, offenderService)
-
-  if (personDetail === null) {
-    return null
-  }
+    ?: return null
 
   return transformer(assessment, personDetail.first, personDetail.second)
 }

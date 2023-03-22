@@ -38,20 +38,31 @@ class TasksTest : IntegrationTestBase() {
             crn = offenderDetails.otherIds.crn,
             reallocated = true
           ) { _, _ ->
-            webTestClient.get()
-              .uri("/tasks")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails)
+            `Given a Placement Request`(
+              allocatedToUser = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              webTestClient.get()
+                .uri("/tasks")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(
+                      taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
+                      taskTransformer.transformPlacementRequestToTask(
+                        placementRequest,
+                        offenderDetails,
+                        inmateDetails
+                      )
+                    )
                   )
                 )
-              )
+            }
           }
         }
       }
