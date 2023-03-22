@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpStatus
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
@@ -22,13 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -824,7 +819,8 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          offenderDetails.otherIds.crn,
+          userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
             teamCodes = emptyList()
           )
@@ -866,7 +862,8 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          offenderDetails.otherIds.crn,
+          userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
             teamCodes = listOf(offenderDetails.otherIds.crn)
           )
@@ -904,7 +901,8 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          offenderDetails.otherIds.crn,
+          userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1")
           )
@@ -948,7 +946,8 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusStaffCode!!,
+          offenderDetails.otherIds.crn,
+          userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1")
           )
@@ -1171,148 +1170,6 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
       }
-    }
-  }
-
-  @Test
-  fun `Reallocate application to different assessor without JWT returns 401`() {
-    webTestClient.post()
-      .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-      .bodyValue(
-        NewReallocation(
-          userId = UUID.randomUUID(),
-          taskType = TaskType.assessment
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `Reallocate application to different assessor without WORKFLOW_MANAGER role returns 403`() {
-    `Given a User` { userEntity, jwt ->
-      webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID(),
-            taskType = TaskType.assessment
-          )
-        )
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-  }
-
-  @Test
-  fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      `Given a User`(roles = listOf(UserRole.ASSESSOR)) { otherUser, _ ->
-        `Given a User`(
-          roles = listOf(UserRole.ASSESSOR)
-        ) { assigneeUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
-            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(otherUser)
-              withApplicationSchema(applicationSchema)
-            }
-
-            val existingAssessment = assessmentEntityFactory.produceAndPersist {
-              withApplication(application)
-              withAllocatedToUser(otherUser)
-              withAssessmentSchema(assessmentSchema)
-            }
-
-            webTestClient.post()
-              .uri("/applications/${application.id}/allocations")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                NewReallocation(
-                  userId = assigneeUser.id,
-                  taskType = TaskType.assessment
-                )
-              )
-              .exchange()
-              .expectStatus()
-              .isCreated
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  Reallocation(
-                    taskType = TaskType.assessment,
-                    user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises)
-                  )
-                )
-              )
-
-            val assessments = assessmentRepository.findAll()
-
-            assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
-            assertThat(assessments).anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
-          }
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Reallocating a placement request returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID(),
-            taskType = TaskType.placementRequest
-          )
-        )
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
-    }
-  }
-
-  @Test
-  fun `Reallocating a placement request review returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID(),
-            taskType = TaskType.placementRequestReview
-          )
-        )
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
-    }
-  }
-
-  @Test
-  fun `Reallocating a booking appeal returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID(),
-            taskType = TaskType.bookingAppeal
-          )
-        )
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
     }
   }
 
