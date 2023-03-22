@@ -15,6 +15,7 @@ class PlacementRequestTransformer(
 ) {
   fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): PlacementRequest {
     return PlacementRequest(
+      id = jpa.id,
       gender = jpa.gender,
       type = jpa.apType,
       expectedArrival = jpa.expectedArrival,
