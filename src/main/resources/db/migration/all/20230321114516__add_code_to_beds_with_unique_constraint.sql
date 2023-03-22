@@ -1,0 +1,1 @@
+ALTER TABLE beds ADD COLUMN "code" text UNIQUE;

@@ -32,6 +32,7 @@ class RoomService(
     var room = RoomEntity(
       id = UUID.randomUUID(),
       name = roomName,
+      code = null,
       notes = notes,
       premises = premises,
       beds = mutableListOf(),
@@ -113,13 +114,14 @@ class RoomService(
 
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors)
+        ValidatableActionResult.FieldValidationError(validationErrors),
       )
     }
 
     room = RoomEntity(
       id = room.id,
       name = room.name,
+      code = null,
       notes = notes,
       premises = room.premises,
       beds = room.beds,
@@ -127,7 +129,7 @@ class RoomService(
     )
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(roomRepository.save(room))
+      ValidatableActionResult.Success(roomRepository.save(room)),
     )
   }
 
@@ -153,7 +155,8 @@ class RoomService(
     BedEntity(
       id = UUID.randomUUID(),
       name = bedName,
+      code = null,
       room = room,
-    )
+    ),
   )
 }
