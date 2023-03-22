@@ -1586,6 +1586,38 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/tasks/{taskType}:
+    get:
+      tags:
+        - Application data
+      summary: Gets a task for an application
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          description: ID of the application
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
+      responses:
+        200:
+          description: successfully retrieved task
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Task'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /applications/{applicationId}/allocations:
     post:
       tags:
