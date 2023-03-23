@@ -1618,11 +1618,11 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /applications/{applicationId}/allocations:
+  /applications/{applicationId}/tasks/{taskType}/allocations:
     post:
       tags:
         - Operations on applications
-      summary: Reallocates an application
+      summary: Reallocates a task for an application
       parameters:
         - name: applicationId
           in: path
@@ -1631,6 +1631,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
       requestBody:
         content:
           'application/json':
@@ -3845,11 +3851,8 @@ components:
         userId:
           type: string
           format: uuid
-        taskType:
-          $ref: '#/components/schemas/TaskType'
       required:
         - userId
-        - taskType
     Reallocation:
       type: object
       properties:

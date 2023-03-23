@@ -71,5 +71,5 @@ data class PlacementRequestEntity(
   @JoinColumn(name = "allocated_to_user_id")
   val allocatedToUser: UserEntity,
 
-  val reallocatedAt: OffsetDateTime?
+  var reallocatedAt: OffsetDateTime?
 )

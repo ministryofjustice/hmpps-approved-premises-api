@@ -1388,111 +1388,14 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Unauthorised when requestUser does not have WORKFLOW_MANAGER role`() {
-    val requestUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val result = assessmentService.reallocateAssessment(requestUser, UUID.randomUUID(), UUID.randomUUID())
-
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
-  }
-
-  @Test
-  fun `reallocateAssessment returns Not Found when assignee user does not exist`() {
-    val requestUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-      .apply {
-        roles += UserRoleAssignmentEntityFactory()
-          .withRole(UserRole.WORKFLOW_MANAGER)
-          .withUser(this)
-          .produce()
-      }
-
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-
-    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.NotFound()
-
-    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, UUID.randomUUID())
-
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
-  fun `reallocateAssessment returns Not Found when application does not exist`() {
-    val requestUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-      .apply {
-        roles += UserRoleAssignmentEntityFactory()
-          .withRole(UserRole.WORKFLOW_MANAGER)
-          .withUser(this)
-          .produce()
-      }
-
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-
-    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
-      UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-    )
-
-    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
-
-    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns null
-
-    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
-
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
   fun `reallocateAssessment returns General Validation Error when application already has a submitted assessment`() {
-    val requestUser = UserEntityFactory()
+    val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
           .produce()
       }
       .produce()
-      .apply {
-        roles += UserRoleAssignmentEntityFactory()
-          .withRole(UserRole.WORKFLOW_MANAGER)
-          .withUser(this)
-          .produce()
-      }
-
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-
-    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
-      UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-    )
-
-    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(
@@ -1505,8 +1408,6 @@ class AssessmentServiceTest {
           .produce()
       )
       .produce()
-
-    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
@@ -1522,9 +1423,9 @@ class AssessmentServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
 
-    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+    val result = assessmentService.reallocateAssessment(assigneeUser, application)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1536,33 +1437,13 @@ class AssessmentServiceTest {
 
   @Test
   fun `reallocateAssessment returns Field Validation Error when user to assign to is not an ASSESSOR`() {
-    val requestUser = UserEntityFactory()
+    val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
           .produce()
       }
       .produce()
-      .apply {
-        roles += UserRoleAssignmentEntityFactory()
-          .withRole(UserRole.WORKFLOW_MANAGER)
-          .withUser(this)
-          .produce()
-      }
-
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-
-    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
-      UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-    )
-
-    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(
@@ -1575,8 +1456,6 @@ class AssessmentServiceTest {
           .produce()
       )
       .produce()
-
-    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
@@ -1591,9 +1470,9 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
 
-    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+    val result = assessmentService.reallocateAssessment(assigneeUser, application)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1605,22 +1484,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `reallocateAssessment returns Field Validation Error when user to assign to does not have relevant qualifications`() {
-    val requestUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-      .apply {
-        roles += UserRoleAssignmentEntityFactory()
-          .withRole(UserRole.WORKFLOW_MANAGER)
-          .withUser(this)
-          .produce()
-      }
-
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1635,12 +1498,6 @@ class AssessmentServiceTest {
           .produce()
       }
 
-    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
-      assigneeUser
-    )
-
-    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
-
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(
         UserEntityFactory()
@@ -1653,8 +1510,6 @@ class AssessmentServiceTest {
       )
       .withIsPipeApplication(true)
       .produce()
-
-    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
@@ -1669,9 +1524,9 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
 
-    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+    val result = assessmentService.reallocateAssessment(assigneeUser, application)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1683,22 +1538,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one`() {
-    val requestUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-      .apply {
-        roles += UserRoleAssignmentEntityFactory()
-          .withRole(UserRole.WORKFLOW_MANAGER)
-          .withUser(this)
-          .produce()
-      }
-
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1718,12 +1557,6 @@ class AssessmentServiceTest {
           .produce()
       }
 
-    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.Success(
-      assigneeUser
-    )
-
-    val applicationId = UUID.fromString("95c7175f-451a-47e0-af16-6bf9175b5581")
-
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(
         UserEntityFactory()
@@ -1736,8 +1569,6 @@ class AssessmentServiceTest {
       )
       .withIsPipeApplication(true)
       .produce()
-
-    every { applicationRepositoryMock.findByIdOrNull(applicationId) } returns application
 
     val previousAssessment = AssessmentEntityFactory()
       .withApplication(application)
@@ -1752,7 +1583,7 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(applicationId) } returns previousAssessment
+    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
@@ -1763,7 +1594,7 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.save(previousAssessment) } answers { it.invocation.args[0] as AssessmentEntity }
     every { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as AssessmentEntity }
 
-    val result = assessmentService.reallocateAssessment(requestUser, assigneeUserId, applicationId)
+    val result = assessmentService.reallocateAssessment(assigneeUser, application)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity

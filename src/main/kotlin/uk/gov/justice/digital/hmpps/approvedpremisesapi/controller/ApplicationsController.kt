@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -64,6 +65,7 @@ class ApplicationsController(
   private val taskTransformer: TaskTransformer,
   private val enumConverterFactory: EnumConverterFactory,
   private val placementRequestService: PlacementRequestService,
+  private val taskService: TaskService
 ) : ApplicationsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -194,42 +196,6 @@ class ApplicationsController(
     return ResponseEntity(documentTransformer.transformToApi(documents, application.convictionId), HttpStatus.OK)
   }
 
-  @Transactional
-  override fun applicationsApplicationIdAllocationsPost(applicationId: UUID, body: NewReallocation): ResponseEntity<Reallocation> {
-    val user = userService.getUserForRequest()
-
-    val allocatedToUser = when (body.taskType) {
-      TaskType.assessment -> {
-        val authorisationResult = assessmentService.reallocateAssessment(user, body.userId, applicationId)
-
-        val validationResult = when (authorisationResult) {
-          is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-          is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-          is AuthorisableActionResult.Success -> authorisationResult.entity
-        }
-
-        val assessment = when (validationResult) {
-          is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-          is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-          is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-          is ValidatableActionResult.Success -> validationResult.entity
-        }
-
-        assessment.allocatedToUser
-      }
-      else -> {
-        throw NotAllowedProblem(detail = "The Task Type ${body.taskType} is not currently supported")
-      }
-    }
-
-    val reallocation = Reallocation(
-      taskType = body.taskType,
-      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises)
-    )
-
-    return ResponseEntity(reallocation, HttpStatus.CREATED)
-  }
-
   override fun applicationsApplicationIdAssessmentGet(applicationId: UUID): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
 
@@ -289,6 +255,30 @@ class ApplicationsController(
     }
 
     return ResponseEntity.ok(task)
+  }
+
+  @Transactional
+  override fun applicationsApplicationIdTasksTaskTypeAllocationsPost(applicationId: UUID, taskName: String, body: NewReallocation): ResponseEntity<Reallocation> {
+    val user = userService.getUserForRequest()
+
+    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+      taskName.kebabCaseToPascalCase()
+    ) ?: throw NotFoundProblem(taskName, "TaskType")
+
+    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, taskType, body.userId, applicationId)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> authorisationResult.entity
+    }
+
+    val reallocatedTask = when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    return ResponseEntity(reallocatedTask, HttpStatus.CREATED)
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {
