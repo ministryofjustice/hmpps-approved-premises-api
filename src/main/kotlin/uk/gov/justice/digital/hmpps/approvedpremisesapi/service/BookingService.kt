@@ -508,7 +508,7 @@ class BookingService(
     reasonId: UUID,
     notes: String?
   ) = validated<CancellationEntity> {
-    if (booking.cancellation != null) {
+    if (booking.premises is ApprovedPremisesEntity && booking.cancellation != null) {
       return generalError("This Booking already has a Cancellation set")
     }
 
@@ -570,7 +570,7 @@ class BookingService(
   ) = validated<DepartureEntity> {
     val occurredAt = OffsetDateTime.now()
 
-    if (booking.departure != null) {
+    if (booking.premises is ApprovedPremisesEntity && booking.departure != null) {
       return generalError("This Booking already has a Departure set")
     }
 
