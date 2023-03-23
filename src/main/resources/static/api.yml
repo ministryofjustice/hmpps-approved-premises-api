@@ -4497,12 +4497,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CharacteristicPair'
+        bedCount:
+          type: integer
+          description: the total number of Beds in the Premises
       required:
         - id
         - name
         - addressLine1
         - postcode
         - characteristics
+        - bedCount
     BedSearchResultRoomSummary:
       type: object
       properties:
