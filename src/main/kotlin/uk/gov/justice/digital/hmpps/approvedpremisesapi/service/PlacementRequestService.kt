@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -38,6 +39,44 @@ class PlacementRequestService(
     }
 
     return AuthorisableActionResult.Success(placementRequest)
+  }
+
+  fun reallocatePlacementRequest(assigneeUser: UserEntity, application: ApprovedPremisesApplicationEntity): AuthorisableActionResult<ValidatableActionResult<PlacementRequestEntity>> {
+    val currentPlacementRequest = placementRequestRepository.findByApplication_IdAndReallocatedAtNull(application.id)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (currentPlacementRequest.booking != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This placement request has already been completed")
+      )
+    }
+
+    if (!assigneeUser.hasRole(UserRole.MATCHER)) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" })
+      )
+    }
+
+    currentPlacementRequest.reallocatedAt = OffsetDateTime.now()
+    placementRequestRepository.save(currentPlacementRequest)
+
+    // Make the timestamp precision less precise, so we don't have any issues with microsecond resolution in tests
+    val dateTimeNow = OffsetDateTime.now().withNano(0)
+
+    val newPlacementRequest = placementRequestRepository.save(
+      currentPlacementRequest.copy(
+        id = UUID.randomUUID(),
+        reallocatedAt = null,
+        allocatedToUser = assigneeUser,
+        createdAt = dateTimeNow
+      )
+    )
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        newPlacementRequest
+      )
+    )
   }
 
   fun createPlacementRequest(assessment: AssessmentEntity, requirements: NewPlacementRequest): ValidatableActionResult<PlacementRequestEntity> =
