@@ -387,26 +387,8 @@ class AssessmentService(
     )
   }
 
-  fun reallocateAssessment(requestUser: UserEntity, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    if (! requestUser.hasRole(UserRole.WORKFLOW_MANAGER)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    val assigneeUserResult = userService.updateUserFromCommunityApiById(userToAllocateToId)
-
-    val assigneeUser = when (assigneeUserResult) {
-      is AuthorisableActionResult.Success -> assigneeUserResult.entity
-      else -> return AuthorisableActionResult.NotFound()
-    }
-
-    val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw RuntimeException("Only CAS1 Applications are currently supported")
-    }
-
-    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationId) ?: return AuthorisableActionResult.NotFound()
+  fun reallocateAssessment(assigneeUser: UserEntity, application: ApprovedPremisesApplicationEntity): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id) ?: return AuthorisableActionResult.NotFound()
 
     if (currentAssessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
@@ -416,13 +398,13 @@ class AssessmentService(
 
     val requiredQualifications = getRequiredQualificationsForApprovedPremisesApplication(application)
 
-    if (! assigneeUser.hasRole(UserRole.ASSESSOR)) {
+    if (!assigneeUser.hasRole(UserRole.ASSESSOR)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" })
       )
     }
 
-    if (! assigneeUser.hasAllQualifications(requiredQualifications)) {
+    if (!assigneeUser.hasAllQualifications(requiredQualifications)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingQualifications" })
       )

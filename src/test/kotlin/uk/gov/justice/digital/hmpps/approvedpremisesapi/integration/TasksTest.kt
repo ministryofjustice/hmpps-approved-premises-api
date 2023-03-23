@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -264,52 +265,64 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Reallocating a placement request returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/tasks/placement-request/allocations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID()
-          )
-        )
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+      `Given a User` { userToReallocate, _ ->
+        `Given an Application`(createdByUser = user) { application ->
+          webTestClient.post()
+            .uri("/applications/${application.id}/tasks/placement-request/allocations")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewReallocation(
+                userId = userToReallocate.id
+              )
+            )
+            .exchange()
+            .expectStatus()
+            .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+        }
+      }
     }
   }
 
   @Test
   fun `Reallocating a placement request review returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/tasks/placement-request-review/allocations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID()
-          )
-        )
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+      `Given a User` { userToReallocate, _ ->
+        `Given an Application`(createdByUser = user) { application ->
+          webTestClient.post()
+            .uri("/applications/${application.id}/tasks/placement-request-review/allocations")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewReallocation(
+                userId = userToReallocate.id
+              )
+            )
+            .exchange()
+            .expectStatus()
+            .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+        }
+      }
     }
   }
 
   @Test
   fun `Reallocating a booking appeal returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/tasks/booking-appeal/allocations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID()
-          )
-        )
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+      `Given a User` { userToReallocate, _ ->
+        `Given an Application`(createdByUser = user) { application ->
+          webTestClient.post()
+            .uri("/applications/${application.id}/tasks/booking-appeal/allocations")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewReallocation(
+                userId = userToReallocate.id
+              )
+            )
+            .exchange()
+            .expectStatus()
+            .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+        }
+      }
     }
   }
 }
