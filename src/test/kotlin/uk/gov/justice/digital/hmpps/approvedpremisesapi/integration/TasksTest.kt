@@ -2,10 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
-import java.time.OffsetDateTime
 
 class TasksTest : IntegrationTestBase() {
   @Autowired
@@ -24,52 +27,149 @@ class TasksTest : IntegrationTestBase() {
   fun `Get all tasks returns 200 with correct body`() {
     `Given a User` { user, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
+        `Given an Assessment`(
+          allocatedToUser = user,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn
+        ) { assessment, _ ->
+          `Given an Assessment`(
+            allocatedToUser = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn,
+            reallocated = true
+          ) { _, _ ->
+            `Given a Placement Request`(
+              allocatedToUser = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              webTestClient.get()
+                .uri("/tasks")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(
+                      taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
+                      taskTransformer.transformPlacementRequestToTask(
+                        placementRequest,
+                        offenderDetails,
+                        inmateDetails
+                      )
+                    )
+                  )
+                )
+            }
+          }
         }
+      }
+    }
+  }
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
+  @Test
+  fun `Get a Task for an application without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/applications/f601ff2d-b1e0-4878-8731-ccfa19a2ce84/tasks/assessment")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get an unknown task type for an application returns 404`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment`(
+          allocatedToUser = user,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn
+        ) { _, application ->
+          webTestClient.get()
+            .uri("/applications/${application.id}/tasks/unknown-task")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isNotFound
         }
+      }
+    }
+  }
 
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
-        }
-
-        val assessment = assessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-        }
-
-        assessment.schemaUpToDate = true
-
-        val reallocatedAssessment = assessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-          withReallocatedAt(OffsetDateTime.now())
-        }
-
-        reallocatedAssessment.schemaUpToDate = true
-
-        webTestClient.get()
-          .uri("/tasks")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(
-                taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails)
+  @Test
+  fun `Get an assessment task for an application returns 200 with correct body`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User` { user, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Assessment`(
+            allocatedToUser = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn
+          ) { assessment, application ->
+            webTestClient.get()
+              .uri("/applications/${application.id}/tasks/assessment")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails)
+                )
               )
-            )
-          )
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get a Placement Request Task for an application returns 200`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User` { user, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given a Placement Request`(
+            allocatedToUser = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn
+          ) { placementRequest, application ->
+            webTestClient.get()
+              .uri("/applications/${application.id}/tasks/placement-request")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  taskTransformer.transformPlacementRequestToTask(placementRequest, offenderDetails, inmateDetails)
+                )
+              )
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get an non-implemented task type for an application returns 405`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment`(
+          allocatedToUser = user,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn
+        ) { _, application ->
+          webTestClient.get()
+            .uri("/applications/${application.id}/tasks/booking-appeal")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+        }
       }
     }
   }

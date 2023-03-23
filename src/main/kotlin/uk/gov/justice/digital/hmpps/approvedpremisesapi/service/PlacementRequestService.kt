@@ -10,7 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -25,6 +27,17 @@ class PlacementRequestService(
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
     return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+  }
+
+  fun getPlacementRequestForUserAndApplication(user: UserEntity, applicationID: UUID): AuthorisableActionResult<PlacementRequestEntity> {
+    val placementRequest = placementRequestRepository.findByApplication_IdAndReallocatedAtNull(applicationID)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (!user.hasRole(UserRole.WORKFLOW_MANAGER) && placementRequest.allocatedToUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    return AuthorisableActionResult.Success(placementRequest)
   }
 
   fun createPlacementRequest(assessment: AssessmentEntity, requirements: NewPlacementRequest): ValidatableActionResult<PlacementRequestEntity> =
