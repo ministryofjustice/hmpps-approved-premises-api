@@ -5,14 +5,17 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -20,20 +23,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
 
 class TaskServiceTest {
   private val assessmentServiceMock = mockk<AssessmentService>()
   private val applicationRepositoryMock = mockk<ApplicationRepository>()
   private val userServiceMock = mockk<UserService>()
+  private val placementRequestServiceMock = mockk<PlacementRequestService>()
+  private val userTransformerMock = mockk<UserTransformer>()
 
   private val taskService = TaskService(
     assessmentServiceMock,
     applicationRepositoryMock,
-    userServiceMock
+    userServiceMock,
+    placementRequestServiceMock,
+    userTransformerMock
   )
 
   private val requestUserWithPermission = UserEntityFactory()
@@ -96,21 +104,22 @@ class TaskServiceTest {
 
     val assessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce()
-      )
+      .withAllocatedToUser(assigneeUser)
       .produce()
 
     every { assessmentServiceMock.reallocateAssessment(assigneeUser, application) } returns AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
         assessment
       )
+    )
+
+    val transformedUser = mockk<User>()
+
+    every { userTransformerMock.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) } returns transformedUser
+
+    val reallocation = Reallocation(
+      taskType = TaskType.assessment,
+      user = transformedUser
     )
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, application.id)
@@ -121,7 +130,43 @@ class TaskServiceTest {
     Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
     validationResult as ValidatableActionResult.Success
 
-    Assertions.assertThat(validationResult.entity).isEqualTo(assessment)
+    Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
+  }
+
+  @Test
+  fun `reallocateTask reallocates a placementRequest`() {
+    val assigneeUser = generateAndStubAssigneeUser()
+    val application = generateAndStubApplication()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    every { placementRequestServiceMock.reallocatePlacementRequest(assigneeUser, application) } returns AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        placementRequest
+      )
+    )
+
+    val transformedUser = mockk<User>()
+
+    every { userTransformerMock.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) } returns transformedUser
+
+    val reallocation = Reallocation(
+      taskType = TaskType.placementRequest,
+      user = transformedUser
+    )
+
+    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementRequest, assigneeUser.id, application.id)
+
+    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    validationResult as ValidatableActionResult.Success
+
+    Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
   }
 
   private fun generateAndStubAssigneeUser(): UserEntity {

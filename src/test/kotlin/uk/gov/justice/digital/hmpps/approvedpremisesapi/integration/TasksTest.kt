@@ -264,21 +264,44 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Reallocating a placement request returns a NotAllowedProblem`() {
+  fun `Reallocating a placement request to different assessor returns 201, creates new placement request, deallocates old one`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
-      `Given a User` { userToReallocate, _ ->
-        `Given an Application`(createdByUser = user) { application ->
-          webTestClient.post()
-            .uri("/applications/${application.id}/tasks/placement-request/allocations")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              NewReallocation(
-                userId = userToReallocate.id
+      `Given a User`(
+        roles = listOf(UserRole.MATCHER)
+      ) { assigneeUser, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a Placement Request`(
+            createdByUser = user,
+            allocatedToUser = user,
+            crn = offenderDetails.otherIds.crn
+          ) { existingPlacementRequest, application ->
+            webTestClient.post()
+              .uri("/applications/${application.id}/tasks/placement-request/allocations")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                NewReallocation(
+                  userId = assigneeUser.id
+                )
               )
-            )
-            .exchange()
-            .expectStatus()
-            .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+              .exchange()
+              .expectStatus()
+              .isCreated
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  Reallocation(
+                    user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises),
+                    taskType = TaskType.placementRequest
+                  )
+                )
+              )
+
+            val placementRequests = placementRequestRepository.findAll()
+
+            Assertions.assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
+            Assertions.assertThat(placementRequests)
+              .anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
+          }
         }
       }
     }

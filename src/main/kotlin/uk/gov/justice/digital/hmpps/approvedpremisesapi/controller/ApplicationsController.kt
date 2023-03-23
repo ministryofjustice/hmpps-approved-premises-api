@@ -278,14 +278,8 @@ class ApplicationsController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    val reallocation = Reallocation(
-      taskType = taskType,
-      user = userTransformer.transformJpaToApi(reallocatedTask.allocatedToUser, ServiceName.approvedPremises)
-    )
-
-    return ResponseEntity(reallocation, HttpStatus.CREATED)
+    return ResponseEntity(reallocatedTask, HttpStatus.CREATED)
   }
-
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
