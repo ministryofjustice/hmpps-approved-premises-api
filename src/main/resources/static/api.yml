@@ -2565,6 +2565,11 @@ components:
           $ref: '#/components/schemas/TaskType'
       required: 
         - applicationId
+        - person
+        - dueDate
+        - allocatedToStaffMember
+        - status
+        - taskType
     TaskType:
       type: string
       enum:
