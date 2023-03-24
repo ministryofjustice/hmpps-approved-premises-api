@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
@@ -81,7 +82,7 @@ class TaskService(
 
     return Reallocation(
       taskType = taskType,
-      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises)
+      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser
     )
   }
 }

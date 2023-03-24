@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -245,7 +246,7 @@ class TasksTest : IntegrationTestBase() {
                 .json(
                   objectMapper.writeValueAsString(
                     Reallocation(
-                      user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises),
+                      user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
                       taskType = TaskType.assessment
                     )
                   )
@@ -290,7 +291,7 @@ class TasksTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   Reallocation(
-                    user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises),
+                    user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
                     taskType = TaskType.placementRequest
                   )
                 )

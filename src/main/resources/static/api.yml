@@ -3857,11 +3857,11 @@ components:
       type: object
       properties:
         user:
-          $ref: '#/components/schemas/User'
+          $ref: '#/components/schemas/ApprovedPremisesUser'
         taskType:
           $ref: '#/components/schemas/TaskType'
       required:
-        - userId
+        - user
         - taskType
     User:
       type: object
