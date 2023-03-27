@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 class BedTransformer {
   fun transformJpaToApi(jpa: BedEntity) = Bed(
     id = jpa.id,
-    name = jpa.name
+    name = jpa.name,
+    code = jpa.code,
   )
 }

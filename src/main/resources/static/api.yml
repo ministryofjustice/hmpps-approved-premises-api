@@ -1586,11 +1586,43 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /applications/{applicationId}/allocations:
+  /applications/{applicationId}/tasks/{taskType}:
+    get:
+      tags:
+        - Application data
+      summary: Gets a task for an application
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          description: ID of the application
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
+      responses:
+        200:
+          description: successfully retrieved task
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Task'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/tasks/{taskType}/allocations:
     post:
       tags:
         - Operations on applications
-      summary: Reallocates an application
+      summary: Reallocates a task for an application
       parameters:
         - name: applicationId
           in: path
@@ -1599,6 +1631,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
       requestBody:
         content:
           'application/json':
@@ -1666,9 +1704,7 @@ paths:
           content:
             'application/json':
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BedSearchResult'
+                $ref: '#/components/schemas/BedSearchResults'
         400:
           description: invalid params
           content:
@@ -1970,6 +2006,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Task'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-requests:
+    get:
+      tags:
+        - Placement requests
+      summary: Gets placement requests for a given user
+      responses:
+        200:
+          description: successfully retrieved placement requests
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlacementRequest'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -2509,6 +2565,11 @@ components:
           $ref: '#/components/schemas/TaskType'
       required: 
         - applicationId
+        - person
+        - dueDate
+        - allocatedToStaffMember
+        - status
+        - taskType
     TaskType:
       type: string
       enum:
@@ -2645,31 +2706,17 @@ components:
           type: string
           format: date
           example: 2022-09-30
+        bedId:
+          type: string
+          format: uuid
         serviceName:
           $ref: '#/components/schemas/ServiceName'
       required:
         - crn
         - arrivalDate
         - departureDate
+        - bedId
         - serviceName
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          approved-premises: '#/components/schemas/NewApprovedPremisesBooking'
-          temporary-accommodation: '#/components/schemas/NewTemporaryAccommodationBooking'
-    NewApprovedPremisesBooking:
-      allOf:
-        - $ref: '#/components/schemas/NewBooking'
-    NewTemporaryAccommodationBooking:
-      allOf:
-        - $ref: '#/components/schemas/NewBooking'
-        - type: object
-          properties:
-            bedId:
-              type: string
-              format: uuid
-          required:
-            - bedId
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -2694,17 +2741,29 @@ components:
               allOf:
                 - $ref: '#/components/schemas/Arrival'
             departure:
+              description: The latest version of the departure, if it exists
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Departure'
+            departures:
+              description: The full history of the departure
+              type: array
+              items:
+                $ref: '#/components/schemas/Departure'
             nonArrival:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Nonarrival'
             cancellation:
+              description: The latest version of the cancellation, if it exists
               nullable: true
               allOf:
               - $ref: '#/components/schemas/Cancellation'
+            cancellations:
+              description: The full history of the cancellation
+              type: array
+              items:
+                $ref: '#/components/schemas/Cancellation'
             confirmation:
               nullable: true
               allOf:
@@ -2712,6 +2771,8 @@ components:
           required:
             - status
             - extensions
+            - departures
+            - cancellations
     Person:
       type: object
       properties:
@@ -3022,6 +3083,9 @@ components:
         endDate:
           type: string
           format: date
+        bedId:
+          type: string
+          format: uuid
         reason:
           $ref: '#/components/schemas/LostBedReason'
         referenceNumber:
@@ -3038,32 +3102,9 @@ components:
         - id
         - startDate
         - endDate
+        - bedId
         - reason
         - status
-      discriminator:
-        propertyName: service
-        mapping:
-          approved-premises: '#/components/schemas/ApprovedPremisesLostBed'
-          temporary-accommodation: '#/components/schemas/TemporaryAccommodationLostBed'
-    ApprovedPremisesLostBed:
-      allOf:
-        - $ref: "#/components/schemas/LostBed"
-        - type: object
-          properties:
-            numberOfBeds:
-              type: integer
-          required:
-            - numberOfBeds
-    TemporaryAccommodationLostBed:
-      allOf:
-        - $ref: "#/components/schemas/LostBed"
-        - type: object
-          properties:
-            bedId:
-              type: string
-              format: uuid
-          required:
-            - bedId
     NewLostBed:
       type: object
       properties:
@@ -3080,37 +3121,14 @@ components:
           type: string
         notes:
           type: string
-        serviceName:
-          $ref: '#/components/schemas/ServiceName'
+        bedId:
+          type: string
+          format: uuid
       required:
         - startDate
         - endDate
         - reason
-        - serviceName
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          approved-premises: '#/components/schemas/NewApprovedPremisesLostBed'
-          temporary-accommodation: '#/components/schemas/NewTemporaryAccommodationLostBed'
-    NewApprovedPremisesLostBed:
-      allOf:
-        - $ref: '#/components/schemas/NewLostBed'
-        - type: object
-          properties:
-            numberOfBeds:
-              type: integer
-          required:
-            - numberOfBeds
-    NewTemporaryAccommodationLostBed:
-      allOf:
-        - $ref: '#/components/schemas/NewLostBed'
-        - type: object
-          properties:
-            bedId:
-              type: string
-              format: uuid
-          required:
-            - bedId
+        - bedId
     UpdateLostBed:
       type: object
       properties:
@@ -3127,32 +3145,10 @@ components:
           type: string
         notes:
           type: string
-        serviceName:
-          $ref: '#/components/schemas/ServiceName'
       required:
         - startDate
         - endDate
         - reason
-        - serviceName
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          approved-premises: '#/components/schemas/UpdateApprovedPremisesLostBed'
-          temporary-accommodation: '#/components/schemas/UpdateTemporaryAccommodationLostBed'
-    UpdateApprovedPremisesLostBed:
-      allOf:
-        - $ref: '#/components/schemas/UpdateLostBed'
-        - type: object
-          properties:
-            numberOfBeds:
-              type: integer
-          required:
-            - numberOfBeds
-    UpdateTemporaryAccommodationLostBed:
-      allOf:
-        - $ref: '#/components/schemas/UpdateLostBed'
-        - type: object
-          properties: {}
     LostBedCancellation:
       type: object
       properties:
@@ -3811,7 +3807,7 @@ components:
         document:
           $ref: '#/components/schemas/AnyValue'
         requirements:
-          $ref: '#/components/schemas/PlacementRequest'
+          $ref: '#/components/schemas/NewPlacementRequest'
       required:
         - document
         - requirements
@@ -3874,20 +3870,17 @@ components:
         userId:
           type: string
           format: uuid
-        taskType:
-          $ref: '#/components/schemas/TaskType'
       required:
         - userId
-        - taskType
     Reallocation:
       type: object
       properties:
         user:
-          $ref: '#/components/schemas/User'
+          $ref: '#/components/schemas/ApprovedPremisesUser'
         taskType:
           $ref: '#/components/schemas/TaskType'
       required:
-        - userId
+        - user
         - taskType
     User:
       type: object
@@ -3997,6 +3990,9 @@ components:
           format: uuid
         name:
           type: string
+        code:
+          type: string
+          example: NEABC-4
         notes:
           type: string
         beds:
@@ -4019,6 +4015,9 @@ components:
           format: uuid
         name:
           type: string
+        code:
+          type: string
+          example: NEABC04
       required:
         - id
         - name
@@ -4205,7 +4204,6 @@ components:
       type: object
       properties:
         assessmentId:
-          type: object
           $ref: '#/components/schemas/OASysAssessmentId'
         assessmentState:
           $ref: '#/components/schemas/OASysAssessmentState'
@@ -4325,6 +4323,7 @@ components:
       type: string
       enum:
         - approved_premises
+        - approved_premises_rooms
         - temporary_accommodation_premises
         - temporary_accommodation_bedspace
         - user
@@ -4340,7 +4339,7 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
-    PlacementRequest:
+    NewPlacementRequest:
       type: object
       properties:
         gender:
@@ -4377,6 +4376,22 @@ components:
         - essentialCriteria
         - desirableCriteria
         - mentalHealthSupport
+    PlacementRequest:
+      allOf:
+        - $ref: '#/components/schemas/NewPlacementRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            person:
+              $ref: '#/components/schemas/Person'
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+      required:
+        - person
+        - risks
+        - id
     PlacementCriteria:
       type: string
       enum:
@@ -4411,20 +4426,20 @@ components:
     BedSearchParameters:
       type: object
       properties:
-        service:
+        serviceName:
           type: string
-        start_date:
+        startDate:
           type: string
           format: date
           description: The date the Bed will need to be free from
-        duration_days:
+        durationDays:
           type: integer
           description: The number of days the Bed will need to be free from the start_date until
       required:
-        - start_date
-        - duration_days
+        - startDate
+        - durationDays
       discriminator:
-        propertyName: service
+        propertyName: serviceName
         mapping:
           approved-premises: '#/components/schemas/ApprovedPremisesBedSearchParameters'
           temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchParameters'
@@ -4433,56 +4448,61 @@ components:
         - $ref: '#/components/schemas/BedSearchParameters'
         - type: object
           properties:
-            postcode_district:
+            postcodeDistrict:
               type: string
               description: The postcode district to search outwards from
-            max_distance_miles:
+            maxDistanceMiles:
               type: integer
               description: Maximum number of miles from the postcode district to search, only required if more than 50 miles which is the default
-            required_premises_characteristics:
+            requiredPremisesCharacteristics:
               type: array
               items:
                 type: string
-            required_bed_characteristics:
+            requiredRoomCharacteristics:
               type: array
               items:
                 type: string
-      required:
-        - postcode_district
-        - max_distance_miles
-        - required_premises_characteristics
-        - required_bed_characteristics
+          required:
+            - postcodeDistrict
+            - maxDistanceMiles
+            - requiredPremisesCharacteristics
+            - requiredRoomCharacteristics
     TemporaryAccommodationBedSearchParameters:
       allOf:
         - $ref: '#/components/schemas/BedSearchParameters'
         - type: object
           properties:
-            probation_delivery_unit:
+            probationDeliveryUnit:
               type: string
               description: The pdu to search within
-      required:
-        - probation_delivery_unit
+          required:
+            - probationDeliveryUnit
     BedSearchResults:
       type: object
       properties:
-        results_room_count:
+        resultsRoomCount:
           type: integer
           description: How many distinct Rooms the Beds in the results belong to
-        results_premises_count:
+        resultsPremisesCount:
           type: integer
           description: How many distinct Premises the Beds in the results belong to
-        results_bed_count:
+        resultsBedCount:
           type: integer
           description: How many Beds are in the results
         results:
           type: array
           items:
             $ref: '#/components/schemas/BedSearchResult'
+      required:
+        - resultsRoomCount
+        - resultsPremisesCount
+        - resultsBedCount
+        - results
     BedSearchResult:
       type: object
       properties:
-        service:
-          type: string
+        serviceName:
+          $ref: '#/components/schemas/ServiceName'
         premises:
           $ref: '#/components/schemas/BedSearchResultPremisesSummary'
         room:
@@ -4494,7 +4514,7 @@ components:
         - room
         - bed
       discriminator:
-        propertyName: service
+        propertyName: serviceName
         mapping:
           approved-premises: '#/components/schemas/ApprovedPremisesBedSearchResult'
           temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchResult'
@@ -4503,15 +4523,16 @@ components:
         - $ref: '#/components/schemas/BedSearchResult'
         - type: object
           properties:
-            distance_miles:
+            distanceMiles:
               type: number
               description: how many miles away from the postcode district the Premises this Bed belongs to is
-      required:
-        - distance_miles
+          required:
+            - distanceMiles
     TemporaryAccommodationBedSearchResult:
       allOf:
         - $ref: '#/components/schemas/BedSearchResult'
     BedSearchResultPremisesSummary:
+      type: object
       properties:
         id:
           type: string
@@ -4526,34 +4547,38 @@ components:
           type: string
         postcode:
           type: string
-        characteristic_property_names:
+        characteristics:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/CharacteristicPair'
+        bedCount:
+          type: integer
+          description: the total number of Beds in the Premises
       required:
         - id
         - name
         - addressLine1
-        - addressLine2
-        - town
         - postcode
-        - characteristic_property_names
+        - characteristics
+        - bedCount
     BedSearchResultRoomSummary:
+      type: object
       properties:
         id:
           type: string
           format: uuid
         name:
           type: string
-        characteristic_property_names:
+        characteristics:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/CharacteristicPair'
       required:
         - id
         - name
-        - characteristic_property_names
+        - characteristics
     BedSearchResultBedSummary:
+      type: object
       properties:
         id:
           type: string
@@ -4562,4 +4587,13 @@ components:
           type: string
       required:
         - id
+        - name
+    CharacteristicPair:
+      type: object
+      properties:
+        propertyName:
+          type: string
+        name:
+          type: string
+      required:
         - name

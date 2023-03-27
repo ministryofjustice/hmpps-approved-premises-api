@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -53,7 +54,7 @@ class AssessmentController(
         user.deliusUsername,
         offenderService,
         assessmentTransformer::transformJpaToApi
-      ) as List<Assessment>
+      )
     )
   }
 
@@ -106,6 +107,7 @@ class AssessmentController(
     val assessment = when (assessmentValidationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
@@ -149,6 +151,7 @@ class AssessmentController(
     val assessment = when (assessmentValidationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
@@ -176,6 +179,7 @@ class AssessmentController(
     when (assessmentValidationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
       is ValidatableActionResult.Success -> Unit
     }
 
@@ -234,5 +238,6 @@ class AssessmentController(
     is ValidatableActionResult.Success -> result.entity
     is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
     is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+    is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   }
 }

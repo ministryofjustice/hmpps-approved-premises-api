@@ -5,7 +5,6 @@ import io.mockk.every
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -36,12 +35,11 @@ class ReallocationAtomicTest : IntegrationTestBase() {
           every { realAssessmentRepository.save(match { it.id != existingAssessment.id }) } throws RuntimeException("I am a database error")
 
           webTestClient.post()
-            .uri("/applications/${application.id}/allocations")
+            .uri("/applications/${application.id}/tasks/assessment/allocations")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewReallocation(
-                userId = assigneeUser.id,
-                taskType = TaskType.assessment
+                userId = assigneeUser.id
               )
             )
             .exchange()

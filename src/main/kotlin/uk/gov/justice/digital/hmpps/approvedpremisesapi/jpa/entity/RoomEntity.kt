@@ -13,7 +13,9 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
-interface RoomRepository : JpaRepository<RoomEntity, UUID>
+interface RoomRepository : JpaRepository<RoomEntity, UUID> {
+  fun findByCode(roomCode: String): RoomEntity?
+}
 
 @Entity
 @Table(name = "rooms")
@@ -21,7 +23,8 @@ data class RoomEntity(
   @Id
   val id: UUID,
   val name: String,
-  val notes: String?,
+  val code: String?,
+  var notes: String?,
   @ManyToOne
   @JoinColumn(name = "premises_id")
   val premises: PremisesEntity,
@@ -34,4 +37,7 @@ data class RoomEntity(
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
   val characteristics: MutableList<CharacteristicEntity>,
-)
+) {
+
+  override fun toString() = "RoomEntity: $id"
+}

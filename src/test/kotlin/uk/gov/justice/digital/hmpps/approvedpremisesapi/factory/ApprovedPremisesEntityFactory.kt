@@ -2,6 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Point
+import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -31,6 +34,8 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var service: Yielded<String> = { "CAS1" }
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
+  private var point: Yielded<Point> = { Point(Coordinate(1.0, 2.0), PrecisionModel(PrecisionModel.Type("FLOATING")), 4326) }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -121,6 +126,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     )
   }
 
+  fun withPoint(point: Point) = apply {
+    this.point = { point }
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -140,6 +149,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     qCode = this.qCode(),
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
-    status = this.status()
+    status = this.status(),
+    point = this.point()
   )
 }

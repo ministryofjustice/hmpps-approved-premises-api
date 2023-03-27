@@ -242,14 +242,16 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.cancellation = CancellationEntityFactory()
-      .withYieldedReason {
-        CancellationReasonEntityFactory()
-          .withName("House exploded")
-          .produce()
-      }
-      .withBooking(booking)
-      .produce()
+    booking.cancellations = mutableListOf(
+      CancellationEntityFactory()
+        .withYieldedReason {
+          CancellationReasonEntityFactory()
+            .withName("House exploded")
+            .produce()
+        }
+        .withBooking(booking)
+        .produce()
+    )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null))
     assertThat(actual.count()).isEqualTo(1)
@@ -353,22 +355,24 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.departure = DepartureEntityFactory()
-      .withDateTime(now)
-      .withYieldedReason {
-        DepartureReasonEntityFactory()
-          .produce()
-      }
-      .withYieldedMoveOnCategory {
-        MoveOnCategoryEntityFactory()
-          .produce()
-      }
-      .withYieldedDestinationProvider {
-        DestinationProviderEntityFactory()
-          .produce()
-      }
-      .withBooking(booking)
-      .produce()
+    booking.departures = mutableListOf(
+      DepartureEntityFactory()
+        .withDateTime(now)
+        .withYieldedReason {
+          DepartureReasonEntityFactory()
+            .produce()
+        }
+        .withYieldedMoveOnCategory {
+          MoveOnCategoryEntityFactory()
+            .produce()
+        }
+        .withYieldedDestinationProvider {
+          DestinationProviderEntityFactory()
+            .produce()
+        }
+        .withBooking(booking)
+        .produce()
+    )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null))
     assertThat(actual.count()).isEqualTo(1)
@@ -474,22 +478,24 @@ class BookingsReportGeneratorTest {
       .withBooking(booking)
       .produce()
 
-    booking.departure = DepartureEntityFactory()
-      .withDateTime(now)
-      .withYieldedReason {
-        DepartureReasonEntityFactory()
-          .produce()
-      }
-      .withYieldedMoveOnCategory {
-        MoveOnCategoryEntityFactory()
-          .produce()
-      }
-      .withYieldedDestinationProvider {
-        DestinationProviderEntityFactory()
-          .produce()
-      }
-      .withBooking(booking)
-      .produce()
+    booking.departures = mutableListOf(
+      DepartureEntityFactory()
+        .withDateTime(now)
+        .withYieldedReason {
+          DepartureReasonEntityFactory()
+            .produce()
+        }
+        .withYieldedMoveOnCategory {
+          MoveOnCategoryEntityFactory()
+            .produce()
+        }
+        .withYieldedDestinationProvider {
+          DestinationProviderEntityFactory()
+            .produce()
+        }
+        .withBooking(booking)
+        .produce()
+    )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null))
     assertThat(actual.count()).isEqualTo(1)
@@ -523,22 +529,24 @@ class BookingsReportGeneratorTest {
       .withBooking(booking)
       .produce()
 
-    booking.departure = DepartureEntityFactory()
-      .withDateTime(now)
-      .withYieldedReason {
-        DepartureReasonEntityFactory()
-          .produce()
-      }
-      .withYieldedMoveOnCategory {
-        MoveOnCategoryEntityFactory()
-          .produce()
-      }
-      .withYieldedDestinationProvider {
-        DestinationProviderEntityFactory()
-          .produce()
-      }
-      .withBooking(booking)
-      .produce()
+    booking.departures = mutableListOf(
+      DepartureEntityFactory()
+        .withDateTime(now)
+        .withYieldedReason {
+          DepartureReasonEntityFactory()
+            .produce()
+        }
+        .withYieldedMoveOnCategory {
+          MoveOnCategoryEntityFactory()
+            .produce()
+        }
+        .withYieldedDestinationProvider {
+          DestinationProviderEntityFactory()
+            .produce()
+        }
+        .withBooking(booking)
+        .produce()
+    )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null))
     assertThat(actual.count()).isEqualTo(1)
@@ -582,22 +590,24 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.departure = DepartureEntityFactory()
-      .withYieldedReason {
-        DepartureReasonEntityFactory()
-          .produce()
-      }
-      .withYieldedMoveOnCategory {
-        MoveOnCategoryEntityFactory()
-          .withName("Joined the Space Force")
-          .produce()
-      }
-      .withYieldedDestinationProvider {
-        DestinationProviderEntityFactory()
-          .produce()
-      }
-      .withBooking(booking)
-      .produce()
+    booking.departures = mutableListOf(
+      DepartureEntityFactory()
+        .withYieldedReason {
+          DepartureReasonEntityFactory()
+            .produce()
+        }
+        .withYieldedMoveOnCategory {
+          MoveOnCategoryEntityFactory()
+            .withName("Joined the Space Force")
+            .produce()
+        }
+        .withYieldedDestinationProvider {
+          DestinationProviderEntityFactory()
+            .produce()
+        }
+        .withBooking(booking)
+        .produce()
+    )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.temporaryAccommodation, null))
     assertThat(actual.count()).isEqualTo(1)

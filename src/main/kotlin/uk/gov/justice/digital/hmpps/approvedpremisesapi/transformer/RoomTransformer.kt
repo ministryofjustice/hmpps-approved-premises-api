@@ -12,6 +12,7 @@ class RoomTransformer(
   fun transformJpaToApi(jpa: RoomEntity) = Room(
     id = jpa.id,
     name = jpa.name,
+    code = jpa.code,
     notes = jpa.notes ?: "",
     beds = jpa.beds.map(bedTransformer::transformJpaToApi),
     characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),

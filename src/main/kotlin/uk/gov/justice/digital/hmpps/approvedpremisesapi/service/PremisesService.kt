@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesLostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
@@ -16,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationLostBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -84,7 +82,7 @@ class PremisesService(
         arrivedBookings = bookingsOnDay.count { it.arrival != null },
         nonArrivedBookings = bookingsOnDay.count { it.nonArrival != null },
         cancelledBookings = bookingsOnDay.count { it.cancellation != null },
-        lostBeds = lostBedsOnDay.sumOf { if (it is ApprovedPremisesLostBedsEntity) it.numberOfBeds else 1 }
+        lostBeds = lostBedsOnDay.size
       )
     }.associateBy { it.date }
   }
@@ -96,27 +94,16 @@ class PremisesService(
     reasonId: UUID,
     referenceNumber: String?,
     notes: String?,
-    service: ServiceName,
-    numberOfBeds: Int?,
-    bedId: UUID?,
+    bedId: UUID,
   ): ValidatableActionResult<LostBedsEntity> =
     validated {
       if (endDate.isBefore(startDate)) {
         "$.endDate" hasValidationError "beforeStartDate"
       }
 
-      if (service == ServiceName.approvedPremises && numberOfBeds!! <= 0) {
-        "$.numberOfBeds" hasValidationError "isZero"
-      }
-
-      val bed = if (service == ServiceName.temporaryAccommodation) {
-        val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
-        if (bed == null) {
-          "$.bedId" hasValidationError "doesNotExist"
-        }
-        bed
-      } else {
-        null
+      val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
+      if (bed == null) {
+        "$.bedId" hasValidationError "doesNotExist"
       }
 
       val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
@@ -130,34 +117,19 @@ class PremisesService(
         return fieldValidationError
       }
 
-      val lostBedsEntity = when (service) {
-        ServiceName.approvedPremises -> lostBedsRepository.save(
-          ApprovedPremisesLostBedsEntity(
-            id = UUID.randomUUID(),
-            premises = premises,
-            startDate = startDate,
-            endDate = endDate,
-            numberOfBeds = numberOfBeds!!,
-            reason = reason!!,
-            referenceNumber = referenceNumber,
-            notes = notes,
-            lostBedCancellation = null,
-          )
+      val lostBedsEntity = lostBedsRepository.save(
+        LostBedsEntity(
+          id = UUID.randomUUID(),
+          premises = premises,
+          startDate = startDate,
+          endDate = endDate,
+          bed = bed!!,
+          reason = reason!!,
+          referenceNumber = referenceNumber,
+          notes = notes,
+          cancellation = null
         )
-        ServiceName.temporaryAccommodation -> lostBedsRepository.save(
-          TemporaryAccommodationLostBedEntity(
-            id = UUID.randomUUID(),
-            premises = premises,
-            startDate = startDate,
-            endDate = endDate,
-            bed = bed!!,
-            reason = reason!!,
-            referenceNumber = referenceNumber,
-            notes = notes,
-            lostBedCancellation = null,
-          )
-        )
-      }
+      )
 
       return success(lostBedsEntity)
     }
@@ -168,27 +140,15 @@ class PremisesService(
     endDate: LocalDate,
     reasonId: UUID,
     referenceNumber: String?,
-    notes: String?,
-    service: ServiceName,
-    numberOfBeds: Int?,
+    notes: String?
   ): AuthorisableActionResult<ValidatableActionResult<LostBedsEntity>> {
     val lostBed = lostBedsRepository.findByIdOrNull(lostBedId)
       ?: return AuthorisableActionResult.NotFound()
 
     return AuthorisableActionResult.Success(
       validated {
-        if ((lostBed is ApprovedPremisesLostBedsEntity && service != ServiceName.approvedPremises) ||
-          (lostBed is TemporaryAccommodationLostBedEntity && service != ServiceName.temporaryAccommodation)
-        ) {
-          "$.serviceName" hasValidationError "incorrectLostBedServiceScope"
-        }
-
         if (endDate.isBefore(startDate)) {
           "$.endDate" hasValidationError "beforeStartDate"
-        }
-
-        if (service == ServiceName.approvedPremises && numberOfBeds!! <= 0) {
-          "$.numberOfBeds" hasValidationError "isZero"
         }
 
         val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
@@ -202,34 +162,15 @@ class PremisesService(
           return@validated fieldValidationError
         }
 
-        val updatedLostBedsEntity = when (service) {
-          ServiceName.approvedPremises -> lostBedsRepository.save(
-            ApprovedPremisesLostBedsEntity(
-              id = lostBedId,
-              premises = lostBed.premises,
-              startDate = startDate,
-              endDate = endDate,
-              numberOfBeds = numberOfBeds!!,
-              reason = reason!!,
-              referenceNumber = referenceNumber,
-              notes = notes,
-              lostBedCancellation = null,
-            )
-          )
-          ServiceName.temporaryAccommodation -> lostBedsRepository.save(
-            TemporaryAccommodationLostBedEntity(
-              id = lostBedId,
-              premises = lostBed.premises,
-              startDate = startDate,
-              endDate = endDate,
-              bed = (lostBed as TemporaryAccommodationLostBedEntity).bed,
-              reason = reason!!,
-              referenceNumber = referenceNumber,
-              notes = notes,
-              lostBedCancellation = null,
-            )
-          )
-        }
+        val updatedLostBedsEntity = lostBedsRepository.save(
+          lostBed.apply {
+            this.startDate = startDate
+            this.endDate = endDate
+            this.reason = reason!!
+            this.referenceNumber = referenceNumber
+            this.notes = notes
+          }
+        )
 
         success(updatedLostBedsEntity)
       }

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -13,14 +14,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
@@ -31,11 +35,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformAssessment
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -52,7 +62,13 @@ class ApplicationsController(
   private val assessmentService: AssessmentService,
   private val userService: UserService,
   private val userTransformer: UserTransformer,
+  private val taskTransformer: TaskTransformer,
+  private val enumConverterFactory: EnumConverterFactory,
+  private val placementRequestService: PlacementRequestService,
+  private val taskService: TaskService
 ) : ApplicationsApiDelegate {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
 
@@ -98,6 +114,7 @@ class ApplicationsController(
     val application = when (val applicationResult = applicationService.createApplication(body.crn, user, deliusPrincipal.token.tokenValue, serviceName, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
       is ValidatableActionResult.Success -> applicationResult.entity
     }
 
@@ -124,6 +141,7 @@ class ApplicationsController(
     val updatedApplication = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -148,6 +166,7 @@ class ApplicationsController(
     when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
       is ValidatableActionResult.Success -> Unit
     }
 
@@ -177,41 +196,6 @@ class ApplicationsController(
     return ResponseEntity(documentTransformer.transformToApi(documents, application.convictionId), HttpStatus.OK)
   }
 
-  @Transactional
-  override fun applicationsApplicationIdAllocationsPost(applicationId: UUID, body: NewReallocation): ResponseEntity<Reallocation> {
-    val user = userService.getUserForRequest()
-
-    val allocatedToUser = when (body.taskType) {
-      TaskType.assessment -> {
-        val authorisationResult = assessmentService.reallocateAssessment(user, body.userId, applicationId)
-
-        val validationResult = when (authorisationResult) {
-          is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-          is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-          is AuthorisableActionResult.Success -> authorisationResult.entity
-        }
-
-        val assessment = when (validationResult) {
-          is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-          is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-          is ValidatableActionResult.Success -> validationResult.entity
-        }
-
-        assessment.allocatedToUser
-      }
-      else -> {
-        throw NotAllowedProblem(detail = "The Task Type ${body.taskType} is not currently supported")
-      }
-    }
-
-    val reallocation = Reallocation(
-      taskType = body.taskType,
-      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises)
-    )
-
-    return ResponseEntity(reallocation, HttpStatus.CREATED)
-  }
-
   override fun applicationsApplicationIdAssessmentGet(applicationId: UUID): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
 
@@ -223,6 +207,78 @@ class ApplicationsController(
 
     val (offender, inmate) = getPersonDetail(assessment.application.crn)
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, offender, inmate))
+  }
+
+  override fun applicationsApplicationIdTasksTaskTypeGet(
+    applicationId: UUID,
+    taskName: String
+  ): ResponseEntity<Task> {
+    val user = userService.getUserForRequest()
+    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+      taskName.kebabCaseToPascalCase()
+    ) ?: throw NotFoundProblem(taskName, "TaskType")
+
+    val task = when (taskType) {
+      TaskType.assessment -> {
+        val assessment =
+          when (val applicationResult = assessmentService.getAssessmentForUserAndApplication(user, applicationId)) {
+            is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Assessment")
+            is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+            is AuthorisableActionResult.Success -> applicationResult.entity
+          }
+
+        transformAssessment(
+          log,
+          assessment,
+          user.deliusUsername,
+          offenderService,
+          taskTransformer::transformAssessmentToTask
+        ) as Task
+      }
+      TaskType.placementRequest -> {
+        val placementRequest = when (val result = placementRequestService.getPlacementRequestForUserAndApplication(user, applicationId)) {
+          is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Placement Request")
+          is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+          is AuthorisableActionResult.Success -> result.entity
+        }
+
+        val personDetail = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService)
+
+        if (personDetail === null) {
+          throw NotFoundProblem(placementRequest.application.crn, "Offender")
+        }
+
+        taskTransformer.transformPlacementRequestToTask(placementRequest, personDetail.first, personDetail.second)
+      } else -> {
+        throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
+      }
+    }
+
+    return ResponseEntity.ok(task)
+  }
+
+  @Transactional
+  override fun applicationsApplicationIdTasksTaskTypeAllocationsPost(applicationId: UUID, taskName: String, body: NewReallocation): ResponseEntity<Reallocation> {
+    val user = userService.getUserForRequest()
+
+    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+      taskName.kebabCaseToPascalCase()
+    ) ?: throw NotFoundProblem(taskName, "TaskType")
+
+    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, taskType, body.userId, applicationId)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> authorisationResult.entity
+    }
+
+    val reallocatedTask = when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    return ResponseEntity(reallocatedTask, HttpStatus.CREATED)
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {

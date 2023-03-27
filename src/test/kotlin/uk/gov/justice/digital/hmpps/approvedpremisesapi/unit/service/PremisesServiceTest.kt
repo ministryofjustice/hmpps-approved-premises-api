@@ -9,7 +9,6 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesLostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -18,13 +17,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationLostBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesLostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationRepository
@@ -98,12 +96,36 @@ class PremisesServiceTest {
         ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
       }.produce()
 
-    val lostBedEntity = ApprovedPremisesLostBedsEntityFactory()
+    val lostBedEntityOne = LostBedsEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
       .withYieldedReason { LostBedReasonEntityFactory().produce() }
-      .withNumberOfBeds(5)
+      .withBed(
+        BedEntityFactory().apply {
+          withYieldedRoom {
+            RoomEntityFactory().apply {
+              withYieldedPremises { premises }
+            }.produce()
+          }
+        }.produce()
+      )
+      .produce()
+
+    val lostBedEntityTwo = LostBedsEntityFactory()
+      .withPremises(premises)
+      .withStartDate(startDate.plusDays(1))
+      .withEndDate(startDate.plusDays(2))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withBed(
+        BedEntityFactory().apply {
+          withYieldedRoom {
+            RoomEntityFactory().apply {
+              withYieldedPremises { premises }
+            }.produce()
+          }
+        }.produce()
+      )
       .produce()
 
     val pendingBookingEntity = BookingEntityFactory()
@@ -152,7 +174,7 @@ class PremisesServiceTest {
       .withBooking(cancelledBookingEntity)
       .produce()
 
-    cancelledBookingEntity.cancellation = cancelledArrivalEntity
+    cancelledBookingEntity.cancellations = mutableListOf(cancelledArrivalEntity)
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       pendingBookingEntity,
@@ -161,14 +183,15 @@ class PremisesServiceTest {
       cancelledBookingEntity
     )
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
-      lostBedEntity
+      lostBedEntityOne,
+      lostBedEntityTwo
     )
 
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
 
     assertThat(result).containsValues(
       Availability(date = startDate, pendingBookings = 0, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 5),
+      Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 2),
       Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
@@ -188,12 +211,20 @@ class PremisesServiceTest {
         ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
       }.produce()
 
-    val lostBedEntity = ApprovedPremisesLostBedsEntityFactory()
+    val lostBedEntity = LostBedsEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
       .withYieldedReason { LostBedReasonEntityFactory().produce() }
-      .withNumberOfBeds(5)
+      .withBed(
+        BedEntityFactory().apply {
+          withYieldedRoom {
+            RoomEntityFactory().apply {
+              withYieldedPremises { premises }
+            }.produce()
+          }
+        }.produce()
+      )
       .produce()
 
     val lostBedCancellation = LostBedCancellationEntityFactory()
@@ -238,7 +269,7 @@ class PremisesServiceTest {
       .withYieldedRoom { room }
       .produce()
 
-    val lostBedEntity = TemporaryAccommodationLostBedEntityFactory()
+    val lostBedEntity = LostBedsEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -292,7 +323,7 @@ class PremisesServiceTest {
       .withBooking(cancelledBookingEntity)
       .produce()
 
-    cancelledBookingEntity.cancellation = cancelledArrivalEntity
+    cancelledBookingEntity.cancellations = mutableListOf(cancelledArrivalEntity)
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       pendingBookingEntity,
@@ -335,18 +366,15 @@ class PremisesServiceTest {
       premises = premisesEntity,
       startDate = LocalDate.parse("2022-08-28"),
       endDate = LocalDate.parse("2022-08-25"),
-      numberOfBeds = 0,
       reasonId = reasonId,
       referenceNumber = "12345",
       notes = "notes",
-      service = ServiceName.approvedPremises,
-      bedId = null,
+      bedId = UUID.randomUUID()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.endDate", "beforeStartDate"),
-      entry("$.numberOfBeds", "isZero"),
       entry("$.reason", "doesNotExist")
     )
   }
@@ -372,12 +400,10 @@ class PremisesServiceTest {
       premises = premisesEntity,
       startDate = LocalDate.parse("2022-08-25"),
       endDate = LocalDate.parse("2022-08-28"),
-      numberOfBeds = 1,
       reasonId = reasonId,
       referenceNumber = "12345",
       notes = "notes",
-      service = ServiceName.approvedPremises,
-      bedId = null,
+      bedId = UUID.randomUUID()
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -397,6 +423,17 @@ class PremisesServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
+    val room = RoomEntityFactory()
+      .withPremises(premisesEntity)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withYieldedRoom { room }
+      .produce()
+
+    premisesEntity.rooms += room
+    room.beds += bed
+
     val lostBedReason = LostBedReasonEntityFactory()
       .withServiceScope(ServiceName.approvedPremises.value)
       .produce()
@@ -409,25 +446,20 @@ class PremisesServiceTest {
       premises = premisesEntity,
       startDate = LocalDate.parse("2022-08-25"),
       endDate = LocalDate.parse("2022-08-28"),
-      numberOfBeds = 5,
       reasonId = lostBedReason.id,
       referenceNumber = "12345",
       notes = "notes",
-      service = ServiceName.approvedPremises,
-      bedId = null,
+      bedId = bed.id
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
-    assertThat(result.entity).isInstanceOf(ApprovedPremisesLostBedsEntity::class.java)
-    val entity = result.entity as ApprovedPremisesLostBedsEntity
-    assertThat(entity.premises).isEqualTo(premisesEntity)
-    assertThat(entity.reason).isEqualTo(lostBedReason)
-    assertThat(entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-    assertThat(entity.numberOfBeds).isEqualTo(5)
-    assertThat(entity.referenceNumber).isEqualTo("12345")
-    assertThat(entity.notes).isEqualTo("notes")
+    assertThat(result.entity.premises).isEqualTo(premisesEntity)
+    assertThat(result.entity.reason).isEqualTo(lostBedReason)
+    assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+    assertThat(result.entity.referenceNumber).isEqualTo("12345")
+    assertThat(result.entity.notes).isEqualTo("notes")
   }
 
   @Test
@@ -443,13 +475,22 @@ class PremisesServiceTest {
 
     val reasonId = UUID.randomUUID()
 
-    val lostBedsEntity = ApprovedPremisesLostBedsEntityFactory()
+    val lostBedsEntity = LostBedsEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
         LostBedReasonEntityFactory()
           .withServiceScope(ServiceName.approvedPremises.value)
           .produce()
       }
+      .withBed(
+        BedEntityFactory().apply {
+          withYieldedRoom {
+            RoomEntityFactory().apply {
+              withPremises(premisesEntity)
+            }.produce()
+          }
+        }.produce()
+      )
       .produce()
 
     every { lostBedsRepositoryMock.findByIdOrNull(lostBedsEntity.id) } returns lostBedsEntity
@@ -459,11 +500,9 @@ class PremisesServiceTest {
       lostBedId = lostBedsEntity.id,
       startDate = LocalDate.parse("2022-08-28"),
       endDate = LocalDate.parse("2022-08-25"),
-      numberOfBeds = 0,
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes",
-      service = ServiceName.approvedPremises,
+      notes = "notes"
     )
 
     assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -471,7 +510,6 @@ class PremisesServiceTest {
     assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.endDate", "beforeStartDate"),
-      entry("$.numberOfBeds", "isZero"),
       entry("$.reason", "doesNotExist")
     )
   }
@@ -489,13 +527,22 @@ class PremisesServiceTest {
 
     val reasonId = UUID.randomUUID()
 
-    val lostBedsEntity = ApprovedPremisesLostBedsEntityFactory()
+    val lostBedsEntity = LostBedsEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
         LostBedReasonEntityFactory()
           .withServiceScope(ServiceName.approvedPremises.value)
           .produce()
       }
+      .withBed(
+        BedEntityFactory().apply {
+          withYieldedRoom {
+            RoomEntityFactory().apply {
+              withPremises(premisesEntity)
+            }.produce()
+          }
+        }.produce()
+      )
       .produce()
 
     every { lostBedsRepositoryMock.findByIdOrNull(lostBedsEntity.id) } returns lostBedsEntity
@@ -507,11 +554,9 @@ class PremisesServiceTest {
       lostBedId = lostBedsEntity.id,
       startDate = LocalDate.parse("2022-08-25"),
       endDate = LocalDate.parse("2022-08-28"),
-      numberOfBeds = 1,
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes",
-      service = ServiceName.approvedPremises,
+      notes = "notes"
     )
 
     assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -537,13 +582,22 @@ class PremisesServiceTest {
       .withServiceScope(ServiceName.approvedPremises.value)
       .produce()
 
-    val lostBedsEntity = ApprovedPremisesLostBedsEntityFactory()
+    val lostBedsEntity = LostBedsEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
         LostBedReasonEntityFactory()
           .withServiceScope(ServiceName.approvedPremises.value)
           .produce()
       }
+      .withBed(
+        BedEntityFactory().apply {
+          withYieldedRoom {
+            RoomEntityFactory().apply {
+              withPremises(premisesEntity)
+            }.produce()
+          }
+        }.produce()
+      )
       .produce()
 
     every { lostBedsRepositoryMock.findByIdOrNull(lostBedsEntity.id) } returns lostBedsEntity
@@ -555,24 +609,19 @@ class PremisesServiceTest {
       lostBedId = lostBedsEntity.id,
       startDate = LocalDate.parse("2022-08-25"),
       endDate = LocalDate.parse("2022-08-28"),
-      numberOfBeds = 5,
       reasonId = lostBedReason.id,
       referenceNumber = "12345",
       notes = "notes",
-      service = ServiceName.approvedPremises,
     )
     assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
     val resultEntity = (result as AuthorisableActionResult.Success).entity
     assertThat(resultEntity).isInstanceOf(ValidatableActionResult.Success::class.java)
     resultEntity as ValidatableActionResult.Success
-    assertThat(resultEntity.entity).isInstanceOf(ApprovedPremisesLostBedsEntity::class.java)
-    val entity = resultEntity.entity as ApprovedPremisesLostBedsEntity
-    assertThat(entity.premises).isEqualTo(premisesEntity)
-    assertThat(entity.reason).isEqualTo(lostBedReason)
-    assertThat(entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-    assertThat(entity.numberOfBeds).isEqualTo(5)
-    assertThat(entity.referenceNumber).isEqualTo("12345")
-    assertThat(entity.notes).isEqualTo("notes")
+    assertThat(resultEntity.entity.premises).isEqualTo(premisesEntity)
+    assertThat(resultEntity.entity.reason).isEqualTo(lostBedReason)
+    assertThat(resultEntity.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+    assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
+    assertThat(resultEntity.entity.notes).isEqualTo("notes")
   }
 }

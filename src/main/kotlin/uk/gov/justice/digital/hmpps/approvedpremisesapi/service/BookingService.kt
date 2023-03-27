@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
@@ -49,7 +50,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
@@ -92,7 +92,8 @@ class BookingService(
     premises: ApprovedPremisesEntity,
     crn: String,
     arrivalDate: LocalDate,
-    departureDate: LocalDate
+    departureDate: LocalDate,
+    bedId: UUID
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     if (!user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
       return AuthorisableActionResult.Unauthorised()
@@ -102,6 +103,12 @@ class BookingService(
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
+
+      val bed = premises.rooms
+        .flatMap { it.beds }
+        .find { it.id == bedId }
+
+      if (bed == null) "$.bedId" hasValidationError "doesNotExist"
 
       val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
         .filter { it.submittedAt != null }
@@ -132,13 +139,13 @@ class BookingService(
           departureDate = departureDate,
           keyWorkerStaffCode = null,
           arrival = null,
-          departure = null,
+          departures = mutableListOf(),
           nonArrival = null,
-          cancellation = null,
+          cancellations = mutableListOf(),
           confirmation = null,
           extensions = mutableListOf(),
           premises = premises,
-          bed = null,
+          bed = bed,
           service = ServiceName.approvedPremises.value,
           originalArrivalDate = arrivalDate,
           originalDepartureDate = departureDate,
@@ -228,9 +235,15 @@ class BookingService(
     departureDate: LocalDate,
     bedId: UUID
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    throwIfBookingDatesConflict(arrivalDate, departureDate, null, bedId, premises)
-
     val validationResult = validated {
+      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId, premises)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      }
+
+      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId, premises)?.let {
+        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+      }
+
       val bed = premises.rooms
         .flatMap { it.beds }
         .find { it.id == bedId }
@@ -255,9 +268,9 @@ class BookingService(
           departureDate = departureDate,
           keyWorkerStaffCode = null,
           arrival = null,
-          departure = null,
+          departures = mutableListOf(),
           nonArrival = null,
-          cancellation = null,
+          cancellations = mutableListOf(),
           confirmation = null,
           extensions = mutableListOf(),
           premises = premises,
@@ -322,11 +335,9 @@ class BookingService(
       )
     )
 
-    if (booking.service == ServiceName.temporaryAccommodation.value) {
-      booking.arrivalDate = arrivalDate
-      booking.departureDate = expectedDepartureDate
-      updateBooking(booking)
-    }
+    booking.arrivalDate = arrivalDate
+    booking.departureDate = expectedDepartureDate
+    updateBooking(booking)
 
     if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
       val domainEventId = UUID.randomUUID()
@@ -497,7 +508,7 @@ class BookingService(
     reasonId: UUID,
     notes: String?
   ) = validated<CancellationEntity> {
-    if (booking.cancellation != null) {
+    if (booking.premises is ApprovedPremisesEntity && booking.cancellation != null) {
       return generalError("This Booking already has a Cancellation set")
     }
 
@@ -559,7 +570,7 @@ class BookingService(
   ) = validated<DepartureEntity> {
     val occurredAt = OffsetDateTime.now()
 
-    if (booking.departure != null) {
+    if (booking.premises is ApprovedPremisesEntity && booking.departure != null) {
       return generalError("This Booking already has a Departure set")
     }
 
@@ -617,10 +628,8 @@ class BookingService(
       )
     )
 
-    if (booking.service == ServiceName.temporaryAccommodation.value) {
-      booking.departureDate = dateTime.toLocalDate()
-      updateBooking(booking)
-    }
+    booking.departureDate = dateTime.toLocalDate()
+    updateBooking(booking)
 
     if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
       val domainEventId = UUID.randomUUID()
@@ -703,13 +712,12 @@ class BookingService(
     newDepartureDate: LocalDate,
     notes: String?
   ) = validated<ExtensionEntity> {
-    when (booking.service) {
-      ServiceName.approvedPremises.value -> if (booking.departureDate.isAfter(newDepartureDate)) {
-        return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
-      }
-      ServiceName.temporaryAccommodation.value -> if (booking.arrivalDate.isAfter(newDepartureDate)) {
-        return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
-      }
+    if (booking.premises is ApprovedPremisesEntity && booking.departureDate.isAfter(newDepartureDate)) {
+      return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
+    }
+
+    if (booking.arrivalDate.isAfter(newDepartureDate)) {
+      return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
 
     val extensionEntity = ExtensionEntity(
@@ -780,30 +788,38 @@ class BookingService(
     }
   }
 
-  private fun throwIfBookingDatesConflict(
+  fun getBookingWithConflictingDates(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    thisBookingId: UUID?,
+    thisEntityId: UUID?,
     bedId: UUID,
     premises: PremisesEntity,
-  ) {
-    // TODO: Ideally we wouldn't throw ConflictProblem from the service layer as its HTTP specific
-
+  ): BookingEntity? {
     val desiredRange = arrivalDate..departureDate
-    premises.bookings
-      .filter { it.id != thisBookingId }
+    return premises.bookings
+      .filter { it.id != thisEntityId }
       .filter { it.bed?.id == bedId }
       .filter { it.cancellation == null }
       .map { it to (it.arrivalDate..it.departureDate) }
       .find { (_, range) -> range overlaps desiredRange }
       ?.first
-      ?.let {
-        throw ConflictProblem(
-          it.id,
-          "Booking",
-          "dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-        )
-      }
+  }
+
+  fun getLostBedWithConflictingDates(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    thisEntityId: UUID?,
+    bedId: UUID,
+    premises: PremisesEntity,
+  ): LostBedsEntity? {
+    val desiredRange = startDate..endDate
+    return premises.lostBeds
+      .filter { it.id != thisEntityId }
+      .filter { it.bed.id == bedId }
+      .filter { it.cancellation == null }
+      .map { it to (it.startDate..it.endDate) }
+      .find { (_, range) -> range overlaps desiredRange }
+      ?.first
   }
 }
 

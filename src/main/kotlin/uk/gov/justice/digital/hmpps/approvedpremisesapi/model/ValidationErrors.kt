@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import java.util.UUID
 
 @JvmInline
 value class ValidationErrors(private val errorMap: MutableMap<String, String>) : MutableMap<String, String> by errorMap {
@@ -18,6 +19,7 @@ class ValidatedScope<EntityType> {
   infix fun generalError(message: String) = ValidatableActionResult.GeneralValidationError<EntityType>(message)
   infix fun String.hasValidationError(message: String) = validationErrors.put(this, message)
   infix fun String.hasSingleValidationError(message: String) = ValidatableActionResult.FieldValidationError<EntityType>(singleValidationErrorOf(this to message))
+  infix fun UUID.hasConflictError(message: String) = ValidatableActionResult.ConflictError<EntityType>(this, message)
 }
 
 inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> ValidatableActionResult<EntityType>): ValidatableActionResult<EntityType> {
