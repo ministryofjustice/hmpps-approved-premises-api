@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -90,12 +90,12 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.reallocatePlacementRequest(assigneeUser, application)
 
-    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+    assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
 
-    Assertions.assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
     validationResult as ValidatableActionResult.GeneralValidationError
-    Assertions.assertThat(validationResult.message).isEqualTo("This placement request has already been completed")
+    assertThat(validationResult.message).isEqualTo("This placement request has already been completed")
   }
 
   @Test
@@ -109,12 +109,12 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.reallocatePlacementRequest(assigneeUser, application)
 
-    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+    assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
 
-    Assertions.assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
+    assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
     validationResult as ValidatableActionResult.FieldValidationError
-    Assertions.assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingMatcherRole")
+    assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingMatcherRole")
   }
 
   @Test
@@ -145,28 +145,28 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.reallocatePlacementRequest(assigneeUser, application)
 
-    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+    assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
 
-    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    assertThat(validationResult is ValidatableActionResult.Success).isTrue
     validationResult as ValidatableActionResult.Success
 
-    Assertions.assertThat(previousPlacementRequest.reallocatedAt).isNotNull
+    assertThat(previousPlacementRequest.reallocatedAt).isNotNull
 
     verify { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) }
 
     val newPlacementRequest = validationResult.entity
 
-    Assertions.assertThat(newPlacementRequest.application).isEqualTo(application)
-    Assertions.assertThat(newPlacementRequest.allocatedToUser).isEqualTo(assigneeUser)
-    Assertions.assertThat(newPlacementRequest.radius).isEqualTo(previousPlacementRequest.radius)
-    Assertions.assertThat(newPlacementRequest.postcodeDistrict).isEqualTo(previousPlacementRequest.postcodeDistrict)
-    Assertions.assertThat(newPlacementRequest.gender).isEqualTo(previousPlacementRequest.gender)
-    Assertions.assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
-    Assertions.assertThat(newPlacementRequest.mentalHealthSupport).isEqualTo(previousPlacementRequest.mentalHealthSupport)
-    Assertions.assertThat(newPlacementRequest.apType).isEqualTo(previousPlacementRequest.apType)
-    Assertions.assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
-    Assertions.assertThat(newPlacementRequest.desirableCriteria).isEqualTo(previousPlacementRequest.desirableCriteria)
-    Assertions.assertThat(newPlacementRequest.essentialCriteria).isEqualTo(previousPlacementRequest.essentialCriteria)
+    assertThat(newPlacementRequest.application).isEqualTo(application)
+    assertThat(newPlacementRequest.allocatedToUser).isEqualTo(assigneeUser)
+    assertThat(newPlacementRequest.radius).isEqualTo(previousPlacementRequest.radius)
+    assertThat(newPlacementRequest.postcodeDistrict).isEqualTo(previousPlacementRequest.postcodeDistrict)
+    assertThat(newPlacementRequest.gender).isEqualTo(previousPlacementRequest.gender)
+    assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
+    assertThat(newPlacementRequest.mentalHealthSupport).isEqualTo(previousPlacementRequest.mentalHealthSupport)
+    assertThat(newPlacementRequest.apType).isEqualTo(previousPlacementRequest.apType)
+    assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
+    assertThat(newPlacementRequest.desirableCriteria).isEqualTo(previousPlacementRequest.desirableCriteria)
+    assertThat(newPlacementRequest.essentialCriteria).isEqualTo(previousPlacementRequest.essentialCriteria)
   }
 }
