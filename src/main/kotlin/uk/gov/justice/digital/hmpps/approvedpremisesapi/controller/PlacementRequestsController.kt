@@ -5,11 +5,15 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementRequestsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
+import java.util.UUID
 
 @Service
 class PlacementRequestsController(
@@ -35,6 +39,25 @@ class PlacementRequestsController(
 
         placementRequestTransformer.transformJpaToApi(it, personDetail.first, personDetail.second)
       }
+    )
+  }
+
+  override fun placementRequestsIdGet(id: UUID): ResponseEntity<PlacementRequest> {
+    val user = userService.getUserForRequest()
+
+    val authorisationResult = placementRequestService.getPlacementRequestForUser(user, id)
+
+    val placementRequest = when (authorisationResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "PlacementRequest")
+      is AuthorisableActionResult.Success -> authorisationResult.entity
+    }
+
+    val personDetail = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService)
+      ?: throw NotFoundProblem(placementRequest.application.crn, "Offender")
+
+    return ResponseEntity.ok(
+      placementRequestTransformer.transformJpaToApi(placementRequest, personDetail.first, personDetail.second)
     )
   }
 }
