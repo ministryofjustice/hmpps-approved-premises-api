@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import java.util.UUID
 
 class PlacementRequestServiceTest {
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
@@ -168,5 +170,80 @@ class PlacementRequestServiceTest {
     assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
     assertThat(newPlacementRequest.desirableCriteria).isEqualTo(previousPlacementRequest.desirableCriteria)
     assertThat(newPlacementRequest.essentialCriteria).isEqualTo(previousPlacementRequest.essentialCriteria)
+  }
+
+  @Test
+  fun `getPlacementRequestForUser returns NotFound when PlacementRequest doesn't exist`() {
+    val placementRequestId = UUID.fromString("72f15a57-8f3a-48bc-abc7-be09fe548fea")
+
+    val requestingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
+
+    val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequestId)
+
+    assertThat(result is AuthorisableActionResult.NotFound)
+  }
+
+  @Test
+  fun `getPlacementRequestForUser returns Unauthorised when PlacementRequest not allocated to User and User does not have WORKFLOW_MANAGER role`() {
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    val requestingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+    val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised)
+  }
+
+  @Test
+  fun `getPlacementRequestForUser returns Success when PlacementRequest is allocated to User`() {
+    val requestingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(requestingUser)
+      .produce()
+
+    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+    val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised)
+  }
+
+  @Test
+  fun `getPlacementRequestForUser returns Success when User has the WORKFLOW_MANAGER role`() {
+    val requestingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.WORKFLOW_MANAGER)
+          .produce()
+      }
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+    val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised)
   }
 }

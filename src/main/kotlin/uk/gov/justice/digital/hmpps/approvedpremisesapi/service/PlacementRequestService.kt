@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -28,6 +29,17 @@ class PlacementRequestService(
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
     return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+  }
+
+  fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<PlacementRequestEntity> {
+    val placementRequest = placementRequestRepository.findByIdOrNull(id)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (placementRequest.allocatedToUser.id != user.id && !user.hasRole(UserRole.WORKFLOW_MANAGER)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    return AuthorisableActionResult.Success(placementRequest)
   }
 
   fun getPlacementRequestForUserAndApplication(user: UserEntity, applicationID: UUID): AuthorisableActionResult<PlacementRequestEntity> {
