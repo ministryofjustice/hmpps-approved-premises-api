@@ -156,10 +156,12 @@ class UserService(
 
   fun clearRoles(user: UserEntity) {
     userRoleAssignmentRepository.deleteAllById(user.roles.map(UserRoleAssignmentEntity::id))
+    user.roles.clear()
   }
 
   fun clearQualifications(user: UserEntity) {
     userQualificationAssignmentRepository.deleteAllById(user.qualifications.map(UserQualificationAssignmentEntity::id))
+    user.qualifications.clear()
   }
 
   private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
