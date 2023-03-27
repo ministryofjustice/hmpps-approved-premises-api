@@ -1222,11 +1222,11 @@ class LostBedsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        existingBooking.cancellation = cancellationEntityFactory.produceAndPersist {
+        existingBooking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
           withYieldedBooking { existingBooking }
           withDate(LocalDate.parse("2022-07-01"))
           withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-        }
+        }.toMutableList()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/lost-beds")
@@ -1492,11 +1492,11 @@ class LostBedsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        existingBooking.cancellation = cancellationEntityFactory.produceAndPersist {
+        existingBooking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
           withYieldedBooking { existingBooking }
           withDate(LocalDate.parse("2022-07-01"))
           withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-        }
+        }.toMutableList()
 
         webTestClient.put()
           .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")

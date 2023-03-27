@@ -2741,17 +2741,29 @@ components:
               allOf:
                 - $ref: '#/components/schemas/Arrival'
             departure:
+              description: The latest version of the departure, if it exists
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Departure'
+            departures:
+              description: The full history of the departure
+              type: array
+              items:
+                $ref: '#/components/schemas/Departure'
             nonArrival:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Nonarrival'
             cancellation:
+              description: The latest version of the cancellation, if it exists
               nullable: true
               allOf:
               - $ref: '#/components/schemas/Cancellation'
+            cancellations:
+              description: The full history of the cancellation
+              type: array
+              items:
+                $ref: '#/components/schemas/Cancellation'
             confirmation:
               nullable: true
               allOf:
@@ -2759,6 +2771,8 @@ components:
           required:
             - status
             - extensions
+            - departures
+            - cancellations
     Person:
       type: object
       properties:

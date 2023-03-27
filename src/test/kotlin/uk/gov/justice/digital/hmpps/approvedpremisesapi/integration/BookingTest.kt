@@ -237,18 +237,18 @@ class BookingTest : IntegrationTestBase() {
         bookings[2].let {
           it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
-          it.departure = departureEntityFactory.produceAndPersist {
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
             withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
             withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[3].let {
-          it.cancellation = cancellationEntityFactory.produceAndPersist {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[4].let {
           it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
@@ -298,18 +298,18 @@ class BookingTest : IntegrationTestBase() {
         bookings[2].let {
           it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
-          it.departure = departureEntityFactory.produceAndPersist {
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
             withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
             withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[3].let {
-          it.cancellation = cancellationEntityFactory.produceAndPersist {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
             withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-          }
+          }.toMutableList()
         }
         bookings[4].let {
           it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
@@ -686,11 +686,11 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        existingBooking.cancellation = cancellationEntityFactory.produceAndPersist {
+        existingBooking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
           withYieldedBooking { existingBooking }
           withDate(LocalDate.parse("2022-07-01"))
           withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-        }
+        }.toMutableList()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1399,6 +1399,66 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Create Departure on Approved Premises Booking when a departure already exists returns 400 Bad Request`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          approvedPremisesEntityFactory.produceAndPersist {
+            withQCode("QCODE")
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+              }
+            }
+          }
+        }
+        withServiceName(ServiceName.approvedPremises)
+        withArrivalDate(LocalDate.parse("2022-08-10"))
+        withDepartureDate(LocalDate.parse("2022-08-30"))
+      }
+
+      val reason = departureReasonEntityFactory.produceAndPersist {
+        withServiceScope("approved-premises")
+      }
+      val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+        withServiceScope("approved-premises")
+      }
+      val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
+
+      val departure = departureEntityFactory.produceAndPersist {
+        withBooking(booking)
+        withReason(reason)
+        withMoveOnCategory(moveOnCategory)
+        withDestinationProvider(destinationProvider)
+      }
+      booking.departures = mutableListOf(departure)
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewDeparture(
+            dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+            reasonId = reason.id,
+            moveOnCategoryId = moveOnCategory.id,
+            destinationProviderId = destinationProvider.id,
+            notes = "Corrected date",
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath(".detail").isEqualTo("This Booking already has a Departure set")
+    }
+  }
+
   @Test
   fun `Create Departure updates the departure date for a Temporary Accommodation booking`() {
     `Given a User` { userEntity, jwt ->
@@ -1456,6 +1516,68 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Departure on Temporary Accommodation Booking when a departure already exists returns OK with correct body`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises {
+            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withYieldedProbationRegion {
+                probationRegionEntityFactory.produceAndPersist {
+                  withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+                }
+              }
+            }
+          }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-10"))
+          withDepartureDate(LocalDate.parse("2022-08-30"))
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        val reason = departureReasonEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+        val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+
+        val departure = departureEntityFactory.produceAndPersist {
+          withBooking(booking)
+          withReason(reason)
+          withMoveOnCategory(moveOnCategory)
+        }
+        booking.departures = mutableListOf(departure)
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewDeparture(
+              dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+              reasonId = reason.id,
+              moveOnCategoryId = moveOnCategory.id,
+              destinationProviderId = null,
+              notes = "Corrected date",
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.dateTime").isEqualTo("2022-09-01T12:34:56.789Z")
+          .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+          .jsonPath("$.moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
+          .jsonPath("$.destinationProvider").isEqualTo(null)
+          .jsonPath("$.notes").isEqualTo("Corrected date")
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
       }
     }
   }
@@ -1568,6 +1690,49 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  fun `Create Cancellation on Approved Premises Booking when a cancellation already exists returns 400 Bad Request`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            }
+          }
+        }
+      }
+
+      val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+        withServiceScope("*")
+      }
+
+      val cancellation = cancellationEntityFactory.produceAndPersist {
+        withBooking(booking)
+        withReason(cancellationReason)
+      }
+      booking.cancellations = mutableListOf(cancellation)
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewCancellation(
+            date = LocalDate.parse("2022-08-18"),
+            reason = cancellationReason.id,
+            notes = "Corrected date"
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath(".detail").isEqualTo("This Booking already has a Cancellation set")
+    }
+  }
+
   @Test
   fun `Create Cancellation on Temporary Accommodation Booking on a premises that's not in the user's region returns 403 Forbidden`() {
     `Given a User` { userEntity, jwt ->
@@ -1603,6 +1768,53 @@ class BookingTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isForbidden
+    }
+  }
+
+  @Test
+  fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body`() {
+    `Given a User` { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationRegion(userEntity.probationRegion)
+          }
+        }
+      }
+
+      val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+        withServiceScope("*")
+      }
+
+      val cancellation = cancellationEntityFactory.produceAndPersist {
+        withBooking(booking)
+        withReason(cancellationReason)
+      }
+      booking.cancellations = mutableListOf(cancellation)
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewCancellation(
+            date = LocalDate.parse("2022-08-18"),
+            reason = cancellationReason.id,
+            notes = "Corrected date"
+          )
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+        .jsonPath(".date").isEqualTo("2022-08-18")
+        .jsonPath(".notes").isEqualTo("Corrected date")
+        .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+        .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+        .jsonPath(".reason.isActive").isEqualTo(true)
+        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
     }
   }
 

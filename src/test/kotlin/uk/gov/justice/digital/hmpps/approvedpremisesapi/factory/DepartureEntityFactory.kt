@@ -76,7 +76,7 @@ class DepartureEntityFactory : Factory<DepartureEntity> {
     dateTime = this.dateTime(),
     reason = this.reason?.invoke() ?: throw RuntimeException("Reason must be provided"),
     moveOnCategory = this.moveOnCategory?.invoke() ?: throw RuntimeException("MoveOnCategory must be provided"),
-    destinationProvider = this.destinationProvider?.invoke() ?: throw RuntimeException("DestinationProvider must be provided"),
+    destinationProvider = this.destinationProvider?.invoke(),
     notes = this.notes(),
     booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided"),
     createdAt = this.createdAt(),

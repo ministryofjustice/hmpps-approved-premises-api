@@ -174,7 +174,7 @@ class PremisesServiceTest {
       .withBooking(cancelledBookingEntity)
       .produce()
 
-    cancelledBookingEntity.cancellation = cancelledArrivalEntity
+    cancelledBookingEntity.cancellations = mutableListOf(cancelledArrivalEntity)
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       pendingBookingEntity,
@@ -323,7 +323,7 @@ class PremisesServiceTest {
       .withBooking(cancelledBookingEntity)
       .produce()
 
-    cancelledBookingEntity.cancellation = cancelledArrivalEntity
+    cancelledBookingEntity.cancellations = mutableListOf(cancelledArrivalEntity)
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       pendingBookingEntity,

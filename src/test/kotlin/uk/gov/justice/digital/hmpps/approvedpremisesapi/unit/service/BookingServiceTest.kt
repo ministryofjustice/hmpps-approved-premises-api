@@ -247,7 +247,7 @@ class BookingServiceTest {
       .withYieldedDestinationProvider { DestinationProviderEntityFactory().produce() }
       .produce()
 
-    bookingEntity.departure = departureEntity
+    bookingEntity.departures = mutableListOf(departureEntity)
 
     val result = bookingService.createDeparture(
       booking = bookingEntity,
@@ -1263,7 +1263,7 @@ class BookingServiceTest {
       .withYieldedReason { CancellationReasonEntityFactory().produce() }
       .produce()
 
-    bookingEntity.cancellation = cancellationEntity
+    bookingEntity.cancellations = mutableListOf(cancellationEntity)
 
     val result = bookingService.createCancellation(
       booking = bookingEntity,

@@ -35,12 +35,12 @@ data class BookingEntity(
   var keyWorkerStaffCode: String?,
   @OneToOne(mappedBy = "booking")
   var arrival: ArrivalEntity?,
-  @OneToOne(mappedBy = "booking")
-  var departure: DepartureEntity?,
+  @OneToMany(mappedBy = "booking")
+  var departures: MutableList<DepartureEntity>,
   @OneToOne(mappedBy = "booking")
   var nonArrival: NonArrivalEntity?,
-  @OneToOne(mappedBy = "booking")
-  var cancellation: CancellationEntity?,
+  @OneToMany(mappedBy = "booking")
+  var cancellations: MutableList<CancellationEntity>,
   @OneToOne(mappedBy = "booking")
   var confirmation: ConfirmationEntity?,
   @OneToOne
@@ -62,6 +62,12 @@ data class BookingEntity(
   var originalDepartureDate: LocalDate,
   val createdAt: OffsetDateTime,
 ) {
+  val departure: DepartureEntity?
+    get() = departures.maxByOrNull { it.createdAt }
+
+  val cancellation: CancellationEntity?
+    get() = cancellations.maxByOrNull { it.createdAt }
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is BookingEntity) return false
@@ -72,9 +78,7 @@ data class BookingEntity(
     if (departureDate != other.departureDate) return false
     if (keyWorkerStaffCode != other.keyWorkerStaffCode) return false
     if (arrival != other.arrival) return false
-    if (departure != other.departure) return false
     if (nonArrival != other.nonArrival) return false
-    if (cancellation != other.cancellation) return false
     if (confirmation != other.confirmation) return false
     if (originalArrivalDate != other.originalArrivalDate) return false
     if (originalDepartureDate != other.originalDepartureDate) return false
@@ -83,7 +87,7 @@ data class BookingEntity(
     return true
   }
 
-  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, departure, nonArrival, cancellation, confirmation, originalArrivalDate, originalDepartureDate, createdAt)
+  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, nonArrival, confirmation, originalArrivalDate, originalDepartureDate, createdAt)
 
   override fun toString() = "BookingEntity:$id"
 }
