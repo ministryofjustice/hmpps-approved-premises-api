@@ -2032,6 +2032,32 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-requests/{id}:
+    get:
+      tags:
+        - Placement requests
+      summary: Gets placement requests for a given user
+      parameters:
+        - name: id
+          in: path
+          description: ID of the placement request
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved placement requests
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementRequest'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
