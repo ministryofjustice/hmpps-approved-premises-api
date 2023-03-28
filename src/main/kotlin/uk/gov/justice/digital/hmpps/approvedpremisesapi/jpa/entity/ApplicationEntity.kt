@@ -69,6 +69,7 @@ abstract class ApplicationEntity(
   var assessments: MutableList<AssessmentEntity>,
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
+  abstract fun getRequiredQualifications(): List<UserQualification>
 }
 
 @Entity
@@ -110,6 +111,19 @@ class ApprovedPremisesApplicationEntity(
 ) {
   fun hasTeamCode(code: String) = teamCodes.any { it.teamCode == code }
   fun hasAnyTeamCode(codes: List<String>) = codes.any(::hasTeamCode)
+  override fun getRequiredQualifications(): List<UserQualification> {
+    val requiredQualifications = mutableListOf<UserQualification>()
+
+    if (isPipeApplication == true) {
+      requiredQualifications += UserQualification.PIPE
+    }
+
+    if (isWomensApplication == true) {
+      requiredQualifications += UserQualification.WOMENS
+    }
+
+    return requiredQualifications
+  }
 }
 
 @Repository
@@ -152,4 +166,6 @@ class TemporaryAccommodationApplicationEntity(
   submittedAt,
   schemaUpToDate,
   assessments
-)
+) {
+  override fun getRequiredQualifications(): List<UserQualification> = emptyList()
+}
