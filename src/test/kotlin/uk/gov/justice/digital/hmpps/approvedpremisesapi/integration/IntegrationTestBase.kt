@@ -7,9 +7,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
@@ -133,11 +133,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualificationAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DbExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
 
+@ExtendWith(DbExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
@@ -146,9 +148,6 @@ abstract class IntegrationTestBase {
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
   lateinit var webTestClient: WebTestClient
-
-  @Autowired
-  private lateinit var flyway: Flyway
 
   @Autowired
   private lateinit var jdbcTemplate: JdbcTemplate
@@ -322,12 +321,6 @@ abstract class IntegrationTestBase {
 
     wiremockServer = WireMockServer(57839)
     wiremockServer.start()
-
-    flyway.clean()
-
-    jdbcTemplate.execute("CREATE EXTENSION postgis;")
-
-    flyway.migrate()
 
     cacheManager.cacheNames.forEach {
       cacheManager.getCache(it)!!.clear()
