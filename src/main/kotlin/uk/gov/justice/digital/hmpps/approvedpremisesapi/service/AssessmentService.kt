@@ -102,7 +102,7 @@ class AssessmentService(
       throw RuntimeException("Only CAS1 Applications are currently supported")
     }
 
-    val requiredQualifications = getRequiredQualificationsForApprovedPremisesApplication(application)
+    val requiredQualifications = application.getRequiredQualifications()
 
     // Might want to handle this more robustly in future if it emerges this is more common than initially thought
     val allocatedUser = getUserForAllocation(requiredQualifications)
@@ -396,7 +396,7 @@ class AssessmentService(
       )
     }
 
-    val requiredQualifications = getRequiredQualificationsForApprovedPremisesApplication(application)
+    val requiredQualifications = application.getRequiredQualifications()
 
     if (!assigneeUser.hasRole(UserRole.ASSESSOR)) {
       return AuthorisableActionResult.Success(
@@ -499,17 +499,4 @@ class AssessmentService(
   }
 
   private fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
-  private fun getRequiredQualificationsForApprovedPremisesApplication(application: ApprovedPremisesApplicationEntity): List<UserQualification> {
-    val requiredQualifications = mutableListOf<UserQualification>()
-
-    if (application.isPipeApplication == true) {
-      requiredQualifications += UserQualification.PIPE
-    }
-
-    if (application.isWomensApplication == true) {
-      requiredQualifications += UserQualification.WOMENS
-    }
-
-    return requiredQualifications
-  }
 }

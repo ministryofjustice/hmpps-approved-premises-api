@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
@@ -114,24 +115,31 @@ class TasksTest : IntegrationTestBase() {
   fun `Get an assessment task for an application returns 200 with correct body`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          `Given an Assessment`(
-            allocatedToUser = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn
-          ) { assessment, application ->
-            webTestClient.get()
-              .uri("/applications/${application.id}/tasks/assessment")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails)
+        `Given a User`(
+          roles = listOf(UserRole.ASSESSOR)
+        ) { allocatableUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Assessment`(
+              allocatedToUser = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn
+            ) { assessment, application ->
+              webTestClient.get()
+                .uri("/applications/${application.id}/tasks/assessment")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    TaskWrapper(
+                      task = taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
+                      users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises))
+                    )
+                  )
                 )
-              )
+            }
           }
         }
       }
@@ -142,24 +150,31 @@ class TasksTest : IntegrationTestBase() {
   fun `Get a Placement Request Task for an application returns 200`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          `Given a Placement Request`(
-            allocatedToUser = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn
-          ) { placementRequest, application ->
-            webTestClient.get()
-              .uri("/applications/${application.id}/tasks/placement-request")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  taskTransformer.transformPlacementRequestToTask(placementRequest, offenderDetails, inmateDetails)
+        `Given a User`(
+          roles = listOf(UserRole.MATCHER)
+        ) { allocatableUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given a Placement Request`(
+              allocatedToUser = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, application ->
+              webTestClient.get()
+                .uri("/applications/${application.id}/tasks/placement-request")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    TaskWrapper(
+                      task = taskTransformer.transformPlacementRequestToTask(placementRequest, offenderDetails, inmateDetails),
+                      users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises))
+                    )
+                  )
                 )
-              )
+            }
           }
         }
       }

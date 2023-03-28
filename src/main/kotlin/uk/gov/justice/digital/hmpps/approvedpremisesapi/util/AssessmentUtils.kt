@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
 fun <T> mapAndTransformAssessments(
@@ -26,9 +27,9 @@ fun <T> transformAssessment(
   deliusUsername: String,
   offenderService: OffenderService,
   transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> T
-): T? {
+): T {
   val personDetail = getPersonDetailsForCrn(log, assessment.application.crn, deliusUsername, offenderService)
-    ?: return null
+    ?: throw NotFoundProblem(assessment.application.crn, "Offender")
 
   return transformer(assessment, personDetail.first, personDetail.second)
 }
