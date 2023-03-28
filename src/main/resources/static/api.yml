@@ -1611,7 +1611,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Task'
+                $ref: '#/components/schemas/TaskWrapper'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -2567,6 +2567,18 @@ components:
         - probationRegionId
         - characteristicIds
         - status
+    TaskWrapper:
+      type: object
+      properties:
+        task:
+          $ref: '#/components/schemas/Task'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+      required:
+        - task
+        - users
     Task:
       type: object
       properties:
