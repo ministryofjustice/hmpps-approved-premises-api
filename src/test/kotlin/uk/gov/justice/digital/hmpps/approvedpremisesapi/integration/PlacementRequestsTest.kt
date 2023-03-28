@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.OffsetDateTime
@@ -86,6 +88,71 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 )
               )
             )
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get single Placement Request without a JWT returns 401`() {
+    webTestClient.get()
+      .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get single Placement Request that is not allocated to calling User and without WORKFLOW_MANAGER role returns 403`() {
+    `Given a User` { user, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = otherUser) {
+            `Given a Placement Request`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              webTestClient.get()
+                .uri("/placement-requests/${placementRequest.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get single Placement Request that is allocated to calling User returns 200`() {
+    `Given a User` { user, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = otherUser) {
+            `Given a Placement Request`(
+              allocatedToUser = user,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              webTestClient.get()
+                .uri("/placement-requests/${placementRequest.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    placementRequestTransformer.transformJpaToApi(
+                      placementRequest, offenderDetails, inmateDetails
+                    )
+                  )
+                )
+            }
+          }
         }
       }
     }
