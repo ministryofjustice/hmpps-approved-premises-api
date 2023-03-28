@@ -16,11 +16,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -212,13 +215,16 @@ class ApplicationsController(
   override fun applicationsApplicationIdTasksTaskTypeGet(
     applicationId: UUID,
     taskName: String
-  ): ResponseEntity<Task> {
+  ): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
     val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
       taskName.kebabCaseToPascalCase()
     ) ?: throw NotFoundProblem(taskName, "TaskType")
 
-    val task = when (taskType) {
+    val transformedTask: Task
+    var transformedAllocatableUsers: List<User>
+
+    when (taskType) {
       TaskType.assessment -> {
         val assessment =
           when (val applicationResult = assessmentService.getAssessmentForUserAndApplication(user, applicationId)) {
@@ -227,13 +233,16 @@ class ApplicationsController(
             is AuthorisableActionResult.Success -> applicationResult.entity
           }
 
-        transformAssessment(
+        transformedTask = transformAssessment(
           log,
           assessment,
           user.deliusUsername,
           offenderService,
           taskTransformer::transformAssessmentToTask
-        ) as Task
+        )
+
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(assessment.application.getRequiredQualifications(), listOf(UserRole.ASSESSOR))
+          .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementRequest -> {
         val placementRequest = when (val result = placementRequestService.getPlacementRequestForUserAndApplication(user, applicationId)) {
@@ -248,13 +257,21 @@ class ApplicationsController(
           throw NotFoundProblem(placementRequest.application.crn, "Offender")
         }
 
-        taskTransformer.transformPlacementRequestToTask(placementRequest, personDetail.first, personDetail.second)
+        transformedTask = taskTransformer.transformPlacementRequestToTask(placementRequest, personDetail.first, personDetail.second)
+
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(emptyList(), listOf(UserRole.MATCHER))
+          .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       } else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
       }
     }
 
-    return ResponseEntity.ok(task)
+    return ResponseEntity.ok(
+      TaskWrapper(
+        task = transformedTask,
+        users = transformedAllocatableUsers
+      )
+    )
   }
 
   @Transactional
