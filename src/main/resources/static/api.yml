@@ -1717,6 +1717,47 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /bookings/search:
+    get:
+      summary: Searches for bookings with the given parameters
+      parameters:
+        - name: status
+          in: query
+          description: If provided, only search for bookings with the given status
+          required: false
+          schema:
+            $ref: "#/components/schemas/BookingSearchStatus"
+        - name: sortOrder
+          in: query
+          description: If provided, return results in the given order
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortOrder"
+        - name: sortField
+          in: query
+          description: If provided, return results ordered by the given field name
+          required: false
+          schema:
+            $ref: "#/components/schemas/BookingSearchSortField"
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BookingSearchResults'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/departure-reasons:
     get:
       tags:
@@ -4634,4 +4675,138 @@ components:
         name:
           type: string
       required:
+        - name
+    SortOrder:
+      type: string
+      enum:
+        - ascending
+        - descending
+    BookingSearchStatus:
+      type: string
+      enum:
+        - provisional
+        - confirmed
+        - active
+        - closed
+        - cancelled
+    BookingSearchSortField:
+      type: string
+      enum:
+        - name
+        - crn
+        - startDate
+        - endDate
+        - createdAt
+      x-enum-varnames:
+        - personName
+        - personCrn
+        - bookingStartDate
+        - bookingEndDate
+        - bookingCreatedAt
+    BookingSearchResults:
+      type: object
+      properties:
+        resultsCount:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingSearchResult"
+      required:
+        - resultsCount
+        - results
+    BookingSearchResult:
+      type: object
+      properties:
+        person:
+          $ref: "#/components/schemas/BookingSearchResultPersonSummary"
+        booking:
+          $ref: "#/components/schemas/BookingSearchResultBookingSummary"
+        premises:
+          $ref: "#/components/schemas/BookingSearchResultPremisesSummary"
+        room:
+          $ref: "#/components/schemas/BookingSearchResultRoomSummary"
+        bed:
+          $ref: "#/components/schemas/BookingSearchResultBedSummary"
+      required:
+        - person
+        - booking
+        - premises
+        - room
+        - bed
+    BookingSearchResultPersonSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        crn:
+          type: string
+      required:
+        - name
+        - crn
+    BookingSearchResultBookingSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/BookingSearchStatus"
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - status
+        - startDate
+        - endDate
+        - createdAt
+    BookingSearchResultPremisesSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        town:
+          type: string
+        postcode:
+          type: string
+      required:
+        - id
+        - name
+        - addressLine1
+        - postcode
+    BookingSearchResultRoomSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
+    BookingSearchResultBedSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
         - name
