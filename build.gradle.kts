@@ -16,7 +16,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("com.vladmihalcea:hibernate-types-55:2.21.1")
-  implementation("org.locationtech.jts:jts-core:1.14.0")
+  implementation("org.locationtech.jts:jts-core:1.19.0")
   implementation("org.hibernate:hibernate-spatial")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
