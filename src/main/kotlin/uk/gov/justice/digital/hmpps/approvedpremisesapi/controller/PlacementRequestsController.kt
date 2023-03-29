@@ -4,13 +4,21 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementRequestsApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.util.UUID
@@ -20,7 +28,9 @@ class PlacementRequestsController(
   private val userService: UserService,
   private val placementRequestService: PlacementRequestService,
   private val placementRequestTransformer: PlacementRequestTransformer,
-  private val offenderService: OffenderService
+  private val offenderService: OffenderService,
+  private val bookingService: BookingService,
+  private val bookingTransformer: BookingTransformer
 ) : PlacementRequestsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -59,5 +69,50 @@ class PlacementRequestsController(
     return ResponseEntity.ok(
       placementRequestTransformer.transformJpaToApi(placementRequest, personDetail.first, personDetail.second)
     )
+  }
+
+  override fun placementRequestsIdBookingPost(id: UUID, newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<Booking> {
+    val user = userService.getUserForRequest()
+
+    val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
+      user = user,
+      placementRequestId = id,
+      bedId = newPlacementRequestBooking.bedId,
+      arrivalDate = newPlacementRequestBooking.arrivalDate,
+      departureDate = newPlacementRequestBooking.departureDate
+    )
+
+    val validatableResult = when (authorisableResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(authorisableResult.id!!, authorisableResult.entityType!!)
+      is AuthorisableActionResult.Success -> authorisableResult.entity
+    }
+
+    val createdBooking = when (validatableResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validatableResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validatableResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validatableResult.conflictingEntityId, conflictReason = validatableResult.message)
+      is ValidatableActionResult.Success -> validatableResult.entity
+    }
+
+    val offenderResult = offenderService.getOffenderByCrn(createdBooking.crn, user.deliusUsername)
+    val offender = when (offenderResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
+      is AuthorisableActionResult.Success -> offenderResult.entity
+    }
+
+    if (offender.otherIds.nomsNumber == null) {
+      throw InternalServerErrorProblem("No nomsNumber present for CRN")
+    }
+
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offender.otherIds.nomsNumber)
+    val inmate = when (inmateDetailResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
+      is AuthorisableActionResult.Success -> inmateDetailResult.entity
+    }
+
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, offender, inmate, null))
   }
 }
