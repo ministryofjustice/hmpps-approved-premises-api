@@ -65,7 +65,7 @@ data class PlacementRequestEntity(
 
   @ManyToOne
   @JoinColumn(name = "booking_id")
-  val booking: BookingEntity?,
+  var booking: BookingEntity?,
 
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")

@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -82,10 +83,84 @@ class BookingService(
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val bedRepository: BedRepository,
+  private val placementRequestRepository: PlacementRequestRepository,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
+
+  @Transactional
+  fun createApprovedPremisesBookingFromPlacementRequest(
+    user: UserEntity,
+    placementRequestId: UUID,
+    bedId: UUID,
+    arrivalDate: LocalDate,
+    departureDate: LocalDate
+  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
+    val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
+      ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
+
+    if (placementRequest.allocatedToUser.id != user.id) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val validationResult = validated {
+      if (departureDate.isBefore(arrivalDate)) {
+        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      val bed = bedRepository.findByIdOrNull(bedId)
+
+      if (bed == null) {
+        "$.bedId" hasValidationError "doesNotExist"
+      } else if (bed.room.premises !is ApprovedPremisesEntity) {
+        "$.bedId" hasValidationError "mustBelongToApprovedPremises"
+      }
+
+      if (validationErrors.any()) {
+        return@validated fieldValidationError
+      }
+
+      val bookingCreatedAt = OffsetDateTime.now()
+
+      val booking = bookingRepository.save(
+        BookingEntity(
+          id = UUID.randomUUID(),
+          crn = placementRequest.application.crn,
+          arrivalDate = arrivalDate,
+          departureDate = departureDate,
+          keyWorkerStaffCode = null,
+          arrival = null,
+          departures = mutableListOf(),
+          nonArrival = null,
+          cancellations = mutableListOf(),
+          confirmation = null,
+          extensions = mutableListOf(),
+          premises = bed!!.room.premises,
+          bed = bed,
+          service = ServiceName.approvedPremises.value,
+          originalArrivalDate = arrivalDate,
+          originalDepartureDate = departureDate,
+          createdAt = bookingCreatedAt,
+          application = placementRequest.application,
+          offlineApplication = null
+        )
+      )
+
+      placementRequest.booking = booking
+      placementRequestRepository.save(placementRequest)
+
+      saveBookingMadeDomainEvent(
+        booking = booking,
+        user = user,
+        bookingCreatedAt = bookingCreatedAt
+      )
+
+      return@validated success(booking)
+    }
+
+    return AuthorisableActionResult.Success(validationResult)
+  }
 
   @Transactional
   fun createApprovedPremisesAdHocBooking(
