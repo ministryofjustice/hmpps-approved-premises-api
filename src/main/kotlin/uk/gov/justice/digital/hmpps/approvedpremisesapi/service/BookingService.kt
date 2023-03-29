@@ -82,12 +82,11 @@ class BookingService(
   private val cancellationReasonRepository: CancellationReasonRepository,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
-  fun createBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
 
   @Transactional
-  fun createApprovedPremisesBooking(
+  fun createApprovedPremisesAdHocBooking(
     user: UserEntity,
     premises: ApprovedPremisesEntity,
     crn: String,
