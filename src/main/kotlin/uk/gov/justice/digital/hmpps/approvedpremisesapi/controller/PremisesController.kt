@@ -320,7 +320,6 @@ class PremisesController(
       is ApprovedPremisesEntity -> {
         bookingService.createApprovedPremisesAdHocBooking(
           user = user,
-          premises = premises,
           crn = body.crn,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
