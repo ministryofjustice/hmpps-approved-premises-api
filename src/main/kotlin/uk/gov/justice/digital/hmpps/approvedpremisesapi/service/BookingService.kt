@@ -108,6 +108,14 @@ class BookingService(
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
 
+      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      }
+
+      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+      }
+
       val bed = bedRepository.findByIdOrNull(bedId)
 
       if (bed == null) {
@@ -176,6 +184,14 @@ class BookingService(
     val validationResult = validated {
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      }
+
+      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
       val bed = bedRepository.findByIdOrNull(bedId)
