@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import org.flywaydb.core.Flyway
-import org.hibernate.internal.SessionFactoryImpl
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
@@ -16,8 +15,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.sql.Connection
 import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicBoolean
-import javax.persistence.EntityManagerFactory
-import javax.persistence.metamodel.EntityType
 import javax.sql.DataSource
 
 class DbExtension : BeforeAllCallback, BeforeEachCallback {
@@ -30,7 +27,7 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
       TableData("spatial_ref_sys"),
     )
 
-    private lateinit var INITIAL_DB_STATE: Map<EntityType<*>, List<Any>>
+    private lateinit var INITIAL_DB_STATE: Map<TableData, TableResults>
   }
 
   override fun beforeAll(context: ExtensionContext?) {
@@ -38,7 +35,8 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
       val applicationContext = SpringExtension.getApplicationContext(context!!)
 
       runFlywayMigrations(applicationContext)
-      getInitialDatabaseState(applicationContext)
+      val dataSource = getDatasource(applicationContext)
+      getInitialDatabaseState(dataSource)
     }
   }
 
@@ -46,7 +44,7 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
     val applicationContext = SpringExtension.getApplicationContext(context!!)
     val dataSource = getDatasource(applicationContext)
     cleanDatabase(dataSource)
-    setInitialDatabaseState(applicationContext)
+    setInitialDatabaseState(dataSource)
   }
 
   private fun runFlywayMigrations(applicationContext: ApplicationContext) {
@@ -58,41 +56,6 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
     jdbcTemplate.execute("CREATE EXTENSION postgis;")
 
     flyway.migrate()
-  }
-
-  private fun getInitialDatabaseState(applicationContext: ApplicationContext) {
-    val entityManagerFactory = applicationContext.getBean(EntityManagerFactory::class.java)
-    val sessionFactory = entityManagerFactory.unwrap(SessionFactoryImpl::class.java)
-
-    sessionFactory.openSession().use { session ->
-      INITIAL_DB_STATE = session.metamodel.entities.associateWith {
-        val query = session.criteriaBuilder.createQuery()
-        val root = query.from(it)
-        query.select(root)
-        val results = session.createQuery(query).resultList
-
-        LOGGER.debug("Found ${results.count()} ${it.name} instances")
-
-        results
-      }
-    }
-  }
-
-  private fun setInitialDatabaseState(applicationContext: ApplicationContext) {
-    val entityManagerFactory = applicationContext.getBean(EntityManagerFactory::class.java)
-    val sessionFactory = entityManagerFactory.unwrap(SessionFactoryImpl::class.java)
-
-    sessionFactory.openSession().use { session ->
-      val transaction = session.beginTransaction()
-
-      INITIAL_DB_STATE.forEach { (entityType, entities) ->
-        entities.forEach { session.save(it) }
-        LOGGER.debug("Restoring ${entities.count()} ${entityType.name} instances")
-      }
-
-      session.flush()
-      transaction.commit()
-    }
   }
 
   private fun getDatasource(applicationContext: ApplicationContext): DataSource {
@@ -110,11 +73,45 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
     return pgSimpleDataSource
   }
 
+  private fun getInitialDatabaseState(dataSource: DataSource) {
+    try {
+      dataSource.connection.use { connection ->
+        connection.autoCommit = false
+        val tablesToCapture = getTableData(connection)
+        INITIAL_DB_STATE = getDatabaseState(tablesToCapture, connection)
+        connection.commit()
+      }
+    } catch (e: SQLException) {
+      LOGGER.error(String.format("Failed to capture initial database state due to error: \"%s\"", e.message))
+      e.printStackTrace()
+    }
+  }
+
+  private fun setInitialDatabaseState(dataSource: DataSource) {
+    try {
+      dataSource.connection.use { connection ->
+        connection.autoCommit = false
+        INITIAL_DB_STATE.keys.forEach { table ->
+          table.foreignKeys.forEach { fk ->
+            connection.prepareStatement("ALTER TABLE ${table.fullyQualifiedTableName} ALTER CONSTRAINT $fk DEFERRABLE INITIALLY IMMEDIATE;")
+              .execute()
+          }
+        }
+        connection.prepareStatement("SET CONSTRAINTS ALL DEFERRED;").execute()
+        INITIAL_DB_STATE.values.forEach { it.insert(connection) }
+        connection.commit()
+      }
+    } catch (e: SQLException) {
+      LOGGER.error(String.format("Failed to restore initial database state due to error: \"%s\"", e.message))
+      e.printStackTrace()
+    }
+  }
+
   private fun cleanDatabase(dataSource: DataSource) {
     try {
       dataSource.connection.use { connection ->
         connection.autoCommit = false
-        val tablesToClean = loadTablesToClean(connection)
+        val tablesToClean = getTableData(connection)
         cleanTablesData(tablesToClean, connection)
         connection.commit()
       }
@@ -124,15 +121,25 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
     }
   }
 
-  private fun loadTablesToClean(connection: Connection): List<TableData> {
+  private fun getTableData(connection: Connection): List<TableData> {
     val databaseMetaData = connection.metaData
     val resultSet = databaseMetaData.getTables(connection.catalog, null, null, arrayOf("TABLE"))
 
     val tablesToClean = mutableListOf<TableData>()
     while (resultSet.next()) {
+      val schema = resultSet.getString("TABLE_SCHEM")
+      val name = resultSet.getString("TABLE_NAME")
+
+      val constraintsResultSet = databaseMetaData.getCrossReference(connection.catalog, null, null, null, schema, name)
+      val foreignKeys = mutableListOf<String>()
+      while (constraintsResultSet.next()) {
+        foreignKeys.add(constraintsResultSet.getString("FK_NAME"))
+      }
+
       val table = TableData(
-        schema = resultSet.getString("TABLE_SCHEM"),
-        name = resultSet.getString("TABLE_NAME"),
+        schema = schema,
+        name = name,
+        foreignKeys = foreignKeys,
       )
 
       if (!TABLES_TO_IGNORE.contains(table)) {
@@ -141,6 +148,22 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
     }
 
     return tablesToClean
+  }
+
+  private fun getDatabaseState(tablesNames: List<TableData>, connection: Connection): Map<TableData, TableResults> {
+    return tablesNames.associateWith { table ->
+      val resultSet = connection.prepareStatement("SELECT * FROM ${table.fullyQualifiedTableName}").executeQuery()
+      val columns = (1..resultSet.metaData.columnCount).map { resultSet.metaData.getColumnName(it) }
+
+      val results = mutableListOf<Map<String, Any>>()
+
+      while (resultSet.next()) {
+        val row = columns.associateWith { key -> resultSet.getObject(key) }
+        results.add(row)
+      }
+
+      TableResults(table, columns, results)
+    }
   }
 
   private fun cleanTablesData(tablesNames: List<TableData>, connection: Connection) {
@@ -153,8 +176,27 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
     connection.prepareStatement(statement).execute()
   }
 
-  data class TableData(val name: String, val schema: String? = "public") {
+  data class TableData(val name: String, val schema: String? = "public", val foreignKeys: List<String> = listOf()) {
     val fullyQualifiedTableName =
       if (schema != null) "$schema.$name" else name
+  }
+
+  data class TableResults(val tableData: TableData, val columns: List<String>, val results: List<Map<String, Any>>) {
+    fun insert(connection: Connection) {
+      val sql = "INSERT INTO ${tableData.fullyQualifiedTableName} ($columnNamesSql) VALUES ($valueParametersSql);"
+      println(sql)
+      val statement = connection.prepareStatement(sql)
+
+      results.forEach { result ->
+        columns.map { result[it] }.forEachIndexed { i, param -> statement.setObject(i + 1, param) }
+        statement.execute()
+      }
+    }
+
+    private val columnNamesSql
+      get() = columns.joinToString()
+
+    private val valueParametersSql
+      get() = columns.indices.joinToString { "?" }
   }
 }
