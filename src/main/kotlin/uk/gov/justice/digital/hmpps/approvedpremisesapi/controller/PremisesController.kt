@@ -318,9 +318,8 @@ class PremisesController(
 
     val authorisableResult = when (premises) {
       is ApprovedPremisesEntity -> {
-        bookingService.createApprovedPremisesBooking(
+        bookingService.createApprovedPremisesAdHocBooking(
           user = user,
-          premises = premises,
           crn = body.crn,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,

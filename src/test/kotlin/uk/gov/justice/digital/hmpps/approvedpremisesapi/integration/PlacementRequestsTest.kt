@@ -2,12 +2,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class PlacementRequestsTest : IntegrationTestBase() {
 
@@ -151,6 +154,99 @@ class PlacementRequestsTest : IntegrationTestBase() {
                     )
                   )
                 )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create a Booking from a Placement Request without a JWT returns 401`() {
+    webTestClient.post()
+      .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/booking")
+      .bodyValue(
+        NewPlacementRequestBooking(
+          arrivalDate = LocalDate.parse("2023-03-29"),
+          departureDate = LocalDate.parse("2023-04-01"),
+          bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e")
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Creating a Booking from a Placement Request that is not allocated to the User returns a 403`() {
+    `Given a User` { user, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = otherUser) {
+            `Given a Placement Request`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              webTestClient.post()
+                .uri("/placement-requests/${placementRequest.id}/booking")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  NewPlacementRequestBooking(
+                    arrivalDate = LocalDate.parse("2023-03-29"),
+                    departureDate = LocalDate.parse("2023-04-01"),
+                    bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e")
+                  )
+                )
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Creating a Booking from a Placement Request that is allocated to the User returns a 200`() {
+    `Given a User` { user, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = otherUser) {
+            `Given a Placement Request`(
+              allocatedToUser = user,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              val premises = approvedPremisesEntityFactory.produceAndPersist {
+                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                withYieldedProbationRegion {
+                  probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                }
+              }
+
+              val room = roomEntityFactory.produceAndPersist {
+                withPremises(premises)
+              }
+
+              val bed = bedEntityFactory.produceAndPersist {
+                withRoom(room)
+              }
+
+              webTestClient.post()
+                .uri("/placement-requests/${placementRequest.id}/booking")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  NewPlacementRequestBooking(
+                    arrivalDate = LocalDate.parse("2023-03-29"),
+                    departureDate = LocalDate.parse("2023-04-01"),
+                    bedId = bed.id
+                  )
+                )
+                .exchange()
+                .expectStatus()
+                .isOk
             }
           }
         }

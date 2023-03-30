@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -44,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -80,16 +82,89 @@ class BookingService(
   private val nonArrivalRepository: NonArrivalRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
+  private val bedRepository: BedRepository,
+  private val placementRequestRepository: PlacementRequestRepository,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
-  fun createBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
 
   @Transactional
-  fun createApprovedPremisesBooking(
+  fun createApprovedPremisesBookingFromPlacementRequest(
     user: UserEntity,
-    premises: ApprovedPremisesEntity,
+    placementRequestId: UUID,
+    bedId: UUID,
+    arrivalDate: LocalDate,
+    departureDate: LocalDate
+  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
+    val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
+      ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
+
+    if (placementRequest.allocatedToUser.id != user.id) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val validationResult = validated {
+      if (departureDate.isBefore(arrivalDate)) {
+        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      val bed = bedRepository.findByIdOrNull(bedId)
+
+      if (bed == null) {
+        "$.bedId" hasValidationError "doesNotExist"
+      } else if (bed.room.premises !is ApprovedPremisesEntity) {
+        "$.bedId" hasValidationError "mustBelongToApprovedPremises"
+      }
+
+      if (validationErrors.any()) {
+        return@validated fieldValidationError
+      }
+
+      val bookingCreatedAt = OffsetDateTime.now()
+
+      val booking = bookingRepository.save(
+        BookingEntity(
+          id = UUID.randomUUID(),
+          crn = placementRequest.application.crn,
+          arrivalDate = arrivalDate,
+          departureDate = departureDate,
+          keyWorkerStaffCode = null,
+          arrival = null,
+          departures = mutableListOf(),
+          nonArrival = null,
+          cancellations = mutableListOf(),
+          confirmation = null,
+          extensions = mutableListOf(),
+          premises = bed!!.room.premises,
+          bed = bed,
+          service = ServiceName.approvedPremises.value,
+          originalArrivalDate = arrivalDate,
+          originalDepartureDate = departureDate,
+          createdAt = bookingCreatedAt,
+          application = placementRequest.application,
+          offlineApplication = null
+        )
+      )
+
+      placementRequest.booking = booking
+      placementRequestRepository.save(placementRequest)
+
+      saveBookingMadeDomainEvent(
+        booking = booking,
+        user = user,
+        bookingCreatedAt = bookingCreatedAt
+      )
+
+      return@validated success(booking)
+    }
+
+    return AuthorisableActionResult.Success(validationResult)
+  }
+
+  @Transactional
+  fun createApprovedPremisesAdHocBooking(
+    user: UserEntity,
     crn: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
@@ -104,11 +179,13 @@ class BookingService(
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
 
-      val bed = premises.rooms
-        .flatMap { it.beds }
-        .find { it.id == bedId }
+      val bed = bedRepository.findByIdOrNull(bedId)
 
-      if (bed == null) "$.bedId" hasValidationError "doesNotExist"
+      if (bed == null) {
+        "$.bedId" hasValidationError "doesNotExist"
+      } else if (bed.room.premises !is ApprovedPremisesEntity) {
+        "$.bedId" hasValidationError "mustBelongToApprovedPremises"
+      }
 
       val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
         .filter { it.submittedAt != null }
@@ -144,7 +221,7 @@ class BookingService(
           cancellations = mutableListOf(),
           confirmation = null,
           extensions = mutableListOf(),
-          premises = premises,
+          premises = bed!!.room.premises,
           bed = bed,
           service = ServiceName.approvedPremises.value,
           originalArrivalDate = arrivalDate,
@@ -156,67 +233,10 @@ class BookingService(
       )
 
       if (associateWithOnlineApplication) {
-        val domainEventId = UUID.randomUUID()
-
-        val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
-          is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
-        }
-
-        val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-        val staffDetails = when (staffDetailsResult) {
-          is ClientResult.Success -> staffDetailsResult.body
-          is ClientResult.Failure -> staffDetailsResult.throwException()
-        }
-
-        val application = booking.application!! as ApprovedPremisesApplicationEntity
-        val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-        domainEventService.saveBookingMadeDomainEvent(
-          DomainEvent(
-            id = domainEventId,
-            applicationId = application.id,
-            crn = booking.crn,
-            occurredAt = bookingCreatedAt,
-            data = BookingMadeEnvelope(
-              id = domainEventId,
-              timestamp = bookingCreatedAt,
-              eventType = "approved-premises.booking.made",
-              eventDetails = BookingMade(
-                applicationId = application.id,
-                applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
-                bookingId = booking.id,
-                personReference = PersonReference(
-                  crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
-                  noms = offenderDetails.otherIds.nomsNumber!!
-                ),
-                deliusEventNumber = application.eventNumber,
-                createdAt = bookingCreatedAt,
-                bookedBy = BookingMadeBookedBy(
-                  staffMember = StaffMember(
-                    staffCode = staffDetails.staffCode,
-                    staffIdentifier = staffDetails.staffIdentifier,
-                    forenames = staffDetails.staff.forenames,
-                    surname = staffDetails.staff.surname,
-                    username = staffDetails.username
-                  ),
-                  cru = Cru(
-                    name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
-                  )
-                ),
-                premises = Premises(
-                  id = approvedPremises.id,
-                  name = approvedPremises.name,
-                  apCode = approvedPremises.apCode,
-                  legacyApCode = approvedPremises.qCode,
-                  localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
-                ),
-                arrivalOn = booking.arrivalDate,
-                departureOn = booking.departureDate
-              )
-            )
-          )
+        saveBookingMadeDomainEvent(
+          booking = booking,
+          user = user,
+          bookingCreatedAt = bookingCreatedAt
         )
       }
 
@@ -224,6 +244,75 @@ class BookingService(
     }
 
     return AuthorisableActionResult.Success(validationResult)
+  }
+
+  private fun saveBookingMadeDomainEvent(
+    booking: BookingEntity,
+    user: UserEntity,
+    bookingCreatedAt: OffsetDateTime
+  ) {
+    val domainEventId = UUID.randomUUID()
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    val application = booking.application!! as ApprovedPremisesApplicationEntity
+    val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+    domainEventService.saveBookingMadeDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = booking.crn,
+        occurredAt = bookingCreatedAt,
+        data = BookingMadeEnvelope(
+          id = domainEventId,
+          timestamp = bookingCreatedAt,
+          eventType = "approved-premises.booking.made",
+          eventDetails = BookingMade(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            bookingId = booking.id,
+            personReference = PersonReference(
+              crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!
+            ),
+            deliusEventNumber = application.eventNumber,
+            createdAt = bookingCreatedAt,
+            bookedBy = BookingMadeBookedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username
+              ),
+              cru = Cru(
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
+              )
+            ),
+            premises = Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+            ),
+            arrivalOn = booking.arrivalDate,
+            departureOn = booking.departureDate
+          )
+        )
+      )
+    )
   }
 
   @Transactional
@@ -244,11 +333,13 @@ class BookingService(
         return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
-      val bed = premises.rooms
-        .flatMap { it.beds }
-        .find { it.id == bedId }
+      val bed = bedRepository.findByIdOrNull(bedId)
 
-      if (bed == null) "$.bedId" hasValidationError "doesNotExist"
+      if (bed == null) {
+        "$.bedId" hasValidationError "doesNotExist"
+      } else if (bed.room.premises !is TemporaryAccommodationPremisesEntity) {
+        "$.bedId" hasValidationError "mustBelongToTemporaryAccommodationPremises"
+      }
 
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"

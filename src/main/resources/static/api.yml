@@ -2099,6 +2099,39 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-requests/{id}/booking:
+    post:
+      tags:
+        - Placement requests
+      summary: Creates a Booking for a placement request
+      parameters:
+        - name: id
+          in: path
+          description: ID of the placement request
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Booking details
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewPlacementRequestBooking'
+        required: true
+      responses:
+        200:
+          description: successfully created a Booking
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Booking'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -2796,6 +2829,24 @@ components:
         - departureDate
         - bedId
         - serviceName
+    NewPlacementRequestBooking:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+          example: 2022-07-28
+        departureDate:
+          type: string
+          format: date
+          example: 2022-09-30
+        bedId:
+          type: string
+          format: uuid
+      required:
+        - arrivalDate
+        - departureDate
+        - bedId
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
