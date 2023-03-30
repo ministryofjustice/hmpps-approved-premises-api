@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -374,8 +373,8 @@ class PremisesController(
     val bedId = booking.bed?.id
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
-    throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId, booking.premises)
-    throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId, booking.premises)
+    throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
+    throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
     val result = bookingService.createArrival(
       booking = booking,
@@ -504,8 +503,8 @@ class PremisesController(
     val bedId = booking.bed?.id
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
-    throwIfBookingDatesConflict(booking.arrivalDate, body.newDepartureDate, bookingId, bedId, booking.premises)
-    throwIfLostBedDatesConflict(booking.arrivalDate, body.newDepartureDate, null, bedId, booking.premises)
+    throwIfBookingDatesConflict(booking.arrivalDate, body.newDepartureDate, bookingId, bedId)
+    throwIfLostBedDatesConflict(booking.arrivalDate, body.newDepartureDate, null, bedId)
 
     val result = bookingService.createExtension(
       booking = booking,
@@ -526,8 +525,8 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId, premises)
-    throwIfLostBedDatesConflict(body.startDate, body.endDate, null, body.bedId, premises)
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId)
+    throwIfLostBedDatesConflict(body.startDate, body.endDate, null, body.bedId)
 
     val result = premisesService.createLostBeds(
       premises = premises,
@@ -587,8 +586,8 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    throwIfBookingDatesConflict(body.startDate, body.endDate, null, lostBed.bed.id, premises)
-    throwIfLostBedDatesConflict(body.startDate, body.endDate, lostBedId, lostBed.bed.id, premises)
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, lostBed.bed.id)
+    throwIfLostBedDatesConflict(body.startDate, body.endDate, lostBedId, lostBed.bed.id)
 
     val updateLostBedResult = premisesService
       .updateLostBeds(
@@ -774,10 +773,9 @@ class PremisesController(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID,
-    premises: PremisesEntity,
+    bedId: UUID
   ) {
-    bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedId, premises)?.let {
+    bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedId)?.let {
       throw ConflictProblem(it.id, "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates")
     }
   }
@@ -786,10 +784,9 @@ class PremisesController(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID,
-    premises: PremisesEntity,
+    bedId: UUID
   ) {
-    bookingService.getLostBedWithConflictingDates(startDate, endDate, thisEntityId, bedId, premises)?.let {
+    bookingService.getLostBedWithConflictingDates(startDate, endDate, thisEntityId, bedId)?.let {
       throw ConflictProblem(it.id, "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates")
     }
   }

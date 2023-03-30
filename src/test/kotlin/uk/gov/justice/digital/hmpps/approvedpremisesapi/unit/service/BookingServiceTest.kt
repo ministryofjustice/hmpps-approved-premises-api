@@ -70,6 +70,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
@@ -115,6 +116,7 @@ class BookingServiceTest {
   private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val mockBedRepository = mockk<BedRepository>()
   private val mockPlacementRequestRepository = mockk<PlacementRequestRepository>()
+  private val mockLostBedsRepository = mockk<LostBedsRepository>()
 
   private val bookingService = BookingService(
     premisesService = mockPremisesService,
@@ -138,6 +140,7 @@ class BookingServiceTest {
     cancellationReasonRepository = mockCancellationReasonRepository,
     bedRepository = mockBedRepository,
     placementRequestRepository = mockPlacementRequestRepository,
+    lostBedsRepository = mockLostBedsRepository,
     applicationUrlTemplate = "http://frontend/applications/#id"
   )
 
@@ -1949,8 +1952,13 @@ class BookingServiceTest {
   fun `createTemporaryAccommodationBooking returns FieldValidationError if Departure Date is before Arrival Date`() {
     val crn = "CRN123"
     val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
+    val arrivalDate = LocalDate.parse("2023-02-23")
+    val departureDate = LocalDate.parse("2023-02-22")
 
     every { mockBedRepository.findByIdOrNull(bedId) } returns null
+
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -1975,8 +1983,13 @@ class BookingServiceTest {
   fun `createTemporaryAccommodationBooking returns FieldValidationError if Bed does not exist`() {
     val crn = "CRN123"
     val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
+    val arrivalDate = LocalDate.parse("2023-02-23")
+    val departureDate = LocalDate.parse("2023-02-22")
 
     every { mockBedRepository.findByIdOrNull(bedId) } returns null
+
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -1986,7 +1999,7 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
-    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"), bedId)
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, arrivalDate, departureDate, bedId)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -2022,6 +2035,9 @@ class BookingServiceTest {
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
 
     val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, arrivalDate, departureDate, bed.id)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
