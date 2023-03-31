@@ -26,7 +26,9 @@ class PlacementRequestTransformer(
       desirableCriteria = jpa.desirableCriteria.mapNotNull { characteristicToCriteria(it) },
       mentalHealthSupport = jpa.mentalHealthSupport,
       person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-      risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn)
+      risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
+      applicationId = jpa.application.id,
+      assessmentId = jpa.assessment.id
     )
   }
 

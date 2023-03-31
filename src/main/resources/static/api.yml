@@ -4518,10 +4518,18 @@ components:
               $ref: '#/components/schemas/Person'
             risks:
               $ref: '#/components/schemas/PersonRisks'
+            applicationId:
+              type: string
+              format: uuid
+            assessmentId:
+              type: string
+              format: uuid
       required:
         - person
         - risks
         - id
+        - applicationId
+        - assessmentId
     PlacementCriteria:
       type: string
       enum:
