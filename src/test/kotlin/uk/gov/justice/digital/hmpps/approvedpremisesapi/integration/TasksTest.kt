@@ -39,42 +39,46 @@ class TasksTest : IntegrationTestBase() {
   @Test
   fun `Get all tasks returns 200 with correct body`() {
     `Given a User` { user, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        `Given an Assessment`(
-          allocatedToUser = user,
-          createdByUser = user,
-          crn = offenderDetails.otherIds.crn
-        ) { assessment, _ ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Assessment`(
             allocatedToUser = user,
             createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
-            reallocated = true
-          ) { _, _ ->
-            `Given a Placement Request`(
+            crn = offenderDetails.otherIds.crn
+          ) { assessment, _ ->
+            `Given an Assessment`(
               allocatedToUser = user,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn
-            ) { placementRequest, _ ->
-              webTestClient.get()
-                .uri("/tasks")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    listOf(
-                      taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
-                      taskTransformer.transformPlacementRequestToTask(
-                        placementRequest,
-                        offenderDetails,
-                        inmateDetails
+              crn = offenderDetails.otherIds.crn,
+              reallocated = true
+            ) { _, _ ->
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn
+              ) { placementRequest, _ ->
+                webTestClient.get()
+                  .uri("/tasks")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .expectBody()
+                  .json(
+                    objectMapper.writeValueAsString(
+                      listOf(
+                        taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
+                        taskTransformer.transformAssessmentToTask(placementRequest.assessment, offenderDetails, inmateDetails),
+                        taskTransformer.transformPlacementRequestToTask(
+                          placementRequest,
+                          offenderDetails,
+                          inmateDetails
+                        )
                       )
                     )
                   )
-                )
+              }
             }
           }
         }
@@ -155,7 +159,8 @@ class TasksTest : IntegrationTestBase() {
         ) { allocatableUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given a Placement Request`(
-              allocatedToUser = user,
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = user,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn
             ) { placementRequest, application ->
@@ -288,7 +293,8 @@ class TasksTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           `Given a Placement Request`(
             createdByUser = user,
-            allocatedToUser = user,
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
             crn = offenderDetails.otherIds.crn
           ) { existingPlacementRequest, application ->
             webTestClient.post()
