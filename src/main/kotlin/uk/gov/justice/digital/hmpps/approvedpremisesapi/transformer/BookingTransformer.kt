@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -52,20 +53,20 @@ class BookingTransformer(
   }
 
   private fun determineApprovedPremisesStatus(jpa: BookingEntity) = when {
-    jpa.nonArrival != null -> Booking.Status.notMinusArrived
-    jpa.arrival != null && jpa.departure == null -> Booking.Status.arrived
-    jpa.departure != null -> Booking.Status.departed
-    jpa.cancellation != null -> Booking.Status.cancelled
-    jpa.arrival == null && jpa.nonArrival == null -> Booking.Status.awaitingMinusArrival
+    jpa.nonArrival != null -> BookingStatus.notMinusArrived
+    jpa.arrival != null && jpa.departure == null -> BookingStatus.arrived
+    jpa.departure != null -> BookingStatus.departed
+    jpa.cancellation != null -> BookingStatus.cancelled
+    jpa.arrival == null && jpa.nonArrival == null -> BookingStatus.awaitingMinusArrival
     else -> throw RuntimeException("Could not determine status for Booking ${jpa.id}")
   }
 
   private fun determineTemporaryAccommodationStatus(jpa: BookingEntity) = when {
-    jpa.cancellation != null -> Booking.Status.cancelled
-    jpa.departure != null -> Booking.Status.departed
-    jpa.arrival != null -> Booking.Status.arrived
-    jpa.nonArrival != null -> Booking.Status.notMinusArrived
-    jpa.confirmation != null -> Booking.Status.confirmed
-    else -> Booking.Status.provisional
+    jpa.cancellation != null -> BookingStatus.cancelled
+    jpa.departure != null -> BookingStatus.departed
+    jpa.arrival != null -> BookingStatus.arrived
+    jpa.nonArrival != null -> BookingStatus.notMinusArrived
+    jpa.confirmation != null -> BookingStatus.confirmed
+    else -> BookingStatus.provisional
   }
 }

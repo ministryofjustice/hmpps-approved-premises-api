@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
@@ -208,7 +209,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        status = Booking.Status.awaitingMinusArrival,
+        status = BookingStatus.awaitingMinusArrival,
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
@@ -246,7 +247,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        status = Booking.Status.provisional,
+        status = BookingStatus.provisional,
         extensions = listOf(),
         serviceName = ServiceName.temporaryAccommodation,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
@@ -300,7 +301,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = Booking.Status.notMinusArrived,
+        status = BookingStatus.notMinusArrived,
         nonArrival = Nonarrival(
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
           bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
@@ -365,7 +366,7 @@ class BookingTransformerTest {
           keyWorker = true,
           name = "first last"
         ),
-        status = Booking.Status.arrived,
+        status = BookingStatus.arrived,
         arrival = Arrival(
           bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -427,7 +428,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = Booking.Status.cancelled,
+        status = BookingStatus.cancelled,
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           date = LocalDate.parse("2022-08-10"),
@@ -520,7 +521,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = Booking.Status.cancelled,
+        status = BookingStatus.cancelled,
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           notes = null,
@@ -653,7 +654,7 @@ class BookingTransformerTest {
           keyWorker = true,
           name = "first last"
         ),
-        status = Booking.Status.departed,
+        status = BookingStatus.departed,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -879,7 +880,7 @@ class BookingTransformerTest {
           keyWorker = true,
           name = "first last"
         ),
-        status = Booking.Status.departed,
+        status = BookingStatus.departed,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -1014,7 +1015,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = Booking.Status.confirmed,
+        status = BookingStatus.confirmed,
         cancellation = null,
         confirmation = Confirmation(
           id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),

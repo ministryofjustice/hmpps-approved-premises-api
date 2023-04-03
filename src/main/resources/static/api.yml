@@ -1753,7 +1753,7 @@ paths:
           description: If provided, only search for bookings with the given status
           required: false
           schema:
-            $ref: "#/components/schemas/BookingSearchStatus"
+            $ref: "#/components/schemas/BookingStatus"
         - name: sortOrder
           in: query
           description: If provided, return results in the given order
@@ -1766,6 +1766,12 @@ paths:
           required: false
           schema:
             $ref: "#/components/schemas/BookingSearchSortField"
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the bookings to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
@@ -2995,15 +3001,7 @@ components:
         - type: object
           properties:
             status:
-              type: string
-              enum:
-              - arrived
-              - awaiting-arrival
-              - not-arrived
-              - departed
-              - cancelled
-              - provisional
-              - confirmed
+              $ref: '#/components/schemas/BookingStatus'
             extensions:
               type: array
               items:
@@ -4883,14 +4881,16 @@ components:
       enum:
         - ascending
         - descending
-    BookingSearchStatus:
+    BookingStatus:
       type: string
       enum:
+        - arrived
+        - awaiting-arrival
+        - not-arrived
+        - departed
+        - cancelled
         - provisional
         - confirmed
-        - active
-        - closed
-        - cancelled
     BookingSearchSortField:
       type: string
       enum:
@@ -4953,7 +4953,7 @@ components:
           type: string
           format: uuid
         status:
-          $ref: "#/components/schemas/BookingSearchStatus"
+          $ref: "#/components/schemas/BookingStatus"
         startDate:
           type: string
           format: date
