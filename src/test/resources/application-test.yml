@@ -1,3 +1,5 @@
+logging.level.org.springframework.test.context.cache: DEBUG
+
 server:
   shutdown: immediate
 
@@ -10,7 +12,7 @@ spring:
     username: integration_test
     password: integration_test_password
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5433/approved_premises_integration_test
+    url: sdhgiodshgiofdhgio
   flyway:
     locations: classpath:db/migration/all
   jpa:
@@ -54,23 +56,23 @@ domain-events:
 
 hmpps:
   auth:
-    url: http://localhost:57839/auth
+    url: http://localhost:#WIREMOCK_PORT/auth
     client-id: integration-test-client-id
     client-secret: secret
 
 services:
   community-api:
-    base-url: http://localhost:57839
+    base-url: http://localhost:#WIREMOCK_PORT
   hmpps-tier:
-    base-url: http://localhost:57839
+    base-url: http://localhost:#WIREMOCK_PORT
   prisons-api:
-    base-url: http://localhost:57839
+    base-url: http://localhost:#WIREMOCK_PORT
   case-notes:
-    base-url: http://localhost:57839
+    base-url: http://localhost:#WIREMOCK_PORT
   ap-delius-context-api:
-    base-url: http://localhost:57839
+    base-url: http://localhost:#WIREMOCK_PORT
   ap-oasys-context-api:
-    base-url: http://localhost:57839
+    base-url: http://localhost:#WIREMOCK_PORT
 
 prison-case-notes:
   lookback-days: 365

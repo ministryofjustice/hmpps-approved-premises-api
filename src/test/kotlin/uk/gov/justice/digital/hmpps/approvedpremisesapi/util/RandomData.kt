@@ -18,6 +18,7 @@ private fun randomWithCharPool(charPool: List<Char>, length: Int) = (1..length)
   .joinToString("")
 
 fun randomStringMultiCaseWithNumbers(length: Int) = randomWithCharPool(charPoolMultiCaseNumbers, length)
+fun randomStringLowerCase(length: Int) = randomWithCharPool(charPoolLowerCase, length)
 
 fun randomStringUpperCase(length: Int) = randomWithCharPool(charPoolUpperCase, length)
 

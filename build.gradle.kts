@@ -90,6 +90,10 @@ tasks.register("bootRunLocal") {
 
 tasks.test {
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+  systemProperty("junit.jupiter.execution.parallel.enabled", "true")
+  systemProperty("junit.jupiter.execution.parallel.mode.default", "same_thread")
+  systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
+  systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic")
 }
 
 openApiGenerate {
