@@ -13,6 +13,7 @@ import javax.persistence.JoinColumn
 import javax.persistence.JoinTable
 import javax.persistence.ManyToMany
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -74,6 +75,9 @@ data class PlacementRequestEntity(
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   val allocatedToUser: UserEntity,
+
+  @OneToMany(mappedBy = "placementRequest")
+  var bookingNotMades: MutableList<BookingNotMadeEntity>,
 
   var reallocatedAt: OffsetDateTime?
 )

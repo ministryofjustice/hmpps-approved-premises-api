@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
@@ -31,6 +32,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var allocatedToUser: Yielded<UserEntity> = { UserEntityFactory().produce() }
   private var booking: Yielded<BookingEntity?> = { null }
+  private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -68,6 +70,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.desirableCriteria = { desirableCriteria }
   }
 
+  fun withBookingNotMades(bookingNotMades: MutableList<BookingNotMadeEntity>) = apply {
+    this.bookingNotMades = { bookingNotMades }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     gender = this.gender(),
@@ -84,6 +90,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     createdAt = this.createdAt(),
     allocatedToUser = this.allocatedToUser(),
     booking = this.booking(),
+    bookingNotMades = this.bookingNotMades(),
     reallocatedAt = this.reallocatedAt()
   )
 }
