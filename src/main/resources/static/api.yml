@@ -2132,6 +2132,39 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-requests/{id}/booking-not-made:
+    post:
+      tags:
+        - Placement requests
+      summary: Records that an attempt to match was made but no suitable Beds could be found
+      parameters:
+        - name: id
+          in: path
+          description: ID of the placement request
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Details about the failure to match
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewBookingNotMade'
+        required: true
+      responses:
+        200:
+          description: successfully recorded that a Booking could not be made
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BookingNotMade'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -4869,3 +4902,26 @@ components:
       required:
         - id
         - name
+    NewBookingNotMade:
+      type: object
+      properties:
+        notes:
+          type: string
+    BookingNotMade:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        placementRequestId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+      required:
+        - id
+        - placementRequestId
+        - createdAt
