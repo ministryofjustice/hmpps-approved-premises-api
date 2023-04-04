@@ -4,6 +4,8 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.time.OffsetDateTime
 
 class BookingSearchServiceTest {
   private val mockBookingSearchRepository = mockk<BookingSearchRepository>()
@@ -42,7 +45,7 @@ class BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockBookingSearchRepository.findBookings(any(), any()) } returns listOf(
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
       BookingSearchResultFactory().produce(),
       BookingSearchResultFactory().produce(),
       BookingSearchResultFactory().produce(),
@@ -74,10 +77,16 @@ class BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockBookingSearchRepository.findBookings(any(), any()) } returns listOf(
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
+      BookingSearchResultFactory()
+        .withBookingCreatedAt(OffsetDateTime.now().minusDays(3))
+        .produce(),
+      BookingSearchResultFactory()
+        .withBookingCreatedAt(OffsetDateTime.now().minusDays(2))
+        .produce(),
+      BookingSearchResultFactory()
+        .withBookingCreatedAt(OffsetDateTime.now().minusDays(1))
+        .produce(),
     )
 
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returnsMany listOf(
@@ -103,10 +112,16 @@ class BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockBookingSearchRepository.findBookings(any(), any()) } returns listOf(
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
+      BookingSearchResultFactory()
+        .withBookingCreatedAt(OffsetDateTime.now().minusDays(3))
+        .produce(),
+      BookingSearchResultFactory()
+        .withBookingCreatedAt(OffsetDateTime.now().minusDays(2))
+        .produce(),
+      BookingSearchResultFactory()
+        .withBookingCreatedAt(OffsetDateTime.now().minusDays(1))
+        .produce(),
     )
 
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returnsMany listOf(
@@ -126,5 +141,190 @@ class BookingSearchServiceTest {
       assertThat(it.personName).isNotNull()
     }
     assertThat(validationResult.entity.last().personName).isNull()
+  }
+
+  @EnumSource(value = SortOrder::class)
+  @ParameterizedTest
+  fun `findBookings returns results sorted according to person name`(sortOrder: SortOrder) {
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea {
+            ApAreaEntityFactory().produce()
+          }
+          .produce()
+      }
+      .produce()
+
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+    )
+
+    every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce())
+
+    val result = bookingSearchService.findBookings(ServiceName.temporaryAccommodation, null, sortOrder, BookingSearchSortField.personName)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = result.entity as ValidatableActionResult.Success
+    assertThat(validationResult.entity).hasSize(3)
+
+    assertThat(validationResult.entity.map { it.personName }).isSortedAccordingTo { a, b ->
+      when (sortOrder) {
+        SortOrder.ascending -> compareValues(a, b)
+        SortOrder.descending -> compareValues(b, a)
+      }
+    }
+  }
+
+  @EnumSource(value = SortOrder::class)
+  @ParameterizedTest
+  fun `findBookings returns results sorted according to person CRN`(sortOrder: SortOrder) {
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea {
+            ApAreaEntityFactory().produce()
+          }
+          .produce()
+      }
+      .produce()
+
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+    )
+
+    every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce())
+
+    val result = bookingSearchService.findBookings(ServiceName.temporaryAccommodation, null, sortOrder, BookingSearchSortField.personCrn)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = result.entity as ValidatableActionResult.Success
+    assertThat(validationResult.entity).hasSize(3)
+
+    assertThat(validationResult.entity.map { it.personCrn }).isSortedAccordingTo { a, b ->
+      when (sortOrder) {
+        SortOrder.ascending -> compareValues(a, b)
+        SortOrder.descending -> compareValues(b, a)
+      }
+    }
+  }
+
+  @EnumSource(value = SortOrder::class)
+  @ParameterizedTest
+  fun `findBookings returns results sorted according to booking start date`(sortOrder: SortOrder) {
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea {
+            ApAreaEntityFactory().produce()
+          }
+          .produce()
+      }
+      .produce()
+
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+    )
+
+    every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce())
+
+    val result = bookingSearchService.findBookings(ServiceName.temporaryAccommodation, null, sortOrder, BookingSearchSortField.bookingStartDate)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = result.entity as ValidatableActionResult.Success
+    assertThat(validationResult.entity).hasSize(3)
+
+    assertThat(validationResult.entity.map { it.bookingStartDate }).isSortedAccordingTo { a, b ->
+      when (sortOrder) {
+        SortOrder.ascending -> compareValues(a, b)
+        SortOrder.descending -> compareValues(b, a)
+      }
+    }
+  }
+
+  @EnumSource(value = SortOrder::class)
+  @ParameterizedTest
+  fun `findBookings returns results sorted according to booking end date`(sortOrder: SortOrder) {
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea {
+            ApAreaEntityFactory().produce()
+          }
+          .produce()
+      }
+      .produce()
+
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+    )
+
+    every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce())
+
+    val result = bookingSearchService.findBookings(ServiceName.temporaryAccommodation, null, sortOrder, BookingSearchSortField.bookingEndDate)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = result.entity as ValidatableActionResult.Success
+    assertThat(validationResult.entity).hasSize(3)
+
+    assertThat(validationResult.entity.map { it.bookingEndDate }).isSortedAccordingTo { a, b ->
+      when (sortOrder) {
+        SortOrder.ascending -> compareValues(a, b)
+        SortOrder.descending -> compareValues(b, a)
+      }
+    }
+  }
+
+  @EnumSource(value = SortOrder::class)
+  @ParameterizedTest
+  fun `findBookings returns results sorted according to booking creation`(sortOrder: SortOrder) {
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea {
+            ApAreaEntityFactory().produce()
+          }
+          .produce()
+      }
+      .produce()
+
+    every { mockBookingSearchRepository.findBookings(any(), any(), any()) } returns listOf(
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+      BookingSearchResultFactory().produce(),
+    )
+
+    every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce())
+
+    val result = bookingSearchService.findBookings(ServiceName.temporaryAccommodation, null, sortOrder, BookingSearchSortField.bookingCreatedAt)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = result.entity as ValidatableActionResult.Success
+    assertThat(validationResult.entity).hasSize(3)
+
+    assertThat(validationResult.entity.map { it.bookingCreatedAt }).isSortedAccordingTo { a, b ->
+      when (sortOrder) {
+        SortOrder.ascending -> compareValues(a, b)
+        SortOrder.descending -> compareValues(b, a)
+      }
+    }
   }
 }

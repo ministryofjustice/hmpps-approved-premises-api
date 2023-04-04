@@ -52,6 +52,10 @@ class BookingSearchResultFactory : Factory<BookingSearchResult> {
     this.bookingStatus = { bookingStatus.value }
   }
 
+  fun withBookingCreatedAt(bookingCreatedAt: OffsetDateTime) = apply {
+    this.bookingCreatedAt = { bookingCreatedAt }
+  }
+
   override fun produce() = BookingSearchResult(
     personName = this.personName?.invoke(),
     personCrn = this.personCrn(),

@@ -291,6 +291,77 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Results are only returned for the user's probation region for Temporary Accommodation`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val expectedPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+          withProbationRegion(userEntity.probationRegion)
+          withYieldedLocalAuthorityArea {
+            localAuthorityEntityFactory.produceAndPersist()
+          }
+        }
+
+        val unexpectedPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea {
+                apAreaEntityFactory.produceAndPersist()
+              }
+            }
+          }
+          withYieldedLocalAuthorityArea {
+            localAuthorityEntityFactory.produceAndPersist()
+          }
+        }
+
+        val allPremises = expectedPremises + unexpectedPremises
+
+        val allBeds = mutableListOf<BedEntity>()
+        allPremises.forEach { premises ->
+          val rooms = roomEntityFactory.produceAndPersistMultiple(3) {
+            withPremises(premises)
+          }
+
+          rooms.forEach { room ->
+            val bed = bedEntityFactory.produceAndPersist {
+              withRoom(room)
+            }
+
+            allBeds += bed
+          }
+        }
+
+        val allBookings = mutableListOf<BookingEntity>()
+        allBeds.forEach { bed ->
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(bed.room.premises)
+            withCrn(offenderDetails.otherIds.crn)
+            withBed(bed)
+            withServiceName(ServiceName.temporaryAccommodation)
+          }
+
+          allBookings += booking
+        }
+
+        val expectedPremisesIds = expectedPremises.map { it.id }
+        val expectedBookings = allBookings.filter { expectedPremisesIds.contains(it.premises.id) }
+
+        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
+
+        webTestClient.get()
+          .uri("/bookings/search")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedResponse))
+      }
+    }
+  }
+
   private fun getExpectedResponse(expectedBookings: List<BookingEntity>, offenderDetails: OffenderDetailSummary): BookingSearchResults {
     return BookingSearchResults(
       resultsCount = expectedBookings.size,

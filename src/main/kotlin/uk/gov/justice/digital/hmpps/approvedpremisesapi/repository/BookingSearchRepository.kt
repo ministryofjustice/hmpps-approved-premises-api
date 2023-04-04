@@ -58,18 +58,28 @@ class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParam
   private val bookingStatusFilter = """
     s.booking_status = :booking_status
   """.trimIndent()
+
+  private val probationRegionFilter = """
+    p.probation_region_id = :probation_region
+  """.trimIndent()
+
   fun findBookings(
     serviceName: ServiceName,
     status: BookingStatus?,
+    probationRegionId: UUID?,
   ): List<BookingSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("service", serviceName.value)
       addValue("booking_status", status?.value)
+      addValue("probation_region", probationRegionId)
     }
 
     var optionalFilters = ""
     if (status != null) {
       optionalFilters += "AND $bookingStatusFilter\n"
+    }
+    if (probationRegionId != null) {
+      optionalFilters += "AND $probationRegionFilter\n"
     }
 
     val query = bookingSearchQuery.replace("#OPTIONAL_FILTERS", optionalFilters)

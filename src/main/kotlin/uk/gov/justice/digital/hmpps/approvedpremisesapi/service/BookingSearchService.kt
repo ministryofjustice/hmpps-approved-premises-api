@@ -25,9 +25,15 @@ class BookingSearchService(
   ): AuthorisableActionResult<ValidatableActionResult<List<BookingSearchResult>>> {
     val user = userService.getUserForRequest()
 
+    val probationRegionId = when (serviceName) {
+      ServiceName.temporaryAccommodation -> user.probationRegion.id
+      else -> null
+    }
+
     val results = bookingSearchRepository.findBookings(
       serviceName,
       status,
+      probationRegionId,
     )
 
     results.forEach { result ->
@@ -40,9 +46,24 @@ class BookingSearchService(
       result.personName = offenderDetails?.let { "${it.firstName} ${it.surname}" }
     }
 
+    val comparator = Comparator<BookingSearchResult> { a, b ->
+      val ascendingCompare = when (sortField) {
+        BookingSearchSortField.personName -> compareValues(a.personName, b.personName)
+        BookingSearchSortField.personCrn -> compareValues(a.personCrn, b.personCrn)
+        BookingSearchSortField.bookingStartDate -> compareValues(a.bookingStartDate, b.bookingStartDate)
+        BookingSearchSortField.bookingEndDate -> compareValues(a.bookingEndDate, b.bookingEndDate)
+        BookingSearchSortField.bookingCreatedAt -> compareValues(a.bookingCreatedAt, b.bookingCreatedAt)
+      }
+
+      when (sortOrder) {
+        SortOrder.ascending -> ascendingCompare
+        SortOrder.descending -> -ascendingCompare
+      }
+    }
+
     return AuthorisableActionResult.Success(
       validated {
-        return@validated success(results)
+        return@validated success(results.sortedWith(comparator))
       }
     )
   }
