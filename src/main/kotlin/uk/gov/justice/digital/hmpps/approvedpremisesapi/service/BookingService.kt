@@ -273,7 +273,7 @@ class BookingService(
         id = domainEventId,
         applicationId = application.id,
         crn = booking.crn,
-        occurredAt = bookingCreatedAt,
+        occurredAt = bookingCreatedAt.toInstant(),
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
@@ -453,7 +453,7 @@ class BookingService(
           id = domainEventId,
           applicationId = application.id,
           crn = booking.crn,
-          occurredAt = arrivalDate.toLocalDateTime(), // TODO: Endpoint should accept a date-time instead
+          occurredAt = arrivalDate.toLocalDateTime().toInstant(), // TODO: Endpoint should accept a date-time instead
           data = PersonArrivedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
@@ -554,7 +554,7 @@ class BookingService(
           id = domainEventId,
           applicationId = application.id,
           crn = booking.crn,
-          occurredAt = date.toLocalDateTime(),
+          occurredAt = date.toLocalDateTime().toInstant(),
           data = PersonNotArrivedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
@@ -745,7 +745,7 @@ class BookingService(
           id = domainEventId,
           applicationId = application.id,
           crn = booking.crn,
-          occurredAt = dateTime,
+          occurredAt = dateTime.toInstant(),
           data = PersonDepartedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),

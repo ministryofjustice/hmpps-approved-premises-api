@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -96,7 +97,7 @@ class DomainEventServiceTest {
         id = id,
         applicationId = applicationId,
         crn = "CRN",
-        occurredAt = occurredAt,
+        occurredAt = occurredAt.toInstant(),
         data = data
       )
     )
@@ -119,7 +120,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = ApplicationSubmittedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -139,7 +140,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -154,7 +155,7 @@ class DomainEventServiceTest {
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An application has been submitted for an Approved Premises placement" &&
             deserializedMessage.detailUrl == "http://frontend/events/application-submitted/$id" &&
-            deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
@@ -180,7 +181,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = ApplicationSubmittedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -202,7 +203,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -251,7 +252,7 @@ class DomainEventServiceTest {
         id = id,
         applicationId = applicationId,
         crn = "CRN",
-        occurredAt = occurredAt,
+        occurredAt = occurredAt.toInstant(),
         data = data
       )
     )
@@ -274,7 +275,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = ApplicationAssessedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -294,7 +295,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -309,7 +310,7 @@ class DomainEventServiceTest {
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An application has been assessed for an Approved Premises placement" &&
             deserializedMessage.detailUrl == "http://frontend/events/application-assessed/$id" &&
-            deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
@@ -335,7 +336,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = ApplicationAssessedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -357,7 +358,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -406,7 +407,7 @@ class DomainEventServiceTest {
         id = id,
         applicationId = applicationId,
         crn = "CRN",
-        occurredAt = occurredAt,
+        occurredAt = occurredAt.toInstant(),
         data = data
       )
     )
@@ -429,7 +430,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = BookingMadeEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -449,7 +450,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -464,7 +465,7 @@ class DomainEventServiceTest {
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An Approved Premises booking has been made" &&
             deserializedMessage.detailUrl == "http://frontend/events/booking-made/$id" &&
-            deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
@@ -490,7 +491,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = BookingMadeEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -512,7 +513,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -561,7 +562,7 @@ class DomainEventServiceTest {
         id = id,
         applicationId = applicationId,
         crn = "CRN",
-        occurredAt = occurredAt,
+        occurredAt = occurredAt.toInstant(),
         data = data
       )
     )
@@ -584,7 +585,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = PersonArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -604,7 +605,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -619,7 +620,7 @@ class DomainEventServiceTest {
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has arrived at an Approved Premises for their Booking" &&
             deserializedMessage.detailUrl == "http://frontend/events/person-arrived/$id" &&
-            deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
@@ -645,7 +646,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = PersonArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -667,7 +668,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -716,7 +717,7 @@ class DomainEventServiceTest {
         id = id,
         applicationId = applicationId,
         crn = "CRN",
-        occurredAt = occurredAt,
+        occurredAt = occurredAt.toInstant(),
         data = data
       )
     )
@@ -739,7 +740,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = PersonNotArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -759,7 +760,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -774,7 +775,7 @@ class DomainEventServiceTest {
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has failed to arrive at an Approved Premises for their Booking" &&
             deserializedMessage.detailUrl == "http://frontend/events/person-not-arrived/$id" &&
-            deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
@@ -800,7 +801,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = PersonNotArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -822,7 +823,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -871,7 +872,7 @@ class DomainEventServiceTest {
         id = id,
         applicationId = applicationId,
         crn = "CRN",
-        occurredAt = occurredAt,
+        occurredAt = occurredAt.toInstant(),
         data = data
       )
     )
@@ -894,7 +895,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = PersonDepartedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -914,7 +915,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )
@@ -929,7 +930,7 @@ class DomainEventServiceTest {
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has left an Approved Premises" &&
             deserializedMessage.detailUrl == "http://frontend/events/person-departed/$id" &&
-            deserializedMessage.occurredAt == domainEventToSave.occurredAt &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
@@ -955,7 +956,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
-      occurredAt = OffsetDateTime.now(),
+      occurredAt = Instant.now(),
       data = PersonDepartedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
@@ -977,7 +978,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
             it.crn == domainEventToSave.crn &&
-            it.occurredAt == domainEventToSave.occurredAt &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
         }
       )

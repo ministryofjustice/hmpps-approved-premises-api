@@ -367,7 +367,7 @@ class ApplicationService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        occurredAt = eventOccurredAt,
+        occurredAt = eventOccurredAt.toInstant(),
         data = ApplicationSubmittedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),

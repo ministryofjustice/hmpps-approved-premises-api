@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -77,7 +78,7 @@ class DomainEventService(
       id = domainEventEntity.id,
       applicationId = domainEventEntity.applicationId,
       crn = domainEventEntity.crn,
-      occurredAt = domainEventEntity.occurredAt,
+      occurredAt = domainEventEntity.occurredAt.toInstant(),
       data = data
     )
   }
@@ -162,7 +163,7 @@ class DomainEventService(
         applicationId = domainEvent.applicationId,
         crn = domainEvent.crn,
         type = enumTypeFromDataType(domainEvent.data!!::class.java),
-        occurredAt = domainEvent.occurredAt,
+        occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data)
       )
@@ -174,7 +175,7 @@ class DomainEventService(
         version = 1,
         description = typeDescription,
         detailUrl = detailUrl,
-        occurredAt = domainEvent.occurredAt,
+        occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         additionalInformation = SnsEventAdditionalInformation(
           applicationId = domainEvent.applicationId
         ),

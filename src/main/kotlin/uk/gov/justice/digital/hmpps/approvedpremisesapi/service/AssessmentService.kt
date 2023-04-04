@@ -231,7 +231,7 @@ class AssessmentService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        occurredAt = acceptedAt,
+        occurredAt = acceptedAt.toInstant(),
         data = ApplicationAssessedEnvelope(
           id = domainEventId,
           timestamp = acceptedAt.toInstant(),
@@ -344,7 +344,7 @@ class AssessmentService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        occurredAt = rejectedAt,
+        occurredAt = rejectedAt.toInstant(),
         data = ApplicationAssessedEnvelope(
           id = domainEventId,
           timestamp = rejectedAt.toInstant(),
