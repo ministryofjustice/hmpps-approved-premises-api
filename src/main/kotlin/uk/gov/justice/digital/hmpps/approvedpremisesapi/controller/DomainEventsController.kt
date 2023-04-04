@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.EventsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -54,6 +55,13 @@ class DomainEventsController(
 
   override fun eventsPersonDepartedEventIdGet(eventId: UUID): ResponseEntity<PersonDepartedEnvelope> {
     val event = domainEventService.getPersonDepartedEvent(eventId)
+      ?: throw NotFoundProblem(eventId, "DomainEvent")
+
+    return ResponseEntity.ok(event.data)
+  }
+
+  override fun eventsBookingNotMadeEventIdGet(eventId: UUID): ResponseEntity<BookingNotMadeEnvelope> {
+    val event = domainEventService.getBookingNotMadeEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)
