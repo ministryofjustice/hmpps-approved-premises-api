@@ -82,8 +82,8 @@ class OASysSectionsTransformerTest {
 
     assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
     assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-    assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate)
-    assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted)
+    assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
+    assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
     assertThat(result.offenceDetails).containsAll(
       listOf(
         OASysQuestion(

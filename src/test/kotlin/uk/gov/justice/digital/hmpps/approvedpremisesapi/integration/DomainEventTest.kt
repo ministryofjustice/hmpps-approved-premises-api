@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import java.time.OffsetDateTime
+import java.time.Instant
 import java.util.UUID
 
 class DomainEventTest : IntegrationTestBase() {
@@ -53,7 +53,7 @@ class DomainEventTest : IntegrationTestBase() {
 
     val envelopedData = ApplicationSubmittedEnvelope(
       id = eventId,
-      timestamp = OffsetDateTime.now(),
+      timestamp = Instant.now(),
       eventType = "approved-premises.application.submitted",
       eventDetails = ApplicationSubmittedFactory().produce()
     )
@@ -110,7 +110,7 @@ class DomainEventTest : IntegrationTestBase() {
 
     val envelopedData = ApplicationAssessedEnvelope(
       id = eventId,
-      timestamp = OffsetDateTime.now(),
+      timestamp = Instant.now(),
       eventType = "approved-premises.application.assessed",
       eventDetails = ApplicationAssessedFactory().produce()
     )
@@ -167,7 +167,7 @@ class DomainEventTest : IntegrationTestBase() {
 
     val envelopedData = BookingMadeEnvelope(
       id = eventId,
-      timestamp = OffsetDateTime.now(),
+      timestamp = Instant.now(),
       eventType = "approved-premises.booking.made",
       eventDetails = BookingMadeFactory().produce()
     )
@@ -224,7 +224,7 @@ class DomainEventTest : IntegrationTestBase() {
 
     val envelopedData = PersonArrivedEnvelope(
       id = eventId,
-      timestamp = OffsetDateTime.now(),
+      timestamp = Instant.now(),
       eventType = "approved-premises.person.arrived",
       eventDetails = PersonArrivedFactory().produce()
     )
@@ -281,7 +281,7 @@ class DomainEventTest : IntegrationTestBase() {
 
     val envelopedData = PersonNotArrivedEnvelope(
       id = eventId,
-      timestamp = OffsetDateTime.now(),
+      timestamp = Instant.now(),
       eventType = "approved-premises.person.not-arrived",
       eventDetails = PersonNotArrivedFactory().produce()
     )
@@ -338,7 +338,7 @@ class DomainEventTest : IntegrationTestBase() {
 
     val envelopedData = PersonDepartedEnvelope(
       id = eventId,
-      timestamp = OffsetDateTime.now(),
+      timestamp = Instant.now(),
       eventType = "approved-premises.person.departed",
       eventDetails = PersonDepartedFactory().produce()
     )

@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class PersonArrivedFactory : Factory<PersonArrived> {
@@ -21,7 +21,7 @@ class PersonArrivedFactory : Factory<PersonArrived> {
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var applicationSubmittedOn: Yielded<LocalDate> = { LocalDate.now() }
   private var keyWorker: Yielded<StaffMember> = { StaffMemberFactory().produce() }
-  private var arrivedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(5) }
+  private var arrivedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var expectedDepartureOn: Yielded<LocalDate> = { LocalDate.now().minusDays(5) }
   private var notes: Yielded<String?> = { null }
 
@@ -57,7 +57,7 @@ class PersonArrivedFactory : Factory<PersonArrived> {
     this.keyWorker = { keyWorker }
   }
 
-  fun withArrivedAt(arrivedAt: OffsetDateTime) = apply {
+  fun withArrivedAt(arrivedAt: Instant) = apply {
     this.arrivedAt = { arrivedAt }
   }
 

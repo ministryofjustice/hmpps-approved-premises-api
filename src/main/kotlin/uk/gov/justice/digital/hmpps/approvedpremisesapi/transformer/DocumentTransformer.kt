@@ -14,7 +14,7 @@ class DocumentTransformer {
         id = it.id,
         level = DocumentLevel.offender,
         fileName = it.documentName,
-        createdAt = it.createdAt.atOffset(ZoneOffset.UTC),
+        createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
         typeCode = it.type.code,
         typeDescription = it.type.description,
         description = it.extendedDescription
@@ -29,7 +29,7 @@ class DocumentTransformer {
           id = it.id,
           level = DocumentLevel.conviction,
           fileName = it.documentName,
-          createdAt = it.createdAt.atOffset(ZoneOffset.UTC),
+          createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
           typeCode = it.type.code,
           typeDescription = it.type.description,
           description = it.extendedDescription

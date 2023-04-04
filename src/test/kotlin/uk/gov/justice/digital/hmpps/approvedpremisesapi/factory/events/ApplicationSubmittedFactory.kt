@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.time.OffsetDateTime
+import java.time.Instant
 import java.util.UUID
 
 class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
@@ -28,7 +28,7 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
   private var age: Yielded<Int> = { randomInt(18, 99) }
   private var gender: Yielded<ApplicationSubmitted.Gender> = { randomOf(listOf(ApplicationSubmitted.Gender.male, ApplicationSubmitted.Gender.female)) }
   private var targetLocation: Yielded<String> = { randomOf(listOf("AB", "KY", "L")) }
-  private var submittedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
+  private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var submittedByStaffMember: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var submittedByProbationArea: Yielded<ProbationArea> = { ProbationAreaFactory().produce() }
   private var submittedByTeam: Yielded<Team> = { TeamFactory().produce() }
@@ -76,7 +76,7 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
     this.targetLocation = { targetLocation }
   }
 
-  fun withSubmittedAt(submittedAt: OffsetDateTime) = apply {
+  fun withSubmittedAt(submittedAt: Instant) = apply {
     this.submittedAt = { submittedAt }
   }
 

@@ -12,7 +12,7 @@ class ArrivalTransformer() {
       arrivalDate = jpa.arrivalDate,
       expectedDepartureDate = jpa.expectedDepartureDate,
       notes = jpa.notes,
-      createdAt = jpa.createdAt,
+      createdAt = jpa.createdAt.toInstant(),
     )
   }
 }

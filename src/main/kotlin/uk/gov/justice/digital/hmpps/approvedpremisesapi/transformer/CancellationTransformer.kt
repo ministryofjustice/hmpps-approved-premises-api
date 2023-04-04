@@ -13,7 +13,7 @@ class CancellationTransformer(private val cancellationReasonTransformer: Cancell
       date = jpa.date,
       reason = cancellationReasonTransformer.transformJpaToApi(jpa.reason),
       notes = jpa.notes,
-      createdAt = jpa.createdAt,
+      createdAt = jpa.createdAt.toInstant(),
     )
   }
 }

@@ -66,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -477,7 +478,7 @@ class PremisesController(
     val result = bookingService.createDeparture(
       user = user,
       booking = booking,
-      dateTime = body.dateTime,
+      dateTime = body.dateTime.atOffset(ZoneOffset.UTC),
       reasonId = body.reasonId,
       moveOnCategoryId = body.moveOnCategoryId,
       destinationProviderId = body.destinationProviderId,

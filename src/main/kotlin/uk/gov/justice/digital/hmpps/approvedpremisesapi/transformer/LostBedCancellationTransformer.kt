@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancel
 class LostBedCancellationTransformer {
   fun transformJpaToApi(jpa: LostBedCancellationEntity) = LostBedCancellation(
     id = jpa.id,
-    createdAt = jpa.createdAt,
+    createdAt = jpa.createdAt.toInstant(),
     notes = jpa.notes,
   )
 }

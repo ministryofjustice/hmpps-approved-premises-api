@@ -76,7 +76,7 @@ class DomainEventServiceTest {
 
     val data = ApplicationSubmittedEnvelope(
       id = id,
-      timestamp = occurredAt,
+      timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.application.submitted",
       eventDetails = ApplicationSubmittedFactory().produce()
     )
@@ -122,7 +122,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = ApplicationSubmittedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.submitted",
         eventDetails = ApplicationSubmittedFactory().produce()
       )
@@ -183,7 +183,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = ApplicationSubmittedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.submitted",
         eventDetails = ApplicationSubmittedFactory().produce()
       )
@@ -231,7 +231,7 @@ class DomainEventServiceTest {
 
     val data = ApplicationAssessedEnvelope(
       id = id,
-      timestamp = occurredAt,
+      timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.application.assessed",
       eventDetails = ApplicationAssessedFactory().produce()
     )
@@ -277,7 +277,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = ApplicationAssessedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
         eventDetails = ApplicationAssessedFactory().produce()
       )
@@ -338,7 +338,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = ApplicationAssessedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
         eventDetails = ApplicationAssessedFactory().produce()
       )
@@ -386,7 +386,7 @@ class DomainEventServiceTest {
 
     val data = BookingMadeEnvelope(
       id = id,
-      timestamp = occurredAt,
+      timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.booking.made",
       eventDetails = BookingMadeFactory().produce()
     )
@@ -432,7 +432,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = BookingMadeEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.booking.made",
         eventDetails = BookingMadeFactory().produce()
       )
@@ -493,7 +493,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = BookingMadeEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.booking.made",
         eventDetails = BookingMadeFactory().produce()
       )
@@ -541,7 +541,7 @@ class DomainEventServiceTest {
 
     val data = PersonArrivedEnvelope(
       id = id,
-      timestamp = occurredAt,
+      timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.person.arrived",
       eventDetails = PersonArrivedFactory().produce()
     )
@@ -587,7 +587,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = PersonArrivedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.arrived",
         eventDetails = PersonArrivedFactory().produce()
       )
@@ -648,7 +648,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = PersonArrivedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.arrived",
         eventDetails = PersonArrivedFactory().produce()
       )
@@ -696,7 +696,7 @@ class DomainEventServiceTest {
 
     val data = PersonNotArrivedEnvelope(
       id = id,
-      timestamp = occurredAt,
+      timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.person.not-arrived",
       eventDetails = PersonNotArrivedFactory().produce()
     )
@@ -742,7 +742,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = PersonNotArrivedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.not-arrived",
         eventDetails = PersonNotArrivedFactory().produce()
       )
@@ -803,7 +803,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = PersonNotArrivedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.not-arrived",
         eventDetails = PersonNotArrivedFactory().produce()
       )
@@ -851,7 +851,7 @@ class DomainEventServiceTest {
 
     val data = PersonDepartedEnvelope(
       id = id,
-      timestamp = occurredAt,
+      timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.person.departed",
       eventDetails = PersonDepartedFactory().produce()
     )
@@ -897,7 +897,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = PersonDepartedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.departed",
         eventDetails = PersonDepartedFactory().produce()
       )
@@ -958,7 +958,7 @@ class DomainEventServiceTest {
       occurredAt = OffsetDateTime.now(),
       data = PersonDepartedEnvelope(
         id = id,
-        timestamp = occurredAt,
+        timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.departed",
         eventDetails = PersonDepartedFactory().produce()
       )

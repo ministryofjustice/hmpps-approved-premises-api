@@ -27,8 +27,8 @@ class ApplicationsTransformer(
       createdByUserId = jpa.createdByUser.id,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
-      createdAt = jpa.createdAt,
-      submittedAt = jpa.submittedAt,
+      createdAt = jpa.createdAt.toInstant(),
+      submittedAt = jpa.submittedAt?.toInstant(),
       isWomensApplication = jpa.isWomensApplication,
       isPipeApplication = jpa.isPipeApplication,
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
@@ -42,8 +42,8 @@ class ApplicationsTransformer(
       createdByUserId = jpa.createdByUser.id,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
-      createdAt = jpa.createdAt,
-      submittedAt = jpa.submittedAt,
+      createdAt = jpa.createdAt.toInstant(),
+      submittedAt = jpa.submittedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       status = getStatus(jpa)
@@ -54,8 +54,8 @@ class ApplicationsTransformer(
   fun transformJpaToApi(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = OfflineApplication(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-    createdAt = jpa.createdAt,
-    submittedAt = jpa.submittedAt
+    createdAt = jpa.createdAt.toInstant(),
+    submittedAt = jpa.submittedAt.toInstant()
   )
 
   private fun getStatus(entity: ApplicationEntity) = when {

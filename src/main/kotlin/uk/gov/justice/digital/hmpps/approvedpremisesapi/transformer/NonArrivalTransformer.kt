@@ -13,7 +13,7 @@ class NonArrivalTransformer(private val nonArrivalReasonTransformer: NonArrivalR
       date = jpa.date,
       reason = nonArrivalReasonTransformer.transformJpaToApi(jpa.reason),
       notes = jpa.notes,
-      createdAt = jpa.createdAt,
+      createdAt = jpa.createdAt.toInstant(),
     )
   }
 }

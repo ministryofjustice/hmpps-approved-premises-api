@@ -189,9 +189,9 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(responseBody).anyMatch {
               outdatedApplicationEntityManagedByTeam.id == it.id &&
                 outdatedApplicationEntityManagedByTeam.crn == it.person?.crn &&
-                outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt.toInstant() &&
+                outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
                 outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(outdatedApplicationEntityManagedByTeam.data) == serializableToJsonNode(it.data) &&
                 olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
             }
@@ -199,9 +199,9 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(responseBody).anyMatch {
               upToDateApplicationEntityManagedByTeam.id == it.id &&
                 upToDateApplicationEntityManagedByTeam.crn == it.person?.crn &&
-                upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt.toInstant() &&
+                upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
                 upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(upToDateApplicationEntityManagedByTeam.data) == serializableToJsonNode(it.data) &&
                 newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
             }
@@ -327,9 +327,9 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(responseBody).anyMatch {
               outdatedApplicationEntityCreatedByUser.id == it.id &&
                 outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
-                outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt &&
                 outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
                 olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
             }
@@ -337,9 +337,9 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(responseBody).anyMatch {
               upToDateApplicationEntityCreatedByUser.id == it.id &&
                 upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
-                upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt &&
                 upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
                 newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
             }
@@ -347,9 +347,9 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(responseBody).anyMatch {
               outdatedApplicationEntityNotCreatedByUser.id == it.id &&
                 outdatedApplicationEntityNotCreatedByUser.crn == it.person?.crn &&
-                outdatedApplicationEntityNotCreatedByUser.createdAt.toInstant() == it.createdAt.toInstant() &&
+                outdatedApplicationEntityNotCreatedByUser.createdAt.toInstant() == it.createdAt &&
                 outdatedApplicationEntityNotCreatedByUser.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+                outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(outdatedApplicationEntityNotCreatedByUser.data) == serializableToJsonNode(it.data) &&
                 olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
             }
@@ -514,9 +514,9 @@ class ApplicationTest : IntegrationTestBase() {
         assertThat(responseBody).matches {
           applicationEntity.id == it.id &&
             applicationEntity.crn == it.person.crn &&
-            applicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+            applicationEntity.createdAt.toInstant() == it.createdAt &&
             applicationEntity.createdByUser.id == it.createdByUserId &&
-            applicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+            applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
             serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
             newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
         }
@@ -676,9 +676,9 @@ class ApplicationTest : IntegrationTestBase() {
         assertThat(responseBody).matches {
           nonUpgradableApplicationEntity.id == it.id &&
             nonUpgradableApplicationEntity.crn == it.person?.crn &&
-            nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
+            nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt &&
             nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
-            nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt?.toInstant() &&
+            nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
             serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
             olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
         }
@@ -711,8 +711,8 @@ class ApplicationTest : IntegrationTestBase() {
         assertThat(responseBody).matches {
           offlineApplicationEntity.id == it.id &&
             offlineApplicationEntity.crn == it.person.crn &&
-            offlineApplicationEntity.createdAt.toInstant() == it.createdAt.toInstant() &&
-            offlineApplicationEntity.submittedAt.toInstant() == it.submittedAt?.toInstant()
+            offlineApplicationEntity.createdAt.toInstant() == it.createdAt &&
+            offlineApplicationEntity.submittedAt.toInstant() == it.submittedAt
         }
       }
     }

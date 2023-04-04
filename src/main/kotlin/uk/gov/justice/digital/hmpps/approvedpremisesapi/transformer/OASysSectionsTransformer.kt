@@ -23,8 +23,8 @@ class OASysSectionsTransformer : OASysTransformer() {
     return OASysSections(
       assessmentId = offenceDetails.assessmentId,
       assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
-      dateStarted = offenceDetails.initiationDate,
-      dateCompleted = offenceDetails.dateCompleted,
+      dateStarted = offenceDetails.initiationDate.toInstant(),
+      dateCompleted = offenceDetails.dateCompleted?.toInstant(),
       offenceDetails = listOf(
         oASysQuestionWithSingleAnswer("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
         oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimPerpetratorRel),
