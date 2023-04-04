@@ -703,7 +703,6 @@ components:
         - applicationUrl
         - attemptedAt
         - attemptedBy
-        - failureDescription
     BookingCancelledEnvelope:
       type: object
       properties:
