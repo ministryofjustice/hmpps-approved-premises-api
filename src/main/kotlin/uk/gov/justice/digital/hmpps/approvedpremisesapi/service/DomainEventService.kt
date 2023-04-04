@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -40,6 +41,7 @@ class DomainEventService(
   @Value("\${person-arrived-detail-url-template}") private val personArrivedDetailUrlTemplate: String,
   @Value("\${person-not-arrived-detail-url-template}") private val personNotArrivedDetailUrlTemplate: String,
   @Value("\${person-departed-detail-url-template}") private val personDepartedDetailUrlTemplate: String,
+  @Value("\${booking-not-made-detail-url-template}") private val bookingNotMadeDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -54,6 +56,7 @@ class DomainEventService(
   fun getPersonArrivedEvent(id: UUID) = get<PersonArrivedEnvelope>(id)
   fun getPersonNotArrivedEvent(id: UUID) = get<PersonNotArrivedEnvelope>(id)
   fun getPersonDepartedEvent(id: UUID) = get<PersonDepartedEnvelope>(id)
+  fun getBookingNotMadeEvent(id: UUID) = get<BookingNotMadeEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -70,6 +73,8 @@ class DomainEventService(
       T::class == PersonNotArrivedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       T::class == PersonDepartedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
+      T::class == BookingNotMadeEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
@@ -149,6 +154,17 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms
     )
 
+  @Transactional
+  fun saveBookingNotMadeEvent(domainEvent: DomainEvent<BookingNotMadeEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.booking.not-made",
+      typeDescription = "It was not possible to create a Booking on this attempt",
+      detailUrl = bookingNotMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+    )
+
   private fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     typeName: String,
@@ -205,6 +221,7 @@ class DomainEventService(
     PersonArrivedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED
     PersonNotArrivedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED
     PersonDepartedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED
+    BookingNotMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }
