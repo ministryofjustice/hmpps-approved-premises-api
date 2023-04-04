@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EnumType
@@ -104,7 +105,9 @@ data class UserRoleAssignmentEntity(
   val user: UserEntity,
   @Enumerated(value = EnumType.STRING)
   val role: UserRole
-)
+) {
+  override fun hashCode() = Objects.hash(id, role)
+}
 
 enum class UserRole {
   ASSESSOR,

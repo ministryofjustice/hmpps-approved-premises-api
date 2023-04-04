@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
@@ -2071,10 +2072,16 @@ class BookingServiceTest {
       .withUnitTestControlProbationRegion()
       .produce()
 
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(otherUser)
+      .produce()
+
     val placementRequest = PlacementRequestEntityFactory()
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(otherUser)
+      .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(otherUser)
           .produce()
       )
       .withAllocatedToUser(otherUser)
@@ -2105,10 +2112,16 @@ class BookingServiceTest {
       .withUnitTestControlProbationRegion()
       .produce()
 
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(otherUser)
+      .produce()
+
     val placementRequest = PlacementRequestEntityFactory()
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(otherUser)
+      .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(otherUser)
           .produce()
       )
       .withAllocatedToUser(user)
@@ -2159,11 +2172,17 @@ class BookingServiceTest {
       .withUnitTestControlProbationRegion()
       .produce()
 
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCrn(crn)
+      .withCreatedByUser(otherUser)
+      .produce()
+
     val placementRequest = PlacementRequestEntityFactory()
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCrn(crn)
-          .withCreatedByUser(otherUser)
+      .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(otherUser)
           .produce()
       )
       .withAllocatedToUser(user)

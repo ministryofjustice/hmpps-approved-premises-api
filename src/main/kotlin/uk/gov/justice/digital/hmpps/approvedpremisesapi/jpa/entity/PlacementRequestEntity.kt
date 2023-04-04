@@ -42,6 +42,10 @@ data class PlacementRequestEntity(
   @JoinColumn(name = "application_id")
   val application: ApprovedPremisesApplicationEntity,
 
+  @ManyToOne
+  @JoinColumn(name = "assessment_id")
+  val assessment: AssessmentEntity,
+
   val radius: Int,
 
   @ManyToMany

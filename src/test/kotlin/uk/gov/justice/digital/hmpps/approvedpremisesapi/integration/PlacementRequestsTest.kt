@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -31,8 +32,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
     `Given a User` { user, jwt ->
       `Given an Offender` { offenderDetails1, inmateDetails1 ->
         `Given an Offender` { offenderDetails2, _ ->
-
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
 
@@ -42,15 +46,32 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withApplicationSchema(applicationSchema)
           }
 
+          val assessment1 = assessmentEntityFactory.produceAndPersist {
+            withAssessmentSchema(assessmentSchema)
+            withApplication(application1)
+            withSubmittedAt(OffsetDateTime.now())
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.ACCEPTED)
+          }
+
           val application2 = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails2.otherIds.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
           }
 
+          val assessment2 = assessmentEntityFactory.produceAndPersist {
+            withAssessmentSchema(assessmentSchema)
+            withApplication(application2)
+            withSubmittedAt(OffsetDateTime.now())
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.ACCEPTED)
+          }
+
           val placementRequest = placementRequestFactory.produceAndPersist {
             withAllocatedToUser(user)
             withApplication(application1)
+            withAssessment(assessment1)
             withPostcodeDistrict(
               postCodeDistrictRepository.findAll()[0]
             )
@@ -66,6 +87,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withAllocatedToUser(user)
             withReallocatedAt(OffsetDateTime.now())
             withApplication(application2)
+            withAssessment(assessment2)
             withPostcodeDistrict(
               postCodeDistrictRepository.findAll()[0]
             )
@@ -112,7 +134,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Application`(createdByUser = otherUser) {
             `Given a Placement Request`(
-              allocatedToUser = otherUser,
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn
             ) { placementRequest, _ ->
@@ -136,7 +159,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Application`(createdByUser = otherUser) {
             `Given a Placement Request`(
-              allocatedToUser = user,
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn
             ) { placementRequest, _ ->
@@ -184,7 +208,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Application`(createdByUser = otherUser) {
             `Given a Placement Request`(
-              allocatedToUser = otherUser,
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn
             ) { placementRequest, _ ->
@@ -215,7 +240,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Application`(createdByUser = otherUser) {
             `Given a Placement Request`(
-              allocatedToUser = user,
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn
             ) { placementRequest, _ ->

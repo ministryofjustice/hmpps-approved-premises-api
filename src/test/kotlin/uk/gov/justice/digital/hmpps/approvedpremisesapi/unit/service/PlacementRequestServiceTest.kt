@@ -9,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
@@ -82,10 +83,20 @@ class PlacementRequestServiceTest {
       .withYieldedPremises { premisesEntity }
       .produce()
 
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(assigneeUser)
+      .produce()
+
     val previousPlacementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
-      .withAllocatedToUser(previousUser)
       .withBooking(booking)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(assigneeUser)
+          .produce()
+      )
+      .withAllocatedToUser(previousUser)
       .produce()
 
     every { placementRequestRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementRequest
@@ -102,8 +113,18 @@ class PlacementRequestServiceTest {
 
   @Test
   fun `reallocatePlacementRequest returns Field Validation Error when user to assign to is not a MATCHER`() {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(assigneeUser)
+      .produce()
+
     val previousPlacementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(assigneeUser)
+          .produce()
+      )
       .withAllocatedToUser(previousUser)
       .produce()
 
@@ -135,8 +156,18 @@ class PlacementRequestServiceTest {
           .produce()
       }
 
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(assigneeUser)
+      .produce()
+
     val previousPlacementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(assigneeUser)
+          .produce()
+      )
       .withAllocatedToUser(previousUser)
       .produce()
 
@@ -189,13 +220,23 @@ class PlacementRequestServiceTest {
 
   @Test
   fun `getPlacementRequestForUser returns Unauthorised when PlacementRequest not allocated to User and User does not have WORKFLOW_MANAGER role`() {
-    val placementRequest = PlacementRequestEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(assigneeUser)
-      .produce()
-
     val requestingUser = UserEntityFactory()
       .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(requestingUser)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(requestingUser)
+          .produce()
+      )
+      .withAllocatedToUser(assigneeUser)
       .produce()
 
     every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
@@ -211,8 +252,18 @@ class PlacementRequestServiceTest {
       .withUnitTestControlProbationRegion()
       .produce()
 
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(assigneeUser)
+      .produce()
+
     val placementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(assigneeUser)
+          .produce()
+      )
       .withAllocatedToUser(requestingUser)
       .produce()
 
@@ -235,8 +286,18 @@ class PlacementRequestServiceTest {
           .produce()
       }
 
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(assigneeUser)
+      .produce()
+
     val placementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(assigneeUser)
+          .produce()
+      )
       .withAllocatedToUser(assigneeUser)
       .produce()
 

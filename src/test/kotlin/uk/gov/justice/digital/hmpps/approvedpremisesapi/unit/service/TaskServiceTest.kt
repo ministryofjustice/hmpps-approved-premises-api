@@ -140,6 +140,12 @@ class TaskServiceTest {
 
     val placementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(assigneeUser)
+          .produce()
+      )
       .withAllocatedToUser(assigneeUser)
       .produce()
 

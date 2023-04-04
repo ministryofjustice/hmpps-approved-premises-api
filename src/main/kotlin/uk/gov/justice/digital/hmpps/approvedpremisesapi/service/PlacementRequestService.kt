@@ -120,6 +120,7 @@ class PlacementRequestService(
           mentalHealthSupport = requirements.mentalHealthSupport,
           createdAt = OffsetDateTime.now(),
           application = application,
+          assessment = assessment,
           allocatedToUser = user,
           booking = null,
           reallocatedAt = null,
