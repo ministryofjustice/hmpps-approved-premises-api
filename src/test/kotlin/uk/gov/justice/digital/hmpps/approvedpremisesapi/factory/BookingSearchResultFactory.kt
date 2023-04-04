@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -13,6 +14,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingSearchResultFactory : Factory<BookingSearchResult> {
+  private var personName: Yielded<String>? = null
   private var personCrn: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var bookingId: Yielded<UUID> = { UUID.randomUUID() }
   private var bookingStatus: Yielded<String> = {
@@ -42,8 +44,16 @@ class BookingSearchResultFactory : Factory<BookingSearchResult> {
   private var bedId: Yielded<UUID> = { UUID.randomUUID() }
   private var bedName: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
 
+  fun withPersonName(personName: String) = apply {
+    this.personName = { personName }
+  }
+
+  fun withBookingStatus(bookingStatus: BookingStatus) = apply {
+    this.bookingStatus = { bookingStatus.value }
+  }
+
   override fun produce() = BookingSearchResult(
-    personName = null,
+    personName = this.personName?.invoke(),
     personCrn = this.personCrn(),
     bookingId = this.bookingId(),
     bookingStatus = this.bookingStatus(),
