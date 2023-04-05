@@ -9,14 +9,15 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.cache.CacheManager
+import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -147,7 +148,7 @@ import java.util.UUID
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Tag("integration")
 abstract class IntegrationTestBase {
   lateinit var wiremockServer: WireMockServer
 
@@ -157,6 +158,9 @@ abstract class IntegrationTestBase {
 
   @Value("\${wiremock.port}")
   lateinit var wiremockPort: Integer
+
+  @Autowired
+  lateinit var applicationContext: ApplicationContext
 
   @Autowired
   private lateinit var jdbcTemplate: JdbcTemplate
@@ -327,8 +331,6 @@ abstract class IntegrationTestBase {
     webTestClient = webTestClient.mutate()
       .responseTimeout(Duration.ofMinutes(20))
       .build()
-
-    println("IntegrationTestBase BeforeEach - Wiremock Port is: $wiremockPort")
 
     wiremockServer = WireMockServer(wiremockPort.toInt())
     wiremockServer.start()

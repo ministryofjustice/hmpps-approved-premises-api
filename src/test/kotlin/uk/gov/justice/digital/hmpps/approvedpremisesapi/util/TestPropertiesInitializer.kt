@@ -12,13 +12,12 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
     val wiremockPort = SocketUtils.findAvailableTcpPort()
     val databaseName = setupDatabase()
 
-    println("TestPropertiesInitializer - Wiremock Port is: $wiremockPort")
-
     // TODO: Programmatically load these from application-test.yml and replace the #WIREMOCK_PORTs
     TestPropertyValues
       .of(
         mapOf(
           "wiremock.port" to wiremockPort.toString(),
+          "hmpps.sqs.topics.domainevents.arn" to "arn:aws:sns:eu-west-2:000000000000:domainevents-int-test-${randomStringLowerCase(10)}",
           "spring.datasource.url" to "jdbc:postgresql://localhost:5433/$databaseName",
           "services.community-api.base-url" to "http://localhost:$wiremockPort",
           "services.hmpps-tier.base-url" to "http://localhost:$wiremockPort",
@@ -38,7 +37,7 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
       username = "integration_test"
       password = "integration_test_password"
     }
-1
+
     val jdbcTemplate = JdbcTemplate(driver)
 
     val databaseName = "approved_premises_integration_test_${randomStringLowerCase(6)}"

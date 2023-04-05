@@ -88,12 +88,25 @@ tasks.register("bootRunLocal") {
   finalizedBy("bootRun")
 }
 
-tasks.test {
+tasks.withType<Test> {
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
-  systemProperty("junit.jupiter.execution.parallel.enabled", "true")
-  systemProperty("junit.jupiter.execution.parallel.mode.default", "same_thread")
-  systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
-  systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic")
+  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+}
+
+tasks.register<Test>("integrationTest") {
+  group = "verification"
+
+  useJUnitPlatform {
+    includeTags("integration")
+  }
+}
+
+tasks.register<Test>("unitTest") {
+  group = "verification"
+
+  useJUnitPlatform {
+    excludeTags("integration")
+  }
 }
 
 openApiGenerate {
