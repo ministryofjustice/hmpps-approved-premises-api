@@ -10,8 +10,8 @@ class PrisonCaseNoteTransformer {
   fun transformModelToApi(domain: CaseNote) = PrisonCaseNote(
     id = domain.caseNoteId,
     sensitive = domain.sensitive,
-    createdAt = domain.creationDateTime.atOffset(ZoneOffset.UTC),
-    occurredAt = domain.occurrenceDateTime.atOffset(ZoneOffset.UTC),
+    createdAt = domain.creationDateTime.toInstant(ZoneOffset.UTC),
+    occurredAt = domain.occurrenceDateTime.toInstant(ZoneOffset.UTC),
     authorName = domain.authorName,
     type = domain.typeDescription ?: domain.type,
     subType = domain.subTypeDescription ?: domain.subType,

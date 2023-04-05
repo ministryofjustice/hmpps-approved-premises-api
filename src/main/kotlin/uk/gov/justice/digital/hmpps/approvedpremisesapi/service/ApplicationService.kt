@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
@@ -366,10 +367,10 @@ class ApplicationService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        occurredAt = eventOccurredAt,
+        occurredAt = eventOccurredAt.toInstant(),
         data = ApplicationSubmittedEnvelope(
           id = domainEventId,
-          timestamp = eventOccurredAt,
+          timestamp = eventOccurredAt.toInstant(),
           eventType = "approved-premises.application.submitted",
           eventDetails = ApplicationSubmitted(
             applicationId = application.id,
@@ -390,7 +391,7 @@ class ApplicationService(
               else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
             },
             targetLocation = submitApplication.targetLocation,
-            submittedAt = OffsetDateTime.now(),
+            submittedAt = Instant.now(),
             submittedBy = ApplicationSubmittedSubmittedBy(
               staffMember = StaffMember(
                 staffCode = staffDetails.staffCode,

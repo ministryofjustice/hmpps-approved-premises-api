@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
+import java.time.Instant
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication as ApiAdjudication
 
 class AdjudicationTransformerTest {
@@ -70,7 +70,7 @@ class AdjudicationTransformerTest {
       listOf(
         ApiAdjudication(
           id = 12345,
-          reportedAt = OffsetDateTime.parse("2022-10-28T15:15:15Z"),
+          reportedAt = Instant.parse("2022-10-28T15:15:15Z"),
           establishment = "THE PLACE",
           offenceDescription = "Something, something",
           hearingHeld = true,
@@ -114,7 +114,7 @@ class AdjudicationTransformerTest {
       listOf(
         ApiAdjudication(
           id = 12345,
-          reportedAt = OffsetDateTime.parse("2022-10-28T15:15:15Z"),
+          reportedAt = Instant.parse("2022-10-28T15:15:15Z"),
           establishment = "THE PLACE",
           offenceDescription = "Something, something",
           hearingHeld = false,

@@ -11,7 +11,7 @@ class AdjudicationTransformer {
     result.adjudicationCharges.map { charge ->
       Adjudication(
         id = result.adjudicationNumber,
-        reportedAt = result.reportTime.atOffset(ZoneOffset.UTC),
+        reportedAt = result.reportTime.toInstant(ZoneOffset.UTC),
         establishment = adjudicationsPage.agencies.firstOrNull { it.agencyId == result.agencyId }?.description ?: throw RuntimeException("Agency ${result.agencyId} not found"),
         offenceDescription = charge.offenceDescription,
         hearingHeld = charge.findingCode != null,

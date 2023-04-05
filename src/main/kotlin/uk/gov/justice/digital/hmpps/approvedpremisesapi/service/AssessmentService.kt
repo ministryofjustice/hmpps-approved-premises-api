@@ -231,10 +231,10 @@ class AssessmentService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        occurredAt = acceptedAt,
+        occurredAt = acceptedAt.toInstant(),
         data = ApplicationAssessedEnvelope(
           id = domainEventId,
-          timestamp = acceptedAt,
+          timestamp = acceptedAt.toInstant(),
           eventType = "approved-premises.application.assessed",
           eventDetails = ApplicationAssessed(
             applicationId = application.id,
@@ -245,7 +245,7 @@ class AssessmentService(
               noms = offenderDetails.otherIds.nomsNumber!!
             ),
             deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
-            assessedAt = acceptedAt,
+            assessedAt = acceptedAt.toInstant(),
             assessedBy = ApplicationAssessedAssessedBy(
               staffMember = StaffMember(
                 staffCode = staffDetails.staffCode,
@@ -344,10 +344,10 @@ class AssessmentService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        occurredAt = rejectedAt,
+        occurredAt = rejectedAt.toInstant(),
         data = ApplicationAssessedEnvelope(
           id = domainEventId,
-          timestamp = rejectedAt,
+          timestamp = rejectedAt.toInstant(),
           eventType = "approved-premises.application.assessed",
           eventDetails = ApplicationAssessed(
             applicationId = application.id,
@@ -358,7 +358,7 @@ class AssessmentService(
               noms = offenderDetails.otherIds.nomsNumber!!
             ),
             deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
-            assessedAt = rejectedAt,
+            assessedAt = rejectedAt.toInstant(),
             assessedBy = ApplicationAssessedAssessedBy(
               staffMember = StaffMember(
                 staffCode = staffDetails.staffCode,

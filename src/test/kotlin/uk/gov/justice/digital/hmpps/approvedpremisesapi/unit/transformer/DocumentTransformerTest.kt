@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
+import java.time.Instant
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class DocumentTransformerTest {
@@ -59,7 +59,7 @@ class DocumentTransformerTest {
         id = UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString(),
         level = DocumentLevel.offender,
         fileName = "offender_level_doc.pdf",
-        createdAt = OffsetDateTime.parse("2022-12-07T11:40:00Z"),
+        createdAt = Instant.parse("2022-12-07T11:40:00Z"),
         typeCode = "TYPE-1",
         typeDescription = "Type 1 Description",
         description = "Extended Description 1"
@@ -68,7 +68,7 @@ class DocumentTransformerTest {
         id = UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString(),
         level = DocumentLevel.conviction,
         fileName = "conviction_level_doc.pdf",
-        createdAt = OffsetDateTime.parse("2022-12-07T10:40:00Z"),
+        createdAt = Instant.parse("2022-12-07T10:40:00Z"),
         typeCode = "TYPE-2",
         typeDescription = "Type 2 Description",
         description = "Extended Description 2"

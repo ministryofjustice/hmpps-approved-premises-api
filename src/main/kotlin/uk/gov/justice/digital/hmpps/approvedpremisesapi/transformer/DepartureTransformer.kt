@@ -14,12 +14,12 @@ class DepartureTransformer(
     Departure(
       id = jpa.id,
       bookingId = jpa.booking.id,
-      dateTime = jpa.dateTime,
+      dateTime = jpa.dateTime.toInstant(),
       reason = departureReasonTransformer.transformJpaToApi(jpa.reason),
       moveOnCategory = moveOnCategoryTransformer.transformJpaToApi(jpa.moveOnCategory),
       destinationProvider = jpa.destinationProvider?.let { destinationProviderTransformer.transformJpaToApi(it) },
       notes = jpa.notes,
-      createdAt = jpa.createdAt,
+      createdAt = jpa.createdAt.toInstant(),
     )
   }
 }

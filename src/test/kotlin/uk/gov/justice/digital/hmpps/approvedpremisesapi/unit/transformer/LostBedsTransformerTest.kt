@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class LostBedsTransformerTest {
   private val lostBedReasonTransformer = mockk<LostBedReasonTransformer>()
@@ -128,7 +128,7 @@ class LostBedsTransformerTest {
       serviceScope = "approved-premises",
     )
 
-    val now = OffsetDateTime.now()
+    val now = Instant.now()
     every { lostBedCancellationTransformer.transformJpaToApi(lostBed.cancellation!!) } returns LostBedCancellation(
       id = lostBed.cancellation!!.id,
       createdAt = now,

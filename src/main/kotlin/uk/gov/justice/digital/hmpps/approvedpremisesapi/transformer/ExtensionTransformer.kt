@@ -12,6 +12,6 @@ class ExtensionTransformer() {
     previousDepartureDate = jpa.previousDepartureDate,
     newDepartureDate = jpa.newDepartureDate,
     notes = jpa.notes,
-    createdAt = jpa.createdAt,
+    createdAt = jpa.createdAt.toInstant(),
   )
 }

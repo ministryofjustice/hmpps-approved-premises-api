@@ -88,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -774,7 +775,7 @@ class BookingServiceTest {
             legacyApCode = approvedPremises.qCode,
             localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
           ) &&
-            data.departedAt == OffsetDateTime.parse("2022-08-24T15:00:00+01:00") &&
+            data.departedAt == Instant.parse("2022-08-24T15:00:00+01:00") &&
             data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
             data.destination.destinationProvider == DestinationProvider(
             description = destinationProviderEntity.name,

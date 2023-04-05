@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class BookingMadeFactory : Factory<BookingMade> {
@@ -17,7 +17,7 @@ class BookingMadeFactory : Factory<BookingMade> {
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var bookingId: Yielded<UUID> = { UUID.randomUUID() }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
+  private var createdAt: Yielded<Instant> = { Instant.now() }
   private var bookedBy: Yielded<BookingMadeBookedBy> = { BookingMadeBookedByFactory().produce() }
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var arrivalOn: Yielded<LocalDate> = { LocalDate.now() }
@@ -43,7 +43,7 @@ class BookingMadeFactory : Factory<BookingMade> {
     this.bookingId = { bookingId }
   }
 
-  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+  fun withCreatedAt(createdAt: Instant) = apply {
     this.createdAt = { createdAt }
   }
 

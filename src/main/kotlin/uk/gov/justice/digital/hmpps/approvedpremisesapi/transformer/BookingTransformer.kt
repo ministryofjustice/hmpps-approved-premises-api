@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import kotlin.RuntimeException
 
 @Component
 class BookingTransformer(
@@ -43,7 +42,7 @@ class BookingTransformer(
     bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
     originalArrivalDate = jpa.originalArrivalDate,
     originalDepartureDate = jpa.originalDepartureDate,
-    createdAt = jpa.createdAt,
+    createdAt = jpa.createdAt.toInstant(),
   )
 
   private fun determineStatus(jpa: BookingEntity) = when {

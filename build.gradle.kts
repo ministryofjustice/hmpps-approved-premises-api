@@ -104,7 +104,10 @@ openApiGenerate {
     put("gradleBuildFile", "false")
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
+    put("dateLibrary", "custom")
   }
+  typeMappings.put("DateTime", "Instant")
+  importMappings.put("Instant", "java.time.Instant")
 }
 
 tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateDomainEvents") {
@@ -119,7 +122,10 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
     put("gradleBuildFile", "false")
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
+    put("dateLibrary", "custom")
   }
+  typeMappings.put("DateTime", "Instant")
+  importMappings.put("Instant", "java.time.Instant")
 }
 
 tasks.get("openApiGenerate").dependsOn("openApiGenerateDomainEvents")

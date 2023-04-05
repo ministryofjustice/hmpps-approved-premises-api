@@ -273,10 +273,10 @@ class BookingService(
         id = domainEventId,
         applicationId = application.id,
         crn = booking.crn,
-        occurredAt = bookingCreatedAt,
+        occurredAt = bookingCreatedAt.toInstant(),
         data = BookingMadeEnvelope(
           id = domainEventId,
-          timestamp = bookingCreatedAt,
+          timestamp = bookingCreatedAt.toInstant(),
           eventType = "approved-premises.booking.made",
           eventDetails = BookingMade(
             applicationId = application.id,
@@ -287,7 +287,7 @@ class BookingService(
               noms = offenderDetails.otherIds.nomsNumber!!
             ),
             deliusEventNumber = application.eventNumber,
-            createdAt = bookingCreatedAt,
+            createdAt = bookingCreatedAt.toInstant(),
             bookedBy = BookingMadeBookedBy(
               staffMember = StaffMember(
                 staffCode = staffDetails.staffCode,
@@ -453,10 +453,10 @@ class BookingService(
           id = domainEventId,
           applicationId = application.id,
           crn = booking.crn,
-          occurredAt = arrivalDate.toLocalDateTime(), // TODO: Endpoint should accept a date-time instead
+          occurredAt = arrivalDate.toLocalDateTime().toInstant(), // TODO: Endpoint should accept a date-time instead
           data = PersonArrivedEnvelope(
             id = domainEventId,
-            timestamp = occurredAt,
+            timestamp = occurredAt.toInstant(),
             eventType = "approved-premises.person.arrived",
             eventDetails = PersonArrived(
               applicationId = application.id,
@@ -482,7 +482,7 @@ class BookingService(
                 surname = keyWorkerStaffDetails.staff.surname,
                 username = null
               ),
-              arrivedAt = arrivalDate.toLocalDateTime(), // TODO: Endpoint should accept a date-time instead
+              arrivedAt = arrivalDate.toLocalDateTime().toInstant(), // TODO: Endpoint should accept a date-time instead
               expectedDepartureOn = expectedDepartureDate,
               notes = notes
             )
@@ -554,10 +554,10 @@ class BookingService(
           id = domainEventId,
           applicationId = application.id,
           crn = booking.crn,
-          occurredAt = date.toLocalDateTime(),
+          occurredAt = date.toLocalDateTime().toInstant(),
           data = PersonNotArrivedEnvelope(
             id = domainEventId,
-            timestamp = occurredAt,
+            timestamp = occurredAt.toInstant(),
             eventType = "approved-premises.person.not-arrived",
             eventDetails = PersonNotArrived(
               applicationId = application.id,
@@ -745,10 +745,10 @@ class BookingService(
           id = domainEventId,
           applicationId = application.id,
           crn = booking.crn,
-          occurredAt = dateTime,
+          occurredAt = dateTime.toInstant(),
           data = PersonDepartedEnvelope(
             id = domainEventId,
-            timestamp = occurredAt,
+            timestamp = occurredAt.toInstant(),
             eventType = "approved-premises.person.departed",
             eventDetails = PersonDeparted(
               applicationId = application.id,
@@ -773,7 +773,7 @@ class BookingService(
                 surname = keyWorkerStaffDetails.staff.surname,
                 username = null
               ),
-              departedAt = dateTime,
+              departedAt = dateTime.toInstant(),
               reason = reason.name,
               legacyReasonCode = reason.legacyDeliusReasonCode!!,
               destination = PersonDepartedDestination(

@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -1304,7 +1305,7 @@ class BookingTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewDeparture(
-            dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+            dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
             reasonId = reason.id,
             moveOnCategoryId = moveOnCategory.id,
             destinationProviderId = destinationProvider.id,
@@ -1372,7 +1373,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewDeparture(
-              dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+              dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
               reasonId = reason.id,
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = destinationProvider.id,
@@ -1444,7 +1445,7 @@ class BookingTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewDeparture(
-            dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+            dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
             reasonId = reason.id,
             moveOnCategoryId = moveOnCategory.id,
             destinationProviderId = destinationProvider.id,
@@ -1493,7 +1494,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewDeparture(
-              dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+              dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
               reasonId = reason.id,
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = null,
@@ -1561,7 +1562,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewDeparture(
-              dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+              dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
               reasonId = reason.id,
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = null,
@@ -1617,7 +1618,7 @@ class BookingTest : IntegrationTestBase() {
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewDeparture(
-              dateTime = OffsetDateTime.parse("2022-09-01T12:34:56.789Z"),
+              dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
               reasonId = reason.id,
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = null,

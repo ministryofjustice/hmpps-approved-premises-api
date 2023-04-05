@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.time.OffsetDateTime
+import java.time.Instant
 import java.util.UUID
 
 class ApplicationAssessedFactory : Factory<ApplicationAssessed> {
@@ -15,7 +15,7 @@ class ApplicationAssessedFactory : Factory<ApplicationAssessed> {
   private var applicationUrl: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
-  private var assessedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(5) }
+  private var assessedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var assessedBy: Yielded<ApplicationAssessedAssessedBy> = { ApplicationAssessedAssessedByFactory().produce() }
   private var decision: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var decisionRationale: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
@@ -36,7 +36,7 @@ class ApplicationAssessedFactory : Factory<ApplicationAssessed> {
     this.deliusEventNumber = { deliusEventNumber }
   }
 
-  fun withAssessedAt(assessedAt: OffsetDateTime) = apply {
+  fun withAssessedAt(assessedAt: Instant) = apply {
     this.assessedAt = { assessedAt }
   }
 

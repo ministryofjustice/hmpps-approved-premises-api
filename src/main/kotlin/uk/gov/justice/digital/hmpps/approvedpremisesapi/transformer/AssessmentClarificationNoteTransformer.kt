@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 class AssessmentClarificationNoteTransformer {
   fun transformJpaToApi(jpa: AssessmentClarificationNoteEntity) = ClarificationNote(
     id = jpa.id,
-    createdAt = jpa.createdAt,
+    createdAt = jpa.createdAt.toInstant(),
     createdByStaffMemberId = jpa.createdByUser.id,
     query = jpa.query,
     response = jpa.response,

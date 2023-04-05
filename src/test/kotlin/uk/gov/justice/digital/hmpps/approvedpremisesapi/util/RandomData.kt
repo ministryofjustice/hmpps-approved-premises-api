@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -38,5 +39,8 @@ fun LocalDateTime.randomDateTimeBefore(maxDays: Int = 14): LocalDateTime = this.
 
 fun OffsetDateTime.randomDateTimeAfter(maxDays: Int = 14): OffsetDateTime = this.plusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
 fun OffsetDateTime.randomDateTimeBefore(maxDays: Int = 14): OffsetDateTime = this.minusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
+
+fun Instant.randomDateTimeAfter(maxDays: Int = 14): Instant = this.plus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
+fun Instant.randomDateTimeBefore(maxDays: Int = 14): Instant = this.minus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
 
 fun <T> randomOf(options: List<T>) = options[randomInt(0, options.size - 1)]
