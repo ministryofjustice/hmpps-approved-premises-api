@@ -44,8 +44,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(),
-      requiredRoomCharacteristics = listOf(),
+      requiredCharacteristics = listOf(),
     )
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -70,14 +69,12 @@ class BedSearchServiceTest {
 
     val premisesCharacteristicPropertyName = "unknownPropertyName"
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristicPropertyName) } returns null
-
     val roomCharacteristic = CharacteristicEntityFactory()
       .withModelScope("room")
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristicPropertyName, roomCharacteristic.propertyName!!)) } returns listOf(roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -85,8 +82,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristicPropertyName),
-      requiredRoomCharacteristics = listOf(roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(premisesCharacteristicPropertyName, roomCharacteristic.propertyName!!),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -94,7 +90,7 @@ class BedSearchServiceTest {
     assertThat(authorisableResult.entity is ValidatableActionResult.FieldValidationError).isTrue
     val fieldValidationError = authorisableResult.entity as ValidatableActionResult.FieldValidationError
 
-    assertThat(fieldValidationError.validationMessages["$.requiredPremisesCharacteristics"]).isEqualTo("$premisesCharacteristicPropertyName doesNotExist")
+    assertThat(fieldValidationError.validationMessages["$.requiredCharacteristics"]).isEqualTo("$premisesCharacteristicPropertyName doesNotExist")
   }
 
   @Test
@@ -119,14 +115,12 @@ class BedSearchServiceTest {
       .withModelScope("premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristic.propertyName!!) } returns premisesCharacteristic
-
     val roomCharacteristic = CharacteristicEntityFactory()
       .withModelScope("room")
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -134,8 +128,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristic.propertyName!!),
-      requiredRoomCharacteristics = listOf(roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -143,7 +136,7 @@ class BedSearchServiceTest {
     assertThat(authorisableResult.entity is ValidatableActionResult.FieldValidationError).isTrue
     val fieldValidationError = authorisableResult.entity as ValidatableActionResult.FieldValidationError
 
-    assertThat(fieldValidationError.validationMessages["$.requiredPremisesCharacteristics"]).isEqualTo("${premisesCharacteristic.propertyName} scopeInvalid")
+    assertThat(fieldValidationError.validationMessages["$.requiredCharacteristics"]).isEqualTo("${premisesCharacteristic.propertyName} scopeInvalid")
   }
 
   @Test
@@ -168,11 +161,9 @@ class BedSearchServiceTest {
       .withModelScope("premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristic.propertyName!!) } returns premisesCharacteristic
-
     val roomCharacteristicPropertyName = "unknownPropertyName"
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristicPropertyName) } returns null
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristicPropertyName)) } returns listOf(premisesCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -180,8 +171,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristic.propertyName!!),
-      requiredRoomCharacteristics = listOf(roomCharacteristicPropertyName),
+      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristicPropertyName),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -189,7 +179,7 @@ class BedSearchServiceTest {
     assertThat(authorisableResult.entity is ValidatableActionResult.FieldValidationError).isTrue
     val fieldValidationError = authorisableResult.entity as ValidatableActionResult.FieldValidationError
 
-    assertThat(fieldValidationError.validationMessages["$.requiredRoomCharacteristics"]).isEqualTo("$roomCharacteristicPropertyName doesNotExist")
+    assertThat(fieldValidationError.validationMessages["$.requiredCharacteristics"]).isEqualTo("$roomCharacteristicPropertyName doesNotExist")
   }
 
   @Test
@@ -214,14 +204,12 @@ class BedSearchServiceTest {
       .withModelScope("premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristic.propertyName!!) } returns premisesCharacteristic
-
     val roomCharacteristic = CharacteristicEntityFactory()
       .withServiceScope("temporary-accommodation")
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -229,8 +217,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristic.propertyName!!),
-      requiredRoomCharacteristics = listOf(roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -238,7 +225,7 @@ class BedSearchServiceTest {
     assertThat(authorisableResult.entity is ValidatableActionResult.FieldValidationError).isTrue
     val fieldValidationError = authorisableResult.entity as ValidatableActionResult.FieldValidationError
 
-    assertThat(fieldValidationError.validationMessages["$.requiredRoomCharacteristics"]).isEqualTo("${roomCharacteristic.propertyName} scopeInvalid")
+    assertThat(fieldValidationError.validationMessages["$.requiredCharacteristics"]).isEqualTo("${roomCharacteristic.propertyName} scopeInvalid")
   }
 
   @Test
@@ -263,12 +250,12 @@ class BedSearchServiceTest {
       .withModelScope("premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristic.propertyName!!) } returns premisesCharacteristic
-
     val roomCharacteristic = CharacteristicEntityFactory()
       .withServiceScope("approved-premises")
       .withModelScope("room")
       .produce()
+
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
 
@@ -278,8 +265,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristic.propertyName!!),
-      requiredRoomCharacteristics = listOf(roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -312,14 +298,12 @@ class BedSearchServiceTest {
       .withModelScope("premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristic.propertyName!!) } returns premisesCharacteristic
-
     val roomCharacteristic = CharacteristicEntityFactory()
       .withServiceScope("approved-premises")
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -327,8 +311,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristic.propertyName!!),
-      requiredRoomCharacteristics = listOf(roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -361,14 +344,12 @@ class BedSearchServiceTest {
       .withModelScope("premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristic.propertyName!!) } returns premisesCharacteristic
-
     val roomCharacteristic = CharacteristicEntityFactory()
       .withServiceScope("approved-premises")
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -376,8 +357,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 0,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristic.propertyName!!),
-      requiredRoomCharacteristics = listOf(roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -410,14 +390,12 @@ class BedSearchServiceTest {
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(premisesCharacteristic.propertyName!!) } returns premisesCharacteristic
-
     val roomCharacteristic = CharacteristicEntityFactory()
       .withModelScope("room")
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val repositorySearchResults = listOf(
       ApprovedPremisesBedSearchResult(
@@ -465,8 +443,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredPremisesCharacteristics = listOf(premisesCharacteristic.propertyName!!),
-      requiredRoomCharacteristics = listOf(roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
