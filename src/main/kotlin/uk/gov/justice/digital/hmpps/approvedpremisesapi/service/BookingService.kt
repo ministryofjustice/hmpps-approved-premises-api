@@ -40,13 +40,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -54,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -84,6 +82,7 @@ class BookingService(
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val bedRepository: BedRepository,
   private val placementRequestRepository: PlacementRequestRepository,
+  private val lostBedsRepository: LostBedsRepository,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
@@ -107,6 +106,14 @@ class BookingService(
     val validationResult = validated {
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      }
+
+      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
       val bed = bedRepository.findByIdOrNull(bedId)
@@ -177,6 +184,14 @@ class BookingService(
     val validationResult = validated {
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      }
+
+      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
       val bed = bedRepository.findByIdOrNull(bedId)
@@ -325,11 +340,11 @@ class BookingService(
     bedId: UUID
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val validationResult = validated {
-      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId, premises)?.let {
+      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
       }
 
-      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId, premises)?.let {
+      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
@@ -883,35 +898,25 @@ class BookingService(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID,
-    premises: PremisesEntity,
-  ): BookingEntity? {
-    val desiredRange = arrivalDate..departureDate
-    return premises.bookings
-      .filter { it.id != thisEntityId }
-      .filter { it.bed?.id == bedId }
-      .filter { it.cancellation == null }
-      .map { it to (it.arrivalDate..it.departureDate) }
-      .find { (_, range) -> range overlaps desiredRange }
-      ?.first
-  }
+    bedId: UUID
+  ) = bookingRepository.findByBedIdAndOverlappingDate(
+    bedId,
+    arrivalDate,
+    departureDate,
+    thisEntityId
+  )
 
   fun getLostBedWithConflictingDates(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID,
-    premises: PremisesEntity,
-  ): LostBedsEntity? {
-    val desiredRange = startDate..endDate
-    return premises.lostBeds
-      .filter { it.id != thisEntityId }
-      .filter { it.bed.id == bedId }
-      .filter { it.cancellation == null }
-      .map { it to (it.startDate..it.endDate) }
-      .find { (_, range) -> range overlaps desiredRange }
-      ?.first
-  }
+    bedId: UUID
+  ) = lostBedsRepository.findByBedIdAndOverlappingDate(
+    bedId,
+    startDate,
+    endDate,
+    thisEntityId
+  )
 }
 
 sealed interface GetBookingForPremisesResult {
