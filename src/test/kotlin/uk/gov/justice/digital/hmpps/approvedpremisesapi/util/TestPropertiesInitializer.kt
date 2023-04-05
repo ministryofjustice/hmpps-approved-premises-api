@@ -1,0 +1,61 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
+
+import org.springframework.boot.env.OriginTrackedMapPropertySource
+import org.springframework.boot.origin.OriginTrackedValue
+import org.springframework.boot.test.util.TestPropertyValues
+import org.springframework.context.ApplicationContextInitializer
+import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.datasource.DriverManagerDataSource
+import org.springframework.util.SocketUtils
+
+class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
+  override fun initialize(applicationContext: ConfigurableApplicationContext?) {
+    val wiremockPort = SocketUtils.findAvailableTcpPort()
+    val databaseName = setupDatabase()
+
+    val upstreamServiceUrlsToOverride = mutableMapOf<String, String>()
+
+    applicationContext!!.environment.propertySources
+      .filterIsInstance<OriginTrackedMapPropertySource>()
+      .filter { it.name.contains("application-test.yml") }
+      .forEach { propertyFile ->
+        propertyFile.source.forEach { (propertyName, propertyValue) ->
+          if (propertyName.startsWith("services.") && (propertyValue as? OriginTrackedValue)?.value is String) {
+            upstreamServiceUrlsToOverride[propertyName] = ((propertyValue as OriginTrackedValue).value as String).replace("#WIREMOCK_PORT", wiremockPort.toString())
+            return@forEach
+          }
+
+          if (propertyName == "hmpps.auth.url" && (propertyValue as? OriginTrackedValue)?.value is String) {
+            upstreamServiceUrlsToOverride[propertyName] = ((propertyValue as OriginTrackedValue).value as String).replace("#WIREMOCK_PORT", wiremockPort.toString())
+          }
+        }
+      }
+
+    TestPropertyValues
+      .of(
+        mapOf(
+          "wiremock.port" to wiremockPort.toString(),
+          "hmpps.sqs.topics.domainevents.arn" to "arn:aws:sns:eu-west-2:000000000000:domainevents-int-test-${randomStringLowerCase(10)}",
+          "spring.datasource.url" to "jdbc:postgresql://localhost:5433/$databaseName"
+        ) + upstreamServiceUrlsToOverride
+      ).applyTo(applicationContext)
+  }
+
+  private fun setupDatabase(): String {
+    val driver = DriverManagerDataSource().apply {
+      setDriverClassName("org.postgresql.Driver")
+      url = "jdbc:postgresql://localhost:5433/postgres"
+      username = "integration_test"
+      password = "integration_test_password"
+    }
+
+    val jdbcTemplate = JdbcTemplate(driver)
+
+    val databaseName = "approved_premises_integration_test_${randomStringLowerCase(6)}"
+
+    jdbcTemplate.execute("CREATE DATABASE $databaseName")
+
+    return databaseName
+  }
+}
