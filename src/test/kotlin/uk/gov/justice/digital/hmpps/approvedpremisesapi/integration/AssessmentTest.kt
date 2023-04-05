@@ -200,6 +200,8 @@ class AssessmentTest : IntegrationTestBase() {
               withAssessmentSchema(assessmentSchema)
             }
 
+            val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
             assessment.schemaUpToDate = true
 
             val essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift)
@@ -210,7 +212,7 @@ class AssessmentTest : IntegrationTestBase() {
               type = ApType.normal,
               expectedArrival = LocalDate.now(),
               duration = 12,
-              location = "B74",
+              location = postcodeDistrict.outcode,
               radius = 50,
               essentialCriteria = essentialCriteria,
               desirableCriteria = desirableCriteria,
