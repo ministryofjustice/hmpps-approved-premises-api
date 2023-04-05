@@ -262,6 +262,69 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Accept assessment returns an error if the postcode cannot be found`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+    ) { userEntity, jwt ->
+      `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = assessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            val essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift)
+            val desirableCriteria = listOf(PlacementCriteria.hasBrailleSignage, PlacementCriteria.acceptsSexOffenders)
+
+            val placementRequest = NewPlacementRequest(
+              gender = Gender.male,
+              type = ApType.normal,
+              expectedArrival = LocalDate.now(),
+              duration = 12,
+              location = "SW1",
+              radius = 50,
+              essentialCriteria = essentialCriteria,
+              desirableCriteria = desirableCriteria,
+              mentalHealthSupport = false
+            )
+
+            webTestClient.post()
+              .uri("/assessments/${assessment.id}/acceptance")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequest))
+              .exchange()
+              .expectStatus()
+              .is4xxClientError
+              .expectBody()
+              .jsonPath("title").isEqualTo("Bad Request")
+              .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+              .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.postcodeDistrict")
+          }
+        }
+      }
+    }
+  }
+
+  @Test
   fun `Reject assessment without JWT returns 401`() {
     webTestClient.post()
       .uri("/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/rejection")
