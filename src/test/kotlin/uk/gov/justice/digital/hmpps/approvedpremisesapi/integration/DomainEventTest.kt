@@ -5,12 +5,14 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
@@ -356,6 +358,63 @@ class DomainEventTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody(PersonDepartedEnvelope::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get Booking Not Made Event without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/events/booking-not-made/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get Booking Not Made Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username"
+    )
+
+    webTestClient.get()
+      .uri("/events/booking-not-made/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Get Booking Not Made Event returns 200 with correct body`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = BookingNotMadeEnvelope(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = "approved-premises.booking.not-made",
+      eventDetails = BookingNotMadeFactory().produce()
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/booking-not-made/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(BookingNotMadeEnvelope::class.java)
       .returnResult()
 
     assertThat(response.responseBody).isEqualTo(envelopedData)

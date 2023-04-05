@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -17,6 +19,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var placementRequestTransformer: PlacementRequestTransformer
+
+  @Autowired
+  lateinit var bookingNotMadeTransformer: BookingNotMadeTransformer
 
   @Test
   fun `Get all placement requests without JWT returns 401`() {
@@ -273,6 +278,83 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .exchange()
                 .expectStatus()
                 .isOk
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create a Booking Not Made from a Placement Request without a JWT returns 401`() {
+    webTestClient.post()
+      .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/booking-not-made")
+      .bodyValue(
+        NewBookingNotMade(
+          notes = "some notes"
+        )
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create a Booking Not Made from a Placement Request that is not allocated to the user returns 403`() {
+    `Given a User` { user, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = otherUser) {
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              webTestClient.post()
+                .uri("/placement-requests/${placementRequest.id}/booking-not-made")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  NewBookingNotMade(
+                    notes = "some notes"
+                  )
+                )
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create a Booking Not Made from a Placement Request returns 200`() {
+    `Given a User` { user, jwt ->
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = otherUser) {
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn
+            ) { placementRequest, _ ->
+              webTestClient.post()
+                .uri("/placement-requests/${placementRequest.id}/booking-not-made")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  NewBookingNotMade(
+                    notes = "some notes"
+                  )
+                )
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonPath("$.placementRequestId").isEqualTo(placementRequest.id.toString())
+                .jsonPath("$.notes").isEqualTo("some notes")
             }
           }
         }

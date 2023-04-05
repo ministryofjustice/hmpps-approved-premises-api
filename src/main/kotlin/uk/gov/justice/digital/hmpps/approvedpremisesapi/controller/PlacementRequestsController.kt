@@ -1,10 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementRequestsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -18,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
@@ -30,7 +34,8 @@ class PlacementRequestsController(
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
-  private val bookingTransformer: BookingTransformer
+  private val bookingTransformer: BookingTransformer,
+  private val bookingNotMadeTransformer: BookingNotMadeTransformer
 ) : PlacementRequestsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -114,5 +119,23 @@ class PlacementRequestsController(
     }
 
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, offender, inmate, null))
+  }
+
+  override fun placementRequestsIdBookingNotMadePost(id: UUID, newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> {
+    val user = userService.getUserForRequest()
+
+    val authorisableResult = placementRequestService.createBookingNotMade(
+      user = user,
+      placementRequestId = id,
+      notes = newBookingNotMade.notes
+    )
+
+    val bookingNotMade = when (authorisableResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(authorisableResult.id!!, authorisableResult.entityType!!)
+      is AuthorisableActionResult.Success -> authorisableResult.entity
+    }
+
+    return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
   }
 }

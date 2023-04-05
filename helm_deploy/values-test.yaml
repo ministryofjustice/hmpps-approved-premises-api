@@ -30,6 +30,7 @@ generic-service:
     PERSON-ARRIVED-DETAIL-URL-TEMPLATE: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/person-arrived/#eventId
     PERSON-NOT-ARRIVED-DETAIL-URL-TEMPLATE: https://approved-premises-api.hmpps.service.justice.gov.uk/events/person-not-arrived/#eventId
     PERSON-DEPARTED-DETAIL-URL-TEMPLATE: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/person-departed/#eventId
+    BOOKING-NOT-MADE-DETAIL-URL-TEMPLATE: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/booking-not-made/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: false
 
   allowlist:

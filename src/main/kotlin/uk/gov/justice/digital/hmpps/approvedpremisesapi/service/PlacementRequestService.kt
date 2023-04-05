@@ -1,10 +1,21 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -12,12 +23,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class PlacementRequestService(
@@ -25,6 +38,12 @@ class PlacementRequestService(
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val characteristicRepository: CharacteristicRepository,
   private val userRepository: UserRepository,
+  private val bookingNotMadeRepository: BookingNotMadeRepository,
+  private val domainEventService: DomainEventService,
+  private val offenderService: OffenderService,
+  private val communityApiClient: CommunityApiClient,
+  private val cruService: CruService,
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
@@ -123,10 +142,100 @@ class PlacementRequestService(
           assessment = assessment,
           allocatedToUser = user,
           booking = null,
+          bookingNotMades = mutableListOf(),
           reallocatedAt = null,
         )
       )
 
       return success(placementRequestEntity)
     }
+
+  @Transactional
+  fun createBookingNotMade(
+    user: UserEntity,
+    placementRequestId: UUID,
+    notes: String?
+  ): AuthorisableActionResult<BookingNotMadeEntity> {
+    val bookingNotCreatedAt = OffsetDateTime.now()
+
+    val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (placementRequest.allocatedToUser.id != user.id) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val bookingNotMade = BookingNotMadeEntity(
+      id = UUID.randomUUID(),
+      placementRequest = placementRequest,
+      createdAt = bookingNotCreatedAt,
+      notes = notes
+    )
+
+    saveBookingNotMadeDomainEvent(user, placementRequest, bookingNotCreatedAt, notes)
+
+    return AuthorisableActionResult.Success(
+      bookingNotMadeRepository.save(bookingNotMade)
+    )
+  }
+
+  private fun saveBookingNotMadeDomainEvent(
+    user: UserEntity,
+    placementRequest: PlacementRequestEntity,
+    bookingNotCreatedAt: OffsetDateTime,
+    notes: String?
+  ) {
+    val domainEventId = UUID.randomUUID()
+
+    val application = placementRequest.application
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Not Made Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Not Made Domain Event: Not Found")
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    domainEventService.saveBookingNotMadeEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = bookingNotCreatedAt.toInstant(),
+        data = BookingNotMadeEnvelope(
+          id = domainEventId,
+          timestamp = bookingNotCreatedAt.toInstant(),
+          eventType = "approved-premises.booking.not-made",
+          eventDetails = BookingNotMade(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            personReference = PersonReference(
+              crn = application.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!
+            ),
+            deliusEventNumber = application.eventNumber,
+            attemptedAt = bookingNotCreatedAt.toInstant(),
+            attemptedBy = BookingMadeBookedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username
+              ),
+              cru = Cru(
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
+              )
+            ),
+            failureDescription = notes
+          )
+        )
+      )
+    )
+  }
 }

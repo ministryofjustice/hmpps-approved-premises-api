@@ -1,21 +1,31 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -24,6 +34,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import java.util.UUID
 
@@ -32,12 +45,23 @@ class PlacementRequestServiceTest {
   private val postcodeDistrictRepository = mockk<PostcodeDistrictRepository>()
   private val characteristicRepository = mockk<CharacteristicRepository>()
   private val userRepository = mockk<UserRepository>()
+  private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
+  private val domainEventService = mockk<DomainEventService>()
+  private val offenderService = mockk<OffenderService>()
+  private val communityApiClient = mockk<CommunityApiClient>()
+  private val cruService = mockk<CruService>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
     postcodeDistrictRepository,
     characteristicRepository,
-    userRepository
+    userRepository,
+    bookingNotMadeRepository,
+    domainEventService,
+    offenderService,
+    communityApiClient,
+    cruService,
+    "http://frontend/applications/#id"
   )
 
   private val previousUser = UserEntityFactory()
@@ -306,5 +330,125 @@ class PlacementRequestServiceTest {
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
 
     assertThat(result is AuthorisableActionResult.Unauthorised)
+  }
+
+  @Test
+  fun `createBookingNotMade returns Not Found when Placement Request doesn't exist`() {
+    val requestingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val placementRequestId = UUID.fromString("25dd65b1-38b5-47bc-a00b-f2df228ed06b")
+
+    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
+
+    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequestId, null)
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `createBookingNotMade returns Unauthorised when Placement Request isn't allocated to User`() {
+    val requestingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val otherUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(otherUser)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withAllocatedToUser(otherUser)
+      .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(otherUser)
+          .produce()
+      )
+      .produce()
+
+    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, null)
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `createBookingNotMade returns Success, saves Booking Not Made and saves domain event`() {
+    val requestingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val otherUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(otherUser)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withAllocatedToUser(requestingUser)
+      .withApplication(application)
+      .withAssessment(
+        AssessmentEntityFactory()
+          .withApplication(application)
+          .withAllocatedToUser(otherUser)
+          .produce()
+      )
+      .produce()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(application.crn)
+      .produce()
+
+    every { offenderService.getOffenderByCrn(application.crn, requestingUser.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { communityApiClient.getStaffUserDetails(requestingUser.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails
+    )
+
+    every { domainEventService.saveBookingNotMadeEvent(any()) } just Runs
+
+    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+    every { bookingNotMadeRepository.save(any()) } answers { it.invocation.args[0] as BookingNotMadeEntity }
+
+    every { cruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
+
+    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, "some notes")
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val bookingNotMade = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(bookingNotMade.placementRequest).isEqualTo(placementRequest)
+    assertThat(bookingNotMade.notes).isEqualTo("some notes")
+
+    verify(exactly = 1) { bookingNotMadeRepository.save(match { it.notes == "some notes" && it.placementRequest == placementRequest }) }
+
+    verify(exactly = 1) {
+      domainEventService.saveBookingNotMadeEvent(
+        match {
+          val data = it.data.eventDetails
+          val application = placementRequest.application
+
+          it.applicationId == application.id &&
+            it.crn == application.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.failureDescription == "some notes"
+        }
+      )
+    }
   }
 }
