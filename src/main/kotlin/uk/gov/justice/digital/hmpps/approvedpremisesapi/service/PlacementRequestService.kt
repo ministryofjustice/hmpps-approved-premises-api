@@ -113,10 +113,7 @@ class PlacementRequestService(
   fun createPlacementRequest(assessment: AssessmentEntity, requirements: NewPlacementRequest): ValidatableActionResult<PlacementRequestEntity> =
     validated {
       val postcodeDistrict = postcodeDistrictRepository.findByOutcode(requirements.location)
-
-      if (postcodeDistrict == null) {
-        "$.postcodeDistrict" hasValidationError "doesNotExist"
-      }
+        ?: return@validated ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.postcodeDistrict"] = "doesNotExist" })
 
       val user = userRepository.findRandomMatcher() ?: throw RuntimeException("No Matchers could be found")
 
