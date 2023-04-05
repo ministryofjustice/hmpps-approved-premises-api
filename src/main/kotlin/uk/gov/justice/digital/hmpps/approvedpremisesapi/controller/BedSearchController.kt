@@ -30,8 +30,7 @@ class BedSearchController(
         maxDistanceMiles = bedSearchParameters.maxDistanceMiles,
         startDate = bedSearchParameters.startDate,
         durationInDays = bedSearchParameters.durationDays,
-        requiredPremisesCharacteristics = bedSearchParameters.requiredPremisesCharacteristics,
-        requiredRoomCharacteristics = bedSearchParameters.requiredRoomCharacteristics,
+        requiredCharacteristics = bedSearchParameters.requiredCharacteristics,
         postcodeDistrictOutcode = bedSearchParameters.postcodeDistrict,
       )
       is TemporaryAccommodationBedSearchParameters -> bedSearchService.findTemporaryAccommodationBeds(

@@ -25,8 +25,7 @@ class BedSearchTest : IntegrationTestBase() {
         ApprovedPremisesBedSearchParameters(
           postcodeDistrict = "AA11",
           maxDistanceMiles = 20,
-          requiredPremisesCharacteristics = listOf(),
-          requiredRoomCharacteristics = listOf(),
+          requiredCharacteristics = listOf(),
           startDate = LocalDate.parse("2023-03-23"),
           durationDays = 7,
           serviceName = "approved-premises",
@@ -47,8 +46,7 @@ class BedSearchTest : IntegrationTestBase() {
           ApprovedPremisesBedSearchParameters(
             postcodeDistrict = "AA11",
             maxDistanceMiles = 20,
-            requiredPremisesCharacteristics = listOf(),
-            requiredRoomCharacteristics = listOf(),
+            requiredCharacteristics = listOf(),
             startDate = LocalDate.parse("2023-03-23"),
             durationDays = 7,
             serviceName = "approved-premises",
@@ -106,8 +104,7 @@ class BedSearchTest : IntegrationTestBase() {
           ApprovedPremisesBedSearchParameters(
             postcodeDistrict = postcodeDistrict.outcode,
             maxDistanceMiles = 20,
-            requiredPremisesCharacteristics = listOf(),
-            requiredRoomCharacteristics = listOf(),
+            requiredCharacteristics = listOf(),
             startDate = LocalDate.parse("2023-03-23"),
             durationDays = 7,
             serviceName = "approved-premises",

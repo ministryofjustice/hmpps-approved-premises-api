@@ -4625,19 +4625,14 @@ components:
             maxDistanceMiles:
               type: integer
               description: Maximum number of miles from the postcode district to search, only required if more than 50 miles which is the default
-            requiredPremisesCharacteristics:
-              type: array
-              items:
-                type: string
-            requiredRoomCharacteristics:
+            requiredCharacteristics:
               type: array
               items:
                 type: string
           required:
             - postcodeDistrict
             - maxDistanceMiles
-            - requiredPremisesCharacteristics
-            - requiredRoomCharacteristics
+            - requiredCharacteristics
     TemporaryAccommodationBedSearchParameters:
       allOf:
         - $ref: '#/components/schemas/BedSearchParameters'

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -13,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.LocalDate
+import java.util.UUID
 
 @Service
 class BedSearchService(
@@ -26,8 +26,7 @@ class BedSearchService(
     maxDistanceMiles: Int,
     startDate: LocalDate,
     durationInDays: Int,
-    requiredPremisesCharacteristics: List<String>,
-    requiredRoomCharacteristics: List<String>,
+    requiredCharacteristics: List<String>,
   ): AuthorisableActionResult<ValidatableActionResult<List<ApprovedPremisesBedSearchResult>>> {
     if (!user.hasRole(UserRole.MATCHER)) {
       return AuthorisableActionResult.Unauthorised()
@@ -35,46 +34,24 @@ class BedSearchService(
 
     return AuthorisableActionResult.Success(
       validated {
-        val premisesCharacteristicErrors = mutableListOf<String>()
-        val premisesCharacteristics = requiredPremisesCharacteristics.mapNotNull {
-          val characteristic = characteristicService.getCharacteristicByPropertyName(it)
+        val characteristicErrors = mutableListOf<String>()
+        val premisesCharacteristicIds = mutableListOf<UUID>()
+        val roomCharacteristicIds = mutableListOf<UUID>()
 
-          if (characteristic == null) {
-            premisesCharacteristicErrors += "$it doesNotExist"
-            return@mapNotNull null
+        val characteristics = characteristicService.getCharacteristicsByPropertyNames(requiredCharacteristics)
+
+        requiredCharacteristics.forEach { propertyName ->
+          val characteristic = characteristics.firstOrNull { it.propertyName == propertyName }
+          when {
+            characteristic == null -> characteristicErrors += "$propertyName doesNotExist"
+            characteristic.matches(ServiceName.approvedPremises.value, "premises") -> premisesCharacteristicIds += characteristic.id
+            characteristic.matches(ServiceName.approvedPremises.value, "room") -> roomCharacteristicIds += characteristic.id
+            else -> characteristicErrors += "$propertyName scopeInvalid"
           }
-
-          if (!characteristic.matches(ServiceName.approvedPremises.value, "premises")) {
-            premisesCharacteristicErrors += "$it scopeInvalid"
-            return@mapNotNull null
-          }
-
-          characteristic
         }
 
-        if (premisesCharacteristicErrors.any()) {
-          "$.requiredPremisesCharacteristics" hasValidationError premisesCharacteristicErrors.joinToString(", ")
-        }
-
-        val roomCharacteristicErrors = mutableListOf<String>()
-        val roomCharacteristics = requiredRoomCharacteristics.mapNotNull {
-          val characteristic = characteristicService.getCharacteristicByPropertyName(it)
-
-          if (characteristic == null) {
-            roomCharacteristicErrors += "$it doesNotExist"
-            return@mapNotNull null
-          }
-
-          if (!characteristic.matches(ServiceName.approvedPremises.value, "room")) {
-            roomCharacteristicErrors += "$it scopeInvalid"
-            return@mapNotNull null
-          }
-
-          characteristic
-        }
-
-        if (roomCharacteristicErrors.any()) {
-          "$.requiredRoomCharacteristics" hasValidationError roomCharacteristicErrors.joinToString(", ")
+        if (characteristicErrors.any()) {
+          "$.requiredCharacteristics" hasValidationError characteristicErrors.joinToString(", ")
         }
 
         postcodeDistrictRepository.findByOutcode(postcodeDistrictOutcode)
@@ -98,8 +75,8 @@ class BedSearchService(
             maxDistanceMiles = maxDistanceMiles,
             startDate = startDate,
             durationInDays = durationInDays,
-            requiredPremisesCharacteristics = premisesCharacteristics.map(CharacteristicEntity::id),
-            requiredRoomCharacteristics = roomCharacteristics.map(CharacteristicEntity::id),
+            requiredPremisesCharacteristics = premisesCharacteristicIds,
+            requiredRoomCharacteristics = roomCharacteristicIds,
           ),
         )
       },
