@@ -153,7 +153,7 @@ class ApprovedPremisesSeedJob(
         status = row.status,
         longitude = row.longitude,
         latitude = row.latitude,
-        point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.longitude, row.latitude)) else null
+        point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null
       )
     )
 
