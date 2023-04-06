@@ -3883,6 +3883,9 @@ components:
           type: string
         releaseType:
           $ref: '#/components/schemas/ReleaseTypeOption'
+        releaseDate:
+          type: string
+          format: date
       required:
         - translatedDocument
         - isPipeApplication

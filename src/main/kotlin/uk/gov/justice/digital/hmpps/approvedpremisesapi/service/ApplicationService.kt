@@ -320,6 +320,7 @@ class ApplicationService(
       isPipeApplication = submitApplication.isPipeApplication
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
+      releaseDate = submitApplication.releaseDate
     }
 
     assessmentService.createAssessment(application)
