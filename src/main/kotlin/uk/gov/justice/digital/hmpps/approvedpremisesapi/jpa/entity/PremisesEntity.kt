@@ -26,6 +26,9 @@ import javax.persistence.Table
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   fun findAllByProbationRegion_Id(probationRegionId: UUID): List<PremisesEntity>
 
+  @Query("SELECT p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status, COUNT(b) AS bed_count FROM TemporaryAccommodationPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status")
+  fun findAllTemporaryAccommodationSummary(): List<Array<Any?>>
+
   @Query("SELECT p FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesEntity>
 
