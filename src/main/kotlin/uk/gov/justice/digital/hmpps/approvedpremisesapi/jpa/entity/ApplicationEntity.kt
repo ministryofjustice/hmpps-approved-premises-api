@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Convert
@@ -92,6 +93,7 @@ class ApprovedPremisesApplicationEntity(
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
+  var releaseDate: LocalDate?,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,

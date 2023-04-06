@@ -214,6 +214,7 @@ class ApplicationService(
         convictionId = convictionId!!,
         eventNumber = deliusEventNumber!!,
         offenceId = offenceId!!,
+        releaseDate = null,
         schemaUpToDate = true,
         riskRatings = riskRatings,
         assessments = mutableListOf(),

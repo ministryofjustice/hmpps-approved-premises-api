@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -30,6 +31,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var convictionId: Yielded<Long> = { randomInt(0, 1000).toLong() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
+  private var releaseDate: Yielded<LocalDate?> = { null }
   private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
   private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
   private var teamCodes: Yielded<MutableList<ApplicationTeamCodeEntity>> = { mutableListOf() }
@@ -94,6 +96,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.offenceId = { offenceId }
   }
 
+  fun withReleaseDate(releaseDate: LocalDate?) = apply {
+    this.releaseDate = { releaseDate }
+  }
+
   fun withAssessments(assessments: MutableList<AssessmentEntity>) = apply {
     this.assessments = { assessments }
   }
@@ -116,6 +122,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     convictionId = this.convictionId(),
     eventNumber = this.eventNumber(),
     offenceId = this.offenceId(),
+    releaseDate = this.releaseDate(),
     schemaUpToDate = false,
     riskRatings = this.riskRatings(),
     assessments = this.assessments(),
