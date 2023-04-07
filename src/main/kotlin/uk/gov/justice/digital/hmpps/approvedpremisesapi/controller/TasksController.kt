@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.TasksApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -26,22 +28,26 @@ class TasksController(
   override fun tasksGet(): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
-    val assessments = mapAndTransformAssessments(
-      log,
-      assessmentService.getVisibleAssessmentsForUser(user),
-      user.deliusUsername,
-      offenderService,
-      taskTransformer::transformAssessmentToTask
-    )
+    if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
+      val assessments = mapAndTransformAssessments(
+        log,
+        assessmentService.getAllReallocatable(),
+        user.deliusUsername,
+        this.offenderService,
+        taskTransformer::transformAssessmentToTask,
+      )
 
-    val placementRequests = mapAndTransformPlacementRequests(
-      log,
-      placementRequestService.getVisiblePlacementRequestsForUser(user),
-      user.deliusUsername,
-      offenderService,
-      taskTransformer::transformPlacementRequestToTask
-    )
+      val placementRequests = mapAndTransformPlacementRequests(
+        log,
+        placementRequestService.getAllReallocatable(),
+        user.deliusUsername,
+        this.offenderService,
+        taskTransformer::transformPlacementRequestToTask,
+      )
 
-    return ResponseEntity.ok(assessments + placementRequests)
+      return ResponseEntity.ok(placementRequests + assessments)
+    } else {
+      throw ForbiddenProblem()
+    }
   }
 }

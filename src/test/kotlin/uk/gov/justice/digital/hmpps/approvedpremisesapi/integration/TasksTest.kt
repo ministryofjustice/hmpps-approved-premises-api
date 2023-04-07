@@ -37,23 +37,35 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all tasks without workflow manager permissions returns 403`() {
+    `Given a User` { _, jwt ->
+      webTestClient.get()
+        .uri("/tasks")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
   fun `Get all tasks returns 200 with correct body`() {
-    `Given a User` { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Assessment`(
-            allocatedToUser = user,
-            createdByUser = user,
+            allocatedToUser = otherUser,
+            createdByUser = otherUser,
             crn = offenderDetails.otherIds.crn
           ) { assessment, _ ->
             `Given an Assessment`(
-              allocatedToUser = user,
-              createdByUser = user,
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
               reallocated = true
             ) { _, _ ->
               `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
+                placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn
@@ -69,7 +81,6 @@ class TasksTest : IntegrationTestBase() {
                     objectMapper.writeValueAsString(
                       listOf(
                         taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
-                        taskTransformer.transformAssessmentToTask(placementRequest.assessment, offenderDetails, inmateDetails),
                         taskTransformer.transformPlacementRequestToTask(
                           placementRequest,
                           offenderDetails,

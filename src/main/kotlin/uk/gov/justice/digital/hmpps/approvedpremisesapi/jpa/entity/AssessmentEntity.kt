@@ -21,6 +21,8 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<AssessmentEntity>
 
   fun findAllByReallocatedAtNull(): List<AssessmentEntity>
+
+  fun findAllByReallocatedAtNullAndSubmittedAtNull(): List<AssessmentEntity>
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 }
 

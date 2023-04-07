@@ -65,6 +65,17 @@ class AssessmentService(
     return assessments
   }
 
+  fun getAllReallocatable(): List<AssessmentEntity> {
+    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
+    val assessments = assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNull()
+
+    assessments.forEach {
+      it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
+    }
+
+    return assessments
+  }
+
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
     // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
 
