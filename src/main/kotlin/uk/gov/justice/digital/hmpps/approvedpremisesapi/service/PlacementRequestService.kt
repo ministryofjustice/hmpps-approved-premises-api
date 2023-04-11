@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -114,7 +114,7 @@ class PlacementRequestService(
     )
   }
 
-  fun createPlacementRequest(assessment: AssessmentEntity, requirements: NewPlacementRequest): ValidatableActionResult<PlacementRequestEntity> =
+  fun createPlacementRequest(assessment: AssessmentEntity, requirements: PlacementRequirements): ValidatableActionResult<PlacementRequestEntity> =
     validated {
       val postcodeDistrict = postcodeDistrictRepository.findByOutcode(requirements.location)
         ?: return@validated ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.postcodeDistrict"] = "doesNotExist" })
