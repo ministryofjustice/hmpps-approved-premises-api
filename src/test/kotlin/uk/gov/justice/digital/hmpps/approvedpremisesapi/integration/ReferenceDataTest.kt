@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthori
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 
@@ -44,6 +46,9 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var nonArrivalReasonTransformer: NonArrivalReasonTransformer
+
+  @Autowired
+  lateinit var probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer
 
   @Test
   fun `Get Characteristics returns 200 with correct body`() {
@@ -456,6 +461,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Probation Regions returns 200 with correct body`() {
+    probationDeliveryUnitRepository.deleteAll()
     probationRegionRepository.deleteAll()
 
     val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(10) {
@@ -490,6 +496,76 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/non-arrival-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Probation Delivery Units returns 200 with correct body`() {
+    probationDeliveryUnitRepository.deleteAll()
+
+    val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(4) {
+      withYieldedApArea {
+        apAreaEntityFactory.produceAndPersist()
+      }
+    }
+
+    val probationDeliveryUnits = mutableListOf<ProbationDeliveryUnitEntity>()
+    probationRegions.forEach { probationRegion ->
+      probationDeliveryUnits += probationDeliveryUnitFactory.produceAndPersistMultiple(10) {
+        withProbationRegion(probationRegion)
+      }
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      probationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/probation-delivery-units")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Probation Delivery Units by Probation Region returns 200 with correct body`() {
+    probationDeliveryUnitRepository.deleteAll()
+
+    val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(4) {
+      withYieldedApArea {
+        apAreaEntityFactory.produceAndPersist()
+      }
+    }
+
+    val probationDeliveryUnits = mutableListOf<ProbationDeliveryUnitEntity>()
+    probationRegions.forEach { probationRegion ->
+      probationDeliveryUnits += probationDeliveryUnitFactory.produceAndPersistMultiple(10) {
+        withProbationRegion(probationRegion)
+      }
+    }
+
+    val probationRegionId = probationRegions[0].id
+
+    val expectedProbationDeliveryUnits = probationDeliveryUnits.filter { it.probationRegion.id == probationRegionId }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedProbationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/probation-delivery-units?probationRegionId=$probationRegionId")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()

@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthority
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
@@ -30,7 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthori
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
+import java.util.UUID
 
 @Service
 class ReferenceDataController(
@@ -43,6 +47,7 @@ class ReferenceDataController(
   private val characteristicRepository: CharacteristicRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
+  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val departureReasonTransformer: DepartureReasonTransformer,
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
   private val destinationProviderTransformer: DestinationProviderTransformer,
@@ -51,7 +56,8 @@ class ReferenceDataController(
   private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer,
   private val characteristicTransformer: CharacteristicTransformer,
   private val probationRegionTransformer: ProbationRegionTransformer,
-  private val nonArrivalReasonTransformer: NonArrivalReasonTransformer
+  private val nonArrivalReasonTransformer: NonArrivalReasonTransformer,
+  private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
 ) : ReferenceDataApiDelegate {
 
   override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?): ResponseEntity<List<Characteristic>> {
@@ -122,5 +128,14 @@ class ReferenceDataController(
     val reasons = nonArrivalReasonRepository.findAll()
 
     return ResponseEntity.ok(reasons.map(nonArrivalReasonTransformer::transformJpaToApi))
+  }
+
+  override fun referenceDataProbationDeliveryUnitsGet(probationRegionId: UUID?): ResponseEntity<List<ProbationDeliveryUnit>> {
+    val probationDeliveryUnits = when (probationRegionId) {
+      null -> probationDeliveryUnitRepository.findAll()
+      else -> probationDeliveryUnitRepository.findAllByProbationRegion_Id(probationRegionId)
+    }
+
+    return ResponseEntity.ok(probationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi))
   }
 }
