@@ -9,13 +9,16 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.cache.CacheManager
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -138,19 +141,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DbExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.TestPropertiesInitializer
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
 
 @ExtendWith(DbExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
+@ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
+@Tag("integration")
 abstract class IntegrationTestBase {
   lateinit var wiremockServer: WireMockServer
 
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
   lateinit var webTestClient: WebTestClient
+
+  @Value("\${wiremock.port}")
+  lateinit var wiremockPort: Integer
 
   @Autowired
   private lateinit var jdbcTemplate: JdbcTemplate
@@ -326,7 +335,7 @@ abstract class IntegrationTestBase {
       .responseTimeout(Duration.ofMinutes(20))
       .build()
 
-    wiremockServer = WireMockServer(57839)
+    wiremockServer = WireMockServer(wiremockPort.toInt())
     wiremockServer.start()
 
     cacheManager.cacheNames.forEach {

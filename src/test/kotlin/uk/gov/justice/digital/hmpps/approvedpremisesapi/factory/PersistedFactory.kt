@@ -1,10 +1,24 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.jpa.repository.JpaRepository
 
 class PersistedFactory<EntityType : Any, PrimaryKeyType : Any, FactoryType : Factory<EntityType>>(private val factoryProducer: () -> FactoryType, private val repository: JpaRepository<EntityType, PrimaryKeyType>) {
-  fun produceAndPersist(): EntityType = repository.saveAndFlush(factoryProducer().produce())
+  fun produceAndPersist(): EntityType {
+    (1..5).forEach {
+      try {
+        return repository.saveAndFlush(factoryProducer().produce())
+      } catch (dataIntegrityViolationException: DataIntegrityViolationException) {
+        if (it == 5) {
+          throw dataIntegrityViolationException
+        }
+      }
+    }
+
+    throw RuntimeException("Unreachable")
+  }
+
   fun produceAndPersist(configuration: FactoryType.() -> Unit): EntityType {
     val factory = factoryProducer()
     configuration(factory)

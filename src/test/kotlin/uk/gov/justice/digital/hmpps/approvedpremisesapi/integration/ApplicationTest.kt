@@ -1353,7 +1353,7 @@ class InboundMessageListener(private val objectMapper: ObjectMapper) {
   fun blockForMessage(): SnsEvent {
     var waitedCount = 0
     while (isEmpty()) {
-      if (waitedCount == 30) throw RuntimeException("Never received SQS message from SNS topic")
+      if (waitedCount == 300) throw RuntimeException("Never received SQS message from SNS topic after 30s")
 
       Thread.sleep(100)
       waitedCount += 1

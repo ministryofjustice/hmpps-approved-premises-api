@@ -77,9 +77,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withAllocatedToUser(user)
             withApplication(application1)
             withAssessment(assessment1)
-            withPostcodeDistrict(
-              postCodeDistrictRepository.findAll()[0]
-            )
+            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
             withDesirableCriteria(
               characteristicEntityFactory.produceAndPersistMultiple(5)
             )

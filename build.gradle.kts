@@ -88,8 +88,32 @@ tasks.register("bootRunLocal") {
   finalizedBy("bootRun")
 }
 
-tasks.test {
+tasks.withType<Test> {
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+
+  if (environment["GITHUB_ACTION"] != null) {
+    maxParallelForks = Runtime.getRuntime().availableProcessors()
+    println("Running on GitHub Actions - setting max test processes to number of processors: $maxParallelForks")
+  } else {
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+    println("Setting max test processes to recommended half of available: $maxParallelForks")
+  }
+}
+
+tasks.register<Test>("integrationTest") {
+  group = "verification"
+
+  useJUnitPlatform {
+    includeTags("integration")
+  }
+}
+
+tasks.register<Test>("unitTest") {
+  group = "verification"
+
+  useJUnitPlatform {
+    excludeTags("integration")
+  }
 }
 
 openApiGenerate {

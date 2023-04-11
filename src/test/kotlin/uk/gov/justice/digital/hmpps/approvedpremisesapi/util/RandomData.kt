@@ -20,6 +20,7 @@ private fun randomWithCharPool(charPool: List<Char>, length: Int) = (1..length)
 fun randomStringMultiCaseWithNumbers(length: Int) = randomWithCharPool(charPoolMultiCaseNumbers, length)
 
 fun randomStringUpperCase(length: Int) = randomWithCharPool(charPoolUpperCase, length)
+fun randomStringLowerCase(length: Int) = randomWithCharPool(charPoolLowerCase, length)
 
 fun randomEmailAddress() = randomWithCharPool(charPoolLowerCase, 5) + "." + randomWithCharPool(charPoolLowerCase, 8) + "@" + randomWithCharPool(charPoolLowerCase, 6) + ".com"
 

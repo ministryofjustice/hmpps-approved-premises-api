@@ -42,9 +42,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withAllocatedToUser(placementRequestAllocatedTo)
     withApplication(application)
     withAssessment(assessment)
-    withPostcodeDistrict(
-      postCodeDistrictRepository.findAll()[0]
-    )
+    withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
     withDesirableCriteria(
       characteristicEntityFactory.produceAndPersistMultiple(5)
     )
