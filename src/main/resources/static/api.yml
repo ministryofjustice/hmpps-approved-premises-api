@@ -3999,7 +3999,7 @@ components:
     AssessmentStatus:
       type: string
       enum:
-        - pending
+        - awaiting_response
         - active
         - completed
         - reallocated

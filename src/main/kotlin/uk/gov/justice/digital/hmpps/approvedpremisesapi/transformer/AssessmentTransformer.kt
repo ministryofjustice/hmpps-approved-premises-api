@@ -67,7 +67,7 @@ class AssessmentTransformer(
 
   private fun getStatus(entity: AssessmentEntity) = when {
     entity.decision !== null -> AssessmentStatus.completed
-    entity.clarificationNotes.any { it.response == null } -> AssessmentStatus.pending
+    entity.clarificationNotes.any { it.response == null } -> AssessmentStatus.awaitingResponse
     entity.reallocatedAt != null -> AssessmentStatus.reallocated
     else -> AssessmentStatus.active
   }
