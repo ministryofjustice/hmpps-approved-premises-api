@@ -96,7 +96,9 @@ class ApprovedPremisesApplicationEntity(
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,
   @OneToMany(mappedBy = "application")
-  val teamCodes: MutableList<ApplicationTeamCodeEntity>
+  val teamCodes: MutableList<ApplicationTeamCodeEntity>,
+  @OneToMany(mappedBy = "application")
+  var placementRequests: MutableList<PlacementRequestEntity>,
 ) : ApplicationEntity(
   id,
   crn,
@@ -124,6 +126,9 @@ class ApprovedPremisesApplicationEntity(
 
     return requiredQualifications
   }
+
+  fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
+  fun getLatestBooking(): BookingEntity? = getLatestPlacementRequest()?.booking
 }
 
 @Repository

@@ -129,7 +129,7 @@ class AssessmentTransformerTest {
 
     val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
-    assertThat(result.status).isEqualTo(AssessmentStatus.pending)
+    assertThat(result.status).isEqualTo(AssessmentStatus.awaitingResponse)
   }
 
   @Test

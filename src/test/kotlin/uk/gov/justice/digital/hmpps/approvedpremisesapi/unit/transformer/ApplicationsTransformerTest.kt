@@ -12,11 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -122,7 +126,7 @@ class ApplicationsTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi transforms an Approved Premises application with requested clarification notes correctly`() {
+  fun `transformJpaToApi sets status as 'requested further information' when transforming an Approved Premises application with requested clarification notes`() {
     val application = submittedApprovedPremisesApplicationFactory.produce()
     val assessment = assessmentFactory.withApplication(application).produce()
 
@@ -142,7 +146,7 @@ class ApplicationsTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi transforms a Temporary Accommodation application with requested clarification notes correctly`() {
+  fun `transformJpaToApi sets status as 'requested further information' when transforming a Temporary Accommodation application with requested clarification notes`() {
     val application = submittedTemporaryAccommodationApplicationFactory.produce()
     val assessment = assessmentFactory.withApplication(application).produce()
 
@@ -162,7 +166,7 @@ class ApplicationsTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi transforms an Approved Premises application with a completed clarification note correctly`() {
+  fun `transformJpaToApi sets status as 'submitted' when transforming an Approved Premises application with a completed clarification note`() {
     val application = submittedApprovedPremisesApplicationFactory.produce()
     val assessment = assessmentFactory.withApplication(application).produce()
 
@@ -180,7 +184,104 @@ class ApplicationsTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi transforms a Temporary Accommodation application with a completed clarification note correctly`() {
+  fun `transformJpaToApi sets status as 'rejected' when transforming an Approved Premises application with a rejected Assessment`() {
+    val application = submittedApprovedPremisesApplicationFactory.produce()
+    val assessment = assessmentFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.REJECTED)
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.status).isEqualTo(ApplicationStatus.rejected)
+  }
+
+  @Test
+  fun `transformJpaToApi sets status as 'pending' when transforming an Approved Premises application with an approved Assessment but no Placement Request`() {
+    val application = submittedApprovedPremisesApplicationFactory.produce()
+    val assessment = assessmentFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.status).isEqualTo(ApplicationStatus.pending)
+  }
+
+  @Test
+  fun `transformJpaToApi sets status as 'awaiting placement' when transforming an Approved Premises application with an approved Assessment with a Placement Request that has no Booking`() {
+    val application = submittedApprovedPremisesApplicationFactory.produce()
+    val assessment = assessmentFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce()
+      )
+      .produce()
+
+    application.placementRequests += placementRequest
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.status).isEqualTo(ApplicationStatus.awaitingPlacement)
+  }
+
+  @Test
+  fun `transformJpaToApi sets status as 'accepted' when transforming an Approved Premises application with an approved Assessment with a Placement Request that has a Booking`() {
+    val application = submittedApprovedPremisesApplicationFactory.produce()
+    val assessment = assessmentFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+
+    val booking = BookingEntityFactory()
+      .withPremises(
+        ApprovedPremisesEntityFactory()
+          .withUnitTestControlTestProbationAreaAndLocalAuthority()
+          .produce()
+      )
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withBooking(booking)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce()
+      )
+      .produce()
+
+    application.placementRequests += placementRequest
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.status).isEqualTo(ApplicationStatus.placed)
+  }
+
+  @Test
+  fun `transformJpaToApi sets status as 'submitted' when transforming a Temporary Accommodation application with a completed clarification note`() {
     val application = submittedTemporaryAccommodationApplicationFactory.produce()
     val assessment = assessmentFactory.withApplication(application).produce()
 

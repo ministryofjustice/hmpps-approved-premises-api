@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -58,9 +59,25 @@ class ApplicationsTransformer(
     submittedAt = jpa.submittedAt.toInstant()
   )
 
-  private fun getStatus(entity: ApplicationEntity) = when {
-    entity.getLatestAssessment()?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
-    entity.submittedAt !== null -> ApplicationStatus.submitted
-    else -> ApplicationStatus.inProgress
+  private fun getStatus(entity: ApplicationEntity): ApplicationStatus {
+    val latestAssessment = entity.getLatestAssessment()
+
+    if (entity is ApprovedPremisesApplicationEntity) {
+      return when {
+        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.REJECTED -> ApplicationStatus.rejected
+        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestPlacementRequest() == null -> ApplicationStatus.pending
+        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestBooking() == null -> ApplicationStatus.awaitingPlacement
+        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestBooking() != null -> ApplicationStatus.placed
+        latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
+        entity.submittedAt !== null -> ApplicationStatus.submitted
+        else -> ApplicationStatus.inProgress
+      }
+    }
+
+    return when {
+      latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
+      entity.submittedAt !== null -> ApplicationStatus.submitted
+      else -> ApplicationStatus.inProgress
+    }
   }
 }

@@ -217,7 +217,8 @@ class ApplicationService(
         schemaUpToDate = true,
         riskRatings = riskRatings,
         assessments = mutableListOf(),
-        teamCodes = mutableListOf()
+        teamCodes = mutableListOf(),
+        placementRequests = mutableListOf()
       )
     )
 

@@ -3838,6 +3838,10 @@ components:
         - inProgress
         - submitted
         - requestedFurtherInformation
+        - pending
+        - rejected
+        - awaitingPlacement
+        - placed
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
@@ -3999,7 +4003,7 @@ components:
     AssessmentStatus:
       type: string
       enum:
-        - pending
+        - awaiting_response
         - active
         - completed
         - reallocated
