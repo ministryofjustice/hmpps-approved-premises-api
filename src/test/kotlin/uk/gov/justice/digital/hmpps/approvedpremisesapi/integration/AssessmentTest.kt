@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -151,7 +151,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Accept assessment without JWT returns 401`() {
-    val placementRequest = NewPlacementRequest(
+    val placementRequirements = PlacementRequirements(
       gender = Gender.male,
       type = ApType.normal,
       expectedArrival = LocalDate.now(),
@@ -165,7 +165,7 @@ class AssessmentTest : IntegrationTestBase() {
 
     webTestClient.post()
       .uri("/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/acceptance")
-      .bodyValue(AssessmentAcceptance(document = "{}", requirements = placementRequest))
+      .bodyValue(AssessmentAcceptance(document = "{}", requirements = placementRequirements))
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -207,7 +207,7 @@ class AssessmentTest : IntegrationTestBase() {
             val essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift)
             val desirableCriteria = listOf(PlacementCriteria.hasBrailleSignage, PlacementCriteria.acceptsSexOffenders)
 
-            val placementRequest = NewPlacementRequest(
+            val placementRequirements = PlacementRequirements(
               gender = Gender.male,
               type = ApType.normal,
               expectedArrival = LocalDate.now(),
@@ -222,7 +222,7 @@ class AssessmentTest : IntegrationTestBase() {
             webTestClient.post()
               .uri("/assessments/${assessment.id}/acceptance")
               .header("Authorization", "Bearer $jwt")
-              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequest))
+              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements))
               .exchange()
               .expectStatus()
               .isOk
@@ -247,16 +247,16 @@ class AssessmentTest : IntegrationTestBase() {
 
             assertThat(persistedPlacementRequest.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
             assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
-            assertThat(persistedPlacementRequest.duration).isEqualTo(placementRequest.duration)
-            assertThat(persistedPlacementRequest.apType).isEqualTo(placementRequest.type)
-            assertThat(persistedPlacementRequest.mentalHealthSupport).isEqualTo(placementRequest.mentalHealthSupport)
-            assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementRequest.expectedArrival)
-            assertThat(persistedPlacementRequest.gender).isEqualTo(placementRequest.gender)
-            assertThat(persistedPlacementRequest.postcodeDistrict.outcode).isEqualTo(placementRequest.location)
-            assertThat(persistedPlacementRequest.radius).isEqualTo(placementRequest.radius)
+            assertThat(persistedPlacementRequest.duration).isEqualTo(placementRequirements.duration)
+            assertThat(persistedPlacementRequest.apType).isEqualTo(placementRequirements.type)
+            assertThat(persistedPlacementRequest.mentalHealthSupport).isEqualTo(placementRequirements.mentalHealthSupport)
+            assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementRequirements.expectedArrival)
+            assertThat(persistedPlacementRequest.gender).isEqualTo(placementRequirements.gender)
+            assertThat(persistedPlacementRequest.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
+            assertThat(persistedPlacementRequest.radius).isEqualTo(placementRequirements.radius)
 
-            assertThat(persistedPlacementRequest.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequest.desirableCriteria.map { it.toString() })
-            assertThat(persistedPlacementRequest.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequest.essentialCriteria.map { it.toString() })
+            assertThat(persistedPlacementRequest.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.desirableCriteria.map { it.toString() })
+            assertThat(persistedPlacementRequest.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.essentialCriteria.map { it.toString() })
           }
         }
       }
@@ -297,7 +297,7 @@ class AssessmentTest : IntegrationTestBase() {
             val essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift)
             val desirableCriteria = listOf(PlacementCriteria.hasBrailleSignage, PlacementCriteria.acceptsSexOffenders)
 
-            val placementRequest = NewPlacementRequest(
+            val placementRequirements = PlacementRequirements(
               gender = Gender.male,
               type = ApType.normal,
               expectedArrival = LocalDate.now(),
@@ -312,7 +312,7 @@ class AssessmentTest : IntegrationTestBase() {
             webTestClient.post()
               .uri("/assessments/${assessment.id}/acceptance")
               .header("Authorization", "Bearer $jwt")
-              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequest))
+              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements))
               .exchange()
               .expectStatus()
               .is4xxClientError
