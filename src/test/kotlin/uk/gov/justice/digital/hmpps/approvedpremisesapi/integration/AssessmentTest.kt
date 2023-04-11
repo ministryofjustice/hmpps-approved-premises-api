@@ -172,7 +172,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Accept assessment returns 200, persists decision, creates and allocates a placement request, and emits SNS domain event message`() {
+  fun `Accept assessment returns 200, persists decision, creates and allocates a placement request, and emits SNS domain event message when requirements provided`() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
     ) { userEntity, jwt ->
@@ -243,7 +243,7 @@ class AssessmentTest : IntegrationTestBase() {
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
             )
 
-            val persistedPlacementRequest = placementRequestRepository.findByApplication(application)
+            val persistedPlacementRequest = placementRequestRepository.findByApplication(application)!!
 
             assertThat(persistedPlacementRequest.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
             assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
@@ -257,6 +257,70 @@ class AssessmentTest : IntegrationTestBase() {
 
             assertThat(persistedPlacementRequest.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.desirableCriteria.map { it.toString() })
             assertThat(persistedPlacementRequest.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.essentialCriteria.map { it.toString() })
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Accept assessment returns 200, persists decision, does not create a Placement Request, and emits SNS domain event message when requirements not provided`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+    ) { userEntity, jwt ->
+      `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = assessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+            assessment.schemaUpToDate = true
+
+            webTestClient.post()
+              .uri("/assessments/${assessment.id}/acceptance")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = null))
+              .exchange()
+              .expectStatus()
+              .isOk
+
+            val persistedAssessment = assessmentRepository.findByIdOrNull(assessment.id)!!
+            assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+            assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+            assertThat(persistedAssessment.submittedAt).isNotNull
+
+            val emittedMessage = inboundMessageListener.blockForMessage()
+
+            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
+            assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+            assertThat(emittedMessage.detailUrl).matches("http://frontend/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+            )
+
+            assertThat(placementRequestRepository.findByApplication(application)).isNull()
           }
         }
       }

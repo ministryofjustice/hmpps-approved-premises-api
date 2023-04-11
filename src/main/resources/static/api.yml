@@ -4082,7 +4082,6 @@ components:
           $ref: '#/components/schemas/PlacementRequirements'
       required:
         - document
-        - requirements
     AssessmentRejection:
       type: object
       properties:

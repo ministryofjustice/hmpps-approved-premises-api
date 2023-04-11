@@ -155,9 +155,11 @@ class AssessmentController(
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
-    extractResultEntityOrThrow(
-      placementRequestService.createPlacementRequest(assessment, assessmentAcceptance.requirements)
-    )
+    if (assessmentAcceptance.requirements != null) {
+      extractResultEntityOrThrow(
+        placementRequestService.createPlacementRequest(assessment, assessmentAcceptance.requirements)
+      )
+    }
 
     return ResponseEntity(HttpStatus.OK)
   }
