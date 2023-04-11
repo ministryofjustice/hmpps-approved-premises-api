@@ -3838,6 +3838,10 @@ components:
         - inProgress
         - submitted
         - requestedFurtherInformation
+        - pending
+        - rejected
+        - awaitingPlacement
+        - placed
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
