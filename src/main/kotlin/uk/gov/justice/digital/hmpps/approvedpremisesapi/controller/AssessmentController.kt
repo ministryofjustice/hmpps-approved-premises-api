@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -155,9 +156,11 @@ class AssessmentController(
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
-    extractResultEntityOrThrow(
-      placementRequestService.createPlacementRequest(assessment, assessmentAcceptance.requirements)
-    )
+    if ((assessment.application as? ApprovedPremisesApplicationEntity)?.releaseDate != null) {
+      extractResultEntityOrThrow(
+        placementRequestService.createPlacementRequest(assessment, assessmentAcceptance.requirements)
+      )
+    }
 
     return ResponseEntity(HttpStatus.OK)
   }
