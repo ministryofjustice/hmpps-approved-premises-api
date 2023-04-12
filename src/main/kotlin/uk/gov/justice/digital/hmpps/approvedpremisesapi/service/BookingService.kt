@@ -904,7 +904,7 @@ class BookingService(
     arrivalDate,
     departureDate,
     thisEntityId
-  )
+  ).firstOrNull()
 
   fun getLostBedWithConflictingDates(
     startDate: LocalDate,
@@ -916,7 +916,7 @@ class BookingService(
     startDate,
     endDate,
     thisEntityId
-  )
+  ).firstOrNull()
 }
 
 sealed interface GetBookingForPremisesResult {

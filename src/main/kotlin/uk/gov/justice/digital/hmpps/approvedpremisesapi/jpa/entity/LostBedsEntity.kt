@@ -33,7 +33,7 @@ interface LostBedsRepository : JpaRepository<LostBedsEntity, UUID> {
           c is NULL
   """,
   )
-  fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): LostBedsEntity?
+  fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): List<LostBedsEntity>
 }
 
 @Entity
