@@ -1624,8 +1624,8 @@ class BookingServiceTest {
       .produce()
 
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val existingApplication = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
@@ -1655,8 +1655,8 @@ class BookingServiceTest {
     val departureDate = LocalDate.parse("2023-02-23")
 
     every { mockBedRepository.findByIdOrNull(bedId) } returns null
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -1708,8 +1708,8 @@ class BookingServiceTest {
 
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
     every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
@@ -1751,8 +1751,8 @@ class BookingServiceTest {
       .produce()
 
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val existingApplication = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
@@ -1797,8 +1797,8 @@ class BookingServiceTest {
       .produce()
 
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val existingApplication = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
@@ -1848,8 +1848,8 @@ class BookingServiceTest {
       .produce()
 
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val existingApplication = ApprovedPremisesApplicationEntityFactory()
       .withCrn(crn)
@@ -1953,8 +1953,8 @@ class BookingServiceTest {
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, arrivalDate, departureDate, bed.id)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -1986,8 +1986,8 @@ class BookingServiceTest {
 
     every { mockBedRepository.findByIdOrNull(bedId) } returns null
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -2016,8 +2016,8 @@ class BookingServiceTest {
     val departureDate = LocalDate.parse("2023-02-22")
 
     every { mockBedRepository.findByIdOrNull(bedId) } returns null
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -2064,8 +2064,8 @@ class BookingServiceTest {
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, arrivalDate, departureDate, bed.id)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -2190,8 +2190,8 @@ class BookingServiceTest {
     every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
       user = user,
@@ -2252,13 +2252,15 @@ class BookingServiceTest {
     every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns BookingEntityFactory()
-      .withArrivalDate(arrivalDate)
-      .withDepartureDate(departureDate)
-      .withPremises(premises)
-      .withBed(bed)
-      .produce()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf(
+      BookingEntityFactory()
+        .withArrivalDate(arrivalDate)
+        .withDepartureDate(departureDate)
+        .withPremises(premises)
+        .withBed(bed)
+        .produce()
+    )
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
       user = user,
@@ -2319,14 +2321,16 @@ class BookingServiceTest {
     every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns LostBedsEntityFactory()
-      .withStartDate(arrivalDate)
-      .withEndDate(departureDate)
-      .withPremises(premises)
-      .withBed(bed)
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
-      .produce()
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf(
+      LostBedsEntityFactory()
+        .withStartDate(arrivalDate)
+        .withEndDate(departureDate)
+        .withPremises(premises)
+        .withBed(bed)
+        .withYieldedReason { LostBedReasonEntityFactory().produce() }
+        .produce()
+    )
 
     val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
       user = user,
@@ -2388,8 +2392,8 @@ class BookingServiceTest {
       .withRoom(room)
       .produce()
 
-    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns null
+    every { mockBookingRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
