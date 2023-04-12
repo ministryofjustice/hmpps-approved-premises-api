@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -31,7 +32,20 @@ class PlacementRequestTransformer(
       applicationId = jpa.application.id,
       assessmentId = jpa.assessment.id,
       releaseType = getReleaseType(jpa.application.releaseType),
+      status = getStatus(jpa),
     )
+  }
+
+  private fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
+    if (placementRequest.booking == null) {
+      if (placementRequest.bookingNotMades.any()) {
+        return PlacementRequestStatus.unableToMatch
+      }
+
+      return PlacementRequestStatus.notMatched
+    }
+
+    return PlacementRequestStatus.matched
   }
 
   private fun characteristicToCriteria(characteristic: CharacteristicEntity): PlacementCriteria? = when (characteristic.propertyName) {
