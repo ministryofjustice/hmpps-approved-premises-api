@@ -4681,8 +4681,8 @@ components:
     PlacementRequestStatus:
       type: string
       enum:
-        - not_matched
-        - unable_to_match
+        - notMatched
+        - unableToMatch
         - matched
     PlacementCriteria:
       type: string
