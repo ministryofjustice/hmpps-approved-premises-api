@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -11,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 @Component
 class PlacementRequestTransformer(
   private val personTransformer: PersonTransformer,
-  private val risksTransformer: RisksTransformer
+  private val risksTransformer: RisksTransformer,
 ) {
   fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): PlacementRequest {
     return PlacementRequest(
@@ -28,7 +29,8 @@ class PlacementRequestTransformer(
       person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
       risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
       applicationId = jpa.application.id,
-      assessmentId = jpa.assessment.id
+      assessmentId = jpa.assessment.id,
+      releaseType = getReleaseType(jpa.application.releaseType),
     )
   }
 
@@ -49,6 +51,15 @@ class PlacementRequestTransformer(
     "hasTactileFlooring" -> PlacementCriteria.hasTactileFlooring
     "hasBrailleSignage" -> PlacementCriteria.hasBrailleSignage
     "hasHearingLoop" -> PlacementCriteria.hasHearingLoop
+    else -> { null }
+  }
+
+  private fun getReleaseType(releaseType: String?): ReleaseTypeOption? = when (releaseType) {
+    "licence" -> ReleaseTypeOption.licence
+    "rotl" -> ReleaseTypeOption.rotl
+    "hdc" -> ReleaseTypeOption.hdc
+    "pss" -> ReleaseTypeOption.pss
+    "in_community" -> ReleaseTypeOption.inCommunity
     else -> { null }
   }
 }
