@@ -25,7 +25,6 @@ class CommunityApiClient(
   @Qualifier("communityApiWebClient") private val webClient: WebClient,
   objectMapper: ObjectMapper
 ) : BaseHMPPSClient(webClient, objectMapper) {
-  @Cacheable(value = ["offenderDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getOffenderDetailSummary(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
   }

@@ -34,8 +34,6 @@ class RedisConfiguration {
     @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
     @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
     @Value("\${caches.userAccess.expiry-seconds}") userAccessExpirySeconds: Long,
-    @Value("\${caches.offenderDetails.expiry-seconds}") offenderDetailsExpirySeconds: Long,
-    @Value("\${caches.inmateDetails.expiry-seconds}") inmateDetailsExpirySeconds: Long,
     @Value("\${caches.staffDetails.expiry-seconds}") staffDetailsExpirySeconds: Long,
     @Value("\${caches.teamManagingCases.expiry-seconds}") teamManagingCasesExpirySeconds: Long,
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
@@ -44,9 +42,7 @@ class RedisConfiguration {
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
       builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), time, objectMapper)
-        .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofSeconds(offenderDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
-        .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofSeconds(inmateDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<StaffUserDetails>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
         .clientCacheFor<UKBankHolidays>("ukBankHolidaysCache", Duration.ofSeconds(ukBankHolidaysExpirySeconds), time, objectMapper)
