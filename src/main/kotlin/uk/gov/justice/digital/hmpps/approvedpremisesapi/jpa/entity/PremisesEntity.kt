@@ -26,8 +26,8 @@ import javax.persistence.Table
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   fun findAllByProbationRegion_Id(probationRegionId: UUID): List<PremisesEntity>
 
-  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status, CAST(COUNT(b) as int)) FROM TemporaryAccommodationPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status")
-  fun findAllTemporaryAccommodationSummary(): List<PremisesSummary>
+  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status, CAST(COUNT(b) as int)) FROM TemporaryAccommodationPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status")
+  fun findAllTemporaryAccommodationSummary(): List<TemporaryAccommodationPremisesSummary>
 
   @Query("SELECT p FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesEntity>
@@ -172,7 +172,7 @@ class TemporaryAccommodationPremisesEntity(
   status
 )
 
-data class PremisesSummary(
+data class TemporaryAccommodationPremisesSummary(
   val id: UUID,
   val name: String,
   val addressLine1: String,

@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
@@ -45,7 +45,7 @@ class PremisesService(
 
   fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
 
-  fun getAllPremisesSummary(serviceName: ServiceName): List<PremisesSummary> {
+  fun getAllPremisesSummary(serviceName: ServiceName): List<TemporaryAccommodationPremisesSummary> {
     return premisesRepository.findAllTemporaryAccommodationSummary()
   }
 

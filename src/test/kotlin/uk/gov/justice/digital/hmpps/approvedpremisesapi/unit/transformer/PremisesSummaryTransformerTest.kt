@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesSummaryTransformer
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesSummary as DomainPremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary as DomainPremisesSummary
 
 class PremisesSummaryTransformerTest {
   private val premisesSummaryTransformer = PremisesSummaryTransformer()
