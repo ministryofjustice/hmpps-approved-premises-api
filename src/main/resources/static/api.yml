@@ -4084,6 +4084,7 @@ components:
           $ref: '#/components/schemas/AnyValue'
         requirements:
           $ref: '#/components/schemas/PlacementRequirements'
+
       required:
         - document
     AssessmentRejection:
@@ -4669,6 +4670,8 @@ components:
             assessmentId:
               type: string
               format: uuid
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
       required:
         - person
         - risks

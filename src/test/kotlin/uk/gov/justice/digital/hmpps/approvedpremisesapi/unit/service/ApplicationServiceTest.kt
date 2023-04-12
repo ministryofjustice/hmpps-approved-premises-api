@@ -890,6 +890,7 @@ class ApplicationServiceTest {
       val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
       assertThat(persistedApplication.isPipeApplication).isTrue
       assertThat(persistedApplication.isWomensApplication).isFalse
+      assertThat(persistedApplication.releaseType).isEqualTo(submitApplication.releaseType.toString())
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createAssessment(application) }

@@ -57,7 +57,7 @@ class ApplicationService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val objectMapper: ObjectMapper,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -218,8 +218,9 @@ class ApplicationService(
         riskRatings = riskRatings,
         assessments = mutableListOf(),
         teamCodes = mutableListOf(),
-        placementRequests = mutableListOf()
-      )
+        placementRequests = mutableListOf(),
+        releaseType = null,
+      ),
     )
 
     managingTeamCodes.forEach {
@@ -227,8 +228,8 @@ class ApplicationService(
         ApplicationTeamCodeEntity(
           id = UUID.randomUUID(),
           application = createdApplication,
-          teamCode = it
-        )
+          teamCode = it,
+        ),
       )
     }
 
@@ -247,13 +248,13 @@ class ApplicationService(
 
     if (!application.schemaUpToDate) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
       )
     }
 
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been submitted")
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
       )
     }
 
@@ -262,7 +263,7 @@ class ApplicationService(
     val savedApplication = applicationRepository.save(application)
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication)
+      ValidatableActionResult.Success(savedApplication),
     )
   }
 
@@ -281,19 +282,19 @@ class ApplicationService(
 
     if (application !is ApprovedPremisesApplicationEntity) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas1Supported")
+        ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
       )
     }
 
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been submitted")
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
       )
     }
 
     if (!application.schemaUpToDate) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
       )
     }
 
@@ -308,7 +309,7 @@ class ApplicationService(
 
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors)
+        ValidatableActionResult.FieldValidationError(validationErrors),
       )
     }
 
@@ -320,6 +321,7 @@ class ApplicationService(
       isPipeApplication = submitApplication.isPipeApplication
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
+      releaseType = submitApplication.releaseType.toString()
     }
 
     assessmentService.createAssessment(application)
@@ -329,7 +331,7 @@ class ApplicationService(
     createApplicationSubmittedEvent(application, submitApplication, username, jwt)
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(application)
+      ValidatableActionResult.Success(application),
     )
   }
 
@@ -379,7 +381,7 @@ class ApplicationService(
               .replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = application.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ),
             deliusEventNumber = application.eventNumber,
             mappa = mappaLevel,
@@ -399,29 +401,29 @@ class ApplicationService(
                 staffIdentifier = staffDetails.staffIdentifier,
                 forenames = staffDetails.staff.forenames,
                 surname = staffDetails.staff.surname,
-                username = staffDetails.username
+                username = staffDetails.username,
               ),
               probationArea = ProbationArea(
                 code = staffDetails.probationArea.code,
-                name = staffDetails.probationArea.description
+                name = staffDetails.probationArea.description,
               ),
               team = Team(
                 code = team.code,
-                name = team.description
+                name = team.description,
               ),
               ldu = Ldu(
                 code = team.teamType.code,
-                name = team.teamType.description
+                name = team.teamType.description,
               ),
               region = Region(
                 code = staffDetails.probationArea.code,
-                name = staffDetails.probationArea.description
-              )
+                name = staffDetails.probationArea.description,
+              ),
             ),
-            sentenceLengthInMonths = null
-          )
-        )
-      )
+            sentenceLengthInMonths = null,
+          ),
+        ),
+      ),
     )
   }
 
