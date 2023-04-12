@@ -59,7 +59,7 @@ class AssessmentTransformer(
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
 
-  private fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
+  fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
     JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
     JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
     null -> null

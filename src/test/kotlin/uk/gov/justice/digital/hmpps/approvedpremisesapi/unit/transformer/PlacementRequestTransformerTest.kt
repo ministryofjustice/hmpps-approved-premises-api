@@ -1,7 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -20,15 +26,26 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 
 class PlacementRequestTransformerTest {
-  private val personTransformer = PersonTransformer()
-  private val risksTransformer = RisksTransformer()
+  private val mockAssessmentTransformer = mockk<AssessmentTransformer>()
+  private val mockPersonTransformer = mockk<PersonTransformer>()
+  private val mockRisksTransformer = mockk<RisksTransformer>()
+  private val mockUserTransformer = mockk<UserTransformer>()
 
-  private val placementRequestTransformer = PlacementRequestTransformer(personTransformer, risksTransformer)
+  private val placementRequestTransformer = PlacementRequestTransformer(
+    mockPersonTransformer,
+    mockRisksTransformer,
+    mockAssessmentTransformer,
+    mockUserTransformer,
+  )
 
   private val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
   private val inmateDetail = InmateDetailFactory().produce()
@@ -42,9 +59,12 @@ class PlacementRequestTransformerTest {
     .withCreatedByUser(user)
     .produce()
 
+  private val submittedAt = OffsetDateTime.now()
+
   private val assessment = AssessmentEntityFactory()
     .withAllocatedToUser(user)
     .withApplication(application)
+    .withSubmittedAt(submittedAt)
     .produce()
 
   private val placementRequestFactory = PlacementRequestEntityFactory()
@@ -67,6 +87,20 @@ class PlacementRequestTransformerTest {
     )
     .withAllocatedToUser(user)
 
+  private val mockRisks = mockk<PersonRisks>()
+  private val mockPerson = mockk<Person>()
+
+  private val mockUser = mockk<ApprovedPremisesUser>()
+  private val decision = ApiAssessmentDecision.accepted
+
+  @BeforeEach
+  fun setup() {
+    every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns decision
+    every { mockPersonTransformer.transformModelToApi(offenderDetailSummary, inmateDetail) } returns mockPerson
+    every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
+    every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
+  }
+
   @Test
   fun `transformJpaToApi transforms a basic placement request entity`() {
     val placementRequestEntity = placementRequestFactory.produce()
@@ -85,12 +119,15 @@ class PlacementRequestTransformerTest {
         essentialCriteria = listOf(PlacementCriteria.isSemiSpecialistMentalHealth, PlacementCriteria.isRecoveryFocussed),
         desirableCriteria = listOf(PlacementCriteria.hasWideStepFreeAccess, PlacementCriteria.hasLift, PlacementCriteria.hasBrailleSignage),
         mentalHealthSupport = placementRequestEntity.mentalHealthSupport,
-        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-        risks = risksTransformer.transformDomainToApi(placementRequestEntity.application.riskRatings!!, placementRequestEntity.application.crn),
+        person = mockPerson,
+        risks = mockRisks,
         applicationId = application.id,
         assessmentId = assessment.id,
         releaseType = ReleaseTypeOption.licence,
         status = PlacementRequestStatus.notMatched,
+        assessmentDecision = decision,
+        assessmentDate = submittedAt.toInstant(),
+        assessor = mockUser,
       ),
     )
   }

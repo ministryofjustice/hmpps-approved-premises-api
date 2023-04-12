@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -14,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 class PlacementRequestTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
+  private val assessmentTransformer: AssessmentTransformer,
+  private val userTransformer: UserTransformer
 ) {
   fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): PlacementRequest {
     return PlacementRequest(
@@ -31,8 +35,11 @@ class PlacementRequestTransformer(
       risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
       applicationId = jpa.application.id,
       assessmentId = jpa.assessment.id,
-      releaseType = getReleaseType(jpa.application.releaseType),
+      releaseType = getReleaseType(jpa.application.releaseType)!!,
       status = getStatus(jpa),
+      assessmentDecision = assessmentTransformer.transformJpaDecisionToApi(jpa.assessment.decision)!!,
+      assessmentDate = jpa.assessment.submittedAt?.toInstant()!!,
+      assessor = userTransformer.transformJpaToApi(jpa.assessment.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     )
   }
 
