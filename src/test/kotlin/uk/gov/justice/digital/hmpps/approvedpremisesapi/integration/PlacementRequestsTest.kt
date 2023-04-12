@@ -49,6 +49,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withCrn(offenderDetails1.otherIds.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
+            withReleaseType("licence")
           }
 
           val assessment1 = assessmentEntityFactory.produceAndPersist {
@@ -63,6 +64,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withCrn(offenderDetails2.otherIds.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
+            withReleaseType("licence")
           }
 
           val assessment2 = assessmentEntityFactory.produceAndPersist {
@@ -79,10 +81,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withAssessment(assessment1)
             withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
             withDesirableCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(5)
+              characteristicEntityFactory.produceAndPersistMultiple(5),
             )
             withEssentialCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(3)
+              characteristicEntityFactory.produceAndPersistMultiple(3),
             )
           }
 
@@ -92,13 +94,13 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withApplication(application2)
             withAssessment(assessment2)
             withPostcodeDistrict(
-              postCodeDistrictRepository.findAll()[0]
+              postCodeDistrictRepository.findAll()[0],
             )
             withDesirableCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(5)
+              characteristicEntityFactory.produceAndPersistMultiple(5),
             )
             withEssentialCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(3)
+              characteristicEntityFactory.produceAndPersistMultiple(3),
             )
           }
 
@@ -112,9 +114,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(placementRequest, offenderDetails1, inmateDetails1)
-                )
-              )
+                  placementRequestTransformer.transformJpaToApi(placementRequest, offenderDetails1, inmateDetails1),
+                ),
+              ),
             )
         }
       }
@@ -140,7 +142,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.get()
                 .uri("/placement-requests/${placementRequest.id}")
@@ -165,7 +167,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.get()
                 .uri("/placement-requests/${placementRequest.id}")
@@ -177,9 +179,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .json(
                   objectMapper.writeValueAsString(
                     placementRequestTransformer.transformJpaToApi(
-                      placementRequest, offenderDetails, inmateDetails
-                    )
-                  )
+                      placementRequest,
+                      offenderDetails,
+                      inmateDetails,
+                    ),
+                  ),
                 )
             }
           }
@@ -196,8 +200,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
         NewPlacementRequestBooking(
           arrivalDate = LocalDate.parse("2023-03-29"),
           departureDate = LocalDate.parse("2023-04-01"),
-          bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e")
-        )
+          bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e"),
+        ),
       )
       .exchange()
       .expectStatus()
@@ -214,7 +218,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.post()
                 .uri("/placement-requests/${placementRequest.id}/booking")
@@ -223,8 +227,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   NewPlacementRequestBooking(
                     arrivalDate = LocalDate.parse("2023-03-29"),
                     departureDate = LocalDate.parse("2023-04-01"),
-                    bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e")
-                  )
+                    bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e"),
+                  ),
                 )
                 .exchange()
                 .expectStatus()
@@ -246,7 +250,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               val premises = approvedPremisesEntityFactory.produceAndPersist {
                 withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -270,8 +274,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   NewPlacementRequestBooking(
                     arrivalDate = LocalDate.parse("2023-03-29"),
                     departureDate = LocalDate.parse("2023-04-01"),
-                    bedId = bed.id
-                  )
+                    bedId = bed.id,
+                  ),
                 )
                 .exchange()
                 .expectStatus()
@@ -289,8 +293,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
       .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/booking-not-made")
       .bodyValue(
         NewBookingNotMade(
-          notes = "some notes"
-        )
+          notes = "some notes",
+        ),
       )
       .exchange()
       .expectStatus()
@@ -307,15 +311,15 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.post()
                 .uri("/placement-requests/${placementRequest.id}/booking-not-made")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   NewBookingNotMade(
-                    notes = "some notes"
-                  )
+                    notes = "some notes",
+                  ),
                 )
                 .exchange()
                 .expectStatus()
@@ -337,15 +341,15 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.post()
                 .uri("/placement-requests/${placementRequest.id}/booking-not-made")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   NewBookingNotMade(
-                    notes = "some notes"
-                  )
+                    notes = "some notes",
+                  ),
                 )
                 .exchange()
                 .expectStatus()

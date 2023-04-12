@@ -24,6 +24,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withCrn(crn)
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
+    withReleaseType("licence")
   }
 
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {

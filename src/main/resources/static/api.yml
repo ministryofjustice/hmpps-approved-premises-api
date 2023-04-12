@@ -4672,12 +4672,24 @@ components:
               $ref: '#/components/schemas/ReleaseTypeOption'
             status:
               $ref: '#/components/schemas/PlacementRequestStatus'
+            assessmentDecision:
+              $ref: '#/components/schemas/AssessmentDecision'
+            assessmentDate:
+              type: string
+              format: date-time
+            assessor:
+              $ref: '#/components/schemas/ApprovedPremisesUser'
       required:
         - person
         - risks
         - id
         - applicationId
         - assessmentId
+        - releaseType
+        - status
+        - assessmentDecision
+        - assessmentDate
+        - assessor
     PlacementRequestStatus:
       type: string
       enum:
