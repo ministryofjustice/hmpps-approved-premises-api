@@ -45,13 +45,13 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .jsonPath("$..[0]id").isEqualTo(uuid.toString())
-        .jsonPath("$..[0]addressLine1").isEqualTo("221 Baker Street")
-        .jsonPath("$..[0]addressLine2").isEqualTo("221B")
-        .jsonPath("$..[0]postcode").isEqualTo("NW1 6XE")
-        .jsonPath("$..[0]status").isEqualTo("active")
-        .jsonPath("$..[0]pdu").isEqualTo("PDU")
-        .jsonPath("$..[0]bedCount").isEqualTo(5)
+        .jsonPath("$[0].id").isEqualTo(uuid.toString())
+        .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+        .jsonPath("$[0].addressLine2").isEqualTo("221B")
+        .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+        .jsonPath("$[0].status").isEqualTo("active")
+        .jsonPath("$[0].pdu").isEqualTo("PDU")
+        .jsonPath("$[0].bedCount").isEqualTo(5)
     }
   }
 }
