@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -115,13 +116,14 @@ class DeserializationValidationService {
       LocalDate::class.java -> LocalDateSpecialJsonPrimitiveTypeChecker(jsonNode)
       LocalDateTime::class.java -> LocalDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
       OffsetDateTime::class.java -> OffsetDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
+      Instant::class.java -> InstantSpecialJsonPrimitiveTypeChecker(jsonNode)
       UUID::class.java -> UUIDSpecialJsonPrimitiveTypeChecker(jsonNode)
       else -> null
     }
   }
 
-  private fun getExpectedJsonPrimitiveType(jvmPrimitive: Class<*>): JsonNodeType? {
-    return when (jvmPrimitive) {
+  private fun getExpectedJsonPrimitiveType(jvmType: Class<*>): JsonNodeType? {
+    return when (jvmType) {
       String::class.java -> JsonNodeType.STRING
       Boolean::class.java -> JsonNodeType.BOOLEAN
       Boolean::class.javaObjectType -> JsonNodeType.BOOLEAN
@@ -131,6 +133,7 @@ class DeserializationValidationService {
       LocalDate::class.java -> JsonNodeType.STRING
       LocalDateTime::class.java -> JsonNodeType.STRING
       OffsetDateTime::class.java -> JsonNodeType.STRING
+      Instant::class.java -> JsonNodeType.STRING
       UUID::class.java -> JsonNodeType.STRING
       else -> null
     }
@@ -169,6 +172,14 @@ class OffsetDateTimeSpecialJsonPrimitiveTypeChecker(val jsonNode: JsonNode) : Sp
     if (jsonNode.nodeType != JsonNodeType.STRING) return false
 
     return doesNotThrow { OffsetDateTime.parse(jsonNode.textValue()) }
+  }
+}
+
+class InstantSpecialJsonPrimitiveTypeChecker(val jsonNode: JsonNode) : SpecialJsonPrimitiveTypeChecker {
+  override fun isValid(): Boolean {
+    if (jsonNode.nodeType != JsonNodeType.STRING) return false
+
+    return doesNotThrow { Instant.parse(jsonNode.textValue()) }
   }
 }
 
