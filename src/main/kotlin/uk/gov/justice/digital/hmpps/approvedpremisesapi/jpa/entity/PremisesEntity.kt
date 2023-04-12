@@ -172,6 +172,17 @@ class TemporaryAccommodationPremisesEntity(
   status
 )
 
+data class ApprovedPremisesSummary(
+  val id: UUID,
+  val name: String,
+  val addressLine1: String,
+  val addressLine2: String?,
+  val postcode: String,
+  val status: PropertyStatus,
+  val bedCount: Int,
+  val apCode: String
+)
+
 data class TemporaryAccommodationPremisesSummary(
   val id: UUID,
   val name: String,
