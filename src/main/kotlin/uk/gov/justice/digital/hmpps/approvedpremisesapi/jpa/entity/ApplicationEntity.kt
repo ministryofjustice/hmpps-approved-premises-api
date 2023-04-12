@@ -99,6 +99,7 @@ class ApprovedPremisesApplicationEntity(
   val teamCodes: MutableList<ApplicationTeamCodeEntity>,
   @OneToMany(mappedBy = "application")
   var placementRequests: MutableList<PlacementRequestEntity>,
+  var releaseType: String?,
 ) : ApplicationEntity(
   id,
   crn,

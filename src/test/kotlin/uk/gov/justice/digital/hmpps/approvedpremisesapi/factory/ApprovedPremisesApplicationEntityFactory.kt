@@ -35,6 +35,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
   private var teamCodes: Yielded<MutableList<ApplicationTeamCodeEntity>> = { mutableListOf() }
   private var placementRequests: Yielded<MutableList<PlacementRequestEntity>> = { mutableListOf() }
+  private var releaseType: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -108,6 +109,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.placementRequests = { placementRequests }
   }
 
+  fun withReleaseType(releaseType: String) = apply {
+    this.releaseType = { releaseType }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -126,6 +131,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     riskRatings = this.riskRatings(),
     assessments = this.assessments(),
     teamCodes = this.teamCodes(),
-    placementRequests = this.placementRequests()
+    placementRequests = this.placementRequests(),
+    releaseType = this.releaseType(),
   )
 }
