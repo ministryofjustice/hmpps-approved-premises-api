@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesSummary as ApiPremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesSummary as DomainPremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesSummary as DomainPremisesSummary
 
 @Component
 class PremisesSummaryTransformer() {
