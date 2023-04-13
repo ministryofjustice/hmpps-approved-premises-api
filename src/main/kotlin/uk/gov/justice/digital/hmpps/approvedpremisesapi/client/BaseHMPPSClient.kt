@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -11,7 +12,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 abstract class BaseHMPPSClient(
   private val webClient: WebClient,
-  private val objectMapper: ObjectMapper
+  private val objectMapper: ObjectMapper,
+  private val redisTemplate: RedisTemplate<String, String>
 ) {
   protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.GET, requestBuilderConfiguration)
