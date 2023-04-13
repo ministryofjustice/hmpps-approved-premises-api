@@ -26,8 +26,11 @@ import javax.persistence.Table
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   fun findAllByProbationRegion_Id(probationRegionId: UUID): List<PremisesEntity>
 
-  @Query("SELECT p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status, COUNT(b) AS bed_count FROM TemporaryAccommodationPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status")
-  fun findAllTemporaryAccommodationSummary(): List<Array<Any?>>
+  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status, CAST(COUNT(b) as int)) FROM TemporaryAccommodationPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status")
+  fun findAllTemporaryAccommodationSummary(): List<TemporaryAccommodationPremisesSummary>
+
+  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.status, CAST(COUNT(b) as int), p.apCode) FROM ApprovedPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status")
+  fun findAllApprovedPremisesSummary(): List<ApprovedPremisesSummary>
 
   @Query("SELECT p FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesEntity>
@@ -170,4 +173,26 @@ class TemporaryAccommodationPremisesEntity(
   rooms,
   characteristics,
   status
+)
+
+data class ApprovedPremisesSummary(
+  val id: UUID,
+  val name: String,
+  val addressLine1: String,
+  val addressLine2: String?,
+  val postcode: String,
+  val status: PropertyStatus,
+  val bedCount: Int,
+  val apCode: String
+)
+
+data class TemporaryAccommodationPremisesSummary(
+  val id: UUID,
+  val name: String,
+  val addressLine1: String,
+  val addressLine2: String?,
+  val postcode: String,
+  val pdu: String,
+  val status: PropertyStatus,
+  val bedCount: Int,
 )

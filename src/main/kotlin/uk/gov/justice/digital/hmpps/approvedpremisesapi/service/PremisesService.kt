@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -25,17 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusi
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-
-data class PremisesSummary(
-  val id: UUID,
-  val name: String,
-  val addressLine1: String,
-  val addressLine2: String?,
-  val postcode: String,
-  val pdu: String,
-  val status: PropertyStatus,
-  val bedCount: Int,
-)
 
 @Service
 class PremisesService(
@@ -55,21 +46,12 @@ class PremisesService(
 
   fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
 
-  fun getAllPremisesSummary(serviceName: ServiceName): List<PremisesSummary> {
-    val premises = premisesRepository.findAllTemporaryAccommodationSummary()
+  fun getAllTemporaryAccommodationPremisesSummaries(): List<TemporaryAccommodationPremisesSummary> {
+    return premisesRepository.findAllTemporaryAccommodationSummary()
+  }
 
-    return premises.map {
-      PremisesSummary(
-        it[0] as UUID,
-        it[1] as String,
-        it[2] as String,
-        it[3] as String?,
-        it[4] as String,
-        it[5] as String,
-        it[6] as PropertyStatus,
-        (it[7] as Long).toInt(),
-      )
-    }
+  fun getAllApprovedPremisesSummaries(): List<ApprovedPremisesSummary> {
+    return premisesRepository.findAllApprovedPremisesSummary()
   }
 
   fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesEntity> = premisesRepository.findAllByProbationRegion_Id(probationRegionId)

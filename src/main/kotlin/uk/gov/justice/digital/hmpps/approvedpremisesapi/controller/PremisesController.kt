@@ -96,12 +96,20 @@ class PremisesController(
 ) : PremisesApiDelegate {
 
   override fun premisesSummaryGet(xServiceName: ServiceName): ResponseEntity<List<PremisesSummary>> {
-    val premises = premisesService.getAllPremisesSummary(xServiceName!!)
-    return ResponseEntity.ok(
-      premises.map {
-        premisesSummaryTransformer.transformDomainToApi(it)
+    val transformedSummaries = when (xServiceName) {
+      ServiceName.approvedPremises -> {
+        val summaries = premisesService.getAllApprovedPremisesSummaries()
+
+        summaries.map(premisesSummaryTransformer::transformDomainToApi)
       }
-    )
+      ServiceName.temporaryAccommodation -> {
+        val summaries = premisesService.getAllTemporaryAccommodationPremisesSummaries()
+
+        summaries.map(premisesSummaryTransformer::transformDomainToApi)
+      }
+    }
+
+    return ResponseEntity.ok(transformedSummaries)
   }
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
     val premises = premisesService.getPremises(premisesId)
