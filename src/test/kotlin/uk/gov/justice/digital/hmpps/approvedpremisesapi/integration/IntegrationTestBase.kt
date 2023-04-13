@@ -149,20 +149,24 @@ import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
 
+object WiremockServerHolder {
+  var wiremockServer: WireMockServer? = null
+}
+
 @ExtendWith(DbExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
 @Tag("integration")
 abstract class IntegrationTestBase {
-  lateinit var wiremockServer: WireMockServer
-
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
   lateinit var webTestClient: WebTestClient
 
   @Value("\${wiremock.port}")
   lateinit var wiremockPort: Integer
+
+  lateinit var wiremockServer: WireMockServer
 
   @Autowired
   private lateinit var jdbcTemplate: JdbcTemplate
@@ -342,7 +346,9 @@ abstract class IntegrationTestBase {
       .responseTimeout(Duration.ofMinutes(20))
       .build()
 
-    wiremockServer = WireMockServer(wiremockPort.toInt())
+    WiremockServerHolder.wiremockServer?.stop()
+    WiremockServerHolder.wiremockServer = WireMockServer(wiremockPort.toInt())
+    wiremockServer = WiremockServerHolder.wiremockServer!!
     wiremockServer.start()
 
     cacheManager.cacheNames.forEach {

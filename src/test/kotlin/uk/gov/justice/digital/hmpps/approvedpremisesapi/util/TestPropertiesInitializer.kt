@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.common.FatalStartupException
 import org.springframework.boot.env.OriginTrackedMapPropertySource
 import org.springframework.boot.origin.OriginTrackedValue
 import org.springframework.boot.test.util.TestPropertyValues
@@ -8,10 +10,12 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.util.SocketUtils
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockServerHolder
 
 class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
   override fun initialize(applicationContext: ConfigurableApplicationContext?) {
-    val wiremockPort = SocketUtils.findAvailableTcpPort()
+    val wiremockPort = findWiremockPort()
+
     val databaseName = setupDatabase()
 
     val upstreamServiceUrlsToOverride = mutableMapOf<String, String>()
@@ -40,6 +44,25 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
           "spring.datasource.url" to "jdbc:postgresql://localhost:5433/$databaseName"
         ) + upstreamServiceUrlsToOverride
       ).applyTo(applicationContext)
+  }
+
+  private fun findWiremockPort(): Int {
+    val port = SocketUtils.findAvailableTcpPort()
+
+    (1..10).forEach {
+      try {
+        WiremockServerHolder.wiremockServer = WireMockServer(port)
+        WiremockServerHolder.wiremockServer!!.start()
+
+        return port
+      } catch (fatalStartupException: FatalStartupException) {
+        if (it == 10) {
+          throw fatalStartupException
+        }
+      }
+    }
+
+    throw RuntimeException("Unreachable")
   }
 
   private fun setupDatabase(): String {
