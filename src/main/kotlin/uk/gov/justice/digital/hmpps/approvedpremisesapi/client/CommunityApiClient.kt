@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -23,8 +24,9 @@ import java.io.OutputStream
 @Component
 class CommunityApiClient(
   @Qualifier("communityApiWebClient") private val webClient: WebClient,
-  objectMapper: ObjectMapper
-) : BaseHMPPSClient(webClient, objectMapper) {
+  objectMapper: ObjectMapper,
+  redisTemplate: RedisTemplate<String, String>
+) : BaseHMPPSClient(webClient, objectMapper, redisTemplate) {
   fun getOffenderDetailSummary(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
   }

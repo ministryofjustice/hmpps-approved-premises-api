@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.HealthDetails
@@ -15,8 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshS
 @Component
 class ApOASysContextApiClient(
   @Qualifier("apOASysContextApiWebClient") webClient: WebClient,
-  objectMapper: ObjectMapper
-) : BaseHMPPSClient(webClient, objectMapper) {
+  objectMapper: ObjectMapper,
+  redisTemplate: RedisTemplate<String, String>
+) : BaseHMPPSClient(webClient, objectMapper, redisTemplate) {
   fun getOffenceDetails(crn: String) = getRequest<OffenceDetails> {
     path = "/offence-details/$crn"
   }
