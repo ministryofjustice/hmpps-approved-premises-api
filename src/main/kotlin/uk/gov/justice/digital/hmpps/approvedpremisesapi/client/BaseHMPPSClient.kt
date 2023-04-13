@@ -86,6 +86,12 @@ sealed interface ClientResult<ResponseType> {
       inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper().readValue(body, ResponseType::class.java)
     }
 
+    class PreemptiveCacheTimeout<ResponseType>(val cacheName: String, val cacheKey: String, val timeoutMs: Int) : Failure<ResponseType> {
+      override fun throwException(): Nothing {
+        throw RuntimeException("Timed out after ${timeoutMs}ms waiting for $cacheKey on pre-emptive cache $cacheName")
+      }
+    }
+
     class Other<ResponseType>(val method: HttpMethod, val path: String, val exception: Exception) : Failure<ResponseType> {
       override fun throwException(): Nothing {
         throw RuntimeException("Unable to complete $method request to $path", exception)
