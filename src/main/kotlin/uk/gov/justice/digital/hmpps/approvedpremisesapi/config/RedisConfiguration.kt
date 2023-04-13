@@ -96,6 +96,8 @@ class ClientResultRedisSerializer(
           path = clientResult.path
         )
       }
+      is ClientResult.Failure.PreemptiveCacheTimeout ->
+        throw RuntimeException("Preemptively cached requests should not be annotated with @Cacheable")
       is ClientResult.Success -> {
         SerializableClientResult(
           discriminator = ClientResultDiscriminator.SUCCESS,
