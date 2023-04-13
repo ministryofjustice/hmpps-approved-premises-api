@@ -10,18 +10,19 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.cache.RedisCacheConfiguration
 import org.springframework.data.redis.cache.RedisCacheManager.RedisCacheManagerBuilder
+import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
 import org.springframework.data.redis.serializer.RedisSerializer
+import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.time.Duration
 
 @Configuration
@@ -47,6 +48,14 @@ class RedisConfiguration {
         .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
         .clientCacheFor<UKBankHolidays>("ukBankHolidaysCache", Duration.ofSeconds(ukBankHolidaysExpirySeconds), time, objectMapper)
     }
+  }
+
+  @Bean
+  fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<*, *>? {
+    val template: RedisTemplate<*, *> = RedisTemplate<Any, Any>()
+    template.connectionFactory = connectionFactory
+    template.keySerializer = StringRedisSerializer()
+    return template
   }
 
   private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, version: String, objectMapper: ObjectMapper) =
@@ -98,7 +107,7 @@ class ClientResultRedisSerializer(
           path = null
         )
       }
-      null -> null
+      else -> null
     }
 
     return objectMapper.writeValueAsBytes(toSerialize)
