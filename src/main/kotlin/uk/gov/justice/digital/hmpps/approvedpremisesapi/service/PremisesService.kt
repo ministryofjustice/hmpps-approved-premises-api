@@ -46,8 +46,8 @@ class PremisesService(
 
   fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
 
-  fun getAllTemporaryAccommodationPremisesSummaries(): List<TemporaryAccommodationPremisesSummary> {
-    return premisesRepository.findAllTemporaryAccommodationSummary()
+  fun getAllTemporaryAccommodationPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> {
+    return premisesRepository.findAllTemporaryAccommodationSummary(regionId)
   }
 
   fun getAllApprovedPremisesSummaries(): List<ApprovedPremisesSummary> {

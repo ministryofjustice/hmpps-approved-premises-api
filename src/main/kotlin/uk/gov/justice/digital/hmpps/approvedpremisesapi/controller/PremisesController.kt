@@ -103,7 +103,8 @@ class PremisesController(
         summaries.map(premisesSummaryTransformer::transformDomainToApi)
       }
       ServiceName.temporaryAccommodation -> {
-        val summaries = premisesService.getAllTemporaryAccommodationPremisesSummaries()
+        val user = usersService.getUserForRequest()
+        val summaries = premisesService.getAllTemporaryAccommodationPremisesSummaries(user.probationRegion.id)
 
         summaries.map(premisesSummaryTransformer::transformDomainToApi)
       }

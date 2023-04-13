@@ -11,14 +11,12 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all CAS3 Premises returns OK with correct body`() {
-    `Given a User` { _, jwt ->
+    `Given a User` { user, jwt ->
       val uuid = UUID.randomUUID()
 
-      val cas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withProbationRegion(user.probationRegion)
         withId(uuid)
         withAddressLine1("221 Baker Street")
         withAddressLine2("221B")
@@ -29,8 +27,19 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withTotalBeds(0) // A static legacy column that we don't use
       }
 
+      // unexpectedCas3Premises that's in a different region
+      temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
       val room = roomEntityFactory.produceAndPersist {
-        withYieldedPremises { cas3Premises }
+        withYieldedPremises { expectedCas3Premises }
       }
 
       bedEntityFactory.produceAndPersistMultiple(5) {
@@ -52,6 +61,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].pdu").isEqualTo("PDU")
         .jsonPath("$[0].bedCount").isEqualTo(5)
+        .jsonPath("$.length()").isEqualTo(1)
     }
   }
 
