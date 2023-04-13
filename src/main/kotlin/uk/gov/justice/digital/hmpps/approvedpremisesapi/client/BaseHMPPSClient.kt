@@ -68,9 +68,17 @@ abstract class BaseHMPPSClient(
     internal var path: String? = null
     internal var body: Any? = null
     internal var headers = HttpHeaders()
+    internal var preemptiveCacheConfig: PreemptiveCacheConfig? = null
+    internal var isPreemptiveCall = false
+    internal var preemptiveCacheKey: String? = null
 
     fun withHeader(key: String, value: String) = headers.add(key, value)
   }
+
+  data class PreemptiveCacheConfig (
+    val cacheName: String,
+    val ttlSeconds: Int,
+  )
 }
 
 sealed interface ClientResult<ResponseType> {
