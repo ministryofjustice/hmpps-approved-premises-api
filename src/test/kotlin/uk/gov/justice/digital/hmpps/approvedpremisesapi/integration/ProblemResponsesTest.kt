@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -84,6 +85,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
              "aLocalDate": "not a date",
              "aLocalDateTime": "not a date time",
              "anOffsetDateTime": "not an offset date time",
+             "anInstant": "not an instant",
              "aUUID": "not a uuid"
           }
         """
@@ -113,6 +115,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
         InvalidParam(propertyName = "$.aLocalDate", errorType = "invalid"),
         InvalidParam(propertyName = "$.aLocalDateTime", errorType = "invalid"),
         InvalidParam(propertyName = "$.anOffsetDateTime", errorType = "invalid"),
+        InvalidParam(propertyName = "$.anInstant", errorType = "invalid"),
         InvalidParam(propertyName = "$.aUUID", errorType = "invalid")
       )
     )
@@ -139,6 +142,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
                 "aLocalDate": "not a date",
                 "aLocalDateTime": "not a date time",
                 "anOffsetDateTime": "not an offset date time",
+                "anInstant": "not an instant",
                 "aUUID": "not a uuid"
              },
              "requiredListOfInts": ["not", "ints", false],
@@ -152,6 +156,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
              "aLocalDate": "not a date",
              "aLocalDateTime": "not a date time",
              "anOffsetDateTime": "not an offset date time",
+             "anInstant": "not an instant",
              "aUUID": "not a uuid"
           }]
         """
@@ -181,8 +186,41 @@ class ProblemResponsesTest : IntegrationTestBase() {
         InvalidParam(propertyName = "$[0].aLocalDate", errorType = "invalid"),
         InvalidParam(propertyName = "$[0].aLocalDateTime", errorType = "invalid"),
         InvalidParam(propertyName = "$[0].anOffsetDateTime", errorType = "invalid"),
+        InvalidParam(propertyName = "$[0].anInstant", errorType = "invalid"),
         InvalidParam(propertyName = "$[0].aUUID", errorType = "invalid")
       )
+    )
+  }
+
+  @Test
+  fun `Valid special JSON primitive properties are not listed as errors when appearing alongside an invalid property`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val validationResult = webTestClient.post()
+      .uri("/deserialization-test/special-json-primitives")
+      .header("Authorization", "Bearer $jwt")
+      .header("Content-Type", "application/json")
+      .bodyValue(
+        """
+          {
+            "missingString": null,
+            "localDate": "2023-04-12",
+            "localDateTime": "2023-04-12T16:52:00",
+            "offsetDateTime": "2023-04-12T16:52:00+01:00",
+            "instant": "2023-04-12T16:52:00+01:00",
+            "uuid": "61f22c65-4d42-4cc1-8955-e4ea89088194"
+          }
+        """
+      )
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .returnResult<ValidationError>()
+      .responseBody
+      .blockFirst()
+
+    assertThat(validationResult!!.invalidParams).containsExactly(
+      InvalidParam(propertyName = "$.missingString", errorType = "empty")
     )
   }
 
@@ -216,6 +254,11 @@ class DeserializationTestController {
     return ResponseEntity.ok(Unit)
   }
 
+  @PostMapping(path = ["deserialization-test/special-json-primitives"], consumes = ["application/json"])
+  fun testDeserialization(@RequestBody body: AllSpecialJSONPrimitives): ResponseEntity<Unit> {
+    return ResponseEntity.ok(Unit)
+  }
+
   @GetMapping(path = ["unhandled-exception"])
   fun unhandledException(): ResponseEntity<Unit> {
     throw RuntimeException("I am an unhandled exception")
@@ -233,6 +276,7 @@ data class DeserializationTestBody(
   val aLocalDate: LocalDate,
   val aLocalDateTime: LocalDateTime,
   val anOffsetDateTime: OffsetDateTime,
+  val anInstant: Instant,
   val aUUID: UUID
 )
 
@@ -240,4 +284,13 @@ data class DeserializationTestBodyNested(
   val requiredString: String,
   val optionalBoolean: Boolean?,
   val optionalLocalDate: LocalDate?
+)
+
+data class AllSpecialJSONPrimitives(
+  val missingString: String,
+  val localDate: LocalDate,
+  val localDateTime: LocalDateTime,
+  val offsetDateTime: OffsetDateTime,
+  val instant: Instant,
+  val uuid: UUID,
 )
