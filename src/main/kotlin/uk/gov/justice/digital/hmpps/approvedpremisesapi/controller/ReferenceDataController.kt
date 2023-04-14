@@ -76,19 +76,37 @@ class ReferenceDataController(
     return ResponseEntity.ok(localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataDepartureReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<DepartureReason>> {
+  override fun referenceDataDepartureReasonsGet(
+    xServiceName: ServiceName?,
+    includeInactive: Boolean?,
+  ): ResponseEntity<List<DepartureReason>> {
     val reasons = when (xServiceName != null) {
-      true -> departureReasonRepository.findAllByServiceScope(xServiceName.value)
-      false -> departureReasonRepository.findAll()
+      true -> when (includeInactive) {
+        true -> departureReasonRepository.findAllByServiceScope(xServiceName.value)
+        else -> departureReasonRepository.findActiveByServiceScope(xServiceName.value)
+      }
+      false -> when (includeInactive) {
+        true -> departureReasonRepository.findAll()
+        else -> departureReasonRepository.findActive()
+      }
     }
 
     return ResponseEntity.ok(reasons.map(departureReasonTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataMoveOnCategoriesGet(xServiceName: ServiceName?): ResponseEntity<List<MoveOnCategory>> {
+  override fun referenceDataMoveOnCategoriesGet(
+    xServiceName: ServiceName?,
+    includeInactive: Boolean?,
+  ): ResponseEntity<List<MoveOnCategory>> {
     val moveOnCategories = when (xServiceName != null) {
-      true -> moveOnCategoryRepository.findAllByServiceScope(xServiceName.value)
-      false -> moveOnCategoryRepository.findAll()
+      true -> when (includeInactive) {
+        true -> moveOnCategoryRepository.findAllByServiceScope(xServiceName.value)
+        else -> moveOnCategoryRepository.findActiveByServiceScope(xServiceName.value)
+      }
+      false -> when (includeInactive) {
+        true -> moveOnCategoryRepository.findAll()
+        else -> moveOnCategoryRepository.findActive()
+      }
     }
 
     return ResponseEntity.ok(moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi))
