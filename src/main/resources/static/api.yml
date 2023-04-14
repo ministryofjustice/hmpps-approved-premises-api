@@ -1803,6 +1803,12 @@ paths:
           description: If given, only departure reasons for this service will be returned
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: includeInactive
+          in: query
+          required: false
+          description: Specifies whether inactive departure reasons should be provided. Defaults to `false`.
+          schema:
+            type: boolean
       responses:
         200:
           description: successful operation
@@ -1830,6 +1836,12 @@ paths:
           description: If given, only move-on categories for this service will be returned
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: includeInactive
+          in: query
+          required: false
+          description: Specifies whether inactive move-on categories should be provided. Defaults to `false`.
+          schema:
+            type: boolean
       responses:
         200:
           description: successful operation
