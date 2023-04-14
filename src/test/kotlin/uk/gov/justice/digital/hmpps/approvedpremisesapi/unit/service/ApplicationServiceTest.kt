@@ -724,7 +724,7 @@ class ApplicationServiceTest {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
       val username = "SOMEPERSON"
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
       assertThat(applicationService.submitApplication(applicationId, submitApplication, username, "jwt") is AuthorisableActionResult.NotFound).isTrue
     }
@@ -752,7 +752,7 @@ class ApplicationServiceTest {
             .produce()
         }
         .produce()
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       assertThat(applicationService.submitApplication(applicationId, submitApplication, username, "jwt") is AuthorisableActionResult.Unauthorised).isTrue
@@ -770,7 +770,7 @@ class ApplicationServiceTest {
         }
 
       every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApplication(applicationId, submitApplication, username, "jwt")
@@ -799,7 +799,7 @@ class ApplicationServiceTest {
         }
 
       every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApplication(applicationId, submitApplication, username, "jwt")
@@ -828,7 +828,7 @@ class ApplicationServiceTest {
         }
 
       every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }

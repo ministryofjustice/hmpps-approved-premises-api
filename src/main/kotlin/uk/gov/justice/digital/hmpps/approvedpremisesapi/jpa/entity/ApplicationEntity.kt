@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -15,6 +16,7 @@ import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
+import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
@@ -34,6 +36,10 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
+
+  @Query("SELECT a FROM ApplicationEntity a WHERE a.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun findByIdOrNullWithWriteLock(id: UUID): ApplicationEntity?
 }
 
 @Entity
