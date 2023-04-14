@@ -11,8 +11,7 @@
     }
   },
   "selfDiagnostics": {
-    "destination": "console",
-    "level": "DEBUG"
+    "destination": "console"
   },
   "preview": {
     "sampling": {
