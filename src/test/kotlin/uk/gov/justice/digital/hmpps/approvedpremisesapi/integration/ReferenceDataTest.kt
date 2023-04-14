@@ -216,6 +216,65 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get Departure Reasons returns only active departure reasons by default`() {
+    departureReasonRepository.deleteAll()
+
+    val departureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(true)
+    }
+
+    // Unexpected departure reasons
+    departureReasonEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(false)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      departureReasons.map(departureReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/departure-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Departure Reasons returns both active and inactive departure reasons when 'includeInactive' query is true`() {
+    departureReasonRepository.deleteAll()
+
+    val activeDepartureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(true)
+    }
+
+    val inactiveDepartureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(false)
+    }
+
+    val departureReasons = activeDepartureReasons + inactiveDepartureReasons
+
+    val expectedJson = objectMapper.writeValueAsString(
+      departureReasons.map(departureReasonTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/departure-reasons?includeInactive=true")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
   fun `Get Move on Categories returns 200 with correct body`() {
     moveOnCategoryRepository.deleteAll()
 
@@ -283,6 +342,65 @@ class ReferenceDataTest : IntegrationTestBase() {
       .uri("/reference-data/move-on-categories")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", "temporary-accommodation")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Move on Categories returns only active move on categories by default`() {
+    moveOnCategoryRepository.deleteAll()
+
+    val moveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(true)
+    }
+
+    // Unexpected move on categories
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(false)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/move-on-categories")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Move on Categories returns both active and inactive move on categories when 'includeInactive' query is true`() {
+    moveOnCategoryRepository.deleteAll()
+
+    val activeMoveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(true)
+    }
+
+    val inactiveMoveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(false)
+    }
+
+    val moveOnCategories = activeMoveOnCategories + inactiveMoveOnCategories
+
+    val expectedJson = objectMapper.writeValueAsString(
+      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/move-on-categories?includeInactive=true")
+      .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
       .isOk
