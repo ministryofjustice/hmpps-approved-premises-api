@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.cache.CacheManager
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
@@ -228,6 +229,9 @@ abstract class IntegrationTestBase {
   lateinit var jwtAuthHelper: JwtAuthHelper
 
   @Autowired
+  lateinit var redisTemplate: RedisTemplate<String, String>
+
+  @Autowired
   lateinit var probationRegionRepository: ProbationRegionTestRepository
 
   @Autowired
@@ -408,6 +412,8 @@ abstract class IntegrationTestBase {
     cacheManager.cacheNames.forEach {
       cacheManager.getCache(it)!!.clear()
     }
+
+    redisTemplate.keys("**").forEach(redisTemplate::delete)
   }
 
   @AfterEach
