@@ -12,6 +12,12 @@ import javax.persistence.Table
 interface DepartureReasonRepository : JpaRepository<DepartureReasonEntity, UUID> {
   @Query("SELECT d FROM DepartureReasonEntity d WHERE d.serviceScope = :serviceName OR d.serviceScope = '*'")
   fun findAllByServiceScope(serviceName: String): List<DepartureReasonEntity>
+
+  @Query("SELECT d FROM DepartureReasonEntity d WHERE d.serviceScope = :serviceName OR d.serviceScope = '*' AND d.isActive = true")
+  fun findActiveByServiceScope(serviceName: String): List<DepartureReasonEntity>
+
+  @Query("SELECT d FROM DepartureReasonEntity d WHERE d.isActive = true")
+  fun findActive(): List<DepartureReasonEntity>
 }
 
 @Entity
