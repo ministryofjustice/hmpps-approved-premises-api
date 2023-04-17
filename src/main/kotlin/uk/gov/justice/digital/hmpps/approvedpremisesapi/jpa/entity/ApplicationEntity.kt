@@ -106,6 +106,7 @@ class ApprovedPremisesApplicationEntity(
   @OneToMany(mappedBy = "application")
   var placementRequests: MutableList<PlacementRequestEntity>,
   var releaseType: String?,
+  var arrivalDate: OffsetDateTime?,
 ) : ApplicationEntity(
   id,
   crn,

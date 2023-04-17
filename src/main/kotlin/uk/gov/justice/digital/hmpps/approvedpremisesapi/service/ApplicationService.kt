@@ -40,6 +40,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -220,6 +221,7 @@ class ApplicationService(
         teamCodes = mutableListOf(),
         placementRequests = mutableListOf(),
         releaseType = null,
+        arrivalDate = null
       ),
     )
 
@@ -322,6 +324,7 @@ class ApplicationService(
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
+      arrivalDate = submitApplication.arrivalDate?.atOffset(ZoneOffset.UTC)
     }
 
     assessmentService.createAssessment(application)
