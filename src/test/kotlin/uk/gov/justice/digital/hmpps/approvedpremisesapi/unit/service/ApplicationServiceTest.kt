@@ -39,6 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -48,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -525,17 +528,25 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `updateApplication returns NotFound when application doesn't exist`() {
+  fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", username) is AuthorisableActionResult.NotFound).isTrue
+    assertThat(applicationService.updateApprovedPremisesApplication(
+      applicationId = applicationId,
+      isWomensApplication = false,
+      isPipeApplication = null,
+      releaseType = null,
+      arrivalDate = null,
+      data = "{}",
+      username = username
+    ) is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
-  fun `updateApplication returns Unauthorised when application doesn't belong to request user`() {
+  fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -563,11 +574,19 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(applicationService.updateApplication(applicationId, "{}", username) is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(applicationService.updateApprovedPremisesApplication(
+      applicationId = applicationId,
+      isWomensApplication = false,
+      isPipeApplication = null,
+      releaseType = null,
+      arrivalDate = null,
+      data = "{}",
+      username = username
+    ) is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `updateApplication returns GeneralValidationError when application schema is outdated`() {
+  fun `updateApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -593,7 +612,15 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    val result = applicationService.updateApplication(applicationId, "{}", username)
+    val result = applicationService.updateApprovedPremisesApplication(
+      applicationId = applicationId,
+      isWomensApplication = false,
+      isPipeApplication = null,
+      releaseType = null,
+      arrivalDate = null,
+      data = "{}",
+      username = username
+    )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -605,7 +632,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `updateApplication returns GeneralValidationError when application has already been submitted`() {
+  fun `updateApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -634,7 +661,15 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    val result = applicationService.updateApplication(applicationId, "{}", username)
+    val result = applicationService.updateApprovedPremisesApplication(
+      applicationId = applicationId,
+      isWomensApplication = false,
+      isPipeApplication = null,
+      releaseType = null,
+      arrivalDate = null,
+      data = "{}",
+      username = username
+    )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -646,7 +681,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `updateApplication returns Success with updated Application`() {
+  fun `updateApprovedPremisesApplication returns Success with updated Application`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -682,7 +717,15 @@ class ApplicationServiceTest {
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val result = applicationService.updateApplication(applicationId, updatedData, username)
+    val result = applicationService.updateApprovedPremisesApplication(
+      applicationId = applicationId,
+      isWomensApplication = false,
+      isPipeApplication = true,
+      releaseType = "rotl",
+      arrivalDate = OffsetDateTime.parse("2023-04-17T14:10:00+01:00"),
+      data = updatedData,
+      username = username
+    )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -690,7 +733,205 @@ class ApplicationServiceTest {
     assertThat(result.entity is ValidatableActionResult.Success).isTrue
     val validatableActionResult = result.entity as ValidatableActionResult.Success
 
-    assertThat(validatableActionResult.entity.data).isEqualTo(updatedData)
+    val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+    assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
+    assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
+    assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
+    assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
+    assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T14:10:00+01:00"))
+  }
+
+  //here
+  @Test
+  fun `updateTemporaryAccommodationApplication returns NotFound when application doesn't exist`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+    assertThat(applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = "{}",
+      username = username
+    ) is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `updateTemporaryAccommodationApplication returns Unauthorised when application doesn't belong to request user`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withId(applicationId)
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce()
+      }
+      .produce()
+
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    assertThat(applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = "{}",
+      username = username
+    ) is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `updateTemporaryAccommodationApplication returns GeneralValidationError when application schema is outdated`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(null)
+      .produce()
+      .apply {
+        schemaUpToDate = false
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = "{}",
+      username = username
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+  }
+
+  @Test
+  fun `updateTemporaryAccommodationApplication returns GeneralValidationError when application has already been submitted`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = "{}",
+      username = username
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+  }
+
+  @Test
+  fun `updateTemporaryAccommodationApplication returns Success with updated Application`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+    val updatedData = """
+      {
+        "aProperty": "value"
+      }
+    """
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+    every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
+    every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val result = applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = updatedData,
+      username = username
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+    val approvedPremisesApplication = validatableActionResult.entity as TemporaryAccommodationApplicationEntity
+
+    assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
   }
 
   @Nested

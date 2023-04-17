@@ -238,9 +238,23 @@ class ApplicationService(
     return success(createdApplication.apply { schemaUpToDate = true })
   }
 
-  fun updateApplication(applicationId: UUID, data: String, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun updateApprovedPremisesApplication(
+    applicationId: UUID,
+    isWomensApplication: Boolean?,
+    isPipeApplication: Boolean?,
+    releaseType: String?,
+    arrivalDate: OffsetDateTime?,
+    data: String,
+    username: String
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
+
+    if (application !is ApprovedPremisesApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
+      )
+    }
 
     val user = userService.getUserForRequest()
 
@@ -260,7 +274,56 @@ class ApplicationService(
       )
     }
 
-    application.data = data
+    application.apply {
+      this.isWomensApplication = isWomensApplication
+      this.isPipeApplication = isPipeApplication
+      this.releaseType = releaseType
+      this.arrivalDate = arrivalDate
+      this.data = data
+    }
+
+    val savedApplication = applicationRepository.save(application)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  fun updateTemporaryAccommodationApplication(
+    applicationId: UUID,
+    data: String,
+    username: String
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application !is TemporaryAccommodationApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas3Supported"),
+      )
+    }
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    application.apply {
+      this.data = data
+    }
 
     val savedApplication = applicationRepository.save(application)
 

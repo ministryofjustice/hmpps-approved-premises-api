@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -50,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsFor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformAssessment
 import java.net.URI
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -133,7 +136,23 @@ class ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateApplication(applicationId, serializedData, username)
+    val applicationResult = when(body) {
+      is UpdateApprovedPremisesApplication -> applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        data = serializedData,
+        isWomensApplication = body.isWomensApplication,
+        isPipeApplication = body.isPipeApplication,
+        releaseType = body.releaseType?.name,
+        arrivalDate = body.arrivalDate?.atOffset(ZoneOffset.UTC),
+        username = username
+      )
+      is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
+        applicationId = applicationId,
+        data = serializedData,
+        username = username
+      )
+      else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
+    }
 
     val validationResult = when (applicationResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")

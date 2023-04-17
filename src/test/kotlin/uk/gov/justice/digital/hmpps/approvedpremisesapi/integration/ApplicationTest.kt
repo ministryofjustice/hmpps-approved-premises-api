@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -987,7 +988,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update existing application returns 200 with correct body`() {
+  fun `Update existing AP application returns 200 with correct body`() {
     `Given a User` { submittingUser, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1027,7 +1028,7 @@ class ApplicationTest : IntegrationTestBase() {
             .uri("/applications/$applicationId")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              UpdateApplication(
+              UpdateApprovedPremisesApplication(
                 data = mapOf("thingId" to 123),
                 isWomensApplication = false,
                 isPipeApplication = true

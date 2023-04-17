@@ -3886,12 +3886,32 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AnyValue'
-        isWomensApplication:
-          type: boolean
-        isPipeApplication:
-          type: boolean
+      discriminator:
+        propertyName: type
+        mapping:
+          CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
+          CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
       required:
         - data
+    UpdateApprovedPremisesApplication:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
+        - type: object
+          properties:
+            isWomensApplication:
+              type: boolean
+            isPipeApplication:
+              type: boolean
+            targetLocation:
+              type: string
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
+            arrivalDate:
+              type: string
+              format: date-time
+    UpdateTemporaryAccommodationApplication:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
     SubmitApplication:
       type: object
       properties:

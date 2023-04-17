@@ -42,6 +42,16 @@ class ApprovedPremisesApplicationJsonSchemaEntity(
 ) : JsonSchemaEntity(id, addedAt, schema)
 
 @Entity
+@DiscriminatorValue("TEMPORARY_ACCOMMODATION_APPLICATION")
+@Table(name = "temporary_accommodation_application_json_schemas")
+@PrimaryKeyJoinColumn(name = "json_schema_id")
+class TemporaryAccommodationApplicationJsonSchemaEntity(
+  id: UUID,
+  addedAt: OffsetDateTime,
+  schema: String,
+) : JsonSchemaEntity(id, addedAt, schema)
+
+@Entity
 @DiscriminatorValue("APPROVED_PREMISES_ASSESSMENT")
 @Table(name = "approved_premises_assessment_json_schemas")
 @PrimaryKeyJoinColumn(name = "json_schema_id")
