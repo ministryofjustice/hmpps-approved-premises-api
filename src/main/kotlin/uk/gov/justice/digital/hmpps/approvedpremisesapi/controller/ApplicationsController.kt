@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -75,14 +76,14 @@ class ApplicationsController(
 ) : ApplicationsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
+  override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
 
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
     val applications = applicationService.getAllApplicationsForUsername(username, serviceName)
 
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransform(it) })
+    return ResponseEntity.ok(applications.map(::getPersonDetailAndTransformToSummary))
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
@@ -344,6 +345,12 @@ class ApplicationsController(
     val (offender, inmate) = getPersonDetail(application.crn)
 
     return applicationsTransformer.transformJpaToApi(application, offender, inmate)
+  }
+
+  private fun getPersonDetailAndTransformToSummary(application: ApplicationEntity): ApplicationSummary {
+    val (offender, inmate) = getPersonDetail(application.crn)
+
+    return applicationsTransformer.transformJpaToApiSummary(application, offender, inmate)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity): Application {

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -325,5 +326,16 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as TemporaryAccommodationApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+  }
+
+  @Test
+  fun `transformJpaToApiSummary transforms an in progress Approved Premises application correctly`() {
+    val application = approvedPremisesApplicationFactory.withSubmittedAt(null).produce()
+
+    val result = applicationsTransformer.transformJpaToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+
+    assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.createdByUserId).isEqualTo(user.id)
+    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
   }
 }
