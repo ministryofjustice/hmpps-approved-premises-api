@@ -103,7 +103,9 @@ class PlacementRequestService(
         id = UUID.randomUUID(),
         reallocatedAt = null,
         allocatedToUser = assigneeUser,
-        createdAt = dateTimeNow
+        createdAt = dateTimeNow,
+        desirableCriteria = currentPlacementRequest.desirableCriteria.toList(),
+        essentialCriteria = currentPlacementRequest.essentialCriteria.toList(),
       )
     )
 
