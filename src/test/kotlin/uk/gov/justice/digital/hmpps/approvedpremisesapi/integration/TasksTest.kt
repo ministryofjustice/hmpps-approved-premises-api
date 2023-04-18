@@ -330,10 +330,16 @@ class TasksTest : IntegrationTestBase() {
               )
 
             val placementRequests = placementRequestRepository.findAll()
+            val allocatedPlacementRequest = placementRequests.find { it.allocatedToUser.id == assigneeUser.id }
 
             Assertions.assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
-            Assertions.assertThat(placementRequests)
-              .anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
+            Assertions.assertThat(allocatedPlacementRequest).isNotNull
+
+            val desirableCriteria = allocatedPlacementRequest!!.desirableCriteria.map { it.propertyName }
+            val essentialCriteria = allocatedPlacementRequest!!.essentialCriteria.map { it.propertyName }
+
+            Assertions.assertThat(desirableCriteria).isEqualTo(existingPlacementRequest.desirableCriteria.map { it.propertyName })
+            Assertions.assertThat(essentialCriteria).isEqualTo(existingPlacementRequest.essentialCriteria.map { it.propertyName })
           }
         }
       }
