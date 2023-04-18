@@ -4691,17 +4691,17 @@ components:
               format: date-time
             assessor:
               $ref: '#/components/schemas/ApprovedPremisesUser'
-      required:
-        - person
-        - risks
-        - id
-        - applicationId
-        - assessmentId
-        - releaseType
-        - status
-        - assessmentDecision
-        - assessmentDate
-        - assessor
+          required:
+            - person
+            - risks
+            - id
+            - applicationId
+            - assessmentId
+            - releaseType
+            - status
+            - assessmentDecision
+            - assessmentDate
+            - assessor
     PlacementRequestStatus:
       type: string
       enum:
