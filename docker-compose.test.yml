@@ -10,7 +10,7 @@ services:
       - "5433:5432"
 
   integration_test_redis:
-    image: "bitnami/redis:5.0"
+    image: "bitnami/redis:7.0.11"
     container_name: approved-premises-redis-test
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
