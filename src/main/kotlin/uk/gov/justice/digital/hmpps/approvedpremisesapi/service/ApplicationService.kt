@@ -269,7 +269,7 @@ class ApplicationService(
 
   @Transactional
   fun submitApplication(applicationId: UUID, submitApplication: SubmitApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
-    var application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+    var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)

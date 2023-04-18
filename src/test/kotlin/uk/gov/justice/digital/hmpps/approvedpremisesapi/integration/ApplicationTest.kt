@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -69,6 +71,9 @@ class ApplicationTest : IntegrationTestBase() {
 
   @SpykBean
   lateinit var realApplicationTeamCodeRepository: ApplicationTeamCodeRepository
+
+  @SpykBean
+  lateinit var realApplicationRepository: ApplicationRepository
 
   @Test
   fun `Get all applications without JWT returns 401`() {
@@ -1168,6 +1173,136 @@ class ApplicationTest : IntegrationTestBase() {
             SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
             SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
           )
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `When several concurrent submit application requests occur, only one is successful, all others return 400 without persisting domain events`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().produce()
+          )
+        )
+      }
+    ) { submittingUser, jwt ->
+      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(
+              """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {
+                  "isWomensApplication": {
+                    "description": "whether this is a womens application",
+                    "type": "boolean"
+                  },
+                  "isPipeApplication": {
+                    "description": "whether this is a PIPE application",
+                    "type": "boolean"
+                  }
+                },
+                "required": [ "isWomensApplication", "isPipeApplication" ]
+              }
+            """
+            )
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
+              {
+                 "isWomensApplication": true,
+                 "isPipeApplication": true
+              }
+            """
+            )
+          }
+
+          CommunityAPI_mockSuccessfulRegistrationsCall(
+            offenderDetails.otherIds.crn,
+            Registrations(
+              registrations = listOf(
+                RegistrationClientResponseFactory()
+                  .withType(
+                    RegistrationKeyValue(
+                      code = "MAPP",
+                      description = "MAPPA"
+                    )
+                  )
+                  .withRegisterCategory(
+                    RegistrationKeyValue(
+                      code = "A",
+                      description = "A"
+                    )
+                  )
+                  .withRegisterLevel(
+                    RegistrationKeyValue(
+                      code = "1",
+                      description = "1"
+                    )
+                  )
+                  .produce()
+              )
+            )
+          )
+
+          every { realApplicationRepository.save(any()) } answers {
+            Thread.sleep(1000)
+            it.invocation.args[0] as ApplicationEntity
+          }
+
+          val responseStatuses = mutableListOf<HttpStatus>()
+
+          (1..10).map {
+            val thread = Thread {
+              webTestClient.post()
+                .uri("/applications/$applicationId/submission")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  SubmitApplication(
+                    translatedDocument = {},
+                    isPipeApplication = true,
+                    isWomensApplication = true,
+                    targetLocation = "SW1A 1AA",
+                    releaseType = ReleaseTypeOption.licence
+                  )
+                )
+                .exchange()
+                .returnResult<String>()
+                .consumeWith {
+                  synchronized(responseStatuses) {
+                    responseStatuses += it.status
+                  }
+                }
+            }
+
+            thread.start()
+
+            thread
+          }.forEach(Thread::join)
+
+          val persistedDomainEvents = domainEventRepository.findAll().filter { it.applicationId == applicationId }
+
+          assertThat(persistedDomainEvents).singleElement()
+          assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
+          assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
         }
       }
     }
