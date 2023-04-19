@@ -49,6 +49,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -66,6 +68,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
@@ -127,19 +131,23 @@ class ApplicationServiceTest {
           .produce()
       }
       .produce()
-    val applicationEntities = listOf(
-      ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(userEntity)
-        .withApplicationSchema(newestJsonSchema)
-        .produce(),
-      ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(userEntity)
-        .withApplicationSchema(newestJsonSchema)
-        .produce(),
-      ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(userEntity)
-        .withApplicationSchema(newestJsonSchema)
-        .produce()
+    val applicationSummaries = listOf(
+      object : ApprovedPremisesApplicationSummary {
+        override fun getHasPlacementRequest(): Boolean = false
+        override fun getIsWomensApplication(): Boolean? = true
+        override fun getIsPipeApplication(): Boolean? = true
+        override fun getArrivalDate(): Timestamp? = null
+        override fun getRiskRatings(): String? = null
+        override fun getId(): UUID = UUID.fromString("8ecbbd9c-3c66-4f0b-8f21-87f537676422")
+        override fun getCrn(): String = "CRN123"
+        override fun getCreatedByUserId(): UUID = UUID.fromString("60d0a768-1d05-4538-a6fd-78eb723dd310")
+        override fun getCreatedAt(): Timestamp = Timestamp.from(Instant.parse("2023-04-20T10:11:00+01:00"))
+        override fun getSubmittedAt(): Timestamp? = null
+        override fun getLatestAssessmentSubmittedAt(): Timestamp? = null
+        override fun getLatestAssessmentDecision(): AssessmentDecision? = null
+        override fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean = false
+        override fun getHasBooking(): Boolean = false
+      }
     )
 
     every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
@@ -156,14 +164,14 @@ class ApplicationServiceTest {
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockApplicationRepository.findAllByManagingTeam(listOf("TEAM1"), ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
+    every { mockApplicationRepository.findApprovedPremisesSummariesForManagingTeams(listOf("TEAM1")) } returns applicationSummaries
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    applicationEntities.forEach {
-      every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
+    applicationSummaries.forEach {
+      every { mockOffenderService.canAccessOffender(distinguishedName, it.getCrn()) } returns true
     }
 
-    assertThat(applicationService.getAllApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).containsAll(applicationEntities)
+    assertThat(applicationService.getAllApplicationsForUsername(distinguishedName, ServiceName.approvedPremises)).containsAll(applicationSummaries)
   }
 
   @Test

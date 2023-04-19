@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -60,15 +61,9 @@ class ApplicationService(
   private val objectMapper: ObjectMapper,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String,
 ) {
-  fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
+  fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
-
-    val entityType = if (serviceName == ServiceName.approvedPremises) {
-      ApprovedPremisesApplicationEntity::class.java
-    } else {
-      TemporaryAccommodationApplicationEntity::class.java
-    }
 
     val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
     val userDetails = when (userDetailsResult) {
@@ -76,18 +71,17 @@ class ApplicationService(
       is ClientResult.Failure -> userDetailsResult.throwException()
     }
 
-    val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
-      applicationRepository.findAll()
+    val applicationSummaries = if (serviceName == ServiceName.approvedPremises && userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+      applicationRepository.findAllApprovedPremisesSummaries()
     } else if (serviceName == ServiceName.approvedPremises) {
-      applicationRepository.findAllByManagingTeam(userDetails.teams?.map { it.code } ?: emptyList(), entityType)
+      applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
     } else {
-      applicationRepository.findAllByCreatedByUser_Id(userEntity.id, entityType)
+      applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(userEntity.id)
     }
 
-    return applications
-      .map(jsonSchemaService::checkSchemaOutdated)
+    return applicationSummaries
       .filter {
-        offenderService.canAccessOffender(userDistinguishedName, it.crn)
+        offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
       }
   }
 

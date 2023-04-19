@@ -137,7 +137,7 @@ class ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = when(body) {
+    val applicationResult = when (body) {
       is UpdateApprovedPremisesApplication -> applicationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
         data = serializedData,
@@ -347,10 +347,10 @@ class ApplicationsController(
     return applicationsTransformer.transformJpaToApi(application, offender, inmate)
   }
 
-  private fun getPersonDetailAndTransformToSummary(application: ApplicationEntity): ApplicationSummary {
-    val (offender, inmate) = getPersonDetail(application.crn)
+  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary): ApplicationSummary {
+    val (offender, inmate) = getPersonDetail(application.getCrn())
 
-    return applicationsTransformer.transformJpaToApiSummary(application, offender, inmate)
+    return applicationsTransformer.transformDomainToApiSummary(application, offender, inmate)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity): Application {
