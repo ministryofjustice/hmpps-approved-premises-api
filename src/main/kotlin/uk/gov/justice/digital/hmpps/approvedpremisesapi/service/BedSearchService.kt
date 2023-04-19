@@ -25,7 +25,7 @@ class BedSearchService(
     postcodeDistrictOutcode: String,
     maxDistanceMiles: Int,
     startDate: LocalDate,
-    durationInDays: Int,
+    durationInWeeks: Int,
     requiredCharacteristics: List<String>,
   ): AuthorisableActionResult<ValidatableActionResult<List<ApprovedPremisesBedSearchResult>>> {
     if (!user.hasRole(UserRole.MATCHER)) {
@@ -57,8 +57,8 @@ class BedSearchService(
         postcodeDistrictRepository.findByOutcode(postcodeDistrictOutcode)
           ?: ("$.postcodeDistrictOutcode" hasValidationError "doesNotExist")
 
-        if (durationInDays < 1) {
-          "$.durationDays" hasValidationError "mustBeAtLeast1"
+        if (durationInWeeks < 1) {
+          "$.durationInWeeks" hasValidationError "mustBeAtLeast1"
         }
 
         if (maxDistanceMiles < 1) {
@@ -74,7 +74,7 @@ class BedSearchService(
             postcodeDistrictOutcode = postcodeDistrictOutcode,
             maxDistanceMiles = maxDistanceMiles,
             startDate = startDate,
-            durationInDays = durationInDays,
+            durationInWeeks = durationInWeeks,
             requiredPremisesCharacteristics = premisesCharacteristicIds,
             requiredRoomCharacteristics = roomCharacteristicIds,
           ),

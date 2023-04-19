@@ -387,7 +387,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 50,
       startDate = LocalDate.parse("2023-03-09"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredPremisesCharacteristics = requiredPremisesCharacteristics.map(CharacteristicEntity::id),
       requiredRoomCharacteristics = requiredRoomCharacteristics.map(CharacteristicEntity::id),
     )

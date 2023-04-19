@@ -43,7 +43,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = "AA11",
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 7,
       requiredCharacteristics = listOf(),
     )
 
@@ -81,7 +81,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredCharacteristics = listOf(premisesCharacteristicPropertyName, roomCharacteristic.propertyName!!),
     )
 
@@ -127,7 +127,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
@@ -170,7 +170,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristicPropertyName),
     )
 
@@ -216,7 +216,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
@@ -264,7 +264,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
@@ -310,7 +310,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 0,
+      durationInWeeks = 0,
       requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
@@ -319,7 +319,7 @@ class BedSearchServiceTest {
     assertThat(authorisableResult.entity is ValidatableActionResult.FieldValidationError).isTrue
     val fieldValidationError = authorisableResult.entity as ValidatableActionResult.FieldValidationError
 
-    assertThat(fieldValidationError.validationMessages["$.durationDays"]).isEqualTo("mustBeAtLeast1")
+    assertThat(fieldValidationError.validationMessages["$.durationInWeeks"]).isEqualTo("mustBeAtLeast1")
   }
 
   @Test
@@ -356,7 +356,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 0,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 
@@ -431,7 +431,7 @@ class BedSearchServiceTest {
         postcodeDistrictOutcode = postcodeDistrict.outcode,
         maxDistanceMiles = 20,
         startDate = LocalDate.parse("2023-03-22"),
-        durationInDays = 7,
+        durationInWeeks = 1,
         requiredPremisesCharacteristics = listOf(premisesCharacteristic.id),
         requiredRoomCharacteristics = listOf(roomCharacteristic.id),
       )
@@ -442,7 +442,7 @@ class BedSearchServiceTest {
       postcodeDistrictOutcode = postcodeDistrict.outcode,
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
+      durationInWeeks = 1,
       requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
     )
 

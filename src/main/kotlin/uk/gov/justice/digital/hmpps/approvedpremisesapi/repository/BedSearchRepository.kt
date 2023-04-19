@@ -70,7 +70,7 @@ ORDER BY distance_miles;
     postcodeDistrictOutcode: String,
     maxDistanceMiles: Int,
     startDate: LocalDate,
-    durationInDays: Int,
+    durationInWeeks: Int,
     requiredPremisesCharacteristics: List<UUID>,
     requiredRoomCharacteristics: List<UUID>,
   ): List<ApprovedPremisesBedSearchResult> {
@@ -82,7 +82,7 @@ ORDER BY distance_miles;
       addValue("room_characteristic_ids", requiredRoomCharacteristics)
       addValue("room_characteristic_ids_count", requiredRoomCharacteristics.size)
       addValue("start_date", startDate)
-      addValue("end_date", startDate.plusDays(durationInDays.toLong()))
+      addValue("end_date", startDate.plusWeeks(durationInWeeks.toLong()))
     }
 
     var optionalFilters = ""

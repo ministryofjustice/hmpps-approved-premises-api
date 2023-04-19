@@ -4748,12 +4748,8 @@ components:
           type: string
           format: date
           description: The date the Bed will need to be free from
-        durationDays:
-          type: integer
-          description: The number of days the Bed will need to be free from the start_date until
       required:
         - startDate
-        - durationDays
       discriminator:
         propertyName: serviceName
         mapping:
@@ -4774,10 +4770,14 @@ components:
               type: array
               items:
                 type: string
+            durationWeeks:
+              type: integer
+              description: The number of weeks the Bed will need to be free from the start_date until
           required:
             - postcodeDistrict
             - maxDistanceMiles
             - requiredCharacteristics
+            - durationWeeks
     TemporaryAccommodationBedSearchParameters:
       allOf:
         - $ref: '#/components/schemas/BedSearchParameters'
@@ -4786,8 +4786,12 @@ components:
             probationDeliveryUnit:
               type: string
               description: The pdu to search within
+            durationDays:
+              type: integer
+              description: The number of days the Bed will need to be free from the start_date until
           required:
             - probationDeliveryUnit
+            - durationDays
     BedSearchResults:
       type: object
       properties:

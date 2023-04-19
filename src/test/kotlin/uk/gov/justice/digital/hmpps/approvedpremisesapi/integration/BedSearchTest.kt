@@ -27,7 +27,7 @@ class BedSearchTest : IntegrationTestBase() {
           maxDistanceMiles = 20,
           requiredCharacteristics = listOf(),
           startDate = LocalDate.parse("2023-03-23"),
-          durationDays = 7,
+          durationWeeks = 1,
           serviceName = "approved-premises",
         ),
       )
@@ -48,7 +48,7 @@ class BedSearchTest : IntegrationTestBase() {
             maxDistanceMiles = 20,
             requiredCharacteristics = listOf(),
             startDate = LocalDate.parse("2023-03-23"),
-            durationDays = 7,
+            durationWeeks = 1,
             serviceName = "approved-premises",
           ),
         )
@@ -106,7 +106,7 @@ class BedSearchTest : IntegrationTestBase() {
             maxDistanceMiles = 20,
             requiredCharacteristics = listOf(),
             startDate = LocalDate.parse("2023-03-23"),
-            durationDays = 7,
+            durationWeeks = 1,
             serviceName = "approved-premises",
           ),
         )

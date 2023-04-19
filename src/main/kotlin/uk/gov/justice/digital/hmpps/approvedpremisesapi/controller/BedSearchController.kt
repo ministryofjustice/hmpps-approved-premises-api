@@ -29,7 +29,7 @@ class BedSearchController(
         user = user,
         maxDistanceMiles = bedSearchParameters.maxDistanceMiles,
         startDate = bedSearchParameters.startDate,
-        durationInDays = bedSearchParameters.durationDays,
+        durationInWeeks = bedSearchParameters.durationWeeks,
         requiredCharacteristics = bedSearchParameters.requiredCharacteristics,
         postcodeDistrictOutcode = bedSearchParameters.postcodeDistrict,
       )
