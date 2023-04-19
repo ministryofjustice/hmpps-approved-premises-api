@@ -2983,6 +2983,8 @@ components:
           format: uuid
         serviceName:
           $ref: '#/components/schemas/ServiceName'
+        enableTurnarounds:
+          type: boolean
       required:
         - crn
         - arrivalDate
@@ -4923,6 +4925,7 @@ components:
         - cancelled
         - provisional
         - confirmed
+        - closed
     BookingSearchSortField:
       type: string
       enum:
