@@ -534,15 +534,17 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    assertThat(applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = null,
-      releaseType = null,
-      arrivalDate = null,
-      data = "{}",
-      username = username
-    ) is AuthorisableActionResult.NotFound).isTrue
+    assertThat(
+      applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        isWomensApplication = false,
+        isPipeApplication = null,
+        releaseType = null,
+        arrivalDate = null,
+        data = "{}",
+        username = username
+      ) is AuthorisableActionResult.NotFound
+    ).isTrue
   }
 
   @Test
@@ -574,15 +576,17 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = null,
-      releaseType = null,
-      arrivalDate = null,
-      data = "{}",
-      username = username
-    ) is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(
+      applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        isWomensApplication = false,
+        isPipeApplication = null,
+        releaseType = null,
+        arrivalDate = null,
+        data = "{}",
+        username = username
+      ) is AuthorisableActionResult.Unauthorised
+    ).isTrue
   }
 
   @Test
@@ -742,7 +746,6 @@ class ApplicationServiceTest {
     assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T14:10:00+01:00"))
   }
 
-  //here
   @Test
   fun `updateTemporaryAccommodationApplication returns NotFound when application doesn't exist`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
@@ -750,11 +753,13 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    assertThat(applicationService.updateTemporaryAccommodationApplication(
-      applicationId = applicationId,
-      data = "{}",
-      username = username
-    ) is AuthorisableActionResult.NotFound).isTrue
+    assertThat(
+      applicationService.updateTemporaryAccommodationApplication(
+        applicationId = applicationId,
+        data = "{}",
+        username = username
+      ) is AuthorisableActionResult.NotFound
+    ).isTrue
   }
 
   @Test
@@ -786,11 +791,13 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(applicationService.updateTemporaryAccommodationApplication(
-      applicationId = applicationId,
-      data = "{}",
-      username = username
-    ) is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(
+      applicationService.updateTemporaryAccommodationApplication(
+        applicationId = applicationId,
+        data = "{}",
+        username = username
+      ) is AuthorisableActionResult.Unauthorised
+    ).isTrue
   }
 
   @Test
