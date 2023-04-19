@@ -2996,16 +2996,15 @@ components:
           type: string
           format: date
           example: 2022-07-28
-        departureDate:
-          type: string
-          format: date
-          example: 2022-09-30
+        durationWeeks:
+          type: integer
+          description: The number of weeks the booking will need to last for
         bedId:
           type: string
           format: uuid
       required:
         - arrivalDate
-        - departureDate
+        - durationWeeks
         - bedId
     Booking:
       allOf:

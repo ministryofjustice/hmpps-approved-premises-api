@@ -199,7 +199,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       .bodyValue(
         NewPlacementRequestBooking(
           arrivalDate = LocalDate.parse("2023-03-29"),
-          departureDate = LocalDate.parse("2023-04-01"),
+          durationWeeks = 12,
           bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e"),
         ),
       )
@@ -226,7 +226,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .bodyValue(
                   NewPlacementRequestBooking(
                     arrivalDate = LocalDate.parse("2023-03-29"),
-                    departureDate = LocalDate.parse("2023-04-01"),
+                    durationWeeks = 12,
                     bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e"),
                   ),
                 )
@@ -273,7 +273,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .bodyValue(
                   NewPlacementRequestBooking(
                     arrivalDate = LocalDate.parse("2023-03-29"),
-                    departureDate = LocalDate.parse("2023-04-01"),
+                    durationWeeks = 12,
                     bedId = bed.id,
                   ),
                 )

@@ -2101,7 +2101,7 @@ class BookingServiceTest {
       placementRequestId = placementRequestId,
       bedId = bedId,
       arrivalDate = LocalDate.parse("2023-03-28"),
-      departureDate = LocalDate.parse("2023-03-30")
+      durationWeeks = 7
     )
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
@@ -2141,7 +2141,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bedId,
       arrivalDate = LocalDate.parse("2023-03-28"),
-      departureDate = LocalDate.parse("2023-03-30")
+      durationWeeks = 7
     )
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -2150,7 +2150,8 @@ class BookingServiceTest {
   @Test
   fun `createApprovedPremisesBookingFromPlacementRequest returns GeneralValidationError if Bed does not belong to an Approved Premises`() {
     val arrivalDate = LocalDate.parse("2023-03-28")
-    val departureDate = LocalDate.parse("2023-03-30")
+    val durationWeeks = 12
+    val departureDate = arrivalDate.plusWeeks(durationWeeks.toLong())
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -2198,7 +2199,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      durationWeeks = durationWeeks
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -2212,7 +2213,8 @@ class BookingServiceTest {
   @Test
   fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if Bed has a conflicting Booking`() {
     val arrivalDate = LocalDate.parse("2023-03-28")
-    val departureDate = LocalDate.parse("2023-03-30")
+    val durationWeeks = 12
+    val departureDate = arrivalDate.plusWeeks(durationWeeks.toLong())
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -2267,7 +2269,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      durationWeeks = durationWeeks
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -2281,7 +2283,8 @@ class BookingServiceTest {
   @Test
   fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if Bed has a conflicting Lost Bed`() {
     val arrivalDate = LocalDate.parse("2023-03-28")
-    val departureDate = LocalDate.parse("2023-03-30")
+    val durationWeeks = 12
+    val departureDate = arrivalDate.plusWeeks(durationWeeks.toLong())
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -2337,7 +2340,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      durationWeeks = durationWeeks
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -2352,7 +2355,8 @@ class BookingServiceTest {
   fun `createApprovedPremisesBookingFromPlacementRequest saves Booking and creates Domain Event`() {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")
-    val departureDate = LocalDate.parse("2023-02-23")
+    val durationWeeks = 12
+    val departureDate = arrivalDate.plusWeeks(durationWeeks.toLong())
 
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -2417,7 +2421,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      durationWeeks = durationWeeks
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue

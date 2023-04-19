@@ -94,7 +94,7 @@ class BookingService(
     placementRequestId: UUID,
     bedId: UUID,
     arrivalDate: LocalDate,
-    departureDate: LocalDate
+    durationWeeks: Int
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
@@ -103,11 +103,9 @@ class BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val validationResult = validated {
-      if (departureDate.isBefore(arrivalDate)) {
-        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
-      }
+    val departureDate = arrivalDate.plusWeeks(durationWeeks.toLong())
 
+    val validationResult = validated {
       getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
       }

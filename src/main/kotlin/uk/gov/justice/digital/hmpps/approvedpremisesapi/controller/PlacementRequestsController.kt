@@ -84,7 +84,7 @@ class PlacementRequestsController(
       placementRequestId = id,
       bedId = newPlacementRequestBooking.bedId,
       arrivalDate = newPlacementRequestBooking.arrivalDate,
-      departureDate = newPlacementRequestBooking.departureDate
+      durationWeeks = newPlacementRequestBooking.durationWeeks
     )
 
     val validatableResult = when (authorisableResult) {
