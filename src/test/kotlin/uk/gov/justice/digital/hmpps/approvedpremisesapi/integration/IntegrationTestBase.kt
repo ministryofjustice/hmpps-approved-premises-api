@@ -151,12 +151,50 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DbExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.TestPropertiesInitializer
+import java.nio.channels.FileChannel
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
 
-object WiremockServerHolder {
-  var wiremockServer: WireMockServer? = null
+object WiremockPortHolder {
+  private val possiblePorts = 57830..57880
+
+  private var port: Int? = null
+  private var channel: FileChannel? = null
+
+  fun getPort(): Int {
+    synchronized(this) {
+      if (port != null) {
+        return port!!
+      }
+
+      possiblePorts.forEach { portToTry ->
+        val lockFilePath = Paths.get("${System.getProperty("java.io.tmpdir")}${System.getProperty("file.separator")}ap-int-port-lock-$portToTry.lock")
+
+        try {
+          channel = FileChannel.open(lockFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+          channel!!.position(0)
+
+          if (channel!!.tryLock() == null) {
+            channel!!.close()
+            channel = null
+            return@forEach
+          }
+
+          port = portToTry
+
+          return portToTry
+        } catch (_: Exception) {
+        }
+      }
+
+      throw RuntimeException("Could not lock any potential Wiremock ports")
+    }
+  }
+
+  fun releasePort() = channel?.close()
 }
 
 @ExtendWith(DbExtension::class)
@@ -357,9 +395,7 @@ abstract class IntegrationTestBase {
       .responseTimeout(Duration.ofMinutes(20))
       .build()
 
-    WiremockServerHolder.wiremockServer?.stop()
-    WiremockServerHolder.wiremockServer = WireMockServer(wiremockPort.toInt())
-    wiremockServer = WiremockServerHolder.wiremockServer!!
+    wiremockServer = WireMockServer(wiremockPort.toInt())
     wiremockServer.start()
 
     cacheManager.cacheNames.forEach {
