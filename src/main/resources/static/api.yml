@@ -2198,7 +2198,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Booking'
+                $ref: '#/components/schemas/NewPlacementRequestBookingConfirmation'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -5053,6 +5053,19 @@ components:
       required:
         - id
         - name
+    NewPlacementRequestBookingConfirmation:
+      type: object
+      properties:
+        premisesName:
+          type: string
+        arrivalDate:
+          type: string
+          format: date
+          example: 2022-07-28
+        departureDate:
+          type: string
+          format: date
+          example: 2022-09-30
     NewBookingNotMade:
       type: object
       properties:
