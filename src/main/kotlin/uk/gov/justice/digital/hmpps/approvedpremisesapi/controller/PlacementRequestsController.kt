@@ -5,15 +5,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementRequestsApiDelegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -22,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.util.UUID
@@ -34,8 +33,8 @@ class PlacementRequestsController(
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
-  private val bookingTransformer: BookingTransformer,
-  private val bookingNotMadeTransformer: BookingNotMadeTransformer
+  private val bookingConfirmationTransformer: NewPlacementRequestBookingConfirmationTransformer,
+  private val bookingNotMadeTransformer: BookingNotMadeTransformer,
 ) : PlacementRequestsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -53,7 +52,7 @@ class PlacementRequestsController(
         }
 
         placementRequestTransformer.transformJpaToApi(it, personDetail.first, personDetail.second)
-      }
+      },
     )
   }
 
@@ -72,11 +71,11 @@ class PlacementRequestsController(
       ?: throw NotFoundProblem(placementRequest.application.crn, "Offender")
 
     return ResponseEntity.ok(
-      placementRequestTransformer.transformJpaToApi(placementRequest, personDetail.first, personDetail.second)
+      placementRequestTransformer.transformJpaToApi(placementRequest, personDetail.first, personDetail.second),
     )
   }
 
-  override fun placementRequestsIdBookingPost(id: UUID, newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<Booking> {
+  override fun placementRequestsIdBookingPost(id: UUID, newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> {
     val user = userService.getUserForRequest()
 
     val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
@@ -84,7 +83,7 @@ class PlacementRequestsController(
       placementRequestId = id,
       bedId = newPlacementRequestBooking.bedId,
       arrivalDate = newPlacementRequestBooking.arrivalDate,
-      departureDate = newPlacementRequestBooking.departureDate
+      departureDate = newPlacementRequestBooking.departureDate,
     )
 
     val validatableResult = when (authorisableResult) {
@@ -100,25 +99,7 @@ class PlacementRequestsController(
       is ValidatableActionResult.Success -> validatableResult.entity
     }
 
-    val offenderResult = offenderService.getOffenderByCrn(createdBooking.crn, user.deliusUsername)
-    val offender = when (offenderResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
-      is AuthorisableActionResult.Success -> offenderResult.entity
-    }
-
-    if (offender.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
-
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offender.otherIds.nomsNumber)
-    val inmate = when (inmateDetailResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
-      is AuthorisableActionResult.Success -> inmateDetailResult.entity
-    }
-
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, offender, inmate, null))
+    return ResponseEntity.ok(bookingConfirmationTransformer.transformJpaToApi(createdBooking))
   }
 
   override fun placementRequestsIdBookingNotMadePost(id: UUID, newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> {
@@ -127,7 +108,7 @@ class PlacementRequestsController(
     val authorisableResult = placementRequestService.createBookingNotMade(
       user = user,
       placementRequestId = id,
-      notes = newBookingNotMade.notes
+      notes = newBookingNotMade.notes,
     )
 
     val bookingNotMade = when (authorisableResult) {
