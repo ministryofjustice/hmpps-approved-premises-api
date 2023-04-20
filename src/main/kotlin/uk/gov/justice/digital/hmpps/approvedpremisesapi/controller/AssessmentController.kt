@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -38,7 +37,6 @@ class AssessmentController(
   private val offenderService: OffenderService,
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
-  private val placementRequestService: PlacementRequestService
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -140,7 +138,12 @@ class AssessmentController(
 
     val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
 
-    val assessmentAuthResult = assessmentService.acceptAssessment(user, assessmentId, serializedData)
+    val assessmentAuthResult = assessmentService.acceptAssessment(
+      user = user,
+      assessmentId = assessmentId,
+      document = serializedData,
+      placementRequirements = assessmentAcceptance.requirements
+    )
 
     val assessmentValidationResult = when (assessmentAuthResult) {
       is AuthorisableActionResult.Success -> assessmentAuthResult.entity
@@ -153,12 +156,6 @@ class AssessmentController(
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
-    }
-
-    if (assessmentAcceptance.requirements != null) {
-      extractResultEntityOrThrow(
-        placementRequestService.createPlacementRequest(assessment, assessmentAcceptance.requirements)
-      )
     }
 
     return ResponseEntity(HttpStatus.OK)

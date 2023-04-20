@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -45,6 +46,7 @@ class AssessmentService(
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
+  private val placementRequestService: PlacementRequestService,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
@@ -173,7 +175,7 @@ class AssessmentService(
     )
   }
 
-  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
     val acceptedAt = OffsetDateTime.now()
 
@@ -222,6 +224,16 @@ class AssessmentService(
     assessment.decision = AssessmentDecision.ACCEPTED
 
     val savedAssessment = assessmentRepository.save(assessment)
+
+    if (placementRequirements != null) {
+      val placementRequestValidationResult = placementRequestService.createPlacementRequest(assessment, placementRequirements)
+
+      if (placementRequestValidationResult !is ValidatableActionResult.Success) {
+        return AuthorisableActionResult.Success(
+          placementRequestValidationResult.translateError()
+        )
+      }
+    }
 
     val application = savedAssessment.application
 
