@@ -5066,6 +5066,10 @@ components:
           type: string
           format: date
           example: 2022-09-30
+      required:
+        - premisesName
+        - arrivalDate
+        - departureDate
     NewBookingNotMade:
       type: object
       properties:
