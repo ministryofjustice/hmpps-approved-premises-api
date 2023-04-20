@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import arrow.core.Ior
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -132,7 +133,7 @@ class PremisesController(
         body.characteristicIds,
         body.notes,
         body.status,
-        body.pdu,
+        Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
       )
 
     val validationResult = when (updatePremisesResult) {
@@ -198,7 +199,7 @@ class PremisesController(
         notes = body.notes,
         characteristicIds = body.characteristicIds,
         status = body.status,
-        pdu = body.pdu,
+        probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
       )
     )
     return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)

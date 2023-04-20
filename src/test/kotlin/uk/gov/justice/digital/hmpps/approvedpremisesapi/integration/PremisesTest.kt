@@ -39,6 +39,10 @@ class PremisesTest : IntegrationTestBase() {
   @Test
   fun `Create new premises returns 201`() {
     `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
       webTestClient.post()
         .uri("/premises")
         .header("Authorization", "Bearer $jwt")
@@ -54,7 +58,7 @@ class PremisesTest : IntegrationTestBase() {
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
             status = PropertyStatus.pending,
-            pdu = "Some Location",
+            probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
         .exchange()
@@ -66,6 +70,10 @@ class PremisesTest : IntegrationTestBase() {
   @Test
   fun `When a new premises is created then all field data is persisted`() {
     `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
       webTestClient.post()
         .uri("/premises")
         .header("Authorization", "Bearer $jwt")
@@ -82,7 +90,7 @@ class PremisesTest : IntegrationTestBase() {
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
             status = PropertyStatus.pending,
-            pdu = "Some Location",
+            probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
         .exchange()
@@ -99,7 +107,51 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
         .jsonPath("status").isEqualTo("pending")
-        .jsonPath("pdu").isEqualTo("Some Location")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+    }
+  }
+
+  @Test
+  fun `When a new Temporary Accommodation premises is created with a legacy PDU name then all field data is persisted`() {
+    `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "some arbitrary name",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            pdu = probationDeliveryUnit.name,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .expectBody()
+        .jsonPath("addressLine1").isEqualTo("1 somewhere")
+        .jsonPath("addressLine2").isEqualTo("Some district")
+        .jsonPath("town").isEqualTo("Somewhere")
+        .jsonPath("postcode").isEqualTo("AB123CD")
+        .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
+        .jsonPath("notes").isEqualTo("some arbitrary notes")
+        .jsonPath("name").isEqualTo("some arbitrary name")
+        .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
     }
   }
 
@@ -151,12 +203,14 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `When a Temporary Accommodation Premises is updated then all field data is persisted`() {
-    `Given a User` { _, jwt ->
+    `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withProbationRegion(user.probationRegion)
         withTotalBeds(20)
         withPdu("Some Location")
       }
@@ -174,10 +228,10 @@ class PremisesTest : IntegrationTestBase() {
             postcode = "AB456CD",
             notes = "some arbitrary notes updated",
             localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-            probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+            probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
             status = PropertyStatus.archived,
-            pdu = "Some New Location",
+            probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
         .exchange()
@@ -191,16 +245,71 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("notes").isEqualTo("some arbitrary notes updated")
         .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
         .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
-        .jsonPath("probationRegion.id").isEqualTo("a02b7727-63aa-46f2-80f1-e0b05b31903c")
-        .jsonPath("probationRegion.name").isEqualTo("North West")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("probationRegion.name").isEqualTo(user.probationRegion.name)
         .jsonPath("status").isEqualTo("archived")
-        .jsonPath("pdu").isEqualTo("Some New Location")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+    }
+  }
+
+  @Test
+  fun `When a Temporary Accommodation Premises is updated with a legacy PDU name then all field data is persisted`() {
+    `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(user.probationRegion)
+        withTotalBeds(20)
+        withPdu("Some Location")
+      }
+
+      val premisesToGet = premises[0]
+
+      webTestClient.put()
+        .uri("/premises/${premisesToGet.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdatePremises(
+            addressLine1 = "1 somewhere updated",
+            addressLine2 = "Some other district",
+            town = "Somewhere Else",
+            postcode = "AB456CD",
+            notes = "some arbitrary notes updated",
+            localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.archived,
+            pdu = probationDeliveryUnit.name,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
+        .jsonPath("addressLine2").isEqualTo("Some other district")
+        .jsonPath("town").isEqualTo("Somewhere Else")
+        .jsonPath("postcode").isEqualTo("AB456CD")
+        .jsonPath("notes").isEqualTo("some arbitrary notes updated")
+        .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
+        .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("probationRegion.name").isEqualTo(user.probationRegion.name)
+        .jsonPath("status").isEqualTo("archived")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
     }
   }
 
   @Test
   fun `Updating a Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { _, jwt ->
+    `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -210,7 +319,7 @@ class PremisesTest : IntegrationTestBase() {
           }
         }
         withTotalBeds(20)
-        withPdu("Some Location")
+        withPdu(probationDeliveryUnit.name)
       }
 
       val premisesToGet = premises[0]
@@ -230,7 +339,7 @@ class PremisesTest : IntegrationTestBase() {
             probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
             characteristicIds = mutableListOf(),
             status = PropertyStatus.archived,
-            pdu = "Some New Location",
+            probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
         .exchange()
@@ -409,6 +518,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.archived,
             pdu = null,
+            probationDeliveryUnitId = null,
           ),
         )
         .exchange()
@@ -416,7 +526,90 @@ class PremisesTest : IntegrationTestBase() {
         .is4xxClientError
         .expectBody()
         .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
         .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+    }
+  }
+
+  @Test
+  fun `Trying to update a Temporary Accommodation Premises with an invalid PDU name returns 400`() {
+    `Given a User` { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+        withTotalBeds(20)
+      }
+
+      val premisesToGet = premises[0]
+
+      webTestClient.put()
+        .uri("/premises/${premisesToGet.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdatePremises(
+            addressLine1 = "1 somewhere updated",
+            addressLine2 = "Some other district",
+            town = "Somewhere Else",
+            postcode = "AB456CD",
+            notes = "some arbitrary notes updated",
+            localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+            probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.archived,
+            pdu = "Non-existent PDU",
+            probationDeliveryUnitId = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.pdu")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+    }
+  }
+
+  @Test
+  fun `Trying to update a Temporary Accommodation Premises with an invalid probation delivery unit ID returns 400`() {
+    `Given a User` { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+        withTotalBeds(20)
+      }
+
+      val premisesToGet = premises[0]
+
+      webTestClient.put()
+        .uri("/premises/${premisesToGet.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdatePremises(
+            addressLine1 = "1 somewhere updated",
+            addressLine2 = "Some other district",
+            town = "Somewhere Else",
+            postcode = "AB456CD",
+            notes = "some arbitrary notes updated",
+            localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+            probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.archived,
+            pdu = null,
+            probationDeliveryUnitId = UUID.randomUUID(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
     }
   }
 
@@ -461,6 +654,10 @@ class PremisesTest : IntegrationTestBase() {
   @Test
   fun `When a new premises is created with no notes then it defaults to empty`() {
     `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
       webTestClient.post()
         .uri("/premises")
         .header("Authorization", "Bearer $jwt")
@@ -476,7 +673,7 @@ class PremisesTest : IntegrationTestBase() {
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
             status = PropertyStatus.active,
-            pdu = "Some Location",
+            probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
         .exchange()
@@ -681,6 +878,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.pending,
             pdu = null,
+            probationDeliveryUnitId = null,
           ),
         )
         .exchange()
@@ -688,7 +886,74 @@ class PremisesTest : IntegrationTestBase() {
         .is4xxClientError
         .expectBody()
         .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
         .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+    }
+  }
+
+  @Test
+  fun `Trying to create a Temporary Accommodation Premises with an invalid probation delivery unit ID returns 400`() {
+    `Given a User` { user, jwt ->
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "some arbitrary name",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            pdu = null,
+            probationDeliveryUnitId = UUID.randomUUID(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+    }
+  }
+
+  @Test
+  fun `Trying to create a Temporary Accommodation Premises with an invalid PDU name returns 400`() {
+    `Given a User` { user, jwt ->
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "some arbitrary name",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            pdu = "Non-existent PDU",
+            probationDeliveryUnitId = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.pdu")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
     }
   }
 

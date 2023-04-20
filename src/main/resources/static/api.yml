@@ -2794,6 +2794,9 @@ components:
           $ref: '#/components/schemas/PropertyStatus'
         pdu:
           type: string
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
       required:
         - name
         - addressLine1
@@ -4074,6 +4077,9 @@ components:
           $ref: '#/components/schemas/PropertyStatus'
         pdu:
           type: string
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
       required:
         - addressLine1
         - postcode

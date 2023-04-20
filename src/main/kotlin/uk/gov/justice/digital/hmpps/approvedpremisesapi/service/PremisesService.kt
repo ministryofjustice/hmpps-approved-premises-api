@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -15,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
@@ -37,6 +40,7 @@ class PremisesService(
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val lostBedCancellationRepository: LostBedCancellationRepository,
+  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService
 ) {
   private val serviceNameToEntityType = mapOf(
@@ -221,9 +225,8 @@ class PremisesService(
     notes: String?,
     characteristicIds: List<UUID>,
     status: PropertyStatus,
-    pdu: String?,
-  ) = validated<PremisesEntity> {
-
+    probationDeliveryUnitIdentifier: Either<String, UUID>?,
+  ) = validated {
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
       "$.probationRegionId" hasValidationError "doesNotExist"
@@ -265,8 +268,8 @@ class PremisesService(
       "$.name" hasValidationError "notUnique"
     }
 
-    if (pdu.isNullOrBlank()) {
-      "$.pdu" hasValidationError "empty"
+    val probationDeliveryUnit = tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
+      property hasValidationError err
     }
 
     if (validationErrors.any()) {
@@ -291,7 +294,7 @@ class PremisesService(
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
       status = status,
-      pdu = pdu!!,
+      pdu = probationDeliveryUnit!!.name,
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -332,7 +335,7 @@ class PremisesService(
     characteristicIds: List<UUID>,
     notes: String?,
     status: PropertyStatus,
-    pdu: String?,
+    probationDeliveryUnitIdentifier: Either<String, UUID>?,
   ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
 
     val premises = premisesRepository.findByIdOrNull(premisesId)
@@ -359,8 +362,13 @@ class PremisesService(
       validationErrors["$.probationRegionId"] = "doesNotExist"
     }
 
-    if (premises is TemporaryAccommodationPremisesEntity && pdu.isNullOrBlank()) {
-      validationErrors["$.pdu"] = "empty"
+    val probationDeliveryUnit = when (premises) {
+      is TemporaryAccommodationPremisesEntity -> {
+        tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
+          validationErrors[property] = err
+        }
+      }
+      else -> null
     }
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -397,7 +405,7 @@ class PremisesService(
       it.notes = if (notes.isNullOrEmpty()) "" else notes
       it.status = status
       if (it is TemporaryAccommodationPremisesEntity) {
-        it.pdu = pdu!!
+        it.pdu = probationDeliveryUnit!!.name
       }
     }
 
@@ -413,5 +421,41 @@ class PremisesService(
     ServiceName.approvedPremises.value -> premises is ApprovedPremisesEntity
     ServiceName.temporaryAccommodation.value -> premises is TemporaryAccommodationPremisesEntity
     else -> false
+  }
+
+  private fun tryGetProbationDeliveryUnit(
+    probationDeliveryUnitIdentifier: Either<String, UUID>?,
+    probationRegionId: UUID,
+    onValidationError: (property: String, err: String) -> Unit,
+  ): ProbationDeliveryUnitEntity? {
+    val probationDeliveryUnit = when (probationDeliveryUnitIdentifier) {
+      null -> {
+        onValidationError("$.probationDeliveryUnitId", "empty")
+        null
+      }
+      else -> probationDeliveryUnitIdentifier.fold({ name ->
+        if (name.isBlank()) {
+          onValidationError("$.pdu", "empty")
+        }
+
+        val result = probationDeliveryUnitRepository.findByNameAndProbationRegion_Id(name, probationRegionId)
+
+        if (result == null) {
+          onValidationError("$.pdu", "doesNotExist")
+        }
+
+        result
+      }, { id ->
+        val result = probationDeliveryUnitRepository.findByIdAndProbationRegion_Id(id, probationRegionId)
+
+        if (result == null) {
+          onValidationError("$.probationDeliveryUnitId", "doesNotExist")
+        }
+
+        result
+      })
+    }
+
+    return probationDeliveryUnit
   }
 }

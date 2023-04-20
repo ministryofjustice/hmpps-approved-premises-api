@@ -12,6 +12,10 @@ import javax.persistence.Table
 @Repository
 interface ProbationDeliveryUnitRepository : JpaRepository<ProbationDeliveryUnitEntity, UUID> {
   fun findAllByProbationRegion_Id(probationRegionId: UUID): List<ProbationDeliveryUnitEntity>
+
+  fun findByIdAndProbationRegion_Id(id: UUID, probationRegionId: UUID): ProbationDeliveryUnitEntity?
+
+  fun findByNameAndProbationRegion_Id(name: String, probationRegionId: UUID): ProbationDeliveryUnitEntity?
 }
 
 @Entity

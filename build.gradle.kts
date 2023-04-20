@@ -46,6 +46,8 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:dataframe:0.10.0")
 
+  implementation("io.arrow-kt:arrow-core:1.1.5")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.5")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
