@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -17,6 +19,7 @@ class TemporaryAccommodationPremisesSeedJob(
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
+  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
 ) : SeedJob<TemporaryAccommodationPremisesSeedCsvRow>(
   id = UUID.randomUUID(),
@@ -69,10 +72,13 @@ class TemporaryAccommodationPremisesSeedJob(
         ?: throw RuntimeException("Characteristic $it does not exist")
     }
 
+    val probationDeliveryUnit = probationDeliveryUnitRepository.findByNameAndProbationRegion_Id(row.pdu, probationRegion.id)
+      ?: throw RuntimeException("Probation Delivery Unit ${row.pdu} does not exist")
+
     if (existingPremises != null) {
-      updateExistingPremises(row, existingPremises, probationRegion, localAuthorityArea, characteristics)
+      updateExistingPremises(row, existingPremises, probationRegion, localAuthorityArea, probationDeliveryUnit, characteristics)
     } else {
-      createNewPremises(row, probationRegion, localAuthorityArea, characteristics)
+      createNewPremises(row, probationRegion, localAuthorityArea, probationDeliveryUnit, characteristics)
     }
   }
 
@@ -80,6 +86,7 @@ class TemporaryAccommodationPremisesSeedJob(
     row: TemporaryAccommodationPremisesSeedCsvRow,
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
+    probationDeliveryUnit: ProbationDeliveryUnitEntity,
     characteristics: List<CharacteristicEntity>
   ) {
     log.info("Creating new Temporary Accommodation premises: ${row.name}")
@@ -102,7 +109,7 @@ class TemporaryAccommodationPremisesSeedJob(
         lostBeds = mutableListOf(),
         rooms = mutableListOf(),
         characteristics = mutableListOf(),
-        pdu = row.pdu,
+        probationDeliveryUnit = probationDeliveryUnit,
         status = PropertyStatus.active,
       )
     )
@@ -119,6 +126,7 @@ class TemporaryAccommodationPremisesSeedJob(
     existingPremises: TemporaryAccommodationPremisesEntity,
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
+    probationDeliveryUnit: ProbationDeliveryUnitEntity,
     characteristics: List<CharacteristicEntity>
   ) {
     log.info("Updating existing Temporary Accommodation premises: ${row.name}")
@@ -133,7 +141,7 @@ class TemporaryAccommodationPremisesSeedJob(
       this.notes = row.notes
       this.probationRegion = probationRegion
       this.localAuthorityArea = localAuthorityArea
-      this.pdu = row.pdu
+      this.probationDeliveryUnit = probationDeliveryUnit
     }
 
     characteristics.forEach {

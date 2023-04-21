@@ -69,11 +69,16 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       withApArea(apAreaEntityFactory.produceAndPersist())
     }
 
+    val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
     val csvRow = TemporaryAccommodationPremisesSeedCsvRowFactory()
       .withProbationRegion(probationRegion.name)
       .withLocalAuthorityArea(localAuthorityArea.name)
+      .withPdu(probationDeliveryUnit.name)
       .withCharacteristics(listOf("Park nearby", "Not suitable for arson offenders"))
       .produce()
 
@@ -96,7 +101,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
     assertThat(persistedPremises.postcode).isEqualTo(csvRow.postcode)
     assertThat(persistedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
     assertThat(persistedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
-    assertThat(persistedPremises.pdu).isEqualTo(csvRow.pdu)
+    assertThat(persistedPremises.probationDeliveryUnit!!.name).isEqualTo(csvRow.pdu)
     assertThat(persistedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedPremises.notes).isEqualTo(csvRow.notes)
   }
@@ -107,8 +112,16 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       withApArea(apAreaEntityFactory.produceAndPersist())
     }
 
+    val originalProbationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+      withProbationRegion(originalProbationRegion)
+    }
+
     val updatedProbationRegion = probationRegionEntityFactory.produceAndPersist {
       withApArea(apAreaEntityFactory.produceAndPersist())
+    }
+
+    val updateProbationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+      withProbationRegion(updatedProbationRegion)
     }
 
     val originalLocalAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -119,12 +132,14 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       withName("ta-premises-to-update")
       withProbationRegion(originalProbationRegion)
       withLocalAuthorityArea(originalLocalAuthorityArea)
+      withProbationDeliveryUnit(originalProbationDeliveryUnit)
     }
 
     val csvRow = TemporaryAccommodationPremisesSeedCsvRowFactory()
       .withName(existingPremises.name)
       .withProbationRegion(updatedProbationRegion.name)
       .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
+      .withPdu(updateProbationDeliveryUnit.name)
       .withCharacteristics(listOf("Floor level access"))
       .produce()
 
@@ -147,7 +162,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
     assertThat(persistedPremises.postcode).isEqualTo(csvRow.postcode)
     assertThat(persistedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
     assertThat(persistedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
-    assertThat(persistedPremises.pdu).isEqualTo(csvRow.pdu)
+    assertThat(persistedPremises.probationDeliveryUnit!!.name).isEqualTo(csvRow.pdu)
     assertThat(persistedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedPremises.notes).isEqualTo(csvRow.notes)
   }

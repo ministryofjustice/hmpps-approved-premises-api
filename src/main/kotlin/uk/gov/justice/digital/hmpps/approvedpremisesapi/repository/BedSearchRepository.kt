@@ -188,6 +188,7 @@ LEFT JOIN rooms r ON r.premises_id = p.id
 LEFT JOIN room_characteristics rc on rc.room_id = r.id
 LEFT JOIN characteristics c2 ON rc.characteristic_id = c2.id
 LEFT JOIN beds b ON b.room_id = r.id
+LEFT JOIN probation_delivery_units pdu on pdu.id = tap.probation_delivery_unit_id
 WHERE
     (SELECT COUNT(1) FROM bookings books
          LEFT JOIN cancellations books_cancel ON books_cancel.booking_id = books.id
@@ -203,7 +204,7 @@ WHERE
          (lostbeds.start_date, lostbeds.end_date) OVERLAPS (:start_date, :end_date) AND
          lostbeds_cancel.id IS NULL
      ) = 0 AND 
-    tap.pdu = :probation_delivery_unit AND 
+    pdu.name = :probation_delivery_unit AND
     p.probation_region_id = :probation_region_id AND 
     p.status = 'active' AND 
     p.service = 'temporary-accommodation';
