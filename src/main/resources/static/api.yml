@@ -2742,6 +2742,8 @@ components:
           properties:
             pdu:
               type: string
+            probationDeliveryUnit:
+              $ref: '#/components/schemas/ProbationDeliveryUnit'
       required:
         - pdu
     ApprovedPremisesSummary:
