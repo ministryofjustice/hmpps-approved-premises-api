@@ -14,7 +14,8 @@ class PremisesTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
   private val apAreaTransformer: ApAreaTransformer,
   private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer,
-  private val characteristicTransformer: CharacteristicTransformer
+  private val characteristicTransformer: CharacteristicTransformer,
+  private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
 ) {
   fun transformJpaToApi(jpa: PremisesEntity, availableBedsForToday: Int): Premises = when (jpa) {
     is ApprovedPremisesEntity -> ApprovedPremises(
@@ -52,6 +53,7 @@ class PremisesTransformer(
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
       status = jpa.status,
       pdu = jpa.probationDeliveryUnit?.name ?: "Not specified",
+      probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) }
     )
     else -> throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")
   }
