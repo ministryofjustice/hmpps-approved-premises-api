@@ -108,6 +108,8 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
         .jsonPath("status").isEqualTo("pending")
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
     }
   }
 
@@ -152,6 +154,8 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
         .jsonPath("status").isEqualTo("pending")
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
     }
   }
 
@@ -253,6 +257,8 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("probationRegion.name").isEqualTo(user.probationRegion.name)
         .jsonPath("status").isEqualTo("archived")
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
     }
   }
 
@@ -308,6 +314,8 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("probationRegion.name").isEqualTo(user.probationRegion.name)
         .jsonPath("status").isEqualTo("archived")
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
     }
   }
 
