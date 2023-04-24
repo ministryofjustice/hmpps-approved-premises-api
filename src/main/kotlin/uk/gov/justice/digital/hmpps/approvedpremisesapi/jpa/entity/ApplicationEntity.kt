@@ -168,6 +168,7 @@ class ApprovedPremisesApplicationEntity(
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
   var isPipeApplication: Boolean?,
+  var isInapplicable: Boolean?,
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,

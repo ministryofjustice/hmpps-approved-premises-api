@@ -215,7 +215,8 @@ class ApplicationService(
         teamCodes = mutableListOf(),
         placementRequests = mutableListOf(),
         releaseType = null,
-        arrivalDate = null
+        arrivalDate = null,
+        isInapplicable = null
       ),
     )
 
