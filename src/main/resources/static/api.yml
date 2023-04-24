@@ -3963,6 +3963,8 @@ components:
         - $ref: '#/components/schemas/UpdateApplication'
         - type: object
           properties:
+            isInapplicable:
+              type: boolean
             isWomensApplication:
               type: boolean
             isPipeApplication:

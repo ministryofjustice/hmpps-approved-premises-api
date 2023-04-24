@@ -145,6 +145,7 @@ class ApplicationsController(
         isPipeApplication = body.isPipeApplication,
         releaseType = body.releaseType?.name,
         arrivalDate = body.arrivalDate?.atOffset(ZoneOffset.UTC),
+        isInapplicable = body.isInapplicable,
         username = username
       )
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
