@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.common.FatalStartupException
 import org.springframework.boot.env.OriginTrackedMapPropertySource
 import org.springframework.boot.origin.OriginTrackedValue
 import org.springframework.boot.test.util.TestPropertyValues
@@ -9,12 +7,13 @@ import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DriverManagerDataSource
-import org.springframework.util.SocketUtils
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockServerHolder
+import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPortHolder
+import javax.annotation.PreDestroy
 
 class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
   override fun initialize(applicationContext: ConfigurableApplicationContext?) {
-    val wiremockPort = findWiremockPort()
+    val wiremockPort = WiremockPortHolder.getPort()
 
     val databaseName = setupDatabase()
 
@@ -46,25 +45,6 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
       ).applyTo(applicationContext)
   }
 
-  private fun findWiremockPort(): Int {
-    val port = SocketUtils.findAvailableTcpPort()
-
-    (1..10).forEach {
-      try {
-        WiremockServerHolder.wiremockServer = WireMockServer(port)
-        WiremockServerHolder.wiremockServer!!.start()
-
-        return port
-      } catch (fatalStartupException: FatalStartupException) {
-        if (it == 10) {
-          throw fatalStartupException
-        }
-      }
-    }
-
-    throw RuntimeException("Unreachable")
-  }
-
   private fun setupDatabase(): String {
     val driver = DriverManagerDataSource().apply {
       setDriverClassName("org.postgresql.Driver")
@@ -81,4 +61,10 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
 
     return databaseName
   }
+}
+
+@Component
+class TestPropertiesDestructor {
+  @PreDestroy
+  fun destroy() = WiremockPortHolder.releasePort()
 }
