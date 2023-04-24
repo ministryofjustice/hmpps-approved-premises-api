@@ -3976,7 +3976,7 @@ components:
               $ref: '#/components/schemas/ReleaseTypeOption'
             arrivalDate:
               type: string
-              format: date-time
+              format: date
     UpdateTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
@@ -3995,7 +3995,7 @@ components:
           $ref: '#/components/schemas/ReleaseTypeOption'
         arrivalDate:
           type: string
-          format: date-time
+          format: date
       required:
         - translatedDocument
         - isPipeApplication

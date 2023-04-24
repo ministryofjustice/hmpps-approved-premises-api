@@ -738,7 +738,7 @@ class ApplicationServiceTest {
       isWomensApplication = false,
       isPipeApplication = true,
       releaseType = "rotl",
-      arrivalDate = OffsetDateTime.parse("2023-04-17T14:10:00+01:00"),
+      arrivalDate = LocalDate.parse("2023-04-17"),
       data = updatedData,
       username = username,
       isInapplicable = false
@@ -757,7 +757,7 @@ class ApplicationServiceTest {
     assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
     assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
     assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
-    assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T14:10:00+01:00"))
+    assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
   }
 
   @Test
