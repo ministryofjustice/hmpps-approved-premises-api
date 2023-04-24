@@ -41,7 +41,11 @@ class NPlus1QueriesTest : IntegrationTestBase() {
         }
         withProbationRegion(user.probationRegion)
         withService("CAS3")
-        withPdu("Some Location")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
       }
 
       premises.forEach { p ->

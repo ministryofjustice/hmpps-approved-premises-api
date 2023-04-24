@@ -416,8 +416,6 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
   // - Do not have any overlapping Bookings or Lost Beds (except where they have been cancelled)
   @Test
   fun `Searching for a Temporary Accommodation Bed returns correct results`() {
-    val searchPdu = "SEARCH-PDU"
-
     val bedsThatShouldNotAppearInSearchResults = mutableListOf<BedEntity>()
     val bedsThatShouldAppearInSearchResults = mutableListOf<BedEntity>()
 
@@ -435,12 +433,20 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
+    val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
     // Premises isn't in the PDU which has a room/bed which matches everything else - this should not be returned in the results
 
     val premisesNotInPdu = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
-      withPdu("OTHER-PDU")
+      withYieldedProbationDeliveryUnit {
+        probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+        }
+      }
       withStatus(PropertyStatus.active)
     }
 
@@ -469,7 +475,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val premisesOneInPdu = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
-      withPdu(searchPdu)
+      withProbationDeliveryUnit(searchPdu)
       withStatus(PropertyStatus.active)
     }
 
@@ -599,7 +605,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val premisesTwoInPdu = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
-      withPdu(searchPdu)
+      withProbationDeliveryUnit(searchPdu)
       withStatus(PropertyStatus.active)
     }
 
@@ -620,7 +626,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val premisesThreeInPdu = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
-      withPdu(searchPdu)
+      withProbationDeliveryUnit(searchPdu)
       withStatus(PropertyStatus.active)
     }
 
@@ -674,7 +680,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val nonActivePremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
-      withPdu("SEARCH-PDU")
+      withProbationDeliveryUnit(searchPdu)
       withStatus(PropertyStatus.archived)
     }
 
@@ -692,7 +698,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val premisesInOtherProbationRegion = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(otherProbationRegion)
       withLocalAuthorityArea(localAuthorityArea)
-      withPdu("SEARCH-PDU")
+      withProbationDeliveryUnit(searchPdu)
       withStatus(PropertyStatus.active)
     }
 
@@ -708,7 +714,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bedsThatShouldNotAppearInSearchResults += bedOneInRoomInPremisesInOtherProbationRegion
 
     val results = bedSearchRepository.findTemporaryAccommodationBeds(
-      probationDeliveryUnit = searchPdu,
+      probationDeliveryUnit = searchPdu.name,
       startDate = LocalDate.parse("2023-03-09"),
       durationInDays = 7,
       probationRegionId = probationRegion.id

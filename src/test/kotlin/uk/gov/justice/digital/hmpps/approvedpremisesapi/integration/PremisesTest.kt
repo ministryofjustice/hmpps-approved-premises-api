@@ -212,7 +212,11 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
         withTotalBeds(20)
-        withPdu("Some Location")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
       }
 
       val premisesToGet = premises[0]
@@ -263,7 +267,11 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
         withTotalBeds(20)
-        withPdu("Some Location")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
       }
 
       val premisesToGet = premises[0]
@@ -310,16 +318,20 @@ class PremisesTest : IntegrationTestBase() {
         withProbationRegion(user.probationRegion)
       }
 
+      val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
+        withId(UUID.randomUUID())
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        withProbationRegion(otherProbationRegion)
+        withTotalBeds(20)
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(otherProbationRegion)
           }
         }
-        withTotalBeds(20)
-        withPdu(probationDeliveryUnit.name)
       }
 
       val premisesToGet = premises[0]
@@ -1079,7 +1091,11 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion { region }
         withService("CAS3")
         withTotalBeds(20)
-        withPdu("Some Location")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(region)
+          }
+        }
       }
 
       val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
@@ -1090,21 +1106,27 @@ class PremisesTest : IntegrationTestBase() {
       }
 
       // Add some extra premises in both services for other regions that shouldn't be returned
+      val otherRegion = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist()
+        }
+      }
+
       temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { otherRegion }
         withService("CAS3")
         withTotalBeds(20)
-        withPdu("Some Other Location")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(otherRegion)
+          }
+        }
       }
 
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { otherRegion }
         withService("CAS1")
         withTotalBeds(20)
       }
@@ -1137,7 +1159,11 @@ class PremisesTest : IntegrationTestBase() {
         withProbationRegion(user.probationRegion)
         withService("CAS3")
         withTotalBeds(20)
-        withPdu("Some Location")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
       }
 
       // Add some extra premises in the same region but in Approved Premises that shouldn't be returned
@@ -1149,21 +1175,27 @@ class PremisesTest : IntegrationTestBase() {
       }
 
       // Add some extra premises in both services for other regions that shouldn't be returned
+      val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist()
+        }
+      }
+
       temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withProbationRegion(otherProbationRegion)
         withService("CAS3")
         withTotalBeds(20)
-        withPdu("Some Other Location")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(otherProbationRegion)
+          }
+        }
       }
 
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withProbationRegion(otherProbationRegion)
         withService("CAS1")
         withTotalBeds(20)
       }

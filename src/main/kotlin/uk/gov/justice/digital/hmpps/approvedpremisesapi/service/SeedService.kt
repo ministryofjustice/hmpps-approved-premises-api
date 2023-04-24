@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
@@ -64,6 +65,7 @@ class SeedService(
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(ProbationRegionRepository::class.java),
           applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
+          applicationContext.getBean(ProbationDeliveryUnitRepository::class.java),
           applicationContext.getBean(CharacteristicService::class.java),
         )
         SeedFileType.temporaryAccommodationBedspace -> TemporaryAccommodationBedspaceSeedJob(

@@ -51,7 +51,7 @@ class PremisesTransformer(
       localAuthorityArea = jpa.localAuthorityArea?.let { localAuthorityAreaTransformer.transformJpaToApi(it) },
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
       status = jpa.status,
-      pdu = jpa.pdu,
+      pdu = jpa.probationDeliveryUnit?.name ?: "Not specified",
     )
     else -> throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")
   }

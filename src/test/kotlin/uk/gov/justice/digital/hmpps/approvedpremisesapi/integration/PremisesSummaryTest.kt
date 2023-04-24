@@ -22,7 +22,11 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withAddressLine2("221B")
         withPostcode("NW1 6XE")
         withStatus(PropertyStatus.active)
-        withPdu("PDU")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
         withService("CAS3")
         withTotalBeds(0) // A static legacy column that we don't use
       }
@@ -59,7 +63,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].addressLine2").isEqualTo("221B")
         .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
         .jsonPath("$[0].status").isEqualTo("active")
-        .jsonPath("$[0].pdu").isEqualTo("PDU")
+        .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
         .jsonPath("$[0].bedCount").isEqualTo(5)
         .jsonPath("$.length()").isEqualTo(1)
     }

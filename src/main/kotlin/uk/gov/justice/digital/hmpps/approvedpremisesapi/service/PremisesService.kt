@@ -294,7 +294,7 @@ class PremisesService(
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
       status = status,
-      pdu = probationDeliveryUnit!!.name,
+      probationDeliveryUnit = probationDeliveryUnit!!,
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -405,7 +405,7 @@ class PremisesService(
       it.notes = if (notes.isNullOrEmpty()) "" else notes
       it.status = status
       if (it is TemporaryAccommodationPremisesEntity) {
-        it.pdu = probationDeliveryUnit!!.name
+        it.probationDeliveryUnit = probationDeliveryUnit!!
       }
     }
 

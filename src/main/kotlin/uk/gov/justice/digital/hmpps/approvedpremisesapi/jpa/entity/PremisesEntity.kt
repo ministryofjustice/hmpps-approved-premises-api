@@ -29,15 +29,16 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query(
     """
         SELECT
-          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status, CAST(COUNT(b) as int))
+          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, CAST(COUNT(b) as int))
         FROM
           TemporaryAccommodationPremisesEntity p
           LEFT JOIN p.rooms r 
           LEFT JOIN r.beds b
           LEFT JOIN p.probationRegion pr
+          LEFT JOIN p.probationDeliveryUnit pdu
         WHERE 
           pr.id = :regionId
-        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.pdu, p.status
+        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status
       """
   )
   fun findAllTemporaryAccommodationSummary(regionId: UUID): List<TemporaryAccommodationPremisesSummary>
@@ -167,7 +168,9 @@ class TemporaryAccommodationPremisesEntity(
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
-  var pdu: String,
+  @ManyToOne
+  @JoinColumn(name = "probation_delivery_unit_id")
+  var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
 ) : PremisesEntity(
   id,
   name,

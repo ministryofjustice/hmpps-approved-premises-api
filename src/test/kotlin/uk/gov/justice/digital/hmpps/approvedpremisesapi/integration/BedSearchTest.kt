@@ -159,6 +159,10 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
+    val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
     `Given a User`(
       probationRegion = probationRegion
     ) { _, jwt ->
@@ -167,7 +171,7 @@ class BedSearchTest : IntegrationTestBase() {
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
         withLocalAuthorityArea(localAuthorityArea)
-        withPdu("SEARCH-PDU")
+        withProbationDeliveryUnit(searchPdu)
         withProbationRegion(probationRegion)
         withStatus(PropertyStatus.active)
       }
@@ -189,7 +193,7 @@ class BedSearchTest : IntegrationTestBase() {
             startDate = LocalDate.parse("2023-03-23"),
             durationDays = 7,
             serviceName = "approved-premises",
-            probationDeliveryUnit = "SEARCH-PDU",
+            probationDeliveryUnit = searchPdu.name,
           ),
         )
         .exchange()

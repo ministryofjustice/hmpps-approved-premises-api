@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -27,7 +28,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
-  private var pdu: Yielded<String> = { randomStringUpperCase(15) }
+  private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -85,8 +86,12 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.status = { status }
   }
 
-  fun withPdu(pdu: String) = apply {
-    this.pdu = { pdu }
+  fun withProbationDeliveryUnit(probationDeliveryUnit: ProbationDeliveryUnitEntity) = apply {
+    this.probationDeliveryUnit = { probationDeliveryUnit }
+  }
+
+  fun withYieldedProbationDeliveryUnit(probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>) = apply {
+    this.probationDeliveryUnit = probationDeliveryUnit
   }
 
   fun withUnitTestControlTestProbationAreaAndLocalAuthority() = apply {
@@ -126,6 +131,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
     status = this.status(),
-    pdu = this.pdu(),
+    probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
   )
 }
