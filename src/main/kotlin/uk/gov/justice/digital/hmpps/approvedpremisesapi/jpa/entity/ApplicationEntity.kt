@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Convert
@@ -40,6 +41,78 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query("SELECT a FROM ApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   fun findByIdOrNullWithWriteLock(id: UUID): ApplicationEntity?
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    ass.submitted_at as latestAssessmentSubmittedAt,
+    ass.decision as latestAssessmentDecision,
+    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
+    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
+    apa.is_womens_application as isWomensApplication,
+    apa.is_pipe_application as isPipeApplication,
+    apa.arrival_date as arrivalDate,
+    CAST(apa.risk_ratings AS TEXT) as riskRatings
+FROM approved_premises_applications apa
+LEFT JOIN applications a ON a.id = apa.id
+LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL;
+""",
+    nativeQuery = true
+  )
+  fun findAllApprovedPremisesSummaries(): List<ApprovedPremisesApplicationSummary>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    ass.submitted_at as latestAssessmentSubmittedAt,
+    ass.decision as latestAssessmentDecision,
+    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
+    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
+    apa.is_womens_application as isWomensApplication,
+    apa.is_pipe_application as isPipeApplication,
+    apa.arrival_date as arrivalDate,
+    CAST(apa.risk_ratings AS TEXT) as riskRatings
+FROM approved_premises_applications apa
+LEFT JOIN applications a ON a.id = apa.id
+LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+WHERE (SELECT COUNT(1) FROM approved_premises_application_team_codes apatc WHERE apatc.application_id = apa.id AND apatc.team_code IN :teamCodes) > 0
+""",
+    nativeQuery = true
+  )
+  fun findApprovedPremisesSummariesForManagingTeams(teamCodes: List<String>): List<ApprovedPremisesApplicationSummary>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    ass.submitted_at as latestAssessmentSubmittedAt,
+    ass.decision as latestAssessmentDecision,
+    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = taa.id) > 0 as hasBooking
+FROM temporary_accommodation_applications taa 
+LEFT JOIN applications a ON a.id = taa.id 
+LEFT JOIN assessments ass ON ass.application_id = taa.id AND ass.reallocated_at IS NULL 
+WHERE a.created_by_user_id = :userId
+""",
+    nativeQuery = true
+  )
+  fun findAllTemporaryAccommodationSummariesCreatedByUser(userId: UUID): List<TemporaryAccommodationApplicationSummary>
 }
 
 @Entity
@@ -106,6 +179,7 @@ class ApprovedPremisesApplicationEntity(
   @OneToMany(mappedBy = "application")
   var placementRequests: MutableList<PlacementRequestEntity>,
   var releaseType: String?,
+  var arrivalDate: OffsetDateTime?,
 ) : ApplicationEntity(
   id,
   crn,
@@ -181,3 +255,25 @@ class TemporaryAccommodationApplicationEntity(
 ) {
   override fun getRequiredQualifications(): List<UserQualification> = emptyList()
 }
+
+interface ApplicationSummary {
+  fun getId(): UUID
+  fun getCrn(): String
+  fun getCreatedByUserId(): UUID
+  fun getCreatedAt(): Timestamp
+  fun getSubmittedAt(): Timestamp?
+  fun getLatestAssessmentSubmittedAt(): Timestamp?
+  fun getLatestAssessmentDecision(): AssessmentDecision?
+  fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean
+  fun getHasBooking(): Boolean
+}
+
+interface ApprovedPremisesApplicationSummary : ApplicationSummary {
+  fun getHasPlacementRequest(): Boolean
+  fun getIsWomensApplication(): Boolean?
+  fun getIsPipeApplication(): Boolean?
+  fun getArrivalDate(): Timestamp?
+  fun getRiskRatings(): String?
+}
+
+interface TemporaryAccommodationApplicationSummary : ApplicationSummary

@@ -21,11 +21,12 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -189,16 +190,14 @@ class ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
+            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
             assertThat(responseBody).anyMatch {
               outdatedApplicationEntityManagedByTeam.id == it.id &&
                 outdatedApplicationEntityManagedByTeam.crn == it.person?.crn &&
                 outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
                 outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(outdatedApplicationEntityManagedByTeam.data) == serializableToJsonNode(it.data) &&
-                olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+                outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
             }
 
             assertThat(responseBody).anyMatch {
@@ -206,9 +205,7 @@ class ApplicationTest : IntegrationTestBase() {
                 upToDateApplicationEntityManagedByTeam.crn == it.person?.crn &&
                 upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
                 upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(upToDateApplicationEntityManagedByTeam.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
             }
 
             assertThat(responseBody).noneMatch {
@@ -327,16 +324,14 @@ class ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplication>>() {})
+            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
             assertThat(responseBody).anyMatch {
               outdatedApplicationEntityCreatedByUser.id == it.id &&
                 outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
                 outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt &&
                 outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(outdatedApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
-                olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt
             }
 
             assertThat(responseBody).anyMatch {
@@ -344,9 +339,7 @@ class ApplicationTest : IntegrationTestBase() {
                 upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
                 upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt &&
                 upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(upToDateApplicationEntityCreatedByUser.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt
             }
 
             assertThat(responseBody).anyMatch {
@@ -354,9 +347,7 @@ class ApplicationTest : IntegrationTestBase() {
                 outdatedApplicationEntityNotCreatedByUser.crn == it.person?.crn &&
                 outdatedApplicationEntityNotCreatedByUser.createdAt.toInstant() == it.createdAt &&
                 outdatedApplicationEntityNotCreatedByUser.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(outdatedApplicationEntityNotCreatedByUser.data) == serializableToJsonNode(it.data) &&
-                olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+                outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt
             }
 
             assertThat(responseBody).anyMatch {
@@ -987,7 +978,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update existing application returns 200 with correct body`() {
+  fun `Update existing AP application returns 200 with correct body`() {
     `Given a User` { submittingUser, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1027,7 +1018,7 @@ class ApplicationTest : IntegrationTestBase() {
             .uri("/applications/$applicationId")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              UpdateApplication(
+              UpdateApprovedPremisesApplication(
                 data = mapOf("thingId" to 123),
                 isWomensApplication = false,
                 isPipeApplication = true

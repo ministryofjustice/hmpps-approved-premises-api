@@ -40,7 +40,7 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     this.query = { query }
   }
 
-  fun withResponse(response: String) = apply {
+  fun withResponse(response: String?) = apply {
     this.response = { response }
   }
 

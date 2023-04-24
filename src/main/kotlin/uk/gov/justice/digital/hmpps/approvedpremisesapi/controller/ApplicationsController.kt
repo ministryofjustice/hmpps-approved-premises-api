@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -18,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -50,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsFor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformAssessment
 import java.net.URI
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -72,14 +76,14 @@ class ApplicationsController(
 ) : ApplicationsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<Application>> {
+  override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
 
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
     val applications = applicationService.getAllApplicationsForUsername(username, serviceName)
 
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransform(it) })
+    return ResponseEntity.ok(applications.map(::getPersonDetailAndTransformToSummary))
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
@@ -133,7 +137,23 @@ class ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateApplication(applicationId, serializedData, username)
+    val applicationResult = when (body) {
+      is UpdateApprovedPremisesApplication -> applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        data = serializedData,
+        isWomensApplication = body.isWomensApplication,
+        isPipeApplication = body.isPipeApplication,
+        releaseType = body.releaseType?.name,
+        arrivalDate = body.arrivalDate?.atOffset(ZoneOffset.UTC),
+        username = username
+      )
+      is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
+        applicationId = applicationId,
+        data = serializedData,
+        username = username
+      )
+      else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
+    }
 
     val validationResult = when (applicationResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
@@ -325,6 +345,12 @@ class ApplicationsController(
     val (offender, inmate) = getPersonDetail(application.crn)
 
     return applicationsTransformer.transformJpaToApi(application, offender, inmate)
+  }
+
+  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary): ApplicationSummary {
+    val (offender, inmate) = getPersonDetail(application.getCrn())
+
+    return applicationsTransformer.transformDomainToApiSummary(application, offender, inmate)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity): Application {

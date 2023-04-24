@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -40,6 +41,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -59,15 +61,9 @@ class ApplicationService(
   private val objectMapper: ObjectMapper,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String,
 ) {
-  fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationEntity> {
+  fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
-
-    val entityType = if (serviceName == ServiceName.approvedPremises) {
-      ApprovedPremisesApplicationEntity::class.java
-    } else {
-      TemporaryAccommodationApplicationEntity::class.java
-    }
 
     val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
     val userDetails = when (userDetailsResult) {
@@ -75,18 +71,17 @@ class ApplicationService(
       is ClientResult.Failure -> userDetailsResult.throwException()
     }
 
-    val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
-      applicationRepository.findAll()
+    val applicationSummaries = if (serviceName == ServiceName.approvedPremises && userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+      applicationRepository.findAllApprovedPremisesSummaries()
     } else if (serviceName == ServiceName.approvedPremises) {
-      applicationRepository.findAllByManagingTeam(userDetails.teams?.map { it.code } ?: emptyList(), entityType)
+      applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
     } else {
-      applicationRepository.findAllByCreatedByUser_Id(userEntity.id, entityType)
+      applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(userEntity.id)
     }
 
-    return applications
-      .map(jsonSchemaService::checkSchemaOutdated)
+    return applicationSummaries
       .filter {
-        offenderService.canAccessOffender(userDistinguishedName, it.crn)
+        offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
       }
   }
 
@@ -220,6 +215,7 @@ class ApplicationService(
         teamCodes = mutableListOf(),
         placementRequests = mutableListOf(),
         releaseType = null,
+        arrivalDate = null
       ),
     )
 
@@ -236,9 +232,23 @@ class ApplicationService(
     return success(createdApplication.apply { schemaUpToDate = true })
   }
 
-  fun updateApplication(applicationId: UUID, data: String, username: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun updateApprovedPremisesApplication(
+    applicationId: UUID,
+    isWomensApplication: Boolean?,
+    isPipeApplication: Boolean?,
+    releaseType: String?,
+    arrivalDate: OffsetDateTime?,
+    data: String,
+    username: String
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
+
+    if (application !is ApprovedPremisesApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
+      )
+    }
 
     val user = userService.getUserForRequest()
 
@@ -258,7 +268,56 @@ class ApplicationService(
       )
     }
 
-    application.data = data
+    application.apply {
+      this.isWomensApplication = isWomensApplication
+      this.isPipeApplication = isPipeApplication
+      this.releaseType = releaseType
+      this.arrivalDate = arrivalDate
+      this.data = data
+    }
+
+    val savedApplication = applicationRepository.save(application)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  fun updateTemporaryAccommodationApplication(
+    applicationId: UUID,
+    data: String,
+    username: String
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application !is TemporaryAccommodationApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas3Supported"),
+      )
+    }
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    application.apply {
+      this.data = data
+    }
 
     val savedApplication = applicationRepository.save(application)
 
@@ -322,6 +381,7 @@ class ApplicationService(
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
+      arrivalDate = submitApplication.arrivalDate?.atOffset(ZoneOffset.UTC)
     }
 
     assessmentService.createAssessment(application)

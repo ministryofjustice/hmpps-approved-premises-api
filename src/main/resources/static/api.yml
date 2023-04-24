@@ -1433,7 +1433,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Application'
+                  $ref: '#/components/schemas/ApplicationSummary'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -3802,6 +3802,9 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            arrivalDate:
+              type: string
+              format: date-time
             risks:
               $ref: '#/components/schemas/PersonRisks'
             createdByUserId:
@@ -3847,6 +3850,71 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
+    ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+      discriminator:
+        propertyName: type
+        mapping:
+          Offline: '#/components/schemas/OfflineApplicationSummary'
+          CAS1: '#/components/schemas/ApprovedPremisesApplicationSummary'
+          CAS3: '#/components/schemas/TemporaryAccommodationApplicationSummary'
+      required:
+        - id
+        - person
+        - createdAt
+        - type
+    OfflineApplicationSummary:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationSummary'
+        - type: object
+          properties: { }
+    ApprovedPremisesApplicationSummary:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationSummary'
+        - type: object
+          properties:
+            isWomensApplication:
+              type: boolean
+            isPipeApplication:
+              type: boolean
+            arrivalDate:
+              type: string
+              format: date-time
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+            createdByUserId:
+              type: string
+              format: uuid
+            status:
+              $ref: '#/components/schemas/ApplicationStatus'
+          required:
+            - createdByUserId
+            - status
+    TemporaryAccommodationApplicationSummary:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationSummary'
+        - type: object
+          properties:
+            createdByUserId:
+              type: string
+              format: uuid
+            status:
+              $ref: '#/components/schemas/ApplicationStatus'
+          required:
+            - createdByUserId
+            - status
     ApplicationStatus:
       type: string
       enum:
@@ -3883,12 +3951,32 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AnyValue'
-        isWomensApplication:
-          type: boolean
-        isPipeApplication:
-          type: boolean
+      discriminator:
+        propertyName: type
+        mapping:
+          CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
+          CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
       required:
         - data
+    UpdateApprovedPremisesApplication:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
+        - type: object
+          properties:
+            isWomensApplication:
+              type: boolean
+            isPipeApplication:
+              type: boolean
+            targetLocation:
+              type: string
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
+            arrivalDate:
+              type: string
+              format: date-time
+    UpdateTemporaryAccommodationApplication:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
     SubmitApplication:
       type: object
       properties:
@@ -3902,6 +3990,9 @@ components:
           type: string
         releaseType:
           $ref: '#/components/schemas/ReleaseTypeOption'
+        arrivalDate:
+          type: string
+          format: date-time
       required:
         - translatedDocument
         - isPipeApplication

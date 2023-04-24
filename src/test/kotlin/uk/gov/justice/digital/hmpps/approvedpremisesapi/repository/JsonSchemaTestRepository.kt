@@ -4,10 +4,14 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import java.util.UUID
 
 @Repository
 interface ApprovedPremisesApplicationJsonSchemaTestRepository : JpaRepository<ApprovedPremisesApplicationJsonSchemaEntity, UUID>
+
+@Repository
+interface TemporaryAccommodationApplicationJsonSchemaTestRepository : JpaRepository<TemporaryAccommodationApplicationJsonSchemaEntity, UUID>
 
 @Repository
 interface ApprovedPremisesAssessmentJsonSchemaTestRepository : JpaRepository<ApprovedPremisesAssessmentJsonSchemaEntity, UUID>
