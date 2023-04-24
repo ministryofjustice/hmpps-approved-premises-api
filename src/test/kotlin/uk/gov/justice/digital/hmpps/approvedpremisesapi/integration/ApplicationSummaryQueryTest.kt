@@ -51,6 +51,14 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withIsWomensApplication(false)
           withReleaseType("rotl")
           withSubmittedAt(null)
+          withIsInapplicable(false)
+        }
+
+        val inapplicableApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withIsInapplicable(true)
         }
 
         val submittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -94,6 +102,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
         val results = realApplicationRepository.findAllApprovedPremisesSummaries()
 
+        assertThat(results.size).isEqualTo(2)
+
         results.first { it.getId() == nonSubmittedApplication.id }.let {
           assertThat(it.getCrn()).isEqualTo(nonSubmittedApplication.crn)
           assertThat(it.getCreatedByUserId()).isEqualTo(nonSubmittedApplication.createdByUser.id)
@@ -116,6 +126,10 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           assertThat(it.getLatestAssessmentHasClarificationNotesWithoutResponse()).isEqualTo(true)
           assertThat(it.getHasPlacementRequest()).isEqualTo(true)
           assertThat(it.getHasBooking()).isEqualTo(true)
+        }
+
+        assertThat(results).noneMatch {
+          it.getId() == inapplicableApplication.id
         }
       }
     }
@@ -175,6 +189,14 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withIsWomensApplication(false)
           withReleaseType("rotl")
           withSubmittedAt(null)
+          withIsInapplicable(false)
+        }
+
+        val inapplicableApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withIsInapplicable(true)
         }
 
         val teamCodeForNonSubmittedApplication = applicationTeamCodeFactory.produceAndPersist {
@@ -228,6 +250,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
         val results = realApplicationRepository.findApprovedPremisesSummariesForManagingTeams(listOf("TEAM1"))
 
+        assertThat(results.size).isEqualTo(2)
+
         results.first { it.getId() == nonSubmittedApplication.id }.let {
           assertThat(it.getCrn()).isEqualTo(nonSubmittedApplication.crn)
           assertThat(it.getCreatedByUserId()).isEqualTo(nonSubmittedApplication.createdByUser.id)
@@ -254,6 +278,10 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
         assertThat(results).noneMatch {
           it.getId() == applicationForDifferentTeam.id
+        }
+
+        assertThat(results).noneMatch {
+          it.getId() == inapplicableApplication.id
         }
       }
     }

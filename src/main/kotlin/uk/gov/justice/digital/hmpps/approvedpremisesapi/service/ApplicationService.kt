@@ -215,7 +215,8 @@ class ApplicationService(
         teamCodes = mutableListOf(),
         placementRequests = mutableListOf(),
         releaseType = null,
-        arrivalDate = null
+        arrivalDate = null,
+        isInapplicable = null
       ),
     )
 
@@ -239,6 +240,7 @@ class ApplicationService(
     releaseType: String?,
     arrivalDate: OffsetDateTime?,
     data: String,
+    isInapplicable: Boolean?,
     username: String
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
@@ -269,6 +271,7 @@ class ApplicationService(
     }
 
     application.apply {
+      this.isInapplicable = isInapplicable
       this.isWomensApplication = isWomensApplication
       this.isPipeApplication = isPipeApplication
       this.releaseType = releaseType

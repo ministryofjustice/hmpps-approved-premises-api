@@ -3925,6 +3925,7 @@ components:
         - rejected
         - awaitingPlacement
         - placed
+        - inapplicable
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
@@ -3963,6 +3964,8 @@ components:
         - $ref: '#/components/schemas/UpdateApplication'
         - type: object
           properties:
+            isInapplicable:
+              type: boolean
             isWomensApplication:
               type: boolean
             isPipeApplication:

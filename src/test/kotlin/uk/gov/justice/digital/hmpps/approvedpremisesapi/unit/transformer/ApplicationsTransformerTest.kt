@@ -113,6 +113,17 @@ class ApplicationsTransformerTest {
   }
 
   @Test
+  fun `transformJpaToApi transforms an inapplicable Approved Premises application correctly`() {
+    val application = approvedPremisesApplicationFactory.withIsInapplicable(true).produce()
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.createdByUserId).isEqualTo(user.id)
+    assertThat(result.status).isEqualTo(ApplicationStatus.inapplicable)
+  }
+
+  @Test
   fun `transformJpaToApi transforms an in progress Temporary Accommodation application correctly`() {
     val application = temporaryAccommodationApplicationEntityFactory.withSubmittedAt(null).produce()
 

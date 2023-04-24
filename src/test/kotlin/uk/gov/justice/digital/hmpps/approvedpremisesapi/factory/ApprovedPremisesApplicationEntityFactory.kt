@@ -37,6 +37,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var placementRequests: Yielded<MutableList<PlacementRequestEntity>> = { mutableListOf() }
   private var releaseType: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
+  private var isInapplicable: Yielded<Boolean?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -118,6 +119,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.arrivalDate = { arrivalDate }
   }
 
+  fun withIsInapplicable(isInapplicable: Boolean) = apply {
+    this.isInapplicable = { isInapplicable }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -138,6 +143,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     teamCodes = this.teamCodes(),
     placementRequests = this.placementRequests(),
     releaseType = this.releaseType(),
-    arrivalDate = this.arrivalDate()
+    arrivalDate = this.arrivalDate(),
+    isInapplicable = this.isInapplicable()
   )
 }

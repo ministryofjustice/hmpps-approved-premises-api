@@ -61,7 +61,8 @@ SELECT
     CAST(apa.risk_ratings AS TEXT) as riskRatings
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
-LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL;
+LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL
+WHERE apa.is_inapplicable IS NOT TRUE;
 """,
     nativeQuery = true
   )
@@ -88,6 +89,7 @@ FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
 WHERE (SELECT COUNT(1) FROM approved_premises_application_team_codes apatc WHERE apatc.application_id = apa.id AND apatc.team_code IN :teamCodes) > 0
+AND apa.is_inapplicable IS NOT TRUE;
 """,
     nativeQuery = true
   )
@@ -168,6 +170,7 @@ class ApprovedPremisesApplicationEntity(
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
   var isPipeApplication: Boolean?,
+  var isInapplicable: Boolean?,
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
