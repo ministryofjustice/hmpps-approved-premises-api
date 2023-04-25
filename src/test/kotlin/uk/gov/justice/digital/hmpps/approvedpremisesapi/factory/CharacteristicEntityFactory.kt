@@ -14,6 +14,7 @@ class CharacteristicEntityFactory : Factory<CharacteristicEntity> {
   private var propertyName: Yielded<String> = { randomStringUpperCase(7) }
   private var serviceScope: Yielded<String> = { Characteristic.ServiceScope.values().map { it.value }.random() }
   private var modelScope: Yielded<String> = { Characteristic.ModelScope.values().map { it.value }.random() }
+  private var isActive: Yielded<Boolean> = { true }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -35,11 +36,16 @@ class CharacteristicEntityFactory : Factory<CharacteristicEntity> {
     this.name = { name }
   }
 
+  fun withIsActive(isActive: Boolean) = apply {
+    this.isActive = { isActive }
+  }
+
   override fun produce(): CharacteristicEntity = CharacteristicEntity(
     id = this.id(),
     propertyName = this.propertyName(),
     name = this.name(),
     serviceScope = this.serviceScope(),
-    modelScope = this.modelScope()
+    modelScope = this.modelScope(),
+    isActive = this.isActive(),
   )
 }
