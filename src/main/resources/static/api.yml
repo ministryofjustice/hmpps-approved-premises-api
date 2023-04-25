@@ -2063,6 +2063,12 @@ paths:
           description: If given, only characteristics for this service will be returned
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: includeInactive
+          in: query
+          required: false
+          description: Specifies whether inactive characteristics should be provided. Defaults to `false`.
+          schema:
+            type: boolean
       responses:
         200:
           description: successful operation
