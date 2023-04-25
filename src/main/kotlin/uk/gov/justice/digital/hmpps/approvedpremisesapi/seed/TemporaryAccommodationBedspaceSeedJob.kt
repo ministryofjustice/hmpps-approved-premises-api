@@ -80,7 +80,7 @@ class TemporaryAccommodationBedspaceSeedJob(
     appendCharacteristicIfSet(columns, characteristics, "Single bed")
     appendCharacteristicIfSet(columns, characteristics, "Double bed")
     appendCharacteristicIfSet(columns, characteristics, "Shared kitchen")
-    appendCharacteristicIfSet(columns, characteristics, "Floor level access")
+    appendCharacteristicIfSet(columns, characteristics, "Ground floor level access", "Floor level access?")
     appendCharacteristicIfSet(columns, characteristics, "Lift access")
     appendCharacteristicIfSet(columns, characteristics, "Wheelchair accessible")
     appendCharacteristicIfSet(columns, characteristics, "Not suitable for registered sex offenders (RSO)", "Not suitable for RSO?")

@@ -140,7 +140,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       .withProbationRegion(updatedProbationRegion.name)
       .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
       .withPdu(updateProbationDeliveryUnit.name)
-      .withCharacteristics(listOf("Floor level access"))
+      .withCharacteristics(listOf("Ground floor level access"))
       .produce()
 
     withCsv(
@@ -201,7 +201,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         .withQuotedField(it.probationRegion)
         .withQuotedField(it.localAuthorityArea)
         .withQuotedField(it.pdu)
-        .withUnquotedField(it.characteristics.contains("Floor level access").toString().uppercase())
+        .withUnquotedField(it.characteristics.contains("Ground floor level access").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Wheelchair accessible").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Pub nearby").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Park nearby").toString().uppercase())
