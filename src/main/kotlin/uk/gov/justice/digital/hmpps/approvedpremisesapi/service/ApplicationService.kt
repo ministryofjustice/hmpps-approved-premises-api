@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.Period
 import java.time.ZoneOffset
@@ -238,7 +239,7 @@ class ApplicationService(
     isWomensApplication: Boolean?,
     isPipeApplication: Boolean?,
     releaseType: String?,
-    arrivalDate: OffsetDateTime?,
+    arrivalDate: LocalDate?,
     data: String,
     isInapplicable: Boolean?,
     username: String
@@ -275,7 +276,7 @@ class ApplicationService(
       this.isWomensApplication = isWomensApplication
       this.isPipeApplication = isPipeApplication
       this.releaseType = releaseType
-      this.arrivalDate = arrivalDate
+      this.arrivalDate = if (arrivalDate !== null) OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC) else null
       this.data = data
     }
 
@@ -384,7 +385,7 @@ class ApplicationService(
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
-      arrivalDate = submitApplication.arrivalDate?.atOffset(ZoneOffset.UTC)
+      arrivalDate = if (submitApplication.arrivalDate !== null) OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC) else null
     }
 
     assessmentService.createAssessment(application)

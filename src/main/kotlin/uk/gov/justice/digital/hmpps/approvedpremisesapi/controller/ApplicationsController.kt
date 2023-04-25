@@ -53,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsFor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformAssessment
 import java.net.URI
-import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -144,7 +143,7 @@ class ApplicationsController(
         isWomensApplication = body.isWomensApplication,
         isPipeApplication = body.isPipeApplication,
         releaseType = body.releaseType?.name,
-        arrivalDate = body.arrivalDate?.atOffset(ZoneOffset.UTC),
+        arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,
         username = username
       )
