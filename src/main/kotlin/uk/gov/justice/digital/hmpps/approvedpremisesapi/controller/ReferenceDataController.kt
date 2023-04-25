@@ -60,11 +60,16 @@ class ReferenceDataController(
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
 ) : ReferenceDataApiDelegate {
 
-  override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?): ResponseEntity<List<Characteristic>> {
-
+  override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?, includeInactive: Boolean?): ResponseEntity<List<Characteristic>> {
     val characteristics = when (xServiceName != null) {
-      true -> characteristicRepository.findAllByServiceScope(xServiceName.value)
-      false -> characteristicRepository.findAll()
+      true -> when (includeInactive) {
+        true -> characteristicRepository.findAllByServiceScope(xServiceName.value)
+        else -> characteristicRepository.findActiveByServiceScope(xServiceName.value)
+      }
+      false -> when (includeInactive) {
+        true -> characteristicRepository.findAll()
+        else -> characteristicRepository.findActive()
+      }
     }
 
     return ResponseEntity.ok(characteristics.map(characteristicTransformer::transformJpaToApi))
