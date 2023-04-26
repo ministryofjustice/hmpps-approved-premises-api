@@ -17,6 +17,7 @@ import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
@@ -57,6 +58,14 @@ class RedisConfiguration {
     template.keySerializer = StringRedisSerializer()
     return template
   }
+
+  @Bean
+  fun redLock(
+    @Value("\${spring.redis.host}") host: String,
+    @Value("\${spring.redis.port}") port: Int,
+    @Value("\${spring.redis.password}") password: String,
+    @Value("\${spring.redis.database}") database: Int,
+  ) = RedLock(host, port, password, database)
 
   private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, version: String, objectMapper: ObjectMapper) =
     this.withCacheConfiguration(
