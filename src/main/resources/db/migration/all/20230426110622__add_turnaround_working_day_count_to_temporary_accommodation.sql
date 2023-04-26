@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_premises ADD COLUMN turnaround_working_day_count INTEGER NOT NULL DEFAULT 2;
