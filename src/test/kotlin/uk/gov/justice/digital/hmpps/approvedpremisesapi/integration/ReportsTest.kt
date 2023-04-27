@@ -44,6 +44,51 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get bookings report returns 400 if month is provided and not within 1-12`() {
+    `Given a User` { user, jwt ->
+      webTestClient.get()
+        .uri("/reports/bookings?probationRegionId=${user.probationRegion.id}&year=2023&month=-1")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("month must be between 1 and 12")
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns 400 if month is provided without year`() {
+    `Given a User` { user, jwt ->
+      webTestClient.get()
+        .uri("/reports/bookings?probationRegionId=${user.probationRegion.id}&month=1")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("month and year must be provided together")
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns 400 if year is provided without month`() {
+    `Given a User` { user, jwt ->
+      webTestClient.get()
+        .uri("/reports/bookings?probationRegionId=${user.probationRegion.id}&year=2023")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("month and year must be provided together")
+    }
+  }
+
+  @Test
   fun `Get bookings report returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReportsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
@@ -22,6 +23,14 @@ class ReportsController(
     when {
       probationRegionId == null && !userAccessService.currentUserHasAllRegionsAccess() -> throw ForbiddenProblem()
       probationRegionId != null && !userAccessService.currentUserCanAccessRegion(probationRegionId) -> throw ForbiddenProblem()
+    }
+
+    if (month != null && (month < 1 || month > 12)) {
+      throw BadRequestProblem(errorDetail = "month must be between 1 and 12")
+    }
+
+    if ((month != null && year == null) || (year != null && month == null)) {
+      throw BadRequestProblem(errorDetail = "month and year must be provided together")
     }
 
     val properties = BookingsReportProperties(xServiceName, probationRegionId)
