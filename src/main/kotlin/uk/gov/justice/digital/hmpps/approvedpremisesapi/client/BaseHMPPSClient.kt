@@ -17,7 +17,8 @@ import java.time.Instant
 abstract class BaseHMPPSClient(
   private val webClient: WebClient,
   private val objectMapper: ObjectMapper,
-  private val redisTemplate: RedisTemplate<String, String>
+  private val redisTemplate: RedisTemplate<String, String>,
+  private val preemptiveCacheKeyPrefix: String,
 ) {
   protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.GET, requestBuilderConfiguration)
@@ -129,7 +130,7 @@ abstract class BaseHMPPSClient(
 
   private fun getQualifiedKey(requestBuilder: HMPPSRequestConfiguration, cacheConfig: PreemptiveCacheConfig): String {
     val key = requestBuilder.preemptiveCacheKey ?: throw RuntimeException("Must provide a preemptiveCacheKey")
-    return "${cacheConfig.cacheName}-$key"
+    return "$preemptiveCacheKeyPrefix-${cacheConfig.cacheName}-$key"
   }
 
   private fun writeToRedis(qualifiedKey: String, cacheEntry: PreemptiveCacheEntry, hardTtlSeconds: Long) {

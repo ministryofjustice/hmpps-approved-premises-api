@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -143,8 +144,9 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 class PreemptivelyCachedClient(
   @Qualifier("communityApiWebClient") private val webClient: WebClient,
   objectMapper: ObjectMapper,
-  redisTemplate: RedisTemplate<String, String>
-) : BaseHMPPSClient(webClient, objectMapper, redisTemplate) {
+  redisTemplate: RedisTemplate<String, String>,
+  @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
+) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
   private val cacheConfig = PreemptiveCacheConfig(
     cacheName = "offenderDetailSummary",
     successSoftTtlSeconds = 5,

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
@@ -25,8 +26,9 @@ import java.io.OutputStream
 class CommunityApiClient(
   @Qualifier("communityApiWebClient") private val webClient: WebClient,
   objectMapper: ObjectMapper,
-  redisTemplate: RedisTemplate<String, String>
-) : BaseHMPPSClient(webClient, objectMapper, redisTemplate) {
+  redisTemplate: RedisTemplate<String, String>,
+  @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
+) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
   fun getOffenderDetailSummary(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
   }
