@@ -95,8 +95,8 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.probationDeliveryUnit = probationDeliveryUnit
   }
 
-  fun withTurnaroundWorkingDayCount(turnaroundWorkingDayCount: Yielded<Int>) = apply {
-    this.turnaroundWorkingDayCount = turnaroundWorkingDayCount
+  fun withTurnaroundWorkingDayCount(turnaroundWorkingDayCount: Int) = apply {
+    this.turnaroundWorkingDayCount = { turnaroundWorkingDayCount }
   }
 
   fun withUnitTestControlTestProbationAreaAndLocalAuthority() = apply {
