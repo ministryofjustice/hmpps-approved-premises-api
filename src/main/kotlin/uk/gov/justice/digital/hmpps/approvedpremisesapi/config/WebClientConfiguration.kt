@@ -123,7 +123,7 @@ class WebClientConfiguration {
       .build()
   }
 
-  @Bean(name = ["govUKBankHolidaysApiClient"])
+  @Bean(name = ["govUKBankHolidaysApiWebClient"])
   fun govUKBankHolidaysApiClient(
     @Value("\${services.gov-uk-bank-holidays-api.base-url}") govUKBankHolidaysApiBaseUrl: String
   ): WebClient {

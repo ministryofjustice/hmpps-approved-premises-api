@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -57,3 +58,8 @@ infix fun ClosedRange<LocalDate>.overlaps(other: ClosedRange<LocalDate>): Boolea
 
   return !(thisFullyBefore || thisFullyAfter)
 }
+
+fun LocalDate.isWorkingDay(bankHolidays: List<LocalDate>) =
+  this.dayOfWeek != DayOfWeek.SATURDAY &&
+    this.dayOfWeek != DayOfWeek.SUNDAY &&
+    !bankHolidays.contains(this)
