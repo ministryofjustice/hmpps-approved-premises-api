@@ -2960,6 +2960,9 @@ components:
         originalDepartureDate:
           type: string
           format: date
+        closeDate:
+          type: string
+          format: date
         createdAt:
           type: string
           format: date-time
@@ -3066,6 +3069,16 @@ components:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Confirmation'
+            turnaround:
+              description: The latest version of the turnaround, if it exists
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Turnaround'
+            turnarounds:
+              description: The full history of turnarounds
+              type: array
+              items:
+                $ref: '#/components/schemas/Turnaround'
           required:
             - status
             - extensions
@@ -3334,6 +3347,25 @@ components:
       properties:
         notes:
           type: string
+    Turnaround:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        workingDays:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - workingDays
+        - createdAt
     Problem:
       type: object
       properties:
