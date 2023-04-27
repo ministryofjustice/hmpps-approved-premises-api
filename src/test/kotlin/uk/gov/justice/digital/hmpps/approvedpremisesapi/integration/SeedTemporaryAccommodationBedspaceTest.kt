@@ -69,7 +69,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
     assertThat(persistedPremises!!.rooms.size).isEqualTo(1)
     val room = persistedPremises.rooms.first()
     assertThat(room.name).isEqualTo(csvRow.bedspaceName)
-    assertThat(room.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
+    assertThat(room.characteristics.map { it.name }).containsExactlyInAnyOrder(*csvRow.characteristics.toTypedArray())
     assertThat(room.notes).isEqualTo(csvRow.notes)
     assertThat(room.beds.size).isEqualTo(1)
   }
@@ -100,7 +100,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
     val csvRow = TemporaryAccommodationBedspaceSeedCsvRowFactory()
       .withPremisesName(premises.name)
       .withBedspaceName(existingRoom.name)
-      .withCharacteristics(listOf("Not suitable for registered sex offenders (RSO)", "Floor level access"))
+      .withCharacteristics(listOf("Not suitable for registered sex offenders (RSO)", "Ground floor level access"))
       .produce()
 
     withCsv(
@@ -148,7 +148,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
         .withUnquotedField(it.characteristics.contains("Single bed").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Double bed").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Shared kitchen").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Floor level access").toString().uppercase())
+        .withUnquotedField(it.characteristics.contains("Ground floor level access").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Lift access").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Wheelchair accessible").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Not suitable for registered sex offenders (RSO)").toString().uppercase())

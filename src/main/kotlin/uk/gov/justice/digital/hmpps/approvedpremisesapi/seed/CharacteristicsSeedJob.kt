@@ -81,7 +81,8 @@ class CharacteristicsSeedJob(
         propertyName = row.propertyName,
         name = row.name,
         serviceScope = row.serviceScope,
-        modelScope = row.modelScope
+        modelScope = row.modelScope,
+        isActive = true,
       )
     )
   }

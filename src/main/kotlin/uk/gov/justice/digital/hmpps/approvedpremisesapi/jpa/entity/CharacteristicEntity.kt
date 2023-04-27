@@ -12,6 +12,12 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
   @Query("SELECT c FROM CharacteristicEntity c WHERE c.serviceScope = :serviceName")
   fun findAllByServiceScope(serviceName: String): List<CharacteristicEntity>
 
+  @Query("SELECT c FROM CharacteristicEntity c WHERE c.serviceScope = :serviceName AND c.isActive = true")
+  fun findActiveByServiceScope(serviceName: String): List<CharacteristicEntity>
+
+  @Query("SELECT c FROM CharacteristicEntity c WHERE c.isActive = true")
+  fun findActive(): List<CharacteristicEntity>
+
   fun findByName(name: String): CharacteristicEntity?
 
   fun findByPropertyName(propertyName: String): CharacteristicEntity?
@@ -41,6 +47,7 @@ data class CharacteristicEntity(
   var name: String,
   var serviceScope: String,
   var modelScope: String,
+  var isActive: Boolean,
 ) {
   fun matches(entityServiceScope: String, entityModelScope: String) = serviceMatches(entityServiceScope) && modelMatches(entityModelScope)
   fun serviceMatches(entityServiceScope: String) = serviceScope == "*" || entityServiceScope == serviceScope

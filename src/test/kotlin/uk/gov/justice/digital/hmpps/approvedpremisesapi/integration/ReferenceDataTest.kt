@@ -120,6 +120,65 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get Characteristics returns only active characteristics by default`() {
+    characteristicRepository.deleteAll()
+
+    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(true)
+    }
+
+    // Unexpected characteristics
+    characteristicEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(false)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      characteristics.map(characteristicTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/characteristics")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Characteristics returns both active and inactive characteristics when 'includeInactive' query is true`() {
+    characteristicRepository.deleteAll()
+
+    val activeCharacteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(true)
+    }
+
+    val inactiveCharacteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(false)
+    }
+
+    val characteristics = activeCharacteristics + inactiveCharacteristics
+
+    val expectedJson = objectMapper.writeValueAsString(
+      characteristics.map(characteristicTransformer::transformJpaToApi)
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/characteristics?includeInactive=true")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
   fun `Get Local Authorities returns 200 with correct body`() {
     localAuthorityAreaRepository.deleteAll()
 

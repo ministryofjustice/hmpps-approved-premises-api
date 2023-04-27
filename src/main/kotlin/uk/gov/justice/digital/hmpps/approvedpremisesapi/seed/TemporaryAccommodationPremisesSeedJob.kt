@@ -164,7 +164,7 @@ class TemporaryAccommodationPremisesSeedJob(
   private fun getCharacteristics(columns: Map<String, String>): List<String> {
     val characteristics = mutableListOf<String>()
 
-    appendCharacteristicIfSet(columns, characteristics, "Floor level access")
+    appendCharacteristicIfSet(columns, characteristics, "Ground floor level access", "Floor level access?")
     appendCharacteristicIfSet(columns, characteristics, "Wheelchair accessible")
     appendCharacteristicIfSet(columns, characteristics, "Pub nearby")
     appendCharacteristicIfSet(columns, characteristics, "Park nearby")
