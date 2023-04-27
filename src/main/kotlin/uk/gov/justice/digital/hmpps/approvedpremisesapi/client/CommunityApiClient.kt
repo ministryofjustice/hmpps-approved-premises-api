@@ -37,10 +37,6 @@ class CommunityApiClient(
     hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt()
   )
 
-  fun getOffenderDetailSummary(crn: String) = getRequest<OffenderDetailSummary> {
-    path = "/secure/offenders/crn/$crn"
-  }
-
   fun getOffenderDetailSummaryWithWait(crn: String) = getRequest<OffenderDetailSummary> {
     preemptiveCacheConfig = offenderDetailCacheConfig
     preemptiveCacheKey = crn
