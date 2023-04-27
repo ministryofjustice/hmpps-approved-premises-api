@@ -18,7 +18,7 @@ class ReportsController(
   private val reportService: ReportService,
   private val userAccessService: UserAccessService,
 ) : ReportsApiDelegate {
-  override fun reportsBookingsGet(xServiceName: ServiceName, probationRegionId: UUID?): ResponseEntity<Resource> {
+  override fun reportsBookingsGet(xServiceName: ServiceName, probationRegionId: UUID?, year: Int?, month: Int?): ResponseEntity<Resource> {
     when {
       probationRegionId == null && !userAccessService.currentUserHasAllRegionsAccess() -> throw ForbiddenProblem()
       probationRegionId != null && !userAccessService.currentUserCanAccessRegion(probationRegionId) -> throw ForbiddenProblem()
