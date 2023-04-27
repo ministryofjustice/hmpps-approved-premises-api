@@ -75,7 +75,13 @@ class OffenderService(
   }
 
   fun getOffenderByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<OffenderDetailSummary> {
-    val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
+    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
+
+    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
+      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
+    }
+
+    val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
       is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
       is ClientResult.Failure -> offenderResponse.throwException()
