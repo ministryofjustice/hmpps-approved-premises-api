@@ -236,7 +236,7 @@ abstract class IntegrationTestBase {
   lateinit var redisTemplate: RedisTemplate<String, String>
 
   @Autowired
-  lateinit var communityApiClient: CommunityApiClient
+  private lateinit var communityApiClient: CommunityApiClient
 
   @Autowired
   lateinit var probationRegionRepository: ProbationRegionTestRepository
@@ -652,4 +652,6 @@ abstract class IntegrationTestBase {
 
     block()
   }
+
+  fun loadPreemptiveCacheForOffenderDetails(crn: String) = communityApiClient.getOffenderDetailSummaryWithCall(crn)
 }

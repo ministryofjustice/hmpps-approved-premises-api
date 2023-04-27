@@ -32,6 +32,7 @@ fun IntegrationTestBase.`Given an Offender`(
   val inmateDetails = inmateDetailsFactory.produce()
 
   CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+  loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
   PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
 
   block(offenderDetails, inmateDetails)
