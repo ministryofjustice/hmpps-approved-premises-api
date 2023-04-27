@@ -33,7 +33,7 @@ class ReportsController(
       throw BadRequestProblem(errorDetail = "month and year must be provided together")
     }
 
-    val properties = BookingsReportProperties(xServiceName, probationRegionId)
+    val properties = BookingsReportProperties(xServiceName, probationRegionId, year, month)
     val outputStream = ByteArrayOutputStream()
 
     reportService.createBookingsReport(properties, outputStream)
