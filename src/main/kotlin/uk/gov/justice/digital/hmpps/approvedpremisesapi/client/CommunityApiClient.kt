@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import java.io.OutputStream
+import java.time.Duration
 
 @Component
 class CommunityApiClient(
@@ -29,8 +30,28 @@ class CommunityApiClient(
   redisTemplate: RedisTemplate<String, String>,
   @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
 ) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
+  private val offenderDetailCacheConfig = PreemptiveCacheConfig(
+    cacheName = "offenderDetails",
+    successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
+    failureSoftTtlSeconds = Duration.ofMinutes(30).toSeconds().toInt(),
+    hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt()
+  )
+
   fun getOffenderDetailSummary(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
+  }
+
+  fun getOffenderDetailSummaryWithWait(crn: String) = getRequest<OffenderDetailSummary> {
+    preemptiveCacheConfig = offenderDetailCacheConfig
+    preemptiveCacheKey = crn
+    preemptiveCacheTimeoutMs = 0
+  }
+
+  fun getOffenderDetailSummaryWithCall(crn: String) = getRequest<OffenderDetailSummary> {
+    path = "/secure/offenders/crn/$crn"
+    isPreemptiveCall = true
+    preemptiveCacheConfig = offenderDetailCacheConfig
+    preemptiveCacheKey = crn
   }
 
   @Cacheable(value = ["userAccessCache"], unless = IS_NOT_SUCCESSFUL)
