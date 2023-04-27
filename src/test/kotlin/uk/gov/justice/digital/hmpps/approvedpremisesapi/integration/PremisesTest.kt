@@ -6,7 +6,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.time.LocalDate
 import java.util.UUID
+import java.util.stream.Stream
 
 class PremisesTest : IntegrationTestBase() {
   @Autowired
@@ -91,6 +94,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.pending,
             probationDeliveryUnitId = probationDeliveryUnit.id,
+            turnaroundWorkingDayCount = 5
           ),
         )
         .exchange()
@@ -110,6 +114,7 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
         .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
         .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("turnaroundWorkingDayCount").isEqualTo(5)
     }
   }
 
@@ -185,7 +190,7 @@ class PremisesTest : IntegrationTestBase() {
             localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
             probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.archived,
+            status = PropertyStatus.archived
           ),
         )
         .exchange()
@@ -202,6 +207,7 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("probationRegion.id").isEqualTo("a02b7727-63aa-46f2-80f1-e0b05b31903c")
         .jsonPath("probationRegion.name").isEqualTo("North West")
         .jsonPath("status").isEqualTo("archived")
+        .jsonPath("turnaroundWorkingDayCount").doesNotExist()
     }
   }
 
@@ -240,6 +246,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.archived,
             probationDeliveryUnitId = probationDeliveryUnit.id,
+            turnaroundWorkingDayCount = 5
           ),
         )
         .exchange()
@@ -259,6 +266,7 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
         .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
         .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("turnaroundWorkingDayCount").isEqualTo(5)
     }
   }
 
@@ -297,6 +305,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.archived,
             pdu = probationDeliveryUnit.name,
+            turnaroundWorkingDayCount = 5
           ),
         )
         .exchange()
@@ -316,6 +325,7 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
         .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
         .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("turnaroundWorkingDayCount").isEqualTo(5)
     }
   }
 
@@ -2218,5 +2228,100 @@ class PremisesTest : IntegrationTestBase() {
         .expectStatus()
         .isForbidden
     }
+  }
+
+  @Test
+  fun `When a new Temporary Accommodation premises is created with no turnaround working day count then it defaults to 2`() {
+    `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "some arbitrary name",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .expectBody()
+        .jsonPath("addressLine1").isEqualTo("1 somewhere")
+        .jsonPath("addressLine2").isEqualTo("Some district")
+        .jsonPath("town").isEqualTo("Somewhere")
+        .jsonPath("postcode").isEqualTo("AB123CD")
+        .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
+        .jsonPath("notes").isEqualTo("some arbitrary notes")
+        .jsonPath("name").isEqualTo("some arbitrary name")
+        .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("turnaroundWorkingDayCount").isEqualTo(2)
+    }
+  }
+
+  @ParameterizedTest(name = "Trying to create a new Temporary Accommodation premises with turnaround working day count = {0} returns 400 and errorType = {1}")
+  @MethodSource("turnaroundWorkingDayCountProvider")
+  fun `Trying to create a new Temporary Accommodation premises with turnaround working day count less than 1 returns 400`(
+    turnaroundWorkingDayCount: Int,
+    expectedErrorType: String
+  ) {
+    `Given a User` { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "some arbitrary name",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+            turnaroundWorkingDayCount = 0
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.turnaroundWorkingDayCount")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("isNotAPositiveInteger")
+    }
+  }
+  private companion object {
+    @JvmStatic
+    fun turnaroundWorkingDayCountProvider() = Stream.of(
+      Arguments.of(0, "isNotAPositiveInteger"),
+      Arguments.of(-4, "isNotAPositiveInteger"),
+    )
   }
 }

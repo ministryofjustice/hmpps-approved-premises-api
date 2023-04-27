@@ -226,6 +226,7 @@ class PremisesService(
     characteristicIds: List<UUID>,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
+    turnaroundWorkingDayCount: Int?
   ) = validated {
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
@@ -272,6 +273,10 @@ class PremisesService(
       property hasValidationError err
     }
 
+    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount <= 0) {
+      "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
+    }
+
     if (validationErrors.any()) {
       return fieldValidationError
     }
@@ -295,6 +300,7 @@ class PremisesService(
       characteristics = mutableListOf(),
       status = status,
       probationDeliveryUnit = probationDeliveryUnit!!,
+      turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -336,6 +342,7 @@ class PremisesService(
     notes: String?,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
+    turnaroundWorkingDayCount: Int?
   ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
 
     val premises = premisesRepository.findByIdOrNull(premisesId)
@@ -388,6 +395,10 @@ class PremisesService(
       entity
     }
 
+    if (turnaroundWorkingDayCount != null && premises is ApprovedPremisesEntity) {
+      validationErrors["$.turnaroundWorkingDayCount"] = "onlyAppliesToTemporaryAccommodationPremises"
+    }
+
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors)
@@ -406,6 +417,9 @@ class PremisesService(
       it.status = status
       if (it is TemporaryAccommodationPremisesEntity) {
         it.probationDeliveryUnit = probationDeliveryUnit!!
+        if (turnaroundWorkingDayCount != null) {
+          it.turnaroundWorkingDayCount = turnaroundWorkingDayCount!!
+        }
       }
     }
 
