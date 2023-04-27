@@ -67,12 +67,17 @@ data class BookingEntity(
   var originalArrivalDate: LocalDate,
   var originalDepartureDate: LocalDate,
   val createdAt: OffsetDateTime,
+  @OneToMany(mappedBy = "booking")
+  var turnarounds: MutableList<TurnaroundEntity>,
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }
 
   val cancellation: CancellationEntity?
     get() = cancellations.maxByOrNull { it.createdAt }
+
+  val turnaround: TurnaroundEntity?
+    get() = turnarounds.maxByOrNull { it.createdAt }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
