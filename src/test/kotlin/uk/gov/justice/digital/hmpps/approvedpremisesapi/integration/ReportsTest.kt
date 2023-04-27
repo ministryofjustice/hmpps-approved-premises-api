@@ -47,7 +47,7 @@ class ReportsTest : IntegrationTestBase() {
   fun `Get bookings report for all regions returns 403 Forbidden if user does not have all regions access`() {
     `Given a User` { _, jwt ->
       webTestClient.get()
-        .uri("/reports/bookings")
+        .uri("/reports/bookings?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -60,7 +60,7 @@ class ReportsTest : IntegrationTestBase() {
   fun `Get bookings report for a region returns 403 Forbidden if user cannot access the specified region`() {
     `Given a User` { _, jwt ->
       webTestClient.get()
-        .uri("/reports/bookings?probationRegionId=${UUID.randomUUID()}")
+        .uri("/reports/bookings?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -85,36 +85,6 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get bookings report returns 400 if month is provided without year`() {
-    `Given a User` { user, jwt ->
-      webTestClient.get()
-        .uri("/reports/bookings?probationRegionId=${user.probationRegion.id}&month=1")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-        .exchange()
-        .expectStatus()
-        .isBadRequest
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("month and year must be provided together")
-    }
-  }
-
-  @Test
-  fun `Get bookings report returns 400 if year is provided without month`() {
-    `Given a User` { user, jwt ->
-      webTestClient.get()
-        .uri("/reports/bookings?probationRegionId=${user.probationRegion.id}&year=2023")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-        .exchange()
-        .expectStatus()
-        .isBadRequest
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("month and year must be provided together")
-    }
-  }
-
-  @Test
   fun `Get bookings report returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
@@ -133,6 +103,8 @@ class ReportsTest : IntegrationTestBase() {
           withServiceName(ServiceName.approvedPremises)
           withStaffKeyWorkerCode(keyWorker.code)
           withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
         }
 
         bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
@@ -160,10 +132,10 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.approvedPremises, null, null, null))
+          .createReport(bookings, BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
 
         webTestClient.get()
-          .uri("/reports/bookings")
+          .uri("/reports/bookings?year=2023&month=4")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
@@ -258,7 +230,7 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(shouldBeIncludedBookings, BookingsReportProperties(ServiceName.approvedPremises, null, null, null))
+          .createReport(shouldBeIncludedBookings, BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4")
