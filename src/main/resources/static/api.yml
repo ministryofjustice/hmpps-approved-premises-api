@@ -2808,6 +2808,8 @@ components:
         probationDeliveryUnitId:
           type: string
           format: uuid
+        turnaroundWorkingDayCount:
+          type: integer
       required:
         - name
         - addressLine1
@@ -4185,6 +4187,8 @@ components:
         probationDeliveryUnitId:
           type: string
           format: uuid
+        turnaroundWorkingDayCount:
+          type: integer
       required:
         - addressLine1
         - postcode
