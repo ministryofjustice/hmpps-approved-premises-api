@@ -6,10 +6,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.stereotype.Component
 import redis.lock.redlock.RedLock
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 
 @Component
 class PreemptiveCacheRefresher(
   private val flyway: Flyway,
+  private val applicationRepository: ApplicationRepository,
+  private val bookingRepository: BookingRepository,
+  private val communityApiClient: CommunityApiClient,
   redLock: RedLock
 ) : DisposableBean {
   protected val log = LoggerFactory.getLogger(this::class.java)
@@ -20,12 +26,17 @@ class PreemptiveCacheRefresher(
 
   init {
     Thread {
-      while(!haveFlywayMigrationsFinished()) {
+      while (!haveFlywayMigrationsFinished()) {
         if (shuttingDown) return@Thread
         interruptableSleep(100)
       }
 
-      // TODO: Add derived versions of CacheRefreshWorker for Offender Details and Inmate Details to preemptiveCacheThreads
+      preemptiveCacheThreads += OffenderDetailsCacheRefreshWorker(
+        applicationRepository,
+        bookingRepository,
+        communityApiClient,
+        redLock
+      )
 
       log.info("Starting preemptive cache refresh threads")
       preemptiveCacheThreads.forEach(CacheRefreshWorker::start)
@@ -58,14 +69,13 @@ fun interruptableSleep(millis: Long) {
   try {
     Thread.sleep(millis)
   } catch (_: InterruptedException) {
-
   }
 }
 
 abstract class CacheRefreshWorker(
   private val redLock: RedLock,
   private val cacheName: String
-): Thread() {
+) : Thread() {
   protected val log = LoggerFactory.getLogger(this::class.java)
 
   private val twoMinutesInMilliseconds = 120_000
@@ -93,5 +103,5 @@ abstract class CacheRefreshWorker(
     }
   }
 
-  abstract fun work(checkShouldStop: ()->Boolean)
+  abstract fun work(checkShouldStop: () -> Boolean)
 }
