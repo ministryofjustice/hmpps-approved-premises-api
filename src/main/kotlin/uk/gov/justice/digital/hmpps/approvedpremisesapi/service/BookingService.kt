@@ -47,6 +47,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -83,6 +85,7 @@ class BookingService(
   private val bedRepository: BedRepository,
   private val placementRequestRepository: PlacementRequestRepository,
   private val lostBedsRepository: LostBedsRepository,
+  private val turnaroundRepository: TurnaroundRepository,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
@@ -339,7 +342,8 @@ class BookingService(
     crn: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    bedId: UUID
+    bedId: UUID,
+    enableTurnarounds: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val validationResult = validated {
       getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
@@ -392,6 +396,20 @@ class BookingService(
           turnarounds = mutableListOf(),
         )
       )
+
+      val turnaround = turnaroundRepository.save(
+        TurnaroundEntity(
+          id = UUID.randomUUID(),
+          workingDayCount = when (enableTurnarounds) {
+            true -> premises.turnaroundWorkingDayCount
+            else -> 0
+          },
+          createdAt = bookingCreatedAt,
+          booking = booking,
+        )
+      )
+
+      booking.turnarounds += turnaround
 
       success(booking)
     }

@@ -357,7 +357,8 @@ class PremisesController(
           crn = body.crn,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
-          bedId = body.bedId
+          bedId = body.bedId,
+          enableTurnarounds = body.enableTurnarounds ?: false,
         )
       }
 
