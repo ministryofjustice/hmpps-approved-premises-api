@@ -8,7 +8,7 @@ import kotlin.reflect.full.memberProperties
 
 abstract class ReportGenerator<Input : Any, Output : Any, Properties>(private val outputType: KClass<Output>) {
   protected abstract fun filter(properties: Properties): (Input) -> Boolean
-  protected abstract val convert: Input.() -> List<Output>
+  protected abstract val convert: Input.(properties: Properties) -> List<Output>
 
   fun createReport(data: List<Input>, properties: Properties): DataFrame<Output> {
     val filter = filter(properties)
@@ -22,7 +22,7 @@ abstract class ReportGenerator<Input : Any, Output : Any, Properties>(private va
     // From there we can call `DataFrame.cast()` to get it to be the desired `DataFrame<Output>`
     // type.
     val converted = data.filter(filter)
-      .flatMap(convert)
+      .flatMap { convert(it, properties) }
 
     return converted
       .map { it as Any }

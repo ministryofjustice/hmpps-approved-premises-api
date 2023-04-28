@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit
 
 class BookingsReportGenerator : ReportGenerator<BookingEntity, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
 
-  override val convert: BookingEntity.() -> List<BookingsReportRow> = {
+  override val convert: BookingEntity.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
     listOf(
       BookingsReportRow(
         probationRegion = this.premises.probationRegion.name,
