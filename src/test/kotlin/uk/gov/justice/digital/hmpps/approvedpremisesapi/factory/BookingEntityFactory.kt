@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -43,6 +44,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
   private var application: Yielded<ApplicationEntity?> = { null }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
+  private var turnarounds: Yielded<MutableList<TurnaroundEntity>>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -152,6 +154,14 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.offlineApplication = { offlineApplication }
   }
 
+  fun withYieldedTurnarounds(turnarounds: Yielded<MutableList<TurnaroundEntity>>) = apply {
+    this.turnarounds = turnarounds
+  }
+
+  fun withTurnarounds(turnarounds: MutableList<TurnaroundEntity>) = apply {
+    this.turnarounds = { turnarounds }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -171,6 +181,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     originalDepartureDate = this.originalDepartureDate?.invoke() ?: this.departureDate(),
     createdAt = this.createdAt(),
     application = this.application(),
-    offlineApplication = this.offlineApplication()
+    offlineApplication = this.offlineApplication(),
+    turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
   )
 }

@@ -150,7 +150,8 @@ class BookingService(
           originalDepartureDate = departureDate,
           createdAt = bookingCreatedAt,
           application = placementRequest.application,
-          offlineApplication = null
+          offlineApplication = null,
+          turnarounds = mutableListOf(),
         )
       )
 
@@ -243,7 +244,8 @@ class BookingService(
           originalDepartureDate = departureDate,
           createdAt = bookingCreatedAt,
           application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
-          offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null
+          offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null,
+          turnarounds = mutableListOf(),
         )
       )
 
@@ -386,7 +388,8 @@ class BookingService(
           originalDepartureDate = departureDate,
           createdAt = bookingCreatedAt,
           application = null,
-          offlineApplication = null
+          offlineApplication = null,
+          turnarounds = mutableListOf(),
         )
       )
 

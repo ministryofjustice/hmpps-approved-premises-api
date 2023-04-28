@@ -136,7 +136,8 @@ class BookingTransformerTest {
     originalDepartureDate = LocalDate.parse("2022-08-30"),
     createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
     application = null,
-    offlineApplication = null
+    offlineApplication = null,
+    turnarounds = mutableListOf(),
   )
 
   private val staffMember = StaffMember(
