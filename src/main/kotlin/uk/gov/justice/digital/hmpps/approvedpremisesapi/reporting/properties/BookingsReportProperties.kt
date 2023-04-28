@@ -6,4 +6,6 @@ import java.util.UUID
 data class BookingsReportProperties(
   val serviceName: ServiceName,
   val probationRegionId: UUID?,
+  val year: Int?,
+  val month: Int?
 )

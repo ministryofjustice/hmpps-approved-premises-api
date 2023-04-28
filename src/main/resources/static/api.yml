@@ -717,6 +717,65 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /premises/{premisesId}/bookings/{bookingId}/turnarounds:
+    put:
+      tags:
+        - Operations on bookings
+      summary: Updates the turnaround for a specified Booking
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the turnaround is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the turnaround
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdateTurnaround'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Turnaround'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        409:
+          description: An existing booking for the given bed has overlapping dates
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises/{premisesId}/rooms:
     get:
       tags:
@@ -2606,6 +2665,18 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: year
+          in: query
+          required: false
+          description: If provided, only bookings for this year will be returned
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: false
+          description: If provided, only bookings for this month will be returned - must be provided with year
+          schema:
+            type: integer
       responses:
         200:
           description: Successfully retrieved the report
@@ -2962,6 +3033,9 @@ components:
         originalDepartureDate:
           type: string
           format: date
+        closeDate:
+          type: string
+          format: date
         createdAt:
           type: string
           format: date-time
@@ -3068,6 +3142,16 @@ components:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Confirmation'
+            turnaround:
+              description: The latest version of the turnaround, if it exists
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Turnaround'
+            turnarounds:
+              description: The full history of turnarounds
+              type: array
+              items:
+                $ref: '#/components/schemas/Turnaround'
           required:
             - status
             - extensions
@@ -3336,6 +3420,32 @@ components:
       properties:
         notes:
           type: string
+    Turnaround:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        workingDays:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - workingDays
+        - createdAt
+    UpdateTurnaround:
+      type: object
+      properties:
+        workingDays:
+          type: integer
+      required:
+        - workingDays
     Problem:
       type: object
       properties:
