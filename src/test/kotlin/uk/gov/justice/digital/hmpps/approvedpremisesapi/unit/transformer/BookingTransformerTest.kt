@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
@@ -49,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -64,6 +67,7 @@ class BookingTransformerTest {
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
   private val mockExtensionTransformer = mockk<ExtensionTransformer>()
   private val mockBedTransformer = mockk<BedTransformer>()
+  private val mockTurnaroundTransformer = mockk<TurnaroundTransformer>()
   private val enumConverterFactory = EnumConverterFactory()
 
   private val bookingTransformer = BookingTransformer(
@@ -76,6 +80,7 @@ class BookingTransformerTest {
     mockConfirmationTransformer,
     mockExtensionTransformer,
     mockBedTransformer,
+    mockTurnaroundTransformer,
     enumConverterFactory,
   )
 
@@ -219,6 +224,7 @@ class BookingTransformerTest {
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         departures = listOf(),
         cancellations = listOf(),
+        turnarounds = listOf(),
       )
     )
   }
@@ -257,6 +263,7 @@ class BookingTransformerTest {
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         departures = listOf(),
         cancellations = listOf(),
+        turnarounds = listOf(),
       )
     )
   }
@@ -319,6 +326,7 @@ class BookingTransformerTest {
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         departures = listOf(),
         cancellations = listOf(),
+        turnarounds = listOf(),
       )
     )
   }
@@ -383,6 +391,7 @@ class BookingTransformerTest {
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         departures = listOf(),
         cancellations = listOf(),
+        turnarounds = listOf(),
       )
     )
   }
@@ -453,6 +462,7 @@ class BookingTransformerTest {
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
           )
         ),
+        turnarounds = listOf(),
       )
     )
   }
@@ -553,6 +563,7 @@ class BookingTransformerTest {
             createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
           )
         ),
+        turnarounds = listOf(),
       )
     )
   }
@@ -720,6 +731,7 @@ class BookingTransformerTest {
           )
         ),
         cancellations = listOf(),
+        turnarounds = listOf(),
       )
     )
   }
@@ -970,6 +982,7 @@ class BookingTransformerTest {
           )
         ),
         cancellations = listOf(),
+        turnarounds = listOf(),
       )
     )
   }
@@ -1033,6 +1046,114 @@ class BookingTransformerTest {
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         departures = listOf(),
         cancellations = listOf(),
+        turnarounds = listOf(),
+      )
+    )
+  }
+
+  @Test
+  fun `Turnarounds on a booking are correctly transformed`() {
+    val awaitingArrivalBooking = baseBookingEntity.copy(
+      id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+      service = ServiceName.temporaryAccommodation.value,
+      turnarounds = mutableListOf()
+    )
+
+    val turnaround1 = TurnaroundEntity(
+      id = UUID.fromString("34ae3124-cf7a-47d5-86c1-ef9ab4255e30"),
+      workingDayCount = 2,
+      createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+      booking = awaitingArrivalBooking,
+    )
+    val turnaround2 = TurnaroundEntity(
+      id = UUID.fromString("b2af671a-997d-443e-906d-3a1a28c71416"),
+      workingDayCount = 3,
+      createdAt = OffsetDateTime.parse("2022-07-02T10:11:12.345Z"),
+      booking = awaitingArrivalBooking,
+    )
+    val turnaround3 = TurnaroundEntity(
+      id = UUID.fromString("146d05f8-ba83-42ae-a6d7-807a16b7946d"),
+      workingDayCount = 4,
+      createdAt = OffsetDateTime.parse("2022-07-03T09:08:07.654Z"),
+      booking = awaitingArrivalBooking,
+    )
+
+    awaitingArrivalBooking.turnarounds += listOf(turnaround1, turnaround2, turnaround3)
+
+    every { mockTurnaroundTransformer.transformJpaToApi(turnaround1) } returns Turnaround(
+      id = UUID.fromString("34ae3124-cf7a-47d5-86c1-ef9ab4255e30"),
+      bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+      workingDays = 2,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+    )
+
+    every { mockTurnaroundTransformer.transformJpaToApi(turnaround2) } returns Turnaround(
+      id = UUID.fromString("b2af671a-997d-443e-906d-3a1a28c71416"),
+      bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+      workingDays = 3,
+      createdAt = Instant.parse("2022-07-02T10:11:12.345Z"),
+    )
+
+    every { mockTurnaroundTransformer.transformJpaToApi(turnaround3) } returns Turnaround(
+      id = UUID.fromString("146d05f8-ba83-42ae-a6d7-807a16b7946d"),
+      bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+      workingDays = 4,
+      createdAt = Instant.parse("2022-07-03T09:08:07.654Z"),
+    )
+
+    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
+
+    assertThat(transformedBooking).isEqualTo(
+      Booking(
+        id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+        person = Person(
+          crn = "crn",
+          name = "first last",
+          dateOfBirth = LocalDate.parse("2022-09-08"),
+          sex = "Male",
+          status = Person.Status.inCommunity,
+          nomsNumber = "NOMS321",
+          nationality = "English",
+          religionOrBelief = null,
+          genderIdentity = null,
+          prisonName = null
+        ),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = LocalDate.parse("2022-08-30"),
+        status = BookingStatus.provisional,
+        extensions = listOf(),
+        serviceName = ServiceName.temporaryAccommodation,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        departures = listOf(),
+        cancellations = listOf(),
+        turnaround = Turnaround(
+          id = UUID.fromString("146d05f8-ba83-42ae-a6d7-807a16b7946d"),
+          bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+          workingDays = 4,
+          createdAt = Instant.parse("2022-07-03T09:08:07.654Z"),
+        ),
+        turnarounds = listOf(
+          Turnaround(
+            id = UUID.fromString("34ae3124-cf7a-47d5-86c1-ef9ab4255e30"),
+            bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+            workingDays = 2,
+            createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          ),
+          Turnaround(
+            id = UUID.fromString("b2af671a-997d-443e-906d-3a1a28c71416"),
+            bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+            workingDays = 3,
+            createdAt = Instant.parse("2022-07-02T10:11:12.345Z"),
+          ),
+          Turnaround(
+            id = UUID.fromString("146d05f8-ba83-42ae-a6d7-807a16b7946d"),
+            bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+            workingDays = 4,
+            createdAt = Instant.parse("2022-07-03T09:08:07.654Z"),
+          ),
+        ),
       )
     )
   }

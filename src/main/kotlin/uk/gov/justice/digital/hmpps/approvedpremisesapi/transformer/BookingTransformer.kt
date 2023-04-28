@@ -22,6 +22,7 @@ class BookingTransformer(
   private val confirmationTransformer: ConfirmationTransformer,
   private val extensionTransformer: ExtensionTransformer,
   private val bedTransformer: BedTransformer,
+  private val turnaroundTransformer: TurnaroundTransformer,
   private val enumConverterFactory: EnumConverterFactory,
 ) {
   fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?) = Booking(
@@ -44,6 +45,8 @@ class BookingTransformer(
     originalArrivalDate = jpa.originalArrivalDate,
     originalDepartureDate = jpa.originalDepartureDate,
     createdAt = jpa.createdAt.toInstant(),
+    turnaround = jpa.turnaround?.let(turnaroundTransformer::transformJpaToApi),
+    turnarounds = jpa.turnarounds.map(turnaroundTransformer::transformJpaToApi),
   )
 
   private fun determineStatus(jpa: BookingEntity) = when {
