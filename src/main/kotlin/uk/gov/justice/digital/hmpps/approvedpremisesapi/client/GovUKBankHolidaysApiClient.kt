@@ -14,7 +14,7 @@ class GovUKBankHolidaysApiClient(
   objectMapper: ObjectMapper
 ) : BaseHMPPSClient(webClient, objectMapper) {
 
-  @Cacheable(value = ["uKBankHolidaysCache"], unless = IS_NOT_SUCCESSFUL)
+  @Cacheable(value = ["ukBankHolidaysCache"], unless = IS_NOT_SUCCESSFUL)
   fun getUKBankHolidays() = getRequest<UKBankHolidays> {
     path = "/bank-holidays.json"
   }
