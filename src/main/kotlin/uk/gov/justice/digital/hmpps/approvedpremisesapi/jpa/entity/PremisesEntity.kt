@@ -171,6 +171,7 @@ class TemporaryAccommodationPremisesEntity(
   @ManyToOne
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  var turnaroundWorkingDayCount: Int
 ) : PremisesEntity(
   id,
   name,

@@ -53,7 +53,8 @@ class PremisesTransformer(
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
       status = jpa.status,
       pdu = jpa.probationDeliveryUnit?.name ?: "Not specified",
-      probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) }
+      probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) },
+      turnaroundWorkingDayCount = jpa.turnaroundWorkingDayCount
     )
     else -> throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")
   }

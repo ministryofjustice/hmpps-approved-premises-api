@@ -134,6 +134,7 @@ class PremisesController(
         body.notes,
         body.status,
         Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
+        body.turnaroundWorkingDayCount
       )
 
     val validationResult = when (updatePremisesResult) {
@@ -200,6 +201,7 @@ class PremisesController(
         characteristicIds = body.characteristicIds,
         status = body.status,
         probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
+        turnaroundWorkingDayCount = body.turnaroundWorkingDayCount
       )
     )
     return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)
