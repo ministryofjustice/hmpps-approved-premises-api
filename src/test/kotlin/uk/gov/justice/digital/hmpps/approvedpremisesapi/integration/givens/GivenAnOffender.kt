@@ -7,33 +7,32 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 
 fun IntegrationTestBase.`Given an Offender`(
   offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
   inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
   block: (offenderDetails: OffenderDetailSummary, inmateDetails: InmateDetail) -> Unit
 ) {
-  val nomsNumber = randomNumberChars(5)
-  val offenderDetailsFactory = OffenderDetailsSummaryFactory()
-    .withNomsNumber(nomsNumber)
   val inmateDetailsFactory = InmateDetailFactory()
-    .withOffenderNo(nomsNumber)
+  if (inmateDetailsConfigBlock != null) {
+    inmateDetailsConfigBlock(inmateDetailsFactory)
+  }
+
+  val inmateDetails = inmateDetailsFactory.produce()
+
+  val offenderDetailsFactory = OffenderDetailsSummaryFactory()
+    .withNomsNumber(inmateDetails.offenderNo)
 
   if (offenderDetailsConfigBlock != null) {
     offenderDetailsConfigBlock(offenderDetailsFactory)
   }
 
-  if (inmateDetailsConfigBlock != null) {
-    inmateDetailsConfigBlock(inmateDetailsFactory)
-  }
-
   val offenderDetails = offenderDetailsFactory.produce()
-  val inmateDetails = inmateDetailsFactory.produce()
 
   CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
   loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
   PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
+  loadPreemptiveCacheForInmateDetails(inmateDetails.offenderNo)
 
   block(offenderDetails, inmateDetails)
 }

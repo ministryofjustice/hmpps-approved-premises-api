@@ -255,7 +255,7 @@ class PremisesController(
           throw InternalServerErrorProblem("No nomsNumber present for CRN")
         }
 
-        val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
+        val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.crn, offenderResult.entity.otherIds.nomsNumber)
 
         if (inmateDetailResult !is AuthorisableActionResult.Success) {
           throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${it.crn}")
@@ -298,7 +298,7 @@ class PremisesController(
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
     }
 
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.crn, offenderResult.entity.otherIds.nomsNumber)
 
     if (inmateDetailResult !is AuthorisableActionResult.Success) {
       throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${booking.crn}")
@@ -344,7 +344,7 @@ class PremisesController(
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
     }
 
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offender.otherIds.nomsNumber)
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.crn, offender.otherIds.nomsNumber)
     val inmate = when (inmateDetailResult) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
