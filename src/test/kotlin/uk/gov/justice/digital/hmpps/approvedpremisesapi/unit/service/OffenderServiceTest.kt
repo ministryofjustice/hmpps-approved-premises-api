@@ -362,32 +362,47 @@ class OffenderServiceTest {
   }
 
   @Test
-  fun `getInmateDetailByNomsNumber returns not found result when Client responds with 404`() {
+  fun `getInmateDetailByNomsNumber returns not found result when for Offender without Application or Booking and Client responds with 404`() {
+    val crn = "CRN123"
     val nomsNumber = "NOMS321"
 
-    every { mockPrisonsApiClient.getInmateDetails(nomsNumber) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.NOT_FOUND, null)
+    every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.NOT_FOUND, null)
 
-    val result = offenderService.getInmateDetailByNomsNumber(nomsNumber)
+    val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `getInmateDetailByNomsNumber returns not found result when for Offender with Application or Booking and Client responds with 404`() {
+    val crn = "CRN123"
+    val nomsNumber = "NOMS321"
+
+    every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.NOT_FOUND, null)
+
+    val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
   fun `getInmateDetailByNomsNumber returns unauthorised result when Client responds with 403`() {
+    val crn = "CRN123"
     val nomsNumber = "NOMS321"
 
-    every { mockPrisonsApiClient.getInmateDetails(nomsNumber) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.FORBIDDEN, null)
+    every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.FORBIDDEN, null)
 
-    val result = offenderService.getInmateDetailByNomsNumber(nomsNumber)
+    val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `getInmateDetailByNomsNumber returns succesfully when Client responds with 200`() {
+  fun `getInmateDetailByNomsNumber returns successfully when Client responds with 200`() {
+    val crn = "CRN123"
     val nomsNumber = "NOMS321"
 
-    every { mockPrisonsApiClient.getInmateDetails(nomsNumber) } returns ClientResult.Success(
+    every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
       HttpStatus.OK,
       InmateDetail(
         offenderNo = nomsNumber,
@@ -401,7 +416,7 @@ class OffenderServiceTest {
       )
     )
 
-    val result = offenderService.getInmateDetailByNomsNumber(nomsNumber)
+    val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
     assertThat(result is AuthorisableActionResult.Success)
     result as AuthorisableActionResult.Success

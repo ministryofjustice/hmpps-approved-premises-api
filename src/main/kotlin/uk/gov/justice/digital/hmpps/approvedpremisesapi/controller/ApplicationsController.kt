@@ -332,7 +332,7 @@ class ApplicationsController(
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
     }
 
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.nomsNumber)
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(crn, offenderResult.entity.otherIds.nomsNumber)
 
     if (inmateDetailResult !is AuthorisableActionResult.Success) {
       throw InternalServerErrorProblem("Unable to get InmateDetail via crn: $crn")

@@ -133,15 +133,21 @@ class OffenderService(
     }
   }
 
-  fun getInmateDetailByNomsNumber(nomsNumber: String): AuthorisableActionResult<InmateDetail> {
-    val inmateDetail = when (val offenderResponse = prisonsApiClient.getInmateDetails(nomsNumber)) {
-      is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure.StatusCode -> when (offenderResponse.status) {
+  fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail> {
+    var inmateDetailResponse = prisonsApiClient.getInmateDetailsWithWait(nomsNumber)
+
+    if (inmateDetailResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
+      inmateDetailResponse = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
+    }
+
+    val inmateDetail = when (inmateDetailResponse) {
+      is ClientResult.Success -> inmateDetailResponse.body
+      is ClientResult.Failure.StatusCode -> when (inmateDetailResponse.status) {
         HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> offenderResponse.throwException()
+        else -> inmateDetailResponse.throwException()
       }
-      is ClientResult.Failure -> offenderResponse.throwException()
+      is ClientResult.Failure -> inmateDetailResponse.throwException()
     }
 
     return AuthorisableActionResult.Success(inmateDetail)
