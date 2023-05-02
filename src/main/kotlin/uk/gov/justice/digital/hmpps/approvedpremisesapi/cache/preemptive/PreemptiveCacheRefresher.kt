@@ -7,6 +7,7 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.stereotype.Component
 import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 
@@ -16,6 +17,7 @@ class PreemptiveCacheRefresher(
   private val applicationRepository: ApplicationRepository,
   private val bookingRepository: BookingRepository,
   private val communityApiClient: CommunityApiClient,
+  private val prisonsApiClient: PrisonsApiClient,
   redLock: RedLock
 ) : DisposableBean {
   protected val log = LoggerFactory.getLogger(this::class.java)
@@ -35,6 +37,7 @@ class PreemptiveCacheRefresher(
         applicationRepository,
         bookingRepository,
         communityApiClient,
+        prisonsApiClient,
         redLock
       )
 
