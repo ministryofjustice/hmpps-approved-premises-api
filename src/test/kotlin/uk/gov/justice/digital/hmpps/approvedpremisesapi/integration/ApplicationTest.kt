@@ -433,6 +433,7 @@ class ApplicationTest : IntegrationTestBase() {
       CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
       loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
       PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
       webTestClient.get()
         .uri("/applications")
@@ -593,6 +594,7 @@ class ApplicationTest : IntegrationTestBase() {
       CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
       loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
       PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
       CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
@@ -793,6 +795,7 @@ class ApplicationTest : IntegrationTestBase() {
       CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
       loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
       offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
       webTestClient.post()
         .uri("/applications")

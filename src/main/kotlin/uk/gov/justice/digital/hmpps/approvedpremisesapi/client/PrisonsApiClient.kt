@@ -25,10 +25,6 @@ class PrisonsApiClient(
     hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt()
   )
 
-  fun getInmateDetails(nomsNumber: String) = getRequest<InmateDetail> {
-    path = "/api/offenders/$nomsNumber"
-  }
-
   fun getInmateDetailsWithWait(nomsNumber: String) = getRequest<InmateDetail> {
     preemptiveCacheConfig = inmateDetailsCacheConfig
     preemptiveCacheKey = nomsNumber
