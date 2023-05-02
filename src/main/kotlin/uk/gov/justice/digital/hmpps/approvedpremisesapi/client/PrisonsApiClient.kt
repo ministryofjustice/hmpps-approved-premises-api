@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import java.time.Duration
 
 @Component
 class PrisonsApiClient(
@@ -17,8 +18,28 @@ class PrisonsApiClient(
   redisTemplate: RedisTemplate<String, String>,
   @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
 ) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
+  private val inmateDetailsCacheConfig = PreemptiveCacheConfig(
+    cacheName = "inmateDetails",
+    successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
+    failureSoftTtlSeconds = Duration.ofMinutes(30).toSeconds().toInt(),
+    hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt()
+  )
+
   fun getInmateDetails(nomsNumber: String) = getRequest<InmateDetail> {
     path = "/api/offenders/$nomsNumber"
+  }
+
+  fun getInmateDetailsWithWait(nomsNumber: String) = getRequest<InmateDetail> {
+    preemptiveCacheConfig = inmateDetailsCacheConfig
+    preemptiveCacheKey = nomsNumber
+    preemptiveCacheTimeoutMs = 0
+  }
+
+  fun getInmateDetailsWithCall(nomsNumber: String) = getRequest<InmateDetail> {
+    path = "/api/offenders/$nomsNumber"
+    isPreemptiveCall = true
+    preemptiveCacheConfig = inmateDetailsCacheConfig
+    preemptiveCacheKey = nomsNumber
   }
 
   fun getAdjudicationsPage(nomsNumber: String, offset: Int?, pageSize: Int) = getRequest<AdjudicationsPage> {
