@@ -3,6 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.cast
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 
@@ -29,4 +33,10 @@ abstract class ReportGenerator<Input : Any, Output : Any, Properties>(private va
       .toDataFrame(*outputType.memberProperties.toTypedArray())
       .cast()
   }
+
+  protected fun checkServiceType(serviceName: ServiceName, premisesEntity: PremisesEntity) =
+    when (serviceName) {
+      ServiceName.approvedPremises -> premisesEntity is ApprovedPremisesEntity
+      ServiceName.temporaryAccommodation -> premisesEntity is TemporaryAccommodationPremisesEntity
+    }
 }

@@ -94,10 +94,4 @@ class BedUsageReportGenerator(
 
     resultRows
   }
-
-  private fun checkServiceType(serviceName: ServiceName, premisesEntity: PremisesEntity) =
-    when (serviceName) {
-      ServiceName.approvedPremises -> premisesEntity is ApprovedPremisesEntity
-      ServiceName.temporaryAccommodation -> premisesEntity is TemporaryAccommodationPremisesEntity
-    }
 }
