@@ -63,3 +63,12 @@ fun LocalDate.isWorkingDay(bankHolidays: List<LocalDate>) =
   this.dayOfWeek != DayOfWeek.SATURDAY &&
     this.dayOfWeek != DayOfWeek.SUNDAY &&
     !bankHolidays.contains(this)
+
+fun LocalDate.getNextWorkingDay(bankHolidays: List<LocalDate>): LocalDate {
+  var result = this.plusDays(1)
+  while (!result.isWorkingDay(bankHolidays)) {
+    result = result.plusDays(1)
+  }
+
+  return result
+}
