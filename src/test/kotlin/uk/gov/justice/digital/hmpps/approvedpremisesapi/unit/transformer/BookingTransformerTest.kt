@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -69,6 +70,7 @@ class BookingTransformerTest {
   private val mockBedTransformer = mockk<BedTransformer>()
   private val mockTurnaroundTransformer = mockk<TurnaroundTransformer>()
   private val enumConverterFactory = EnumConverterFactory()
+  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
@@ -82,6 +84,7 @@ class BookingTransformerTest {
     mockBedTransformer,
     mockTurnaroundTransformer,
     enumConverterFactory,
+    mockWorkingDayCountService,
   )
 
   private val premisesEntity = TemporaryAccommodationPremisesEntity(
@@ -225,6 +228,7 @@ class BookingTransformerTest {
         departures = listOf(),
         cancellations = listOf(),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -264,6 +268,7 @@ class BookingTransformerTest {
         departures = listOf(),
         cancellations = listOf(),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -327,6 +332,7 @@ class BookingTransformerTest {
         departures = listOf(),
         cancellations = listOf(),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30")
       )
     )
   }
@@ -392,6 +398,7 @@ class BookingTransformerTest {
         departures = listOf(),
         cancellations = listOf(),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -463,6 +470,7 @@ class BookingTransformerTest {
           )
         ),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -564,6 +572,7 @@ class BookingTransformerTest {
           )
         ),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -732,6 +741,7 @@ class BookingTransformerTest {
         ),
         cancellations = listOf(),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30")
       )
     )
   }
@@ -983,6 +993,7 @@ class BookingTransformerTest {
         ),
         cancellations = listOf(),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -1047,6 +1058,7 @@ class BookingTransformerTest {
         departures = listOf(),
         cancellations = listOf(),
         turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
       )
     )
   }
@@ -1101,6 +1113,9 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-03T09:08:07.654Z"),
     )
 
+    every { mockWorkingDayCountService.addWorkingDays(LocalDate.parse("2022-08-30"), 1) } returns LocalDate.parse("2022-08-31")
+    every { mockWorkingDayCountService.addWorkingDays(LocalDate.parse("2022-08-30"), 4) } returns LocalDate.parse("2022-09-05")
+
     val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
 
     assertThat(transformedBooking).isEqualTo(
@@ -1154,6 +1169,8 @@ class BookingTransformerTest {
             createdAt = Instant.parse("2022-07-03T09:08:07.654Z"),
           ),
         ),
+        turnaroundStartDate = LocalDate.parse("2022-08-31"),
+        effectiveEndDate = LocalDate.parse("2022-09-05")
       )
     )
   }
