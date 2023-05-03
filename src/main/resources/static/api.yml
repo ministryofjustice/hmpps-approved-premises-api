@@ -3111,9 +3111,6 @@ components:
         originalDepartureDate:
           type: string
           format: date
-        closeDate:
-          type: string
-          format: date
         createdAt:
           type: string
           format: date-time
