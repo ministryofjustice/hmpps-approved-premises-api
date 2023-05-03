@@ -43,6 +43,17 @@ class ReportsController(
   }
 
   override fun reportsBedUsageGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<Resource> {
+    validateParameters(probationRegionId, month)
+
+    val properties = BedUsageReportProperties(xServiceName, probationRegionId, year, month)
+    val outputStream = ByteArrayOutputStream()
+
+    reportService.createBedUsageReport(properties, outputStream)
+
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
+
+  private fun validateParameters(probationRegionId: UUID?, month: Int) {
     when {
       probationRegionId == null && !userAccessService.currentUserHasAllRegionsAccess() -> throw ForbiddenProblem()
       probationRegionId != null && !userAccessService.currentUserCanAccessRegion(probationRegionId) -> throw ForbiddenProblem()
@@ -51,12 +62,5 @@ class ReportsController(
     if (month < 1 || month > 12) {
       throw BadRequestProblem(errorDetail = "month must be between 1 and 12")
     }
-
-    val properties = BedUsageReportProperties(xServiceName, probationRegionId, year, month)
-    val outputStream = ByteArrayOutputStream()
-
-    reportService.createBedUsageReport(properties, outputStream)
-
-    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
 }
