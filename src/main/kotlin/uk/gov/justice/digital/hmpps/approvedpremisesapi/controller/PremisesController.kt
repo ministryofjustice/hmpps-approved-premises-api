@@ -25,12 +25,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCanc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
@@ -66,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesSumm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -94,6 +97,7 @@ class PremisesController(
   private val roomService: RoomService,
   private val roomTransformer: RoomTransformer,
   private val lostBedCancellationTransformer: LostBedCancellationTransformer,
+  private val turnaroundTransformer: TurnaroundTransformer,
 ) : PremisesApiDelegate {
 
   override fun premisesSummaryGet(xServiceName: ServiceName): ResponseEntity<List<PremisesSummary>> {
@@ -778,6 +782,23 @@ class PremisesController(
     val room = extractResultEntityOrThrow(validationResult)
 
     return ResponseEntity.ok(roomTransformer.transformJpaToApi(room))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdTurnaroundsPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewTurnaround,
+  ): ResponseEntity<Turnaround> {
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+
+    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = bookingService.createTurnaround(booking, body.workingDays)
+    val turnaround = extractResultEntityOrThrow(result)
+
+    return ResponseEntity.ok(turnaroundTransformer.transformJpaToApi(turnaround))
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {

@@ -2662,4 +2662,96 @@ class BookingServiceTest {
       )
     }
   }
+
+  @Test
+  fun `createTurnaround returns FieldValidationError if the number of working days is not a positive integer`() {
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce()
+          )
+          .produce()
+      )
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory()
+          .produce()
+      )
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withPremises(premises)
+      .withBed(bed)
+      .produce()
+
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
+    every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+    val negativeDaysResult = bookingService.createTurnaround(booking, -1)
+    val zeroDaysResult = bookingService.createTurnaround(booking, 0)
+
+    assertThat(negativeDaysResult).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((negativeDaysResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.workingDays", "isNotAPositiveInteger")
+    )
+
+    assertThat(zeroDaysResult).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    assertThat((zeroDaysResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.workingDays", "isNotAPositiveInteger")
+    )
+  }
+
+  @Test
+  fun `createTurnaround returns Success with the persisted entity if the number of working days is a positive integer`() {
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce()
+          )
+          .produce()
+      )
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory()
+          .produce()
+      )
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withPremises(premises)
+      .withBed(bed)
+      .produce()
+
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
+    every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+    val result = bookingService.createTurnaround(booking, 2)
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.booking).isEqualTo(booking)
+    assertThat(result.entity.workingDayCount).isEqualTo(2)
+  }
 }

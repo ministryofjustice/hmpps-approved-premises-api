@@ -420,6 +420,40 @@ class BookingService(
   }
 
   @Transactional
+  fun createTurnaround(
+    booking: BookingEntity,
+    workingDays: Int,
+  ) = validated {
+    if (workingDays <= 0) {
+      "$.workingDays" hasValidationError "isNotAPositiveInteger"
+    }
+
+    val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(booking.departureDate, workingDays)
+    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
+      return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+    }
+
+    getLostBedWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bed!!.id)?.let {
+      return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val turnaround = turnaroundRepository.save(
+      TurnaroundEntity(
+        id = UUID.randomUUID(),
+        workingDayCount = workingDays,
+        createdAt = OffsetDateTime.now(),
+        booking = booking,
+      )
+    )
+
+    return success(turnaround)
+  }
+
+  @Transactional
   fun createArrival(
     user: UserEntity,
     booking: BookingEntity,
