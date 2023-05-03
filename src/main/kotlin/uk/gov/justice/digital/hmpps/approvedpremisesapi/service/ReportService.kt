@@ -7,8 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
@@ -40,6 +42,14 @@ class ReportService(
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
     BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayCountService)
+      .createReport(bedRepository.findAll(), properties)
+      .writeExcel(outputStream) {
+        WorkbookFactory.create(true)
+      }
+  }
+
+  fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {
+    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayCountService)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)

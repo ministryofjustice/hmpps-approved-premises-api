@@ -17,10 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -370,6 +373,106 @@ class ReportsTest : IntegrationTestBase() {
             val actual = DataFrame
               .readExcel(it.responseBody!!.inputStream())
               .convertTo<BedUsageReportRow>(ExcessiveColumns.Remove)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  @Test
+  fun `Get bed utilisation report for all regions returns 403 Forbidden if user does not have all regions access`() {
+    `Given a User` { _, jwt ->
+      webTestClient.get()
+        .uri("/reports/bed-utilisation?year=2023&month=4&")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get bed utilisation report for a region returns 403 Forbidden if user cannot access the specified region`() {
+    `Given a User` { _, jwt ->
+      webTestClient.get()
+        .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get bed utilisation report returns 400 if month is not within 1-12`() {
+    `Given a User` { user, jwt ->
+      webTestClient.get()
+        .uri("/reports/bed-utilisation?probationRegionId=${user.probationRegion.id}&year=2023&month=-1")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("month must be between 1 and 12")
+    }
+  }
+
+  @Test
+  fun `Get bed utilisation report returns OK with correct body`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        val keyWorker = ContextStaffMemberFactory().produce()
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBed(bed)
+          withServiceName(ServiceName.approvedPremises)
+          withStaffKeyWorkerCode(keyWorker.code)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.parse("2023-04-05"))
+          withDepartureDate(LocalDate.parse("2023-04-15"))
+        }
+
+        val expectedDataFrame = BedUtilisationReportGenerator(
+          realBookingRepository,
+          realLostBedsRepository,
+          realWorkingDayCountService,
+        )
+          .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+
+        webTestClient.get()
+          .uri("/reports/bed-utilisation?year=2023&month=4")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<BedUtilisationReportRow>(ExcessiveColumns.Remove)
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }

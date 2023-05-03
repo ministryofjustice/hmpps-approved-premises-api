@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -49,6 +50,17 @@ class ReportsController(
     val outputStream = ByteArrayOutputStream()
 
     reportService.createBedUsageReport(properties, outputStream)
+
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
+
+  override fun reportsBedUtilisationGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<Resource> {
+    validateParameters(probationRegionId, month)
+
+    val properties = BedUtilisationReportProperties(xServiceName, probationRegionId, year, month)
+    val outputStream = ByteArrayOutputStream()
+
+    reportService.createBedUtilisationReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
