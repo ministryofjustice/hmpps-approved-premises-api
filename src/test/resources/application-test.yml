@@ -71,6 +71,8 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   ap-oasys-context-api:
     base-url: http://localhost:#WIREMOCK_PORT
+  gov-uk-bank-holidays-api:
+    base-url: http://localhost:#WIREMOCK_PORT
 
 prison-case-notes:
   lookback-days: 365

@@ -47,6 +47,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -67,6 +69,7 @@ class BookingService(
   private val domainEventService: DomainEventService,
   private val cruService: CruService,
   private val applicationService: ApplicationService,
+  private val workingDayCountService: WorkingDayCountService,
   private val communityApiClient: CommunityApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
@@ -83,6 +86,7 @@ class BookingService(
   private val bedRepository: BedRepository,
   private val placementRequestRepository: PlacementRequestRepository,
   private val lostBedsRepository: LostBedsRepository,
+  private val turnaroundRepository: TurnaroundRepository,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
@@ -339,14 +343,16 @@ class BookingService(
     crn: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    bedId: UUID
+    bedId: UUID,
+    enableTurnarounds: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val validationResult = validated {
-      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+      val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
+      getBookingWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }
 
-      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+      getLostBedWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
@@ -392,6 +398,20 @@ class BookingService(
           turnarounds = mutableListOf(),
         )
       )
+
+      val turnaround = turnaroundRepository.save(
+        TurnaroundEntity(
+          id = UUID.randomUUID(),
+          workingDayCount = when (enableTurnarounds) {
+            true -> premises.turnaroundWorkingDayCount
+            else -> 0
+          },
+          createdAt = bookingCreatedAt,
+          booking = booking,
+        )
+      )
+
+      booking.turnarounds += turnaround
 
       success(booking)
     }
@@ -821,6 +841,14 @@ class BookingService(
     newDepartureDate: LocalDate,
     notes: String?
   ) = validated<ExtensionEntity> {
+    val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
+      return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+    }
+    getLostBedWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bed!!.id)?.let {
+      return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+    }
+
     if (booking.premises is ApprovedPremisesEntity && booking.departureDate.isAfter(newDepartureDate)) {
       return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
     }
@@ -899,15 +927,14 @@ class BookingService(
 
   fun getBookingWithConflictingDates(
     arrivalDate: LocalDate,
-    departureDate: LocalDate,
+    closedDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID
-  ) = bookingRepository.findByBedIdAndOverlappingDate(
-    bedId,
-    arrivalDate,
-    departureDate,
-    thisEntityId
-  ).firstOrNull()
+    bedId: UUID,
+  ): BookingEntity? {
+    val candidateBookings = bookingRepository.findByBedIdAndArrivingBeforeDate(bedId, closedDate, thisEntityId)
+
+    return candidateBookings.firstOrNull { it.lastUnavailableDate >= arrivalDate }
+  }
 
   fun getLostBedWithConflictingDates(
     startDate: LocalDate,
@@ -920,6 +947,9 @@ class BookingService(
     endDate,
     thisEntityId
   ).firstOrNull()
+
+  val BookingEntity.lastUnavailableDate: LocalDate
+    get() = workingDayCountService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
 }
 
 sealed interface GetBookingForPremisesResult {

@@ -15,6 +15,7 @@ import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
@@ -37,6 +38,7 @@ class RedisConfiguration {
     @Value("\${caches.inmateDetails.expiry-seconds}") inmateDetailsExpirySeconds: Long,
     @Value("\${caches.staffDetails.expiry-seconds}") staffDetailsExpirySeconds: Long,
     @Value("\${caches.teamManagingCases.expiry-seconds}") teamManagingCasesExpirySeconds: Long,
+    @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
   ): RedisCacheManagerBuilderCustomizer? {
     val time = buildProperties.time.epochSecond.toString()
 
@@ -47,6 +49,7 @@ class RedisConfiguration {
         .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofSeconds(inmateDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<StaffUserDetails>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
+        .clientCacheFor<UKBankHolidays>("ukBankHolidaysCache", Duration.ofSeconds(ukBankHolidaysExpirySeconds), time, objectMapper)
     }
   }
 

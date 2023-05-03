@@ -165,6 +165,8 @@ caches:
     expiry-seconds: 1200
   teamManagingCases:
     expiry-seconds: 21600
+  ukBankHolidays:
+    expiry-seconds: 86400
 
 seed:
   file-prefix: "/tmp/seed"

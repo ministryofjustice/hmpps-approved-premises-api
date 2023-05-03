@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -491,6 +492,8 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -539,6 +542,8 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -581,6 +586,8 @@ class BookingTest : IntegrationTestBase() {
             }
           }
         }
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -634,6 +641,8 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -653,6 +662,69 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
           .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed has a turnaround that overlaps with the desired dates`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val existingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn("CRN123")
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withArrivalDate(LocalDate.parse("2022-07-15"))
+          withDepartureDate(LocalDate.parse("2022-08-15"))
+        }
+
+        val existingTurnarounds = turnaroundFactory.produceAndPersistMultiple(1) {
+          withWorkingDayCount(5)
+          withCreatedAt(existingBooking.createdAt)
+          withBooking(existingBooking)
+        }
+
+        existingBooking.turnarounds += existingTurnarounds
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-08-22"),
+              departureDate = LocalDate.parse("2022-09-30"),
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-22 which overlaps with the desired dates: ${existingBooking.id}")
       }
     }
   }
@@ -692,6 +764,8 @@ class BookingTest : IntegrationTestBase() {
           withDate(LocalDate.parse("2022-07-01"))
           withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
         }.toMutableList()
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -759,6 +833,8 @@ class BookingTest : IntegrationTestBase() {
           withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
         }
 
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -769,6 +845,62 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when a lost bed for the same bed overlaps with the turnaround time`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+          withTurnaroundWorkingDayCount(2)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+          withBed(bed)
+          withPremises(premises)
+          withStartDate(LocalDate.parse("2022-07-15"))
+          withEndDate(LocalDate.parse("2022-08-15"))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        }
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-06-13"),
+              departureDate = LocalDate.parse("2022-07-13"),
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+              enableTurnarounds = true,
             )
           )
           .exchange()
@@ -817,6 +949,8 @@ class BookingTest : IntegrationTestBase() {
           withLostBed(existingLostBed)
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -954,6 +1088,8 @@ class BookingTest : IntegrationTestBase() {
           withArrivalDate(LocalDate.parse("2022-06-14"))
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
@@ -1873,12 +2009,83 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewExtension(
               newDepartureDate = LocalDate.parse("2022-07-16"),
+              notes = null,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val conflictingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn("CRN123")
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withArrivalDate(LocalDate.parse("2022-07-15"))
+          withDepartureDate(LocalDate.parse("2022-08-15"))
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withArrivalDate(LocalDate.parse("2022-06-12"))
+          withDepartureDate(LocalDate.parse("2022-07-12"))
+        }
+
+        val turnarounds = turnaroundFactory.produceAndPersistMultiple(1) {
+          withWorkingDayCount(2)
+          withCreatedAt(booking.createdAt)
+          withBooking(booking)
+        }
+
+        booking.turnarounds += turnarounds
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewExtension(
+              newDepartureDate = LocalDate.parse("2022-07-13"),
               notes = null,
             )
           )
@@ -1951,6 +2158,74 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Create Temporary Accommodation Extension returns 409 Conflict when a lost bed for the same bed overlaps with the updated booking's turnaround time`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val conflictingLostBed = lostBedsEntityFactory.produceAndPersist {
+          withBed(bed)
+          withPremises(premises)
+          withStartDate(LocalDate.parse("2022-07-15"))
+          withEndDate(LocalDate.parse("2022-08-15"))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withArrivalDate(LocalDate.parse("2022-06-12"))
+          withDepartureDate(LocalDate.parse("2022-07-12"))
+        }
+
+        val turnarounds = turnaroundFactory.produceAndPersistMultiple(1) {
+          withWorkingDayCount(2)
+          withCreatedAt(booking.createdAt)
+          withBooking(booking)
+        }
+
+        booking.turnarounds += turnarounds
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewExtension(
+              newDepartureDate = LocalDate.parse("2022-07-13"),
+              notes = null,
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+      }
+    }
+  }
+
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
   fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles MANAGER, MATCHER`(role: UserRole) {
@@ -1981,6 +2256,8 @@ class BookingTest : IntegrationTestBase() {
         withPremises(premises)
         withBed(bed)
       }
+
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")

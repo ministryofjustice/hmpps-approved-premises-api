@@ -159,4 +159,70 @@ class WorkingDayCountServiceTest {
 
     assertThat(workingDayCountService.getWorkingDaysCount(aMonday, aSunday)).isEqualTo(3)
   }
+
+  @Test
+  fun `addWorkingDays returns the given date if the number of days to add is 0`() {
+    every {
+      mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+    } returns emptyBankHolidays
+
+    val saturday = LocalDate.of(2023, 5, 2).with(TemporalAdjusters.next(DayOfWeek.SATURDAY))
+
+    assertThat(workingDayCountService.addWorkingDays(saturday, 0)).isEqualTo(saturday)
+  }
+
+  @Test
+  fun `addWorkingDays returns the next Monday if the given date is a weekend and the number of days to add is 1`() {
+    every {
+      mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+    } returns emptyBankHolidays
+
+    val saturday = LocalDate.of(2023, 5, 2).with(TemporalAdjusters.next(DayOfWeek.SATURDAY))
+    val monday = LocalDate.of(2023, 5, 2).with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+
+    assertThat(workingDayCountService.addWorkingDays(saturday, 1)).isEqualTo(monday)
+  }
+
+  @Test
+  fun `addWorkingDays correctly handles bank holidays`() {
+    val bankHolidays = ClientResult.Success(
+      HttpStatus.OK,
+      UKBankHolidays(
+        englandAndWales = CountryBankHolidays(
+          division = "england-and-wales",
+          events = listOf(
+            BankHolidayEvent(
+              title = "Early May bank holiday",
+              date = LocalDate.of(2023, 5, 1),
+              notes = "",
+              bunting = true
+            ),
+            BankHolidayEvent(
+              title = "Bank holiday for the coronation of King Charles III",
+              date = LocalDate.of(2023, 5, 8),
+              notes = "",
+              bunting = true
+            )
+          )
+        ),
+        scotland = CountryBankHolidays(
+          division = "scotland",
+          events = listOf()
+        ),
+        northernIreland = CountryBankHolidays(
+          division = "northern-ireland",
+          events = listOf()
+        )
+      )
+    )
+
+    every {
+      mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+    } returns bankHolidays
+
+    val thursday = LocalDate.of(2023, 4, 27)
+    val expected = LocalDate.of(2023, 5, 15)
+
+    assertThat(workingDayCountService.addWorkingDays(thursday, 10)).isEqualTo(expected)
+  }
 }
