@@ -718,10 +718,10 @@ paths:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/turnarounds:
-    put:
+    post:
       tags:
         - Operations on bookings
-      summary: Updates the turnaround for a specified Booking
+      summary: Posts a turnaround to a specified Temporary Accommodation booking
       parameters:
         - name: premisesId
           in: path
@@ -742,7 +742,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/UpdateTurnaround'
+              $ref: '#/components/schemas/NewTurnaround'
         required: true
       responses:
         200:
@@ -3517,7 +3517,7 @@ components:
         - bookingId
         - workingDays
         - createdAt
-    UpdateTurnaround:
+    NewTurnaround:
       type: object
       properties:
         workingDays:
