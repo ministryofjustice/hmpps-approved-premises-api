@@ -28,9 +28,13 @@ abstract class ReportGenerator<Input : Any, Output : Any, Properties>(private va
     val converted = data.filter(filter)
       .flatMap { convert(it, properties) }
 
+    val fields = outputType.java.declaredFields
+    val orderById = fields.withIndex().associate { it.value.name to it.index }
+    val sorted = outputType.memberProperties.sortedBy { orderById[it.name] }
+
     return converted
       .map { it as Any }
-      .toDataFrame(*outputType.memberProperties.toTypedArray())
+      .toDataFrame(*sorted.toTypedArray())
       .cast()
   }
 
