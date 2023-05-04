@@ -72,3 +72,15 @@ fun LocalDate.getNextWorkingDay(bankHolidays: List<LocalDate>): LocalDate {
 
   return result
 }
+
+fun earliestDateOf(date1: LocalDate, date2: LocalDate): LocalDate {
+  if (date1.isBefore(date2)) return date1
+
+  return date2
+}
+
+fun latestDateOf(date1: LocalDate, date2: LocalDate): LocalDate {
+  if (date1.isAfter(date2)) return date1
+
+  return date2
+}
