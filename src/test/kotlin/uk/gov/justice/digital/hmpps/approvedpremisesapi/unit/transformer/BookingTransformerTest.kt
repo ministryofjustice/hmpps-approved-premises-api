@@ -2,7 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
@@ -196,8 +199,13 @@ class BookingTransformerTest {
     )
   }
 
+  @AfterEach
+  fun unmockStatics() {
+    unmockkAll()
+  }
+
   @Test
-  fun `Awaiting Arrival entity is correctly transformed`() {
+  fun `Approved Premises Awaiting Arrival entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"))
 
     val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
@@ -234,7 +242,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Provisional entity is correctly transformed`() {
+  fun `Temporary Accommodation Provisional entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(
       id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
       service = ServiceName.temporaryAccommodation.value,
@@ -274,7 +282,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Non Arrival entity is correctly transformed`() {
+  fun `Approved Premises Non Arrival entity is correctly transformed`() {
     val nonArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19")).apply {
       nonArrival = NonArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
@@ -338,7 +346,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Arrived entity is correctly transformed`() {
+  fun `Approved Premises Arrived entity is correctly transformed`() {
     val arrivalBooking = baseBookingEntity.copy(id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3")).apply {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
@@ -404,7 +412,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Cancelled entity is correctly transformed`() {
+  fun `Approved Premises Cancelled entity is correctly transformed`() {
     val cancellationBooking = baseBookingEntity.copy(id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d")).apply {
       cancellations = mutableListOf(
         CancellationEntity(
@@ -476,7 +484,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Entity with edited cancellation is correctly transformed`() {
+  fun `Temporary Accommodation Entity with edited cancellation is correctly transformed`() {
     val cancellationBooking = baseBookingEntity.copy(id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d")).apply {
       service = ServiceName.temporaryAccommodation.value
       cancellations = mutableListOf(
@@ -578,7 +586,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Departed entity is correctly transformed`() {
+  fun `Approved Premises Departed entity is correctly transformed`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       arrival = ArrivalEntity(
@@ -747,7 +755,623 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Entity with edited departure is correctly transformed`() {
+  fun `Temporary Accommodation entity with zero day turnaround period and departure is correctly transformed to closed status`() {
+    val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
+    val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
+      arrival = ArrivalEntity(
+        id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        expectedDepartureDate = LocalDate.parse("2022-08-16"),
+        notes = null,
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+      )
+      departures = mutableListOf(
+        DepartureEntity(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+          dateTime = OffsetDateTime.parse("2022-08-30T15:30:15+01:00"),
+          reason = DepartureReasonEntity(
+            id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+            name = "Departure Reason",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusReasonCode = "A"
+          ),
+          moveOnCategory = MoveOnCategoryEntity(
+            id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+            name = "Move on Category",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusCategoryCode = "CAT"
+          ),
+          destinationProvider = DestinationProviderEntity(
+            id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+            name = "Destination Provider",
+            isActive = true
+          ),
+          notes = null,
+          booking = this,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        )
+      )
+
+      turnarounds += TurnaroundEntity(
+        id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+        workingDayCount = 0,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        booking = this
+      )
+    }
+
+    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+      bookingId = bookingId,
+      arrivalDate = LocalDate.parse("2022-08-10"),
+      expectedDepartureDate = LocalDate.parse("2022-08-16"),
+      notes = null,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+    )
+
+    every { mockDepartureTransformer.transformJpaToApi(departedBooking.departure) } returns Departure(
+      id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+      bookingId = bookingId,
+      dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+      reason = DepartureReason(
+        id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+        name = "Departure Reason",
+        isActive = true,
+        serviceScope = "*",
+      ),
+      moveOnCategory = MoveOnCategory(
+        id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+        name = "Move on Category",
+        isActive = true,
+        serviceScope = "*",
+      ),
+      destinationProvider = DestinationProvider(
+        id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+        name = "Destination Provider",
+        isActive = true
+      ),
+      notes = null,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+    )
+
+    every { mockTurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
+      id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+      workingDays = 0,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+      bookingId = bookingId
+    )
+
+    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+
+    assertThat(transformedBooking).isEqualTo(
+      Booking(
+        id = bookingId,
+        person = Person(
+          crn = "crn",
+          name = "first last",
+          dateOfBirth = LocalDate.parse("2022-09-08"),
+          sex = "Male",
+          status = Person.Status.inCommunity,
+          nomsNumber = "NOMS321",
+          nationality = "English",
+          religionOrBelief = null,
+          genderIdentity = null,
+          prisonName = null
+        ),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = LocalDate.parse("2022-08-30"),
+        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
+          code = "789",
+          keyWorker = true,
+          name = "first last"
+        ),
+        status = BookingStatus.closed,
+        arrival = Arrival(
+          bookingId = bookingId,
+          arrivalDate = LocalDate.parse("2022-08-10"),
+          expectedDepartureDate = LocalDate.parse("2022-08-16"),
+          notes = null,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        ),
+        departure = Departure(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+          bookingId = bookingId,
+          dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+          reason = DepartureReason(
+            id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+            name = "Departure Reason",
+            isActive = true,
+            serviceScope = "*",
+          ),
+          moveOnCategory = MoveOnCategory(
+            id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+            name = "Move on Category",
+            isActive = true,
+            serviceScope = "*",
+          ),
+          destinationProvider = DestinationProvider(
+            id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+            name = "Destination Provider",
+            isActive = true
+          ),
+          notes = null,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        ),
+        extensions = listOf(),
+        serviceName = ServiceName.temporaryAccommodation,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        departures = listOf(
+          Departure(
+            id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+            bookingId = bookingId,
+            dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+            reason = DepartureReason(
+              id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+              name = "Departure Reason",
+              isActive = true,
+              serviceScope = "*",
+            ),
+            moveOnCategory = MoveOnCategory(
+              id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+              name = "Move on Category",
+              isActive = true,
+              serviceScope = "*",
+            ),
+            destinationProvider = DestinationProvider(
+              id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+              name = "Destination Provider",
+              isActive = true
+            ),
+            notes = null,
+            createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          )
+        ),
+        cancellations = listOf(),
+        turnaround = Turnaround(
+          id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+          workingDays = 0,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          bookingId = bookingId
+        ),
+        turnarounds = listOf(
+          Turnaround(
+            id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+            workingDays = 0,
+            createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+            bookingId = bookingId
+          )
+        ),
+        effectiveEndDate = LocalDate.parse("2022-08-30")
+      )
+    )
+  }
+
+  @Test
+  fun `Temporary Accommodation entity with non-zero day turnaround period and departure within turnaround period is correctly transformed to departed status`() {
+    mockkStatic(OffsetDateTime::class, LocalDate::class)
+
+    val timeNow = OffsetDateTime.parse("2022-08-17T15:30:00Z")
+    val departedAt = OffsetDateTime.parse("2022-08-16T12:30:00Z")
+    val expectedEffectiveEndDate = LocalDate.parse("2022-08-18")
+    every { OffsetDateTime.now() } returns timeNow
+    every { LocalDate.now() } returns timeNow.toLocalDate()
+
+    val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
+    val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
+      departureDate = departedAt.toLocalDate()
+
+      arrival = ArrivalEntity(
+        id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        expectedDepartureDate = departedAt.toLocalDate(),
+        notes = null,
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+      )
+      departures = mutableListOf(
+        DepartureEntity(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+          dateTime = departedAt,
+          reason = DepartureReasonEntity(
+            id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+            name = "Departure Reason",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusReasonCode = "A"
+          ),
+          moveOnCategory = MoveOnCategoryEntity(
+            id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+            name = "Move on Category",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusCategoryCode = "CAT"
+          ),
+          destinationProvider = DestinationProviderEntity(
+            id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+            name = "Destination Provider",
+            isActive = true
+          ),
+          notes = null,
+          booking = this,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        )
+      )
+
+      turnarounds += TurnaroundEntity(
+        id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+        workingDayCount = 2,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        booking = this
+      )
+    }
+
+    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+      bookingId = bookingId,
+      arrivalDate = LocalDate.parse("2022-08-10"),
+      expectedDepartureDate = LocalDate.parse("2022-08-16"),
+      notes = null,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+    )
+
+    every { mockDepartureTransformer.transformJpaToApi(departedBooking.departure) } returns Departure(
+      id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+      bookingId = bookingId,
+      dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+      reason = DepartureReason(
+        id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+        name = "Departure Reason",
+        isActive = true,
+        serviceScope = "*",
+      ),
+      moveOnCategory = MoveOnCategory(
+        id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+        name = "Move on Category",
+        isActive = true,
+        serviceScope = "*",
+      ),
+      destinationProvider = DestinationProvider(
+        id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+        name = "Destination Provider",
+        isActive = true
+      ),
+      notes = null,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+    )
+
+    every { mockTurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
+      id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+      workingDays = 2,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+      bookingId = bookingId
+    )
+
+    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
+    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
+
+    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+
+    assertThat(transformedBooking).isEqualTo(
+      Booking(
+        id = bookingId,
+        person = Person(
+          crn = "crn",
+          name = "first last",
+          dateOfBirth = LocalDate.parse("2022-09-08"),
+          sex = "Male",
+          status = Person.Status.inCommunity,
+          nomsNumber = "NOMS321",
+          nationality = "English",
+          religionOrBelief = null,
+          genderIdentity = null,
+          prisonName = null
+        ),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = departedAt.toLocalDate(),
+        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
+          code = "789",
+          keyWorker = true,
+          name = "first last"
+        ),
+        status = BookingStatus.departed,
+        arrival = Arrival(
+          bookingId = bookingId,
+          arrivalDate = LocalDate.parse("2022-08-10"),
+          expectedDepartureDate = LocalDate.parse("2022-08-16"),
+          notes = null,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        ),
+        departure = Departure(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+          bookingId = bookingId,
+          dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+          reason = DepartureReason(
+            id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+            name = "Departure Reason",
+            isActive = true,
+            serviceScope = "*",
+          ),
+          moveOnCategory = MoveOnCategory(
+            id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+            name = "Move on Category",
+            isActive = true,
+            serviceScope = "*",
+          ),
+          destinationProvider = DestinationProvider(
+            id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+            name = "Destination Provider",
+            isActive = true
+          ),
+          notes = null,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        ),
+        extensions = listOf(),
+        serviceName = ServiceName.temporaryAccommodation,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        departures = listOf(
+          Departure(
+            id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+            bookingId = bookingId,
+            dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+            reason = DepartureReason(
+              id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+              name = "Departure Reason",
+              isActive = true,
+              serviceScope = "*",
+            ),
+            moveOnCategory = MoveOnCategory(
+              id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+              name = "Move on Category",
+              isActive = true,
+              serviceScope = "*",
+            ),
+            destinationProvider = DestinationProvider(
+              id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+              name = "Destination Provider",
+              isActive = true
+            ),
+            notes = null,
+            createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          )
+        ),
+        cancellations = listOf(),
+        turnaround = Turnaround(
+          id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+          workingDays = 2,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          bookingId = bookingId
+        ),
+        turnarounds = listOf(
+          Turnaround(
+            id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+            workingDays = 2,
+            createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+            bookingId = bookingId
+          )
+        ),
+        turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
+        effectiveEndDate = expectedEffectiveEndDate
+      )
+    )
+  }
+
+  @Test
+  fun `Temporary Accommodation entity with non-zero day turnaround period and departure with turnaround period in past is correctly transformed to closed status`() {
+    mockkStatic(OffsetDateTime::class, LocalDate::class)
+
+    val timeNow = OffsetDateTime.parse("2022-08-19T15:30:00Z")
+    val departedAt = OffsetDateTime.parse("2022-08-16T12:30:00Z")
+    val expectedEffectiveEndDate = LocalDate.parse("2022-08-18")
+    every { OffsetDateTime.now() } returns timeNow
+    every { LocalDate.now() } returns timeNow.toLocalDate()
+
+    val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
+    val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
+      departureDate = departedAt.toLocalDate()
+
+      arrival = ArrivalEntity(
+        id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        expectedDepartureDate = departedAt.toLocalDate(),
+        notes = null,
+        booking = this,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+      )
+      departures = mutableListOf(
+        DepartureEntity(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+          dateTime = departedAt,
+          reason = DepartureReasonEntity(
+            id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+            name = "Departure Reason",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusReasonCode = "A"
+          ),
+          moveOnCategory = MoveOnCategoryEntity(
+            id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+            name = "Move on Category",
+            isActive = true,
+            serviceScope = "*",
+            legacyDeliusCategoryCode = "CAT"
+          ),
+          destinationProvider = DestinationProviderEntity(
+            id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+            name = "Destination Provider",
+            isActive = true
+          ),
+          notes = null,
+          booking = this,
+          createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        )
+      )
+
+      turnarounds += TurnaroundEntity(
+        id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+        workingDayCount = 2,
+        createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+        booking = this
+      )
+    }
+
+    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+      bookingId = bookingId,
+      arrivalDate = LocalDate.parse("2022-08-10"),
+      expectedDepartureDate = LocalDate.parse("2022-08-16"),
+      notes = null,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+    )
+
+    every { mockDepartureTransformer.transformJpaToApi(departedBooking.departure) } returns Departure(
+      id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+      bookingId = bookingId,
+      dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+      reason = DepartureReason(
+        id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+        name = "Departure Reason",
+        isActive = true,
+        serviceScope = "*",
+      ),
+      moveOnCategory = MoveOnCategory(
+        id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+        name = "Move on Category",
+        isActive = true,
+        serviceScope = "*",
+      ),
+      destinationProvider = DestinationProvider(
+        id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+        name = "Destination Provider",
+        isActive = true
+      ),
+      notes = null,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+    )
+
+    every { mockTurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
+      id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+      workingDays = 2,
+      createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+      bookingId = bookingId
+    )
+
+    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
+    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
+
+    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+
+    assertThat(transformedBooking).isEqualTo(
+      Booking(
+        id = bookingId,
+        person = Person(
+          crn = "crn",
+          name = "first last",
+          dateOfBirth = LocalDate.parse("2022-09-08"),
+          sex = "Male",
+          status = Person.Status.inCommunity,
+          nomsNumber = "NOMS321",
+          nationality = "English",
+          religionOrBelief = null,
+          genderIdentity = null,
+          prisonName = null
+        ),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = departedAt.toLocalDate(),
+        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
+          code = "789",
+          keyWorker = true,
+          name = "first last"
+        ),
+        status = BookingStatus.closed,
+        arrival = Arrival(
+          bookingId = bookingId,
+          arrivalDate = LocalDate.parse("2022-08-10"),
+          expectedDepartureDate = LocalDate.parse("2022-08-16"),
+          notes = null,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        ),
+        departure = Departure(
+          id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+          bookingId = bookingId,
+          dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+          reason = DepartureReason(
+            id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+            name = "Departure Reason",
+            isActive = true,
+            serviceScope = "*",
+          ),
+          moveOnCategory = MoveOnCategory(
+            id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+            name = "Move on Category",
+            isActive = true,
+            serviceScope = "*",
+          ),
+          destinationProvider = DestinationProvider(
+            id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+            name = "Destination Provider",
+            isActive = true
+          ),
+          notes = null,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        ),
+        extensions = listOf(),
+        serviceName = ServiceName.temporaryAccommodation,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        departures = listOf(
+          Departure(
+            id = UUID.fromString("0d68d5b9-44c7-46cd-a52b-8185477b5edd"),
+            bookingId = bookingId,
+            dateTime = Instant.parse("2022-08-30T15:30:15+01:00"),
+            reason = DepartureReason(
+              id = UUID.fromString("09e74ead-cf5a-40a1-a1be-739d3b97788f"),
+              name = "Departure Reason",
+              isActive = true,
+              serviceScope = "*",
+            ),
+            moveOnCategory = MoveOnCategory(
+              id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
+              name = "Move on Category",
+              isActive = true,
+              serviceScope = "*",
+            ),
+            destinationProvider = DestinationProvider(
+              id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
+              name = "Destination Provider",
+              isActive = true
+            ),
+            notes = null,
+            createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          )
+        ),
+        cancellations = listOf(),
+        turnaround = Turnaround(
+          id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+          workingDays = 2,
+          createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          bookingId = bookingId
+        ),
+        turnarounds = listOf(
+          Turnaround(
+            id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
+            workingDays = 2,
+            createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+            bookingId = bookingId
+          )
+        ),
+        turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
+        effectiveEndDate = expectedEffectiveEndDate
+      )
+    )
+  }
+
+  @Test
+  fun `Temporary Accommodation Entity with edited departure is correctly transformed`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       service = ServiceName.temporaryAccommodation.value
@@ -904,7 +1528,7 @@ class BookingTransformerTest {
           keyWorker = true,
           name = "first last"
         ),
-        status = BookingStatus.departed,
+        status = BookingStatus.closed,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -999,7 +1623,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Confirmed entity is correctly transformed`() {
+  fun `Temporary Accommodation Confirmed entity is correctly transformed`() {
     val confirmationBooking = baseBookingEntity.copy(
       id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
       service = ServiceName.temporaryAccommodation.value,

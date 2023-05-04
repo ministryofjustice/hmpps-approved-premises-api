@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import java.time.LocalDate
 
 @Component
 class BookingTransformer(
@@ -72,12 +73,20 @@ class BookingTransformer(
     else -> throw RuntimeException("Could not determine status for Booking ${jpa.id}")
   }
 
-  private fun determineTemporaryAccommodationStatus(jpa: BookingEntity) = when {
-    jpa.cancellation != null -> BookingStatus.cancelled
-    jpa.departure != null -> BookingStatus.departed
-    jpa.arrival != null -> BookingStatus.arrived
-    jpa.nonArrival != null -> BookingStatus.notMinusArrived
-    jpa.confirmation != null -> BookingStatus.confirmed
-    else -> BookingStatus.provisional
+  private fun determineTemporaryAccommodationStatus(jpa: BookingEntity): BookingStatus {
+    val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
+    val hasZeroDayTurnaround = jpa.turnaround == null || jpa.turnaround!!.workingDayCount == 0
+    val turnaroundPeriodEnded = if (! hasNonZeroDayTurnaround) false else
+      workingDayCountService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount).isBefore(LocalDate.now())
+
+    return when {
+      jpa.cancellation != null -> BookingStatus.cancelled
+      jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
+      jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
+      jpa.arrival != null -> BookingStatus.arrived
+      jpa.nonArrival != null -> BookingStatus.notMinusArrived
+      jpa.confirmation != null -> BookingStatus.confirmed
+      else -> BookingStatus.provisional
+    }
   }
 }
