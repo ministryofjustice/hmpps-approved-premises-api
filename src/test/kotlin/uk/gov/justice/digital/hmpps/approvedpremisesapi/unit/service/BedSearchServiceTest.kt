@@ -4,10 +4,17 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrictEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesBedSearchResult
@@ -18,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -25,11 +33,15 @@ class BedSearchServiceTest {
   private val mockBedSearchRepository = mockk<BedSearchRepository>()
   private val mockPostcodeDistrictRepository = mockk<PostcodeDistrictRepository>()
   private val mockCharacteristicService = mockk<CharacteristicService>()
+  private val mockBookingRepository = mockk<BookingRepository>()
+  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
 
   private val bedSearchService = BedSearchService(
     mockBedSearchRepository,
     mockPostcodeDistrictRepository,
     mockCharacteristicService,
+    mockBookingRepository,
+    mockWorkingDayCountService,
   )
 
   @Test
@@ -518,6 +530,9 @@ class BedSearchServiceTest {
       )
     } returns repositorySearchResults
 
+    every { mockBookingRepository.findClosestBookingBeforeDateForBeds(any(), any()) } returns listOf()
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
       startDate = LocalDate.parse("2023-03-22"),
@@ -531,5 +546,174 @@ class BedSearchServiceTest {
     val result = (authorisableResult.entity as ValidatableActionResult.Success).entity
 
     assertThat(result).isEqualTo(repositorySearchResults)
+  }
+
+  @Test
+  fun `findTemporaryAccommodationBeds does not return results for beds that currently have turnarounds`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val expectedResults = listOf(
+      TemporaryAccommodationBedSearchResult(
+        premisesId = UUID.randomUUID(),
+        premisesName = "Premises Name",
+        premisesAddressLine1 = "1 Someplace",
+        premisesAddressLine2 = null,
+        premisesTown = null,
+        premisesPostcode = "LA1111A",
+        premisesCharacteristics = mutableListOf(
+          CharacteristicNames(
+            propertyName = "bedCharacteristicPropertyName",
+            name = "Bed Characteristic Name",
+          ),
+        ),
+        premisesBedCount = 3,
+        roomId = UUID.randomUUID(),
+        roomName = "Room Name",
+        bedId = UUID.randomUUID(),
+        bedName = "Bed Name",
+        roomCharacteristics = mutableListOf(
+          CharacteristicNames(
+            propertyName = "roomCharacteristicPropertyName",
+            name = "Room Characteristic Name",
+          ),
+        ),
+      ),
+    )
+
+    // This bed is in a turnaround
+    val unexpectedResults = listOf(
+      TemporaryAccommodationBedSearchResult(
+        premisesId = UUID.randomUUID(),
+        premisesName = "Another Premises Name",
+        premisesAddressLine1 = "2 Someplace",
+        premisesAddressLine2 = null,
+        premisesTown = null,
+        premisesPostcode = "LA1111A",
+        premisesCharacteristics = mutableListOf(
+          CharacteristicNames(
+            propertyName = "bedCharacteristicPropertyName",
+            name = "Bed Characteristic Name",
+          ),
+        ),
+        premisesBedCount = 3,
+        roomId = UUID.randomUUID(),
+        roomName = "Another Room Name",
+        bedId = UUID.randomUUID(),
+        bedName = "Another Bed Name",
+        roomCharacteristics = mutableListOf(
+          CharacteristicNames(
+            propertyName = "roomCharacteristicPropertyName",
+            name = "Room Characteristic Name",
+          ),
+        ),
+      ),
+    )
+
+    val repositorySearchResults = expectedResults + unexpectedResults
+
+    every {
+      mockBedSearchRepository.findTemporaryAccommodationBeds(
+        startDate = LocalDate.parse("2023-03-22"),
+        durationInDays = 7,
+        probationDeliveryUnit = "PDU-1",
+        probationRegionId = user.probationRegion.id
+      )
+    } returns repositorySearchResults
+
+    val expectedResultPremises = TemporaryAccommodationPremisesEntityFactory()
+      .withId(expectedResults[0].premisesId)
+      .withProbationRegion(user.probationRegion)
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory()
+          .produce()
+      )
+      .produce()
+
+    val expectedResultRoom = RoomEntityFactory()
+      .withId(expectedResults[0].roomId)
+      .withPremises(expectedResultPremises)
+      .produce()
+
+    val expectedResultBed = BedEntityFactory()
+      .withId(expectedResults[0].bedId)
+      .withRoom(expectedResultRoom)
+      .produce()
+
+    val expectedResultBooking = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-12-19"))
+      .withDepartureDate(LocalDate.parse("2023-03-19"))
+      .withPremises(expectedResultPremises)
+      .withBed(expectedResultBed)
+      .produce()
+
+    val expectedTurnaround = TurnaroundEntityFactory()
+      .withBooking(expectedResultBooking)
+      .withWorkingDayCount(2)
+      .produce()
+
+    expectedResultBooking.turnarounds = mutableListOf(expectedTurnaround)
+
+    val unexpectedResultPremises = TemporaryAccommodationPremisesEntityFactory()
+      .withId(unexpectedResults[0].premisesId)
+      .withProbationRegion(user.probationRegion)
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory()
+          .produce()
+      )
+      .produce()
+
+    val unexpectedResultRoom = RoomEntityFactory()
+      .withId(unexpectedResults[0].roomId)
+      .withPremises(unexpectedResultPremises)
+      .produce()
+
+    val unexpectedResultBed = BedEntityFactory()
+      .withId(unexpectedResults[0].bedId)
+      .withRoom(unexpectedResultRoom)
+      .produce()
+
+    val unexpectedResultBooking = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-12-20"))
+      .withDepartureDate(LocalDate.parse("2023-03-20"))
+      .withPremises(unexpectedResultPremises)
+      .withBed(unexpectedResultBed)
+      .produce()
+
+    val unexpectedTurnaround = TurnaroundEntityFactory()
+      .withBooking(unexpectedResultBooking)
+      .withWorkingDayCount(2)
+      .produce()
+
+    unexpectedResultBooking.turnarounds = mutableListOf(unexpectedTurnaround)
+
+    every {
+      mockBookingRepository.findClosestBookingBeforeDateForBeds(
+        date = any(),
+        bedIds = any(),
+      )
+    } returns listOf(
+      expectedResultBooking,
+      unexpectedResultBooking,
+    )
+
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers {
+      (it.invocation.args[0] as LocalDate).plusDays((it.invocation.args[1] as Int).toLong())
+    }
+
+    val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
+      user = user,
+      startDate = LocalDate.parse("2023-03-22"),
+      durationInDays = 7,
+      probationDeliveryUnit = "PDU-1",
+    )
+
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+    authorisableResult as AuthorisableActionResult.Success
+    assertThat(authorisableResult.entity is ValidatableActionResult.Success).isTrue
+    val result = (authorisableResult.entity as ValidatableActionResult.Success).entity
+
+    assertThat(result).isEqualTo(expectedResults)
   }
 }

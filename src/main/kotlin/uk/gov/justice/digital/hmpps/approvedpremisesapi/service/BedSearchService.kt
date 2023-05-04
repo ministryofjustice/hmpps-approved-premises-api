@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -19,6 +20,8 @@ class BedSearchService(
   private val bedSearchRepository: BedSearchRepository,
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val characteristicService: CharacteristicService,
+  private val bookingRepository: BookingRepository,
+  private val workingDayCountService: WorkingDayCountService,
 ) {
   fun findApprovedPremisesBeds(
     user: UserEntity,
@@ -99,13 +102,22 @@ class BedSearchService(
           return@validated fieldValidationError
         }
 
+        val candidateResults = bedSearchRepository.findTemporaryAccommodationBeds(
+          probationDeliveryUnit = probationDeliveryUnit,
+          startDate = startDate,
+          durationInDays = durationInDays,
+          probationRegionId = user.probationRegion.id
+        )
+
+        val bedIds = candidateResults.map { it.bedId }
+        val bedsWithABookingInTurnaround = bookingRepository.findClosestBookingBeforeDateForBeds(startDate, bedIds)
+          .filter { workingDayCountService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0) >= startDate }
+          .map { it.bed!!.id }
+
+        val results = candidateResults.filter { !bedsWithABookingInTurnaround.contains(it.bedId) }
+
         return@validated success(
-          bedSearchRepository.findTemporaryAccommodationBeds(
-            probationDeliveryUnit = probationDeliveryUnit,
-            startDate = startDate,
-            durationInDays = durationInDays,
-            probationRegionId = user.probationRegion.id
-          ),
+          results
         )
       },
     )
