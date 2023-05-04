@@ -197,7 +197,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Awaiting Arrival entity is correctly transformed`() {
+  fun `Approved Premises Awaiting Arrival entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"))
 
     val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
@@ -234,7 +234,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Provisional entity is correctly transformed`() {
+  fun `Temporary Accommodation Provisional entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(
       id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
       service = ServiceName.temporaryAccommodation.value,
@@ -274,7 +274,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Non Arrival entity is correctly transformed`() {
+  fun `Approved Premises Non Arrival entity is correctly transformed`() {
     val nonArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19")).apply {
       nonArrival = NonArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
@@ -338,7 +338,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Arrived entity is correctly transformed`() {
+  fun `Approved Premises Arrived entity is correctly transformed`() {
     val arrivalBooking = baseBookingEntity.copy(id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3")).apply {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
@@ -404,7 +404,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Cancelled entity is correctly transformed`() {
+  fun `Approved Premises Cancelled entity is correctly transformed`() {
     val cancellationBooking = baseBookingEntity.copy(id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d")).apply {
       cancellations = mutableListOf(
         CancellationEntity(
@@ -476,7 +476,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Entity with edited cancellation is correctly transformed`() {
+  fun `Temporary Accommodation Entity with edited cancellation is correctly transformed`() {
     val cancellationBooking = baseBookingEntity.copy(id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d")).apply {
       service = ServiceName.temporaryAccommodation.value
       cancellations = mutableListOf(
@@ -578,7 +578,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Departed entity is correctly transformed`() {
+  fun `Approved Premises Departed entity is correctly transformed`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       arrival = ArrivalEntity(
@@ -747,7 +747,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Entity with edited departure is correctly transformed`() {
+  fun `Temporary Accommodation Entity with edited departure is correctly transformed`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       service = ServiceName.temporaryAccommodation.value
@@ -999,7 +999,7 @@ class BookingTransformerTest {
   }
 
   @Test
-  fun `Confirmed entity is correctly transformed`() {
+  fun `Temporary Accommodation Confirmed entity is correctly transformed`() {
     val confirmationBooking = baseBookingEntity.copy(
       id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
       service = ServiceName.temporaryAccommodation.value,
