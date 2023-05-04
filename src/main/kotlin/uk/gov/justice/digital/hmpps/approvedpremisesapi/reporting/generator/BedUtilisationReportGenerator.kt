@@ -83,7 +83,7 @@ class BedUtilisationReportGenerator(
         pdu = (premises as? TemporaryAccommodationPremisesEntity)?.probationDeliveryUnit?.name,
         propertyRef = premises.name,
         addressLine1 = premises.addressLine1,
-        bedspaceRef = this.name,
+        bedspaceRef = this.room.name,
         bookedDaysActiveAndClosed = bookedDaysActiveAndClosed,
         confirmedDays = confirmedDays,
         provisionalDays = provisionalDays,
