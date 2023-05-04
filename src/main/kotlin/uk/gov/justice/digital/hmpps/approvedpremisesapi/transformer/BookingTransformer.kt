@@ -49,7 +49,7 @@ class BookingTransformer(
     turnarounds = jpa.turnarounds.map(turnaroundTransformer::transformJpaToApi),
   )
 
-  private fun determineStatus(jpa: BookingEntity) = when {
+  fun determineStatus(jpa: BookingEntity) = when {
     jpa.service == ServiceName.approvedPremises.value -> determineApprovedPremisesStatus(jpa)
     jpa.service == ServiceName.temporaryAccommodation.value -> determineTemporaryAccommodationStatus(jpa)
     else -> throw RuntimeException("Could not determine service for Booking ${jpa.id}")

@@ -1,0 +1,103 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
+
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
+import java.time.LocalDate
+
+class BedUsageReportGenerator(
+  private val bookingTransformer: BookingTransformer,
+  private val bookingRepository: BookingRepository,
+  private val lostBedsRepository: LostBedsRepository,
+  private val workingDayCountService: WorkingDayCountService,
+) : ReportGenerator<BedEntity, BedUsageReportRow, BedUsageReportProperties>(BedUsageReportRow::class) {
+  override fun filter(properties: BedUsageReportProperties): (BedEntity) -> Boolean = {
+    checkServiceType(properties.serviceName, it.room.premises) &&
+      (properties.probationRegionId == null || it.room.premises.probationRegion.id == properties.probationRegionId)
+  }
+
+  override val convert: BedEntity.(properties: BedUsageReportProperties) -> List<BedUsageReportRow> = { properties ->
+    val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
+    val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
+
+    val bookings = bookingRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
+    val voids = lostBedsRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
+
+    val premises = this.room.premises
+
+    val resultRows = mutableListOf<BedUsageReportRow>()
+
+    bookings.forEach { booking ->
+      resultRows += BedUsageReportRow(
+        pdu = if (premises is TemporaryAccommodationPremisesEntity) premises.probationDeliveryUnit?.name else null,
+        propertyRef = premises.name,
+        addressLine1 = premises.addressLine1,
+        bedspaceRef = this.name,
+        crn = booking.crn,
+        type = BedUsageType.Booking,
+        startDate = booking.arrivalDate,
+        endDate = booking.departureDate,
+        durationOfBookingDays = booking.arrivalDate.getDaysUntilInclusive(booking.departureDate).size,
+        bookingStatus = bookingTransformer.determineStatus(booking),
+        voidCategory = null,
+        voidNotes = null
+      )
+
+      val turnaround = booking.turnaround
+      if (turnaround != null && turnaround.workingDayCount > 0) {
+        val turnaroundStartDate = booking.departureDate.plusDays(1)
+        val endDate = workingDayCountService.addWorkingDays(booking.departureDate, turnaround.workingDayCount)
+
+        resultRows += BedUsageReportRow(
+          pdu = (premises as? TemporaryAccommodationPremisesEntity)?.probationDeliveryUnit?.name,
+          propertyRef = premises.name,
+          addressLine1 = premises.addressLine1,
+          bedspaceRef = this.name,
+          crn = null,
+          type = BedUsageType.Turnaround,
+          startDate = turnaroundStartDate,
+          endDate = endDate,
+          durationOfBookingDays = turnaroundStartDate.getDaysUntilInclusive(endDate).size,
+          bookingStatus = null,
+          voidCategory = null,
+          voidNotes = null
+        )
+      }
+    }
+
+    voids.forEach { lostBed ->
+      resultRows += BedUsageReportRow(
+        pdu = if (premises is TemporaryAccommodationPremisesEntity) premises.probationDeliveryUnit?.name else null,
+        propertyRef = premises.name,
+        addressLine1 = premises.addressLine1,
+        bedspaceRef = this.name,
+        crn = null,
+        type = BedUsageType.Void,
+        startDate = lostBed.startDate,
+        endDate = lostBed.endDate,
+        durationOfBookingDays = lostBed.startDate.getDaysUntilInclusive(lostBed.endDate).size,
+        bookingStatus = null,
+        voidCategory = lostBed.reason.name,
+        voidNotes = lostBed.notes
+      )
+    }
+
+    resultRows
+  }
+
+  private fun checkServiceType(serviceName: ServiceName, premisesEntity: PremisesEntity) =
+    when (serviceName) {
+      ServiceName.approvedPremises -> premisesEntity is ApprovedPremisesEntity
+      ServiceName.temporaryAccommodation -> premisesEntity is TemporaryAccommodationPremisesEntity
+    }
+}
