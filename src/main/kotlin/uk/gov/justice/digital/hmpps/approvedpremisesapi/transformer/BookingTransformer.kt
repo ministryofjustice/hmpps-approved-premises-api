@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 
 @Component
 class BookingTransformer(
@@ -24,30 +25,37 @@ class BookingTransformer(
   private val bedTransformer: BedTransformer,
   private val turnaroundTransformer: TurnaroundTransformer,
   private val enumConverterFactory: EnumConverterFactory,
+  private val workingDayCountService: WorkingDayCountService,
 ) {
-  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?) = Booking(
-    id = jpa.id,
-    person = personTransformer.transformModelToApi(offender, inmateDetail),
-    arrivalDate = jpa.arrivalDate,
-    departureDate = jpa.departureDate,
-    serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),
-    keyWorker = staffMember?.let(staffMemberTransformer::transformDomainToApi),
-    status = determineStatus(jpa),
-    arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
-    departure = departureTransformer.transformJpaToApi(jpa.departure),
-    departures = jpa.departures.map { departureTransformer.transformJpaToApi(it)!! },
-    nonArrival = nonArrivalTransformer.transformJpaToApi(jpa.nonArrival),
-    cancellation = cancellationTransformer.transformJpaToApi(jpa.cancellation),
-    cancellations = jpa.cancellations.map { cancellationTransformer.transformJpaToApi(it)!! },
-    confirmation = confirmationTransformer.transformJpaToApi(jpa.confirmation),
-    extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi),
-    bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
-    originalArrivalDate = jpa.originalArrivalDate,
-    originalDepartureDate = jpa.originalDepartureDate,
-    createdAt = jpa.createdAt.toInstant(),
-    turnaround = jpa.turnaround?.let(turnaroundTransformer::transformJpaToApi),
-    turnarounds = jpa.turnarounds.map(turnaroundTransformer::transformJpaToApi),
-  )
+  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?): Booking {
+    val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
+
+    return Booking(
+      id = jpa.id,
+      person = personTransformer.transformModelToApi(offender, inmateDetail),
+      arrivalDate = jpa.arrivalDate,
+      departureDate = jpa.departureDate,
+      serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),
+      keyWorker = staffMember?.let(staffMemberTransformer::transformDomainToApi),
+      status = determineStatus(jpa),
+      arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
+      departure = departureTransformer.transformJpaToApi(jpa.departure),
+      departures = jpa.departures.map { departureTransformer.transformJpaToApi(it)!! },
+      nonArrival = nonArrivalTransformer.transformJpaToApi(jpa.nonArrival),
+      cancellation = cancellationTransformer.transformJpaToApi(jpa.cancellation),
+      cancellations = jpa.cancellations.map { cancellationTransformer.transformJpaToApi(it)!! },
+      confirmation = confirmationTransformer.transformJpaToApi(jpa.confirmation),
+      extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi),
+      bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
+      originalArrivalDate = jpa.originalArrivalDate,
+      originalDepartureDate = jpa.originalDepartureDate,
+      createdAt = jpa.createdAt.toInstant(),
+      turnaround = jpa.turnaround?.let(turnaroundTransformer::transformJpaToApi),
+      turnarounds = jpa.turnarounds.map(turnaroundTransformer::transformJpaToApi),
+      turnaroundStartDate = if (hasNonZeroDayTurnaround) workingDayCountService.addWorkingDays(jpa.departureDate, 1) else null,
+      effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayCountService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
+    )
+  }
 
   fun determineStatus(jpa: BookingEntity) = when {
     jpa.service == ServiceName.approvedPremises.value -> determineApprovedPremisesStatus(jpa)

@@ -3111,9 +3111,6 @@ components:
         originalDepartureDate:
           type: string
           format: date
-        closeDate:
-          type: string
-          format: date
         createdAt:
           type: string
           format: date-time
@@ -3230,6 +3227,12 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Turnaround'
+            turnaroundStartDate:
+              type: string
+              format: date
+            effectiveEndDate:
+              type: string
+              format: date
           required:
             - status
             - extensions
