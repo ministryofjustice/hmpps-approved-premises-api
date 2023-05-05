@@ -4,6 +4,7 @@ import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.FlywayException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -18,6 +19,7 @@ class PreemptiveCacheRefresher(
   private val bookingRepository: BookingRepository,
   private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
+  @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
   redLock: RedLock
 ) : DisposableBean {
   protected val log = LoggerFactory.getLogger(this::class.java)
@@ -38,6 +40,7 @@ class PreemptiveCacheRefresher(
         bookingRepository,
         communityApiClient,
         prisonsApiClient,
+        loggingEnabled,
         redLock
       )
 

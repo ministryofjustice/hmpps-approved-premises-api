@@ -178,3 +178,4 @@ person-departed-detail-url-template: http://localhost:3000/events/person-departe
 booking-not-made-detail-url-template: http://localhost:3000/events/booking-not-made/#eventId
 
 preemptive-cache-key-prefix: ""
+preemptive-cache-logging-enabled: false
