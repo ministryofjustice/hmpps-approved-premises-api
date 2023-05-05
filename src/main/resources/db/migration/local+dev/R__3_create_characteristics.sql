@@ -1,4 +1,7 @@
 -- ${flyway:timestamp}
+
+TRUNCATE TABLE characteristics CASCADE;
+
 insert into
   "characteristics" (
     "id",
