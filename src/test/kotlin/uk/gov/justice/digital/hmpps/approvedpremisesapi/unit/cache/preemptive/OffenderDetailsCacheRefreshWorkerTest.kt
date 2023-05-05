@@ -29,6 +29,7 @@ class OffenderDetailsCacheRefreshWorkerTest {
     mockCommunityApiClient,
     mockPrisonsApiClient,
     false,
+    0,
     mockRedLock
   )
 

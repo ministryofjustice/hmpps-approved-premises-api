@@ -20,6 +20,7 @@ class PreemptiveCacheRefresher(
   private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
+  @Value("\${preemptive-cache-delay-ms}") private val delayMs: Long,
   redLock: RedLock
 ) : DisposableBean {
   protected val log = LoggerFactory.getLogger(this::class.java)
@@ -41,6 +42,7 @@ class PreemptiveCacheRefresher(
         communityApiClient,
         prisonsApiClient,
         loggingEnabled,
+        delayMs,
         redLock
       )
 

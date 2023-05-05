@@ -13,6 +13,7 @@ class OffenderDetailsCacheRefreshWorker(
   private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   private val loggingEnabled: Boolean,
+  private val delayMs: Long,
   redLock: RedLock
 ) : CacheRefreshWorker(redLock, "offenderDetailsAndInmateDetails") {
   override fun work(checkShouldStop: () -> Boolean) {
@@ -64,5 +65,7 @@ class OffenderDetailsCacheRefreshWorker(
         }
       }
     }
+
+    interruptableSleep(delayMs)
   }
 }
