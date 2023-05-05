@@ -106,7 +106,7 @@ abstract class BaseHMPPSClient(
         writeToRedis(qualifiedKey, cacheEntry, cacheConfig.hardTtlSeconds.toLong())
       }
 
-      return ClientResult.Success(result.statusCode, deserialized)
+      return ClientResult.Success(result.statusCode, deserialized, false)
     } catch (exception: WebClientResponseException) {
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         val qualifiedKey = getQualifiedKey(requestBuilder, cacheConfig)
@@ -122,7 +122,7 @@ abstract class BaseHMPPSClient(
         writeToRedis(qualifiedKey, cacheEntry, cacheConfig.hardTtlSeconds.toLong())
       }
 
-      return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString)
+      return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
     } catch (exception: Exception) {
       return ClientResult.Failure.Other(method, requestBuilder.path ?: "", exception)
     }
@@ -158,7 +158,8 @@ abstract class BaseHMPPSClient(
           objectMapper.readValue(cacheEntry.body, typeReference)
         } else {
           objectMapper.readValue(cacheEntry.body, clazz)
-        }
+        },
+        isPreemptivelyCachedResponse = true
       )
     }
 
@@ -166,7 +167,8 @@ abstract class BaseHMPPSClient(
       status = cacheEntry.httpStatus,
       body = cacheEntry.body,
       method = cacheEntry.method!!,
-      path = cacheEntry.path!!
+      path = cacheEntry.path!!,
+      isPreemptivelyCachedResponse = true
     )
   }
 
@@ -200,11 +202,11 @@ abstract class BaseHMPPSClient(
 }
 
 sealed interface ClientResult<ResponseType> {
-  class Success<ResponseType>(val status: HttpStatus, val body: ResponseType) : ClientResult<ResponseType>
+  class Success<ResponseType>(val status: HttpStatus, val body: ResponseType, val isPreemptivelyCachedResponse: Boolean = false) : ClientResult<ResponseType>
   sealed interface Failure<ResponseType> : ClientResult<ResponseType> {
     fun throwException(): Nothing
 
-    class StatusCode<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatus, val body: String?) : Failure<ResponseType> {
+    class StatusCode<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatus, val body: String?, val isPreemptivelyCachedResponse: Boolean = false) : Failure<ResponseType> {
       override fun throwException(): Nothing {
         throw RuntimeException("Unable to complete $method request to $path: $status")
       }
