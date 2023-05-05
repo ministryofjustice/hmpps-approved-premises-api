@@ -28,6 +28,7 @@ class OffenderDetailsCacheRefreshWorkerTest {
     mockBookingRepository,
     mockCommunityApiClient,
     mockPrisonsApiClient,
+    false,
     mockRedLock
   )
 
