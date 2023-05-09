@@ -179,9 +179,9 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         "Local authority / Borough",
         "Probation delivery unit (PDU)",
         // Sample of characteristics
-        "Pub nearby?",
-        "Park nearby?",
-        "School nearby?",
+        "Pub nearby",
+        "Park nearby",
+        "School nearby",
         // Sample of characteristics
         "Optional notes"
       )
