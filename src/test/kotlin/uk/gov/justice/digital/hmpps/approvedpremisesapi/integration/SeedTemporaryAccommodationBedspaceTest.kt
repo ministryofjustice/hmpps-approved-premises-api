@@ -50,7 +50,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
 
     val csvRow = TemporaryAccommodationBedspaceSeedCsvRowFactory()
       .withPremisesName(premises.name)
-      .withCharacteristics(listOf("Single bed", "Wheelchair accessible"))
+      .withCharacteristics(listOf("Shared bathroom", "Shared kitchen"))
       .produce()
 
     withCsv(
@@ -100,7 +100,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
     val csvRow = TemporaryAccommodationBedspaceSeedCsvRowFactory()
       .withPremisesName(premises.name)
       .withBedspaceName(existingRoom.name)
-      .withCharacteristics(listOf("Not suitable for registered sex offenders (RSO)", "Ground floor level access"))
+      .withCharacteristics(listOf("Shared kitchen"))
       .produce()
 
     withCsv(
@@ -129,14 +129,10 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       .withUnquotedFields(
         "Property reference",
         "Bedspace reference",
-        "Single bed?",
-        "Double bed?",
-        "Shared kitchen?",
-        "Floor level access?",
-        "Lift access?",
-        "Wheelchair accessible?",
-        "Not suitable for RSO?",
-        "Not suitable for arson offenders?",
+        // Sample of characteristics
+        "Shared bathroom",
+        "Shared kitchen",
+        // Sample of characteristics
         "Optional notes about the bedspace",
       )
       .newRow()
@@ -145,14 +141,8 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       builder
         .withQuotedField(it.premisesName)
         .withQuotedField(it.bedspaceName)
-        .withUnquotedField(it.characteristics.contains("Single bed").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Double bed").toString().uppercase())
+        .withUnquotedField(it.characteristics.contains("Shared bathroom").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Shared kitchen").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Ground floor level access").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Lift access").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Wheelchair accessible").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Not suitable for registered sex offenders (RSO)").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Not suitable for arson offenders").toString().uppercase())
         .withQuotedField(it.notes ?: "")
         .newRow()
     }

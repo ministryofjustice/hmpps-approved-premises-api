@@ -77,14 +77,11 @@ class TemporaryAccommodationBedspaceSeedJob(
   private fun getCharacteristics(columns: Map<String, String>): List<String> {
     val characteristics = mutableListOf<String>()
 
-    appendCharacteristicIfSet(columns, characteristics, "Single bed")
-    appendCharacteristicIfSet(columns, characteristics, "Double bed")
     appendCharacteristicIfSet(columns, characteristics, "Shared kitchen")
+    appendCharacteristicIfSet(columns, characteristics, "Shared bathroom")
     appendCharacteristicIfSet(columns, characteristics, "Ground floor level access", "Floor level access?")
-    appendCharacteristicIfSet(columns, characteristics, "Lift access")
     appendCharacteristicIfSet(columns, characteristics, "Wheelchair accessible")
-    appendCharacteristicIfSet(columns, characteristics, "Not suitable for registered sex offenders (RSO)", "Not suitable for RSO?")
-    appendCharacteristicIfSet(columns, characteristics, "Not suitable for arson offenders")
+    appendCharacteristicIfSet(columns, characteristics, "Other - please state in notes")
 
     return characteristics.toList()
   }
