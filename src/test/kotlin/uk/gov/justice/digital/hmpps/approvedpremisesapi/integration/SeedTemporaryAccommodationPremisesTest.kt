@@ -79,7 +79,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       .withProbationRegion(probationRegion.name)
       .withLocalAuthorityArea(localAuthorityArea.name)
       .withPdu(probationDeliveryUnit.name)
-      .withCharacteristics(listOf("Park nearby", "Not suitable for arson offenders"))
+      .withCharacteristics(listOf("Park nearby", "Pub nearby"))
       .produce()
 
     withCsv(
@@ -140,7 +140,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       .withProbationRegion(updatedProbationRegion.name)
       .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
       .withPdu(updateProbationDeliveryUnit.name)
-      .withCharacteristics(listOf("Ground floor level access"))
+      .withCharacteristics(listOf("Park nearby"))
       .produce()
 
     withCsv(
@@ -178,15 +178,11 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         "Region",
         "Local authority / Borough",
         "Probation delivery unit (PDU)",
-        "Floor level access?",
-        "Wheelchair accessible?",
+        // Sample of characteristics
         "Pub nearby?",
         "Park nearby?",
         "School nearby?",
-        "Women only?",
-        "Men only?",
-        "Not suitable for RSO?",
-        "Not suitable for arson offenders?",
+        // Sample of characteristics
         "Optional notes"
       )
       .newRow()
@@ -201,15 +197,9 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         .withQuotedField(it.probationRegion)
         .withQuotedField(it.localAuthorityArea)
         .withQuotedField(it.pdu)
-        .withUnquotedField(it.characteristics.contains("Ground floor level access").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Wheelchair accessible").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Pub nearby").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("Park nearby").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("School nearby").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Women only").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Men only").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Not suitable for registered sex offenders (RSO)").toString().uppercase())
-        .withUnquotedField(it.characteristics.contains("Not suitable for arson offenders").toString().uppercase())
         .withQuotedField(it.notes)
         .newRow()
     }
