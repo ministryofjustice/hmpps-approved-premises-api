@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 
 @Service
 class SeedService(
-  @Value("\${seed.file-prefix}") private val seedFilePrefix: String,
+  private val seedConfig: SeedConfig,
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
@@ -96,7 +96,7 @@ class SeedService(
     val errors = mutableListOf<String>()
 
     try {
-      csvReader().open("$seedFilePrefix/${job.fileName}.csv") {
+      csvReader().open("${seedConfig.filePrefix}/${job.fileName}.csv") {
         readAllWithHeaderAsSequence().forEach { row ->
           val deserializedRow = job.deserializeRow(row)
           try {
@@ -121,7 +121,7 @@ class SeedService(
     seedLogger.info("Checking that required headers are present...")
 
     val headerRow = try {
-      csvReader().open("$seedFilePrefix/${job.fileName}.csv") {
+      csvReader().open("${seedConfig.filePrefix}/${job.fileName}.csv") {
         readAllWithHeaderAsSequence().first().keys
       }
     } catch (exception: Exception) {
@@ -141,7 +141,7 @@ class SeedService(
     val errors = mutableListOf<String>()
 
     try {
-      csvReader().open("$seedFilePrefix/${job.fileName}.csv") {
+      csvReader().open("${seedConfig.filePrefix}/${job.fileName}.csv") {
         readAllWithHeaderAsSequence().forEach { row ->
           try {
             job.deserializeRow(row)
