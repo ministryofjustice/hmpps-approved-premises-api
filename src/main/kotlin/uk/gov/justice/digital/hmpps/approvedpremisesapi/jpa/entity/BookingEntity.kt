@@ -40,6 +40,18 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       "AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)"
   )
   fun findByBedIdAndArrivingBeforeDate(bedId: UUID, date: LocalDate, thisEntityId: UUID?): List<BookingEntity>
+
+  @Query(
+    "SELECT b FROM BookingEntity b WHERE (b.bed, b.departureDate) IN (" +
+      "  SELECT b2.bed, MAX(b2.departureDate)" +
+      "  FROM BookingEntity b2 " +
+      "  WHERE b2.departureDate < :date " +
+      "  AND b2.bed.id IN :bedIds " +
+      "  AND SIZE(b2.cancellations) = 0 " +
+      "  GROUP BY b2.bed " +
+      ")"
+  )
+  fun findClosestBookingBeforeDateForBeds(date: LocalDate, bedIds: List<UUID>): List<BookingEntity>
 }
 
 @Entity
