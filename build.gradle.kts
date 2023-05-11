@@ -182,3 +182,5 @@ tasks {
     jvmArgs!!.plus("java.base/java.lang=ALL-UNNAMED")
   }
 }
+
+tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateDomainEvents")
