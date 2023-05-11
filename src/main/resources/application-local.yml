@@ -26,5 +26,8 @@ log-client-credentials-jwt-info: true
 
 seed:
   file-prefix: "./seed"
+  auto:
+    enabled: true
+    file-prefixes: classpath:db/seed/local+dev
 
 assign-default-region-to-users-with-unknown-region: true
