@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import org.springframework.context.ApplicationContext
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
@@ -22,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
+import java.io.IOException
+import javax.annotation.PostConstruct
 
 @Service
 class SeedService(
@@ -30,10 +33,40 @@ class SeedService(
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
 ) {
+  @PostConstruct
+  fun autoSeed() {
+    if (!seedConfig.auto.enabled) {
+      return
+    }
+
+    seedLogger.info("Auto-seeding from locations: ${seedConfig.auto.filePrefixes}")
+    for (filePrefix in seedConfig.auto.filePrefixes) {
+      val csvFiles = try {
+        PathMatchingResourcePatternResolver().getResources("$filePrefix/*.csv")
+      } catch (e: IOException) {
+        seedLogger.warn(e.message!!)
+        continue
+      }
+
+      for (csv in csvFiles) {
+        val csvName = csv.filename!!.replace("\\.csv$".toRegex(), "")
+        val seedFileType = SeedFileType.values().firstOrNull { it.value == csvName }
+        if (seedFileType == null) {
+          seedLogger.warn("Seed file ${csv.file.path} does not have a known job type; skipping.")
+        } else {
+          seedLogger.info("Found seed job of type $seedFileType in $filePrefix")
+          seedData(seedFileType, seedFileType.value) { csv.file.path }
+        }
+      }
+    }
+  }
+
   @Async
   fun seedDataAsync(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename)
 
-  fun seedData(seedFileType: SeedFileType, filename: String) {
+  fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/${this.fileName}.csv" }
+
+  private fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
     seedLogger.info("Starting seed request: $seedFileType - $filename")
 
     try {
@@ -76,27 +109,27 @@ class SeedService(
         )
       }
 
-      transactionTemplate.executeWithoutResult { processJob(job) }
+      transactionTemplate.executeWithoutResult { processJob(job, resolveCsvPath) }
     } catch (exception: Exception) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
   }
 
-  private fun <T> processJob(job: SeedJob<T>) {
+  private fun <T> processJob(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
     // During processing, the CSV file is processed one row at a time to avoid OOM issues.
     // It is preferable to fail fast rather than processing half of a file before stopping,
     // so we first do a full pass but only deserializing each row
-    enforcePresenceOfRequiredHeaders(job)
-    ensureCsvCanBeDeserialized(job)
-    processCsv(job)
+    enforcePresenceOfRequiredHeaders(job, resolveCsvPath)
+    ensureCsvCanBeDeserialized(job, resolveCsvPath)
+    processCsv(job, resolveCsvPath)
   }
 
-  private fun <T> processCsv(job: SeedJob<T>) {
+  private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
     var rowNumber = 1
     val errors = mutableListOf<String>()
 
     try {
-      csvReader().open("${seedConfig.filePrefix}/${job.fileName}.csv") {
+      csvReader().open(job.resolveCsvPath()) {
         readAllWithHeaderAsSequence().forEach { row ->
           val deserializedRow = job.deserializeRow(row)
           try {
@@ -117,11 +150,11 @@ class SeedService(
     }
   }
 
-  private fun <T> enforcePresenceOfRequiredHeaders(job: SeedJob<T>) {
+  private fun <T> enforcePresenceOfRequiredHeaders(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
     seedLogger.info("Checking that required headers are present...")
 
     val headerRow = try {
-      csvReader().open("${seedConfig.filePrefix}/${job.fileName}.csv") {
+      csvReader().open(job.resolveCsvPath()) {
         readAllWithHeaderAsSequence().first().keys
       }
     } catch (exception: Exception) {
@@ -135,13 +168,13 @@ class SeedService(
     }
   }
 
-  private fun <T> ensureCsvCanBeDeserialized(job: SeedJob<T>) {
+  private fun <T> ensureCsvCanBeDeserialized(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
     seedLogger.info("Validating that CSV can be fully read")
     var rowNumber = 1
     val errors = mutableListOf<String>()
 
     try {
-      csvReader().open("${seedConfig.filePrefix}/${job.fileName}.csv") {
+      csvReader().open(job.resolveCsvPath()) {
         readAllWithHeaderAsSequence().forEach { row ->
           try {
             job.deserializeRow(row)
