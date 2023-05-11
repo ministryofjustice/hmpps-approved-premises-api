@@ -5083,7 +5083,7 @@ components:
             requiredCharacteristics:
               type: array
               items:
-                type: string
+                $ref: '#/components/schemas/PlacementCriteria'
           required:
             - postcodeDistrict
             - maxDistanceMiles
