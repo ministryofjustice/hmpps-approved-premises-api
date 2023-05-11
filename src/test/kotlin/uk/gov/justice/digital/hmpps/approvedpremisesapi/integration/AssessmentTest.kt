@@ -158,8 +158,8 @@ class AssessmentTest : IntegrationTestBase() {
       duration = 12,
       location = "B74",
       radius = 50,
-      essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift),
-      desirableCriteria = listOf(PlacementCriteria.hasBrailleSignage, PlacementCriteria.acceptsSexOffenders),
+      essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
+      desirableCriteria = listOf(PlacementCriteria.isCatered, PlacementCriteria.acceptsSexOffenders),
       mentalHealthSupport = false
     )
 
@@ -204,8 +204,8 @@ class AssessmentTest : IntegrationTestBase() {
 
             assessment.schemaUpToDate = true
 
-            val essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift)
-            val desirableCriteria = listOf(PlacementCriteria.hasBrailleSignage, PlacementCriteria.acceptsSexOffenders)
+            val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
+            val desirableCriteria = listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
 
             val placementRequirements = PlacementRequirements(
               gender = Gender.male,
@@ -358,8 +358,8 @@ class AssessmentTest : IntegrationTestBase() {
 
             assessment.schemaUpToDate = true
 
-            val essentialCriteria = listOf(PlacementCriteria.hasHearingLoop, PlacementCriteria.hasLift)
-            val desirableCriteria = listOf(PlacementCriteria.hasBrailleSignage, PlacementCriteria.acceptsSexOffenders)
+            val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isEsap)
+            val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
 
             val placementRequirements = PlacementRequirements(
               gender = Gender.male,
