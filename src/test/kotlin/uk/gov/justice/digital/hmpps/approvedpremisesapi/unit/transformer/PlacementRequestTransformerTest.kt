@@ -79,9 +79,9 @@ class PlacementRequestTransformerTest {
     )
     .withDesirableCriteria(
       listOf(
-        CharacteristicEntityFactory().withPropertyName("hasWideStepFreeAccess").produce(),
-        CharacteristicEntityFactory().withPropertyName("hasLift").produce(),
-        CharacteristicEntityFactory().withPropertyName("hasBrailleSignage").produce(),
+        CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
+        CharacteristicEntityFactory().withPropertyName("isSingleRoom").produce(),
+        CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
         CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
       ),
     )
@@ -103,7 +103,23 @@ class PlacementRequestTransformerTest {
 
   @Test
   fun `transformJpaToApi transforms a basic placement request entity`() {
-    val placementRequestEntity = placementRequestFactory.produce()
+    val placementRequestEntity = placementRequestFactory
+      .withEssentialCriteria(
+        listOf(
+          CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
+          CharacteristicEntityFactory().withPropertyName("isRecoveryFocussed").produce(),
+          CharacteristicEntityFactory().withPropertyName("someOtherPropertyName").produce(),
+        ),
+      )
+      .withDesirableCriteria(
+        listOf(
+          CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
+          CharacteristicEntityFactory().withPropertyName("isSingleRoom").produce(),
+          CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
+          CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
+        ),
+      )
+      .produce()
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
@@ -117,7 +133,7 @@ class PlacementRequestTransformerTest {
         location = placementRequestEntity.postcodeDistrict.outcode,
         radius = placementRequestEntity.radius,
         essentialCriteria = listOf(PlacementCriteria.isSemiSpecialistMentalHealth, PlacementCriteria.isRecoveryFocussed),
-        desirableCriteria = listOf(PlacementCriteria.hasWideStepFreeAccess, PlacementCriteria.hasLift, PlacementCriteria.hasBrailleSignage),
+        desirableCriteria = listOf(PlacementCriteria.isWheelchairDesignated, PlacementCriteria.isSingleRoom, PlacementCriteria.hasEnSuite),
         mentalHealthSupport = placementRequestEntity.mentalHealthSupport,
         person = mockPerson,
         risks = mockRisks,

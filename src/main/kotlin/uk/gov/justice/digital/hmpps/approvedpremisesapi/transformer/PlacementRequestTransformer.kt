@@ -55,24 +55,12 @@ class PlacementRequestTransformer(
     return PlacementRequestStatus.matched
   }
 
-  private fun characteristicToCriteria(characteristic: CharacteristicEntity): PlacementCriteria? = when (characteristic.propertyName) {
-    "isSemiSpecialistMentalHealth" -> PlacementCriteria.isSemiSpecialistMentalHealth
-    "isRecoveryFocussed" -> PlacementCriteria.isRecoveryFocussed
-    "isSuitableForVulnerable" -> PlacementCriteria.isSuitableForVulnerable
-    "acceptsSexOffenders" -> PlacementCriteria.acceptsSexOffenders
-    "acceptsChildSexOffenders" -> PlacementCriteria.acceptsChildSexOffenders
-    "acceptsNonSexualChildOffenders" -> PlacementCriteria.acceptsNonSexualChildOffenders
-    "acceptsHateCrimeOffenders" -> PlacementCriteria.acceptsHateCrimeOffenders
-    "isCatered" -> PlacementCriteria.isCatered
-    "hasWideStepFreeAccess" -> PlacementCriteria.hasWideStepFreeAccess
-    "hasWideAccessToCommunalAreas" -> PlacementCriteria.hasWideAccessToCommunalAreas
-    "hasStepFreeAccessToCommunalAreas" -> PlacementCriteria.hasStepFreeAccessToCommunalAreas
-    "hasWheelChairAccessibleBathrooms" -> PlacementCriteria.hasWheelChairAccessibleBathrooms
-    "hasLift" -> PlacementCriteria.hasLift
-    "hasTactileFlooring" -> PlacementCriteria.hasTactileFlooring
-    "hasBrailleSignage" -> PlacementCriteria.hasBrailleSignage
-    "hasHearingLoop" -> PlacementCriteria.hasHearingLoop
-    else -> { null }
+  private fun characteristicToCriteria(characteristic: CharacteristicEntity): PlacementCriteria? {
+    return try {
+      PlacementCriteria.valueOf(characteristic.propertyName!!)
+    } catch (exception: Exception) {
+      null
+    }
   }
 
   private fun getReleaseType(releaseType: String?): ReleaseTypeOption? = when (releaseType) {

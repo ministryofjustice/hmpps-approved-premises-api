@@ -5019,6 +5019,9 @@ components:
     PlacementCriteria:
       type: string
       enum:
+        - isPipe
+        - isEsap
+        - isRecoveryFocused
         - isSemiSpecialistMentalHealth
         - isRecoveryFocussed
         - isSuitableForVulnerable
@@ -5026,15 +5029,14 @@ components:
         - acceptsChildSexOffenders
         - acceptsNonSexualChildOffenders
         - acceptsHateCrimeOffenders
+        - isWheelchairDesignated
+        - isSingleRoom
+        - isStepFreeDesignated
         - isCatered
-        - hasWideStepFreeAccess
-        - hasWideAccessToCommunalAreas
-        - hasStepFreeAccessToCommunalAreas
-        - hasWheelChairAccessibleBathrooms
-        - hasLift
-        - hasTactileFlooring
-        - hasBrailleSignage
-        - hasHearingLoop
+        - isGroundFloor
+        - hasEnSuite
+        - isSuitedForSexOffenders
+        - isArsonSuitable
     Gender:
       type: string
       enum:
@@ -5081,7 +5083,7 @@ components:
             requiredCharacteristics:
               type: array
               items:
-                type: string
+                $ref: '#/components/schemas/PlacementCriteria'
           required:
             - postcodeDistrict
             - maxDistanceMiles

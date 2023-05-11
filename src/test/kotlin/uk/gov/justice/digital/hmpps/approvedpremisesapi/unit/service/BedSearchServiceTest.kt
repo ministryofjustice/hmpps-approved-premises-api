@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
@@ -79,14 +80,15 @@ class BedSearchServiceTest {
 
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns postcodeDistrict
 
-    val premisesCharacteristicPropertyName = "unknownPropertyName"
+    val premisesCharacteristicPropertyName = "isRecoveryFocussed"
 
     val roomCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("isEsap")
       .withModelScope("room")
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristicPropertyName, roomCharacteristic.propertyName!!)) } returns listOf(roomCharacteristic)
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf("isEsap", premisesCharacteristicPropertyName)) } returns listOf(roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -94,7 +96,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(premisesCharacteristicPropertyName, roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(PlacementCriteria.isEsap, PlacementCriteria.isRecoveryFocussed),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -123,11 +125,13 @@ class BedSearchServiceTest {
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns postcodeDistrict
 
     val premisesCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("hasEnSuite")
       .withServiceScope("temporary-accommodation")
       .withModelScope("premises")
       .produce()
 
     val roomCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("isArsonSuitable")
       .withModelScope("room")
       .withServiceScope("approved-premises")
       .produce()
@@ -140,7 +144,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -169,11 +173,12 @@ class BedSearchServiceTest {
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns postcodeDistrict
 
     val premisesCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("hasEnSuite")
       .withServiceScope("approved-premises")
       .withModelScope("premises")
       .produce()
 
-    val roomCharacteristicPropertyName = "unknownPropertyName"
+    val roomCharacteristicPropertyName = "isArsonSuitable"
 
     every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristicPropertyName)) } returns listOf(premisesCharacteristic)
 
@@ -183,7 +188,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristicPropertyName),
+      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -212,11 +217,13 @@ class BedSearchServiceTest {
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns postcodeDistrict
 
     val premisesCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("isArsonSuitable")
       .withServiceScope("approved-premises")
       .withModelScope("premises")
       .produce()
 
     val roomCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("hasEnSuite")
       .withServiceScope("temporary-accommodation")
       .withModelScope("room")
       .produce()
@@ -229,7 +236,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.hasEnSuite),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -258,11 +265,13 @@ class BedSearchServiceTest {
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns null
 
     val premisesCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("isArsonSuitable")
       .withServiceScope("approved-premises")
       .withModelScope("premises")
       .produce()
 
     val roomCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("hasEnSuite")
       .withServiceScope("approved-premises")
       .withModelScope("room")
       .produce()
@@ -277,7 +286,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.hasEnSuite),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -306,11 +315,13 @@ class BedSearchServiceTest {
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns postcodeDistrict
 
     val premisesCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("hasEnSuite")
       .withServiceScope("approved-premises")
       .withModelScope("premises")
       .produce()
 
     val roomCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("isArsonSuitable")
       .withServiceScope("approved-premises")
       .withModelScope("room")
       .produce()
@@ -323,7 +334,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
-      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -352,11 +363,13 @@ class BedSearchServiceTest {
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns postcodeDistrict
 
     val premisesCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("hasEnSuite")
       .withServiceScope("approved-premises")
       .withModelScope("premises")
       .produce()
 
     val roomCharacteristic = CharacteristicEntityFactory()
+      .withPropertyName("isArsonSuitable")
       .withServiceScope("approved-premises")
       .withModelScope("room")
       .produce()
@@ -369,7 +382,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 0,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -398,13 +411,15 @@ class BedSearchServiceTest {
     every { mockPostcodeDistrictRepository.findByOutcode(postcodeDistrict.outcode) } returns postcodeDistrict
 
     val premisesCharacteristic = CharacteristicEntityFactory()
-      .withModelScope("premises")
+      .withPropertyName("hasEnSuite")
       .withServiceScope("approved-premises")
+      .withModelScope("premises")
       .produce()
 
     val roomCharacteristic = CharacteristicEntityFactory()
-      .withModelScope("room")
+      .withPropertyName("isArsonSuitable")
       .withServiceScope("approved-premises")
+      .withModelScope("room")
       .produce()
 
     every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
@@ -455,7 +470,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
@@ -29,7 +30,7 @@ class BedSearchService(
     maxDistanceMiles: Int,
     startDate: LocalDate,
     durationInDays: Int,
-    requiredCharacteristics: List<String>,
+    requiredCharacteristics: List<PlacementCriteria>,
   ): AuthorisableActionResult<ValidatableActionResult<List<ApprovedPremisesBedSearchResult>>> {
     if (!user.hasRole(UserRole.MATCHER)) {
       return AuthorisableActionResult.Unauthorised()
@@ -40,10 +41,11 @@ class BedSearchService(
         val characteristicErrors = mutableListOf<String>()
         val premisesCharacteristicIds = mutableListOf<UUID>()
         val roomCharacteristicIds = mutableListOf<UUID>()
+        val requiredPropertyNames = requiredCharacteristics.map { it.toString() }
 
-        val characteristics = characteristicService.getCharacteristicsByPropertyNames(requiredCharacteristics)
+        val characteristics = characteristicService.getCharacteristicsByPropertyNames(requiredPropertyNames)
 
-        requiredCharacteristics.forEach { propertyName ->
+        requiredPropertyNames.forEach { propertyName ->
           val characteristic = characteristics.firstOrNull { it.propertyName == propertyName }
           when {
             characteristic == null -> characteristicErrors += "$propertyName doesNotExist"
