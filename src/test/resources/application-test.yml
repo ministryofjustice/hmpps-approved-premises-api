@@ -116,5 +116,6 @@ url-templates:
     booking-not-made-event-detail: http://api/events/booking-not-made/#eventId
   frontend:
     application: http://frontend/applications/#id
+    assessment: http://frontend/assessments/#id
 
 preemptive-cache-delay-ms: 250
