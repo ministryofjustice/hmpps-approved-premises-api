@@ -63,6 +63,10 @@ dependencies {
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.2.0")
+
+  implementation("uk.gov.service.notify:notifications-java-client:4.0.0-RELEASE") {
+    exclude(group = "org.json", module = "json")
+  }
 }
 
 java {
