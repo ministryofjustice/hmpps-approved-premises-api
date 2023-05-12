@@ -45,7 +45,7 @@ class AssessmentService(
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
   private val placementRequestService: PlacementRequestService,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
   fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
     assessmentRepository.findAllAssessmentSummariesNotReallocated(

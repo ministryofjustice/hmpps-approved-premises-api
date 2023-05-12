@@ -281,7 +281,7 @@ class AssessmentTest : IntegrationTestBase() {
 
             assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-            assertThat(emittedMessage.detailUrl).matches("http://frontend/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
             assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
@@ -358,7 +358,7 @@ class AssessmentTest : IntegrationTestBase() {
 
             assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-            assertThat(emittedMessage.detailUrl).matches("http://frontend/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
             assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
@@ -490,7 +490,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-        assertThat(emittedMessage.detailUrl).matches("http://frontend/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+        assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
         assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
           SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),

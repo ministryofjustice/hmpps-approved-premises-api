@@ -169,14 +169,18 @@ seed:
   file-prefix: "/tmp/seed"
 
 assign-default-region-to-users-with-unknown-region: false
-application-url-template: http://localhost:3000/applications/#id
-application-submitted-detail-url-template: http://localhost:3000/events/application-submitted/#eventId
-application-assessed-detail-url-template: http://localhost:3000/events/application-assessed/#eventId
-booking-made-detail-url-template: http://localhost:3000/events/booking-made/#eventId
-person-arrived-detail-url-template: http://localhost:3000/events/person-arrived/#eventId
-person-not-arrived-detail-url-template: http://localhost:3000/events/person-not-arrived/#eventId
-person-departed-detail-url-template: http://localhost:3000/events/person-departed/#eventId
-booking-not-made-detail-url-template: http://localhost:3000/events/booking-not-made/#eventId
+
+url-templates:
+  api:
+    application-submitted-event-detail: http://localhost:3000/events/application-submitted/#eventId
+    application-assessed-event-detail: http://localhost:3000/events/application-assessed/#eventId
+    booking-made-event-detail: http://localhost:3000/events/booking-made/#eventId
+    person-arrived-event-detail: http://localhost:3000/events/person-arrived/#eventId
+    person-not-arrived-event-detail: http://localhost:3000/events/person-not-arrived/#eventId
+    person-departed-event-detail: http://localhost:3000/events/person-departed/#eventId
+    booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
+  frontend:
+    application: http://localhost:3000/applications/#id
 
 preemptive-cache-key-prefix: ""
 preemptive-cache-logging-enabled: false

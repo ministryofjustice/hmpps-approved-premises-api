@@ -35,13 +35,13 @@ class DomainEventService(
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
-  @Value("\${application-submitted-detail-url-template}") private val applicationSubmittedDetailUrlTemplate: String,
-  @Value("\${application-assessed-detail-url-template}") private val applicationAssessedDetailUrlTemplate: String,
-  @Value("\${booking-made-detail-url-template}") private val bookingMadeDetailUrlTemplate: String,
-  @Value("\${person-arrived-detail-url-template}") private val personArrivedDetailUrlTemplate: String,
-  @Value("\${person-not-arrived-detail-url-template}") private val personNotArrivedDetailUrlTemplate: String,
-  @Value("\${person-departed-detail-url-template}") private val personDepartedDetailUrlTemplate: String,
-  @Value("\${booking-not-made-detail-url-template}") private val bookingNotMadeDetailUrlTemplate: String,
+  @Value("\${url-templates.api.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.application-assessed-event-detail}") private val applicationAssessedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.booking-made-event-detail}") private val bookingMadeDetailUrlTemplate: String,
+  @Value("\${url-templates.api.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.person-not-arrived-event-detail}") private val personNotArrivedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.person-departed-event-detail}") private val personDepartedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.booking-not-made-event-detail}") private val bookingNotMadeDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

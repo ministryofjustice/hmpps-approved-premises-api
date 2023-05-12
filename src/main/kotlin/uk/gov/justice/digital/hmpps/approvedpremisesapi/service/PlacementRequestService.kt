@@ -43,7 +43,7 @@ class PlacementRequestService(
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
