@@ -25,13 +25,10 @@ class ReportService(
   private val workingDayCountService: WorkingDayCountService,
 ) {
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
-    val bookingsInScope = if (properties.year != null && properties.month != null) {
-      val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
-      val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
-      bookingRepository.findAllByOverlappingDate(startOfMonth, endOfMonth)
-    } else {
-      bookingRepository.findAll()
-    }
+    val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
+    val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
+
+    val bookingsInScope = bookingRepository.findAllByOverlappingDate(startOfMonth, endOfMonth)
 
     BookingsReportGenerator()
       .createReport(bookingsInScope, properties)

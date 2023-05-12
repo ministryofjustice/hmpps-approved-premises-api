@@ -2667,13 +2667,13 @@ paths:
             format: uuid
         - name: year
           in: query
-          required: false
+          required: true
           description: If provided, only bookings for this year will be returned
           schema:
             type: integer
         - name: month
           in: query
-          required: false
+          required: true
           description: If provided, only bookings for this month will be returned - must be provided with year
           schema:
             type: integer
