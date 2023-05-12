@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,7 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -89,13 +94,48 @@ class AssessmentTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               listOf(
-                assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
+                assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)
               )
             )
           )
       }
     }
   }
+
+  private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
+    DomainAssessmentSummary(
+      type = when (assessment.application) {
+        is ApprovedPremisesApplicationEntity -> "approved-premises"
+        is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
+        else -> fail()
+      },
+
+      id = assessment.id,
+
+      applicationId = assessment.application.id,
+
+      createdAt = assessment.createdAt,
+
+      riskRatings = when (val reified = assessment.application) {
+        is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+        else -> null
+      },
+
+      arrivalDate = when (val application = assessment.application) {
+        is ApprovedPremisesApplicationEntity -> application.arrivalDate
+        else -> null
+      },
+
+      dateOfInfoRequest = assessment
+        .clarificationNotes
+        .filter { it.response == null }
+        .minByOrNull { it.createdAt }
+        ?.createdAt,
+
+      completed = assessment.decision != null,
+
+      crn = assessment.application.crn
+    )
 
   @Test
   fun `Get assessment by ID without JWT returns 401`() {

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.AssessmentsApiDelega
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
@@ -25,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessmentSummaries
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -40,18 +41,18 @@ class AssessmentController(
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun assessmentsGet(): ResponseEntity<List<Assessment>> {
+  override fun assessmentsGet(): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
 
-    val assessments = assessmentService.getVisibleAssessmentsForUser(user)
+    val summaries = assessmentService.getVisibleAssessmentSummariesForUser(user)
 
     return ResponseEntity.ok(
-      mapAndTransformAssessments(
+      mapAndTransformAssessmentSummaries(
         log,
-        assessments,
+        summaries,
         user.deliusUsername,
         offenderService,
-        assessmentTransformer::transformJpaToApi
+        assessmentTransformer::transformDomainToApiSummary
       )
     )
   }
@@ -151,7 +152,7 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val assessment = when (assessmentValidationResult) {
+    when (assessmentValidationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
@@ -191,15 +192,15 @@ class AssessmentController(
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
 
-    val clarificiationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
-    val clarificiationNote = when (clarificiationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificiationNoteResult.entity
+    val clarificationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
+    val clarificationNote = when (clarificationNoteResult) {
+      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificiationNote)
+      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNote)
     )
   }
 
@@ -209,7 +210,7 @@ class AssessmentController(
     updatedClarificationNote: UpdatedClarificationNote
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
-    val clarificiationNoteResult = assessmentService.updateAssessmentClarificationNote(
+    val clarificationNoteResult = assessmentService.updateAssessmentClarificationNote(
       user,
       assessmentId,
       noteId,
@@ -217,26 +218,19 @@ class AssessmentController(
       updatedClarificationNote.responseReceivedOn
     )
 
-    val clarificiationNoteEntityResult = when (clarificiationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificiationNoteResult.entity
+    val clarificationNoteEntityResult = when (clarificationNoteResult) {
+      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val updatedClarificationNote = when (clarificiationNoteEntityResult) {
-      is ValidatableActionResult.Success -> clarificiationNoteEntityResult.entity
+    val clarificationNoteForResponse = when (clarificationNoteEntityResult) {
+      is ValidatableActionResult.Success -> clarificationNoteEntityResult.entity
       else -> throw InternalServerErrorProblem("You must provide a response")
     }
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(updatedClarificationNote)
+      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNoteForResponse)
     )
-  }
-
-  private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
-    is ValidatableActionResult.Success -> result.entity
-    is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
-    is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   }
 }

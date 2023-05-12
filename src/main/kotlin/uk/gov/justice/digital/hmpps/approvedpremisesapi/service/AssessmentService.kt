@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
@@ -22,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -40,8 +40,6 @@ class AssessmentService(
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
-  private val applicationRepository: ApplicationRepository,
-  private val userService: UserService,
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
@@ -49,23 +47,12 @@ class AssessmentService(
   private val placementRequestService: PlacementRequestService,
   @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
-  fun getVisibleAssessmentsForUser(user: UserEntity): List<AssessmentEntity> {
-    // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
-
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-
-    val assessments = if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
-      assessmentRepository.findAllByReallocatedAtNull()
-    } else {
-      assessmentRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
-    }
-
-    assessments.forEach {
-      it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
-    }
-
-    return assessments
-  }
+  fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
+    assessmentRepository.findAllAssessmentSummariesNotReallocated(
+      if (user.hasRole(UserRole.WORKFLOW_MANAGER)) null
+      else
+        user.id.toString()
+    )
 
   fun getAllReallocatable(): List<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
@@ -411,7 +398,8 @@ class AssessmentService(
   }
 
   fun reallocateAssessment(assigneeUser: UserEntity, application: ApprovedPremisesApplicationEntity): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id) ?: return AuthorisableActionResult.NotFound()
+    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)
+      ?: return AuthorisableActionResult.NotFound()
 
     if (currentAssessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
@@ -495,7 +483,7 @@ class AssessmentService(
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
     }
 
-    var clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
+    val clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
 
     if (clarificationNoteEntity === null) {
       return AuthorisableActionResult.NotFound()

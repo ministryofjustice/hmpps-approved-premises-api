@@ -2316,7 +2316,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Assessment'
+                  $ref: '#/components/schemas/AssessmentSummary'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -4342,6 +4342,43 @@ components:
               $ref: '#/components/schemas/TemporaryAccommodationUser'
           required:
             - application
+    AssessmentSummary:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - CAS1
+            - CAS3
+        id:
+          type: string
+          format: uuid
+        applicationId:
+          type: string
+          format: uuid
+        arrivalDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        dateOfInfoRequest:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/AssessmentStatus'
+        risks:
+          $ref: '#/components/schemas/PersonRisks'
+        person:
+          $ref: '#/components/schemas/Person'
+      required:
+        - type
+        - id
+        - applicationId
+        - createdAt
+        - status
+        - person
+
     AssessmentDecision:
       type: string
       enum:

@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -11,20 +14,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -35,11 +46,21 @@ class AssessmentTransformerTest {
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
+  private val mockPersonTransformer = mockk<PersonTransformer>()
+  private val risksTransformer = RisksTransformer()
+  private val objectMapper = ObjectMapper().apply {
+    registerModule(Jdk8Module())
+    registerModule(JavaTimeModule())
+    registerKotlinModule()
+  }
+
   private val assessmentTransformer = AssessmentTransformer(
-    jacksonObjectMapper(),
+    objectMapper,
     mockApplicationsTransformer,
     mockAssessmentClarificationNoteTransformer,
-    mockUserTransformer
+    mockUserTransformer,
+    mockPersonTransformer,
+    risksTransformer,
   )
 
   private val allocatedToUser = UserEntityFactory()
@@ -164,5 +185,57 @@ class AssessmentTransformerTest {
     val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result.status).isEqualTo(AssessmentStatus.active)
+  }
+
+  @Test
+  fun `transform domain to api summary - temporary application`() {
+    val domainSummary = DomainAssessmentSummary(
+      type = "temporary-accommodation",
+      id = UUID.randomUUID(),
+      applicationId = UUID.randomUUID(),
+      createdAt = OffsetDateTime.now(),
+      riskRatings = null,
+      arrivalDate = null,
+      dateOfInfoRequest = null,
+      completed = false,
+      crn = randomStringMultiCaseWithNumbers(6)
+    )
+
+    every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk(), mockk())
+
+    assertThat(apiSummary.type).isEqualTo(AssessmentSummary.Type.cAS3)
+    assertThat(apiSummary.id).isEqualTo(domainSummary.id)
+    assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
+    assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
+    assertThat(apiSummary.status).isEqualTo(AssessmentStatus.active)
+    assertThat(apiSummary.risks).isNull()
+    assertThat(apiSummary.person).isNotNull
+  }
+  @Test
+  fun `transform domain to api summary - approved premises`() {
+    val personRisks = PersonRisksFactory().produce()
+    val domainSummary = DomainAssessmentSummary(
+      type = "approved-premises",
+      id = UUID.randomUUID(),
+      applicationId = UUID.randomUUID(),
+      createdAt = OffsetDateTime.now(),
+      riskRatings = objectMapper.writeValueAsString(personRisks),
+      arrivalDate = OffsetDateTime.now().randomDateTimeBefore(),
+      dateOfInfoRequest = OffsetDateTime.now().randomDateTimeBefore(),
+      completed = false,
+      crn = randomStringMultiCaseWithNumbers(6)
+    )
+
+    every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk(), mockk())
+
+    assertThat(apiSummary.type).isEqualTo(AssessmentSummary.Type.cAS1)
+    assertThat(apiSummary.id).isEqualTo(domainSummary.id)
+    assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
+    assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
+    assertThat(apiSummary.status).isEqualTo(AssessmentStatus.awaitingResponse)
+    assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
+    assertThat(apiSummary.person).isNotNull
   }
 }
