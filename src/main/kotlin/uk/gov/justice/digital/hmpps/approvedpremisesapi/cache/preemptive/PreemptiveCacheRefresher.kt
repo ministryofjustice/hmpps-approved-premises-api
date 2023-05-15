@@ -93,21 +93,25 @@ abstract class CacheRefreshWorker(
 
   override fun run() {
     while (! shuttingDown) {
-      interruptableSleep(500)
-
-      val lock = redLock.lock(cacheName, twoMinutesInMilliseconds) ?: continue
-
-      log.info("Got cache refresh lock for $cacheName")
-      val lockExpiresAt = System.currentTimeMillis() + lock.validity
-
       try {
-        work { shuttingDown || System.currentTimeMillis() > lockExpiresAt }
+        val lock = redLock.lock(cacheName, twoMinutesInMilliseconds) ?: continue
+
+        log.info("Got cache refresh lock for $cacheName")
+        val lockExpiresAt = System.currentTimeMillis() + lock.validity
+
+        try {
+          work { shuttingDown || System.currentTimeMillis() > lockExpiresAt }
+        } catch (exception: Exception) {
+          log.error("Unhandled exception refreshing cache $cacheName", exception)
+        }
+
+        redLock.release(lock.resource, lock.value)
+        log.info("Released cache refresh lock for $cacheName")
       } catch (exception: Exception) {
-        log.error("Unhandled exception refreshing cache $cacheName", exception)
+        log.error("Unhandled exception locking/unlocking cache $cacheName", exception)
       }
 
-      redLock.release(lock.resource, lock.value)
-      log.info("Released cache refresh lock for $cacheName")
+      interruptableSleep(10000)
     }
   }
 
