@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
@@ -53,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -63,8 +61,6 @@ class AssessmentServiceTest {
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
-  private val applicationRepositoryMock = mockk<ApplicationRepository>()
-  private val userServiceMock = mockk<UserService>()
   private val domainEventServiceMock = mockk<DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
   private val cruServiceMock = mockk<CruService>()
@@ -76,8 +72,6 @@ class AssessmentServiceTest {
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
     jsonSchemaServiceMock,
-    applicationRepositoryMock,
-    userServiceMock,
     domainEventServiceMock,
     offenderServiceMock,
     communityApiClientMock,
@@ -87,7 +81,8 @@ class AssessmentServiceTest {
   )
 
   @Test
-  fun `getVisibleAssessmentsForUser fetches all assessments for workflow managers`() {
+  fun `getAssessmentSummariesForUser gets all assessment summaries for workflow manager`() {
+
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -103,45 +98,16 @@ class AssessmentServiceTest {
         .produce()
     )
 
-    val allAssessments = listOf(
-      AssessmentEntityFactory()
-        .withAllocatedToUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce()
-        )
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce()
-            )
-            .produce()
-        )
-        .produce()
-    )
+    every { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(any()) } returns emptyList()
 
-    every { assessmentRepositoryMock.findAllByReallocatedAtNull() } returns allAssessments
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    assessmentService.getVisibleAssessmentSummariesForUser(user)
 
-    val result = assessmentService.getVisibleAssessmentsForUser(user)
-
-    assertThat(result).containsAll(allAssessments)
-
-    verify(exactly = 1) { assessmentRepositoryMock.findAllByReallocatedAtNull() }
+    verify(exactly = 1) { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(null) }
   }
 
   @Test
-  fun `getVisibleAssessmentsForUser fetches only allocated assessments`() {
+  fun `getAssessmentSummariesForUser only fetches allocated assessment summaries for non-workflow user`() {
+
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -150,33 +116,18 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    val allocatedAssessments = listOf(
-      AssessmentEntityFactory()
-        .withAllocatedToUser(user)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce()
-            )
-            .produce()
-        )
+    user.roles.add(
+      UserRoleAssignmentEntityFactory()
+        .withRole(UserRole.ASSESSOR)
+        .withUser(user)
         .produce()
     )
 
-    every { assessmentRepositoryMock.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id) } returns allocatedAssessments
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(any()) } returns emptyList()
 
-    val result = assessmentService.getVisibleAssessmentsForUser(user)
+    assessmentService.getVisibleAssessmentSummariesForUser(user)
 
-    assertThat(result).containsAll(allocatedAssessments)
-
-    verify(exactly = 1) { assessmentRepositoryMock.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id) }
+    verify(exactly = 1) { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(user.id.toString()) }
   }
 
   @Test
@@ -1793,13 +1744,11 @@ class AssessmentServiceTest {
   }
 
   @Nested
-  class UpdateAsssessmentClarificationNote {
+  inner class UpdateAssessmentClarificationNote {
     private val userRepositoryMock = mockk<UserRepository>()
     private val assessmentRepositoryMock = mockk<AssessmentRepository>()
     private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
-    private val applicationRepositoryMock = mockk<ApplicationRepository>()
-    private val userServiceMock = mockk<UserService>()
     private val domainEventServiceMock = mockk<DomainEventService>()
     private val offenderServiceMock = mockk<OffenderService>()
     private val communityApiClientMock = mockk<CommunityApiClient>()
@@ -1811,8 +1760,6 @@ class AssessmentServiceTest {
       assessmentRepositoryMock,
       assessmentClarificationNoteRepositoryMock,
       jsonSchemaServiceMock,
-      applicationRepositoryMock,
-      userServiceMock,
       domainEventServiceMock,
       offenderServiceMock,
       communityApiClientMock,

@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
@@ -53,12 +53,12 @@ class TasksTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
-          `Given an Assessment`(
+          `Given an Assessment for Approved Premises`(
             allocatedToUser = otherUser,
             createdByUser = otherUser,
             crn = offenderDetails.otherIds.crn
           ) { assessment, _ ->
-            `Given an Assessment`(
+            `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -110,7 +110,7 @@ class TasksTest : IntegrationTestBase() {
   fun `Get an unknown task type for an application returns 404`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        `Given an Assessment`(
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
           crn = offenderDetails.otherIds.crn
@@ -134,7 +134,7 @@ class TasksTest : IntegrationTestBase() {
           roles = listOf(UserRole.ASSESSOR)
         ) { allocatableUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given an Assessment`(
+            `Given an Assessment for Approved Premises`(
               allocatedToUser = user,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn
@@ -201,7 +201,7 @@ class TasksTest : IntegrationTestBase() {
   fun `Get an non-implemented task type for an application returns 405`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        `Given an Assessment`(
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
           crn = offenderDetails.otherIds.crn
@@ -256,7 +256,7 @@ class TasksTest : IntegrationTestBase() {
           roles = listOf(UserRole.ASSESSOR)
         ) { assigneeUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            `Given an Assessment`(
+            `Given an Assessment for Approved Premises`(
               allocatedToUser = user,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn

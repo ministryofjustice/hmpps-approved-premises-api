@@ -1,18 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
@@ -23,7 +27,9 @@ class AssessmentTransformer(
   private val objectMapper: ObjectMapper,
   private val applicationsTransformer: ApplicationsTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
-  private val userTransformer: UserTransformer
+  private val userTransformer: UserTransformer,
+  private val personTransformer: PersonTransformer,
+  private val risksTransformer: RisksTransformer,
 ) {
   fun transformJpaToApi(jpa: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = when (jpa.application) {
     is ApprovedPremisesApplicationEntity -> ApprovedPremisesAssessment(
@@ -41,6 +47,7 @@ class AssessmentTransformer(
       rejectionRationale = jpa.rejectionRationale,
       status = getStatus(jpa)
     )
+
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationAssessment(
       id = jpa.id,
       application = applicationsTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail) as TemporaryAccommodationApplication,
@@ -56,8 +63,28 @@ class AssessmentTransformer(
       rejectionRationale = jpa.rejectionRationale,
       status = getStatus(jpa)
     )
+
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
+
+  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): AssessmentSummary =
+    AssessmentSummary(
+      type = when (ase.type) {
+        "approved-premises" -> AssessmentSummary.Type.cAS1
+        "temporary-accommodation" -> AssessmentSummary.Type.cAS3
+        else -> throw RuntimeException("Unsupported type: ${ase.type}")
+      },
+      id = ase.id,
+      applicationId = ase.applicationId,
+      createdAt = ase.createdAt.toInstant(),
+      status = when {
+        ase.completed -> AssessmentStatus.completed
+        ase.dateOfInfoRequest != null -> AssessmentStatus.awaitingResponse
+        else -> AssessmentStatus.active
+      },
+      risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
+      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+    )
 
   fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
     JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
