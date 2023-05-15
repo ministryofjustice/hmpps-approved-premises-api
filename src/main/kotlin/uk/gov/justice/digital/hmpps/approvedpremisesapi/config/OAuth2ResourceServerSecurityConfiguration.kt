@@ -44,7 +44,6 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
         authorize(HttpMethod.POST, "/seed", permitAll)
-        authorize(HttpMethod.DELETE, "/cache/*", permitAll)
         authorize(HttpMethod.POST, "/migration-job", permitAll)
         authorize(HttpMethod.DELETE, "/internal/booking/*", permitAll)
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))

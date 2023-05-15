@@ -58,7 +58,6 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
         .uri("/people/$crn/acct-alerts")

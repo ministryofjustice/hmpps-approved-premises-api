@@ -29,7 +29,7 @@ fun getPersonDetailsForCrn(
 
   val inmateDetails = when (
     val inmateDetailsResult =
-      offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber)
+      offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
   ) {
     is AuthorisableActionResult.Success -> inmateDetailsResult.entity
     is AuthorisableActionResult.NotFound -> {

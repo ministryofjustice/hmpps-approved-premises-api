@@ -2,11 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -21,33 +19,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import java.io.OutputStream
-import java.time.Duration
 
 @Component
 class CommunityApiClient(
   @Qualifier("communityApiWebClient") private val webClient: WebClient,
-  objectMapper: ObjectMapper,
-  redisTemplate: RedisTemplate<String, String>,
-  @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
-) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
-  private val offenderDetailCacheConfig = PreemptiveCacheConfig(
-    cacheName = "offenderDetails",
-    successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
-    failureSoftTtlSeconds = Duration.ofMinutes(30).toSeconds().toInt(),
-    hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt()
-  )
-
-  fun getOffenderDetailSummaryWithWait(crn: String) = getRequest<OffenderDetailSummary> {
-    preemptiveCacheConfig = offenderDetailCacheConfig
-    preemptiveCacheKey = crn
-    preemptiveCacheTimeoutMs = 0
-  }
-
-  fun getOffenderDetailSummaryWithCall(crn: String) = getRequest<OffenderDetailSummary> {
+  objectMapper: ObjectMapper
+) : BaseHMPPSClient(webClient, objectMapper) {
+  @Cacheable(value = ["offenderDetailsCache"], unless = IS_NOT_SUCCESSFUL)
+  fun getOffenderDetailSummary(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
-    isPreemptiveCall = true
-    preemptiveCacheConfig = offenderDetailCacheConfig
-    preemptiveCacheKey = crn
   }
 
   @Cacheable(value = ["userAccessCache"], unless = IS_NOT_SUCCESSFUL)

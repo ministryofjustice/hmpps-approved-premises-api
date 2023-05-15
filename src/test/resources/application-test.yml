@@ -95,7 +95,11 @@ caches:
     expiry-seconds: 21600
   staffMember:
     expiry-seconds: 21600
+  offenderDetails:
+    expiry-seconds: 1200
   userAccess:
+    expiry-seconds: 1200
+  inmateDetails:
     expiry-seconds: 1200
   staffDetails:
     expiry-seconds: 1200

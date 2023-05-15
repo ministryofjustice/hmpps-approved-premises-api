@@ -2628,24 +2628,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /cache/{cacheName}:
-    delete:
-      summary: Clears the given cache, can only be called from a local connection
-      parameters:
-        - in: path
-          name: cacheName
-          required: true
-          schema:
-            $ref: '#/components/schemas/CacheType'
-      responses:
-        200:
-          description: successfully cleared cache
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /migration-job:
     post:
       summary: Starts a migration job (process for data migrations that can't be achieved solely via SQL migrations), can only be called from a local connection
@@ -5423,13 +5405,3 @@ components:
       required:
         - id
         - name
-    CacheType:
-      type: string
-      enum:
-        - qCodeStaffMembers
-        - userAccess
-        - staffDetails
-        - teamsManagingCase
-        - ukBankHolidays
-        - offenderDetails
-        - inmateDetails

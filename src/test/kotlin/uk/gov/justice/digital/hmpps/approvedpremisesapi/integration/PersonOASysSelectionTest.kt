@@ -58,10 +58,9 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
-        .uri("/people/$crn/oasys/selection")
+        .uri("/people/CRN/oasys/selection")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

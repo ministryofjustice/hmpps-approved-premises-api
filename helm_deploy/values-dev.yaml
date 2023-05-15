@@ -33,8 +33,6 @@ generic-service:
     PERSON-DEPARTED-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/person-departed/#eventId
     BOOKING-NOT-MADE-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/booking-not-made/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: true
-    PREEMPTIVE-CACHE-LOGGING-ENABLED: true
-    PREEMPTIVE-CACHE-DELAY-MS: 60000
 
   namespace_secrets:
     hmpps-domain-events-topic:

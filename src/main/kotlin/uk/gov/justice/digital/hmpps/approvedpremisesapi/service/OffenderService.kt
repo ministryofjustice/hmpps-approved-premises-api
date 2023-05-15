@@ -75,13 +75,7 @@ class OffenderService(
   }
 
   fun getOffenderByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<OffenderDetailSummary> {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
-
-    val offender = when (offenderResponse) {
+    val offender = when (val offenderResponse = communityApiClient.getOffenderDetailSummary(crn)) {
       is ClientResult.Success -> offenderResponse.body
       is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
       is ClientResult.Failure -> offenderResponse.throwException()
@@ -133,21 +127,15 @@ class OffenderService(
     }
   }
 
-  fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail> {
-    var inmateDetailResponse = prisonsApiClient.getInmateDetailsWithWait(nomsNumber)
-
-    if (inmateDetailResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      inmateDetailResponse = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
-    }
-
-    val inmateDetail = when (inmateDetailResponse) {
-      is ClientResult.Success -> inmateDetailResponse.body
-      is ClientResult.Failure.StatusCode -> when (inmateDetailResponse.status) {
+  fun getInmateDetailByNomsNumber(nomsNumber: String): AuthorisableActionResult<InmateDetail> {
+    val inmateDetail = when (val offenderResponse = prisonsApiClient.getInmateDetails(nomsNumber)) {
+      is ClientResult.Success -> offenderResponse.body
+      is ClientResult.Failure.StatusCode -> when (offenderResponse.status) {
         HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> inmateDetailResponse.throwException()
+        else -> offenderResponse.throwException()
       }
-      is ClientResult.Failure -> inmateDetailResponse.throwException()
+      is ClientResult.Failure -> offenderResponse.throwException()
     }
 
     return AuthorisableActionResult.Success(inmateDetail)
@@ -252,7 +240,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> alertsResult.throwException()
       }
-      is ClientResult.Failure -> alertsResult.throwException()
+      is ClientResult.Failure.Other -> alertsResult.throwException()
     }
 
     return AuthorisableActionResult.Success(alerts)
@@ -268,7 +256,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> needsResult.throwException()
       }
-      is ClientResult.Failure -> needsResult.throwException()
+      is ClientResult.Failure.Other -> needsResult.throwException()
     }
 
     return AuthorisableActionResult.Success(needs)
@@ -284,7 +272,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> offenceDetailsResult.throwException()
       }
-      is ClientResult.Failure -> offenceDetailsResult.throwException()
+      is ClientResult.Failure.Other -> offenceDetailsResult.throwException()
     }
 
     return AuthorisableActionResult.Success(offenceDetails)
@@ -300,7 +288,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> riskManagementPlanResult.throwException()
       }
-      is ClientResult.Failure -> riskManagementPlanResult.throwException()
+      is ClientResult.Failure.Other -> riskManagementPlanResult.throwException()
     }
 
     return AuthorisableActionResult.Success(riskManagement)
@@ -316,7 +304,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> roshSummaryResult.throwException()
       }
-      is ClientResult.Failure -> roshSummaryResult.throwException()
+      is ClientResult.Failure.Other -> roshSummaryResult.throwException()
     }
 
     return AuthorisableActionResult.Success(roshSummary)
@@ -332,7 +320,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> risksToTheIndividualResult.throwException()
       }
-      is ClientResult.Failure -> risksToTheIndividualResult.throwException()
+      is ClientResult.Failure.Other -> risksToTheIndividualResult.throwException()
     }
 
     return AuthorisableActionResult.Success(riskToTheIndividual)
@@ -348,7 +336,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> convictionsResult.throwException()
       }
-      is ClientResult.Failure -> convictionsResult.throwException()
+      is ClientResult.Failure.Other -> convictionsResult.throwException()
     }
 
     return AuthorisableActionResult.Success(convictions)
@@ -364,7 +352,7 @@ class OffenderService(
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
         else -> documentsResult.throwException()
       }
-      is ClientResult.Failure -> documentsResult.throwException()
+      is ClientResult.Failure.Other -> documentsResult.throwException()
     }
 
     return AuthorisableActionResult.Success(documents)

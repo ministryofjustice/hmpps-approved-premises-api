@@ -59,10 +59,9 @@ class PersonOffencesTest : IntegrationTestBase() {
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
-        .uri("/people/$crn/offences")
+        .uri("/people/CRN/offences")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
