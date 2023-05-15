@@ -65,7 +65,12 @@ class RedisConfiguration {
     @Value("\${spring.redis.port}") port: Int,
     @Value("\${spring.redis.password}") password: String,
     @Value("\${spring.redis.database}") database: Int,
-  ) = RedLock(host, port, password, database)
+    @Value("\${spring.redis.ssl}") ssl: Boolean,
+  ): RedLock {
+    val scheme = if (ssl) "rediss" else "redis"
+    val passwordString = if (password.isNotEmpty()) "$password@" else ""
+    return RedLock(arrayOf("$scheme://$passwordString$host:$port/$database"))
+  }
 
   private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, version: String, objectMapper: ObjectMapper) =
     this.withCacheConfiguration(
