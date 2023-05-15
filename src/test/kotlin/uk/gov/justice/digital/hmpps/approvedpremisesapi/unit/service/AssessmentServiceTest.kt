@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -49,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -66,6 +68,7 @@ class AssessmentServiceTest {
   private val cruServiceMock = mockk<CruService>()
   private val communityApiClientMock = mockk<CommunityApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
+  private val emailNotificationServiceMock = mockk<EmailNotificationService>()
 
   private val assessmentService = AssessmentService(
     userRepositoryMock,
@@ -77,7 +80,10 @@ class AssessmentServiceTest {
     communityApiClientMock,
     cruServiceMock,
     placementRequestServiceMock,
+    emailNotificationServiceMock,
+    NotifyConfig(),
     "http://frontend/applications/#id",
+    "http://frontend/assessments/#id",
   )
 
   @Test
@@ -1669,7 +1675,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one`() {
+  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one, sends allocation email`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1726,6 +1732,8 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.save(previousAssessment) } answers { it.invocation.args[0] as AssessmentEntity }
     every { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as AssessmentEntity }
 
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+
     val result = assessmentService.reallocateAssessment(assigneeUser, application)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1737,6 +1745,16 @@ class AssessmentServiceTest {
     assertThat(previousAssessment.reallocatedAt).isNotNull
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        any(),
+        "f3d78814-383f-4b5f-a681-9bd3ab912888",
+        match {
+          it["name"] == assigneeUser.name &&
+            (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        }
+      )
+    }
   }
 
   @Nested
@@ -1750,6 +1768,7 @@ class AssessmentServiceTest {
     private val communityApiClientMock = mockk<CommunityApiClient>()
     private val cruServiceMock = mockk<CruService>()
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
+    private val emailNotificationServiceMock = mockk<EmailNotificationService>()
 
     private val assessmentService = AssessmentService(
       userRepositoryMock,
@@ -1761,7 +1780,10 @@ class AssessmentServiceTest {
       communityApiClientMock,
       cruServiceMock,
       placementRequestServiceMock,
+      emailNotificationServiceMock,
+      NotifyConfig(),
       "http://frontend/applications/#id",
+      "http://frontend/assessments/#id"
     )
 
     private val user = UserEntityFactory()
@@ -1921,6 +1943,61 @@ class AssessmentServiceTest {
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `createAssessment creates an Assessment and sends allocation email`() {
+      val userWithLeastAllocatedAssessments = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+        .apply {
+          roles += UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.ASSESSOR)
+            .produce()
+
+          qualifications += UserQualificationAssignmentEntityFactory()
+            .withUser(this)
+            .withQualification(UserQualification.PIPE)
+            .produce()
+        }
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce()
+        )
+        .withIsPipeApplication(true)
+        .produce()
+
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+      every { userRepositoryMock.findQualifiedAssessorWithLeastPendingAllocations(listOf("PIPE"), 1) } returns userWithLeastAllocatedAssessments
+
+      every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+
+      assessmentService.createAssessment(application)
+
+      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments }) }
+      verify(exactly = 1) {
+        emailNotificationServiceMock.sendEmail(
+          any(),
+          "f3d78814-383f-4b5f-a681-9bd3ab912888",
+          match {
+            it["name"] == userWithLeastAllocatedAssessments.name &&
+              (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+          }
+        )
+      }
     }
   }
 }

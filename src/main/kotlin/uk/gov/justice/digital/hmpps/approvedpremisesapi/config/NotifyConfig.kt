@@ -16,7 +16,7 @@ class NotifyConfig {
 }
 
 class NotifyTemplates {
-
+  var assessmentAllocated = "f3d78814-383f-4b5f-a681-9bd3ab912888"
 }
 
 enum class NotifyMode {

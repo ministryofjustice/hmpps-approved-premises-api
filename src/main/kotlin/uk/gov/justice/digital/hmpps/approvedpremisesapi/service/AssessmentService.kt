@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -45,7 +46,10 @@ class AssessmentService(
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
   private val placementRequestService: PlacementRequestService,
+  private val emailNotificationService: EmailNotificationService,
+  private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
   fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
     assessmentRepository.findAllAssessmentSummariesNotReallocated(
@@ -112,7 +116,7 @@ class AssessmentService(
 
     val dateTimeNow = OffsetDateTime.now()
 
-    return assessmentRepository.save(
+    val assessment = assessmentRepository.save(
       AssessmentEntity(
         id = UUID.randomUUID(), application = application,
         data = null, document = null, schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
@@ -127,6 +131,17 @@ class AssessmentService(
         clarificationNotes = mutableListOf(),
       ),
     )
+
+    emailNotificationService.sendEmail(
+      user = allocatedUser,
+      templateId = notifyConfig.templates.assessmentAllocated,
+      personalisation = mapOf(
+        "name" to allocatedUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString())
+      )
+    )
+
+    return assessment
   }
 
   fun updateAssessment(user: UserEntity, assessmentId: UUID, data: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
@@ -446,6 +461,15 @@ class AssessmentService(
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
       ),
+    )
+
+    emailNotificationService.sendEmail(
+      user = assigneeUser,
+      templateId = notifyConfig.templates.assessmentAllocated,
+      personalisation = mapOf(
+        "name" to assigneeUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString())
+      )
     )
 
     return AuthorisableActionResult.Success(
