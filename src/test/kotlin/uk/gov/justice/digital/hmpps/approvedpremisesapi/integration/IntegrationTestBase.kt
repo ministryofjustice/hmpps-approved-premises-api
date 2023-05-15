@@ -16,10 +16,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.cache.CacheManager
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTeamCodeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -213,6 +216,9 @@ abstract class IntegrationTestBase {
   @Value("\${wiremock.port}")
   lateinit var wiremockPort: Integer
 
+  @Value("\${preemptive-cache-key-prefix}")
+  lateinit var preemptiveCacheKeyPrefix: String
+
   lateinit var wiremockServer: WireMockServer
 
   @Autowired
@@ -226,6 +232,15 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
+
+  @Autowired
+  lateinit var redisTemplate: RedisTemplate<String, String>
+
+  @Autowired
+  private lateinit var communityApiClient: CommunityApiClient
+
+  @Autowired
+  private lateinit var prisonsApiClient: PrisonsApiClient
 
   @Autowired
   lateinit var probationRegionRepository: ProbationRegionTestRepository
@@ -408,6 +423,8 @@ abstract class IntegrationTestBase {
     cacheManager.cacheNames.forEach {
       cacheManager.getCache(it)!!.clear()
     }
+
+    redisTemplate.keys("$preemptiveCacheKeyPrefix-**").forEach(redisTemplate::delete)
   }
 
   @AfterEach
@@ -639,4 +656,7 @@ abstract class IntegrationTestBase {
 
     block()
   }
+
+  fun loadPreemptiveCacheForOffenderDetails(crn: String) = communityApiClient.getOffenderDetailSummaryWithCall(crn)
+  fun loadPreemptiveCacheForInmateDetails(nomsNumber: String) = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
 }

@@ -371,6 +371,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      loadPreemptiveCacheForOffenderDetails(crn)
 
       CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
 
@@ -430,7 +431,9 @@ class ApplicationTest : IntegrationTestBase() {
       CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
       CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
+      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
+      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
       webTestClient.get()
         .uri("/applications")
@@ -589,7 +592,9 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
 
       CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
+      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
+      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
       CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
@@ -729,6 +734,7 @@ class ApplicationTest : IntegrationTestBase() {
       val crn = "X1234"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      loadPreemptiveCacheForOffenderDetails(crn)
 
       approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withAddedAt(OffsetDateTime.now())
@@ -787,7 +793,9 @@ class ApplicationTest : IntegrationTestBase() {
         .produce()
 
       CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
       offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
       webTestClient.post()
         .uri("/applications")

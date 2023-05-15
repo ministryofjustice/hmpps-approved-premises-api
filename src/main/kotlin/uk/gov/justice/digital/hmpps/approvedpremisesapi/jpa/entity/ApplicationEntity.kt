@@ -115,6 +115,9 @@ WHERE a.created_by_user_id = :userId
     nativeQuery = true
   )
   fun findAllTemporaryAccommodationSummariesCreatedByUser(userId: UUID): List<TemporaryAccommodationApplicationSummary>
+
+  @Query("SELECT DISTINCT(a.crn) FROM ApplicationEntity a")
+  fun getDistinctCrns(): List<String>
 }
 
 @Entity
