@@ -79,10 +79,9 @@ class WebClientConfiguration {
   fun prisonsApiWebClient(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
-    authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String
   ): WebClient {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
     oauth2Client.setDefaultClientRegistrationId("prisons-api")
 
