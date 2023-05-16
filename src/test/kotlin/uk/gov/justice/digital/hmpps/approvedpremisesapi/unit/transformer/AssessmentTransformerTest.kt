@@ -234,6 +234,7 @@ class AssessmentTransformerTest {
     assertThat(apiSummary.id).isEqualTo(domainSummary.id)
     assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
     assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
+    assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate?.toInstant())
     assertThat(apiSummary.status).isEqualTo(AssessmentStatus.awaitingResponse)
     assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
     assertThat(apiSummary.person).isNotNull

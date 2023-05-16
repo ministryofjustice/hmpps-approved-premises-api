@@ -23,22 +23,37 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `assessment summary query works as described when not restricted to user`() {
-    `Given a User` { user, _ ->
-      `Given an Assessment for Approved Premises`(user, user, reallocated = true) { _, _ -> }
-      `Given an Assessment for Approved Premises`(user, user) { apAssessment, _ ->
-        val expectedApAssessmentNote = earliestUnansweredClarificationNote(apAssessment, user)
-        `Given an Assessment for Temporary Accommodation`(user, user) { taAssessment, _ ->
-          val expectedTaAssessmentNote = earliestUnansweredClarificationNote(taAssessment, user)
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Approved Premises`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
 
-          val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllAssessmentSummariesNotReallocated()
+        val expectedApAssessmentNote = earliestUnansweredClarificationNote(apAssessment, user1)
+        `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+          val expectedTaAssessmentNote = earliestUnansweredClarificationNote(taAssessment, user1)
+          `Given a User` { user2, _ ->
 
-          assertThat(results.size).isEqualTo(2)
+            val u2Assessment = assessmentEntityFactory.produceAndPersist {
+              val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(apAssessment.application.schemaVersion)
+                withCreatedByUser(user2)
+                withArrivalDate(OffsetDateTime.now().minusDays(1))
+              }
+              withAllocatedToUser(user2)
+              withAssessmentSchema(apAssessment.schemaVersion)
+              withApplication(application)
+            }
 
-          results.forEach {
-            when (it.id) {
-              apAssessment.id -> assertForAssessmentSummary(it, apAssessment, expectedApAssessmentNote.createdAt)
-              taAssessment.id -> assertForAssessmentSummary(it, taAssessment, expectedTaAssessmentNote.createdAt)
-              else -> fail()
+            val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllAssessmentSummariesNotReallocated()
+
+            assertThat(results.size).isEqualTo(3)
+
+            results.forEach {
+              when (it.id) {
+                u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment, null)
+                apAssessment.id -> assertForAssessmentSummary(it, apAssessment, expectedApAssessmentNote.createdAt)
+                taAssessment.id -> assertForAssessmentSummary(it, taAssessment, expectedTaAssessmentNote.createdAt)
+                else -> fail()
+              }
             }
           }
         }
@@ -68,18 +83,18 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
     }
   }
 
-  private fun assertForAssessmentSummary(summary: DomainAssessmentSummary, assessment: AssessmentEntity, dateOfInfoRequest: OffsetDateTime) {
+  private fun assertForAssessmentSummary(summary: DomainAssessmentSummary, assessment: AssessmentEntity, dateOfInfoRequest: OffsetDateTime?) {
     assertThat(summary.id).isEqualTo(assessment.id)
     val application = assessment.application
     assertThat(summary.applicationId).isEqualTo(application.id)
-    assertThat(summary.createdAt.toInstant()).isEqualTo(assessment.createdAt.toInstant())
-    assertThat(summary.dateOfInfoRequest?.toInstant()).isEqualTo(dateOfInfoRequest.toInstant())
+    assertThat(summary.createdAt).isEqualTo(assessment.createdAt)
+    assertThat(summary.dateOfInfoRequest).isEqualTo(dateOfInfoRequest)
     assertThat(summary.completed).isEqualTo(assessment.decision != null)
     assertThat(summary.crn).isEqualTo(application.crn)
     when (application) {
       is ApprovedPremisesApplicationEntity -> {
         assertThat(summary.type).isEqualTo("approved-premises")
-        assertThat(summary.arrivalDate?.toInstant()).isEqualTo(application.arrivalDate?.toInstant())
+        assertThat(summary.arrivalDate).isEqualTo(application.arrivalDate)
         assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
       }
 
