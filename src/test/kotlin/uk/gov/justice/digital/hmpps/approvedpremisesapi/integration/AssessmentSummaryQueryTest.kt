@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -41,6 +42,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
               withAllocatedToUser(user2)
               withAssessmentSchema(apAssessment.schemaVersion)
               withApplication(application)
+              withDecision(AssessmentDecision.ACCEPTED)
             }
 
             val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllAssessmentSummariesNotReallocated()
@@ -90,6 +92,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
     assertThat(summary.createdAt).isEqualTo(assessment.createdAt)
     assertThat(summary.dateOfInfoRequest).isEqualTo(dateOfInfoRequest)
     assertThat(summary.completed).isEqualTo(assessment.decision != null)
+    assertThat(summary?.decision).isEqualTo(assessment.decision?.name)
     assertThat(summary.crn).isEqualTo(application.crn)
     when (application) {
       is ApprovedPremisesApplicationEntity -> {

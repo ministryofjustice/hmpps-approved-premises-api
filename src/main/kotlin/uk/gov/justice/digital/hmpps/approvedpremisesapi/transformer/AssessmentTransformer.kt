@@ -83,9 +83,13 @@ class AssessmentTransformer(
         ase.dateOfInfoRequest != null -> AssessmentStatus.awaitingResponse
         else -> AssessmentStatus.active
       },
+      decision = when (ase.decision) {
+        "ACCEPTED" -> ApiAssessmentDecision.accepted
+        "REJECTED" -> ApiAssessmentDecision.rejected
+        else -> null
+      },
       risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
       person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-
     )
 
   fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {

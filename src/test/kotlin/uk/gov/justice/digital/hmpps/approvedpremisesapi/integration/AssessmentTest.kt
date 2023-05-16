@@ -4,6 +4,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.NullSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -48,8 +51,10 @@ class AssessmentTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
-  @Test
-  fun `Get all assessments returns 200 with correct body`() {
+  @ParameterizedTest
+  @EnumSource
+  @NullSource
+  fun `Get all assessments returns 200 with correct body`(assessmentDecision: AssessmentDecision?) {
     `Given a User` { user, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -71,6 +76,7 @@ class AssessmentTest : IntegrationTestBase() {
           withAllocatedToUser(user)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
+          withDecision(assessmentDecision)
         }
 
         assessment.schemaUpToDate = true
@@ -93,9 +99,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(
-                assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)
-              )
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails))
             )
           )
       }
@@ -133,7 +137,7 @@ class AssessmentTest : IntegrationTestBase() {
         ?.createdAt,
 
       completed = assessment.decision != null,
-
+      decision = assessment.decision?.name,
       crn = assessment.application.crn
     )
 
