@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
+import io.netty.channel.ChannelOption
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
@@ -12,6 +14,8 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.netty.http.client.HttpClient
+import java.time.Duration
 
 @Configuration
 class WebClientConfiguration {
@@ -130,6 +134,14 @@ class WebClientConfiguration {
   ): WebClient {
     return WebClient.builder()
       .baseUrl(govUKBankHolidaysApiBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt())
+        )
+      )
       .build()
   }
 }
