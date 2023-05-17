@@ -10,6 +10,10 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.Arguments.of
+import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -26,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -39,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.stream.Stream
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
@@ -52,6 +56,15 @@ class AssessmentTransformerTest {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
+  }
+
+  companion object {
+    @JvmStatic
+    fun assessmentDecisionPairs(): Stream<Arguments> = Stream.of(
+      of("ACCEPTED", ApiAssessmentDecision.accepted),
+      of("REJECTED", ApiAssessmentDecision.rejected),
+      of(null, null)
+    )
   }
 
   private val assessmentTransformer = AssessmentTransformer(
@@ -156,7 +169,7 @@ class AssessmentTransformerTest {
   @Test
   fun `transformJpaToApi sets a completed status when there is a decision`() {
     val assessment = assessmentFactory
-      .withDecision(AssessmentDecision.ACCEPTED)
+      .withDecision(JpaAssessmentDecision.ACCEPTED)
       .produce()
 
     val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
@@ -187,8 +200,9 @@ class AssessmentTransformerTest {
     assertThat(result.status).isEqualTo(AssessmentStatus.active)
   }
 
-  @Test
-  fun `transform domain to api summary - temporary application`() {
+  @ParameterizedTest
+  @MethodSource(value = ["assessmentDecisionPairs"])
+  fun `transform domain to api summary - temporary application`(domainDecision: String?, apiDecision: ApiAssessmentDecision?) {
     val domainSummary = DomainAssessmentSummary(
       type = "temporary-accommodation",
       id = UUID.randomUUID(),
@@ -198,6 +212,7 @@ class AssessmentTransformerTest {
       arrivalDate = null,
       dateOfInfoRequest = null,
       completed = false,
+      decision = domainDecision,
       crn = randomStringMultiCaseWithNumbers(6)
     )
 
@@ -209,9 +224,11 @@ class AssessmentTransformerTest {
     assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
     assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
     assertThat(apiSummary.status).isEqualTo(AssessmentStatus.active)
+    assertThat(apiSummary.decision).isEqualTo(apiDecision)
     assertThat(apiSummary.risks).isNull()
     assertThat(apiSummary.person).isNotNull
   }
+
   @Test
   fun `transform domain to api summary - approved premises`() {
     val personRisks = PersonRisksFactory().produce()
@@ -224,6 +241,7 @@ class AssessmentTransformerTest {
       arrivalDate = OffsetDateTime.now().randomDateTimeBefore(),
       dateOfInfoRequest = OffsetDateTime.now().randomDateTimeBefore(),
       completed = false,
+      decision = "ACCEPTED",
       crn = randomStringMultiCaseWithNumbers(6)
     )
 
@@ -234,6 +252,7 @@ class AssessmentTransformerTest {
     assertThat(apiSummary.id).isEqualTo(domainSummary.id)
     assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
     assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
+    assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate?.toInstant())
     assertThat(apiSummary.status).isEqualTo(AssessmentStatus.awaitingResponse)
     assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
     assertThat(apiSummary.person).isNotNull
