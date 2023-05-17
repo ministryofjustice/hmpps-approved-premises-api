@@ -38,7 +38,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     this.id = { id }
   }
 
-  fun withData(data: String) = apply {
+  fun withData(data: String?) = apply {
     this.data = { data }
   }
 

@@ -138,7 +138,8 @@ class AssessmentTest : IntegrationTestBase() {
 
       completed = assessment.decision != null,
       decision = assessment.decision?.name,
-      crn = assessment.application.crn
+      crn = assessment.application.crn,
+      isStarted = assessment.data != null
     )
 
   @Test

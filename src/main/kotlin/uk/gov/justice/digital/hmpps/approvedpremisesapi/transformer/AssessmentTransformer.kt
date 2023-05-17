@@ -81,7 +81,8 @@ class AssessmentTransformer(
       status = when {
         ase.completed -> AssessmentStatus.completed
         ase.dateOfInfoRequest != null -> AssessmentStatus.awaitingResponse
-        else -> AssessmentStatus.active
+        ase.isStarted -> AssessmentStatus.inProgress
+        else -> AssessmentStatus.notStarted
       },
       decision = when (ase.decision) {
         "ACCEPTED" -> ApiAssessmentDecision.accepted
@@ -102,6 +103,7 @@ class AssessmentTransformer(
     entity.decision !== null -> AssessmentStatus.completed
     entity.clarificationNotes.any { it.response == null } -> AssessmentStatus.awaitingResponse
     entity.reallocatedAt != null -> AssessmentStatus.reallocated
-    else -> AssessmentStatus.active
+    entity.data != null -> AssessmentStatus.inProgress
+    else -> AssessmentStatus.notStarted
   }
 }

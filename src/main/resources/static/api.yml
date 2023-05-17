@@ -4317,9 +4317,10 @@ components:
       type: string
       enum:
         - awaiting_response
-        - active
         - completed
         - reallocated
+        - in_progress
+        - not_started
     ApprovedPremisesAssessment:
       allOf:
         - $ref: '#/components/schemas/Assessment'

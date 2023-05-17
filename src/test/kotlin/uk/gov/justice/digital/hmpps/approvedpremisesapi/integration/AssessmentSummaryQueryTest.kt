@@ -27,34 +27,37 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
     `Given a User` { user1, _ ->
       `Given an Assessment for Approved Premises`(user1, user1, reallocated = true) { _, _ -> }
       `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+        `Given an Assessment for Approved Premises`(user1, user1, data = null) { notStartedApAssessment, _ ->
+          val expectedApAssessmentNote = earliestUnansweredClarificationNote(apAssessment, user1)
+          `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+            val expectedTaAssessmentNote = earliestUnansweredClarificationNote(taAssessment, user1)
+            `Given a User` { user2, _ ->
 
-        val expectedApAssessmentNote = earliestUnansweredClarificationNote(apAssessment, user1)
-        `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
-          val expectedTaAssessmentNote = earliestUnansweredClarificationNote(taAssessment, user1)
-          `Given a User` { user2, _ ->
-
-            val u2Assessment = assessmentEntityFactory.produceAndPersist {
-              val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(apAssessment.application.schemaVersion)
-                withCreatedByUser(user2)
-                withArrivalDate(OffsetDateTime.now().minusDays(1))
+              val u2Assessment = assessmentEntityFactory.produceAndPersist {
+                val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(apAssessment.application.schemaVersion)
+                  withCreatedByUser(user2)
+                  withArrivalDate(OffsetDateTime.now().minusDays(1))
+                }
+                withAllocatedToUser(user2)
+                withAssessmentSchema(apAssessment.schemaVersion)
+                withApplication(application)
+                withDecision(AssessmentDecision.ACCEPTED)
               }
-              withAllocatedToUser(user2)
-              withAssessmentSchema(apAssessment.schemaVersion)
-              withApplication(application)
-              withDecision(AssessmentDecision.ACCEPTED)
-            }
 
-            val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllAssessmentSummariesNotReallocated()
+              val results: List<DomainAssessmentSummary> =
+                realAssessmentRepository.findAllAssessmentSummariesNotReallocated()
 
-            assertThat(results.size).isEqualTo(3)
+              assertThat(results.size).isEqualTo(4)
 
-            results.forEach {
-              when (it.id) {
-                u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment, null)
-                apAssessment.id -> assertForAssessmentSummary(it, apAssessment, expectedApAssessmentNote.createdAt)
-                taAssessment.id -> assertForAssessmentSummary(it, taAssessment, expectedTaAssessmentNote.createdAt)
-                else -> fail()
+              results.forEach {
+                when (it.id) {
+                  u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment, null)
+                  apAssessment.id -> assertForAssessmentSummary(it, apAssessment, expectedApAssessmentNote.createdAt)
+                  taAssessment.id -> assertForAssessmentSummary(it, taAssessment, expectedTaAssessmentNote.createdAt)
+                  notStartedApAssessment.id -> assertForAssessmentSummary(it, notStartedApAssessment, null)
+                  else -> fail()
+                }
               }
             }
           }
@@ -92,6 +95,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
     assertThat(summary.createdAt).isEqualTo(assessment.createdAt)
     assertThat(summary.dateOfInfoRequest).isEqualTo(dateOfInfoRequest)
     assertThat(summary.completed).isEqualTo(assessment.decision != null)
+    assertThat(summary.isStarted).isEqualTo(assessment.data != null)
     assertThat(summary?.decision).isEqualTo(assessment.decision?.name)
     assertThat(summary.crn).isEqualTo(application.crn)
     when (application) {
