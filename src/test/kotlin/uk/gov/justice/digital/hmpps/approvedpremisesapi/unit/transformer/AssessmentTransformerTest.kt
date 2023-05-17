@@ -58,6 +58,15 @@ class AssessmentTransformerTest {
     registerKotlinModule()
   }
 
+  companion object {
+    @JvmStatic
+    fun assessmentDecisionPairs(): Stream<Arguments> = Stream.of(
+      of("ACCEPTED", ApiAssessmentDecision.accepted),
+      of("REJECTED", ApiAssessmentDecision.rejected),
+      of(null, null)
+    )
+  }
+
   private val assessmentTransformer = AssessmentTransformer(
     objectMapper,
     mockApplicationsTransformer,
@@ -247,14 +256,5 @@ class AssessmentTransformerTest {
     assertThat(apiSummary.status).isEqualTo(AssessmentStatus.awaitingResponse)
     assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
     assertThat(apiSummary.person).isNotNull
-  }
-
-  companion object {
-    @JvmStatic
-    fun assessmentDecisionPairs(): Stream<Arguments> = Stream.of(
-      of("ACCEPTED", ApiAssessmentDecision.accepted),
-      of("REJECTED", ApiAssessmentDecision.rejected),
-      of(null, null)
-    )
   }
 }
