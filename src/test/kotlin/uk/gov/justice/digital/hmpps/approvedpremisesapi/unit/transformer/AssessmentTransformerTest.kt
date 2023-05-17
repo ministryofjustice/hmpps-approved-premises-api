@@ -190,14 +190,27 @@ class AssessmentTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi sets an active status when there is no decision`() {
+  fun `transformJpaToApi sets an inProgress status when there is no decision and the assessment has data`() {
     val assessment = assessmentFactory
+      .withData("{\"data\": \"something\"}")
       .withDecision(null)
       .produce()
 
     val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
-    assertThat(result.status).isEqualTo(AssessmentStatus.active)
+    assertThat(result.status).isEqualTo(AssessmentStatus.inProgress)
+  }
+
+  @Test
+  fun `transformJpaToApi sets an notStarted status when there is no decision and the assessment has no data`() {
+    val assessment = assessmentFactory
+      .withData(null)
+      .withDecision(null)
+      .produce()
+
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+
+    assertThat(result.status).isEqualTo(AssessmentStatus.notStarted)
   }
 
   @ParameterizedTest
@@ -213,7 +226,8 @@ class AssessmentTransformerTest {
       dateOfInfoRequest = null,
       completed = false,
       decision = domainDecision,
-      crn = randomStringMultiCaseWithNumbers(6)
+      crn = randomStringMultiCaseWithNumbers(6),
+      isStarted = true
     )
 
     every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
@@ -223,7 +237,7 @@ class AssessmentTransformerTest {
     assertThat(apiSummary.id).isEqualTo(domainSummary.id)
     assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
     assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
-    assertThat(apiSummary.status).isEqualTo(AssessmentStatus.active)
+    assertThat(apiSummary.status).isEqualTo(AssessmentStatus.inProgress)
     assertThat(apiSummary.decision).isEqualTo(apiDecision)
     assertThat(apiSummary.risks).isNull()
     assertThat(apiSummary.person).isNotNull
@@ -242,7 +256,8 @@ class AssessmentTransformerTest {
       dateOfInfoRequest = OffsetDateTime.now().randomDateTimeBefore(),
       completed = false,
       decision = "ACCEPTED",
-      crn = randomStringMultiCaseWithNumbers(6)
+      crn = randomStringMultiCaseWithNumbers(6),
+      isStarted = true
     )
 
     every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()

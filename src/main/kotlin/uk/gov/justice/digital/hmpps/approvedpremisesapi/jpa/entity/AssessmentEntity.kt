@@ -47,6 +47,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            ) as dateOfInfoRequest,
            a.decision is not null as completed,
            a.decision as decision,
+           a.data is not null as isStarted,
            ap.crn as crn
       from assessments a
            join applications ap on a.application_id = ap.id
@@ -71,6 +72,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
         ColumnResult(name = "arrivalDate", type = OffsetDateTime::class),
         ColumnResult(name = "dateOfInfoRequest", type = OffsetDateTime::class),
         ColumnResult(name = "completed"),
+        ColumnResult(name = "isStarted"),
         ColumnResult(name = "decision"),
         ColumnResult(name = "crn"),
       ]
@@ -132,6 +134,7 @@ open class DomainAssessmentSummary(
   val arrivalDate: OffsetDateTime?,
   val dateOfInfoRequest: OffsetDateTime?,
   val completed: Boolean,
+  val isStarted: Boolean,
   val decision: String?,
   val crn: String
 )

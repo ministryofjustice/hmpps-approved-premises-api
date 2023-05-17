@@ -13,6 +13,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
+  data: String? = "{ \"some\": \"data\"}",
   block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit
 ) {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -34,6 +35,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
+    withData(data)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
