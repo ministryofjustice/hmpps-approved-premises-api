@@ -144,12 +144,15 @@ class ApplicationService(
     return AuthorisableActionResult.Unauthorised()
   }
 
-  fun createApplication(crn: String, user: UserEntity, jwt: String, service: String, convictionId: Long?, deliusEventNumber: String?, offenceId: String?, createWithRisks: Boolean? = true) = validated<ApplicationEntity> {
-    if (service != ServiceName.approvedPremises.value) {
-      "$.service" hasValidationError "onlyCas1Supported"
-      return fieldValidationError
-    }
-
+  fun createApprovedPremisesApplication(
+    crn: String,
+    user: UserEntity,
+    jwt: String,
+    convictionId: Long?,
+    deliusEventNumber: String?,
+    offenceId: String?,
+    createWithRisks: Boolean? = true,
+  ) = validated<ApplicationEntity> {
     when (offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
@@ -232,6 +235,10 @@ class ApplicationService(
     }
 
     return success(createdApplication.apply { schemaUpToDate = true })
+  }
+
+  fun createTemporaryAccommodationApplication() = validated<ApplicationEntity> {
+    "$.service" hasSingleValidationError "onlyCas1Supported"
   }
 
   fun updateApprovedPremisesApplication(

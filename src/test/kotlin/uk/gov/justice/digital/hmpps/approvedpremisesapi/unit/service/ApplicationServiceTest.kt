@@ -385,7 +385,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApplication returns FieldValidationError when CRN does not exist`() {
+  fun `createApprovedPremisesApplication returns FieldValidationError when CRN does not exist`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
@@ -393,7 +393,7 @@ class ApplicationServiceTest {
 
     val user = userWithUsername(username)
 
-    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", 123, "1", "A12HI")
+    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -401,7 +401,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApplication returns FieldValidationError when CRN is LAO restricted`() {
+  fun `createApprovedPremisesApplication returns FieldValidationError when CRN is LAO restricted`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
@@ -409,7 +409,7 @@ class ApplicationServiceTest {
 
     val user = userWithUsername(username)
 
-    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", 123, "1", "A12HI")
+    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -417,7 +417,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApplication returns FieldValidationError when CRN is not managed by any teams the user is part of`() {
+  fun `createApprovedPremisesApplication returns FieldValidationError when CRN is not managed by any teams the user is part of`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
@@ -434,7 +434,7 @@ class ApplicationServiceTest {
       )
     )
 
-    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", null, null, null)
+    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -442,7 +442,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
+  fun `createApprovedPremisesApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
@@ -459,7 +459,7 @@ class ApplicationServiceTest {
       )
     )
 
-    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", null, null, null)
+    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -469,7 +469,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApplication returns Success with created Application + persisted Risk data`() {
+  fun `createApprovedPremisesApplication returns Success with created Application + persisted Risk data`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
@@ -525,7 +525,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
 
-    val result = applicationService.createApplication(crn, user, "jwt", "approved-premises", 123, "1", "A12HI")
+    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.Success).isTrue
     result as ValidatableActionResult.Success
