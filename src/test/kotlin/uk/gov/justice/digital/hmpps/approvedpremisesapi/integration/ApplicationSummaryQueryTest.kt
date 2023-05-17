@@ -301,12 +301,12 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
         val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
+        val probationRegion = probationRegionEntityFactory.produceAndPersist {
+          withApArea(apAreaEntityFactory.produceAndPersist())
+        }
+
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(
-            probationRegionEntityFactory.produceAndPersist {
-              withApArea(apAreaEntityFactory.produceAndPersist())
-            }
-          )
+          withProbationRegion(probationRegion)
           withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
         }
 
@@ -323,6 +323,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withCreatedByUser(user)
           withApplicationSchema(applicationSchema)
           withSubmittedAt(null)
+          withProbationRegion(probationRegion)
         }
 
         val submittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -330,6 +331,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withCreatedByUser(user)
           withApplicationSchema(applicationSchema)
           withSubmittedAt(OffsetDateTime.parse("2023-04-19T09:34:00+01:00"))
+          withProbationRegion(probationRegion)
         }
 
         val assessmentForSubmittedApplication = assessmentEntityFactory.produceAndPersist {
