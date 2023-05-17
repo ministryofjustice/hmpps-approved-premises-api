@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -237,8 +238,70 @@ class ApplicationService(
     return success(createdApplication.apply { schemaUpToDate = true })
   }
 
-  fun createTemporaryAccommodationApplication() = validated<ApplicationEntity> {
-    "$.service" hasSingleValidationError "onlyCas1Supported"
+  fun createTemporaryAccommodationApplication(
+    crn: String,
+    user: UserEntity,
+    jwt: String,
+    convictionId: Long?,
+    deliusEventNumber: String?,
+    offenceId: String?,
+    createWithRisks: Boolean? = true,
+  ) = validated<ApplicationEntity> {
+    when (offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+      is AuthorisableActionResult.Success -> Unit
+    }
+
+    if (convictionId == null) {
+      "$.convictionId" hasValidationError "empty"
+    }
+
+    if (deliusEventNumber == null) {
+      "$.deliusEventNumber" hasValidationError "empty"
+    }
+
+    if (offenceId == null) {
+      "$.offenceId" hasValidationError "empty"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    var riskRatings: PersonRisks? = null
+
+    if (createWithRisks == true) {
+      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+
+      riskRatings = when (riskRatingsResult) {
+        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+        is AuthorisableActionResult.Success -> riskRatingsResult.entity
+      }
+    }
+
+    val createdApplication = applicationRepository.save(
+      TemporaryAccommodationApplicationEntity(
+        id = UUID.randomUUID(),
+        crn = crn,
+        createdByUser = user,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java),
+        createdAt = OffsetDateTime.now(),
+        submittedAt = null,
+        convictionId = convictionId!!,
+        eventNumber = deliusEventNumber!!,
+        offenceId = offenceId!!,
+        schemaUpToDate = true,
+        riskRatings = riskRatings,
+        assessments = mutableListOf(),
+        probationRegion = user.probationRegion,
+      ),
+    )
+
+    return success(createdApplication.apply { schemaUpToDate = true })
   }
 
   fun updateApprovedPremisesApplication(

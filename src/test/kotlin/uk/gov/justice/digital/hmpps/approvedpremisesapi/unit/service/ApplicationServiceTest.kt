@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -536,6 +537,117 @@ class ApplicationServiceTest {
   }
 
   @Test
+  fun `createTemporaryAccommodationApplication returns FieldValidationError when CRN does not exist`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
+
+    val user = userWithUsername(username)
+
+    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
+  }
+
+  @Test
+  fun `createTemporaryAccommodationApplication returns FieldValidationError when CRN is LAO restricted`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
+
+    val user = userWithUsername(username)
+
+    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+  }
+
+  @Test
+  fun `createTemporaryAccommodationApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce()
+    )
+
+    val user = userWithUsername(username)
+
+    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", null, null, null)
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.convictionId", "empty")
+    assertThat(result.validationMessages).containsEntry("$.deliusEventNumber", "empty")
+    assertThat(result.validationMessages).containsEntry("$.offenceId", "empty")
+  }
+
+  @Test
+  fun `createTemporaryAccommodationApplication returns Success with created Application + persisted Risk data`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val user = userWithUsername(username)
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce()
+    )
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val riskRatings = PersonRisksFactory()
+      .withRoshRisks(
+        RiskWithStatus(
+          value = RoshRisks(
+            overallRisk = "High",
+            riskToChildren = "Medium",
+            riskToPublic = "Low",
+            riskToKnownAdult = "High",
+            riskToStaff = "High",
+            lastUpdated = null
+          )
+        )
+      )
+      .withMappa(
+        RiskWithStatus(
+          value = Mappa(
+            level = "",
+            lastUpdated = LocalDate.parse("2022-12-12")
+          )
+        )
+      )
+      .withFlags(
+        RiskWithStatus(
+          value = listOf(
+            "flag1",
+            "flag2"
+          )
+        )
+      )
+      .produce()
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
+
+    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+
+    assertThat(result is ValidatableActionResult.Success).isTrue
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.crn).isEqualTo(crn)
+    assertThat(result.entity.createdByUser).isEqualTo(user)
+    val temporaryAccommodationApplication = result.entity as TemporaryAccommodationApplicationEntity
+    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+  }
+
+  @Test
   fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
@@ -781,17 +893,17 @@ class ApplicationServiceTest {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withId(applicationId)
       .withYieldedCreatedByUser {
         UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
+          .withProbationRegion(probationRegion)
           .produce()
       }
+      .withProbationRegion(probationRegion)
       .produce()
 
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -832,6 +944,7 @@ class ApplicationServiceTest {
       .withId(applicationId)
       .withCreatedByUser(user)
       .withSubmittedAt(null)
+      .withProbationRegion(user.probationRegion)
       .produce()
       .apply {
         schemaUpToDate = false
@@ -877,6 +990,7 @@ class ApplicationServiceTest {
       .withId(applicationId)
       .withCreatedByUser(user)
       .withSubmittedAt(OffsetDateTime.now())
+      .withProbationRegion(user.probationRegion)
       .produce()
       .apply {
         schemaUpToDate = true
@@ -926,6 +1040,7 @@ class ApplicationServiceTest {
       .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
+      .withProbationRegion(user.probationRegion)
       .produce()
       .apply {
         schemaUpToDate = true
