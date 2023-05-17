@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@7.3.0
+  hmpps: ministryofjustice/hmpps@7.3.1
 
 parameters:
   alerts-slack-channel:
