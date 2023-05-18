@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
@@ -1168,7 +1168,7 @@ class ApplicationTest : IntegrationTestBase() {
             .uri("/applications/$applicationId/submission")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              SubmitApplication(
+              SubmitApprovedPremisesApplication(
                 translatedDocument = {},
                 isPipeApplication = true,
                 isWomensApplication = true,
@@ -1307,7 +1307,7 @@ class ApplicationTest : IntegrationTestBase() {
                 .uri("/applications/$applicationId/submission")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  SubmitApplication(
+                  SubmitApprovedPremisesApplication(
                     translatedDocument = {},
                     isPipeApplication = true,
                     isWomensApplication = true,
