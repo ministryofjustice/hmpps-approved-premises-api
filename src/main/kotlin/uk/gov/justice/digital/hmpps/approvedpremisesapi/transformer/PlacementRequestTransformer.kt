@@ -30,7 +30,6 @@ class PlacementRequestTransformer(
       radius = jpa.radius,
       essentialCriteria = jpa.essentialCriteria.mapNotNull { characteristicToCriteria(it) },
       desirableCriteria = jpa.desirableCriteria.mapNotNull { characteristicToCriteria(it) },
-      mentalHealthSupport = jpa.mentalHealthSupport,
       person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
       risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
       applicationId = jpa.application.id,
@@ -40,6 +39,7 @@ class PlacementRequestTransformer(
       assessmentDecision = assessmentTransformer.transformJpaDecisionToApi(jpa.assessment.decision)!!,
       assessmentDate = jpa.assessment.submittedAt?.toInstant()!!,
       assessor = userTransformer.transformJpaToApi(jpa.assessment.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+      notes = jpa.notes,
     )
   }
 

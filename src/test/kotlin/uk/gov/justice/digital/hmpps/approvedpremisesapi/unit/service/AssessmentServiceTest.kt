@@ -1028,7 +1028,6 @@ class AssessmentServiceTest {
       radius = 5,
       essentialCriteria = listOf(),
       desirableCriteria = listOf(),
-      mentalHealthSupport = false
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
@@ -1143,7 +1142,6 @@ class AssessmentServiceTest {
       radius = 5,
       essentialCriteria = listOf(),
       desirableCriteria = listOf(),
-      mentalHealthSupport = false
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment

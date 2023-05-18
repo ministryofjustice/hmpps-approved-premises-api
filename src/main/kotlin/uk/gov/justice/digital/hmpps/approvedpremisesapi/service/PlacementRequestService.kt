@@ -139,7 +139,6 @@ class PlacementRequestService(
           radius = requirements.radius,
           desirableCriteria = desirableCriteria,
           essentialCriteria = essentialCriteria,
-          mentalHealthSupport = requirements.mentalHealthSupport,
           createdAt = OffsetDateTime.now(),
           application = application,
           assessment = assessment,
@@ -147,6 +146,7 @@ class PlacementRequestService(
           booking = null,
           bookingNotMades = mutableListOf(),
           reallocatedAt = null,
+          notes = requirements.notes,
         )
       )
 

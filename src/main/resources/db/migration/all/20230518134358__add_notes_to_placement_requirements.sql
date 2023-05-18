@@ -1,0 +1,1 @@
+ALTER TABLE placement_requests ADD COLUMN "notes" TEXT NULL;

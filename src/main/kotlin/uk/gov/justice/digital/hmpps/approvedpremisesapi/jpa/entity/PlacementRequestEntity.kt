@@ -67,8 +67,9 @@ data class PlacementRequestEntity(
   )
   val desirableCriteria: List<CharacteristicEntity>,
 
-  val mentalHealthSupport: Boolean,
   val createdAt: OffsetDateTime,
+
+  val notes: String?,
 
   @ManyToOne
   @JoinColumn(name = "booking_id")

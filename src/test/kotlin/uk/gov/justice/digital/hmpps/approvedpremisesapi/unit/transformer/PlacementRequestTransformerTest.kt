@@ -119,6 +119,7 @@ class PlacementRequestTransformerTest {
           CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
         ),
       )
+      .withNotes("Some notes")
       .produce()
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
@@ -134,7 +135,6 @@ class PlacementRequestTransformerTest {
         radius = placementRequestEntity.radius,
         essentialCriteria = listOf(PlacementCriteria.isSemiSpecialistMentalHealth, PlacementCriteria.isRecoveryFocussed),
         desirableCriteria = listOf(PlacementCriteria.isWheelchairDesignated, PlacementCriteria.isSingleRoom, PlacementCriteria.hasEnSuite),
-        mentalHealthSupport = placementRequestEntity.mentalHealthSupport,
         person = mockPerson,
         risks = mockRisks,
         applicationId = application.id,
@@ -144,6 +144,7 @@ class PlacementRequestTransformerTest {
         assessmentDecision = decision,
         assessmentDate = submittedAt.toInstant(),
         assessor = mockUser,
+        notes = placementRequestEntity.notes,
       ),
     )
   }
