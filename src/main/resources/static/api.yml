@@ -4998,6 +4998,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlacementCriteria'
+        notes:
+          type: string
       required:
         - gender
         - type

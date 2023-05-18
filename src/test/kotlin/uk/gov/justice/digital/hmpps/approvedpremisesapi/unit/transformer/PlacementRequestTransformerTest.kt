@@ -119,6 +119,7 @@ class PlacementRequestTransformerTest {
           CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
         ),
       )
+      .withNotes("Some notes")
       .produce()
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
@@ -143,6 +144,7 @@ class PlacementRequestTransformerTest {
         assessmentDecision = decision,
         assessmentDate = submittedAt.toInstant(),
         assessor = mockUser,
+        notes = placementRequestEntity.notes,
       ),
     )
   }

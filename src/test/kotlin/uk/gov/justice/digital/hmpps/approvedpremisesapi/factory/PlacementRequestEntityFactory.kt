@@ -33,6 +33,8 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var booking: Yielded<BookingEntity?> = { null }
   private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
+  private var notes: Yielded<String?> = { null }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -73,6 +75,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.bookingNotMades = { bookingNotMades }
   }
 
+  fun withNotes(notes: String?) = apply {
+    this.notes = { notes }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     gender = this.gender(),
@@ -90,5 +96,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     booking = this.booking(),
     bookingNotMades = this.bookingNotMades(),
     reallocatedAt = this.reallocatedAt(),
+    notes = this.notes(),
   )
 }

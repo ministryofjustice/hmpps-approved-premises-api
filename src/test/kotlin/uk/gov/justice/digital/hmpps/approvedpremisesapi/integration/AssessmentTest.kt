@@ -205,6 +205,7 @@ class AssessmentTest : IntegrationTestBase() {
       radius = 50,
       essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
       desirableCriteria = listOf(PlacementCriteria.isCatered, PlacementCriteria.acceptsSexOffenders),
+      notes = "Some Notes",
     )
 
     webTestClient.post()
@@ -260,6 +261,7 @@ class AssessmentTest : IntegrationTestBase() {
               radius = 50,
               essentialCriteria = essentialCriteria,
               desirableCriteria = desirableCriteria,
+              notes = "Some Notes",
             )
 
             webTestClient.post()
@@ -296,6 +298,7 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedPlacementRequest.gender).isEqualTo(placementRequirements.gender)
             assertThat(persistedPlacementRequest.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
             assertThat(persistedPlacementRequest.radius).isEqualTo(placementRequirements.radius)
+            assertThat(persistedPlacementRequest.notes).isEqualTo(placementRequirements.notes)
 
             assertThat(persistedPlacementRequest.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.desirableCriteria.map { it.toString() })
             assertThat(persistedPlacementRequest.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.essentialCriteria.map { it.toString() })

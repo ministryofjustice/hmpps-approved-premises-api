@@ -69,6 +69,8 @@ data class PlacementRequestEntity(
 
   val createdAt: OffsetDateTime,
 
+  val notes: String?,
+
   @ManyToOne
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity?,

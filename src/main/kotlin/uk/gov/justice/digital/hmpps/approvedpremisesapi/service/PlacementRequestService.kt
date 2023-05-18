@@ -146,6 +146,7 @@ class PlacementRequestService(
           booking = null,
           bookingNotMades = mutableListOf(),
           reallocatedAt = null,
+          notes = requirements.notes,
         )
       )
 
