@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
@@ -1334,6 +1335,69 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedDomainEvents).singleElement()
           assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
           assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Submit Temporary Accommodation application returns 200`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().produce()
+          )
+        )
+      }
+    ) { submittingUser, jwt ->
+      `Given a User` { userEntity, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(
+              """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            """
+            )
+          }
+
+          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withProbationRegion(submittingUser.probationRegion)
+            withData(
+              """
+              {}
+            """
+            )
+          }
+
+          webTestClient.post()
+            .uri("/applications/$applicationId/submission")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              SubmitTemporaryAccommodationApplication(
+                translatedDocument = {},
+              )
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
         }
       }
     }
