@@ -67,7 +67,6 @@ data class PlacementRequestEntity(
   )
   val desirableCriteria: List<CharacteristicEntity>,
 
-  val mentalHealthSupport: Boolean,
   val createdAt: OffsetDateTime,
 
   @ManyToOne

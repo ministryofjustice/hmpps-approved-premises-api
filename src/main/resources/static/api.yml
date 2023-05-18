@@ -4998,8 +4998,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlacementCriteria'
-        mentalHealthSupport:
-          type: boolean
       required:
         - gender
         - type
@@ -5009,7 +5007,6 @@ components:
         - radius
         - essentialCriteria
         - desirableCriteria
-        - mentalHealthSupport
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

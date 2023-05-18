@@ -139,7 +139,6 @@ class PlacementRequestService(
           radius = requirements.radius,
           desirableCriteria = desirableCriteria,
           essentialCriteria = essentialCriteria,
-          mentalHealthSupport = requirements.mentalHealthSupport,
           createdAt = OffsetDateTime.now(),
           application = application,
           assessment = assessment,

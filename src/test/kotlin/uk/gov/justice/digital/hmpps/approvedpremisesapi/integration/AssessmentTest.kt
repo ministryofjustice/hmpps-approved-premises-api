@@ -205,7 +205,6 @@ class AssessmentTest : IntegrationTestBase() {
       radius = 50,
       essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
       desirableCriteria = listOf(PlacementCriteria.isCatered, PlacementCriteria.acceptsSexOffenders),
-      mentalHealthSupport = false
     )
 
     webTestClient.post()
@@ -261,7 +260,6 @@ class AssessmentTest : IntegrationTestBase() {
               radius = 50,
               essentialCriteria = essentialCriteria,
               desirableCriteria = desirableCriteria,
-              mentalHealthSupport = false
             )
 
             webTestClient.post()
@@ -294,7 +292,6 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
             assertThat(persistedPlacementRequest.duration).isEqualTo(placementRequirements.duration)
             assertThat(persistedPlacementRequest.apType).isEqualTo(placementRequirements.type)
-            assertThat(persistedPlacementRequest.mentalHealthSupport).isEqualTo(placementRequirements.mentalHealthSupport)
             assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementRequirements.expectedArrival)
             assertThat(persistedPlacementRequest.gender).isEqualTo(placementRequirements.gender)
             assertThat(persistedPlacementRequest.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
@@ -415,7 +412,6 @@ class AssessmentTest : IntegrationTestBase() {
               radius = 50,
               essentialCriteria = essentialCriteria,
               desirableCriteria = desirableCriteria,
-              mentalHealthSupport = false
             )
 
             webTestClient.post()

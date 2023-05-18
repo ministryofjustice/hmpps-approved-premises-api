@@ -220,7 +220,6 @@ class PlacementRequestServiceTest {
     assertThat(newPlacementRequest.postcodeDistrict).isEqualTo(previousPlacementRequest.postcodeDistrict)
     assertThat(newPlacementRequest.gender).isEqualTo(previousPlacementRequest.gender)
     assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
-    assertThat(newPlacementRequest.mentalHealthSupport).isEqualTo(previousPlacementRequest.mentalHealthSupport)
     assertThat(newPlacementRequest.apType).isEqualTo(previousPlacementRequest.apType)
     assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
     assertThat(newPlacementRequest.desirableCriteria).isEqualTo(previousPlacementRequest.desirableCriteria)

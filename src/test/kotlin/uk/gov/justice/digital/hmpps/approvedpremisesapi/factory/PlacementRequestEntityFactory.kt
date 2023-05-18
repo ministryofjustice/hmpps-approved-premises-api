@@ -28,7 +28,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var radius: Yielded<Int> = { 50 }
   private var essentialCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce()) }
   private var desirableCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce(), CharacteristicEntityFactory().produce()) }
-  private var mentalHealthSupport: Yielded<Boolean> = { false }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var allocatedToUser: Yielded<UserEntity> = { UserEntityFactory().produce() }
   private var booking: Yielded<BookingEntity?> = { null }
@@ -86,11 +85,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     radius = this.radius(),
     essentialCriteria = this.essentialCriteria(),
     desirableCriteria = this.desirableCriteria(),
-    mentalHealthSupport = this.mentalHealthSupport(),
     createdAt = this.createdAt(),
     allocatedToUser = this.allocatedToUser(),
     booking = this.booking(),
     bookingNotMades = this.bookingNotMades(),
-    reallocatedAt = this.reallocatedAt()
+    reallocatedAt = this.reallocatedAt(),
   )
 }
