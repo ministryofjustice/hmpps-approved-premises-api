@@ -5063,19 +5063,23 @@ components:
         - isEsap
         - isSemiSpecialistMentalHealth
         - isRecoveryFocussed
-        - isSuitableForVulnerable
-        - acceptsSexOffenders
-        - acceptsChildSexOffenders
-        - acceptsNonSexualChildOffenders
-        - acceptsHateCrimeOffenders
+        - hasBrailleSignage
+        - hasTactileFlooring
+        - hasHearingLoop
+        - isStepFreeDesignated
+        - isArsonDesignated
         - isWheelchairDesignated
         - isSingleRoom
-        - isStepFreeDesignated
         - isCatered
+        - isSuitedForSexOffenders
+        - isSuitableForVulnerable
+        - acceptsSexOffenders
+        - acceptsHateCrimeOffenders
+        - acceptsChildSexOffenders
+        - acceptsNonSexualChildOffenders
+        - isArsonSuitable
         - isGroundFloor
         - hasEnSuite
-        - isSuitedForSexOffenders
-        - isArsonSuitable
     Gender:
       type: string
       enum:
