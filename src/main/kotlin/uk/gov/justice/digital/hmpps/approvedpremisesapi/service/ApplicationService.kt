@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -416,7 +416,7 @@ class ApplicationService(
   }
 
   @Transactional
-  fun submitApplication(applicationId: UUID, submitApplication: SubmitApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun submitApprovedPremisesApplication(applicationId: UUID, submitApplication: SubmitApprovedPremisesApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -433,7 +433,6 @@ class ApplicationService(
         ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
       )
     }
-    submitApplication as SubmitApprovedPremisesApplication
 
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
@@ -482,6 +481,16 @@ class ApplicationService(
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
+    )
+  }
+
+  @Transactional
+  fun submitTemporaryAccommodationApplication(
+    applicationId: UUID,
+    submitApplication: SubmitTemporaryAccommodationApplication
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
     )
   }
 

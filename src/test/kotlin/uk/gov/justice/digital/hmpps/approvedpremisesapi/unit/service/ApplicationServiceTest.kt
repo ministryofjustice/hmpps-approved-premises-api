@@ -1097,17 +1097,17 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitApplication returns NotFound when application doesn't exist`() {
+    fun `submitApprovedPremisesApplication returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
       val username = "SOMEPERSON"
 
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
-      assertThat(applicationService.submitApplication(applicationId, submitApplication, username, "jwt") is AuthorisableActionResult.NotFound).isTrue
+      assertThat(applicationService.submitApprovedPremisesApplication(applicationId, submitApplication, username, "jwt") is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
-    fun `submitApplication returns Unauthorised when application doesn't belong to request user`() {
+    fun `submitApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
@@ -1132,11 +1132,11 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      assertThat(applicationService.submitApplication(applicationId, submitApplication, username, "jwt") is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(applicationService.submitApprovedPremisesApplication(applicationId, submitApplication, username, "jwt") is AuthorisableActionResult.Unauthorised).isTrue
     }
 
     @Test
-    fun `submitApplication returns GeneralValidationError when application schema is outdated`() {
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -1150,7 +1150,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApplication(applicationId, submitApplication, username, "jwt")
+      val result = applicationService.submitApprovedPremisesApplication(applicationId, submitApplication, username, "jwt")
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1162,7 +1162,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitApplication returns GeneralValidationError when application has already been submitted`() {
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
       val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1179,7 +1179,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApplication(applicationId, submitApplication, username, "jwt")
+      val result = applicationService.submitApprovedPremisesApplication(applicationId, submitApplication, username, "jwt")
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1191,7 +1191,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitApplication returns Success, creates assessment and stores event`() {
+    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event`() {
       val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1257,7 +1257,7 @@ class ApplicationServiceTest {
 
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
 
-      val result = applicationService.submitApplication(applicationId, submitApplication, username, "jwt")
+      val result = applicationService.submitApprovedPremisesApplication(applicationId, submitApplication, username, "jwt")
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
