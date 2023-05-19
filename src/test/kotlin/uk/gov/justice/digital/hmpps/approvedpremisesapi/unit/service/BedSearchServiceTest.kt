@@ -83,12 +83,12 @@ class BedSearchServiceTest {
     val premisesCharacteristicPropertyName = "isRecoveryFocussed"
 
     val roomCharacteristic = CharacteristicEntityFactory()
-      .withPropertyName("isEsap")
+      .withPropertyName("isESAP")
       .withModelScope("room")
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf("isEsap", premisesCharacteristicPropertyName)) } returns listOf(roomCharacteristic)
+    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf("isESAP", premisesCharacteristicPropertyName)) } returns listOf(roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -96,7 +96,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.isEsap, PlacementCriteria.isRecoveryFocussed),
+      requiredCharacteristics = listOf(PlacementCriteria.isESAP, PlacementCriteria.isRecoveryFocussed),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
