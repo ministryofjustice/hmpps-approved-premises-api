@@ -244,6 +244,15 @@ class TemporaryAccommodationApplicationEntity(
   submittedAt: OffsetDateTime?,
   schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
+  val convictionId: Long,
+  val eventNumber: String,
+  val offenceId: String,
+  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Convert(disableConversion = true)
+  val riskRatings: PersonRisks?,
+  @ManyToOne
+  @JoinColumn(name = "probation_region_id")
+  val probationRegion: ProbationRegionEntity,
 ) : ApplicationEntity(
   id,
   crn,

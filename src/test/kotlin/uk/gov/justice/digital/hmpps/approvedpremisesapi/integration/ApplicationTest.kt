@@ -25,7 +25,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -964,6 +966,44 @@ class ApplicationTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .returnResult(ApprovedPremisesApplication::class.java)
+
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
+
+        assertThat(result.responseBody.blockFirst()).matches {
+          it.person.crn == offenderDetails.otherIds.crn &&
+            it.schemaVersion == applicationSchema.id
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new application for Temporary Accommodation returns 201 with correct body and Location header`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789"
+            )
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(TemporaryAccommodationApplication::class.java)
 
         assertThat(result.responseHeaders["Location"]).anyMatch {
           it.matches(Regex("/applications/.+"))

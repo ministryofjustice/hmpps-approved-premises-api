@@ -67,6 +67,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
     withCrn(crn)
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
+    withProbationRegion(createdByUser.probationRegion)
   }
 
   val assessment = assessmentEntityFactory.produceAndPersist {

@@ -125,7 +125,17 @@ class ApplicationsTransformerTest {
 
   @Test
   fun `transformJpaToApi transforms an in progress Temporary Accommodation application correctly`() {
-    val application = temporaryAccommodationApplicationEntityFactory.withSubmittedAt(null).produce()
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce()
+          )
+          .produce()
+      }
+      .produce()
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as TemporaryAccommodationApplication
 
@@ -145,7 +155,16 @@ class ApplicationsTransformerTest {
 
   @Test
   fun `transformJpaToApi transforms a submitted Temporary Accommodation application correctly`() {
-    val application = submittedTemporaryAccommodationApplicationFactory.produce()
+    val application = submittedTemporaryAccommodationApplicationFactory
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce()
+          )
+          .produce()
+      }
+      .produce()
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as TemporaryAccommodationApplication
 
@@ -174,7 +193,16 @@ class ApplicationsTransformerTest {
 
   @Test
   fun `transformJpaToApi sets status as 'requested further information' when transforming a Temporary Accommodation application with requested clarification notes`() {
-    val application = submittedTemporaryAccommodationApplicationFactory.produce()
+    val application = submittedTemporaryAccommodationApplicationFactory
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce()
+          )
+          .produce()
+      }
+      .produce()
     val assessment = assessmentFactory.withApplication(application).produce()
 
     application.assessments = mutableListOf(assessment)
@@ -309,7 +337,16 @@ class ApplicationsTransformerTest {
 
   @Test
   fun `transformJpaToApi sets status as 'submitted' when transforming a Temporary Accommodation application with a completed clarification note`() {
-    val application = submittedTemporaryAccommodationApplicationFactory.produce()
+    val application = submittedTemporaryAccommodationApplicationFactory
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce()
+          )
+          .produce()
+      }
+      .produce()
     val assessment = assessmentFactory.withApplication(application).produce()
 
     assessment.clarificationNotes = mutableListOf(
@@ -327,7 +364,16 @@ class ApplicationsTransformerTest {
 
   @Test
   fun `transformJpaToApi uses the latest assessment`() {
-    val application = submittedTemporaryAccommodationApplicationFactory.produce()
+    val application = submittedTemporaryAccommodationApplicationFactory
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce()
+          )
+          .produce()
+      }
+      .produce()
     val oldAssessment = assessmentFactory.withApplication(application)
       .withCreatedAt(OffsetDateTime.parse("2022-09-01T12:34:56.789Z"))
       .produce()

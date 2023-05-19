@@ -110,14 +110,17 @@ class ApplicationsController(
 
   @Transactional
   override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?): ResponseEntity<Application> {
-    val serviceName = xServiceName?.value ?: ServiceName.approvedPremises.value
-
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
     val (offender, inmate) = getPersonDetail(body.crn)
 
-    val application = when (val applicationResult = applicationService.createApplication(body.crn, user, deliusPrincipal.token.tokenValue, serviceName, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
+    val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
+      ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
+      ServiceName.temporaryAccommodation -> applicationService.createTemporaryAccommodationApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
+    }
+
+    val application = when (applicationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
