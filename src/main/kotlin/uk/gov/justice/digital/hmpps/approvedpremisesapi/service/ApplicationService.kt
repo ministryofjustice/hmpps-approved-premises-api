@@ -489,8 +489,62 @@ class ApplicationService(
     applicationId: UUID,
     submitApplication: SubmitTemporaryAccommodationApplication
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (application !is TemporaryAccommodationApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas3Supported"),
+      )
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    val validationErrors = ValidationErrors()
+    val applicationData = application.data
+
+    if (applicationData == null) {
+      validationErrors["$.data"] = "empty"
+    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
+      validationErrors["$.data"] = "invalid"
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors),
+      )
+    }
+
+    val schema = application.schemaVersion as? TemporaryAccommodationApplicationJsonSchemaEntity
+      ?: throw RuntimeException("Incorrect type of JSON schema referenced by TA Application")
+
+    application.apply {
+      submittedAt = OffsetDateTime.now()
+      document = serializedTranslatedDocument
+    }
+
+    application = applicationRepository.save(application)
+
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
+      ValidatableActionResult.Success(application),
     )
   }
 
