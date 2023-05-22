@@ -57,6 +57,7 @@ class ApplicationsTransformer(
       submittedAt = jpa.submittedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
       status = getStatus(jpa)
     )
     else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
@@ -64,7 +65,8 @@ class ApplicationsTransformer(
 
   fun transformDomainToApiSummary(domain: DomainApplicationSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
-      val riskRatings = if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+      val riskRatings =
+        if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
       ApiApprovedPremisesApplicationSummary(
         id = domain.getId(),
@@ -79,14 +81,21 @@ class ApplicationsTransformer(
         status = getStatusFromSummary(domain)
       )
     }
-    is DomainTemporaryAccommodationApplicationSummary -> ApiTemporaryAccommodationApplicationSummary(
-      id = domain.getId(),
-      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-      createdByUserId = domain.getCreatedByUserId(),
-      createdAt = domain.getCreatedAt().toInstant(),
-      submittedAt = domain.getSubmittedAt()?.toInstant(),
-      status = getStatusFromSummary(domain)
-    )
+
+    is DomainTemporaryAccommodationApplicationSummary -> {
+      val riskRatings =
+        if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+
+      ApiTemporaryAccommodationApplicationSummary(
+        id = domain.getId(),
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        createdByUserId = domain.getCreatedByUserId(),
+        createdAt = domain.getCreatedAt().toInstant(),
+        submittedAt = domain.getSubmittedAt()?.toInstant(),
+        risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
+        status = getStatusFromSummary(domain)
+      )
+    }
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
   }
 
