@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
@@ -41,7 +42,8 @@ class PremisesService(
   private val probationRegionRepository: ProbationRegionRepository,
   private val lostBedCancellationRepository: LostBedCancellationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
-  private val characteristicService: CharacteristicService
+  private val characteristicService: CharacteristicService,
+  private val bedRepository: BedRepository
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -429,6 +431,8 @@ class PremisesService(
       ValidatableActionResult.Success(savedPremises)
     )
   }
+
+  fun getBeds(premisesId: UUID) = bedRepository.findAllBedsForPremises(premisesId)
 
   private fun serviceScopeMatches(scope: String, premises: PremisesEntity) = when (scope) {
     "*" -> true
