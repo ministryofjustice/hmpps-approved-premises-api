@@ -106,7 +106,8 @@ SELECT
     ass.submitted_at as latestAssessmentSubmittedAt,
     ass.decision as latestAssessmentDecision,
     (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
-    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = taa.id) > 0 as hasBooking
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = taa.id) > 0 as hasBooking,
+    CAST(taa.risk_ratings AS TEXT) as riskRatings
 FROM temporary_accommodation_applications taa 
 LEFT JOIN applications a ON a.id = taa.id 
 LEFT JOIN assessments ass ON ass.application_id = taa.id AND ass.reallocated_at IS NULL 
@@ -288,4 +289,6 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getRiskRatings(): String?
 }
 
-interface TemporaryAccommodationApplicationSummary : ApplicationSummary
+interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
+  fun getRiskRatings(): String?
+}

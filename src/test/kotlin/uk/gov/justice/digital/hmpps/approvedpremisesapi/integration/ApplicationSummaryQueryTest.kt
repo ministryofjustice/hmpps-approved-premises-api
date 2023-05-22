@@ -364,6 +364,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           assertThat(it.getLatestAssessmentDecision()).isNull()
           assertThat(it.getLatestAssessmentHasClarificationNotesWithoutResponse()).isEqualTo(false)
           assertThat(it.getHasBooking()).isEqualTo(false)
+          assertThat(it.getRiskRatings()).isNotBlank()
         }
 
         results.first { it.getId() == submittedApplication.id }.let {
@@ -375,6 +376,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           assertThat(it.getLatestAssessmentDecision()).isEqualTo(assessmentForSubmittedApplication.decision)
           assertThat(it.getLatestAssessmentHasClarificationNotesWithoutResponse()).isEqualTo(true)
           assertThat(it.getHasBooking()).isEqualTo(true)
+          assertThat(it.getRiskRatings()).isNotBlank()
         }
       }
     }
