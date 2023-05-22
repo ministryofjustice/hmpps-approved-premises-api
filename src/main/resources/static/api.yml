@@ -4077,6 +4077,8 @@ components:
               $ref: '#/components/schemas/AnyValue'
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
           required:
             - createdByUserId
             - schemaVersion
@@ -4144,6 +4146,8 @@ components:
               format: uuid
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
           required:
             - createdByUserId
             - status
