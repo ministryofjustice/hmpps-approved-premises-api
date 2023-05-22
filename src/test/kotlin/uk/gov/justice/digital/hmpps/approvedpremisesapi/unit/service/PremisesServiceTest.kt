@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationRepository
@@ -50,6 +51,7 @@ class PremisesServiceTest {
   private val lostBedCancellationRepositoryMock = mockk<LostBedCancellationRepository>()
   private val probationDeliveryUnitRepositoryMock = mockk<ProbationDeliveryUnitRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
+  private val bedRepositoryMock = mockk<BedRepository>()
 
   private val premisesService = PremisesService(
     premisesRepositoryMock,
@@ -60,7 +62,8 @@ class PremisesServiceTest {
     probationRegionRepositoryMock,
     lostBedCancellationRepositoryMock,
     probationDeliveryUnitRepositoryMock,
-    characteristicServiceMock
+    characteristicServiceMock,
+    bedRepositoryMock,
   )
 
   @Test
