@@ -4655,6 +4655,29 @@ components:
       required:
         - id
         - name
+    BedSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        roomName:
+          type: string
+        status:
+          $ref: '#/components/schemas/BedStatus'
+      required:
+        - id
+        - name
+        - roomName
+        - status
+    BedStatus:
+      type: string
+      enum:
+        - occupied
+        - available
+        - out_of_service
     PropertyStatus:
       type: string
       enum:
