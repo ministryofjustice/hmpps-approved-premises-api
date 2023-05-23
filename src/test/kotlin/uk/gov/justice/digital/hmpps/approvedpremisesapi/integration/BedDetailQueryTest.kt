@@ -36,6 +36,7 @@ class BedDetailQueryTest : IntegrationTestBase() {
 
     assertThat(result.id).isEqualTo(bed.id)
     assertThat(result.name).isEqualTo(bed.name)
+    assertThat(result.roomId).isEqualTo(room.id)
     assertThat(result.roomName).isEqualTo(room.name)
     assertThat(result.bedBooked).isEqualTo(false)
     assertThat(result.bedOutOfService).isEqualTo(false)

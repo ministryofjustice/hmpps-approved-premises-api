@@ -30,6 +30,7 @@ const val bedSummaryQuery =
     select cast(b.id as text) as id,
       cast(b.name as text) as name,
       cast(r.name as text) as roomName,
+      r.id as roomId,
       (
         select count(booking.id)
         from bookings booking
@@ -76,6 +77,7 @@ const val bedSummaryQuery =
       columns = [
         ColumnResult(name = "id", type = UUID::class),
         ColumnResult(name = "name"),
+        ColumnResult(name = "roomId", type = UUID::class),
         ColumnResult(name = "roomName"),
         ColumnResult(name = "bedBooked"),
         ColumnResult(name = "bedOutOfService"),
@@ -102,6 +104,7 @@ data class BedEntity(
 open class DomainBedSummary(
   val id: UUID,
   val name: String,
+  val roomId: UUID,
   val roomName: String,
   val bedBooked: Boolean,
   val bedOutOfService: Boolean
