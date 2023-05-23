@@ -36,6 +36,17 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
       "WHERE c.propertyName IN :names",
   )
   fun findAllWherePropertyNameIn(names: List<String>): List<CharacteristicEntity>
+
+  @Query(
+    """
+      SELECT c.*
+      FROM characteristics c
+      LEFT JOIN room_characteristics rc ON rc.characteristic_id = c.id
+      WHERE rc.room_id = :roomId
+    """,
+    nativeQuery = true,
+  )
+  fun findAllForRoomId(roomId: UUID): List<CharacteristicEntity>
 }
 
 @Entity
