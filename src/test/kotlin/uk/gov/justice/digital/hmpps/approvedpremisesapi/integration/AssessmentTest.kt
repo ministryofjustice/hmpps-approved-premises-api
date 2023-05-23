@@ -403,7 +403,7 @@ class AssessmentTest : IntegrationTestBase() {
 
             assessment.schemaUpToDate = true
 
-            val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isEsap)
+            val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
             val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
 
             val placementRequirements = PlacementRequirements(

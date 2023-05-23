@@ -5113,8 +5113,8 @@ components:
     PlacementCriteria:
       type: string
       enum:
-        - isPipe
-        - isEsap
+        - isPIPE
+        - isESAP
         - isSemiSpecialistMentalHealth
         - isRecoveryFocussed
         - hasBrailleSignage
