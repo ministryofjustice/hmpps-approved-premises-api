@@ -20,15 +20,17 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 
   @Query(nativeQuery = true)
   fun findAllBedsForPremises(premisesId: UUID): List<DomainBedSummary>
+
+  @Query(nativeQuery = true)
+  fun getDetailById(id: UUID): DomainBedSummary?
 }
 
-@NamedNativeQuery(
-  name = "BedEntity.findAllBedsForPremises",
-  query =
+const val bedSummaryQuery =
   """
     select cast(b.id as text) as id,
       cast(b.name as text) as name,
       cast(r.name as text) as roomName,
+      r.id as roomId,
       (
         select count(booking.id)
         from bookings booking
@@ -44,9 +46,26 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
           and lost_bed.end_date >= CURRENT_DATE
       ) > 0 as bedOutOfService
       from beds b
-           join rooms r on b.room_id = r.id
-     where r.premises_id = cast(?1 as UUID)
-    """,
+           join rooms r on b.room_id = r.id 
+  """
+
+@NamedNativeQuery(
+  name = "BedEntity.findAllBedsForPremises",
+  query =
+  """
+    $bedSummaryQuery
+    where r.premises_id = cast(?1 as UUID)
+  """,
+  resultSetMapping = "DomainBedSummaryMapping"
+)
+
+@NamedNativeQuery(
+  name = "BedEntity.getDetailById",
+  query =
+  """
+    $bedSummaryQuery
+    where b.id = cast(?1 as UUID)
+  """,
   resultSetMapping = "DomainBedSummaryMapping"
 )
 
@@ -58,6 +77,7 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
       columns = [
         ColumnResult(name = "id", type = UUID::class),
         ColumnResult(name = "name"),
+        ColumnResult(name = "roomId", type = UUID::class),
         ColumnResult(name = "roomName"),
         ColumnResult(name = "bedBooked"),
         ColumnResult(name = "bedOutOfService"),
@@ -84,6 +104,7 @@ data class BedEntity(
 open class DomainBedSummary(
   val id: UUID,
   val name: String,
+  val roomId: UUID,
   val roomName: String,
   val bedBooked: Boolean,
   val bedOutOfService: Boolean

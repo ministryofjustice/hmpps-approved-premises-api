@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -57,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
@@ -84,6 +87,7 @@ class PremisesController(
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
+  private val bedService: BedService,
   private val premisesTransformer: PremisesTransformer,
   private val premisesSummaryTransformer: PremisesSummaryTransformer,
   private val bookingTransformer: BookingTransformer,
@@ -100,7 +104,8 @@ class PremisesController(
   private val roomTransformer: RoomTransformer,
   private val lostBedCancellationTransformer: LostBedCancellationTransformer,
   private val turnaroundTransformer: TurnaroundTransformer,
-  private val bedSummaryTransformer: BedSummaryTransformer
+  private val bedSummaryTransformer: BedSummaryTransformer,
+  private val bedDetailTransformer: BedDetailTransformer,
 ) : PremisesApiDelegate {
 
   override fun premisesSummaryGet(xServiceName: ServiceName): ResponseEntity<List<PremisesSummary>> {
@@ -813,6 +818,23 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(premisesService.getBeds(premisesId).map(bedSummaryTransformer::transformToApi))
+  }
+
+  override fun premisesPremisesIdBedsBedIdGet(premisesId: UUID, bedId: UUID): ResponseEntity<BedDetail> {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val validationResult = when (val bedResult = bedService.getBedAndRoomCharacteristics(bedId)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bedId, "Bed")
+      is AuthorisableActionResult.Success -> bedResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(bedDetailTransformer.transformToApi(validationResult))
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {

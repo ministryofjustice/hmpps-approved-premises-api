@@ -81,6 +81,7 @@ class BedSummaryQueryTest : IntegrationTestBase() {
 
     results.first { it.id == bedWithoutBooking.id }.let {
       assertThat(it.name).isEqualTo(bedWithoutBooking.name)
+      assertThat(it.roomId).isEqualTo(bedWithoutBooking.room.id)
       assertThat(it.roomName).isEqualTo(bedWithoutBooking.room.name)
       assertThat(it.bedBooked).isEqualTo(false)
       assertThat(it.bedOutOfService).isEqualTo(false)
@@ -88,6 +89,7 @@ class BedSummaryQueryTest : IntegrationTestBase() {
 
     results.first { it.id == bedWithBooking.id }.let {
       assertThat(it.name).isEqualTo(bedWithBooking.name)
+      assertThat(it.roomId).isEqualTo(bedWithBooking.room.id)
       assertThat(it.roomName).isEqualTo(bedWithBooking.room.name)
       assertThat(it.bedBooked).isEqualTo(true)
       assertThat(it.bedOutOfService).isEqualTo(false)
@@ -95,6 +97,7 @@ class BedSummaryQueryTest : IntegrationTestBase() {
 
     results.first { it.id == bedWithLostBed.id }.let {
       assertThat(it.name).isEqualTo(bedWithLostBed.name)
+      assertThat(it.roomId).isEqualTo(bedWithLostBed.room.id)
       assertThat(it.roomName).isEqualTo(bedWithLostBed.room.name)
       assertThat(it.bedBooked).isEqualTo(false)
       assertThat(it.bedOutOfService).isEqualTo(true)

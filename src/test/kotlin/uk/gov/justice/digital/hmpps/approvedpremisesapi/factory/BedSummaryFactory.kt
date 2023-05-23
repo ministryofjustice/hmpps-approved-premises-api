@@ -10,6 +10,7 @@ class BedSummaryFactory : Factory<DomainBedSummary> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringUpperCase(6) }
   private var roomName: Yielded<String> = { randomStringUpperCase(6) }
+  private var roomId: Yielded<UUID> = { UUID.randomUUID() }
   private var bedBooked: Boolean = false
   private var bedOutOfService: Boolean = false
 
@@ -32,6 +33,7 @@ class BedSummaryFactory : Factory<DomainBedSummary> {
   override fun produce(): DomainBedSummary = DomainBedSummary(
     id = this.id(),
     name = this.name(),
+    roomId = this.roomId(),
     roomName = this.roomName(),
     bedBooked = this.bedBooked,
     bedOutOfService = this.bedOutOfService
