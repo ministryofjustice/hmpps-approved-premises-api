@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -209,8 +210,10 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw BadRequestProblem(errorDetail = "Only CAS1 is currently supported")
+    val convictionId = when (application) {
+      is ApprovedPremisesApplicationEntity -> application.convictionId
+      is TemporaryAccommodationApplicationEntity -> application.convictionId
+      else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
     val documents = when (val documentsResult = offenderService.getDocuments(application.crn)) {
@@ -219,7 +222,7 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> documentsResult.entity
     }
 
-    return ResponseEntity(documentTransformer.transformToApi(documents, application.convictionId), HttpStatus.OK)
+    return ResponseEntity(documentTransformer.transformToApi(documents, convictionId), HttpStatus.OK)
   }
 
   override fun applicationsApplicationIdAssessmentGet(applicationId: UUID): ResponseEntity<Assessment> {
