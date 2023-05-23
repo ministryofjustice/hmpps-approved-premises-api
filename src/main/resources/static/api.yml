@@ -4704,6 +4704,18 @@ components:
         - name
         - roomName
         - status
+    BedDetail:
+      allOf:
+        - $ref: '#/components/schemas/BedSummary'
+        - type: object
+          properties:
+            characteristics:
+              type: array
+              items:
+                type: object
+                $ref: '#/components/schemas/CharacteristicPair'
+          required:
+            - characteristics
     BedStatus:
       type: string
       enum:
