@@ -50,29 +50,29 @@ abstract class BaseHMPPSClient(
 
     try {
       if (cacheConfig != null) {
-        val qualifiedKey = getQualifiedKey(requestBuilder, cacheConfig)
+        val cacheKeySet = getCacheKeySet(requestBuilder, cacheConfig)
 
         if (!requestBuilder.isPreemptiveCall) {
           val pollingStart = System.currentTimeMillis()
 
           do {
-            val cacheEntry = getCacheEntryIfExists(qualifiedKey)
+            val cacheEntryMetadata = getCacheEntryMetadataIfExists(cacheKeySet.metadataKey)
 
-            if (cacheEntry == null) {
+            if (cacheEntryMetadata == null) {
               Thread.sleep(500)
               continue
             }
 
-            return resultFromCacheEntry(cacheEntry, typeReference, clazz)
+            return resultFromCacheMetadata(cacheEntryMetadata, cacheKeySet, typeReference, clazz)
           } while (System.currentTimeMillis() - pollingStart < requestBuilder.preemptiveCacheTimeoutMs)
 
-          return ClientResult.Failure.PreemptiveCacheTimeout(cacheConfig.cacheName, qualifiedKey, requestBuilder.preemptiveCacheTimeoutMs)
+          return ClientResult.Failure.PreemptiveCacheTimeout(cacheConfig.cacheName, cacheKeySet.metadataKey, requestBuilder.preemptiveCacheTimeoutMs)
         }
 
-        val cacheEntry = getCacheEntryIfExists(qualifiedKey)
+        val cacheEntry = getCacheEntryMetadataIfExists(cacheKeySet.metadataKey)
 
         if (cacheEntry != null && cacheEntry.refreshableAfter.isAfter(Instant.now())) {
-          return resultFromCacheEntry(cacheEntry, typeReference, clazz)
+          return resultFromCacheMetadata(cacheEntry, cacheKeySet, typeReference, clazz)
         }
       }
 
@@ -93,33 +93,35 @@ abstract class BaseHMPPSClient(
       }
 
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
-        val qualifiedKey = getQualifiedKey(requestBuilder, cacheConfig)
+        val cacheKeySet = getCacheKeySet(requestBuilder, cacheConfig)
 
-        val cacheEntry = PreemptiveCacheEntry(
+        val cacheEntry = PreemptiveCacheMetadata(
           httpStatus = result.statusCode,
           refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
-          body = result.body,
           method = null,
-          path = null
+          path = null,
+          hasResponseBody = result.body != null
         )
 
-        writeToRedis(qualifiedKey, cacheEntry, cacheConfig.hardTtlSeconds.toLong())
+        writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
       }
 
       return ClientResult.Success(result.statusCode, deserialized, false)
     } catch (exception: WebClientResponseException) {
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
-        val qualifiedKey = getQualifiedKey(requestBuilder, cacheConfig)
+        val qualifiedKey = getCacheKeySet(requestBuilder, cacheConfig)
 
-        val cacheEntry = PreemptiveCacheEntry(
+        val body = exception.responseBodyAsString
+
+        val cacheEntry = PreemptiveCacheMetadata(
           httpStatus = exception.statusCode,
           refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
-          body = exception.responseBodyAsString,
           method = method,
-          path = requestBuilder.path ?: ""
+          path = requestBuilder.path ?: "",
+          hasResponseBody = body != null
         )
 
-        writeToRedis(qualifiedKey, cacheEntry, cacheConfig.hardTtlSeconds.toLong())
+        writeToRedis(qualifiedKey, cacheEntry, body, cacheConfig.hardTtlSeconds.toLong())
       }
 
       return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
@@ -128,36 +130,55 @@ abstract class BaseHMPPSClient(
     }
   }
 
-  private fun getQualifiedKey(requestBuilder: HMPPSRequestConfiguration, cacheConfig: PreemptiveCacheConfig): String {
+  private fun getCacheKeySet(requestBuilder: HMPPSRequestConfiguration, cacheConfig: PreemptiveCacheConfig): CacheKeySet {
     val key = requestBuilder.preemptiveCacheKey ?: throw RuntimeException("Must provide a preemptiveCacheKey")
-    return "$preemptiveCacheKeyPrefix-${cacheConfig.cacheName}-$key"
+    return CacheKeySet(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
   }
 
-  private fun writeToRedis(qualifiedKey: String, cacheEntry: PreemptiveCacheEntry, hardTtlSeconds: Long) {
-    redisTemplate.boundValueOps(qualifiedKey).set(
+  private fun writeToRedis(cacheKeySet: CacheKeySet, cacheEntry: PreemptiveCacheMetadata, body: String?, hardTtlSeconds: Long) {
+    redisTemplate.boundValueOps(cacheKeySet.metadataKey).set(
       objectMapper.writeValueAsString(cacheEntry),
       Duration.ofSeconds(hardTtlSeconds)
     )
+
+    if (body != null) {
+      redisTemplate.boundValueOps(cacheKeySet.dataKey).set(
+        body,
+        Duration.ofSeconds(hardTtlSeconds)
+      )
+    }
   }
 
-  private fun getCacheEntryIfExists(qualifiedKey: String): PreemptiveCacheEntry? {
-    if (redisTemplate.hasKey(qualifiedKey)) {
-      return objectMapper.readValue<PreemptiveCacheEntry>(
-        redisTemplate.boundValueOps(qualifiedKey).get()!!
+  private fun getCacheEntryMetadataIfExists(metaDataKey: String): PreemptiveCacheMetadata? {
+    if (redisTemplate.hasKey(metaDataKey)) {
+      return objectMapper.readValue<PreemptiveCacheMetadata>(
+        redisTemplate.boundValueOps(metaDataKey).get()!!
       )
     }
 
     return null
   }
 
-  private fun <ResponseType> resultFromCacheEntry(cacheEntry: PreemptiveCacheEntry, typeReference: TypeReference<ResponseType>?, clazz: Class<ResponseType>?): ClientResult<ResponseType> {
+  private fun getCacheEntryBody(dataKey: String): String {
+    if (redisTemplate.hasKey(dataKey)) {
+      return redisTemplate.boundValueOps(dataKey).get()!!
+    }
+
+    throw RuntimeException("No Redis entry exists for $dataKey")
+  }
+
+  private fun <ResponseType> resultFromCacheMetadata(cacheEntry: PreemptiveCacheMetadata, cacheKeySet: CacheKeySet, typeReference: TypeReference<ResponseType>?, clazz: Class<ResponseType>?): ClientResult<ResponseType> {
+    val cachedBody = if (cacheEntry.hasResponseBody) {
+      getCacheEntryBody(cacheKeySet.dataKey)
+    } else null
+
     if (cacheEntry.httpStatus.is2xxSuccessful) {
       return ClientResult.Success(
         status = cacheEntry.httpStatus,
         body = if (typeReference != null) {
-          objectMapper.readValue(cacheEntry.body, typeReference)
+          objectMapper.readValue(cachedBody, typeReference)
         } else {
-          objectMapper.readValue(cacheEntry.body, clazz)
+          objectMapper.readValue(cachedBody, clazz)
         },
         isPreemptivelyCachedResponse = true
       )
@@ -165,7 +186,7 @@ abstract class BaseHMPPSClient(
 
     return ClientResult.Failure.StatusCode(
       status = cacheEntry.httpStatus,
-      body = cacheEntry.body,
+      body = cachedBody,
       method = cacheEntry.method!!,
       path = cacheEntry.path!!,
       isPreemptivelyCachedResponse = true
@@ -192,12 +213,12 @@ abstract class BaseHMPPSClient(
   )
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  data class PreemptiveCacheEntry(
+  data class PreemptiveCacheMetadata(
     val httpStatus: HttpStatus,
     val refreshableAfter: Instant,
-    val body: String?,
     val method: HttpMethod?,
-    val path: String?
+    val path: String?,
+    val hasResponseBody: Boolean
   )
 }
 
@@ -226,4 +247,16 @@ sealed interface ClientResult<ResponseType> {
       }
     }
   }
+}
+
+class CacheKeySet(
+  private val prefix: String,
+  private val cacheName: String,
+  private val key: String
+) {
+  val metadataKey: String
+    get() { return "$prefix-$cacheName-$key-metadata" }
+
+  val dataKey: String
+    get() { return "$prefix-$cacheName-$key-data" }
 }

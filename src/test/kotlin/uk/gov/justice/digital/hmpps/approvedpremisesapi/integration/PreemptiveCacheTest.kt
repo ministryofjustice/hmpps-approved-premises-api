@@ -117,18 +117,24 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     Thread {
       Thread.sleep(500)
 
-      val qualifiedKey = "offenderDetailSummary-$crn"
+      val qualifiedMetadataKey = "offenderDetailSummary-$crn-metadata"
+      val qualifiedDataKey = "offenderDetailSummary-$crn-data"
 
-      val cacheEntry = BaseHMPPSClient.PreemptiveCacheEntry(
+      val cacheEntry = BaseHMPPSClient.PreemptiveCacheMetadata(
         httpStatus = HttpStatus.OK,
         refreshableAfter = Instant.now().plusSeconds(10),
-        body = objectMapper.writeValueAsString(offenderDetailsResponse),
         method = null,
-        path = null
+        path = null,
+        hasResponseBody = true
       )
 
-      redisTemplate.boundValueOps(qualifiedKey).set(
+      redisTemplate.boundValueOps(qualifiedMetadataKey).set(
         objectMapper.writeValueAsString(cacheEntry),
+        Duration.ofSeconds(10)
+      )
+
+      redisTemplate.boundValueOps(qualifiedDataKey).set(
+        objectMapper.writeValueAsString(offenderDetailsResponse),
         Duration.ofSeconds(10)
       )
     }.start()
