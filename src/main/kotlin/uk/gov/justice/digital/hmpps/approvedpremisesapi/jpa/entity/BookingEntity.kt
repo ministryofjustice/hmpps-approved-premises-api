@@ -93,6 +93,7 @@ data class BookingEntity(
   val createdAt: OffsetDateTime,
   @OneToMany(mappedBy = "booking")
   var turnarounds: MutableList<TurnaroundEntity>,
+  var nomsNumber: String?
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }

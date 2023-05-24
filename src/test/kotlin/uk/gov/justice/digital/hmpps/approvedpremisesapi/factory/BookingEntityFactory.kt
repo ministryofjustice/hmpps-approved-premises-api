@@ -45,6 +45,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var application: Yielded<ApplicationEntity?> = { null }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
   private var turnarounds: Yielded<MutableList<TurnaroundEntity>>? = null
+  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -162,6 +163,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.turnarounds = { turnarounds }
   }
 
+  fun withNomsNumber(nomsNumber: String?) = apply {
+    this.nomsNumber = { nomsNumber }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -183,5 +188,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     application = this.application(),
     offlineApplication = this.offlineApplication(),
     turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
+    nomsNumber = this.nomsNumber()
   )
 }

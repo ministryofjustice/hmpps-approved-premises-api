@@ -149,6 +149,8 @@ abstract class ApplicationEntity(
 
   @OneToMany(mappedBy = "application")
   var assessments: MutableList<AssessmentEntity>,
+
+  var nomsNumber: String?
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
   abstract fun getRequiredQualifications(): List<UserQualification>
@@ -175,6 +177,7 @@ class ApprovedPremisesApplicationEntity(
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
+  nomsNumber: String?,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,
@@ -195,6 +198,7 @@ class ApprovedPremisesApplicationEntity(
   submittedAt,
   schemaUpToDate,
   assessments,
+  nomsNumber
 ) {
   fun hasTeamCode(code: String) = teamCodes.any { it.teamCode == code }
   fun hasAnyTeamCode(codes: List<String>) = codes.any(::hasTeamCode)
@@ -245,6 +249,7 @@ class TemporaryAccommodationApplicationEntity(
   submittedAt: OffsetDateTime?,
   schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
+  nomsNumber: String?,
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
@@ -264,7 +269,8 @@ class TemporaryAccommodationApplicationEntity(
   createdAt,
   submittedAt,
   schemaUpToDate,
-  assessments
+  assessments,
+  nomsNumber
 ) {
   override fun getRequiredQualifications(): List<UserQualification> = emptyList()
 }
