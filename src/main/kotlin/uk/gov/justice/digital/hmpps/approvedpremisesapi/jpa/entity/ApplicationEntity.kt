@@ -119,6 +119,9 @@ WHERE a.created_by_user_id = :userId
 
   @Query("SELECT DISTINCT(a.crn) FROM ApplicationEntity a")
   fun getDistinctCrns(): List<String>
+
+  @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a")
+  fun getDistinctNomsNumbers(): List<String>
 }
 
 @Entity

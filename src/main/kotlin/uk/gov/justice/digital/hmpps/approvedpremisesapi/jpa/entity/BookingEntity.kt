@@ -35,6 +35,9 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT DISTINCT(b.crn) FROM BookingEntity b")
   fun getDistinctCrns(): List<String>
 
+  @Query("SELECT DISTINCT(b.nomsNumber) FROM BookingEntity b")
+  fun getDistinctNomsNumbers(): List<String>
+
   @Query(
     "SELECT b FROM BookingEntity b " +
       "WHERE b.bed.id = :bedId " +
