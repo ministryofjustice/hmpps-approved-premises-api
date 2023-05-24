@@ -20,13 +20,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      'a3ae72b1-0284-439b-9fd9-e1237fa57a19',
-      CURRENT_DATE + 7,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      'fe1d197f-9025-489e-8f3a-a38c40be3d5c',
+      CURRENT_DATE + 28,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       '315VWWC',
       applicationData,
       applicationDocument,
@@ -40,7 +41,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 16
+      CURRENT_DATE + 16,
+      'M59CS58'
     );
   
 
@@ -57,7 +59,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'a3ae72b1-0284-439b-9fd9-e1237fa57a19',
+      'fe1d197f-9025-489e-8f3a-a38c40be3d5c',
       false,
       false,
       'M2500295343',
@@ -76,9 +78,9 @@ BEGIN
   )
   VALUES
     (
-      'e7668161-e933-4aae-bd4b-116c1e92b37d',
-      'a3ae72b1-0284-439b-9fd9-e1237fa57a19',
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '76b4a657-bcb0-41e4-9efc-b22b8df2fc17',
+      'fe1d197f-9025-489e-8f3a-a38c40be3d5c',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -102,13 +104,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      'caa8ef6d-8b2c-4cd5-b626-375196da9a4d',
-      CURRENT_DATE + 29,
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      'a1fac092-1acb-4288-978f-a9844167b98b',
+      CURRENT_DATE + 6,
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       '4Y29R9P',
       applicationData,
       applicationDocument,
@@ -122,7 +125,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 12
+      CURRENT_DATE + 28,
+      'XWU5JWQ'
     );
   
 
@@ -139,7 +143,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'caa8ef6d-8b2c-4cd5-b626-375196da9a4d',
+      'a1fac092-1acb-4288-978f-a9844167b98b',
       false,
       false,
       'M2500295343',
@@ -158,9 +162,9 @@ BEGIN
   )
   VALUES
     (
-      '4c935bda-0745-4c1c-9ab7-6e7e302d5433',
-      'caa8ef6d-8b2c-4cd5-b626-375196da9a4d',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '652a578d-9c26-423e-8a57-ad3337674190',
+      'a1fac092-1acb-4288-978f-a9844167b98b',
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -184,13 +188,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '320f3046-11b4-482c-83e8-d2ebad559ff2',
-      CURRENT_DATE + 1,
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '31482b90-33f5-49ac-86ef-b60df16a7812',
+      CURRENT_DATE + 27,
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       '4ZUIHFX',
       applicationData,
       applicationDocument,
@@ -204,7 +209,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 2
+      CURRENT_DATE + 12,
+      '5A5C8WL'
     );
   
 
@@ -221,7 +227,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '320f3046-11b4-482c-83e8-d2ebad559ff2',
+      '31482b90-33f5-49ac-86ef-b60df16a7812',
       false,
       false,
       'M2500295343',
@@ -240,9 +246,9 @@ BEGIN
   )
   VALUES
     (
-      '087df236-7661-4471-ae4d-b743683087af',
-      '320f3046-11b4-482c-83e8-d2ebad559ff2',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'd36fe117-c760-4bd0-9649-89c21834fe95',
+      '31482b90-33f5-49ac-86ef-b60df16a7812',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -266,13 +272,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '62bbd92f-617e-400a-9116-f1e8143c3cb5',
-      CURRENT_DATE + 24,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '384c27ba-0f03-470c-9e98-599db620e303',
+      CURRENT_DATE + 20,
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       '52W7TQG',
       applicationData,
       applicationDocument,
@@ -286,7 +293,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 20
+      CURRENT_DATE + 25,
+      '5HBWEG1'
     );
   
 
@@ -303,7 +311,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '62bbd92f-617e-400a-9116-f1e8143c3cb5',
+      '384c27ba-0f03-470c-9e98-599db620e303',
       false,
       false,
       'M2500295343',
@@ -322,336 +330,8 @@ BEGIN
   )
   VALUES
     (
-      '6049f5ca-e256-4225-876e-31ac1d428cdb',
-      '62bbd92f-617e-400a-9116-f1e8143c3cb5',
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '134ad1c6-6039-4f06-8ada-8956f7af75b5',
-      CURRENT_DATE + 13,
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      '5EC66UT',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 11
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '134ad1c6-6039-4f06-8ada-8956f7af75b5',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '73bc2eb1-0568-4a0d-965f-21a56e53f4cb',
-      '134ad1c6-6039-4f06-8ada-8956f7af75b5',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '2899785d-50e9-45f7-9f9c-589eb4e720f9',
-      CURRENT_DATE + 16,
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      '8LO3HSH',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 2
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '2899785d-50e9-45f7-9f9c-589eb4e720f9',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      '25d425c5-c9a6-4129-b16f-25274956dd2f',
-      '2899785d-50e9-45f7-9f9c-589eb4e720f9',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '715c185a-6e84-41ec-8cf3-e0833842e040',
-      CURRENT_DATE + 2,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      'BWEFOI7',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 22
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '715c185a-6e84-41ec-8cf3-e0833842e040',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      'b2a51fbb-8a2f-4603-9678-9d7b01a46111',
-      '715c185a-6e84-41ec-8cf3-e0833842e040',
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at"
-  )
-  values
-    (
-      '89e1d2c2-e847-45dd-b0b4-a9faf99324b6',
-      CURRENT_DATE + 15,
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
-      'GSR1T2F',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 28
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '89e1d2c2-e847-45dd-b0b4-a9faf99324b6',
-      false,
-      false,
-      'M2500295343',
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "allocated_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      'fb8b4775-d87f-4eb9-94c0-dfbab1aa107b',
-      '89e1d2c2-e847-45dd-b0b4-a9faf99324b6',
+      '39db6071-b8ce-4575-8066-048b2db1ff69',
+      '384c27ba-0f03-470c-9e98-599db620e303',
       '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -676,14 +356,15 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '5fefb142-adc7-415c-8c31-752f27d79d0b',
-      CURRENT_DATE + 2,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
-      'HRV83TE',
+      'd1fa54b2-ffb9-4ac7-91db-154dab8e6a5e',
+      CURRENT_DATE + 0,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '5EC66UT',
       applicationData,
       applicationDocument,
       (
@@ -696,7 +377,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 26
+      CURRENT_DATE + 15,
+      '530X5EC'
     );
   
 
@@ -713,7 +395,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '5fefb142-adc7-415c-8c31-752f27d79d0b',
+      'd1fa54b2-ffb9-4ac7-91db-154dab8e6a5e',
       false,
       false,
       'M2500295343',
@@ -732,9 +414,9 @@ BEGIN
   )
   VALUES
     (
-      '694895df-9805-4960-abc3-064b675bdcca',
-      '5fefb142-adc7-415c-8c31-752f27d79d0b',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      '6cfd4d77-6273-4c42-becb-bf7790355462',
+      'd1fa54b2-ffb9-4ac7-91db-154dab8e6a5e',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -758,12 +440,349 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      'ce9d741d-8a63-4e83-b309-7b61b727117c',
+      '7279e532-a436-4eb1-b898-c2af4062f601',
+      CURRENT_DATE + 9,
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '8LO3HSH',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 22,
+      'JD5CLIA'
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '7279e532-a436-4eb1-b898-c2af4062f601',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      'b89f5cd6-3b9c-4f9b-ab2c-0ae812240be3',
+      '7279e532-a436-4eb1-b898-c2af4062f601',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at",
+    "noms_number"
+  )
+  values
+    (
+      'ed8719e5-646d-4c64-bd32-3cd290b609a2',
+      CURRENT_DATE + 21,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
+      'BWEFOI7',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
       CURRENT_DATE + 15,
+      'SX9UI94'
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'ed8719e5-646d-4c64-bd32-3cd290b609a2',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '93786321-6ac3-473b-8504-c5e4ce32d93a',
+      'ed8719e5-646d-4c64-bd32-3cd290b609a2',
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at",
+    "noms_number"
+  )
+  values
+    (
+      'f4aad217-048a-4ff7-9897-76f6cf2ad6dc',
+      CURRENT_DATE + 5,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
+      'GSR1T2F',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 26,
+      'KXTJQEF'
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      'f4aad217-048a-4ff7-9897-76f6cf2ad6dc',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '9b74922b-da80-430d-abfd-eb7494dd26bc',
+      'f4aad217-048a-4ff7-9897-76f6cf2ad6dc',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at",
+    "noms_number"
+  )
+  values
+    (
+      '14e56cfe-00ad-4137-88f9-50c1b10d2bb2',
+      CURRENT_DATE + 13,
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      'HRV83TE',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 23,
+      'N1RRJZU'
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '14e56cfe-00ad-4137-88f9-50c1b10d2bb2',
+      false,
+      false,
+      'M2500295343',
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '0ba78bae-aa42-4bd2-97d6-4e50c20949f8',
+      '14e56cfe-00ad-4137-88f9-50c1b10d2bb2',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at",
+    "noms_number"
+  )
+  values
+    (
+      '92e90a5b-9ccd-40d4-93d3-3bff7c1ad6c9',
+      CURRENT_DATE + 3,
       '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       'HTVI42B',
       applicationData,
@@ -778,7 +797,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 6
+      CURRENT_DATE + 2,
+      '6X1DNW1'
     );
   
 
@@ -795,7 +815,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'ce9d741d-8a63-4e83-b309-7b61b727117c',
+      '92e90a5b-9ccd-40d4-93d3-3bff7c1ad6c9',
       false,
       false,
       'M2500295343',
@@ -814,9 +834,9 @@ BEGIN
   )
   VALUES
     (
-      'f5dae5cb-6425-4737-951a-32278082ed41',
-      'ce9d741d-8a63-4e83-b309-7b61b727117c',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '8ffe3515-6a52-43d1-9848-789c9428d2d6',
+      '92e90a5b-9ccd-40d4-93d3-3bff7c1ad6c9',
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -840,13 +860,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      'a376537c-1d6e-447d-82dd-e7677ce5a282',
-      CURRENT_DATE + 29,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '6bdbe139-5b6c-457a-95e9-3acb6e1f1bfb',
+      CURRENT_DATE + 0,
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       'HUN3BN0',
       applicationData,
       applicationDocument,
@@ -860,7 +881,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 28
+      CURRENT_DATE + 15,
+      'YCSW8BD'
     );
   
 
@@ -877,7 +899,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'a376537c-1d6e-447d-82dd-e7677ce5a282',
+      '6bdbe139-5b6c-457a-95e9-3acb6e1f1bfb',
       false,
       false,
       'M2500295343',
@@ -896,9 +918,9 @@ BEGIN
   )
   VALUES
     (
-      '76e08ed2-2686-4d40-9b1b-661691f9a948',
-      'a376537c-1d6e-447d-82dd-e7677ce5a282',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'b2092cbf-837f-4046-8d87-66990965fe0f',
+      '6bdbe139-5b6c-457a-95e9-3acb6e1f1bfb',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -922,13 +944,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '7518d90a-1206-46f9-bc06-cb945921f9f2',
-      CURRENT_DATE + 6,
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '9f757c8c-9d1e-4bcb-932f-391fdba33391',
+      CURRENT_DATE + 9,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       'IHGHXYM',
       applicationData,
       applicationDocument,
@@ -942,7 +965,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 5
+      CURRENT_DATE + 24,
+      'KWAPTC7'
     );
   
 
@@ -959,7 +983,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '7518d90a-1206-46f9-bc06-cb945921f9f2',
+      '9f757c8c-9d1e-4bcb-932f-391fdba33391',
       false,
       false,
       'M2500295343',
@@ -978,9 +1002,9 @@ BEGIN
   )
   VALUES
     (
-      '9537cdcf-651c-483f-8330-0591c8259902',
-      '7518d90a-1206-46f9-bc06-cb945921f9f2',
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '5277c81b-d500-4d24-9bc0-f5d8eb18fd7a',
+      '9f757c8c-9d1e-4bcb-932f-391fdba33391',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1004,13 +1028,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '77bfbba7-5d9a-4bac-be06-6965dc44fff0',
-      CURRENT_DATE + 19,
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '4afbacac-a8c2-45d7-9f4d-10b40695edff',
+      CURRENT_DATE + 8,
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       'JCRH9V5',
       applicationData,
       applicationDocument,
@@ -1024,7 +1049,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 19
+      CURRENT_DATE + 18,
+      'VTDINBA'
     );
   
 
@@ -1041,7 +1067,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '77bfbba7-5d9a-4bac-be06-6965dc44fff0',
+      '4afbacac-a8c2-45d7-9f4d-10b40695edff',
       false,
       false,
       'M2500295343',
@@ -1060,9 +1086,9 @@ BEGIN
   )
   VALUES
     (
-      '0ea89112-a441-4786-9c60-9b346a90c749',
-      '77bfbba7-5d9a-4bac-be06-6965dc44fff0',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'a1285cc1-8482-45cf-8ff7-4f04d64f2f7d',
+      '4afbacac-a8c2-45d7-9f4d-10b40695edff',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1086,13 +1112,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '5e438fdd-b772-4607-b210-76dfe4bf87d0',
-      CURRENT_DATE + 22,
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'd81ba3cf-feb8-4e43-8e10-175c18a75bdd',
+      CURRENT_DATE + 24,
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       'N6OUTAY',
       applicationData,
       applicationDocument,
@@ -1106,7 +1133,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 29
+      CURRENT_DATE + 14,
+      'HIR0PIN'
     );
   
 
@@ -1123,7 +1151,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '5e438fdd-b772-4607-b210-76dfe4bf87d0',
+      'd81ba3cf-feb8-4e43-8e10-175c18a75bdd',
       false,
       false,
       'M2500295343',
@@ -1142,9 +1170,9 @@ BEGIN
   )
   VALUES
     (
-      '78b69fbf-483c-48c9-a059-e7136c77feb2',
-      '5e438fdd-b772-4607-b210-76dfe4bf87d0',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      'bb5444b4-ba08-42d2-aba6-48ee774f42b5',
+      'd81ba3cf-feb8-4e43-8e10-175c18a75bdd',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1168,13 +1196,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '6a81cac4-8935-47fc-a3fa-278feb849dc2',
-      CURRENT_DATE + 10,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      'b0b17e97-f3ac-49dd-95b3-1073d7ee14b3',
+      CURRENT_DATE + 14,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       'PI251LM',
       applicationData,
       applicationDocument,
@@ -1188,7 +1217,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 22
+      CURRENT_DATE + 22,
+      'QGH3OL6'
     );
   
 
@@ -1205,7 +1235,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '6a81cac4-8935-47fc-a3fa-278feb849dc2',
+      'b0b17e97-f3ac-49dd-95b3-1073d7ee14b3',
       false,
       false,
       'M2500295343',
@@ -1224,9 +1254,9 @@ BEGIN
   )
   VALUES
     (
-      'b9bf3434-8c2e-41f5-b39e-c1c45ff1590b',
-      '6a81cac4-8935-47fc-a3fa-278feb849dc2',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      '03bccc5b-0354-4559-879b-677d1f1b232e',
+      'b0b17e97-f3ac-49dd-95b3-1073d7ee14b3',
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1250,13 +1280,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '2ed1b0d6-b35e-444f-ad8a-4af15ed6a7f7',
-      CURRENT_DATE + 14,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '2bd7afdd-d861-477c-a6c7-85395bb0d6b4',
+      CURRENT_DATE + 26,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       'PR5E5Y2',
       applicationData,
       applicationDocument,
@@ -1270,7 +1301,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 0
+      CURRENT_DATE + 1,
+      'M9XWJ1S'
     );
   
 
@@ -1287,7 +1319,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '2ed1b0d6-b35e-444f-ad8a-4af15ed6a7f7',
+      '2bd7afdd-d861-477c-a6c7-85395bb0d6b4',
       false,
       false,
       'M2500295343',
@@ -1306,9 +1338,9 @@ BEGIN
   )
   VALUES
     (
-      '1386c4f0-b2c5-44d7-8922-ba26271002f5',
-      '2ed1b0d6-b35e-444f-ad8a-4af15ed6a7f7',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      'd29156d8-24f0-4d6e-8222-10d9dc403582',
+      '2bd7afdd-d861-477c-a6c7-85395bb0d6b4',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1332,13 +1364,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '0f09f888-457f-436d-a266-81fe366c8ac9',
-      CURRENT_DATE + 27,
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '667a407f-609a-4ebc-bf67-4e36e1df7e35',
+      CURRENT_DATE + 28,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       'QA93YYK',
       applicationData,
       applicationDocument,
@@ -1352,7 +1385,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 2
+      CURRENT_DATE + 27,
+      'YX2YNT2'
     );
   
 
@@ -1369,7 +1403,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '0f09f888-457f-436d-a266-81fe366c8ac9',
+      '667a407f-609a-4ebc-bf67-4e36e1df7e35',
       false,
       false,
       'M2500295343',
@@ -1388,9 +1422,9 @@ BEGIN
   )
   VALUES
     (
-      '86d7d331-2bfb-4737-b173-51517793b46b',
-      '0f09f888-457f-436d-a266-81fe366c8ac9',
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '0ae6f411-0957-4790-b853-8883af16f577',
+      '667a407f-609a-4ebc-bf67-4e36e1df7e35',
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1414,13 +1448,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '2ed2606b-7515-4063-a6f9-164c7e10ce07',
-      CURRENT_DATE + 17,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '71db43c7-b9d0-4830-8102-0542b0ee4277',
+      CURRENT_DATE + 11,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       'XCMSG3I',
       applicationData,
       applicationDocument,
@@ -1434,7 +1469,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 19
+      CURRENT_DATE + 20,
+      'NYVS303'
     );
   
 
@@ -1451,7 +1487,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '2ed2606b-7515-4063-a6f9-164c7e10ce07',
+      '71db43c7-b9d0-4830-8102-0542b0ee4277',
       false,
       false,
       'M2500295343',
@@ -1470,9 +1506,9 @@ BEGIN
   )
   VALUES
     (
-      '1e3f76fc-c603-4f9e-be81-d68b7cc34871',
-      '2ed2606b-7515-4063-a6f9-164c7e10ce07',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'd354aa03-a2a0-473d-8f42-b6f450ff681d',
+      '71db43c7-b9d0-4830-8102-0542b0ee4277',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1496,13 +1532,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      '5904b06c-09bf-4e84-b949-5af15ce2119f',
-      CURRENT_DATE + 11,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      '34ca7199-09c6-469f-ab00-c7bc10a598db',
+      CURRENT_DATE + 3,
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
       'YRPARSH',
       applicationData,
       applicationDocument,
@@ -1516,7 +1553,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 7
+      CURRENT_DATE + 10,
+      'HBVE0LJ'
     );
   
 
@@ -1533,7 +1571,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '5904b06c-09bf-4e84-b949-5af15ce2119f',
+      '34ca7199-09c6-469f-ab00-c7bc10a598db',
       false,
       false,
       'M2500295343',
@@ -1552,9 +1590,9 @@ BEGIN
   )
   VALUES
     (
-      '0b5c1b1a-3c1c-4c4e-81df-4cd200188591',
-      '5904b06c-09bf-4e84-b949-5af15ce2119f',
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '348fee4c-d625-426b-ab41-864ff480413b',
+      '34ca7199-09c6-469f-ab00-c7bc10a598db',
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1578,13 +1616,14 @@ BEGIN
     "document",
     "schema_version",
     "service",
-    "submitted_at"
+    "submitted_at",
+    "noms_number"
   )
   values
     (
-      'fbe84d6a-5ce2-439d-914f-593f7c7a9539',
-      CURRENT_DATE + 21,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '5e575fe9-28a7-4f7c-ba1a-7ae264c0ed15',
+      CURRENT_DATE + 8,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       'Z33A1BU',
       applicationData,
       applicationDocument,
@@ -1598,7 +1637,8 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 1
+      CURRENT_DATE + 10,
+      '6DO89QY'
     );
   
 
@@ -1615,7 +1655,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'fbe84d6a-5ce2-439d-914f-593f7c7a9539',
+      '5e575fe9-28a7-4f7c-ba1a-7ae264c0ed15',
       false,
       false,
       'M2500295343',
@@ -1634,9 +1674,9 @@ BEGIN
   )
   VALUES
     (
-      'd34fa634-74be-4bc8-821a-6c38e6c844e8',
-      'fbe84d6a-5ce2-439d-914f-593f7c7a9539',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      '30d9ce53-50e2-4282-b823-7e4ada027c73',
+      '5e575fe9-28a7-4f7c-ba1a-7ae264c0ed15',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
       (
