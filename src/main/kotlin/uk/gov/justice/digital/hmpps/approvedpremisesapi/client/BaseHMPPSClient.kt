@@ -35,6 +35,18 @@ abstract class BaseHMPPSClient(
   protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.PATCH, requestBuilderConfiguration)
 
+  protected fun checkPreemptiveCacheStatus(cacheConfig: PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus {
+    val cacheKeySet = CacheKeySet(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
+
+    val cacheEntryMetadata = getCacheEntryMetadataIfExists(cacheKeySet.metadataKey)
+
+    return when {
+      cacheEntryMetadata == null -> PreemptiveCacheEntryStatus.MISS
+      cacheEntryMetadata.refreshableAfter < Instant.now() -> PreemptiveCacheEntryStatus.REQUIRES_REFRESH
+      else -> PreemptiveCacheEntryStatus.EXISTS
+    }
+  }
+
   protected inline fun <reified ResponseType : Any> request(method: HttpMethod, noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> {
     val clazz = if (ResponseType::class.java.typeParameters.any()) null else ResponseType::class.java
     val typeReference = if (ResponseType::class.java.typeParameters.any()) object : TypeReference<ResponseType>() {} else null
@@ -259,4 +271,8 @@ class CacheKeySet(
 
   val dataKey: String
     get() { return "$prefix-$cacheName-$key-data" }
+}
+
+enum class PreemptiveCacheEntryStatus {
+  MISS, REQUIRES_REFRESH, EXISTS
 }
