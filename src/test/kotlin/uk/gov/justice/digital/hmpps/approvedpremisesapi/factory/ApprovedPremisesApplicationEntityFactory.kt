@@ -39,7 +39,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var releaseType: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
-  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
+  private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -125,7 +125,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.isInapplicable = { isInapplicable }
   }
 
-  fun withNomsNumber(nomsNumber: String?) = apply {
+  fun withNomsNumber(nomsNumber: String) = apply {
     this.nomsNumber = { nomsNumber }
   }
 

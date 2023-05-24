@@ -1,0 +1,1 @@
+ALTER TABLE bookings ALTER COLUMN noms_number SET NOT NULL;

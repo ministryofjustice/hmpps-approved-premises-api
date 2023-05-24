@@ -5073,8 +5073,6 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
-        - populate_noms_numbers_bookings
-        - populate_noms_number_applications
     PlacementRequirements:
       type: object
       properties:
