@@ -154,10 +154,16 @@ class ApplicationService(
     offenceId: String?,
     createWithRisks: Boolean? = true,
   ) = validated<ApplicationEntity> {
-    when (offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+
+    val offenderDetails = when (offenderDetailsResult) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> Unit
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    }
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
     }
 
     val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!)
@@ -221,7 +227,8 @@ class ApplicationService(
         placementRequests = mutableListOf(),
         releaseType = null,
         arrivalDate = null,
-        isInapplicable = null
+        isInapplicable = null,
+        nomsNumber = offenderDetails.otherIds.nomsNumber
       ),
     )
 
@@ -247,10 +254,16 @@ class ApplicationService(
     offenceId: String?,
     createWithRisks: Boolean? = true,
   ) = validated<ApplicationEntity> {
-    when (offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+
+    val offenderDetails = when (offenderDetailsResult) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> Unit
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    }
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
     }
 
     if (convictionId == null) {
@@ -298,6 +311,7 @@ class ApplicationService(
         riskRatings = riskRatings,
         assessments = mutableListOf(),
         probationRegion = user.probationRegion,
+        nomsNumber = offenderDetails.otherIds.nomsNumber
       ),
     )
 

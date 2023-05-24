@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -38,6 +39,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var releaseType: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
+  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -123,6 +125,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.isInapplicable = { isInapplicable }
   }
 
+  fun withNomsNumber(nomsNumber: String?) = apply {
+    this.nomsNumber = { nomsNumber }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -144,6 +150,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     placementRequests = this.placementRequests(),
     releaseType = this.releaseType(),
     arrivalDate = this.arrivalDate(),
-    isInapplicable = this.isInapplicable()
+    isInapplicable = this.isInapplicable(),
+    nomsNumber = this.nomsNumber()
   )
 }

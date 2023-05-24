@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -31,6 +32,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
+  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -96,6 +98,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.probationRegion = probationRegion
   }
 
+  fun withNomsNumber(nomsNumber: String?) = apply {
+    this.nomsNumber = { nomsNumber }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -111,6 +117,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     eventNumber = this.eventNumber(),
     offenceId = this.offenceId(),
     riskRatings = this.riskRatings(),
-    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided")
+    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
+    nomsNumber = this.nomsNumber()
   )
 }
