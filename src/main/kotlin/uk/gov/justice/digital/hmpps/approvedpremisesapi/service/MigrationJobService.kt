@@ -6,12 +6,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.PopulateNomsNumbersOnApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.PopulateNomsNumbersOnBookingsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 
@@ -35,10 +33,6 @@ class MigrationJobService(
         )
         MigrationJobType.populateNomsNumbersBookings -> PopulateNomsNumbersOnBookingsJob(
           applicationContext.getBean(BookingRepository::class.java),
-          applicationContext.getBean(CommunityApiClient::class.java)
-        )
-        MigrationJobType.populateNomsNumberApplications -> PopulateNomsNumbersOnApplicationsJob(
-          applicationContext.getBean(ApplicationRepository::class.java),
           applicationContext.getBean(CommunityApiClient::class.java)
         )
       }

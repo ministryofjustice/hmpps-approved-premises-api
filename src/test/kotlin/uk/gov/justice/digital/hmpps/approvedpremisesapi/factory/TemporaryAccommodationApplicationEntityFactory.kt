@@ -32,7 +32,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
-  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
+  private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -98,7 +98,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.probationRegion = probationRegion
   }
 
-  fun withNomsNumber(nomsNumber: String?) = apply {
+  fun withNomsNumber(nomsNumber: String) = apply {
     this.nomsNumber = { nomsNumber }
   }
 
