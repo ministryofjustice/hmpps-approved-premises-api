@@ -156,6 +156,7 @@ class BookingService(
           application = placementRequest.application,
           offlineApplication = null,
           turnarounds = mutableListOf(),
+          nomsNumber = placementRequest.application.nomsNumber
         )
       )
 
@@ -178,6 +179,7 @@ class BookingService(
   fun createApprovedPremisesAdHocBooking(
     user: UserEntity,
     crn: String,
+    nomsNumber: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID
@@ -250,6 +252,7 @@ class BookingService(
           application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
           offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null,
           turnarounds = mutableListOf(),
+          nomsNumber = nomsNumber
         )
       )
 
@@ -341,6 +344,7 @@ class BookingService(
     user: UserEntity,
     premises: TemporaryAccommodationPremisesEntity,
     crn: String,
+    nomsNumber: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,
@@ -378,6 +382,7 @@ class BookingService(
         BookingEntity(
           id = UUID.randomUUID(),
           crn = crn,
+          nomsNumber = nomsNumber,
           arrivalDate = arrivalDate,
           departureDate = departureDate,
           keyWorkerStaffCode = null,

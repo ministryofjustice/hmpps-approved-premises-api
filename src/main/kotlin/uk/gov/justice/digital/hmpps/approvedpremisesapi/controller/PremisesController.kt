@@ -356,6 +356,7 @@ class PremisesController(
         bookingService.createApprovedPremisesAdHocBooking(
           user = user,
           crn = body.crn,
+          nomsNumber = inmate.offenderNo,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId
@@ -367,6 +368,7 @@ class PremisesController(
           user = user,
           premises = premises,
           crn = body.crn,
+          nomsNumber = inmate.offenderNo,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId,
