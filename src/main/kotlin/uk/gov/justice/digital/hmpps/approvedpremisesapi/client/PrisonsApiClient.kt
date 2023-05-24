@@ -38,6 +38,8 @@ class PrisonsApiClient(
     preemptiveCacheKey = nomsNumber
   }
 
+  fun getInmateDetailsCacheEntryStatus(nomsNumber: String) = checkPreemptiveCacheStatus(inmateDetailsCacheConfig, nomsNumber)
+
   fun getAdjudicationsPage(nomsNumber: String, offset: Int?, pageSize: Int) = getRequest<AdjudicationsPage> {
     withHeader("Page-Limit", pageSize.toString())
 

@@ -50,6 +50,8 @@ class CommunityApiClient(
     preemptiveCacheKey = crn
   }
 
+  fun getOffenderDetailsCacheEntryStatus(crn: String) = checkPreemptiveCacheStatus(offenderDetailCacheConfig, crn)
+
   @Cacheable(value = ["userAccessCache"], unless = IS_NOT_SUCCESSFUL)
   fun getUserAccessForOffenderCrn(userDistinguishedName: String, crn: String) = getRequest<UserOffenderAccess> {
     path = "/secure/offenders/crn/$crn/user/$userDistinguishedName/userAccess"

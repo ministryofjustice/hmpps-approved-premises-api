@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import redis.lock.redlock.LockResult
 import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -40,6 +41,14 @@ class PreemptiveCacheRefresher(
         applicationRepository,
         bookingRepository,
         communityApiClient,
+        loggingEnabled,
+        delayMs,
+        redLock
+      )
+
+      preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
+        applicationRepository,
+        bookingRepository,
         prisonsApiClient,
         loggingEnabled,
         delayMs,
@@ -93,8 +102,9 @@ abstract class CacheRefreshWorker(
 
   override fun run() {
     while (! shuttingDown) {
+      var lock: LockResult? = null
       try {
-        val lock = redLock.lock(cacheName, twoMinutesInMilliseconds) ?: continue
+        lock = redLock.lock(cacheName, twoMinutesInMilliseconds) ?: continue
 
         log.info("Got cache refresh lock for $cacheName")
         val lockExpiresAt = System.currentTimeMillis() + lock.validity
@@ -105,13 +115,24 @@ abstract class CacheRefreshWorker(
           log.error("Unhandled exception refreshing cache $cacheName", exception)
         }
 
-        redLock.release(lock.resource, lock.value)
-        log.info("Released cache refresh lock for $cacheName")
+        attemptToReleaseLock(lock)
       } catch (exception: Exception) {
         log.error("Unhandled exception locking/unlocking cache $cacheName", exception)
+        attemptToReleaseLock(lock)
       }
 
       interruptableSleep(10000)
+    }
+  }
+
+  private fun attemptToReleaseLock(lock: LockResult?) {
+    if (lock == null) return
+
+    try {
+      redLock.release(lock.resource, lock.value)
+      log.info("Released cache refresh lock for $cacheName")
+    } catch (exception: Exception) {
+      log.error("Failed to release lock", exception)
     }
   }
 
