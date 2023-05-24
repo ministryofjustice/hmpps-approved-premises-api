@@ -45,7 +45,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var application: Yielded<ApplicationEntity?> = { null }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
   private var turnarounds: Yielded<MutableList<TurnaroundEntity>>? = null
-  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
+  private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -163,7 +163,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.turnarounds = { turnarounds }
   }
 
-  fun withNomsNumber(nomsNumber: String?) = apply {
+  fun withNomsNumber(nomsNumber: String) = apply {
     this.nomsNumber = { nomsNumber }
   }
 
