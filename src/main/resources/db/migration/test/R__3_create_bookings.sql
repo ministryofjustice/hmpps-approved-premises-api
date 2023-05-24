@@ -13,11 +13,12 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '85c8eb35-5c48-436b-9c1d-7791ba3abb1c',
+    '2f706405-df97-4e26-88bb-7901f528620f',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     '315VWWC',
@@ -26,7 +27,8 @@ VALUES
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'M59CS58'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -42,11 +44,12 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '0a3555d0-2aa2-4825-8e56-b759540ae0ce',
+    '4a2e9711-12d0-432f-958d-2fbd76606e4c',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     '4Y29R9P',
@@ -55,7 +58,8 @@ VALUES
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'XWU5JWQ'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -71,11 +75,12 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    'fa21630f-4b7f-452e-9a78-dbadd748bc17',
+    '2a8dd273-7d5b-4b80-9a50-d720aa500726',
     CURRENT_DATE,
     CURRENT_DATE + 84,
     '4ZUIHFX',
@@ -84,7 +89,8 @@ VALUES
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   '5A5C8WL'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -101,20 +107,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '8067f115-d87e-4ed4-9242-53eacd749042',
-    CURRENT_DATE,
+    'aca579ba-9c6f-46b8-8217-01efad42ab2a',
     CURRENT_DATE + 84,
-    'N6OUTAY',
-    CURRENT_DATE,
+    fe86a602-6873-49d3-ac3a-3dfef743ae03,
+    '315VWWC',
     CURRENT_DATE + 84,
+    fe86a602-6873-49d3-ac3a-3dfef743ae03,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
-    'fe86a602-6873-49d3-ac3a-3dfef743ae03',
+    '7012a949-a110-4800-b0f1-83e241612a0e',
     'temporary-accommodation',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'CURRENT_DATE'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -130,20 +138,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '3bab931b-b694-4651-99fc-83f50b030ad1',
-    CURRENT_DATE,
+    '1a774d4b-b7d5-434f-a5cf-a1568a5f076c',
     CURRENT_DATE + 84,
-    '5EC66UT',
-    CURRENT_DATE,
+    e8887df9-b31b-4e9c-931a-e063d778ab0d,
+    'Z33A1BU',
     CURRENT_DATE + 84,
+    e8887df9-b31b-4e9c-931a-e063d778ab0d,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
-    'e8887df9-b31b-4e9c-931a-e063d778ab0d',
+    'ff590a39-7c17-40ed-8960-8469a40f0052',
     'temporary-accommodation',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'CURRENT_DATE'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -158,8 +168,8 @@ INSERT INTO
   )
 VALUES
   (
-    '96e87ea3-4116-4fcd-aff4-4c6bb3aaecf6',
-    '3bab931b-b694-4651-99fc-83f50b030ad1',
+    '7446498f-0e2e-4bad-98c5-11a8d591a2bd',
+    'ff590a39-7c17-40ed-8960-8469a40f0052',
     CURRENT_DATE,
     NULL,
     CURRENT_DATE
@@ -178,20 +188,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '20f6e044-78d9-4e0b-8098-ccb4926d51bd',
-    CURRENT_DATE,
+    'c2abbe16-7553-46a4-a78a-f450106ac4d7',
     CURRENT_DATE + 84,
-    'HTVI42B',
-    CURRENT_DATE,
+    135812b4-e6c0-4ccf-9502-4bfea66f3bd3,
+    'PR5E5Y2',
     CURRENT_DATE + 84,
+    135812b4-e6c0-4ccf-9502-4bfea66f3bd3,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
-    '135812b4-e6c0-4ccf-9502-4bfea66f3bd3',
+    '1e0f0226-6aba-4f69-a12b-7c8ff7b02fe6',
     'temporary-accommodation',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'CURRENT_DATE'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -208,10 +220,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE,
-    '20f6e044-78d9-4e0b-8098-ccb4926d51bd',
+    '1e0f0226-6aba-4f69-a12b-7c8ff7b02fe6',
     CURRENT_DATE,
     CURRENT_DATE + 84,
-    'f6b4d21e-f7cc-4417-8f08-33cae23a8252',
+    '390d7e4e-9e59-422c-aaac-70ff0e1b9322',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -227,8 +239,8 @@ INSERT INTO
   )
 VALUES
   (
-    'f956f4cd-208c-41ae-b186-50afb1b9d857',
-    '20f6e044-78d9-4e0b-8098-ccb4926d51bd',
+    'a67e9e1e-ce61-4375-aae8-7b3e87bf1717',
+    '1e0f0226-6aba-4f69-a12b-7c8ff7b02fe6',
     CURRENT_DATE,
     NULL,
     CURRENT_DATE
@@ -247,20 +259,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '12e35bda-00f7-4d12-bbc3-733ed9b4fda6',
-    CURRENT_DATE,
+    '4a324a8a-de50-45c5-b0f6-0c57db8f6319',
     CURRENT_DATE + 84,
-    '5EC66UT',
-    CURRENT_DATE,
+    d97bdcb9-f7b3-477b-a073-71939fac297a,
+    'HRV83TE',
     CURRENT_DATE + 84,
+    d97bdcb9-f7b3-477b-a073-71939fac297a,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
-    'd97bdcb9-f7b3-477b-a073-71939fac297a',
+    '414cdfcb-aeba-435a-9b89-0a2fa54a97f1',
     'temporary-accommodation',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'CURRENT_DATE'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -278,13 +292,13 @@ INSERT INTO
   )
 VALUES
   (
-    '8a30d8cb-3404-4db5-ae8f-54e3efdeb46b',
+    '38c68463-e67e-4744-b8e4-5e91b423fe1e',
     CURRENT_DATE + 84,
     'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
     '587dc0dc-9073-4992-9d58-5576753050e9',
     NULL,
     NULL,
-    '12e35bda-00f7-4d12-bbc3-733ed9b4fda6',
+    '414cdfcb-aeba-435a-9b89-0a2fa54a97f1',
     CURRENT_DATE
   )
 ON CONFLICT(id) DO NOTHING;
@@ -302,10 +316,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE,
-    '12e35bda-00f7-4d12-bbc3-733ed9b4fda6',
+    '414cdfcb-aeba-435a-9b89-0a2fa54a97f1',
     CURRENT_DATE,
     CURRENT_DATE + 84,
-    '11176e1c-48e2-4beb-a81e-4a8eb54a68d1',
+    '0043d69a-295c-4217-be59-bb51a8b70077',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -321,8 +335,8 @@ INSERT INTO
   )
 VALUES
   (
-    'bec85422-4590-4d6e-b5df-7205298790d5',
-    '12e35bda-00f7-4d12-bbc3-733ed9b4fda6',
+    '3f976d16-67ec-4157-9061-8f3898e33f7f',
+    '414cdfcb-aeba-435a-9b89-0a2fa54a97f1',
     CURRENT_DATE,
     NULL,
     CURRENT_DATE
@@ -341,20 +355,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    'bfd363fc-b1be-480d-bc1f-4a928c99ab50',
-    CURRENT_DATE,
+    'fb620235-b5b4-44a7-b9d6-32d670652313',
     CURRENT_DATE + 84,
-    'YRPARSH',
-    CURRENT_DATE,
+    8be1ed0e-dae7-42d2-97e0-95c95fdb4c50,
+    'QA93YYK',
     CURRENT_DATE + 84,
+    8be1ed0e-dae7-42d2-97e0-95c95fdb4c50,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
-    '8be1ed0e-dae7-42d2-97e0-95c95fdb4c50',
+    '22485508-28d4-4805-ab76-42ab50a61f3a',
     'temporary-accommodation',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'CURRENT_DATE'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -370,10 +386,10 @@ INSERT INTO
   )
 VALUES
   (
-    'b1a73c9a-20ad-4fcc-88a7-e255f8e43903',
+    '599f1025-da07-457c-bec6-c4fc3b84909d',
     CURRENT_DATE - 14,
     NULL,
-    'bfd363fc-b1be-480d-bc1f-4a928c99ab50',
+    '22485508-28d4-4805-ab76-42ab50a61f3a',
     'd2a0d037-53db-4bb2-b9f7-afa07948a3f5',
     CURRENT_DATE
   )
@@ -391,20 +407,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '241cfcac-c6c2-429f-9317-690fb6bfe4a5',
-    CURRENT_DATE,
+    '9a4fd241-3219-469e-a06c-31fc6b52b732',
     CURRENT_DATE + 84,
-    'JCRH9V5',
-    CURRENT_DATE,
+    bdf9f9f6-6d53-4577-bffe-fc5f0ab3de0f,
+    'YRPARSH',
     CURRENT_DATE + 84,
+    bdf9f9f6-6d53-4577-bffe-fc5f0ab3de0f,
     'd33006b7-55d9-4a8e-b722-5e18093dbcdf',
-    'bdf9f9f6-6d53-4577-bffe-fc5f0ab3de0f',
+    '57372b15-9bb9-4ba3-823d-9e4d6b70a5a2',
     'temporary-accommodation',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'CURRENT_DATE'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -420,10 +438,10 @@ INSERT INTO
   )
 VALUES
   (
-    '0caefa7e-3618-4708-9307-cb6266538212',
+    'ae202db4-4c47-4438-a7b8-82b218f0c129',
     CURRENT_DATE + 2,
     NULL,
-    '241cfcac-c6c2-429f-9317-690fb6bfe4a5',
+    '57372b15-9bb9-4ba3-823d-9e4d6b70a5a2',
     'e9184f2e-f409-461e-b149-492a02cb1655',
     CURRENT_DATE
   )
@@ -440,8 +458,8 @@ INSERT INTO
   )
 VALUES
   (
-    '102c2e18-19d2-4fa7-bbf8-ea5d0628e62e',
-    '241cfcac-c6c2-429f-9317-690fb6bfe4a5',
+    'bfcc2f81-7761-404e-80c1-85d87eaaa494',
+    '57372b15-9bb9-4ba3-823d-9e4d6b70a5a2',
     CURRENT_DATE,
     NULL,
     CURRENT_DATE
@@ -461,20 +479,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    'cf3003db-b146-4b1f-b5a8-5a7f9d6223c8',
-    CURRENT_DATE + 2,
+    'd3e054cf-9cb1-4888-b22c-5c958931815e',
+    CURRENT_DATE + 1,
     CURRENT_DATE + 84,
     '52W7TQG',
-    CURRENT_DATE + 2,
+    CURRENT_DATE + 1,
     CURRENT_DATE + 84,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   '5HBWEG1'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -490,20 +510,53 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '6e5dcbed-7d52-496f-8958-6503f156fbff',
-    CURRENT_DATE + 4,
+    '22737215-4050-4c38-a696-34a720021fb6',
+    CURRENT_DATE + 1,
     CURRENT_DATE + 84,
     '5EC66UT',
+    CURRENT_DATE + 1,
+    CURRENT_DATE + 84,
+    '459eeaba-55ac-4a1f-bae2-bad810d4016b',
+    NULL,
+    'approved-premises',
+    CURRENT_DATE,
+   '530X5EC'
+  )
+ON CONFLICT(id) DO NOTHING;
+
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '4cb056e5-ae5e-4844-b218-b4080232c098',
+    CURRENT_DATE + 4,
+    CURRENT_DATE + 84,
+    'BWEFOI7',
     CURRENT_DATE + 4,
     CURRENT_DATE + 84,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'SX9UI94'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -519,49 +572,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '164d7a18-7a56-4628-a95d-a8bff55a1f1f',
+    '2268da8b-7334-4f52-858e-08acd49a4940',
     CURRENT_DATE + 3,
-    CURRENT_DATE + 84,
-    'BWEFOI7',
-    CURRENT_DATE + 3,
-    CURRENT_DATE + 84,
-    '459eeaba-55ac-4a1f-bae2-bad810d4016b',
-    NULL,
-    'approved-premises',
-    CURRENT_DATE
-  )
-ON CONFLICT(id) DO NOTHING;
-
-
-INSERT INTO
-  bookings (
-    "id",
-    "arrival_date",
-    "departure_date",
-    "crn",
-    "original_arrival_date",
-    "original_departure_date",
-    "premises_id",
-    "bed_id",
-    "service",
-    "created_at"
-  )
-VALUES
-  (
-    'fc943a82-2966-4a8c-92f7-94cc7f29c899',
-    CURRENT_DATE + 2,
     CURRENT_DATE + 84,
     'GSR1T2F',
-    CURRENT_DATE + 2,
+    CURRENT_DATE + 3,
     CURRENT_DATE + 84,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'KXTJQEF'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -578,11 +604,12 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '65304b6a-61de-4930-a54f-5e1e3eb4b21d',
+    '4ed1a01a-8acf-4581-9273-3c846090968d',
     CURRENT_DATE - 84,
     CURRENT_DATE,
     'HRV83TE',
@@ -591,7 +618,8 @@ VALUES
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'N1RRJZU'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -608,10 +636,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    '65304b6a-61de-4930-a54f-5e1e3eb4b21d',
+    '4ed1a01a-8acf-4581-9273-3c846090968d',
     CURRENT_DATE,
     CURRENT_DATE,
-    'b2af3908-5f3f-40ef-84cd-0df5683c0f05',
+    'c485e9bb-ef14-4320-9036-6271cee397ef',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -628,11 +656,12 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '08b7c9ed-6900-4fa4-bd8f-7e431cfce5fd',
+    '35e726ee-f457-4e1b-b65d-5813ea7513dc',
     CURRENT_DATE - 84,
     CURRENT_DATE,
     'HTVI42B',
@@ -641,7 +670,8 @@ VALUES
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   '6X1DNW1'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -658,10 +688,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    '08b7c9ed-6900-4fa4-bd8f-7e431cfce5fd',
+    '35e726ee-f457-4e1b-b65d-5813ea7513dc',
     CURRENT_DATE,
     CURRENT_DATE,
-    'e20e1cd8-5581-41e9-9060-1c30bfc78d98',
+    'c1e9d4a7-9e24-4ac7-84af-b4272fdf87dd',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -679,20 +709,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    'ed29449d-fd5c-42bb-a685-676c9f8f8dec',
+    '6ea7cc92-01c2-488a-ae5c-3e205e605e31',
     CURRENT_DATE - 84,
-    CURRENT_DATE + 1,
+    CURRENT_DATE + 3,
     'HRV83TE',
     CURRENT_DATE - 84,
-    CURRENT_DATE + 1,
+    CURRENT_DATE + 3,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'N1RRJZU'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -709,10 +741,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    'ed29449d-fd5c-42bb-a685-676c9f8f8dec',
+    '6ea7cc92-01c2-488a-ae5c-3e205e605e31',
     CURRENT_DATE,
-    CURRENT_DATE + 1,
-    'd8f0efab-07b4-48cf-a1f1-ad2b73eac279',
+    CURRENT_DATE + 3,
+    '35a76262-5fd8-4171-8bfe-522abcb9857f',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -729,11 +761,12 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    'd19a5b81-2b76-4d5a-893e-52cdc1a601b8',
+    '94bc95b9-3e21-4ef1-9650-35cdecac8cf0',
     CURRENT_DATE - 84,
     CURRENT_DATE + 2,
     'HTVI42B',
@@ -742,7 +775,8 @@ VALUES
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   '6X1DNW1'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -759,10 +793,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 84,
-    'd19a5b81-2b76-4d5a-893e-52cdc1a601b8',
+    '94bc95b9-3e21-4ef1-9650-35cdecac8cf0',
     CURRENT_DATE,
     CURRENT_DATE + 2,
-    '06534dfa-0108-4dbf-9ebc-6f8141bfd31e',
+    '7189f560-d3bc-46a0-bc89-0ea0fcd3ccc8',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -780,20 +814,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    'c64f0e8e-c8a7-41ac-9bf3-d58b28d527b7',
+    'd6b2dd4c-4213-4325-965c-0407c5b22119',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 13,
+    CURRENT_DATE + 7,
     'HUN3BN0',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 13,
+    CURRENT_DATE + 7,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'YCSW8BD'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -810,10 +846,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    'c64f0e8e-c8a7-41ac-9bf3-d58b28d527b7',
+    'd6b2dd4c-4213-4325-965c-0407c5b22119',
     CURRENT_DATE,
-    CURRENT_DATE + 13,
-    'ee52f4ef-22b7-49d3-9931-112c98ce9457',
+    CURRENT_DATE + 7,
+    'b459665e-3cd6-4140-9563-bb6d8090f7f3',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -830,20 +866,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '04206c50-9a15-4fa8-b5d5-26811102258f',
+    '50c204ab-b9c0-4c3e-8733-2ee033e2f56a',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 11,
+    CURRENT_DATE + 20,
     'IHGHXYM',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 11,
+    CURRENT_DATE + 20,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'KWAPTC7'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -860,10 +898,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    '04206c50-9a15-4fa8-b5d5-26811102258f',
+    '50c204ab-b9c0-4c3e-8733-2ee033e2f56a',
     CURRENT_DATE,
-    CURRENT_DATE + 11,
-    'cc3add97-2b68-4cb6-9142-6cb6842223ee',
+    CURRENT_DATE + 20,
+    'e452903e-70e9-4ab5-9f12-1a82c5de0395',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -880,20 +918,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    'bfdf867a-4f0e-4462-b388-b05af315c140',
+    'aa361efc-5073-412f-b8cf-bb6ca4549732',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 20,
+    CURRENT_DATE + 17,
     'JCRH9V5',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 20,
+    CURRENT_DATE + 17,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'VTDINBA'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -910,10 +950,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    'bfdf867a-4f0e-4462-b388-b05af315c140',
+    'aa361efc-5073-412f-b8cf-bb6ca4549732',
     CURRENT_DATE,
-    CURRENT_DATE + 20,
-    '1575ea9d-7824-4a24-a3bb-dba83a978094',
+    CURRENT_DATE + 17,
+    '4dcc9c7e-6c5c-4448-b355-0d80c829e5f2',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -930,20 +970,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '9f904a9b-ca17-4648-a9d8-4c934a6689d9',
+    'c81d8cbd-fdb4-408d-aff5-8f597be68c6a',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 39,
+    CURRENT_DATE + 21,
     'N6OUTAY',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 39,
+    CURRENT_DATE + 21,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'HIR0PIN'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -960,10 +1002,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    '9f904a9b-ca17-4648-a9d8-4c934a6689d9',
+    'c81d8cbd-fdb4-408d-aff5-8f597be68c6a',
     CURRENT_DATE,
-    CURRENT_DATE + 39,
-    'ffe2c15a-90de-44ab-b8fb-4843e2ac109f',
+    CURRENT_DATE + 21,
+    'b3de9bd5-a8da-4436-904c-9202c02dd9b0',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
@@ -980,20 +1022,22 @@ INSERT INTO
     "premises_id",
     "bed_id",
     "service",
-    "created_at"
+    "created_at",
+    "noms_number"
   )
 VALUES
   (
-    '4e77927b-7ccf-4e80-8b38-335b3e4f501c',
+    'f322414a-33c9-43fc-8b3b-749915fc30ae',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 35,
+    CURRENT_DATE + 14,
     'PR5E5Y2',
     CURRENT_DATE - 7,
-    CURRENT_DATE + 35,
+    CURRENT_DATE + 14,
     '459eeaba-55ac-4a1f-bae2-bad810d4016b',
     NULL,
     'approved-premises',
-    CURRENT_DATE
+    CURRENT_DATE,
+   'M9XWJ1S'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -1010,10 +1054,10 @@ INSERT INTO
 VALUES
   (
     CURRENT_DATE - 7,
-    '4e77927b-7ccf-4e80-8b38-335b3e4f501c',
+    'f322414a-33c9-43fc-8b3b-749915fc30ae',
     CURRENT_DATE,
-    CURRENT_DATE + 35,
-    '0d59544b-b839-4619-b698-662eba439cfc',
+    CURRENT_DATE + 14,
+    '4de1ae85-d6d1-4652-a551-a93635449d53',
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
