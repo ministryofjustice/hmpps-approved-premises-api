@@ -33,6 +33,8 @@ generic-service:
     PERSON-DEPARTED-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/person-departed/#eventId
     BOOKING-NOT-MADE-DETAIL-URL-TEMPLATE: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/booking-not-made/#eventId
     DOMAIN-EVENTS_EMIT-ENABLED: true
+    SEED_AUTO_ENABLED: true
+    SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev
 
   namespace_secrets:
     hmpps-domain-events-topic:
