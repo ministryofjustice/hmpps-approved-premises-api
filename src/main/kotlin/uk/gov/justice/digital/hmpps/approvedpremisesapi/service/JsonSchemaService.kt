@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 import java.util.Collections.synchronizedMap
@@ -43,7 +42,7 @@ class JsonSchemaService(
   }
 
   fun checkSchemaOutdated(application: ApplicationEntity): ApplicationEntity {
-    val newestSchema = getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java)
+    val newestSchema = getNewestSchema(application.schemaVersion.javaClass)
 
     return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
   }

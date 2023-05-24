@@ -4254,23 +4254,37 @@ components:
       properties:
         translatedDocument:
           $ref: '#/components/schemas/AnyValue'
-        isPipeApplication:
-          type: boolean
-        isWomensApplication:
-          type: boolean
-        targetLocation:
-          type: string
-        releaseType:
-          $ref: '#/components/schemas/ReleaseTypeOption'
-        arrivalDate:
-          type: string
-          format: date
+      discriminator:
+        propertyName: type
+        mapping:
+          CAS1: '#/components/schemas/SubmitApprovedPremisesApplication'
+          CAS3: '#/components/schemas/SubmitTemporaryAccommodationApplication'
       required:
         - translatedDocument
-        - isPipeApplication
-        - isWomensApplication
-        - targetLocation
-        - releaseType
+    SubmitApprovedPremisesApplication:
+      allOf:
+        - $ref: '#/components/schemas/SubmitApplication'
+        - type: object
+          properties:
+            isPipeApplication:
+              type: boolean
+            isWomensApplication:
+              type: boolean
+            targetLocation:
+              type: string
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
+            arrivalDate:
+              type: string
+              format: date
+          required:
+            - isPipeApplication
+            - isWomensApplication
+            - targetLocation
+            - releaseType
+    SubmitTemporaryAccommodationApplication:
+      allOf:
+        - $ref: '#/components/schemas/SubmitApplication'
     ReleaseTypeOption:
       type: string
       enum:

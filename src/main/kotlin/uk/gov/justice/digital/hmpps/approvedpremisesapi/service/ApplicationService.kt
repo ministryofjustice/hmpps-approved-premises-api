@@ -14,7 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -415,7 +416,7 @@ class ApplicationService(
   }
 
   @Transactional
-  fun submitApplication(applicationId: UUID, submitApplication: SubmitApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  fun submitApprovedPremisesApplication(applicationId: UUID, submitApplication: SubmitApprovedPremisesApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -483,7 +484,71 @@ class ApplicationService(
     )
   }
 
-  private fun createApplicationSubmittedEvent(application: ApprovedPremisesApplicationEntity, submitApplication: SubmitApplication, username: String, jwt: String) {
+  @Transactional
+  fun submitTemporaryAccommodationApplication(
+    applicationId: UUID,
+    submitApplication: SubmitTemporaryAccommodationApplication
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (application !is TemporaryAccommodationApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas3Supported"),
+      )
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    val validationErrors = ValidationErrors()
+    val applicationData = application.data
+
+    if (applicationData == null) {
+      validationErrors["$.data"] = "empty"
+    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
+      validationErrors["$.data"] = "invalid"
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors),
+      )
+    }
+
+    val schema = application.schemaVersion as? TemporaryAccommodationApplicationJsonSchemaEntity
+      ?: throw RuntimeException("Incorrect type of JSON schema referenced by TA Application")
+
+    application.apply {
+      submittedAt = OffsetDateTime.now()
+      document = serializedTranslatedDocument
+    }
+
+    application = applicationRepository.save(application)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(application),
+    )
+  }
+
+  private fun createApplicationSubmittedEvent(application: ApprovedPremisesApplicationEntity, submitApplication: SubmitApprovedPremisesApplication, username: String, jwt: String) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
 
