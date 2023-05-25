@@ -33,7 +33,8 @@ COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.nonprod.js
 COPY --from=builder --chown=appuser:appgroup /app/script/run_seed_job /app
 COPY --from=builder --chown=appuser:appgroup /app/script/run_migration_job /app
 COPY --from=builder --chown=appuser:appgroup /app/script/delete_booking /app
-RUN mkdir /tmp/seed && chown appuser:appgroup /tmp/seed && chmod +x /app/run_seed_job && chmod +x /app/run_migration_job && chmod +x /app/delete_booking
+COPY --from=builder --chown=appuser:appgroup /app/script/clear_cache /app
+RUN mkdir /tmp/seed && chown appuser:appgroup /tmp/seed && chmod +x /app/run_seed_job && chmod +x /app/run_migration_job && chmod +x /app/delete_booking && chmod +x /app/clear_cache
 
 USER 2000
 

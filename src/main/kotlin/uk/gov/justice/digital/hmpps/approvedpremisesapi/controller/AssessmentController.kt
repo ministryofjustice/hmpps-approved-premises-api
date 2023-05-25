@@ -79,7 +79,7 @@ class AssessmentController(
       throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
     }
 
-    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
+    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber)
     val inmateDetails = when (inmateDetailsResult) {
       is AuthorisableActionResult.Success -> inmateDetailsResult.entity
       else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")
@@ -122,7 +122,7 @@ class AssessmentController(
       throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
     }
 
-    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.nomsNumber)
+    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber)
     val inmateDetails = when (inmateDetailsResult) {
       is AuthorisableActionResult.Success -> inmateDetailsResult.entity
       else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")

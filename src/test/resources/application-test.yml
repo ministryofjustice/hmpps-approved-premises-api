@@ -95,11 +95,7 @@ caches:
     expiry-seconds: 21600
   staffMember:
     expiry-seconds: 21600
-  offenderDetails:
-    expiry-seconds: 1200
   userAccess:
-    expiry-seconds: 1200
-  inmateDetails:
     expiry-seconds: 1200
   staffDetails:
     expiry-seconds: 1200
@@ -117,3 +113,5 @@ person-arrived-detail-url-template: http://frontend/events/events/person-arrived
 person-not-arrived-detail-url-template: http://frontend/events/events/person-not-arrived/#eventId
 person-departed-detail-url-template: http://frontend/events/events/person-departed/#eventId
 booking-not-made-detail-url-template: http://frontend/events/events/booking-not-made/#eventId
+
+preemptive-cache-delay-ms: 250

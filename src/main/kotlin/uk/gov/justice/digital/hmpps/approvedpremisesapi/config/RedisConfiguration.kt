@@ -10,18 +10,20 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.cache.RedisCacheConfiguration
 import org.springframework.data.redis.cache.RedisCacheManager.RedisCacheManagerBuilder
+import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
 import org.springframework.data.redis.serializer.RedisSerializer
+import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.time.Duration
 
 @Configuration
@@ -34,8 +36,6 @@ class RedisConfiguration {
     @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
     @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
     @Value("\${caches.userAccess.expiry-seconds}") userAccessExpirySeconds: Long,
-    @Value("\${caches.offenderDetails.expiry-seconds}") offenderDetailsExpirySeconds: Long,
-    @Value("\${caches.inmateDetails.expiry-seconds}") inmateDetailsExpirySeconds: Long,
     @Value("\${caches.staffDetails.expiry-seconds}") staffDetailsExpirySeconds: Long,
     @Value("\${caches.teamManagingCases.expiry-seconds}") teamManagingCasesExpirySeconds: Long,
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
@@ -44,13 +44,32 @@ class RedisConfiguration {
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
       builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), time, objectMapper)
-        .clientCacheFor<OffenderDetailSummary>("offenderDetailsCache", Duration.ofSeconds(offenderDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
-        .clientCacheFor<InmateDetail>("inmateDetailsCache", Duration.ofSeconds(inmateDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<StaffUserDetails>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
         .clientCacheFor<UKBankHolidays>("ukBankHolidaysCache", Duration.ofSeconds(ukBankHolidaysExpirySeconds), time, objectMapper)
     }
+  }
+
+  @Bean
+  fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<*, *>? {
+    val template: RedisTemplate<*, *> = RedisTemplate<Any, Any>()
+    template.connectionFactory = connectionFactory
+    template.keySerializer = StringRedisSerializer()
+    return template
+  }
+
+  @Bean
+  fun redLock(
+    @Value("\${spring.redis.host}") host: String,
+    @Value("\${spring.redis.port}") port: Int,
+    @Value("\${spring.redis.password}") password: String,
+    @Value("\${spring.redis.database}") database: Int,
+    @Value("\${spring.redis.ssl}") ssl: Boolean,
+  ): RedLock {
+    val scheme = if (ssl) "rediss" else "redis"
+    val passwordString = if (password.isNotEmpty()) "$password@" else ""
+    return RedLock(arrayOf("$scheme://$passwordString$host:$port/$database"))
   }
 
   private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, version: String, objectMapper: ObjectMapper) =
@@ -91,6 +110,8 @@ class ClientResultRedisSerializer(
           path = clientResult.path
         )
       }
+      is ClientResult.Failure.PreemptiveCacheTimeout ->
+        throw RuntimeException("Preemptively cached requests should not be annotated with @Cacheable")
       is ClientResult.Success -> {
         SerializableClientResult(
           discriminator = ClientResultDiscriminator.SUCCESS,
@@ -102,7 +123,7 @@ class ClientResultRedisSerializer(
           path = null
         )
       }
-      null -> null
+      else -> null
     }
 
     return objectMapper.writeValueAsBytes(toSerialize)
