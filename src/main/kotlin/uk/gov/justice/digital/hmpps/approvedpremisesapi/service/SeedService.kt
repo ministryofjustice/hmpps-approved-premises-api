@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import org.apache.commons.io.FileUtils
 import org.springframework.context.ApplicationContext
+import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
+import java.io.File
 import java.io.IOException
 import javax.annotation.PostConstruct
 
@@ -55,7 +58,19 @@ class SeedService(
           seedLogger.warn("Seed file ${csv.file.path} does not have a known job type; skipping.")
         } else {
           seedLogger.info("Found seed job of type $seedFileType in $filePrefix")
-          seedData(seedFileType, seedFileType.value) { csv.file.path }
+          val filePath = if (csv is ClassPathResource) {
+            csv.inputStream
+
+            val targetFile = File("${seedConfig.filePrefix}/${csv.filename}")
+            seedLogger.info("Copying class path resource ${csv.filename} to ${targetFile.absolutePath}")
+            FileUtils.copyInputStreamToFile(csv.inputStream, targetFile)
+
+            targetFile.absolutePath
+          } else {
+            csv.file.path
+          }
+
+          seedData(seedFileType, seedFileType.value) { filePath }
         }
       }
     }

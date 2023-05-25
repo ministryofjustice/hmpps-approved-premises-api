@@ -81,7 +81,8 @@ class SeedServiceTest {
 
     assertThat(logEntries).anyMatch {
       it.level == "warn" &&
-        it.message.contains("/db/seed/unknown-job-type/unknown_seed_file.csv does not have a known job type; skipping.")
+        it.message.contains("/db/seed/unknown-job-type/unknown_seed_file.csv does not have a known job type; skipping.") ||
+        it.message.contains("\\db\\seed\\unknown-job-type\\unknown_seed_file.csv does not have a known job type; skipping.")
     }
   }
 
