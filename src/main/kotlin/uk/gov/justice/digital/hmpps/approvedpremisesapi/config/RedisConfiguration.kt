@@ -68,7 +68,7 @@ class RedisConfiguration {
     @Value("\${spring.redis.ssl}") ssl: Boolean,
   ): RedLock {
     val scheme = if (ssl) "rediss" else "redis"
-    val passwordString = if (password.isNotEmpty()) "$password@" else ""
+    val passwordString = if (password.isNotEmpty()) ":$password@" else ""
     return RedLock(arrayOf("$scheme://$passwordString$host:$port/$database"))
   }
 
