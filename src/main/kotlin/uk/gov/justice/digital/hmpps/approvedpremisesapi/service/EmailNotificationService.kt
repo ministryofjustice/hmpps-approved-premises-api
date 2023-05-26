@@ -16,7 +16,7 @@ class EmailNotificationService(
   private val notifyConfig: NotifyConfig,
   @Qualifier("normalNotificationClient") private val normalNotificationClient: NotificationClient?,
   @Qualifier("guestListNotificationClient") private val guestListNotificationClient: NotificationClient?,
-  private val guestListUserRepository: NotifyGuestListUserRepository
+  private val guestListUserRepository: NotifyGuestListUserRepository,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

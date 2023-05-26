@@ -14,5 +14,5 @@ interface NotifyGuestListUserRepository : JpaRepository<NotifyGuestListUserEntit
 @Table(name = "notify_guest_list_users")
 data class NotifyGuestListUserEntity(
   @Id
-  val userId: UUID
+  val userId: UUID,
 )

@@ -137,8 +137,8 @@ class AssessmentService(
       templateId = notifyConfig.templates.assessmentAllocated,
       personalisation = mapOf(
         "name" to allocatedUser.name,
-        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString())
-      )
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
+      ),
     )
 
     return assessment
@@ -468,8 +468,8 @@ class AssessmentService(
       templateId = notifyConfig.templates.assessmentAllocated,
       personalisation = mapOf(
         "name" to assigneeUser.name,
-        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString())
-      )
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+      ),
     )
 
     return AuthorisableActionResult.Success(

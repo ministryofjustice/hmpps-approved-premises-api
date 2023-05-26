@@ -28,10 +28,14 @@ class NotifyClientConfig {
   @Bean("normalNotificationClient")
   fun normalNotificationClient(notifyConfig: NotifyConfig) = if (notifyConfig.mode != NotifyMode.DISABLED) {
     NotificationClient(notifyConfig.apiKey)
-  } else null
+  } else {
+    null
+  }
 
   @Bean("guestListNotificationClient")
   fun guestListNotificationClient(notifyConfig: NotifyConfig) = if (notifyConfig.mode == NotifyMode.TEST_AND_GUEST_LIST) {
     NotificationClient(notifyConfig.guestListApiKey)
-  } else null
+  } else {
+    null
+  }
 }

@@ -1752,7 +1752,7 @@ class AssessmentServiceTest {
         match {
           it["name"] == assigneeUser.name &&
             (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        }
+        },
       )
     }
   }
@@ -1783,7 +1783,7 @@ class AssessmentServiceTest {
       emailNotificationServiceMock,
       NotifyConfig(),
       "http://frontend/applications/#id",
-      "http://frontend/assessments/#id"
+      "http://frontend/assessments/#id",
     )
 
     private val user = UserEntityFactory()
@@ -1974,7 +1974,7 @@ class AssessmentServiceTest {
                 .withYieldedApArea { ApAreaEntityFactory().produce() }
                 .produce()
             }
-            .produce()
+            .produce(),
         )
         .withIsPipeApplication(true)
         .produce()
@@ -1995,7 +1995,7 @@ class AssessmentServiceTest {
           match {
             it["name"] == userWithLeastAllocatedAssessments.name &&
               (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          }
+          },
         )
       }
     }
