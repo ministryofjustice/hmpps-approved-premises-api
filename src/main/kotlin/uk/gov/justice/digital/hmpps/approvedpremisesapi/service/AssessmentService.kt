@@ -475,6 +475,15 @@ class AssessmentService(
       ),
     )
 
+    emailNotificationService.sendEmail(
+      user = assigneeUser,
+      templateId = notifyConfig.templates.assessmentDeallocated,
+      personalisation = mapOf(
+        "name" to assigneeUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString())
+      )
+    )
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
         newAssessment,

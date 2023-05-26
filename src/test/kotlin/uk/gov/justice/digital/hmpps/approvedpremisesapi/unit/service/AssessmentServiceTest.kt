@@ -1163,7 +1163,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one, sends allocation email`() {
+  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1241,6 +1241,16 @@ class AssessmentServiceTest {
           it["name"] == assigneeUser.name &&
             (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
         },
+      )
+    }
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        any(),
+        "331ce452-ea83-4f0c-aec0-5eafe85094f2",
+        match {
+          it["name"] == assigneeUser.name &&
+            (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        }
       )
     }
   }
