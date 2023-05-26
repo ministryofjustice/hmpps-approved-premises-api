@@ -14,5 +14,5 @@ data class Alert(
   val dateCreated: LocalDate,
   val dateExpires: LocalDate?,
   val expired: Boolean,
-  val active: Boolean
+  val active: Boolean,
 )

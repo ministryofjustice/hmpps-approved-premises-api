@@ -121,8 +121,8 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
       probationArea = this.submittedByProbationArea(),
       team = this.submittedByTeam(),
       ldu = this.submittedByLdu(),
-      region = this.submittedByRegion()
+      region = this.submittedByRegion(),
     ),
-    sentenceLengthInMonths = this.sentenceLengthInMonths()
+    sentenceLengthInMonths = this.sentenceLengthInMonths(),
   )
 }

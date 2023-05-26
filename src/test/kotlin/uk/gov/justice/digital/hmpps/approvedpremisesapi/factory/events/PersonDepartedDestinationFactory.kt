@@ -27,6 +27,6 @@ class PersonDepartedDestinationFactory : Factory<PersonDepartedDestination> {
   override fun produce() = PersonDepartedDestination(
     premises = this.premises(),
     moveOnCategory = this.moveOnCategory(),
-    destinationProvider = this.destinationProvider()
+    destinationProvider = this.destinationProvider(),
   )
 }

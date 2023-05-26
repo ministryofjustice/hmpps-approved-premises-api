@@ -28,12 +28,12 @@ class JwtAuthHelper {
 
   internal fun createValidClientCredentialsJwt() = createClientCredentialsJwt(
     expiryTime = Duration.ofMinutes(2),
-    roles = listOf("ROLE_COMMUNITY")
+    roles = listOf("ROLE_COMMUNITY"),
   )
 
   internal fun createExpiredClientCredentialsJwt() = createClientCredentialsJwt(
     expiryTime = Duration.ofMinutes(-2),
-    roles = listOf("ROLE_COMMUNITY")
+    roles = listOf("ROLE_COMMUNITY"),
   )
 
   internal fun createClientCredentialsJwt(
@@ -42,7 +42,7 @@ class JwtAuthHelper {
     roles: List<String>? = listOf(),
     authSource: String = if (username == null) "none" else "delius",
     expiryTime: Duration = Duration.ofHours(1),
-    jwtId: String = UUID.randomUUID().toString()
+    jwtId: String = UUID.randomUUID().toString(),
   ): String =
     mutableMapOf<String, Any>()
       .also { it["user_name"] = username ?: "integration-test-client-id" }
@@ -64,7 +64,7 @@ class JwtAuthHelper {
   internal fun createValidAuthorizationCodeJwt(username: String = "username") = createAuthorizationCodeJwt(
     subject = username,
     authSource = "delius",
-    roles = listOf("ROLE_PROBATION")
+    roles = listOf("ROLE_PROBATION"),
   )
 
   internal fun createAuthorizationCodeJwt(
@@ -73,7 +73,7 @@ class JwtAuthHelper {
     roles: List<String>? = listOf(),
     authSource: String = "delius",
     expiryTime: Duration = Duration.ofHours(1),
-    jwtId: String = UUID.randomUUID().toString()
+    jwtId: String = UUID.randomUUID().toString(),
   ): String =
     mutableMapOf<String, Any>()
       .also { it["auth_source"] = authSource }

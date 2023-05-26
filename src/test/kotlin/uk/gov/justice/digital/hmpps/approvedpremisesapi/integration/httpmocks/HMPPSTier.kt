@@ -6,5 +6,5 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 fun IntegrationTestBase.HMPPSTier_mockSuccessfulTierCall(crn: String, response: Tier) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/crn/$crn/tier",
-    responseBody = response
+    responseBody = response,
   )

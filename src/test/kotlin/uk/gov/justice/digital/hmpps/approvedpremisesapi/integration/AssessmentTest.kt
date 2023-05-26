@@ -99,8 +99,8 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails))
-            )
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
+            ),
           )
       }
     }
@@ -139,7 +139,7 @@ class AssessmentTest : IntegrationTestBase() {
       completed = assessment.decision != null,
       decision = assessment.decision?.name,
       crn = assessment.application.crn,
-      isStarted = assessment.data != null
+      isStarted = assessment.data != null,
     )
 
   @Test
@@ -187,8 +187,8 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
-            )
+              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+            ),
           )
       }
     }
@@ -219,7 +219,7 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Accept assessment returns 200, persists decision, creates and allocates a placement request, and emits SNS domain event message when requirements provided`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
       `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
         `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
@@ -285,7 +285,7 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
             assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
 
             val persistedPlacementRequest = placementRequestRepository.findByApplication(application)!!
@@ -311,7 +311,7 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Accept assessment returns 200, persists decision, does not create a Placement Request, and emits SNS domain event message when requirements not provided`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
       `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
         `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
@@ -362,7 +362,7 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
             assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
 
             assertThat(placementRequestRepository.findByApplication(application)).isNull()
@@ -375,7 +375,7 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Accept assessment returns an error if the postcode cannot be found`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
       `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
         `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
@@ -447,7 +447,7 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") }
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -494,7 +494,7 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
         assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
           SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
         )
       }
     }
@@ -529,8 +529,8 @@ class AssessmentTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewClarificationNote(
-              query = "some text"
-            )
+              query = "some text",
+            ),
           )
           .exchange()
           .expectStatus()
@@ -576,8 +576,8 @@ class AssessmentTest : IntegrationTestBase() {
           .bodyValue(
             UpdatedClarificationNote(
               response = "some text",
-              responseReceivedOn = LocalDate.parse("2022-03-04")
-            )
+              responseReceivedOn = LocalDate.parse("2022-03-04"),
+            ),
           )
           .exchange()
           .expectStatus()

@@ -43,8 +43,10 @@ abstract class SeedTestBase : IntegrationTestBase() {
       Files.createDirectory(Path(seedFilePrefix))
     }
     Files.writeString(
-      Path("$seedFilePrefix/$csvName.csv"), contents,
-      StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
+      Path("$seedFilePrefix/$csvName.csv"),
+      contents,
+      StandardOpenOption.CREATE,
+      StandardOpenOption.TRUNCATE_EXISTING,
     )
   }
 }

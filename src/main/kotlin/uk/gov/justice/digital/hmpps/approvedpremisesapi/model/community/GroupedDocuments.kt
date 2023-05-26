@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class GroupedDocuments(
   val documents: List<Document>,
-  val convictions: List<ConvictionDocuments>
+  val convictions: List<ConvictionDocuments>,
 ) {
   fun findDocument(documentId: String) = documents.firstOrNull { it.id == documentId } ?: convictions.flatMap { it.documents }.firstOrNull { it.id == documentId }
 }
@@ -17,15 +17,15 @@ data class Document(
   val extendedDescription: String?,
   val createdAt: LocalDateTime,
   val lastModifiedAt: LocalDateTime?,
-  val parentPrimaryKeyId: Long?
+  val parentPrimaryKeyId: Long?,
 )
 
 data class ConvictionDocuments(
   val convictionId: String,
-  val documents: List<Document>
+  val documents: List<Document>,
 )
 
 data class DocumentType(
   val code: String,
-  val description: String
+  val description: String,
 )

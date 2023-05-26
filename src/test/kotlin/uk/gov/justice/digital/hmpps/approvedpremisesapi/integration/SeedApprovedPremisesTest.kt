@@ -31,9 +31,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
             .withProbationRegion("Not Real Region")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-probation")
@@ -61,9 +61,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
           ApprovedPremisesSeedCsvRowFactory()
             .withProbationRegion(probationRegion.name)
             .withLocalAuthorityArea("Not Real Authority")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-local-authority")
@@ -101,9 +101,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
             .withProbationRegion(probationRegion.name)
             .withLocalAuthorityArea(localAuthorityArea.name)
             .withIsCatered("yes")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-service-scope")
@@ -141,9 +141,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
             .withProbationRegion(probationRegion.name)
             .withLocalAuthorityArea(localAuthorityArea.name)
             .withIsCatered("yes")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "invalid-model-scope")
@@ -168,9 +168,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       "new-ap-invalid-boolean",
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
-          csvRow
-        )
-      )
+          csvRow,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "new-ap-invalid-boolean")
@@ -190,7 +190,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     withCsv(
       "new-ap-missing-headers",
       "name,apCode,qCode,apArea,pdu,probationRegion,localAuthorityArea,town,addressLine1\n" +
-        "HOPE,Q00,North East,Leeds,Yorkshire & The Humber,Leeds,Leeds,1 The Street, Leeds"
+        "HOPE,Q00,North East,Leeds,Yorkshire & The Humber,Leeds,Leeds,1 The Street, Leeds",
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "new-ap-missing-headers")
@@ -249,9 +249,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       "new-ap",
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
-          csvRow
-        )
-      )
+          csvRow,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "new-ap")
@@ -305,9 +305,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       "update-ap",
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
-          csvRow
-        )
-      )
+          csvRow,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremises, "update-ap")
@@ -362,7 +362,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "hasHearingLoop",
         "status",
         "apCode",
-        "qCode"
+        "qCode",
       )
       .newRow()
 
@@ -538,6 +538,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     hasHearingLoop = this.hasHearingLoop(),
     status = this.status(),
     apCode = this.apCode(),
-    qCode = this.qCode()
+    qCode = this.qCode(),
   )
 }

@@ -44,6 +44,6 @@ class PostCodeDistrictEntityFactory : Factory<PostCodeDistrictEntity> {
     latitude = this.latitude(),
     longitude = this.longitude(),
     point = this.point?.invoke() ?: GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
-      .createPoint(Coordinate(this.latitude(), this.longitude()))
+      .createPoint(Coordinate(this.latitude(), this.longitude())),
   )
 }

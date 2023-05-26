@@ -24,7 +24,7 @@ class TaskService(
   private val applicationRepository: ApplicationRepository,
   private val userService: UserService,
   private val placementRequestService: PlacementRequestService,
-  private val userTransformer: UserTransformer
+  private val userTransformer: UserTransformer,
 ) {
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
     if (!requestUser.hasRole(UserRole.WORKFLOW_MANAGER)) {
@@ -67,8 +67,8 @@ class TaskService(
       is ValidatableActionResult.ConflictError -> AuthorisableActionResult.Success(ValidatableActionResult.ConflictError(validationResult.conflictingEntityId, validationResult.message))
       is ValidatableActionResult.Success -> AuthorisableActionResult.Success(
         ValidatableActionResult.Success(
-          entityToReallocation(validationResult.entity, taskType)
-        )
+          entityToReallocation(validationResult.entity, taskType),
+        ),
       )
     }
   }
@@ -82,7 +82,7 @@ class TaskService(
 
     return Reallocation(
       taskType = taskType,
-      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser
+      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     )
   }
 }

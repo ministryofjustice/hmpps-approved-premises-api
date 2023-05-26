@@ -77,12 +77,11 @@ class AssessmentServiceTest {
     communityApiClientMock,
     cruServiceMock,
     placementRequestServiceMock,
-    "http://frontend/applications/#id"
+    "http://frontend/applications/#id",
   )
 
   @Test
   fun `getAssessmentSummariesForUser gets all assessment summaries for workflow manager`() {
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -95,7 +94,7 @@ class AssessmentServiceTest {
       UserRoleAssignmentEntityFactory()
         .withRole(UserRole.WORKFLOW_MANAGER)
         .withUser(user)
-        .produce()
+        .produce(),
     )
 
     every { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(any()) } returns emptyList()
@@ -107,7 +106,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `getAssessmentSummariesForUser only fetches allocated assessment summaries for non-workflow user`() {
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -120,7 +118,7 @@ class AssessmentServiceTest {
       UserRoleAssignmentEntityFactory()
         .withRole(UserRole.ASSESSOR)
         .withUser(user)
-        .produce()
+        .produce(),
     )
 
     every { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(any()) } returns emptyList()
@@ -146,7 +144,7 @@ class AssessmentServiceTest {
       UserRoleAssignmentEntityFactory()
         .withRole(UserRole.WORKFLOW_MANAGER)
         .withUser(user)
-        .produce()
+        .produce(),
     )
 
     val assessment =
@@ -159,7 +157,7 @@ class AssessmentServiceTest {
                 .withYieldedApArea { ApAreaEntityFactory().produce() }
                 .produce()
             }
-            .produce()
+            .produce(),
         )
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
@@ -170,9 +168,9 @@ class AssessmentServiceTest {
                     .withYieldedApArea { ApAreaEntityFactory().produce() }
                     .produce()
                 }
-                .produce()
+                .produce(),
             )
-            .produce()
+            .produce(),
         )
         .produce()
 
@@ -208,7 +206,7 @@ class AssessmentServiceTest {
                 .withYieldedApArea { ApAreaEntityFactory().produce() }
                 .produce()
             }
-            .produce()
+            .produce(),
         )
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
@@ -219,9 +217,9 @@ class AssessmentServiceTest {
                     .withYieldedApArea { ApAreaEntityFactory().produce() }
                     .produce()
                 }
-                .produce()
+                .produce(),
             )
-            .produce()
+            .produce(),
         )
         .produce()
 
@@ -296,9 +294,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(
         UserEntityFactory()
@@ -307,7 +305,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -334,7 +332,7 @@ class AssessmentServiceTest {
       UserRoleAssignmentEntityFactory()
         .withRole(UserRole.WORKFLOW_MANAGER)
         .withUser(user)
-        .produce()
+        .produce(),
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -348,9 +346,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(
         UserEntityFactory()
@@ -359,7 +357,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -399,9 +397,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .produce()
@@ -442,9 +440,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(
         UserEntityFactory()
@@ -453,7 +451,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -487,9 +485,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
@@ -522,7 +520,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -536,9 +534,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
@@ -572,7 +570,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -586,9 +584,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(null)
       .withDecision(null)
@@ -623,7 +621,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -637,9 +635,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
@@ -681,9 +679,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(
         UserEntityFactory()
@@ -692,7 +690,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -726,9 +724,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
@@ -761,7 +759,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -775,9 +773,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
@@ -811,7 +809,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -825,9 +823,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(null)
       .withDecision(null)
@@ -862,7 +860,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -876,9 +874,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
@@ -898,7 +896,7 @@ class AssessmentServiceTest {
     assertThat(validationResult is ValidatableActionResult.FieldValidationError)
     val fieldValidationError = (validationResult as ValidatableActionResult.FieldValidationError)
     assertThat(fieldValidationError.validationMessages).contains(
-      entry("$.data", "invalid")
+      entry("$.data", "invalid"),
     )
   }
 
@@ -913,15 +911,15 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     val assessment = AssessmentEntityFactory().withId(assessmentId).withApplication(
       ApprovedPremisesApplicationEntityFactory().withCreatedByUser(
         UserEntityFactory().withYieldedProbationRegion {
           ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-        }.produce()
-      ).produce()
+        }.produce(),
+      ).produce(),
     ).withAllocatedToUser(user).withAssessmentSchema(schema).withData("{\"test\": \"data\"}").produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
@@ -967,7 +965,7 @@ class AssessmentServiceTest {
             data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
             data.assessedBy == ApplicationAssessedAssessedBy(
@@ -976,19 +974,19 @@ class AssessmentServiceTest {
               staffIdentifier = staffUserDetails.staffIdentifier,
               forenames = staffUserDetails.staff.forenames,
               surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username
+              username = staffUserDetails.username,
             ),
             probationArea = ProbationArea(
               code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description
+              name = staffUserDetails.probationArea.description,
             ),
             cru = Cru(
-              name = "South West & South Central"
-            )
+              name = "South West & South Central",
+            ),
           ) &&
             data.decision == "ACCEPTED" &&
             data.decisionRationale == null
-        }
+        },
       )
     }
 
@@ -1008,15 +1006,15 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     val assessment = AssessmentEntityFactory().withId(assessmentId).withApplication(
       ApprovedPremisesApplicationEntityFactory().withCreatedByUser(
         UserEntityFactory().withYieldedProbationRegion {
           ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-        }.produce()
-      ).produce()
+        }.produce(),
+      ).produce(),
     ).withAllocatedToUser(user).withAssessmentSchema(schema).withData("{\"test\": \"data\"}").produce()
 
     val requirements = PlacementRequirements(
@@ -1043,7 +1041,7 @@ class AssessmentServiceTest {
         .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
         .withAssessment(assessment)
         .withAllocatedToUser(user)
-        .produce()
+        .produce(),
     )
 
     val offenderDetails = OffenderDetailsSummaryFactory().produce()
@@ -1081,7 +1079,7 @@ class AssessmentServiceTest {
             data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
             data.assessedBy == ApplicationAssessedAssessedBy(
@@ -1090,19 +1088,19 @@ class AssessmentServiceTest {
               staffIdentifier = staffUserDetails.staffIdentifier,
               forenames = staffUserDetails.staff.forenames,
               surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username
+              username = staffUserDetails.username,
             ),
             probationArea = ProbationArea(
               code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description
+              name = staffUserDetails.probationArea.description,
             ),
             cru = Cru(
-              name = "South West & South Central"
-            )
+              name = "South West & South Central",
+            ),
           ) &&
             data.decision == "ACCEPTED" &&
             data.decisionRationale == null
-        }
+        },
       )
     }
 
@@ -1122,15 +1120,15 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     val assessment = AssessmentEntityFactory().withId(assessmentId).withApplication(
       ApprovedPremisesApplicationEntityFactory().withCreatedByUser(
         UserEntityFactory().withYieldedProbationRegion {
           ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-        }.produce()
-      ).produce()
+        }.produce(),
+      ).produce(),
     ).withAllocatedToUser(user).withAssessmentSchema(schema).withData("{\"test\": \"data\"}").produce()
 
     val requirements = PlacementRequirements(
@@ -1192,9 +1190,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(
         UserEntityFactory()
@@ -1203,7 +1201,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -1237,9 +1235,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
@@ -1272,7 +1270,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -1286,9 +1284,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
@@ -1322,7 +1320,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -1336,9 +1334,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(null)
       .withDecision(null)
@@ -1373,7 +1371,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
@@ -1387,9 +1385,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
@@ -1409,7 +1407,7 @@ class AssessmentServiceTest {
     assertThat(validationResult is ValidatableActionResult.FieldValidationError)
     val fieldValidationError = (validationResult as ValidatableActionResult.FieldValidationError)
     assertThat(fieldValidationError.validationMessages).contains(
-      entry("$.data", "invalid")
+      entry("$.data", "invalid"),
     )
   }
 
@@ -1428,7 +1426,7 @@ class AssessmentServiceTest {
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     val assessment = AssessmentEntityFactory()
@@ -1442,9 +1440,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
@@ -1495,7 +1493,7 @@ class AssessmentServiceTest {
             data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
             data.assessedBy == ApplicationAssessedAssessedBy(
@@ -1504,19 +1502,19 @@ class AssessmentServiceTest {
               staffIdentifier = staffUserDetails.staffIdentifier,
               forenames = staffUserDetails.staff.forenames,
               surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username
+              username = staffUserDetails.username,
             ),
             probationArea = ProbationArea(
               code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description
+              name = staffUserDetails.probationArea.description,
             ),
             cru = Cru(
-              name = "South West & South Central"
-            )
+              name = "South West & South Central",
+            ),
           ) &&
             data.decision == "REJECTED" &&
             data.decisionRationale == "reasoning"
-        }
+        },
       )
     }
   }
@@ -1539,7 +1537,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -1552,7 +1550,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
@@ -1587,7 +1585,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -1600,7 +1598,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -1640,7 +1638,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .withIsPipeApplication(true)
       .produce()
@@ -1654,7 +1652,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -1699,7 +1697,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .withIsPipeApplication(true)
       .produce()
@@ -1713,7 +1711,7 @@ class AssessmentServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -1722,7 +1720,7 @@ class AssessmentServiceTest {
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     every { assessmentRepositoryMock.save(previousAssessment) } answers { it.invocation.args[0] as AssessmentEntity }
@@ -1763,7 +1761,7 @@ class AssessmentServiceTest {
       communityApiClientMock,
       cruServiceMock,
       placementRequestServiceMock,
-      "http://frontend/applications/#id"
+      "http://frontend/applications/#id",
     )
 
     private val user = UserEntityFactory()
@@ -1777,7 +1775,7 @@ class AssessmentServiceTest {
     private val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
 
     private val assessment = AssessmentEntityFactory()
@@ -1790,9 +1788,9 @@ class AssessmentServiceTest {
                   .withYieldedApArea { ApAreaEntityFactory().produce() }
                   .produce()
               }
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
@@ -1818,7 +1816,7 @@ class AssessmentServiceTest {
       every {
         assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
           assessment.id,
-          assessmentClarificationNoteEntity.id
+          assessmentClarificationNoteEntity.id,
         )
       } returns assessmentClarificationNoteEntity
 
@@ -1829,7 +1827,7 @@ class AssessmentServiceTest {
         assessment.id,
         assessmentClarificationNoteEntity.id,
         "Some response",
-        LocalDate.parse("2022-03-03")
+        LocalDate.parse("2022-03-03"),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1847,7 +1845,7 @@ class AssessmentServiceTest {
       every {
         assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
           assessment.id,
-          assessmentClarificationNoteEntity.id
+          assessmentClarificationNoteEntity.id,
         )
       } returns null
 
@@ -1856,7 +1854,7 @@ class AssessmentServiceTest {
         assessment.id,
         assessmentClarificationNoteEntity.id,
         "Some response",
-        LocalDate.parse("2022-03-03")
+        LocalDate.parse("2022-03-03"),
       )
 
       assertThat(result is AuthorisableActionResult.NotFound).isTrue
@@ -1868,7 +1866,7 @@ class AssessmentServiceTest {
       every {
         assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
           assessment.id,
-          assessmentClarificationNoteEntity.id
+          assessmentClarificationNoteEntity.id,
         )
       } returns AssessmentClarificationNoteEntityFactory()
         .withAssessment(assessment)
@@ -1881,7 +1879,7 @@ class AssessmentServiceTest {
         assessment.id,
         assessmentClarificationNoteEntity.id,
         "Some response",
-        LocalDate.parse("2022-03-03")
+        LocalDate.parse("2022-03-03"),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1899,7 +1897,7 @@ class AssessmentServiceTest {
       every {
         assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
           assessment.id,
-          assessmentClarificationNoteEntity.id
+          assessmentClarificationNoteEntity.id,
         )
       } returns AssessmentClarificationNoteEntityFactory()
         .withAssessment(assessment)
@@ -1910,7 +1908,7 @@ class AssessmentServiceTest {
                 .withYieldedApArea { ApAreaEntityFactory().produce() }
                 .produce()
             }
-            .produce()
+            .produce(),
         )
         .produce()
 
@@ -1919,7 +1917,7 @@ class AssessmentServiceTest {
         assessment.id,
         assessmentClarificationNoteEntity.id,
         "Some response",
-        LocalDate.parse("2022-03-03")
+        LocalDate.parse("2022-03-03"),
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue

@@ -41,8 +41,8 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
           "wiremock.port" to wiremockPort.toString(),
           "preemptive-cache-key-prefix" to wiremockPort.toString(),
           "hmpps.sqs.topics.domainevents.arn" to "arn:aws:sns:eu-west-2:000000000000:domainevents-int-test-${randomStringLowerCase(10)}",
-          "spring.datasource.url" to "jdbc:postgresql://localhost:5433/$databaseName"
-        ) + upstreamServiceUrlsToOverride
+          "spring.datasource.url" to "jdbc:postgresql://localhost:5433/$databaseName",
+        ) + upstreamServiceUrlsToOverride,
       ).applyTo(applicationContext)
   }
 

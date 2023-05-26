@@ -26,7 +26,7 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
   fun `Getting oasys section selection for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -41,7 +41,7 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
   fun `Getting oasys section selection for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -91,8 +91,8 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              needsDetailsTransformer.transformToApi(needsDetails)
-            )
+              needsDetailsTransformer.transformToApi(needsDetails),
+            ),
           )
       }
     }

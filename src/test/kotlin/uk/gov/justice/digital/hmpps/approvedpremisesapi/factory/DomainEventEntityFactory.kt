@@ -53,6 +53,6 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     type = this.type(),
     occurredAt = this.occurredAt(),
     createdAt = this.createdAt(),
-    data = this.data()
+    data = this.data(),
   )
 }

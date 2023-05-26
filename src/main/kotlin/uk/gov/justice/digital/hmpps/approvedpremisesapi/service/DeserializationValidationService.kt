@@ -91,7 +91,7 @@ class DeserializationValidationService {
           }
 
           result.putAll(
-            validateObject("$path.${it.name}", it.returnType.jvmErasure.java.kotlin, jsonObject.get(it.name) as ObjectNode)
+            validateObject("$path.${it.name}", it.returnType.jvmErasure.java.kotlin, jsonObject.get(it.name) as ObjectNode),
           )
           return@forEach
         }

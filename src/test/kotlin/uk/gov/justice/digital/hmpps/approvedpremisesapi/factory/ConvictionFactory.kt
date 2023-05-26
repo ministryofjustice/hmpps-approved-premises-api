@@ -70,6 +70,6 @@ class ConvictionFactory : Factory<Conviction> {
     awaitingPsr = this.awaitingPsr(),
     convictionDate = this.convictionDate(),
     referralDate = this.referralDate(),
-    offences = this.offences()
+    offences = this.offences(),
   )
 }

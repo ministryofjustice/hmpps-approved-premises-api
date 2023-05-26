@@ -28,7 +28,7 @@ data class DepartureReasonEntity(
   val name: String,
   val isActive: Boolean,
   val serviceScope: String,
-  val legacyDeliusReasonCode: String?
+  val legacyDeliusReasonCode: String?,
 ) {
   override fun toString() = "DepartureReasonEntity:$id"
 }

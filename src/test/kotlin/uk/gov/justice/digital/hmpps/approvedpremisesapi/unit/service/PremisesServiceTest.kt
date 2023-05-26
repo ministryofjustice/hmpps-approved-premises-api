@@ -86,7 +86,7 @@ class PremisesServiceTest {
     assertThat(result).containsValues(
       Availability(date = startDate, 0, 0, 0, 0, 0),
       Availability(date = startDate.plusDays(1), 0, 0, 0, 0, 0),
-      Availability(date = startDate.plusDays(2), 0, 0, 0, 0, 0)
+      Availability(date = startDate.plusDays(2), 0, 0, 0, 0, 0),
     )
   }
 
@@ -114,7 +114,7 @@ class PremisesServiceTest {
               withYieldedPremises { premises }
             }.produce()
           }
-        }.produce()
+        }.produce(),
       )
       .produce()
 
@@ -130,7 +130,7 @@ class PremisesServiceTest {
               withYieldedPremises { premises }
             }.produce()
           }
-        }.produce()
+        }.produce(),
       )
       .produce()
 
@@ -186,11 +186,11 @@ class PremisesServiceTest {
       pendingBookingEntity,
       arrivedBookingEntity,
       nonArrivedBookingEntity,
-      cancelledBookingEntity
+      cancelledBookingEntity,
     )
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       lostBedEntityOne,
-      lostBedEntityTwo
+      lostBedEntityTwo,
     )
 
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
@@ -201,7 +201,7 @@ class PremisesServiceTest {
       Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
-      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0)
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0),
     )
   }
 
@@ -229,7 +229,7 @@ class PremisesServiceTest {
               withYieldedPremises { premises }
             }.produce()
           }
-        }.produce()
+        }.produce(),
       )
       .produce()
 
@@ -241,7 +241,7 @@ class PremisesServiceTest {
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
-      lostBedEntity
+      lostBedEntity,
     )
 
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
@@ -252,7 +252,7 @@ class PremisesServiceTest {
       Availability(date = startDate.plusDays(2), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0)
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
     )
   }
 
@@ -335,10 +335,10 @@ class PremisesServiceTest {
       pendingBookingEntity,
       arrivedBookingEntity,
       nonArrivedBookingEntity,
-      cancelledBookingEntity
+      cancelledBookingEntity,
     )
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
-      lostBedEntity
+      lostBedEntity,
     )
 
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
@@ -349,7 +349,7 @@ class PremisesServiceTest {
       Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, lostBeds = 0),
       Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
-      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0)
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0),
     )
   }
 
@@ -375,13 +375,13 @@ class PremisesServiceTest {
       reasonId = reasonId,
       referenceNumber = "12345",
       notes = "notes",
-      bedId = UUID.randomUUID()
+      bedId = UUID.randomUUID(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.endDate", "beforeStartDate"),
-      entry("$.reason", "doesNotExist")
+      entry("$.reason", "doesNotExist"),
     )
   }
 
@@ -409,12 +409,12 @@ class PremisesServiceTest {
       reasonId = reasonId,
       referenceNumber = "12345",
       notes = "notes",
-      bedId = UUID.randomUUID()
+      bedId = UUID.randomUUID(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reason", "incorrectLostBedReasonServiceScope")
+      entry("$.reason", "incorrectLostBedReasonServiceScope"),
     )
   }
 
@@ -455,7 +455,7 @@ class PremisesServiceTest {
       reasonId = lostBedReason.id,
       referenceNumber = "12345",
       notes = "notes",
-      bedId = bed.id
+      bedId = bed.id,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -495,7 +495,7 @@ class PremisesServiceTest {
               withPremises(premisesEntity)
             }.produce()
           }
-        }.produce()
+        }.produce(),
       )
       .produce()
 
@@ -508,7 +508,7 @@ class PremisesServiceTest {
       endDate = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -516,7 +516,7 @@ class PremisesServiceTest {
     assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.endDate", "beforeStartDate"),
-      entry("$.reason", "doesNotExist")
+      entry("$.reason", "doesNotExist"),
     )
   }
 
@@ -547,7 +547,7 @@ class PremisesServiceTest {
               withPremises(premisesEntity)
             }.produce()
           }
-        }.produce()
+        }.produce(),
       )
       .produce()
 
@@ -562,14 +562,14 @@ class PremisesServiceTest {
       endDate = LocalDate.parse("2022-08-28"),
       reasonId = reasonId,
       referenceNumber = "12345",
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
     val resultEntity = (result as AuthorisableActionResult.Success).entity
     assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reason", "incorrectLostBedReasonServiceScope")
+      entry("$.reason", "incorrectLostBedReasonServiceScope"),
     )
   }
 
@@ -602,7 +602,7 @@ class PremisesServiceTest {
               withPremises(premisesEntity)
             }.produce()
           }
-        }.produce()
+        }.produce(),
       )
       .produce()
 

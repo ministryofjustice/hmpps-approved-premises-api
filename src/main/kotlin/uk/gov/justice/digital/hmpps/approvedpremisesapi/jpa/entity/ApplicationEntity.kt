@@ -31,7 +31,7 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query(
     "SELECT a FROM ApplicationEntity a " +
       "LEFT JOIN ApplicationTeamCodeEntity atc ON a = atc.application " +
-      "WHERE TYPE(a) = :type AND atc.teamCode IN (:managingTeamCodes)"
+      "WHERE TYPE(a) = :type AND atc.teamCode IN (:managingTeamCodes)",
   )
   fun <T : ApplicationEntity> findAllByManagingTeam(managingTeamCodes: List<String>, type: Class<T>): List<ApplicationEntity>
 
@@ -64,7 +64,7 @@ LEFT JOIN applications a ON a.id = apa.id
 LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL
 WHERE apa.is_inapplicable IS NOT TRUE;
 """,
-    nativeQuery = true
+    nativeQuery = true,
   )
   fun findAllApprovedPremisesSummaries(): List<ApprovedPremisesApplicationSummary>
 
@@ -91,7 +91,7 @@ LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at 
 WHERE (SELECT COUNT(1) FROM approved_premises_application_team_codes apatc WHERE apatc.application_id = apa.id AND apatc.team_code IN :teamCodes) > 0
 AND apa.is_inapplicable IS NOT TRUE;
 """,
-    nativeQuery = true
+    nativeQuery = true,
   )
   fun findApprovedPremisesSummariesForManagingTeams(teamCodes: List<String>): List<ApprovedPremisesApplicationSummary>
 
@@ -113,7 +113,7 @@ LEFT JOIN applications a ON a.id = taa.id
 LEFT JOIN assessments ass ON ass.application_id = taa.id AND ass.reallocated_at IS NULL 
 WHERE a.created_by_user_id = :userId
 """,
-    nativeQuery = true
+    nativeQuery = true,
   )
   fun findAllTemporaryAccommodationSummariesCreatedByUser(userId: UUID): List<TemporaryAccommodationApplicationSummary>
 
@@ -156,7 +156,7 @@ abstract class ApplicationEntity(
   @OneToMany(mappedBy = "application")
   var assessments: MutableList<AssessmentEntity>,
 
-  var nomsNumber: String
+  var nomsNumber: String,
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
   abstract fun getRequiredQualifications(): List<UserQualification>
@@ -204,7 +204,7 @@ class ApprovedPremisesApplicationEntity(
   submittedAt,
   schemaUpToDate,
   assessments,
-  nomsNumber
+  nomsNumber,
 ) {
   fun hasTeamCode(code: String) = teamCodes.any { it.teamCode == code }
   fun hasAnyTeamCode(codes: List<String>) = codes.any(::hasTeamCode)
@@ -237,7 +237,7 @@ data class ApplicationTeamCodeEntity(
   @ManyToOne
   @JoinColumn(name = "application_id")
   val application: ApprovedPremisesApplicationEntity,
-  val teamCode: String
+  val teamCode: String,
 )
 
 @Entity
@@ -276,7 +276,7 @@ class TemporaryAccommodationApplicationEntity(
   submittedAt,
   schemaUpToDate,
   assessments,
-  nomsNumber
+  nomsNumber,
 ) {
   override fun getRequiredQualifications(): List<UserQualification> = emptyList()
 }

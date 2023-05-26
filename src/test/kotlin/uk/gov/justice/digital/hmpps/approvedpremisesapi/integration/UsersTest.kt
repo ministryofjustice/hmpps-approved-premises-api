@@ -35,7 +35,7 @@ class UsersTest : IntegrationTestBase() {
   fun `Getting a user with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -58,7 +58,7 @@ class UsersTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = deliusUsername,
       authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
+      roles = listOf("ROLE_PROBATION"),
     )
 
     val region = probationRegionEntityFactory.produceAndPersist {
@@ -81,7 +81,7 @@ class UsersTest : IntegrationTestBase() {
         .withUsername(deliusUsername)
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
-        .produce()
+        .produce(),
     )
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
@@ -109,7 +109,7 @@ class UsersTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = deliusUsername,
       authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
+      roles = listOf("ROLE_PROBATION"),
     )
 
     val region = probationRegionEntityFactory.produceAndPersist {
@@ -132,7 +132,7 @@ class UsersTest : IntegrationTestBase() {
         .withUsername(deliusUsername)
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
-        .produce()
+        .produce(),
     )
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
@@ -157,8 +157,8 @@ class UsersTest : IntegrationTestBase() {
             roles = emptyList(),
             qualifications = emptyList(),
             service = ServiceName.approvedPremises.value,
-          )
-        )
+          ),
+        ),
       )
   }
 
@@ -174,7 +174,7 @@ class UsersTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = deliusUsername,
       authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
+      roles = listOf("ROLE_PROBATION"),
     )
 
     val region = probationRegionEntityFactory.produceAndPersist {
@@ -197,7 +197,7 @@ class UsersTest : IntegrationTestBase() {
         .withUsername(deliusUsername)
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
-        .produce()
+        .produce(),
     )
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
@@ -217,8 +217,8 @@ class UsersTest : IntegrationTestBase() {
             region = ProbationRegion(region.id, region.name),
             roles = emptyList(),
             service = ServiceName.temporaryAccommodation.value,
-          )
-        )
+          ),
+        ),
       )
   }
 
@@ -270,8 +270,8 @@ class UsersTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     listOf(requestUser, userWithNoRole, matcher, manager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
-                    }
-                  )
+                    },
+                  ),
                 )
             }
           }
@@ -298,8 +298,8 @@ class UsersTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     listOf(matcher, manager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
-                    }
-                  )
+                    },
+                  ),
                 )
             }
           }
@@ -326,8 +326,8 @@ class UsersTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     listOf(womensUser).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
-                    }
-                  )
+                    },
+                  ),
                 )
             }
           }
@@ -355,8 +355,8 @@ class UsersTest : IntegrationTestBase() {
                     objectMapper.writeValueAsString(
                       listOf(womensAssessor1, womensAssessor2).map {
                         userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
-                      }
-                    )
+                      },
+                    ),
                   )
               }
             }

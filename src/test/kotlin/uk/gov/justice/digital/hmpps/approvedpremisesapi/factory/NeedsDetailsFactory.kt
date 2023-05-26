@@ -124,7 +124,7 @@ class NeedsDetailsFactory : AssessmentInfoFactory<NeedsDetails>() {
       educationTrainingEmploymentIssuesDetails = this.educationTrainingEmploymentIssuesDetails(),
       accommodationIssuesDetails = this.accommodationIssuesDetails(),
       attitudeIssuesDetails = this.attitudeIssuesDetails(),
-      thinkingBehaviouralIssuesDetails = this.thinkingBehaviouralIssuesDetails()
+      thinkingBehaviouralIssuesDetails = this.thinkingBehaviouralIssuesDetails(),
     ),
     linksToHarm = LinksToHarm(
       accommodationLinkedToHarm = this.accommodationLinkedToHarm(),
@@ -136,7 +136,7 @@ class NeedsDetailsFactory : AssessmentInfoFactory<NeedsDetails>() {
       alcoholLinkedToHarm = this.alcoholIssuesLinkedToHarm(),
       emotionalLinkedToHarm = this.emotionalIssuesLinkedToHarm(),
       thinkingBehaviouralLinkedToHarm = this.thinkingBehaviouralIssuesLinkedToHarm(),
-      attitudeLinkedToHarm = this.attitudeIssuesLinkedToHarm()
+      attitudeLinkedToHarm = this.attitudeIssuesLinkedToHarm(),
     ),
     linksToReOffending = LinksToReOffending(
       accommodationLinkedToReOffending = this.accommodationLinkedToReOffending(),
@@ -148,7 +148,7 @@ class NeedsDetailsFactory : AssessmentInfoFactory<NeedsDetails>() {
       alcoholLinkedToReOffending = this.alcoholIssuesLinkedToReOffending(),
       emotionalLinkedToReOffending = this.emotionalIssuesLinkedToReOffending(),
       thinkingBehaviouralLinkedToReOffending = this.thinkingBehaviouralIssuesLinkedToReOffending(),
-      attitudeLinkedToReOffending = this.attitudeIssuesLinkedToReOffending()
-    )
+      attitudeLinkedToReOffending = this.attitudeIssuesLinkedToReOffending(),
+    ),
   )
 }

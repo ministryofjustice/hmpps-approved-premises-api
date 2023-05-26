@@ -11,7 +11,7 @@ class RisksToTheIndividual(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val riskToTheIndividual: RiskToTheIndividualInner?
+  val riskToTheIndividual: RiskToTheIndividualInner?,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -20,7 +20,7 @@ class RisksToTheIndividual(
   initiationDate,
   assessmentStatus,
   superStatus,
-  limitedAccessOffender
+  limitedAccessOffender,
 )
 
 data class RiskToTheIndividualInner(
@@ -31,5 +31,5 @@ data class RiskToTheIndividualInner(
   val currentVulnerability: String?,
   val previousVulnerability: String?,
   val riskOfSeriousHarm: String?,
-  val currentConcernsBreachOfTrustText: String?
+  val currentConcernsBreachOfTrustText: String?,
 )

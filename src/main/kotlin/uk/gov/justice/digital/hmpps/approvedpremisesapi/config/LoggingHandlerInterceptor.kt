@@ -16,7 +16,7 @@ class InterceptorConfig {
   fun mappedInterceptor(loggingHandlerInterceptor: HandlerInterceptor) = MappedInterceptor(
     null,
     arrayOf("/health/**"),
-    loggingHandlerInterceptor
+    loggingHandlerInterceptor,
   )
 }
 
@@ -28,7 +28,7 @@ class LoggingHandlerInterceptor : HandlerInterceptor {
     request: HttpServletRequest,
     response: HttpServletResponse,
     handler: Any,
-    ex: Exception?
+    ex: Exception?,
   ) {
     log.info("${request.method} ${request.requestURI} - ${response.status}")
     super.afterCompletion(request, response, handler, ex)

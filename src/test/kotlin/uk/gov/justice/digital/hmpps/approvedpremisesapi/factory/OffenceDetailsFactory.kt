@@ -70,7 +70,7 @@ class OffenceDetailsFactory : AssessmentInfoFactory<OffenceDetails>() {
       victimPerpetratorRel = this.victimPerpetratorRel(),
       victimInfo = this.victimInfo(),
       patternOffending = this.patternOffending(),
-      acceptsResponsibility = this.acceptsResponsibility()
-    )
+      acceptsResponsibility = this.acceptsResponsibility(),
+    ),
   )
 }

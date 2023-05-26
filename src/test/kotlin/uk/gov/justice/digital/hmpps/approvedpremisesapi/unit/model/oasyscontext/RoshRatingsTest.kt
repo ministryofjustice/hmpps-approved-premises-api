@@ -17,7 +17,7 @@ class RoshRatingsTest {
       riskKnownAdultCustody = RiskLevel.LOW,
       riskKnownAdultCommunity = RiskLevel.LOW,
       riskPublicCustody = RiskLevel.LOW,
-      riskPublicCommunity = RiskLevel.LOW
+      riskPublicCommunity = RiskLevel.LOW,
     )
 
     assertThat(roshRatings.determineOverallRiskLevel()).isEqualTo(RiskLevel.LOW)
@@ -34,7 +34,7 @@ class RoshRatingsTest {
       riskKnownAdultCustody = RiskLevel.LOW,
       riskKnownAdultCommunity = RiskLevel.LOW,
       riskPublicCustody = RiskLevel.LOW,
-      riskPublicCommunity = RiskLevel.MEDIUM
+      riskPublicCommunity = RiskLevel.MEDIUM,
     )
 
     assertThat(roshRatings.determineOverallRiskLevel()).isEqualTo(RiskLevel.MEDIUM)
@@ -51,7 +51,7 @@ class RoshRatingsTest {
       riskKnownAdultCustody = RiskLevel.LOW,
       riskKnownAdultCommunity = RiskLevel.LOW,
       riskPublicCustody = RiskLevel.LOW,
-      riskPublicCommunity = RiskLevel.HIGH
+      riskPublicCommunity = RiskLevel.HIGH,
     )
 
     assertThat(roshRatings.determineOverallRiskLevel()).isEqualTo(RiskLevel.HIGH)
@@ -68,7 +68,7 @@ class RoshRatingsTest {
       riskKnownAdultCustody = RiskLevel.LOW,
       riskKnownAdultCommunity = RiskLevel.LOW,
       riskPublicCustody = RiskLevel.LOW,
-      riskPublicCommunity = RiskLevel.VERY_HIGH
+      riskPublicCommunity = RiskLevel.VERY_HIGH,
     )
 
     assertThat(roshRatings.determineOverallRiskLevel()).isEqualTo(RiskLevel.VERY_HIGH)

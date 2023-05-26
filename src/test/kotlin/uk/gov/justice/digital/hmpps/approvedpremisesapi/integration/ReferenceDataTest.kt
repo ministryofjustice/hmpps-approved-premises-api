@@ -56,7 +56,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi)
+      characteristics.map(characteristicTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -79,7 +79,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withServiceScope(ServiceName.temporaryAccommodation.value)
     }
     val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi)
+      characteristics.map(characteristicTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -103,7 +103,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withServiceScope(ServiceName.approvedPremises.value)
     }
     val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi)
+      characteristics.map(characteristicTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -133,7 +133,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi)
+      characteristics.map(characteristicTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -163,7 +163,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     val characteristics = activeCharacteristics + inactiveCharacteristics
 
     val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi)
+      characteristics.map(characteristicTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -184,7 +184,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val localAuthorities = localAuthorityEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi)
+      localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -205,7 +205,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val departureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      departureReasons.map(departureReasonTransformer::transformJpaToApi)
+      departureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -231,7 +231,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi)
+      expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -258,7 +258,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi)
+      expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -288,7 +288,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      departureReasons.map(departureReasonTransformer::transformJpaToApi)
+      departureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -318,7 +318,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     val departureReasons = activeDepartureReasons + inactiveDepartureReasons
 
     val expectedJson = objectMapper.writeValueAsString(
-      departureReasons.map(departureReasonTransformer::transformJpaToApi)
+      departureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -339,7 +339,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val moveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -365,7 +365,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+      expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -392,7 +392,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+      expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -422,7 +422,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -452,7 +452,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     val moveOnCategories = activeMoveOnCategories + inactiveMoveOnCategories
 
     val expectedJson = objectMapper.writeValueAsString(
-      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi)
+      moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -473,7 +473,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val destinationProviders = destinationProviderEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      destinationProviders.map(destinationProviderTransformer::transformJpaToApi)
+      destinationProviders.map(destinationProviderTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -494,7 +494,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val departureReasons = cancellationReasonEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      departureReasons.map(cancellationReasonTransformer::transformJpaToApi)
+      departureReasons.map(cancellationReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -520,7 +520,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi)
+      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -547,7 +547,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi)
+      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -569,7 +569,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val lostBedReasons = lostBedReasonEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      lostBedReasons.map(lostBedReasonTransformer::transformJpaToApi)
+      lostBedReasons.map(lostBedReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -594,7 +594,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withServiceScope(ServiceName.approvedPremises.value)
     }
     val expectedJson = objectMapper.writeValueAsString(
-      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi)
+      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -620,7 +620,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withServiceScope(ServiceName.temporaryAccommodation.value)
     }
     val expectedJson = objectMapper.writeValueAsString(
-      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi)
+      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -645,7 +645,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withApArea(apAreaEntityFactory.produceAndPersist())
     }
     val expectedJson = objectMapper.writeValueAsString(
-      probationRegions.map(probationRegionTransformer::transformJpaToApi)
+      probationRegions.map(probationRegionTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -666,7 +666,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val nonArrivalReasons = nonArrivalReasonEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
-      nonArrivalReasons.map(nonArrivalReasonTransformer::transformJpaToApi)
+      nonArrivalReasons.map(nonArrivalReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -699,7 +699,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     }
 
     val expectedJson = objectMapper.writeValueAsString(
-      probationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi)
+      probationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -736,7 +736,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     val expectedProbationDeliveryUnits = probationDeliveryUnits.filter { it.probationRegion.id == probationRegionId }
 
     val expectedJson = objectMapper.writeValueAsString(
-      expectedProbationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi)
+      expectedProbationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()

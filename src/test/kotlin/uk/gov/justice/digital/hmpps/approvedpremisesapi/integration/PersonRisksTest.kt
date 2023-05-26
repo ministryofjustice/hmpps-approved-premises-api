@@ -41,7 +41,7 @@ class PersonRisksTest : IntegrationTestBase() {
   fun `Getting risks for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -56,7 +56,7 @@ class PersonRisksTest : IntegrationTestBase() {
   fun `Getting risks for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -97,7 +97,7 @@ class PersonRisksTest : IntegrationTestBase() {
             withRiskPublicCommunity(RiskLevel.MEDIUM)
             withRiskKnownAdultCommunity(RiskLevel.HIGH)
             withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-          }.produce()
+          }.produce(),
         )
 
         HMPPSTier_mockSuccessfulTierCall(
@@ -105,8 +105,8 @@ class PersonRisksTest : IntegrationTestBase() {
           Tier(
             tierScore = "M2",
             calculationId = UUID.randomUUID(),
-            calculationDate = LocalDateTime.parse("2022-09-06T14:59:00")
-          )
+            calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+          ),
         )
 
         CommunityAPI_mockSuccessfulRegistrationsCall(
@@ -121,9 +121,9 @@ class PersonRisksTest : IntegrationTestBase() {
                 .produce(),
               RegistrationClientResponseFactory()
                 .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-                .produce()
-            )
-          )
+                .produce(),
+            ),
+          ),
         )
 
         webTestClient.get()
@@ -145,29 +145,29 @@ class PersonRisksTest : IntegrationTestBase() {
                     riskToPublic = "Medium",
                     riskToKnownAdult = "High",
                     riskToStaff = "Very High",
-                    lastUpdated = LocalDate.parse("2022-09-06")
-                  )
+                    lastUpdated = LocalDate.parse("2022-09-06"),
+                  ),
                 ),
                 tier = RiskTierEnvelope(
                   status = RiskEnvelopeStatus.retrieved,
                   value = RiskTier(
                     level = "M2",
-                    lastUpdated = LocalDate.parse("2022-09-06")
-                  )
+                    lastUpdated = LocalDate.parse("2022-09-06"),
+                  ),
                 ),
                 flags = FlagsEnvelope(
                   status = RiskEnvelopeStatus.retrieved,
-                  value = listOf("RISK FLAG")
+                  value = listOf("RISK FLAG"),
                 ),
                 mappa = MappaEnvelope(
                   status = RiskEnvelopeStatus.retrieved,
                   value = Mappa(
                     level = "CAT C1/LEVEL L1",
-                    lastUpdated = LocalDate.parse("2022-09-06")
-                  )
-                )
-              )
-            )
+                    lastUpdated = LocalDate.parse("2022-09-06"),
+                  ),
+                ),
+              ),
+            ),
           )
       }
     }

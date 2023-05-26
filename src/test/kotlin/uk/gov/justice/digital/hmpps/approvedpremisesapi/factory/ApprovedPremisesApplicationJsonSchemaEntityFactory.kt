@@ -35,7 +35,7 @@ class ApprovedPremisesApplicationJsonSchemaEntityFactory : Factory<ApprovedPremi
           "type": "object",
           "properties": { }
         }
-        """
+        """,
     )
   }
 

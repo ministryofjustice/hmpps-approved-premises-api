@@ -17,7 +17,7 @@ class DocumentTransformer {
         createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
         typeCode = it.type.code,
         typeDescription = it.type.description,
-        description = it.extendedDescription
+        description = it.extendedDescription,
       )
     }
 
@@ -32,7 +32,7 @@ class DocumentTransformer {
           createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
           typeCode = it.type.code,
           typeDescription = it.type.description,
-          description = it.extendedDescription
+          description = it.extendedDescription,
         )
       } ?: emptyList()
 

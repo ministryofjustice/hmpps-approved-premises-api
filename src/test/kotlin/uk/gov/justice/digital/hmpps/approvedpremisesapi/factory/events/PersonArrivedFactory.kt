@@ -80,6 +80,6 @@ class PersonArrivedFactory : Factory<PersonArrived> {
     keyWorker = this.keyWorker(),
     arrivedAt = this.arrivedAt(),
     expectedDepartureOn = this.expectedDepartureOn(),
-    notes = this.notes()
+    notes = this.notes(),
   )
 }

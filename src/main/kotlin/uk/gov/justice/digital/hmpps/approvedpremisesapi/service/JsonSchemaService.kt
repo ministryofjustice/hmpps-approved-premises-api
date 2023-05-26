@@ -17,7 +17,7 @@ import java.util.UUID
 class JsonSchemaService(
   private val objectMapper: ObjectMapper,
   private val jsonSchemaRepository: JsonSchemaRepository,
-  private val applicationRepository: ApplicationRepository
+  private val applicationRepository: ApplicationRepository,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

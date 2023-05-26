@@ -19,6 +19,6 @@ class TeamFactory : Factory<Team> {
 
   override fun produce() = Team(
     code = this.code(),
-    name = this.name()
+    name = this.name(),
   )
 }

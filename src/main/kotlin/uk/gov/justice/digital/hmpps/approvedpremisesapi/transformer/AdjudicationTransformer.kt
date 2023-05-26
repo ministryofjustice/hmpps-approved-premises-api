@@ -15,7 +15,7 @@ class AdjudicationTransformer {
         establishment = adjudicationsPage.agencies.firstOrNull { it.agencyId == result.agencyId }?.description ?: throw RuntimeException("Agency ${result.agencyId} not found"),
         offenceDescription = charge.offenceDescription,
         hearingHeld = charge.findingCode != null,
-        finding = charge.findingCode
+        finding = charge.findingCode,
       )
     }
   }

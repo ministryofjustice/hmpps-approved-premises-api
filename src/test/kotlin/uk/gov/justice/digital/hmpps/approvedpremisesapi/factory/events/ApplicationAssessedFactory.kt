@@ -60,6 +60,6 @@ class ApplicationAssessedFactory : Factory<ApplicationAssessed> {
     assessedAt = this.assessedAt(),
     assessedBy = this.assessedBy(),
     decision = this.decision(),
-    decisionRationale = this.decisionRationale()
+    decisionRationale = this.decisionRationale(),
   )
 }

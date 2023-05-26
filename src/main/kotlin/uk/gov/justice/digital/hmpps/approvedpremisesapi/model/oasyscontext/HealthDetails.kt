@@ -11,7 +11,7 @@ class HealthDetails(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val health: HealthDetailsInner
+  val health: HealthDetailsInner,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -20,7 +20,7 @@ class HealthDetails(
   initiationDate,
   assessmentStatus,
   superStatus,
-  limitedAccessOffender
+  limitedAccessOffender,
 )
 
 data class HealthDetailsInner(

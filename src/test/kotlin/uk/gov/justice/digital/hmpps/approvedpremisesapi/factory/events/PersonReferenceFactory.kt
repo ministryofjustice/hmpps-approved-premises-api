@@ -19,6 +19,6 @@ class PersonReferenceFactory : Factory<PersonReference> {
 
   override fun produce() = PersonReference(
     crn = this.crn(),
-    noms = this.noms()
+    noms = this.noms(),
   )
 }

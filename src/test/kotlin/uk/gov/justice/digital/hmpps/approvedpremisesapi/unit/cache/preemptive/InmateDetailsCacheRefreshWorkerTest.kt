@@ -26,7 +26,7 @@ class InmateDetailsCacheRefreshWorkerTest {
     mockPrisonsApiClient,
     false,
     0,
-    mockRedLock
+    mockRedLock,
   )
 
   @Test
@@ -57,7 +57,7 @@ class InmateDetailsCacheRefreshWorkerTest {
 
       every { mockPrisonsApiClient.getInmateDetailsWithCall(it.offenderNo) } returns ClientResult.Success(
         HttpStatus.OK,
-        it
+        it,
       )
     }
 
@@ -66,7 +66,7 @@ class InmateDetailsCacheRefreshWorkerTest {
 
       every { mockPrisonsApiClient.getInmateDetailsWithCall(it.offenderNo) } returns ClientResult.Success(
         HttpStatus.OK,
-        it
+        it,
       )
     }
 

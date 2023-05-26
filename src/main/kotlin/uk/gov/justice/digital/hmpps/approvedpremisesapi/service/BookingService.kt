@@ -87,7 +87,7 @@ class BookingService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val turnaroundRepository: TurnaroundRepository,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
@@ -98,7 +98,7 @@ class BookingService(
     placementRequestId: UUID,
     bedId: UUID,
     arrivalDate: LocalDate,
-    departureDate: LocalDate
+    departureDate: LocalDate,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
@@ -156,8 +156,8 @@ class BookingService(
           application = placementRequest.application,
           offlineApplication = null,
           turnarounds = mutableListOf(),
-          nomsNumber = placementRequest.application.nomsNumber
-        )
+          nomsNumber = placementRequest.application.nomsNumber,
+        ),
       )
 
       placementRequest.booking = booking
@@ -166,7 +166,7 @@ class BookingService(
       saveBookingMadeDomainEvent(
         booking = booking,
         user = user,
-        bookingCreatedAt = bookingCreatedAt
+        bookingCreatedAt = bookingCreatedAt,
       )
 
       return@validated success(booking)
@@ -182,7 +182,7 @@ class BookingService(
     nomsNumber: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    bedId: UUID
+    bedId: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     if (!user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
       return AuthorisableActionResult.Unauthorised()
@@ -226,7 +226,7 @@ class BookingService(
       val associateWithOfflineApplication = (newestOfflineApplication != null && newestSubmittedOnlineApplication == null) ||
         (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.submittedAt > newestSubmittedOnlineApplication.submittedAt)
 
-      val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && ! associateWithOfflineApplication
+      val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && !associateWithOfflineApplication
 
       val bookingCreatedAt = OffsetDateTime.now()
 
@@ -252,15 +252,15 @@ class BookingService(
           application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
           offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null,
           turnarounds = mutableListOf(),
-          nomsNumber = nomsNumber
-        )
+          nomsNumber = nomsNumber,
+        ),
       )
 
       if (associateWithOnlineApplication) {
         saveBookingMadeDomainEvent(
           booking = booking,
           user = user,
-          bookingCreatedAt = bookingCreatedAt
+          bookingCreatedAt = bookingCreatedAt,
         )
       }
 
@@ -273,7 +273,7 @@ class BookingService(
   private fun saveBookingMadeDomainEvent(
     booking: BookingEntity,
     user: UserEntity,
-    bookingCreatedAt: OffsetDateTime
+    bookingCreatedAt: OffsetDateTime,
   ) {
     val domainEventId = UUID.randomUUID()
 
@@ -308,7 +308,7 @@ class BookingService(
             bookingId = booking.id,
             personReference = PersonReference(
               crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ),
             deliusEventNumber = application.eventNumber,
             createdAt = bookingCreatedAt.toInstant(),
@@ -318,24 +318,24 @@ class BookingService(
                 staffIdentifier = staffDetails.staffIdentifier,
                 forenames = staffDetails.staff.forenames,
                 surname = staffDetails.staff.surname,
-                username = staffDetails.username
+                username = staffDetails.username,
               ),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
-              )
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
             ),
             premises = Premises(
               id = approvedPremises.id,
               name = approvedPremises.name,
               apCode = approvedPremises.apCode,
               legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
             ),
             arrivalOn = booking.arrivalDate,
-            departureOn = booking.departureDate
-          )
-        )
-      )
+            departureOn = booking.departureDate,
+          ),
+        ),
+      ),
     )
   }
 
@@ -401,7 +401,7 @@ class BookingService(
           application = null,
           offlineApplication = null,
           turnarounds = mutableListOf(),
-        )
+        ),
       )
 
       val turnaround = turnaroundRepository.save(
@@ -413,7 +413,7 @@ class BookingService(
           },
           createdAt = bookingCreatedAt,
           booking = booking,
-        )
+        ),
       )
 
       booking.turnarounds += turnaround
@@ -452,7 +452,7 @@ class BookingService(
         workingDayCount = workingDays,
         createdAt = OffsetDateTime.now(),
         booking = booking,
-      )
+      ),
     )
 
     return success(turnaround)
@@ -500,7 +500,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = occurredAt,
-      )
+      ),
     )
 
     booking.arrivalDate = arrivalDate
@@ -541,7 +541,7 @@ class BookingService(
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!
+                noms = offenderDetails.otherIds.nomsNumber!!,
               ),
               deliusEventNumber = application.eventNumber,
               premises = Premises(
@@ -549,7 +549,7 @@ class BookingService(
                 name = approvedPremises.name,
                 apCode = approvedPremises.apCode,
                 legacyApCode = approvedPremises.qCode,
-                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
               ),
               applicationSubmittedOn = application.submittedAt!!.toLocalDate(),
               keyWorker = StaffMember(
@@ -557,14 +557,14 @@ class BookingService(
                 staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
                 forenames = keyWorkerStaffDetails.staff.forenames,
                 surname = keyWorkerStaffDetails.staff.surname,
-                username = null
+                username = null,
               ),
               arrivedAt = arrivalDate.toLocalDateTime().toInstant(), // TODO: Endpoint should accept a date-time instead
               expectedDepartureOn = expectedDepartureDate,
-              notes = notes
-            )
-          )
-        )
+              notes = notes,
+            ),
+          ),
+        ),
       )
     }
 
@@ -576,7 +576,7 @@ class BookingService(
     booking: BookingEntity,
     date: LocalDate,
     reasonId: UUID,
-    notes: String?
+    notes: String?,
   ) = validated<NonArrivalEntity> {
     val occurredAt = OffsetDateTime.now()
 
@@ -605,7 +605,7 @@ class BookingService(
         reason = reason!!,
         booking = booking,
         createdAt = occurredAt,
-      )
+      ),
     )
 
     if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
@@ -642,7 +642,7 @@ class BookingService(
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!
+                noms = offenderDetails.otherIds.nomsNumber!!,
               ),
               deliusEventNumber = application.eventNumber,
               premises = Premises(
@@ -650,7 +650,7 @@ class BookingService(
                 name = approvedPremises.name,
                 apCode = approvedPremises.apCode,
                 legacyApCode = approvedPremises.qCode,
-                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
               ),
               expectedArrivalOn = booking.originalArrivalDate,
               recordedBy = StaffMember(
@@ -658,12 +658,12 @@ class BookingService(
                 staffIdentifier = staffDetails.staffIdentifier,
                 forenames = staffDetails.staff.forenames,
                 surname = staffDetails.staff.surname,
-                username = staffDetails.username
+                username = staffDetails.username,
               ),
-              notes = notes
-            )
-          )
-        )
+              notes = notes,
+            ),
+          ),
+        ),
       )
     }
 
@@ -674,7 +674,7 @@ class BookingService(
     booking: BookingEntity,
     date: LocalDate,
     reasonId: UUID,
-    notes: String?
+    notes: String?,
   ) = validated<CancellationEntity> {
     if (booking.premises is ApprovedPremisesEntity && booking.cancellation != null) {
       return generalError("This Booking already has a Cancellation set")
@@ -699,7 +699,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
-      )
+      ),
     )
 
     return success(cancellationEntity)
@@ -721,7 +721,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
-      )
+      ),
     )
 
     return success(confirmationEntity)
@@ -734,7 +734,7 @@ class BookingService(
     reasonId: UUID,
     moveOnCategoryId: UUID,
     destinationProviderId: UUID?,
-    notes: String?
+    notes: String?,
   ) = validated<DepartureEntity> {
     val occurredAt = OffsetDateTime.now()
 
@@ -793,7 +793,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
-      )
+      ),
     )
 
     booking.departureDate = dateTime.toLocalDate()
@@ -833,7 +833,7 @@ class BookingService(
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!
+                noms = offenderDetails.otherIds.nomsNumber!!,
               ),
               deliusEventNumber = application.eventNumber,
               premises = Premises(
@@ -841,14 +841,14 @@ class BookingService(
                 name = approvedPremises.name,
                 apCode = approvedPremises.apCode,
                 legacyApCode = approvedPremises.qCode,
-                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
               ),
               keyWorker = StaffMember(
                 staffCode = booking.keyWorkerStaffCode!!,
                 staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
                 forenames = keyWorkerStaffDetails.staff.forenames,
                 surname = keyWorkerStaffDetails.staff.surname,
-                username = null
+                username = null,
               ),
               departedAt = dateTime.toInstant(),
               reason = reason.name,
@@ -857,17 +857,17 @@ class BookingService(
                 moveOnCategory = MoveOnCategory(
                   description = moveOnCategory.name,
                   legacyMoveOnCategoryCode = moveOnCategory.legacyDeliusCategoryCode!!,
-                  id = moveOnCategory.id
+                  id = moveOnCategory.id,
                 ),
                 destinationProvider = DestinationProvider(
                   description = destinationProvider!!.name,
-                  id = destinationProvider.id
+                  id = destinationProvider.id,
                 ),
-                premises = null
-              )
-            )
-          )
-        )
+                premises = null,
+              ),
+            ),
+          ),
+        ),
       )
     }
 
@@ -878,7 +878,7 @@ class BookingService(
   fun createExtension(
     booking: BookingEntity,
     newDepartureDate: LocalDate,
-    notes: String?
+    notes: String?,
   ) = validated<ExtensionEntity> {
     val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
     getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
@@ -979,12 +979,12 @@ class BookingService(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID
+    bedId: UUID,
   ) = lostBedsRepository.findByBedIdAndOverlappingDate(
     bedId,
     startDate,
     endDate,
-    thisEntityId
+    thisEntityId,
   ).firstOrNull()
 
   val BookingEntity.lastUnavailableDate: LocalDate

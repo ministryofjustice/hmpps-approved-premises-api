@@ -14,7 +14,7 @@ class ContentCachingFilter : OncePerRequestFilter() {
   override fun doFilterInternal(
     httpServletRequest: HttpServletRequest,
     httpServletResponse: HttpServletResponse,
-    filterChain: FilterChain
+    filterChain: FilterChain,
   ) {
     filterChain.doFilter(ContentCachingRequestWrapper(httpServletRequest), httpServletResponse)
   }

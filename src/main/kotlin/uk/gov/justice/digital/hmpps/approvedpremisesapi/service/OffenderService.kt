@@ -48,7 +48,7 @@ class OffenderService(
   private val caseNotesClient: CaseNotesClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
-  adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel
+  adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
@@ -64,13 +64,13 @@ class OffenderService(
       excludedCategories = excludedCategories.mapIndexed { index, categoryConfig ->
         ExcludedCategory(
           category = categoryConfig.category ?: throw RuntimeException("No category provided for prison-case-notes.excluded-categories at index $index"),
-          subcategory = categoryConfig.subcategory
+          subcategory = categoryConfig.subcategory,
         )
-      }
+      },
     )
 
     adjudicationsConfig = PrisonAdjudicationsConfig(
-      prisonApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided")
+      prisonApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided"),
     )
   }
 
@@ -116,7 +116,7 @@ class OffenderService(
 
   fun canAccessOffender(username: String, crn: String): Boolean {
     return when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(username, crn)) {
-      is ClientResult.Success -> ! accessResponse.body.userExcluded && ! accessResponse.body.userRestricted
+      is ClientResult.Success -> !accessResponse.body.userExcluded && !accessResponse.body.userRestricted
       is ClientResult.Failure.StatusCode -> {
         if (accessResponse.status == HttpStatus.FORBIDDEN) {
           try {
@@ -164,11 +164,11 @@ class OffenderService(
           roshRisks = getRoshRisksEnvelope(crn, jwt),
           mappa = getMappaEnvelope(registrationsResponse),
           tier = getRiskTierEnvelope(crn),
-          flags = getFlagsEnvelope(registrationsResponse)
+          flags = getFlagsEnvelope(registrationsResponse),
         )
 
         AuthorisableActionResult.Success(
-          risks
+          risks,
         )
       }
     }
@@ -182,8 +182,11 @@ class OffenderService(
     var currentPage: CaseNotesPage?
     var currentPageIndex: Int? = null
     do {
-      if (currentPageIndex == null) currentPageIndex = 0
-      else currentPageIndex += 1
+      if (currentPageIndex == null) {
+        currentPageIndex = 0
+      } else {
+        currentPageIndex += 1
+      }
 
       val caseNotesPageResponse = caseNotesClient.getCaseNotesPage(nomsNumber, fromDate, currentPageIndex, prisonCaseNotesConfig.prisonApiPageSize)
       currentPage = when (caseNotesPageResponse) {
@@ -199,7 +202,7 @@ class OffenderService(
       allCaseNotes.addAll(
         currentPage.content.filter { caseNote ->
           prisonCaseNotesConfig.excludedCategories.none { it.excluded(caseNote.type, caseNote.subType) }
-        }
+        },
       )
     } while (currentPage != null && currentPage.totalPages > currentPageIndex!! + 1)
 
@@ -237,8 +240,8 @@ class OffenderService(
     return AuthorisableActionResult.Success(
       AdjudicationsPage(
         results = allAdjudications,
-        agencies = allAgencies
-      )
+        agencies = allAgencies,
+      ),
     )
   }
 
@@ -380,7 +383,7 @@ class OffenderService(
         if (summary.anyRisksAreNull()) {
           return RiskWithStatus(
             status = RiskStatus.NotFound,
-            value = null
+            value = null,
           )
         }
 
@@ -393,24 +396,24 @@ class OffenderService(
             riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
             riskToStaff = summary.riskStaffCommunity!!.text,
             lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
-              ?: roshRisksResponse.body.initiationDate.toLocalDate()
-          )
+              ?: roshRisksResponse.body.initiationDate.toLocalDate(),
+          ),
         )
       }
       is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status == HttpStatus.NOT_FOUND) {
         RiskWithStatus(
           status = RiskStatus.NotFound,
-          value = null
+          value = null,
         )
       } else {
         RiskWithStatus(
           status = RiskStatus.Error,
-          value = null
+          value = null,
         )
       }
       is ClientResult.Failure -> return RiskWithStatus(
         status = RiskStatus.Error,
-        value = null
+        value = null,
       )
     }
   }
@@ -422,9 +425,9 @@ class OffenderService(
           value = registrationsResponse.body.registrations.firstOrNull { it.type.code == "MAPP" }?.let { registration ->
             Mappa(
               level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
-              lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOfOrNull { it.reviewDate } ?: registration.startDate
+              lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOfOrNull { it.reviewDate } ?: registration.startDate,
             )
-          }
+          },
         )
       }
       is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
@@ -442,7 +445,7 @@ class OffenderService(
     when (registrationsResponse) {
       is ClientResult.Success -> {
         return RiskWithStatus(
-          value = registrationsResponse.body.registrations.filter { !ignoredRegisterTypesForFlags.contains(it.type.code) }.map { it.type.description }
+          value = registrationsResponse.body.registrations.filter { !ignoredRegisterTypesForFlags.contains(it.type.code) }.map { it.type.description },
         )
       }
       is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
@@ -463,8 +466,8 @@ class OffenderService(
           status = RiskStatus.Retrieved,
           value = RiskTier(
             level = tierResponse.body.tierScore,
-            lastUpdated = tierResponse.body.calculationDate.toLocalDate()
-          )
+            lastUpdated = tierResponse.body.calculationDate.toLocalDate(),
+          ),
         )
       }
       is ClientResult.Failure.StatusCode -> return if (tierResponse.status == HttpStatus.NOT_FOUND) {

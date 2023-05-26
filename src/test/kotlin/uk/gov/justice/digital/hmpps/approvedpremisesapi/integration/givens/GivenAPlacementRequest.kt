@@ -14,7 +14,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
-  block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit
+  block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -45,10 +45,10 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withAssessment(assessment)
     withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
     withDesirableCriteria(
-      characteristicEntityFactory.produceAndPersistMultiple(5)
+      characteristicEntityFactory.produceAndPersistMultiple(5),
     )
     withEssentialCriteria(
-      characteristicEntityFactory.produceAndPersistMultiple(3)
+      characteristicEntityFactory.produceAndPersistMultiple(3),
     )
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())

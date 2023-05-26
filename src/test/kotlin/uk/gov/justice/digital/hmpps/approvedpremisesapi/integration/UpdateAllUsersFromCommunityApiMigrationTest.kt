@@ -31,14 +31,14 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
       StaffUserDetailsFactory()
         .withUsername(userOne.deliusUsername)
         .withStaffCode("STAFFCODE1")
-        .produce()
+        .produce(),
     )
 
     CommunityAPI_mockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withStaffCode("STAFFCODE2")
-        .produce()
+        .produce(),
     )
 
     val startTime = System.currentTimeMillis()
@@ -78,7 +78,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withStaffCode("STAFFCODE2")
-        .produce()
+        .produce(),
     )
 
     migrationJobService.runMigrationJob(MigrationJobType.updateAllUsersFromCommunityApi)

@@ -45,13 +45,15 @@ class AssessmentService(
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
   private val placementRequestService: PlacementRequestService,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String,
 ) {
   fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
     assessmentRepository.findAllAssessmentSummariesNotReallocated(
-      if (user.hasRole(UserRole.WORKFLOW_MANAGER)) null
-      else
+      if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
+        null
+      } else {
         user.id.toString()
+      },
     )
 
   fun getAllReallocatable(): List<AssessmentEntity> {
@@ -122,8 +124,8 @@ class AssessmentService(
         decision = null,
         schemaUpToDate = true,
         rejectionRationale = null,
-        clarificationNotes = mutableListOf()
-      )
+        clarificationNotes = mutableListOf(),
+      ),
     )
   }
 
@@ -137,19 +139,19 @@ class AssessmentService(
 
     if (!assessment.schemaUpToDate) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
       )
     }
 
     if (assessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
     }
 
     if (assessment.reallocatedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only"),
       )
     }
 
@@ -158,7 +160,7 @@ class AssessmentService(
     val savedAssessment = assessmentRepository.save(assessment)
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment)
+      ValidatableActionResult.Success(savedAssessment),
     )
   }
 
@@ -175,19 +177,19 @@ class AssessmentService(
 
     if (!assessment.schemaUpToDate) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
       )
     }
 
     if (assessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
     }
 
     if (assessment.reallocatedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only"),
       )
     }
 
@@ -202,7 +204,7 @@ class AssessmentService(
 
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors)
+        ValidatableActionResult.FieldValidationError(validationErrors),
       )
     }
 
@@ -217,7 +219,7 @@ class AssessmentService(
 
       if (placementRequestValidationResult !is ValidatableActionResult.Success) {
         return AuthorisableActionResult.Success(
-          placementRequestValidationResult.translateError()
+          placementRequestValidationResult.translateError(),
         )
       }
     }
@@ -252,7 +254,7 @@ class AssessmentService(
               .replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ),
             deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
             assessedAt = acceptedAt.toInstant(),
@@ -262,25 +264,25 @@ class AssessmentService(
                 staffIdentifier = staffDetails.staffIdentifier,
                 forenames = staffDetails.staff.forenames,
                 surname = staffDetails.staff.surname,
-                username = staffDetails.username
+                username = staffDetails.username,
               ),
               probationArea = ProbationArea(
                 code = staffDetails.probationArea.code,
-                name = staffDetails.probationArea.description
+                name = staffDetails.probationArea.description,
               ),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
-              )
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
             ),
             decision = assessment.decision.toString(),
-            decisionRationale = assessment.rejectionRationale
-          )
-        )
-      )
+            decisionRationale = assessment.rejectionRationale,
+          ),
+        ),
+      ),
     )
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment)
+      ValidatableActionResult.Success(savedAssessment),
     )
   }
 
@@ -297,19 +299,19 @@ class AssessmentService(
 
     if (!assessment.schemaUpToDate) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
       )
     }
 
     if (assessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
     }
 
     if (assessment.reallocatedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only"),
       )
     }
 
@@ -324,7 +326,7 @@ class AssessmentService(
 
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors)
+        ValidatableActionResult.FieldValidationError(validationErrors),
       )
     }
 
@@ -365,7 +367,7 @@ class AssessmentService(
               .replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ),
             deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
             assessedAt = rejectedAt.toInstant(),
@@ -375,25 +377,25 @@ class AssessmentService(
                 staffIdentifier = staffDetails.staffIdentifier,
                 forenames = staffDetails.staff.forenames,
                 surname = staffDetails.staff.surname,
-                username = staffDetails.username
+                username = staffDetails.username,
               ),
               probationArea = ProbationArea(
                 code = staffDetails.probationArea.code,
-                name = staffDetails.probationArea.description
+                name = staffDetails.probationArea.description,
               ),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
-              )
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
             ),
             decision = assessment.decision.toString(),
-            decisionRationale = assessment.rejectionRationale
-          )
-        )
-      )
+            decisionRationale = assessment.rejectionRationale,
+          ),
+        ),
+      ),
     )
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment)
+      ValidatableActionResult.Success(savedAssessment),
     )
   }
 
@@ -403,7 +405,7 @@ class AssessmentService(
 
     if (currentAssessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment")
+        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
     }
 
@@ -411,13 +413,13 @@ class AssessmentService(
 
     if (!assigneeUser.hasRole(UserRole.ASSESSOR)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" })
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
       )
     }
 
     if (!assigneeUser.hasAllQualifications(requiredQualifications)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingQualifications" })
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingQualifications" }),
       )
     }
 
@@ -442,14 +444,14 @@ class AssessmentService(
         decision = null,
         schemaUpToDate = true,
         rejectionRationale = null,
-        clarificationNotes = mutableListOf()
-      )
+        clarificationNotes = mutableListOf(),
+      ),
     )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
-        newAssessment
-      )
+        newAssessment,
+      ),
     )
   }
 
@@ -470,7 +472,7 @@ class AssessmentService(
         query = text,
         response = null,
         responseReceivedOn = null,
-      )
+      ),
     )
 
     return AuthorisableActionResult.Success(clarificationNoteEntity)
@@ -495,7 +497,7 @@ class AssessmentService(
 
     if (clarificationNoteEntity.response !== null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A response has already been added to this note")
+        ValidatableActionResult.GeneralValidationError("A response has already been added to this note"),
       )
     }
 
@@ -505,7 +507,7 @@ class AssessmentService(
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedNote)
+      ValidatableActionResult.Success(savedNote),
     )
   }
 

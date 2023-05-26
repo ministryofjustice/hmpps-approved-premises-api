@@ -27,7 +27,7 @@ class PersonOffencesTest : IntegrationTestBase() {
   fun `Getting offences for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -42,7 +42,7 @@ class PersonOffencesTest : IntegrationTestBase() {
   fun `Getting offences for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -90,8 +90,8 @@ class PersonOffencesTest : IntegrationTestBase() {
                 .withOffenceId("2")
                 .withMainCategoryDescription("Main Category 2")
                 .withSubCategoryDescription("Sub Category 2")
-                .produce()
-            )
+                .produce(),
+            ),
           )
           .produce()
 
@@ -110,8 +110,8 @@ class PersonOffencesTest : IntegrationTestBase() {
                 .withOffenceId("4")
                 .withMainCategoryDescription("Main Category 2")
                 .withSubCategoryDescription("Sub Category 2")
-                .produce()
-            )
+                .produce(),
+            ),
           )
           .produce()
 
@@ -125,7 +125,7 @@ class PersonOffencesTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(convictionTransformer.transformToApi(activeConviction))
+            objectMapper.writeValueAsString(convictionTransformer.transformToApi(activeConviction)),
           )
       }
     }

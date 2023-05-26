@@ -91,7 +91,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(approvedPremisesBed, temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -164,7 +164,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, 2023, 4)
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -237,7 +237,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(2)
@@ -287,7 +287,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -356,7 +356,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(2)
@@ -414,7 +414,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)

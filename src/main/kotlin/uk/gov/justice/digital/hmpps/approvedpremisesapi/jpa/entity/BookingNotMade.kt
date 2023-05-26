@@ -22,7 +22,7 @@ data class BookingNotMadeEntity(
   @JoinColumn(name = "placement_request_id")
   val placementRequest: PlacementRequestEntity,
   val createdAt: OffsetDateTime,
-  val notes: String?
+  val notes: String?,
 ) {
 
   override fun toString() = "BookingNotMadeEntity: $id"

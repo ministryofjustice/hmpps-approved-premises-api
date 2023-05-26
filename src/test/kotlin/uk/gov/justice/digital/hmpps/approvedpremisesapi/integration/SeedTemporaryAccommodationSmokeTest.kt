@@ -16,7 +16,7 @@ class SeedTemporaryAccommodationSmokeTest : SeedTestBase() {
         "CHE,1 CherryTree Lane,,Sheffield,SH7 4PB,Yorkshire and the Humber,Sheffield,Sheffield,FALSE,FALSE,FALSE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,Property is located on the same road as a primary school and a park.\n" +
         "SIL,12 Silverhill Lane,Broadheath,Bath,BA3 0EZ,South West,Bath and North East Somerset,Bath and North Somerset (Bath and North East Somerset and North Somerset),FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,TRUE,\"This property has 3 bedspaces, with shared kitchen facilities.\"\n" +
         "STR,24 Strawberry Road,City Centre,Newport,NP1 0PA,Wales,Newport,\"Gwent (Blaenau Gwent, Caerphilly, Monmouthshire, Newport, Torfaen)\",FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,Not suitable to those who hold addictive behaviours\n" +
-        "APP,78 Applemill Court,Pudding Lane,Hereford,HR6 7ZP,West Midlands,Herefordshire,\"Herefordshire, Shropshire and Telford\",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,"
+        "APP,78 Applemill Court,Pudding Lane,Hereford,HR6 7ZP,West Midlands,Herefordshire,\"Herefordshire, Shropshire and Telford\",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,",
     )
 
     withCsv(
@@ -30,7 +30,7 @@ class SeedTemporaryAccommodationSmokeTest : SeedTestBase() {
         "SIL,SIL-3,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,\"Bedspace is 3 of 3 in the property, with access to a shared kitchen.\"\n" +
         "STR,STR-1,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,\n" +
         "APP,APP-1,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,\n" +
-        "APP,APP-2,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,"
+        "APP,APP-2,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,",
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationPremises, "ta-smoketest-premises")

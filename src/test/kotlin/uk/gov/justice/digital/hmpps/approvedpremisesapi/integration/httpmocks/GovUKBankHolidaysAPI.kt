@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UK
 fun IntegrationTestBase.GovUKBankHolidaysAPI_mockSuccessfulCall(bankHolidays: UKBankHolidays) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/bank-holidays.json",
-    responseBody = bankHolidays
+    responseBody = bankHolidays,
   )
 
 fun IntegrationTestBase.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse() =
@@ -16,5 +16,5 @@ fun IntegrationTestBase.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyRespons
       englandAndWales = CountryBankHolidays("england-and-wales", listOf()),
       scotland = CountryBankHolidays("scotland", listOf()),
       northernIreland = CountryBankHolidays("northern-ireland", listOf()),
-    )
+    ),
   )

@@ -73,6 +73,6 @@ class BookingMadeFactory : Factory<BookingMade> {
     bookedBy = this.bookedBy(),
     premises = this.premises(),
     arrivalOn = this.arrivalOn(),
-    departureOn = this.departureOn()
+    departureOn = this.departureOn(),
   )
 }

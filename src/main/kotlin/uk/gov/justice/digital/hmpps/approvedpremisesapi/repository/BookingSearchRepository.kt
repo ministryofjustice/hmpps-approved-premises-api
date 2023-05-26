@@ -130,7 +130,7 @@ class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParam
         }
 
         bookings
-      }
+      },
     )
 
     return result ?: emptyList()

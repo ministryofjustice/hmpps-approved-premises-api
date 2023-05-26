@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
 class UpdateAllUsersFromCommunityApiJob(
   private val userRepository: UserRepository,
-  private val userService: UserService
+  private val userService: UserService,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
 

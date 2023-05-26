@@ -13,6 +13,6 @@ class CruFactory : Factory<Cru> {
   }
 
   override fun produce() = Cru(
-    name = this.name()
+    name = this.name(),
   )
 }

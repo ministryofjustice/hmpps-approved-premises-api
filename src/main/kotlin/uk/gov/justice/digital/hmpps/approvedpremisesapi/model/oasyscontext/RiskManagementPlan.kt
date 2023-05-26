@@ -11,7 +11,7 @@ class RiskManagementPlan(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val riskManagementPlan: RiskManagementPlanInner?
+  val riskManagementPlan: RiskManagementPlanInner?,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -20,7 +20,7 @@ class RiskManagementPlan(
   initiationDate,
   assessmentStatus,
   superStatus,
-  limitedAccessOffender
+  limitedAccessOffender,
 )
 
 data class RiskManagementPlanInner(
@@ -31,5 +31,5 @@ data class RiskManagementPlanInner(
   val interventionsAndTreatment: String?,
   val monitoringAndControl: String?,
   val supervision: String?,
-  val keyInformationAboutCurrentSituation: String?
+  val keyInformationAboutCurrentSituation: String?,
 )

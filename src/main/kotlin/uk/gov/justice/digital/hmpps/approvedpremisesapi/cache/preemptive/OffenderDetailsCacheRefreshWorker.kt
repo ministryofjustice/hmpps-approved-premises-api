@@ -13,7 +13,7 @@ class OffenderDetailsCacheRefreshWorker(
   private val communityApiClient: CommunityApiClient,
   private val loggingEnabled: Boolean,
   private val delayMs: Long,
-  redLock: RedLock
+  redLock: RedLock,
 ) : CacheRefreshWorker(redLock, "offenderDetails") {
   override fun work(checkShouldStop: () -> Boolean) {
     val distinctCrns = (applicationRepository.getDistinctCrns() + bookingRepository.getDistinctCrns()).distinct()
@@ -37,7 +37,7 @@ class OffenderDetailsCacheRefreshWorker(
 
       val communityApiResult = communityApiClient.getOffenderDetailSummaryWithCall(it)
       if (communityApiResult is ClientResult.Failure.StatusCode) {
-        if (! communityApiResult.isPreemptivelyCachedResponse) {
+        if (!communityApiResult.isPreemptivelyCachedResponse) {
           log.error("Unable to refresh Offender Details for $it, response status: ${communityApiResult.status}")
         }
       }

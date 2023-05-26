@@ -93,7 +93,7 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      }
+      },
     ) { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -118,7 +118,7 @@ class ApplicationTest : IntegrationTestBase() {
             },
             "required": [ "thingId" ]
           }
-          """
+          """,
               )
             }
 
@@ -134,7 +134,7 @@ class ApplicationTest : IntegrationTestBase() {
                 "type": "object",
                 "properties": { }
               }
-            """
+            """,
               )
             }
 
@@ -147,7 +147,7 @@ class ApplicationTest : IntegrationTestBase() {
                 {
                    "thingId": 123
                 }
-              """
+              """,
               )
             }
 
@@ -155,8 +155,8 @@ class ApplicationTest : IntegrationTestBase() {
               ApplicationTeamCodeEntity(
                 id = UUID.randomUUID(),
                 application = upToDateApplicationEntityManagedByTeam,
-                teamCode = "TEAM1"
-              )
+                teamCode = "TEAM1",
+              ),
             )
 
             val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -170,8 +170,8 @@ class ApplicationTest : IntegrationTestBase() {
               ApplicationTeamCodeEntity(
                 id = UUID.randomUUID(),
                 application = outdatedApplicationEntityManagedByTeam,
-                teamCode = "TEAM1"
-              )
+                teamCode = "TEAM1",
+              ),
             )
 
             val outdatedApplicationEntityNotManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -247,7 +247,7 @@ class ApplicationTest : IntegrationTestBase() {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
               )
             }
 
@@ -263,7 +263,7 @@ class ApplicationTest : IntegrationTestBase() {
           "type": "object",
           "properties": { }
         }
-        """
+        """,
               )
             }
 
@@ -276,7 +276,7 @@ class ApplicationTest : IntegrationTestBase() {
           {
              "thingId": 123
           }
-          """
+          """,
               )
             }
 
@@ -368,7 +368,7 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      }
+      },
     ) { userEntity, jwt ->
       val crn = "X1234"
 
@@ -394,10 +394,10 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      }
+      },
     ) { userEntity, jwt ->
       `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() }
+        offenderDetailsConfigBlock = { withoutNomsNumber() },
       ) { offenderDetails, inmateDetails ->
         produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
@@ -420,7 +420,7 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      }
+      },
     ) { userEntity, jwt ->
       val crn = "X1234"
 
@@ -482,7 +482,7 @@ class ApplicationTest : IntegrationTestBase() {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
           )
         }
 
@@ -495,7 +495,7 @@ class ApplicationTest : IntegrationTestBase() {
           {
              "thingId": 123
           }
-          """
+          """,
           )
         }
 
@@ -531,7 +531,7 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM2").produce()))
-      }
+      },
     ) { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -557,10 +557,10 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      }
+      },
     ) { userEntity, jwt ->
       `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() }
+        offenderDetailsConfigBlock = { withoutNomsNumber() },
       ) { offenderDetails, inmateDetails ->
         val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
@@ -583,7 +583,7 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      }
+      },
     ) { userEntity, jwt ->
       val crn = "X1234"
 
@@ -636,7 +636,7 @@ class ApplicationTest : IntegrationTestBase() {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
           )
         }
 
@@ -652,7 +652,7 @@ class ApplicationTest : IntegrationTestBase() {
           "type": "object",
           "properties": { }
         }
-        """
+        """,
           )
         }
 
@@ -749,8 +749,8 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewApplication(
-            crn = crn
-          )
+            crn = crn,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -764,7 +764,7 @@ class ApplicationTest : IntegrationTestBase() {
   fun `Create new application returns 500 when a person has no NOMS number`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() }
+        offenderDetailsConfigBlock = { withoutNomsNumber() },
       ) { offenderDetails, inmateDetails ->
         approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())
@@ -776,8 +776,8 @@ class ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn
-            )
+              crn = offenderDetails.otherIds.crn,
+            ),
           )
           .exchange()
           .expectStatus()
@@ -805,8 +805,8 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewApplication(
-            crn = offenderDetails.otherIds.crn
-          )
+            crn = offenderDetails.otherIds.crn,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -829,8 +829,8 @@ class ApplicationTest : IntegrationTestBase() {
           offenderDetails.otherIds.crn,
           userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
-            teamCodes = emptyList()
-          )
+            teamCodes = emptyList(),
+          ),
         )
 
         val result = webTestClient.post()
@@ -841,8 +841,8 @@ class ApplicationTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
               convictionId = 123,
               deliusEventNumber = "1",
-              offenceId = "789"
-            )
+              offenceId = "789",
+            ),
           )
           .exchange()
           .expectStatus()
@@ -872,8 +872,8 @@ class ApplicationTest : IntegrationTestBase() {
           offenderDetails.otherIds.crn,
           userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
-            teamCodes = listOf(offenderDetails.otherIds.crn)
-          )
+            teamCodes = listOf(offenderDetails.otherIds.crn),
+          ),
         )
 
         every { realApplicationTeamCodeRepository.save(any()) } throws RuntimeException("Database Error")
@@ -886,8 +886,8 @@ class ApplicationTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
               convictionId = 123,
               deliusEventNumber = "1",
-              offenceId = "789"
-            )
+              offenceId = "789",
+            ),
           )
           .exchange()
           .expectStatus()
@@ -911,8 +911,8 @@ class ApplicationTest : IntegrationTestBase() {
           offenderDetails.otherIds.crn,
           userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1")
-          )
+            teamCodes = listOf("TEAM1"),
+          ),
         )
 
         val result = webTestClient.post()
@@ -923,8 +923,8 @@ class ApplicationTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
               convictionId = 123,
               deliusEventNumber = "1",
-              offenceId = "789"
-            )
+              offenceId = "789",
+            ),
           )
           .exchange()
           .expectStatus()
@@ -956,8 +956,8 @@ class ApplicationTest : IntegrationTestBase() {
           offenderDetails.otherIds.crn,
           userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1")
-          )
+            teamCodes = listOf("TEAM1"),
+          ),
         )
 
         val result = webTestClient.post()
@@ -968,8 +968,8 @@ class ApplicationTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
               convictionId = 123,
               deliusEventNumber = "1",
-              offenceId = "789"
-            )
+              offenceId = "789",
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1006,8 +1006,8 @@ class ApplicationTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
               convictionId = 123,
               deliusEventNumber = "1",
-              offenceId = "789"
-            )
+              offenceId = "789",
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1052,7 +1052,7 @@ class ApplicationTest : IntegrationTestBase() {
                 },
                 "required": [ "thingId" ]
               }
-            """
+            """,
             )
           }
 
@@ -1070,8 +1070,8 @@ class ApplicationTest : IntegrationTestBase() {
               UpdateApprovedPremisesApplication(
                 data = mapOf("thingId" to 123),
                 isWomensApplication = false,
-                isPipeApplication = true
-              )
+                isPipeApplication = true,
+              ),
             )
             .exchange()
             .expectStatus()
@@ -1094,10 +1094,10 @@ class ApplicationTest : IntegrationTestBase() {
       staffUserDetailsConfigBlock = {
         withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().produce()
-          )
+            StaffUserTeamMembershipFactory().produce(),
+          ),
         )
-      }
+      },
     ) { submittingUser, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1126,7 +1126,7 @@ class ApplicationTest : IntegrationTestBase() {
                 },
                 "required": [ "isWomensApplication", "isPipeApplication" ]
               }
-            """
+            """,
             )
           }
 
@@ -1141,7 +1141,7 @@ class ApplicationTest : IntegrationTestBase() {
                  "isWomensApplication": true,
                  "isPipeApplication": true
               }
-            """
+            """,
             )
           }
 
@@ -1153,24 +1153,24 @@ class ApplicationTest : IntegrationTestBase() {
                   .withType(
                     RegistrationKeyValue(
                       code = "MAPP",
-                      description = "MAPPA"
-                    )
+                      description = "MAPPA",
+                    ),
                   )
                   .withRegisterCategory(
                     RegistrationKeyValue(
                       code = "A",
-                      description = "A"
-                    )
+                      description = "A",
+                    ),
                   )
                   .withRegisterLevel(
                     RegistrationKeyValue(
                       code = "1",
-                      description = "1"
-                    )
+                      description = "1",
+                    ),
                   )
-                  .produce()
-              )
-            )
+                  .produce(),
+              ),
+            ),
           )
 
           webTestClient.post()
@@ -1182,8 +1182,8 @@ class ApplicationTest : IntegrationTestBase() {
                 isPipeApplication = true,
                 isWomensApplication = true,
                 targetLocation = "SW1A 1AA",
-                releaseType = ReleaseTypeOption.licence
-              )
+                releaseType = ReleaseTypeOption.licence,
+              ),
             )
             .exchange()
             .expectStatus()
@@ -1211,7 +1211,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
           assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
             SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
           )
         }
       }
@@ -1224,10 +1224,10 @@ class ApplicationTest : IntegrationTestBase() {
       staffUserDetailsConfigBlock = {
         withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().produce()
-          )
+            StaffUserTeamMembershipFactory().produce(),
+          ),
         )
-      }
+      },
     ) { submittingUser, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1256,7 +1256,7 @@ class ApplicationTest : IntegrationTestBase() {
                 },
                 "required": [ "isWomensApplication", "isPipeApplication" ]
               }
-            """
+            """,
             )
           }
 
@@ -1271,7 +1271,7 @@ class ApplicationTest : IntegrationTestBase() {
                  "isWomensApplication": true,
                  "isPipeApplication": true
               }
-            """
+            """,
             )
           }
 
@@ -1283,24 +1283,24 @@ class ApplicationTest : IntegrationTestBase() {
                   .withType(
                     RegistrationKeyValue(
                       code = "MAPP",
-                      description = "MAPPA"
-                    )
+                      description = "MAPPA",
+                    ),
                   )
                   .withRegisterCategory(
                     RegistrationKeyValue(
                       code = "A",
-                      description = "A"
-                    )
+                      description = "A",
+                    ),
                   )
                   .withRegisterLevel(
                     RegistrationKeyValue(
                       code = "1",
-                      description = "1"
-                    )
+                      description = "1",
+                    ),
                   )
-                  .produce()
-              )
-            )
+                  .produce(),
+              ),
+            ),
           )
 
           every { realApplicationRepository.save(any()) } answers {
@@ -1321,8 +1321,8 @@ class ApplicationTest : IntegrationTestBase() {
                     isPipeApplication = true,
                     isWomensApplication = true,
                     targetLocation = "SW1A 1AA",
-                    releaseType = ReleaseTypeOption.licence
-                  )
+                    releaseType = ReleaseTypeOption.licence,
+                  ),
                 )
                 .exchange()
                 .returnResult<String>()
@@ -1354,10 +1354,10 @@ class ApplicationTest : IntegrationTestBase() {
       staffUserDetailsConfigBlock = {
         withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().produce()
-          )
+            StaffUserTeamMembershipFactory().produce(),
+          ),
         )
-      }
+      },
     ) { submittingUser, jwt ->
       `Given a User` { userEntity, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1377,7 +1377,7 @@ class ApplicationTest : IntegrationTestBase() {
                 "properties": {},
                 "required": []
               }
-            """
+            """,
             )
           }
 
@@ -1390,7 +1390,7 @@ class ApplicationTest : IntegrationTestBase() {
             withData(
               """
               {}
-            """
+            """,
             )
           }
 
@@ -1401,7 +1401,7 @@ class ApplicationTest : IntegrationTestBase() {
             .bodyValue(
               SubmitTemporaryAccommodationApplication(
                 translatedDocument = {},
-              )
+              ),
             )
             .exchange()
             .expectStatus()
@@ -1429,8 +1429,8 @@ class ApplicationTest : IntegrationTestBase() {
               .expectBody()
               .json(
                 objectMapper.writeValueAsString(
-                  assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
-                )
+                  assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+                ),
               )
           }
         }
@@ -1446,7 +1446,7 @@ class ApplicationTest : IntegrationTestBase() {
               val (application, assessment) = produceAndPersistApplicationAndAssessment(
                 applicant,
                 assignee,
-                offenderDetails
+                offenderDetails,
               )
 
               webTestClient.get()
@@ -1458,8 +1458,8 @@ class ApplicationTest : IntegrationTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
-                  )
+                    assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+                  ),
                 )
             }
           }
@@ -1542,7 +1542,7 @@ class ApplicationTest : IntegrationTestBase() {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
       )
     }
 
@@ -1555,7 +1555,7 @@ class ApplicationTest : IntegrationTestBase() {
           {
              "thingId": 123
           }
-          """
+          """,
       )
     }
 
@@ -1563,8 +1563,8 @@ class ApplicationTest : IntegrationTestBase() {
       ApplicationTeamCodeEntity(
         id = UUID.randomUUID(),
         application = application,
-        teamCode = managingTeamCode
-      )
+        teamCode = managingTeamCode,
+      ),
     )
 
     return application
@@ -1614,5 +1614,5 @@ data class MessageAttributes(val eventType: EventType)
 data class Message(
   val Message: String,
   val MessageId: String,
-  val MessageAttributes: MessageAttributes
+  val MessageAttributes: MessageAttributes,
 )

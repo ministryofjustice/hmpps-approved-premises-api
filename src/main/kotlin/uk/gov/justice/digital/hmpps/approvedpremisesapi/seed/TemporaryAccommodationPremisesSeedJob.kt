@@ -87,7 +87,7 @@ class TemporaryAccommodationPremisesSeedJob(
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
     probationDeliveryUnit: ProbationDeliveryUnitEntity,
-    characteristics: List<CharacteristicEntity>
+    characteristics: List<CharacteristicEntity>,
   ) {
     log.info("Creating new Temporary Accommodation premises: ${row.name}")
 
@@ -111,8 +111,8 @@ class TemporaryAccommodationPremisesSeedJob(
         characteristics = mutableListOf(),
         probationDeliveryUnit = probationDeliveryUnit,
         status = PropertyStatus.active,
-        turnaroundWorkingDayCount = 2
-      )
+        turnaroundWorkingDayCount = 2,
+      ),
     )
 
     characteristics.forEach {
@@ -128,7 +128,7 @@ class TemporaryAccommodationPremisesSeedJob(
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
     probationDeliveryUnit: ProbationDeliveryUnitEntity,
-    characteristics: List<CharacteristicEntity>
+    characteristics: List<CharacteristicEntity>,
   ) {
     log.info("Updating existing Temporary Accommodation premises: ${row.name}")
 

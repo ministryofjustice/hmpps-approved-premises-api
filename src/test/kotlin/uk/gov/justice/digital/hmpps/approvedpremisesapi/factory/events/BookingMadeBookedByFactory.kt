@@ -20,6 +20,6 @@ class BookingMadeBookedByFactory : Factory<BookingMadeBookedBy> {
 
   override fun produce() = BookingMadeBookedBy(
     staffMember = this.staffMember(),
-    cru = this.cru()
+    cru = this.cru(),
   )
 }

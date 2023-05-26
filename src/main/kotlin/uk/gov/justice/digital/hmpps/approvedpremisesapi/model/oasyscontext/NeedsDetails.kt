@@ -13,7 +13,7 @@ class NeedsDetails(
   limitedAccessOffender: Boolean,
   val needs: NeedsDetailsInner?,
   val linksToHarm: LinksToHarm?,
-  val linksToReOffending: LinksToReOffending?
+  val linksToReOffending: LinksToReOffending?,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -22,7 +22,7 @@ class NeedsDetails(
   initiationDate,
   assessmentStatus,
   superStatus,
-  limitedAccessOffender
+  limitedAccessOffender,
 )
 
 data class NeedsDetailsInner(
@@ -36,7 +36,7 @@ data class NeedsDetailsInner(
   val educationTrainingEmploymentIssuesDetails: String?,
   val accommodationIssuesDetails: String?,
   val attitudeIssuesDetails: String?,
-  val thinkingBehaviouralIssuesDetails: String?
+  val thinkingBehaviouralIssuesDetails: String?,
 )
 
 data class LinksToHarm(
@@ -49,7 +49,7 @@ data class LinksToHarm(
   val alcoholLinkedToHarm: Boolean?,
   val emotionalLinkedToHarm: Boolean?,
   val thinkingBehaviouralLinkedToHarm: Boolean?,
-  val attitudeLinkedToHarm: Boolean?
+  val attitudeLinkedToHarm: Boolean?,
 )
 
 data class LinksToReOffending(
@@ -62,5 +62,5 @@ data class LinksToReOffending(
   val alcoholLinkedToReOffending: Boolean?,
   val emotionalLinkedToReOffending: Boolean?,
   val thinkingBehaviouralLinkedToReOffending: Boolean?,
-  val attitudeLinkedToReOffending: Boolean?
+  val attitudeLinkedToReOffending: Boolean?,
 )

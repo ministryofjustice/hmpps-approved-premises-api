@@ -10,5 +10,5 @@ abstract class AssessmentInfo(
   val initiationDate: OffsetDateTime,
   val assessmentStatus: String,
   val superStatus: String?,
-  val limitedAccessOffender: Boolean
+  val limitedAccessOffender: Boolean,
 )

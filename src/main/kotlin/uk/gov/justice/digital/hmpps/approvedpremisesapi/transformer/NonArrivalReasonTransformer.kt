@@ -9,6 +9,6 @@ class NonArrivalReasonTransformer() {
   fun transformJpaToApi(jpa: NonArrivalReasonEntity) = NonArrivalReason(
     id = jpa.id,
     name = jpa.name,
-    isActive = jpa.isActive
+    isActive = jpa.isActive,
   )
 }

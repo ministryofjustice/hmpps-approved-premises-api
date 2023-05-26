@@ -78,13 +78,13 @@ class RedisConfiguration {
       RedisCacheConfiguration.defaultCacheConfig()
         .entryTtl(duration)
         .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
-        .prefixCacheNameWith(version)
+        .prefixCacheNameWith(version),
     )
 }
 
 class ClientResultRedisSerializer(
   private val objectMapper: ObjectMapper,
-  private val typeReference: TypeReference<*>
+  private val typeReference: TypeReference<*>,
 ) : RedisSerializer<ClientResult<*>> {
   override fun serialize(clientResult: ClientResult<*>?): ByteArray {
     val toSerialize = when (clientResult) {
@@ -96,7 +96,7 @@ class ClientResultRedisSerializer(
           exceptionMessage = null,
           type = null,
           method = clientResult.method,
-          path = clientResult.path
+          path = clientResult.path,
         )
       }
       is ClientResult.Failure.Other -> {
@@ -107,7 +107,7 @@ class ClientResultRedisSerializer(
           exceptionMessage = clientResult.exception.message,
           type = null,
           method = clientResult.method,
-          path = clientResult.path
+          path = clientResult.path,
         )
       }
       is ClientResult.Failure.PreemptiveCacheTimeout ->
@@ -120,7 +120,7 @@ class ClientResultRedisSerializer(
           exceptionMessage = null,
           type = clientResult.body!!::class.java.typeName,
           method = null,
-          path = null
+          path = null,
         )
       }
       else -> null
@@ -135,7 +135,7 @@ class ClientResultRedisSerializer(
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.SUCCESS) {
       return ClientResult.Success(
         status = deserializedWrapper.status!!,
-        body = objectMapper.readValue(deserializedWrapper.body, typeReference)
+        body = objectMapper.readValue(deserializedWrapper.body, typeReference),
       )
     }
 
@@ -144,7 +144,7 @@ class ClientResultRedisSerializer(
         method = deserializedWrapper.method!!,
         path = deserializedWrapper.path!!,
         status = deserializedWrapper.status!!,
-        body = deserializedWrapper.body
+        body = deserializedWrapper.body,
       )
     }
 
@@ -152,7 +152,7 @@ class ClientResultRedisSerializer(
       return ClientResult.Failure.Other(
         method = deserializedWrapper.method!!,
         path = deserializedWrapper.path!!,
-        exception = RuntimeException(deserializedWrapper.exceptionMessage)
+        exception = RuntimeException(deserializedWrapper.exceptionMessage),
       )
     }
 
@@ -167,13 +167,13 @@ data class SerializableClientResult(
   val body: String?,
   val exceptionMessage: String?,
   val method: HttpMethod?,
-  val path: String?
+  val path: String?,
 )
 
 enum class ClientResultDiscriminator {
   SUCCESS,
   STATUS_CODE_FAILURE,
-  OTHER_FAILURE
+  OTHER_FAILURE,
 }
 
 const val IS_NOT_SUCCESSFUL = "!(#result instanceof T(uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult\$Success))"

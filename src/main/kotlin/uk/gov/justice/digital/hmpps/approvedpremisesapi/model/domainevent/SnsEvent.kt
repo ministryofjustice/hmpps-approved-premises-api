@@ -10,18 +10,18 @@ data class SnsEvent(
   val detailUrl: String,
   val occurredAt: OffsetDateTime,
   val additionalInformation: SnsEventAdditionalInformation,
-  val personReference: SnsEventPersonReferenceCollection
+  val personReference: SnsEventPersonReferenceCollection,
 )
 
 data class SnsEventPersonReferenceCollection(
-  val identifiers: List<SnsEventPersonReference>
+  val identifiers: List<SnsEventPersonReference>,
 )
 
 data class SnsEventPersonReference(
   val type: String,
-  val value: String
+  val value: String,
 )
 
 data class SnsEventAdditionalInformation(
-  val applicationId: UUID
+  val applicationId: UUID,
 )

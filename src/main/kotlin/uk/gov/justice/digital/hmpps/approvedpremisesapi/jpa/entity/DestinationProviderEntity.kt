@@ -16,7 +16,7 @@ data class DestinationProviderEntity(
   @Id
   val id: UUID,
   val name: String,
-  val isActive: Boolean
+  val isActive: Boolean,
 ) {
   override fun toString() = "DestinationProviderEntity:$id"
 }

@@ -28,6 +28,6 @@ class LocalAuthorityEntityFactory : Factory<LocalAuthorityAreaEntity> {
     id = this.id(),
     identifier = this.identifier(),
     name = this.name(),
-    premises = mutableListOf()
+    premises = mutableListOf(),
   )
 }

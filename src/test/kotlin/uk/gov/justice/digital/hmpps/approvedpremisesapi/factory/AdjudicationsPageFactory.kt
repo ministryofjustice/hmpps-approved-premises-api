@@ -9,13 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
   private var results: Yielded<List<Adjudication>> = {
     listOf(
-      AdjudicationFactory().produce()
+      AdjudicationFactory().produce(),
     )
   }
 
   private var agencies: Yielded<List<Agency>> = {
     listOf(
-      AgencyFactory().produce()
+      AgencyFactory().produce(),
     )
   }
 
@@ -29,6 +29,6 @@ class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
 
   override fun produce(): AdjudicationsPage = AdjudicationsPage(
     results = this.results(),
-    agencies = this.agencies()
+    agencies = this.agencies(),
   )
 }

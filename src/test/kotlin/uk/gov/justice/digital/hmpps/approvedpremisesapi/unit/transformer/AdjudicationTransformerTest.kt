@@ -27,9 +27,9 @@ class AdjudicationTransformerTest {
             AdjudicationFactory()
               .withAgencyId("UNKNOWN")
               .withCharges(listOf(AdjudicationChargeFactory().produce()))
-              .produce()
-          )
-        ).produce()
+              .produce(),
+          ),
+        ).produce(),
       )
     }
 
@@ -51,18 +51,18 @@ class AdjudicationTransformerTest {
               oicChargeId = "CHARGE",
               offenceCode = "OFFENCE",
               offenceDescription = "Something, something",
-              findingCode = "QUASHED"
-            )
-          )
-        )
+              findingCode = "QUASHED",
+            ),
+          ),
+        ),
       ),
       agencies = listOf(
         Agency(
           agencyId = "PLACE",
           description = "THE PLACE",
-          agencyType = "INST"
-        )
-      )
+          agencyType = "INST",
+        ),
+      ),
     )
 
     val transformed = adjudicationTransformer.transformToApi(adjudicationsPage)
@@ -74,9 +74,9 @@ class AdjudicationTransformerTest {
           establishment = "THE PLACE",
           offenceDescription = "Something, something",
           hearingHeld = true,
-          finding = "QUASHED"
-        )
-      )
+          finding = "QUASHED",
+        ),
+      ),
     )
   }
 
@@ -95,18 +95,18 @@ class AdjudicationTransformerTest {
               oicChargeId = "CHARGE",
               offenceCode = "OFFENCE",
               offenceDescription = "Something, something",
-              findingCode = null
-            )
-          )
-        )
+              findingCode = null,
+            ),
+          ),
+        ),
       ),
       agencies = listOf(
         Agency(
           agencyId = "PLACE",
           description = "THE PLACE",
-          agencyType = "INST"
-        )
-      )
+          agencyType = "INST",
+        ),
+      ),
     )
 
     val transformed = adjudicationTransformer.transformToApi(adjudicationsPage)
@@ -118,9 +118,9 @@ class AdjudicationTransformerTest {
           establishment = "THE PLACE",
           offenceDescription = "Something, something",
           hearingHeld = false,
-          finding = null
-        )
-      )
+          finding = null,
+        ),
+      ),
     )
   }
 }

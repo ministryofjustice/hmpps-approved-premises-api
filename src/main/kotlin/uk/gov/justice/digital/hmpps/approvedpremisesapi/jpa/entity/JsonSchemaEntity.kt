@@ -28,7 +28,7 @@ abstract class JsonSchemaEntity(
   @Id
   val id: UUID,
   val addedAt: OffsetDateTime,
-  val schema: String
+  val schema: String,
 )
 
 @Entity
@@ -58,5 +58,5 @@ class TemporaryAccommodationApplicationJsonSchemaEntity(
 class ApprovedPremisesAssessmentJsonSchemaEntity(
   id: UUID,
   addedAt: OffsetDateTime,
-  schema: String
+  schema: String,
 ) : JsonSchemaEntity(id, addedAt, schema)

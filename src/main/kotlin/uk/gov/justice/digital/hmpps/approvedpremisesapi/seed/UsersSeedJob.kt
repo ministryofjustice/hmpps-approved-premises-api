@@ -8,11 +8,11 @@ import java.util.UUID
 
 class UsersSeedJob(
   fileName: String,
-  private val userService: UserService
+  private val userService: UserService,
 ) : SeedJob<UsersSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
-  requiredColumns = 2
+  requiredColumns = 2,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -23,7 +23,7 @@ class UsersSeedJob(
   override fun deserializeRow(columns: Map<String, String>) = UsersSeedCsvRow(
     deliusUsername = columns["deliusUsername"]!!.trim().uppercase(),
     roles = parseAllRolesOrThrow(columns["roles"]!!.split(",").filter(String::isNotBlank).map(String::trim)),
-    qualifications = parseAllQualificationsOrThrow(columns["qualifications"]!!.split(",").filter(String::isNotBlank).map(String::trim))
+    qualifications = parseAllQualificationsOrThrow(columns["qualifications"]!!.split(",").filter(String::isNotBlank).map(String::trim)),
   )
 
   private fun parseAllRolesOrThrow(roleNames: List<String>): List<UserRole> {
@@ -87,5 +87,5 @@ class UsersSeedJob(
 data class UsersSeedCsvRow(
   val deliusUsername: String,
   val roles: List<UserRole>,
-  val qualifications: List<UserQualification>
+  val qualifications: List<UserQualification>,
 )

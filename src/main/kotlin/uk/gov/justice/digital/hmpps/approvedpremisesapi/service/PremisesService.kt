@@ -43,7 +43,7 @@ class PremisesService(
   private val lostBedCancellationRepository: LostBedCancellationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
-  private val bedRepository: BedRepository
+  private val bedRepository: BedRepository,
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -68,7 +68,7 @@ class PremisesService(
 
   fun getAllPremisesInRegionForService(
     probationRegionId: UUID,
-    service: ServiceName
+    service: ServiceName,
   ): List<PremisesEntity> = serviceNameToEntityType[service]?.let {
     premisesRepository.findAllByProbationRegion_IdAndType(probationRegionId, it)
   } ?: listOf()
@@ -81,7 +81,7 @@ class PremisesService(
   fun getAvailabilityForRange(
     premises: PremisesEntity,
     startDate: LocalDate,
-    endDate: LocalDate
+    endDate: LocalDate,
   ): Map<LocalDate, Availability> {
     if (endDate.isBefore(startDate)) throw RuntimeException("startDate must be before endDate when calculating availability for range")
 
@@ -98,7 +98,7 @@ class PremisesService(
         arrivedBookings = bookingsOnDay.count { it.arrival != null },
         nonArrivedBookings = bookingsOnDay.count { it.nonArrival != null },
         cancelledBookings = bookingsOnDay.count { it.cancellation != null },
-        lostBeds = lostBedsOnDay.size
+        lostBeds = lostBedsOnDay.size,
       )
     }.associateBy { it.date }
   }
@@ -143,8 +143,8 @@ class PremisesService(
           reason = reason!!,
           referenceNumber = referenceNumber,
           notes = notes,
-          cancellation = null
-        )
+          cancellation = null,
+        ),
       )
 
       return success(lostBedsEntity)
@@ -156,7 +156,7 @@ class PremisesService(
     endDate: LocalDate,
     reasonId: UUID,
     referenceNumber: String?,
-    notes: String?
+    notes: String?,
   ): AuthorisableActionResult<ValidatableActionResult<LostBedsEntity>> {
     val lostBed = lostBedsRepository.findByIdOrNull(lostBedId)
       ?: return AuthorisableActionResult.NotFound()
@@ -185,17 +185,17 @@ class PremisesService(
             this.reason = reason!!
             this.referenceNumber = referenceNumber
             this.notes = notes
-          }
+          },
         )
 
         success(updatedLostBedsEntity)
-      }
+      },
     )
   }
 
   fun cancelLostBed(
     lostBed: LostBedsEntity,
-    notes: String?
+    notes: String?,
   ) = validated<LostBedCancellationEntity> {
     if (lostBed.cancellation != null) {
       return generalError("This Lost Bed already has a cancellation set")
@@ -207,7 +207,7 @@ class PremisesService(
         lostBed = lostBed,
         notes = notes,
         createdAt = OffsetDateTime.now(),
-      )
+      ),
     )
 
     return success(cancellationEntity)
@@ -228,7 +228,7 @@ class PremisesService(
     characteristicIds: List<UUID>,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?
+    turnaroundWorkingDayCount: Int?,
   ) = validated {
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
@@ -302,7 +302,7 @@ class PremisesService(
       characteristics = mutableListOf(),
       status = status,
       probationDeliveryUnit = probationDeliveryUnit!!,
-      turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2
+      turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2,
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
@@ -344,9 +344,8 @@ class PremisesService(
     notes: String?,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?
+    turnaroundWorkingDayCount: Int?,
   ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
-
     val premises = premisesRepository.findByIdOrNull(premisesId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -403,7 +402,7 @@ class PremisesService(
 
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors)
+        ValidatableActionResult.FieldValidationError(validationErrors),
       )
     }
 
@@ -428,7 +427,7 @@ class PremisesService(
     val savedPremises = premisesRepository.save(premises)
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedPremises)
+      ValidatableActionResult.Success(savedPremises),
     )
   }
 
@@ -471,7 +470,7 @@ class PremisesService(
         }
 
         result
-      })
+      },)
     }
 
     return probationDeliveryUnit

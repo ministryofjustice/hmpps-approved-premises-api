@@ -26,6 +26,6 @@ class NonArrivalReasonEntityFactory : Factory<NonArrivalReasonEntity> {
   override fun produce(): NonArrivalReasonEntity = NonArrivalReasonEntity(
     id = this.id(),
     name = this.name(),
-    isActive = this.isActive()
+    isActive = this.isActive(),
   )
 }

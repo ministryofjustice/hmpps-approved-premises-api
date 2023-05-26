@@ -17,7 +17,7 @@ class ContextStaffMemberFactory : Factory<StaffMember> {
     name = StaffMemberName(
       forename = this.forenames(),
       middleName = null,
-      surname = this.surname()
-    )
+      surname = this.surname(),
+    ),
   )
 }

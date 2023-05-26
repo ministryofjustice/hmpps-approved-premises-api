@@ -11,6 +11,6 @@ fun IntegrationTestBase.CaseNotesAPI_mockSuccessfulCaseNotesCall(page: Int, from
 
   mockSuccessfulGetCallWithJsonResponse(
     url = "/case-notes/$nomsNumber?startDate=$fromLocalDateTime&page=$page&size=30",
-    responseBody = result
+    responseBody = result,
   )
 }

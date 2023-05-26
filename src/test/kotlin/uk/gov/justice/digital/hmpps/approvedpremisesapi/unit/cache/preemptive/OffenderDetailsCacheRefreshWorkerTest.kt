@@ -26,7 +26,7 @@ class OffenderDetailsCacheRefreshWorkerTest {
     mockCommunityApiClient,
     false,
     0,
-    mockRedLock
+    mockRedLock,
   )
 
   @Test
@@ -60,7 +60,7 @@ class OffenderDetailsCacheRefreshWorkerTest {
 
       every { mockCommunityApiClient.getOffenderDetailSummaryWithCall(it.otherIds.crn) } returns ClientResult.Success(
         HttpStatus.OK,
-        it
+        it,
       )
     }
 
@@ -69,7 +69,7 @@ class OffenderDetailsCacheRefreshWorkerTest {
 
       every { mockCommunityApiClient.getOffenderDetailSummaryWithCall(it.otherIds.crn) } returns ClientResult.Success(
         HttpStatus.OK,
-        it
+        it,
       )
     }
 

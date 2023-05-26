@@ -22,7 +22,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
-      schema = "{}"
+      schema = "{}",
     )
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -100,6 +100,6 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     allocatedAt = this.allocatedAt(),
     reallocatedAt = this.reallocatedAt(),
     rejectionRationale = this.rejectionRationale(),
-    clarificationNotes = this.clarificationNotes()
+    clarificationNotes = this.clarificationNotes(),
   )
 }

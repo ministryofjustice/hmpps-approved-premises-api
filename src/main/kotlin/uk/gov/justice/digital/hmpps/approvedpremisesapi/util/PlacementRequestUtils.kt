@@ -11,7 +11,7 @@ fun <T> mapAndTransformPlacementRequests(
   placementRequests: List<PlacementRequestEntity>,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (PlacementRequestEntity, OffenderDetailSummary, InmateDetail) -> T
+  transformer: (PlacementRequestEntity, OffenderDetailSummary, InmateDetail) -> T,
 ): List<T> {
   return placementRequests.mapNotNull {
     val assessment = transformPlacementRequest<T>(log, it, deliusUsername, offenderService, transformer)
@@ -26,7 +26,7 @@ fun <T> transformPlacementRequest(
   placementRequest: PlacementRequestEntity,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (PlacementRequestEntity, OffenderDetailSummary, InmateDetail) -> T
+  transformer: (PlacementRequestEntity, OffenderDetailSummary, InmateDetail) -> T,
 ): T? {
   val personDetail = getPersonDetailsForCrn(log, placementRequest.application.crn, deliusUsername, offenderService)
     ?: return null

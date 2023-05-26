@@ -16,7 +16,7 @@ import java.util.UUID
 
 @Service
 class DomainEventsController(
-  private val domainEventService: DomainEventService
+  private val domainEventService: DomainEventService,
 ) : EventsApiDelegate {
   override fun eventsApplicationSubmittedEventIdGet(eventId: UUID): ResponseEntity<ApplicationSubmittedEnvelope> {
     val event = domainEventService.getApplicationSubmittedDomainEvent(eventId)

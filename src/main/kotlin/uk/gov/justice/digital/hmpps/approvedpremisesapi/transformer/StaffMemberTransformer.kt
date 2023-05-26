@@ -9,6 +9,6 @@ class StaffMemberTransformer() {
   fun transformDomainToApi(domain: StaffMember) = ApiStaffMember(
     code = domain.code,
     keyWorker = domain.keyWorker,
-    name = "${domain.name.forename} ${domain.name.surname}"
+    name = "${domain.name.forename} ${domain.name.surname}",
   )
 }

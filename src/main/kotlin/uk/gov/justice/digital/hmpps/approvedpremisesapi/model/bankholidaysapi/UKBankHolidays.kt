@@ -10,12 +10,12 @@ data class UKBankHolidays(
   @JsonProperty("scotland")
   val scotland: CountryBankHolidays,
   @JsonProperty("northern-ireland")
-  val northernIreland: CountryBankHolidays
+  val northernIreland: CountryBankHolidays,
 )
 
 data class CountryBankHolidays(
   val division: String,
-  val events: List<BankHolidayEvent>
+  val events: List<BankHolidayEvent>,
 )
 
 data class BankHolidayEvent(
@@ -23,5 +23,5 @@ data class BankHolidayEvent(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val date: LocalDate,
   val notes: String,
-  val bunting: Boolean
+  val bunting: Boolean,
 )

@@ -15,7 +15,7 @@ class CruService {
     "North East" to listOf("N32", "N54", "N02", "N23"),
     "Wales" to listOf("N03", "C10", "N27", "WPT"),
     "Midlands" to listOf("MLW", "N30", "N52"),
-    "South West & South Central" to listOf("N36", "N58", "N26", "N37", "N59", "N05")
+    "South West & South Central" to listOf("N36", "N58", "N26", "N37", "N59", "N05"),
   )
 
   fun cruNameFromProbationAreaCode(code: String): String {

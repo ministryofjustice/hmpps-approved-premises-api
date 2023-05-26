@@ -59,7 +59,7 @@ class OffenderServiceTest {
       ExcludedCategoryBindingModel().apply {
         this.category = "EXCLUDED_CATEGORY"
         this.subcategory = null
-      }
+      },
     )
   }
   private val adjudicationsConfigBindingModel = PrisonAdjudicationsConfigBindingModel().apply {
@@ -73,7 +73,7 @@ class OffenderServiceTest {
     mockCaseNotesClient,
     mockApOASysContextApiClient,
     prisonCaseNotesConfigBindingModel,
-    adjudicationsConfigBindingModel
+    adjudicationsConfigBindingModel,
   )
 
   @Test
@@ -143,7 +143,7 @@ class OffenderServiceTest {
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
-      jacksonObjectMapper().writeValueAsString(accessBody)
+      jacksonObjectMapper().writeValueAsString(accessBody),
     )
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
@@ -163,7 +163,7 @@ class OffenderServiceTest {
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
-      null
+      null,
     )
 
     val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
@@ -302,7 +302,7 @@ class OffenderServiceTest {
         withRiskPublicCommunity(RiskLevel.MEDIUM)
         withRiskKnownAdultCommunity(RiskLevel.HIGH)
         withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-      }.produce()
+      }.produce(),
     )
 
     mock200Tier(
@@ -310,8 +310,8 @@ class OffenderServiceTest {
       Tier(
         tierScore = "M2",
         calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00")
-      )
+        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+      ),
     )
 
     mock200Registrations(
@@ -326,9 +326,9 @@ class OffenderServiceTest {
             .produce(),
           RegistrationClientResponseFactory()
             .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
@@ -411,9 +411,9 @@ class OffenderServiceTest {
           agencyId = "AGY",
           locationId = 89,
           description = "AGENCY DESCRIPTION",
-          agencyName = "AGENCY NAME"
-        )
-      )
+          agencyName = "AGENCY NAME",
+        ),
+      ),
     )
 
     val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
@@ -427,8 +427,8 @@ class OffenderServiceTest {
         agencyId = "AGY",
         locationId = 89,
         description = "AGENCY DESCRIPTION",
-        agencyName = "AGENCY NAME"
-      )
+        agencyName = "AGENCY NAME",
+      ),
     )
   }
 
@@ -441,7 +441,7 @@ class OffenderServiceTest {
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
-        pageSize = 2
+        pageSize = 2,
       )
     } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.NOT_FOUND, null)
 
@@ -457,7 +457,7 @@ class OffenderServiceTest {
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
-        pageSize = 2
+        pageSize = 2,
       )
     } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.FORBIDDEN, null)
 
@@ -471,13 +471,13 @@ class OffenderServiceTest {
     val caseNotesPageOne = listOf(
       CaseNoteFactory().produce(),
       CaseNoteFactory().produce(),
-      CaseNoteFactory().withType("EXCLUDED_TYPE").produce()
+      CaseNoteFactory().withType("EXCLUDED_TYPE").produce(),
     )
 
     val caseNotesPageTwo = listOf(
       CaseNoteFactory().produce(),
       CaseNoteFactory().produce(),
-      CaseNoteFactory().withType("TYPE").withSubType("EXCLUDED_SUBTYPE").produce()
+      CaseNoteFactory().withType("TYPE").withSubType("EXCLUDED_SUBTYPE").produce(),
     )
 
     every {
@@ -485,7 +485,7 @@ class OffenderServiceTest {
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 0,
-        pageSize = 2
+        pageSize = 2,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
@@ -493,8 +493,8 @@ class OffenderServiceTest {
         totalElements = 6,
         totalPages = 2,
         number = 1,
-        content = caseNotesPageOne
-      )
+        content = caseNotesPageOne,
+      ),
     )
 
     every {
@@ -502,7 +502,7 @@ class OffenderServiceTest {
         nomsNumber = nomsNumber,
         from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
         page = 1,
-        pageSize = 2
+        pageSize = 2,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
@@ -510,8 +510,8 @@ class OffenderServiceTest {
         totalElements = 4,
         totalPages = 2,
         number = 2,
-        content = caseNotesPageTwo
-      )
+        content = caseNotesPageTwo,
+      ),
     )
 
     val result = offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber)
@@ -529,7 +529,7 @@ class OffenderServiceTest {
       mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
-        offset = 0
+        offset = 0,
       )
     } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
 
@@ -544,7 +544,7 @@ class OffenderServiceTest {
       mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
-        offset = 0
+        offset = 0,
       )
     } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
 
@@ -559,27 +559,27 @@ class OffenderServiceTest {
       .withResults(
         listOf(
           AdjudicationFactory().withAgencyId("AGNCY1").produce(),
-          AdjudicationFactory().withAgencyId("AGNCY2").produce()
-        )
+          AdjudicationFactory().withAgencyId("AGNCY2").produce(),
+        ),
       )
       .withAgencies(
         listOf(
           AgencyFactory().withAgencyId("AGNCY1").produce(),
-          AgencyFactory().withAgencyId("AGNCY2").produce()
-        )
+          AgencyFactory().withAgencyId("AGNCY2").produce(),
+        ),
       )
       .produce()
 
     val adjudicationsPageTwo = AdjudicationsPageFactory()
       .withResults(
         listOf(
-          AdjudicationFactory().withAgencyId("AGNCY3").produce()
-        )
+          AdjudicationFactory().withAgencyId("AGNCY3").produce(),
+        ),
       )
       .withAgencies(
         listOf(
-          AgencyFactory().withAgencyId("AGNCY3").produce()
-        )
+          AgencyFactory().withAgencyId("AGNCY3").produce(),
+        ),
       )
       .produce()
 
@@ -587,22 +587,22 @@ class OffenderServiceTest {
       mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
-        offset = 0
+        offset = 0,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
-      adjudicationsPageOne
+      adjudicationsPageOne,
     )
 
     every {
       mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
-        offset = 2
+        offset = 2,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
-      adjudicationsPageTwo
+      adjudicationsPageTwo,
     )
 
     val result = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
@@ -610,10 +610,10 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
     assertThat(result.entity.results).containsAll(
-      adjudicationsPageOne.results.plus(adjudicationsPageTwo.results)
+      adjudicationsPageOne.results.plus(adjudicationsPageTwo.results),
     )
     assertThat(result.entity.agencies).containsExactlyInAnyOrder(
-      *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray()
+      *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray(),
     )
   }
 

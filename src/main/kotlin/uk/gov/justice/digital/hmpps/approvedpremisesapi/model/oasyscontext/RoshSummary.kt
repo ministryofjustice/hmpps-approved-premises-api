@@ -11,7 +11,7 @@ class RoshSummary(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val roshSummary: RoshSummaryInner?
+  val roshSummary: RoshSummaryInner?,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -20,7 +20,7 @@ class RoshSummary(
   initiationDate,
   assessmentStatus,
   superStatus,
-  limitedAccessOffender
+  limitedAccessOffender,
 )
 
 data class RoshSummaryInner(
@@ -28,5 +28,5 @@ data class RoshSummaryInner(
   val natureOfRisk: String?,
   val riskGreatest: String?,
   val riskIncreaseLikelyTo: String?,
-  val riskReductionLikelyTo: String?
+  val riskReductionLikelyTo: String?,
 )

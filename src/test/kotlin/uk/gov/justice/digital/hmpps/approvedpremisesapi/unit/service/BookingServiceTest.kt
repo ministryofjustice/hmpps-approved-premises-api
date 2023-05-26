@@ -151,7 +151,7 @@ class BookingServiceTest {
     placementRequestRepository = mockPlacementRequestRepository,
     lostBedsRepository = mockLostBedsRepository,
     turnaroundRepository = mockTurnaroundRepository,
-    applicationUrlTemplate = "http://frontend/applications/#id"
+    applicationUrlTemplate = "http://frontend/applications/#id",
   )
 
   @Test
@@ -281,7 +281,7 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -324,12 +324,12 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.dateTime", "beforeBookingArrivalDate")
+      entry("$.dateTime", "beforeBookingArrivalDate"),
     )
   }
 
@@ -369,12 +369,12 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reasonId", "doesNotExist")
+      entry("$.reasonId", "doesNotExist"),
     )
   }
 
@@ -418,12 +418,12 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reasonId", "incorrectDepartureReasonServiceScope")
+      entry("$.reasonId", "incorrectDepartureReasonServiceScope"),
     )
   }
 
@@ -463,12 +463,12 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.moveOnCategoryId", "doesNotExist")
+      entry("$.moveOnCategoryId", "doesNotExist"),
     )
   }
 
@@ -513,12 +513,12 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.moveOnCategoryId", "incorrectMoveOnCategoryServiceScope")
+      entry("$.moveOnCategoryId", "incorrectMoveOnCategoryServiceScope"),
     )
   }
 
@@ -558,12 +558,12 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.destinationProviderId", "doesNotExist")
+      entry("$.destinationProviderId", "doesNotExist"),
     )
   }
 
@@ -602,12 +602,12 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.destinationProviderId", "empty")
+      entry("$.destinationProviderId", "empty"),
     )
   }
 
@@ -659,7 +659,7 @@ class BookingServiceTest {
       notes = "notes",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -703,9 +703,9 @@ class BookingServiceTest {
           .withCreatedByUser(
             UserEntityFactory()
               .withUnitTestControlProbationRegion()
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -740,7 +740,7 @@ class BookingServiceTest {
 
     every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
       HttpStatus.OK,
-      keyWorkerStaffUserDetails
+      keyWorkerStaffUserDetails,
     )
 
     every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
@@ -752,7 +752,7 @@ class BookingServiceTest {
       moveOnCategoryId = moveOnCategoryId,
       destinationProviderId = destinationProviderId,
       notes = "notes",
-      user = user
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -778,7 +778,7 @@ class BookingServiceTest {
             data.applicationUrl == "http://frontend/applications/${application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == application.eventNumber &&
             data.premises == Premises(
@@ -786,16 +786,16 @@ class BookingServiceTest {
             name = approvedPremises.name,
             apCode = approvedPremises.apCode,
             legacyApCode = approvedPremises.qCode,
-            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
           ) &&
             data.departedAt == Instant.parse("2022-08-24T15:00:00+01:00") &&
             data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
             data.destination.destinationProvider == DestinationProvider(
             description = destinationProviderEntity.name,
-            id = destinationProviderEntity.id
+            id = destinationProviderEntity.id,
           ) &&
             data.reason == reasonEntity.name
-        }
+        },
       )
     }
   }
@@ -830,7 +830,7 @@ class BookingServiceTest {
       keyWorkerStaffCode = "123",
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -862,12 +862,12 @@ class BookingServiceTest {
       keyWorkerStaffCode = keyWorker.code,
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.expectedDepartureDate", "beforeBookingArrivalDate")
+      entry("$.expectedDepartureDate", "beforeBookingArrivalDate"),
     )
   }
 
@@ -903,7 +903,7 @@ class BookingServiceTest {
       keyWorkerStaffCode = keyWorker.code,
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -939,9 +939,9 @@ class BookingServiceTest {
           .withCreatedByUser(
             UserEntityFactory()
               .withUnitTestControlProbationRegion()
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -962,7 +962,7 @@ class BookingServiceTest {
 
     every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
       HttpStatus.OK,
-      keyWorkerStaffUserDetails
+      keyWorkerStaffUserDetails,
     )
 
     every { mockDomainEventService.savePersonArrivedEvent(any()) } just Runs
@@ -973,7 +973,7 @@ class BookingServiceTest {
       expectedDepartureDate = LocalDate.parse("2022-08-29"),
       notes = "notes",
       keyWorkerStaffCode = keyWorker.code,
-      user = user
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -995,7 +995,7 @@ class BookingServiceTest {
             data.applicationUrl == "http://frontend/applications/${application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == application.eventNumber &&
             data.premises == Premises(
@@ -1003,10 +1003,10 @@ class BookingServiceTest {
             name = approvedPremises.name,
             apCode = approvedPremises.apCode,
             legacyApCode = approvedPremises.qCode,
-            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
           ) &&
             data.applicationSubmittedOn == LocalDate.parse("2023-02-15")
-        }
+        },
       )
     }
   }
@@ -1038,7 +1038,7 @@ class BookingServiceTest {
       keyWorkerStaffCode = null,
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .produce()
+        .produce(),
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1079,7 +1079,7 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = UUID.randomUUID(),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -1113,13 +1113,13 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.date", "afterBookingArrivalDate"),
-      entry("$.reason", "doesNotExist")
+      entry("$.reason", "doesNotExist"),
     )
   }
 
@@ -1154,7 +1154,7 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1211,7 +1211,7 @@ class BookingServiceTest {
 
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
       HttpStatus.OK,
-      staffUserDetails
+      staffUserDetails,
     )
 
     every { mockDomainEventService.savePersonNotArrivedEvent(any()) } just Runs
@@ -1221,7 +1221,7 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1243,7 +1243,7 @@ class BookingServiceTest {
             data.applicationUrl == "http://frontend/applications/${application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == application.eventNumber &&
             data.premises == Premises(
@@ -1251,7 +1251,7 @@ class BookingServiceTest {
             name = approvedPremises.name,
             apCode = approvedPremises.apCode,
             legacyApCode = approvedPremises.qCode,
-            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name
+            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
           ) &&
             data.expectedArrivalOn == bookingEntity.originalArrivalDate &&
             data.recordedBy == StaffMember(
@@ -1259,9 +1259,9 @@ class BookingServiceTest {
             staffIdentifier = staffUserDetails.staffIdentifier,
             forenames = staffUserDetails.staff.forenames,
             surname = staffUserDetails.staff.surname,
-            username = staffUserDetails.username
+            username = staffUserDetails.username,
           )
-        }
+        },
       )
     }
   }
@@ -1292,7 +1292,7 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = UUID.randomUUID(),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -1323,12 +1323,12 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reason", "doesNotExist")
+      entry("$.reason", "doesNotExist"),
     )
   }
 
@@ -1361,12 +1361,12 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reason", "incorrectCancellationReasonServiceScope")
+      entry("$.reason", "incorrectCancellationReasonServiceScope"),
     )
   }
 
@@ -1396,7 +1396,7 @@ class BookingServiceTest {
       booking = bookingEntity,
       date = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1438,12 +1438,12 @@ class BookingServiceTest {
     val result = bookingService.createExtension(
       booking = bookingEntity,
       newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.newDepartureDate", "beforeExistingDepartureDate")
+      entry("$.newDepartureDate", "beforeExistingDepartureDate"),
     )
   }
 
@@ -1484,7 +1484,7 @@ class BookingServiceTest {
     val result = bookingService.createExtension(
       booking = bookingEntity,
       newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1527,12 +1527,12 @@ class BookingServiceTest {
     val result = bookingService.createExtension(
       booking = bookingEntity,
       newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.newDepartureDate", "beforeBookingArrivalDate")
+      entry("$.newDepartureDate", "beforeBookingArrivalDate"),
     )
   }
 
@@ -1572,7 +1572,7 @@ class BookingServiceTest {
     val result = bookingService.createExtension(
       booking = bookingEntity,
       newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1607,7 +1607,7 @@ class BookingServiceTest {
     val result = bookingService.createConfirmation(
       booking = bookingEntity,
       dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -1635,7 +1635,7 @@ class BookingServiceTest {
     val result = bookingService.createConfirmation(
       booking = bookingEntity,
       dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
-      notes = "notes"
+      notes = "notes",
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1702,7 +1702,7 @@ class BookingServiceTest {
     assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
 
     assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.departureDate", "beforeBookingArrivalDate")
+      entry("$.departureDate", "beforeBookingArrivalDate"),
     )
   }
 
@@ -1738,7 +1738,7 @@ class BookingServiceTest {
     assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
 
     assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.bedId", "doesNotExist")
+      entry("$.bedId", "doesNotExist"),
     )
   }
 
@@ -1781,7 +1781,7 @@ class BookingServiceTest {
     assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
 
     assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.crn", "doesNotHaveApplication")
+      entry("$.crn", "doesNotHaveApplication"),
     )
   }
 
@@ -1946,7 +1946,7 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate
-        }
+        },
       )
     }
 
@@ -1961,7 +1961,7 @@ class BookingServiceTest {
             data.applicationUrl == "http://frontend/applications/${existingApplication.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == existingApplication.eventNumber &&
             data.premises == Premises(
@@ -1969,10 +1969,10 @@ class BookingServiceTest {
             name = premises.name,
             apCode = premises.apCode,
             legacyApCode = premises.qCode,
-            localAuthorityAreaName = premises.localAuthorityArea!!.name
+            localAuthorityAreaName = premises.localAuthorityArea!!.name,
           ) &&
             data.arrivalOn == arrivalDate
-        }
+        },
       )
     }
   }
@@ -2028,7 +2028,7 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate
-        }
+        },
       )
     }
 
@@ -2066,7 +2066,7 @@ class BookingServiceTest {
     assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
 
     assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.departureDate", "beforeBookingArrivalDate")
+      entry("$.departureDate", "beforeBookingArrivalDate"),
     )
   }
 
@@ -2098,7 +2098,7 @@ class BookingServiceTest {
     assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
 
     assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.bedId", "doesNotExist")
+      entry("$.bedId", "doesNotExist"),
     )
   }
 
@@ -2147,7 +2147,7 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate
-        }
+        },
       )
     }
   }
@@ -2199,7 +2199,7 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate
-        }
+        },
       )
     }
 
@@ -2208,7 +2208,7 @@ class BookingServiceTest {
         match {
           it.booking == bookingSlot.captured &&
             it.workingDayCount == 0
-        }
+        },
       )
     }
   }
@@ -2260,7 +2260,7 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate
-        }
+        },
       )
     }
 
@@ -2269,7 +2269,7 @@ class BookingServiceTest {
         match {
           it.booking == bookingSlot.captured &&
             it.workingDayCount == premises.turnaroundWorkingDayCount
-        }
+        },
       )
     }
   }
@@ -2290,7 +2290,7 @@ class BookingServiceTest {
       placementRequestId = placementRequestId,
       bedId = bedId,
       arrivalDate = LocalDate.parse("2023-03-28"),
-      departureDate = LocalDate.parse("2023-03-30")
+      departureDate = LocalDate.parse("2023-03-30"),
     )
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
@@ -2316,7 +2316,7 @@ class BookingServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(otherUser)
       .produce()
@@ -2330,7 +2330,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bedId,
       arrivalDate = LocalDate.parse("2023-03-28"),
-      departureDate = LocalDate.parse("2023-03-30")
+      departureDate = LocalDate.parse("2023-03-30"),
     )
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -2359,7 +2359,7 @@ class BookingServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .produce()
@@ -2387,7 +2387,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      departureDate = departureDate,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -2421,7 +2421,7 @@ class BookingServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .produce()
@@ -2447,7 +2447,7 @@ class BookingServiceTest {
         .withDepartureDate(departureDate)
         .withPremises(premises)
         .withBed(bed)
-        .produce()
+        .produce(),
     )
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
@@ -2458,7 +2458,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      departureDate = departureDate,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -2492,7 +2492,7 @@ class BookingServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .produce()
@@ -2520,7 +2520,7 @@ class BookingServiceTest {
         .withPremises(premises)
         .withBed(bed)
         .withYieldedReason { LostBedReasonEntityFactory().produce() }
-        .produce()
+        .produce(),
     )
 
     val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
@@ -2528,7 +2528,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      departureDate = departureDate,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -2564,7 +2564,7 @@ class BookingServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(user)
       .produce()
@@ -2608,7 +2608,7 @@ class BookingServiceTest {
       placementRequestId = placementRequest.id,
       bedId = bed.id,
       arrivalDate = arrivalDate,
-      departureDate = departureDate
+      departureDate = departureDate,
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -2624,7 +2624,7 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate
-        }
+        },
       )
     }
 
@@ -2639,7 +2639,7 @@ class BookingServiceTest {
             data.applicationUrl == "http://frontend/applications/${placementRequest.application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == placementRequest.application.eventNumber &&
             data.premises == Premises(
@@ -2647,10 +2647,10 @@ class BookingServiceTest {
             name = premises.name,
             apCode = premises.apCode,
             legacyApCode = premises.qCode,
-            localAuthorityAreaName = premises.localAuthorityArea!!.name
+            localAuthorityAreaName = premises.localAuthorityArea!!.name,
           ) &&
             data.arrivalOn == arrivalDate
-        }
+        },
       )
     }
 
@@ -2658,7 +2658,7 @@ class BookingServiceTest {
       mockPlacementRequestRepository.save(
         match {
           it.booking == createdBooking
-        }
+        },
       )
     }
   }
@@ -2670,13 +2670,13 @@ class BookingServiceTest {
         ProbationRegionEntityFactory()
           .withApArea(
             ApAreaEntityFactory()
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withLocalAuthorityArea(
         LocalAuthorityEntityFactory()
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -2703,12 +2703,12 @@ class BookingServiceTest {
 
     assertThat(negativeDaysResult).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((negativeDaysResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.workingDays", "isNotAPositiveInteger")
+      entry("$.workingDays", "isNotAPositiveInteger"),
     )
 
     assertThat(zeroDaysResult).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((zeroDaysResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.workingDays", "isNotAPositiveInteger")
+      entry("$.workingDays", "isNotAPositiveInteger"),
     )
   }
 
@@ -2719,13 +2719,13 @@ class BookingServiceTest {
         ProbationRegionEntityFactory()
           .withApArea(
             ApAreaEntityFactory()
-              .produce()
+              .produce(),
           )
-          .produce()
+          .produce(),
       )
       .withLocalAuthorityArea(
         LocalAuthorityEntityFactory()
-          .produce()
+          .produce(),
       )
       .produce()
 

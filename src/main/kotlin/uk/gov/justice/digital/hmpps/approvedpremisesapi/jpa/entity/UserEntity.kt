@@ -31,7 +31,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
       (SELECT COUNT(1) FROM assessments a WHERE a.allocated_to_user_id = u.id AND a.submitted_at IS NULL) ASC 
     LIMIT 1
     """,
-    nativeQuery = true
+    nativeQuery = true,
   )
   fun findQualifiedAssessorWithLeastPendingAllocations(requiredQualifications: List<String>, totalRequiredQualifications: Long): UserEntity?
 
@@ -59,7 +59,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
       LIMIT
         1
     """,
-    nativeQuery = true
+    nativeQuery = true,
   )
   fun findRandomMatcher(): UserEntity?
 }
@@ -104,7 +104,7 @@ data class UserRoleAssignmentEntity(
   @JoinColumn(name = "user_id")
   val user: UserEntity,
   @Enumerated(value = EnumType.STRING)
-  val role: UserRole
+  val role: UserRole,
 ) {
   override fun hashCode() = Objects.hash(id, role)
 }
@@ -115,7 +115,7 @@ enum class UserRole {
   MANAGER,
   WORKFLOW_MANAGER,
   APPLICANT,
-  ROLE_ADMIN
+  ROLE_ADMIN,
 }
 
 @Repository
@@ -130,10 +130,10 @@ data class UserQualificationAssignmentEntity(
   @JoinColumn(name = "user_id")
   val user: UserEntity,
   @Enumerated(value = EnumType.STRING)
-  val qualification: UserQualification
+  val qualification: UserQualification,
 )
 
 enum class UserQualification {
   WOMENS,
-  PIPE
+  PIPE,
 }

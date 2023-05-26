@@ -10,7 +10,7 @@ fun getPersonDetailsForCrn(
   log: Logger,
   crn: String,
   deliusUsername: String,
-  offenderService: OffenderService
+  offenderService: OffenderService,
 ): Pair<OffenderDetailSummary, InmateDetail>? {
   val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername)) {
     is AuthorisableActionResult.Success -> offenderDetailsResult.entity

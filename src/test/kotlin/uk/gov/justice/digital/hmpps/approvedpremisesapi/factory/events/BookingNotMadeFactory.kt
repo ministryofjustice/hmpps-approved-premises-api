@@ -54,6 +54,6 @@ class BookingNotMadeFactory : Factory<BookingNotMade> {
     applicationUrl = this.applicationUrl(),
     attemptedAt = this.attemptedAt(),
     attemptedBy = this.attemptedBy(),
-    failureDescription = this.failureDescription()
+    failureDescription = this.failureDescription(),
   )
 }

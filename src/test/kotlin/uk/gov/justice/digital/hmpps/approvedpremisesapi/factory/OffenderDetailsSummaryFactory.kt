@@ -105,7 +105,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       mostRecentPrisonNumber = null,
       niNumber = null,
       nomsNumber = this.nomsNumber(),
-      pncNumber = null
+      pncNumber = null,
     ),
     offenderProfile = OffenderProfile(
       ethnicity = null,
@@ -117,7 +117,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
         primaryLanguage = null,
         otherLanguages = listOf(),
         languageConcerns = null,
-        requiresInterpreter = null
+        requiresInterpreter = null,
       ),
       religion = this.religionOrBelief(),
       sexualOrientation = null,
@@ -126,13 +126,13 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       riskColour = null,
       disabilities = listOf(),
       genderIdentity = this.genderIdentity(),
-      selfDescribedGender = this.selfDescribedGenderIdentity()
+      selfDescribedGender = this.selfDescribedGenderIdentity(),
     ),
     softDeleted = null,
     currentDisposal = "",
     partitionArea = null,
     currentRestriction = this.currentRestriction(),
     currentExclusion = this.currentExclusion(),
-    isActiveProbationManagedSentence = false
+    isActiveProbationManagedSentence = false,
   )
 }

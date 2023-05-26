@@ -94,7 +94,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.pending,
             probationDeliveryUnitId = probationDeliveryUnit.id,
-            turnaroundWorkingDayCount = 5
+            turnaroundWorkingDayCount = 5,
           ),
         )
         .exchange()
@@ -190,7 +190,7 @@ class PremisesTest : IntegrationTestBase() {
             localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
             probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.archived
+            status = PropertyStatus.archived,
           ),
         )
         .exchange()
@@ -246,7 +246,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.archived,
             probationDeliveryUnitId = probationDeliveryUnit.id,
-            turnaroundWorkingDayCount = 5
+            turnaroundWorkingDayCount = 5,
           ),
         )
         .exchange()
@@ -305,7 +305,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.archived,
             pdu = probationDeliveryUnit.name,
-            turnaroundWorkingDayCount = 5
+            turnaroundWorkingDayCount = 5,
           ),
         )
         .exchange()
@@ -2281,7 +2281,7 @@ class PremisesTest : IntegrationTestBase() {
   @MethodSource("turnaroundWorkingDayCountProvider")
   fun `Trying to create a new Temporary Accommodation premises with turnaround working day count less than 1 returns 400`(
     turnaroundWorkingDayCount: Int,
-    expectedErrorType: String
+    expectedErrorType: String,
   ) {
     `Given a User` { user, jwt ->
       val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
@@ -2305,7 +2305,7 @@ class PremisesTest : IntegrationTestBase() {
             characteristicIds = mutableListOf(),
             status = PropertyStatus.pending,
             probationDeliveryUnitId = probationDeliveryUnit.id,
-            turnaroundWorkingDayCount = 0
+            turnaroundWorkingDayCount = 0,
           ),
         )
         .exchange()

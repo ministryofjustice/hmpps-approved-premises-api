@@ -19,7 +19,7 @@ data class OffenderDetailSummary(
   val partitionArea: String?,
   val currentRestriction: Boolean,
   val currentExclusion: Boolean,
-  val isActiveProbationManagedSentence: Boolean
+  val isActiveProbationManagedSentence: Boolean,
 )
 
 data class OffenderIds(
@@ -29,7 +29,7 @@ data class OffenderIds(
   val mostRecentPrisonNumber: String?,
   val niNumber: String?,
   val nomsNumber: String?,
-  val pncNumber: String?
+  val pncNumber: String?,
 )
 
 data class OffenderProfile(
@@ -46,14 +46,14 @@ data class OffenderProfile(
   val riskColour: String?,
   val disabilities: List<Disability>?,
   val genderIdentity: String?,
-  val selfDescribedGender: String?
+  val selfDescribedGender: String?,
 )
 
 data class OffenderLanguages(
   val primaryLanguage: String?,
   val otherLanguages: List<String>?,
   val languageConcerns: String?,
-  val requiresInterpreter: Boolean?
+  val requiresInterpreter: Boolean?,
 )
 
 data class Disability(
@@ -64,12 +64,12 @@ data class Disability(
   val notes: String?,
   val provisions: List<DisabilityProvision>?,
   val lastUpdatedDateTime: LocalDate?,
-  val isActive: Boolean
+  val isActive: Boolean,
 )
 
 data class DisabilityType(
   val code: String?,
-  val description: String?
+  val description: String?,
 )
 
 data class DisabilityProvision(
@@ -77,10 +77,10 @@ data class DisabilityProvision(
   val notes: String?,
   val startDate: LocalDate?,
   val endDate: LocalDate?,
-  val provisionType: ProvisionType?
+  val provisionType: ProvisionType?,
 )
 
 data class ProvisionType(
   val code: String?,
-  val description: String?
+  val description: String?,
 )

@@ -56,9 +56,8 @@ const val bedSummaryQuery =
     $bedSummaryQuery
     where r.premises_id = cast(?1 as UUID)
   """,
-  resultSetMapping = "DomainBedSummaryMapping"
+  resultSetMapping = "DomainBedSummaryMapping",
 )
-
 @NamedNativeQuery(
   name = "BedEntity.getDetailById",
   query =
@@ -66,9 +65,8 @@ const val bedSummaryQuery =
     $bedSummaryQuery
     where b.id = cast(?1 as UUID)
   """,
-  resultSetMapping = "DomainBedSummaryMapping"
+  resultSetMapping = "DomainBedSummaryMapping",
 )
-
 @SqlResultSetMapping(
   name = "DomainBedSummaryMapping",
   classes = [
@@ -81,11 +79,10 @@ const val bedSummaryQuery =
         ColumnResult(name = "roomName"),
         ColumnResult(name = "bedBooked"),
         ColumnResult(name = "bedOutOfService"),
-      ]
-    )
-  ]
+      ],
+    ),
+  ],
 )
-
 @Entity
 @Table(name = "beds")
 data class BedEntity(
@@ -107,5 +104,5 @@ open class DomainBedSummary(
   val roomId: UUID,
   val roomName: String,
   val bedBooked: Boolean,
-  val bedOutOfService: Boolean
+  val bedOutOfService: Boolean,
 )

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 @Controller
 class DocumentsController(
   private val httpAuthService: HttpAuthService,
-  private val offenderService: OffenderService
+  private val offenderService: OffenderService,
 ) {
   @RequestMapping(method = [RequestMethod.GET], value = ["/documents/{crn}/{documentId}"], produces = ["application/octet-stream"])
   fun documentsCrnDocumentIdGet(@PathVariable("crn") crn: String, @PathVariable("documentId") documentId: String): ResponseEntity<StreamingResponseBody> {
@@ -49,7 +49,7 @@ class DocumentsController(
       HttpHeaders().apply {
         put("Content-Disposition", listOf("attachment; filename=\"${documentMetaData.documentName}\""))
       },
-      HttpStatus.OK
+      HttpStatus.OK,
     )
   }
 }

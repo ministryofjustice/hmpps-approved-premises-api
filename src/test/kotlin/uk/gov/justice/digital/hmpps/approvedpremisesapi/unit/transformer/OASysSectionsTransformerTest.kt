@@ -77,7 +77,7 @@ class OASysSectionsTransformerTest {
       risksToTheIndividualApiResponse,
       riskManagementPlanApiResponse,
       needsDetailsApiResponse,
-      requestedOptionalSections
+      requestedOptionalSections,
     )
 
     assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
@@ -89,39 +89,39 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Offence analysis",
           questionNumber = "2.1",
-          answer = offenceDetailsApiResponse.offence?.offenceAnalysis
+          answer = offenceDetailsApiResponse.offence?.offenceAnalysis,
         ),
         OASysQuestion(
           label = "Pattern of offending",
           questionNumber = "2.12",
-          answer = offenceDetailsApiResponse.offence?.patternOffending
+          answer = offenceDetailsApiResponse.offence?.patternOffending,
         ),
         OASysQuestion(
           label = "Victim - perpetrator relationship",
           questionNumber = "2.4.1",
-          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel
+          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel,
         ),
         OASysQuestion(
           label = "Other victim information",
           questionNumber = "2.4.2",
-          answer = offenceDetailsApiResponse.offence?.victimInfo
+          answer = offenceDetailsApiResponse.offence?.victimInfo,
         ),
         OASysQuestion(
           label = "Impact on the victim",
           questionNumber = "2.5",
-          answer = offenceDetailsApiResponse.offence?.victimImpact
+          answer = offenceDetailsApiResponse.offence?.victimImpact,
         ),
         OASysQuestion(
           label = "Motivation and triggers",
           questionNumber = "2.8.3",
-          answer = offenceDetailsApiResponse.offence?.offenceMotivation
+          answer = offenceDetailsApiResponse.offence?.offenceMotivation,
         ),
         OASysQuestion(
           label = "Issues contributing to risks",
           questionNumber = "2.98",
-          answer = offenceDetailsApiResponse.offence?.issueContributingToRisk
-        )
-      )
+          answer = offenceDetailsApiResponse.offence?.issueContributingToRisk,
+        ),
+      ),
     )
 
     assertThat(result.roshSummary).containsAll(
@@ -129,29 +129,29 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Who is at risk",
           questionNumber = "R10.1",
-          answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk
+          answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk,
         ),
         OASysQuestion(
           label = "What is the nature of the risk",
           questionNumber = "R10.2",
-          answer = roshSummaryApiResponse.roshSummary?.natureOfRisk
+          answer = roshSummaryApiResponse.roshSummary?.natureOfRisk,
         ),
         OASysQuestion(
           label = "When is the risk likely to be the greatest",
           questionNumber = "R10.3",
-          answer = roshSummaryApiResponse.roshSummary?.riskGreatest
+          answer = roshSummaryApiResponse.roshSummary?.riskGreatest,
         ),
         OASysQuestion(
           label = "What circumstances are likely to increase risk",
           questionNumber = "R10.4",
-          answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo
+          answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo,
         ),
         OASysQuestion(
           label = "What circumstances are likely to reduce the risk",
           questionNumber = "R10.5",
-          answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo
-        )
-      )
+          answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
+        ),
+      ),
     )
 
     assertThat(result.riskToSelf).containsAll(
@@ -159,19 +159,19 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Current concerns about self-harm or suicide",
           questionNumber = "R8.1.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
         ),
         OASysQuestion(
           label = "Current concerns about Coping in Custody or Hostel",
           questionNumber = "R8.2.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
         ),
         OASysQuestion(
           label = "Current concerns about Vulnerability",
           questionNumber = "R8.3.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability
-        )
-      )
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
+        ),
+      ),
     )
 
     assertThat(result.riskManagementPlan).containsAll(
@@ -179,44 +179,44 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Further considerations",
           questionNumber = "RM28",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.furtherConsiderations
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.furtherConsiderations,
         ),
         OASysQuestion(
           label = "Additional comments",
           questionNumber = "RM35",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.additionalComments
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.additionalComments,
         ),
         OASysQuestion(
           label = "Contingency plans",
           questionNumber = "RM34",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.contingencyPlans
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.contingencyPlans,
         ),
         OASysQuestion(
           label = "Victim safety planning",
           questionNumber = "RM33",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.victimSafetyPlanning
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.victimSafetyPlanning,
         ),
         OASysQuestion(
           label = "Interventions and treatment",
           questionNumber = "RM32",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.interventionsAndTreatment
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.interventionsAndTreatment,
         ),
         OASysQuestion(
           label = "Monitoring and control",
           questionNumber = "RM31",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.monitoringAndControl
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.monitoringAndControl,
         ),
         OASysQuestion(
           label = "Supervision",
           questionNumber = "RM30",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.supervision
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.supervision,
         ),
         OASysQuestion(
           label = "Key information about current situation",
           questionNumber = "RM28.1",
-          answer = riskManagementPlanApiResponse.riskManagementPlan?.keyInformationAboutCurrentSituation
-        )
-      )
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.keyInformationAboutCurrentSituation,
+        ),
+      ),
     )
   }
 
@@ -240,7 +240,7 @@ class OASysSectionsTransformerTest {
       risksToTheIndividualApiResponse,
       riskManagementPlanApiResponse,
       needsDetailsApiResponse,
-      requestedOptionalSections
+      requestedOptionalSections,
     )
 
     assertThat(result.supportingInformation).containsExactlyInAnyOrder(
@@ -250,7 +250,7 @@ class OASysSectionsTransformerTest {
         sectionNumber = 4,
         linkedToHarm = false,
         linkedToReOffending = false,
-        answer = "Education, Training, Employment"
+        answer = "Education, Training, Employment",
       ),
       OASysSupportingInformationQuestion(
         label = "Financial management issues contributing to risks of offending and harm",
@@ -258,7 +258,7 @@ class OASysSectionsTransformerTest {
         sectionNumber = 5,
         linkedToHarm = null,
         linkedToReOffending = null,
-        answer = null
+        answer = null,
       ),
       OASysSupportingInformationQuestion(
         label = "Issues of emotional well-being contributing to risks of offending and harm",
@@ -266,7 +266,7 @@ class OASysSectionsTransformerTest {
         sectionNumber = 10,
         linkedToHarm = true,
         linkedToReOffending = false,
-        answer = "Emotional"
+        answer = "Emotional",
       ),
       OASysSupportingInformationQuestion(
         label = "Drug misuse issues contributing to risks of offending and harm",
@@ -274,7 +274,7 @@ class OASysSectionsTransformerTest {
         sectionNumber = 8,
         linkedToHarm = needsDetailsApiResponse.linksToHarm?.drugLinkedToHarm,
         linkedToReOffending = needsDetailsApiResponse.linksToReOffending?.drugLinkedToReOffending,
-        answer = needsDetailsApiResponse.needs?.drugIssuesDetails
+        answer = needsDetailsApiResponse.needs?.drugIssuesDetails,
       ),
       OASysSupportingInformationQuestion(
         label = "Alcohol misuse issues contributing to risks of offending and harm",
@@ -282,8 +282,8 @@ class OASysSectionsTransformerTest {
         sectionNumber = 9,
         linkedToHarm = needsDetailsApiResponse.linksToHarm?.alcoholLinkedToHarm,
         linkedToReOffending = needsDetailsApiResponse.linksToReOffending?.alcoholLinkedToReOffending,
-        answer = needsDetailsApiResponse.needs?.alcoholIssuesDetails
-      )
+        answer = needsDetailsApiResponse.needs?.alcoholIssuesDetails,
+      ),
     )
   }
 }

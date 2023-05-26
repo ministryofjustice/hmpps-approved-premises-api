@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 @Component
 class TaskTransformer(
   private val personTransformer: PersonTransformer,
-  private val userTransformer: UserTransformer
+  private val userTransformer: UserTransformer,
 ) {
   fun transformAssessmentToTask(assessment: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Task(
     applicationId = assessment.application.id,
@@ -22,7 +22,7 @@ class TaskTransformer(
     dueDate = assessment.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(assessment.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getAssessmentStatus(assessment),
-    taskType = TaskType.assessment
+    taskType = TaskType.assessment,
   )
 
   fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Task(
@@ -31,7 +31,7 @@ class TaskTransformer(
     dueDate = placementRequest.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementRequest.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementRequestStatus(placementRequest),
-    taskType = TaskType.placementRequest
+    taskType = TaskType.placementRequest,
   )
 
   private fun getAssessmentStatus(entity: AssessmentEntity): Status = when {

@@ -250,7 +250,7 @@ class BookingsReportGeneratorTest {
             .produce()
         }
         .withBooking(booking)
-        .produce()
+        .produce(),
     )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
@@ -371,7 +371,7 @@ class BookingsReportGeneratorTest {
             .produce()
         }
         .withBooking(booking)
-        .produce()
+        .produce(),
     )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
@@ -494,7 +494,7 @@ class BookingsReportGeneratorTest {
             .produce()
         }
         .withBooking(booking)
-        .produce()
+        .produce(),
     )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
@@ -545,7 +545,7 @@ class BookingsReportGeneratorTest {
             .produce()
         }
         .withBooking(booking)
-        .produce()
+        .produce(),
     )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
@@ -606,7 +606,7 @@ class BookingsReportGeneratorTest {
             .produce()
         }
         .withBooking(booking)
-        .produce()
+        .produce(),
     )
 
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))

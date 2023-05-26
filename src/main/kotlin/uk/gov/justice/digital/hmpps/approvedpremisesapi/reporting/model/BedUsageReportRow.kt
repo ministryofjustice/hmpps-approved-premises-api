@@ -15,11 +15,11 @@ data class BedUsageReportRow(
   val durationOfBookingDays: Int,
   val bookingStatus: BookingStatus?,
   val voidCategory: String?,
-  val voidNotes: String?
+  val voidNotes: String?,
 )
 
 enum class BedUsageType {
   Booking,
   Turnaround,
-  Void
+  Void,
 }

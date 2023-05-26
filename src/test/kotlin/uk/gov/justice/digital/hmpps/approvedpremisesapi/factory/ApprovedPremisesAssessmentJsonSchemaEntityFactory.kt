@@ -35,13 +35,13 @@ class ApprovedPremisesAssessmentJsonSchemaEntityFactory : Factory<ApprovedPremis
           "type": "object",
           "properties": { }
         }
-        """
+        """,
     )
   }
 
   override fun produce(): ApprovedPremisesAssessmentJsonSchemaEntity = ApprovedPremisesAssessmentJsonSchemaEntity(
     id = this.id(),
     addedAt = this.addedAt(),
-    schema = this.schema()
+    schema = this.schema(),
   )
 }

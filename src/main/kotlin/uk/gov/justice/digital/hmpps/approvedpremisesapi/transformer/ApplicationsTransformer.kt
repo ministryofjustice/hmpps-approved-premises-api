@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 class ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
-  private val risksTransformer: RisksTransformer
+  private val risksTransformer: RisksTransformer,
 ) {
   fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): Application = when (jpa) {
     is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
@@ -45,7 +45,7 @@ class ApplicationsTransformer(
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
-      status = getStatus(jpa)
+      status = getStatus(jpa),
     )
     is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
       id = jpa.id,
@@ -58,7 +58,7 @@ class ApplicationsTransformer(
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
-      status = getStatus(jpa)
+      status = getStatus(jpa),
     )
     else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
   }
@@ -78,7 +78,7 @@ class ApplicationsTransformer(
         isPipeApplication = domain.getIsPipeApplication(),
         arrivalDate = domain.getArrivalDate()?.toInstant(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
-        status = getStatusFromSummary(domain)
+        status = getStatusFromSummary(domain),
       )
     }
 
@@ -93,7 +93,7 @@ class ApplicationsTransformer(
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
-        status = getStatusFromSummary(domain)
+        status = getStatusFromSummary(domain),
       )
     }
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
@@ -103,14 +103,14 @@ class ApplicationsTransformer(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
-    submittedAt = jpa.submittedAt.toInstant()
+    submittedAt = jpa.submittedAt.toInstant(),
   )
 
   fun transformJpaToApiSummary(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = OfflineApplicationSummary(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
-    submittedAt = jpa.submittedAt.toInstant()
+    submittedAt = jpa.submittedAt.toInstant(),
   )
 
   private fun getStatus(entity: ApplicationEntity): ApplicationStatus {

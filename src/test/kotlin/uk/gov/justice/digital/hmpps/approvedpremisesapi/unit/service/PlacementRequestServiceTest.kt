@@ -61,7 +61,7 @@ class PlacementRequestServiceTest {
     offenderService,
     communityApiClient,
     cruService,
-    "http://frontend/applications/#id"
+    "http://frontend/applications/#id",
   )
 
   private val previousUser = UserEntityFactory()
@@ -88,7 +88,7 @@ class PlacementRequestServiceTest {
             .withYieldedApArea { ApAreaEntityFactory().produce() }
             .produce()
         }
-        .produce()
+        .produce(),
     )
     .produce()
 
@@ -118,7 +118,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(assigneeUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(previousUser)
       .produce()
@@ -147,7 +147,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(assigneeUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(previousUser)
       .produce()
@@ -190,7 +190,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(assigneeUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(previousUser)
       .produce()
@@ -257,7 +257,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(requestingUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -285,7 +285,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(assigneeUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(requestingUser)
       .produce()
@@ -319,7 +319,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(assigneeUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -366,7 +366,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -397,7 +397,7 @@ class PlacementRequestServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -411,7 +411,7 @@ class PlacementRequestServiceTest {
 
     every { communityApiClient.getStaffUserDetails(requestingUser.deliusUsername) } returns ClientResult.Success(
       HttpStatus.OK,
-      staffUserDetails
+      staffUserDetails,
     )
 
     every { domainEventService.saveBookingNotMadeEvent(any()) } just Runs
@@ -442,11 +442,11 @@ class PlacementRequestServiceTest {
             data.applicationUrl == "http://frontend/applications/${application.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!
+            noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
             data.deliusEventNumber == application.eventNumber &&
             data.failureDescription == "some notes"
-        }
+        },
       )
     }
   }

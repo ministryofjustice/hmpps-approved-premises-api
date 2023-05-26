@@ -22,5 +22,5 @@ data class PostCodeDistrictEntity(
   val outcode: String,
   val latitude: Double,
   val longitude: Double,
-  val point: Point
+  val point: Point,
 )

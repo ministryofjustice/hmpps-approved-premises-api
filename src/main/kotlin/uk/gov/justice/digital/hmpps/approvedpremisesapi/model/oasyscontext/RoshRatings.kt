@@ -11,7 +11,7 @@ class RoshRatings(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val rosh: RoshRatingsInner
+  val rosh: RoshRatingsInner,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -20,7 +20,7 @@ class RoshRatings(
   initiationDate,
   assessmentStatus,
   superStatus,
-  limitedAccessOffender
+  limitedAccessOffender,
 )
 
 data class RoshRatingsInner(
@@ -52,5 +52,5 @@ enum class RiskLevel(val text: String) {
   VERY_HIGH("Very High"),
   HIGH("High"),
   MEDIUM("Medium"),
-  LOW("Low")
+  LOW("Low"),
 }

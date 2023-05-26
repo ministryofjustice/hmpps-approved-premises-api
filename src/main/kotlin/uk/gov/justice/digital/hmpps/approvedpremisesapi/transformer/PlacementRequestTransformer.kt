@@ -17,7 +17,7 @@ class PlacementRequestTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val assessmentTransformer: AssessmentTransformer,
-  private val userTransformer: UserTransformer
+  private val userTransformer: UserTransformer,
 ) {
   fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): PlacementRequest {
     return PlacementRequest(

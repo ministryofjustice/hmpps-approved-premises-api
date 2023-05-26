@@ -10,7 +10,7 @@ data class StaffUserDetails(
   val staffIdentifier: Long,
   val staff: StaffNames,
   val teams: List<StaffUserTeamMembership>?,
-  val probationArea: StaffProbationArea
+  val probationArea: StaffProbationArea,
 )
 
 data class StaffWithoutUsernameUserDetails(
@@ -18,13 +18,13 @@ data class StaffWithoutUsernameUserDetails(
   val staffIdentifier: Long,
   val staff: StaffNames,
   val teams: List<StaffUserTeamMembership>?,
-  val probationArea: StaffProbationArea
+  val probationArea: StaffProbationArea,
 )
 
 data class StaffNames(
   val forenames: String,
   val surname: String,
-  val fullName: String = "$forenames $surname"
+  val fullName: String = "$forenames $surname",
 )
 
 data class StaffUserTeamMembership(
@@ -37,15 +37,15 @@ data class StaffUserTeamMembership(
   val district: KeyValue,
   val borough: KeyValue,
   val startDate: LocalDate,
-  val endDate: LocalDate?
+  val endDate: LocalDate?,
 )
 
 data class KeyValue(
   val code: String,
-  val description: String
+  val description: String,
 )
 
 data class StaffProbationArea(
   val code: String,
-  val description: String
+  val description: String,
 )

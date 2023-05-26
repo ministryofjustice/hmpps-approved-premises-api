@@ -103,7 +103,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
         .withIdentifier("LOCALAUTHORITY")
-        .produce()
+        .produce(),
     )
 
     this.withProbationRegion(
@@ -112,9 +112,9 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
         .withApArea(
           ApAreaEntityFactory()
             .withIdentifier("APAREA")
-            .produce()
+            .produce(),
         )
-        .produce()
+        .produce(),
     )
   }
 
@@ -137,6 +137,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     characteristics = mutableListOf(),
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
-    turnaroundWorkingDayCount = this.turnaroundWorkingDayCount?.invoke() ?: 2
+    turnaroundWorkingDayCount = this.turnaroundWorkingDayCount?.invoke() ?: 2,
   )
 }

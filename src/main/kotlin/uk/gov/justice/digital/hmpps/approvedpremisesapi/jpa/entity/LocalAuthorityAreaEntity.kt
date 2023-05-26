@@ -20,5 +20,5 @@ data class LocalAuthorityAreaEntity(
   var identifier: String,
   var name: String,
   @OneToMany(mappedBy = "localAuthorityArea")
-  var premises: MutableList<PremisesEntity>
+  var premises: MutableList<PremisesEntity>,
 )

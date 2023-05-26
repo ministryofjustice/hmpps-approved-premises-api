@@ -13,5 +13,5 @@ data class BedUtilisationReportRow(
   val voidDays: Int,
   val totalBookedDays: Int,
   val totalDaysInTheMonth: Int,
-  val occupancyRate: Double
+  val occupancyRate: Double,
 )

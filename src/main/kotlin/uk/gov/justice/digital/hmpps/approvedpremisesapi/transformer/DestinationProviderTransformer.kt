@@ -9,6 +9,6 @@ class DestinationProviderTransformer() {
   fun transformJpaToApi(jpa: DestinationProviderEntity) = DestinationProvider(
     id = jpa.id,
     name = jpa.name,
-    isActive = jpa.isActive
+    isActive = jpa.isActive,
   )
 }

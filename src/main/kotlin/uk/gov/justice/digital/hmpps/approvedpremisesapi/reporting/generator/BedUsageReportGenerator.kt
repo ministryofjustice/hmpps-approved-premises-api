@@ -47,7 +47,7 @@ class BedUsageReportGenerator(
         durationOfBookingDays = booking.arrivalDate.getDaysUntilInclusive(booking.departureDate).size,
         bookingStatus = bookingTransformer.determineStatus(booking),
         voidCategory = null,
-        voidNotes = null
+        voidNotes = null,
       )
 
       val turnaround = booking.turnaround
@@ -67,7 +67,7 @@ class BedUsageReportGenerator(
           durationOfBookingDays = turnaroundStartDate.getDaysUntilInclusive(endDate).size,
           bookingStatus = null,
           voidCategory = null,
-          voidNotes = null
+          voidNotes = null,
         )
       }
     }
@@ -85,7 +85,7 @@ class BedUsageReportGenerator(
         durationOfBookingDays = lostBed.startDate.getDaysUntilInclusive(lostBed.endDate).size,
         bookingStatus = null,
         voidCategory = lostBed.reason.name,
-        voidNotes = lostBed.notes
+        voidNotes = lostBed.notes,
       )
     }
 

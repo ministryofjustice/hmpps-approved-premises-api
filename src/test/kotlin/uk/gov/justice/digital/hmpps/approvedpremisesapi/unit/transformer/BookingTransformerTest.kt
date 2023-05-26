@@ -103,14 +103,14 @@ class BookingTransformerTest {
         id = UUID.fromString("a005f122-a0e9-4d93-b5bb-f7c5bd82a015"),
         identifier = "APA",
         name = "Ap Area",
-        probationRegions = mutableListOf()
-      )
+        probationRegions = mutableListOf(),
+      ),
     ).apply { apArea.probationRegions.add(this) },
     localAuthorityArea = LocalAuthorityAreaEntity(
       id = UUID.fromString("ee39d3bc-e9ad-4408-a21d-cf763aa1d981"),
       identifier = "AUTHORITY",
       name = "Local Authority Area",
-      premises = mutableListOf()
+      premises = mutableListOf(),
     ),
     bookings = mutableListOf(),
     lostBeds = mutableListOf(),
@@ -125,7 +125,7 @@ class BookingTransformerTest {
     characteristics = mutableListOf(),
     status = PropertyStatus.active,
     probationDeliveryUnit = null,
-    turnaroundWorkingDayCount = 2
+    turnaroundWorkingDayCount = 2,
   )
 
   private val baseBookingEntity = BookingEntity(
@@ -149,7 +149,7 @@ class BookingTransformerTest {
     application = null,
     offlineApplication = null,
     turnarounds = mutableListOf(),
-    nomsNumber = "NOMS123"
+    nomsNumber = "NOMS123",
   )
 
   private val staffMember = StaffMember(
@@ -158,8 +158,8 @@ class BookingTransformerTest {
     name = StaffMemberName(
       forename = "first",
       middleName = null,
-      surname = "last"
-    )
+      surname = "last",
+    ),
   )
 
   private val offenderDetails = OffenderDetailsSummaryFactory()
@@ -183,7 +183,7 @@ class BookingTransformerTest {
     every { mockStaffMemberTransformer.transformDomainToApi(staffMember) } returns uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
       code = "789",
       keyWorker = true,
-      name = "first last"
+      name = "first last",
     )
 
     every { mockPersonTransformer.transformModelToApi(offenderDetails, inmateDetail) } returns Person(
@@ -196,7 +196,7 @@ class BookingTransformerTest {
       nationality = "English",
       religionOrBelief = null,
       genderIdentity = null,
-      prisonName = null
+      prisonName = null,
     )
   }
 
@@ -224,7 +224,7 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
@@ -238,7 +238,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
-      )
+      ),
     )
   }
 
@@ -264,7 +264,7 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
@@ -278,7 +278,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
-      )
+      ),
     )
   }
 
@@ -319,7 +319,7 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
@@ -341,8 +341,8 @@ class BookingTransformerTest {
         departures = listOf(),
         cancellations = listOf(),
         turnarounds = listOf(),
-        effectiveEndDate = LocalDate.parse("2022-08-30")
-      )
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
+      ),
     )
   }
 
@@ -382,14 +382,14 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
           code = "789",
           keyWorker = true,
-          name = "first last"
+          name = "first last",
         ),
         status = BookingStatus.arrived,
         arrival = Arrival(
@@ -408,7 +408,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
-      )
+      ),
     )
   }
 
@@ -423,7 +423,7 @@ class BookingTransformerTest {
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        )
+        ),
       )
     }
 
@@ -450,7 +450,7 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
@@ -476,11 +476,11 @@ class BookingTransformerTest {
             reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
             notes = null,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          )
+          ),
         ),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
-      )
+      ),
     )
   }
 
@@ -504,7 +504,7 @@ class BookingTransformerTest {
           notes = "Original reason chosen in error",
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-02T12:34:56.789Z"),
-        )
+        ),
       )
     }
 
@@ -545,7 +545,7 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
@@ -578,11 +578,11 @@ class BookingTransformerTest {
             date = LocalDate.parse("2022-08-10"),
             reason = CancellationReason(id = UUID.fromString("dd6444f7-af56-436c-8451-ca993617471e"), name = "Some other reason", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
             createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
-          )
+          ),
         ),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
-      )
+      ),
     )
   }
 
@@ -607,24 +607,24 @@ class BookingTransformerTest {
             name = "Departure Reason",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusReasonCode = "A"
+            legacyDeliusReasonCode = "A",
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
             name = "Move on Category",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusCategoryCode = "CAT"
+            legacyDeliusCategoryCode = "CAT",
           ),
           destinationProvider = DestinationProviderEntity(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        )
+        ),
       )
     }
 
@@ -655,7 +655,7 @@ class BookingTransformerTest {
       destinationProvider = DestinationProvider(
         id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
         name = "Destination Provider",
-        isActive = true
+        isActive = true,
       ),
       notes = null,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -676,14 +676,14 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
           code = "789",
           keyWorker = true,
-          name = "first last"
+          name = "first last",
         ),
         status = BookingStatus.departed,
         arrival = Arrival(
@@ -712,7 +712,7 @@ class BookingTransformerTest {
           destinationProvider = DestinationProvider(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -742,16 +742,16 @@ class BookingTransformerTest {
             destinationProvider = DestinationProvider(
               id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
               name = "Destination Provider",
-              isActive = true
+              isActive = true,
             ),
             notes = null,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          )
+          ),
         ),
         cancellations = listOf(),
         turnarounds = listOf(),
-        effectiveEndDate = LocalDate.parse("2022-08-30")
-      )
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
+      ),
     )
   }
 
@@ -776,31 +776,31 @@ class BookingTransformerTest {
             name = "Departure Reason",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusReasonCode = "A"
+            legacyDeliusReasonCode = "A",
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
             name = "Move on Category",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusCategoryCode = "CAT"
+            legacyDeliusCategoryCode = "CAT",
           ),
           destinationProvider = DestinationProviderEntity(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        )
+        ),
       )
 
       turnarounds += TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 0,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        booking = this
+        booking = this,
       )
     }
 
@@ -831,7 +831,7 @@ class BookingTransformerTest {
       destinationProvider = DestinationProvider(
         id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
         name = "Destination Provider",
-        isActive = true
+        isActive = true,
       ),
       notes = null,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -841,7 +841,7 @@ class BookingTransformerTest {
       id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
       workingDays = 0,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-      bookingId = bookingId
+      bookingId = bookingId,
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
@@ -859,14 +859,14 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
           code = "789",
           keyWorker = true,
-          name = "first last"
+          name = "first last",
         ),
         status = BookingStatus.closed,
         arrival = Arrival(
@@ -895,7 +895,7 @@ class BookingTransformerTest {
           destinationProvider = DestinationProvider(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -925,29 +925,29 @@ class BookingTransformerTest {
             destinationProvider = DestinationProvider(
               id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
               name = "Destination Provider",
-              isActive = true
+              isActive = true,
             ),
             notes = null,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          )
+          ),
         ),
         cancellations = listOf(),
         turnaround = Turnaround(
           id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
           workingDays = 0,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          bookingId = bookingId
+          bookingId = bookingId,
         ),
         turnarounds = listOf(
           Turnaround(
             id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
             workingDays = 0,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-            bookingId = bookingId
-          )
+            bookingId = bookingId,
+          ),
         ),
-        effectiveEndDate = LocalDate.parse("2022-08-30")
-      )
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
+      ),
     )
   }
 
@@ -982,31 +982,31 @@ class BookingTransformerTest {
             name = "Departure Reason",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusReasonCode = "A"
+            legacyDeliusReasonCode = "A",
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
             name = "Move on Category",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusCategoryCode = "CAT"
+            legacyDeliusCategoryCode = "CAT",
           ),
           destinationProvider = DestinationProviderEntity(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        )
+        ),
       )
 
       turnarounds += TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 2,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        booking = this
+        booking = this,
       )
     }
 
@@ -1037,7 +1037,7 @@ class BookingTransformerTest {
       destinationProvider = DestinationProvider(
         id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
         name = "Destination Provider",
-        isActive = true
+        isActive = true,
       ),
       notes = null,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1047,7 +1047,7 @@ class BookingTransformerTest {
       id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
       workingDays = 2,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-      bookingId = bookingId
+      bookingId = bookingId,
     )
 
     every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
@@ -1068,14 +1068,14 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
           code = "789",
           keyWorker = true,
-          name = "first last"
+          name = "first last",
         ),
         status = BookingStatus.departed,
         arrival = Arrival(
@@ -1104,7 +1104,7 @@ class BookingTransformerTest {
           destinationProvider = DestinationProvider(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1134,30 +1134,30 @@ class BookingTransformerTest {
             destinationProvider = DestinationProvider(
               id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
               name = "Destination Provider",
-              isActive = true
+              isActive = true,
             ),
             notes = null,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          )
+          ),
         ),
         cancellations = listOf(),
         turnaround = Turnaround(
           id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
           workingDays = 2,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          bookingId = bookingId
+          bookingId = bookingId,
         ),
         turnarounds = listOf(
           Turnaround(
             id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
             workingDays = 2,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-            bookingId = bookingId
-          )
+            bookingId = bookingId,
+          ),
         ),
         turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
-        effectiveEndDate = expectedEffectiveEndDate
-      )
+        effectiveEndDate = expectedEffectiveEndDate,
+      ),
     )
   }
 
@@ -1192,31 +1192,31 @@ class BookingTransformerTest {
             name = "Departure Reason",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusReasonCode = "A"
+            legacyDeliusReasonCode = "A",
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
             name = "Move on Category",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusCategoryCode = "CAT"
+            legacyDeliusCategoryCode = "CAT",
           ),
           destinationProvider = DestinationProviderEntity(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        )
+        ),
       )
 
       turnarounds += TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 2,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
-        booking = this
+        booking = this,
       )
     }
 
@@ -1247,7 +1247,7 @@ class BookingTransformerTest {
       destinationProvider = DestinationProvider(
         id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
         name = "Destination Provider",
-        isActive = true
+        isActive = true,
       ),
       notes = null,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1257,7 +1257,7 @@ class BookingTransformerTest {
       id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
       workingDays = 2,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-      bookingId = bookingId
+      bookingId = bookingId,
     )
 
     every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
@@ -1278,14 +1278,14 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
           code = "789",
           keyWorker = true,
-          name = "first last"
+          name = "first last",
         ),
         status = BookingStatus.closed,
         arrival = Arrival(
@@ -1314,7 +1314,7 @@ class BookingTransformerTest {
           destinationProvider = DestinationProvider(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1344,30 +1344,30 @@ class BookingTransformerTest {
             destinationProvider = DestinationProvider(
               id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
               name = "Destination Provider",
-              isActive = true
+              isActive = true,
             ),
             notes = null,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          )
+          ),
         ),
         cancellations = listOf(),
         turnaround = Turnaround(
           id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
           workingDays = 2,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-          bookingId = bookingId
+          bookingId = bookingId,
         ),
         turnarounds = listOf(
           Turnaround(
             id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
             workingDays = 2,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
-            bookingId = bookingId
-          )
+            bookingId = bookingId,
+          ),
         ),
         turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
-        effectiveEndDate = expectedEffectiveEndDate
-      )
+        effectiveEndDate = expectedEffectiveEndDate,
+      ),
     )
   }
 
@@ -1393,19 +1393,19 @@ class BookingTransformerTest {
             name = "Departure Reason",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusReasonCode = "A"
+            legacyDeliusReasonCode = "A",
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
             name = "Move on Category",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusCategoryCode = "CAT"
+            legacyDeliusCategoryCode = "CAT",
           ),
           destinationProvider = DestinationProviderEntity(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           booking = this,
@@ -1419,24 +1419,24 @@ class BookingTransformerTest {
             name = "Departure Reason",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusReasonCode = "A"
+            legacyDeliusReasonCode = "A",
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("3fc011f3-81ae-46fa-a066-84de8423ab87"),
             name = "Some other category",
             isActive = true,
             serviceScope = "*",
-            legacyDeliusCategoryCode = "CAT"
+            legacyDeliusCategoryCode = "CAT",
           ),
           destinationProvider = DestinationProviderEntity(
             id = UUID.fromString("48a5fac2-6ac6-4dad-8389-b59cc6b6112c"),
             name = "Some other destination provider",
-            isActive = true
+            isActive = true,
           ),
           notes = "Updated move-on category and destination provider after receiving new information",
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-02T12:34:56.789Z"),
-        )
+        ),
       )
     }
 
@@ -1471,7 +1471,7 @@ class BookingTransformerTest {
           destinationProvider = DestinationProvider(
             id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
             name = "Destination Provider",
-            isActive = true
+            isActive = true,
           ),
           notes = null,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1495,7 +1495,7 @@ class BookingTransformerTest {
           destinationProvider = DestinationProvider(
             id = UUID.fromString("48a5fac2-6ac6-4dad-8389-b59cc6b6112c"),
             name = "Some other destination provider",
-            isActive = true
+            isActive = true,
           ),
           notes = "Updated move-on category and destination provider after receiving new information",
           createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
@@ -1520,14 +1520,14 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
           code = "789",
           keyWorker = true,
-          name = "first last"
+          name = "first last",
         ),
         status = BookingStatus.closed,
         arrival = Arrival(
@@ -1556,7 +1556,7 @@ class BookingTransformerTest {
           destinationProvider = DestinationProvider(
             id = UUID.fromString("48a5fac2-6ac6-4dad-8389-b59cc6b6112c"),
             name = "Some other destination provider",
-            isActive = true
+            isActive = true,
           ),
           notes = "Updated move-on category and destination provider after receiving new information",
           createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
@@ -1586,7 +1586,7 @@ class BookingTransformerTest {
             destinationProvider = DestinationProvider(
               id = UUID.fromString("29669658-c8f2-492c-8eab-2dd73a208d30"),
               name = "Destination Provider",
-              isActive = true
+              isActive = true,
             ),
             notes = null,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1610,16 +1610,16 @@ class BookingTransformerTest {
             destinationProvider = DestinationProvider(
               id = UUID.fromString("48a5fac2-6ac6-4dad-8389-b59cc6b6112c"),
               name = "Some other destination provider",
-              isActive = true
+              isActive = true,
             ),
             notes = "Updated move-on category and destination provider after receiving new information",
             createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
-          )
+          ),
         ),
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
-      )
+      ),
     )
   }
 
@@ -1661,7 +1661,7 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
@@ -1684,7 +1684,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
-      )
+      ),
     )
   }
 
@@ -1693,7 +1693,7 @@ class BookingTransformerTest {
     val awaitingArrivalBooking = baseBookingEntity.copy(
       id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
       service = ServiceName.temporaryAccommodation.value,
-      turnarounds = mutableListOf()
+      turnarounds = mutableListOf(),
     )
 
     val turnaround1 = TurnaroundEntity(
@@ -1756,7 +1756,7 @@ class BookingTransformerTest {
           nationality = "English",
           religionOrBelief = null,
           genderIdentity = null,
-          prisonName = null
+          prisonName = null,
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
@@ -1795,8 +1795,8 @@ class BookingTransformerTest {
           ),
         ),
         turnaroundStartDate = LocalDate.parse("2022-08-31"),
-        effectiveEndDate = LocalDate.parse("2022-09-05")
-      )
+        effectiveEndDate = LocalDate.parse("2022-09-05"),
+      ),
     )
   }
 }

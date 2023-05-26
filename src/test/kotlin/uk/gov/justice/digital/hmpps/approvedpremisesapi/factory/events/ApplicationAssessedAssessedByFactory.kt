@@ -27,6 +27,6 @@ class ApplicationAssessedAssessedByFactory : Factory<ApplicationAssessedAssessed
   override fun produce() = ApplicationAssessedAssessedBy(
     staffMember = this.staffMember(),
     probationArea = this.probationArea(),
-    cru = this.cru()
+    cru = this.cru(),
   )
 }

@@ -717,7 +717,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       probationDeliveryUnit = searchPdu.name,
       startDate = LocalDate.parse("2023-03-09"),
       durationInDays = 7,
-      probationRegionId = probationRegion.id
+      probationRegionId = probationRegion.id,
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)

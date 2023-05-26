@@ -34,7 +34,7 @@ class BookingNotMadeTransformerTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(otherUser)
-          .produce()
+          .produce(),
       )
       .produce()
 

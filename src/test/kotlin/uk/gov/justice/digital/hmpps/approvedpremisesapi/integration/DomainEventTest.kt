@@ -33,7 +33,7 @@ class DomainEventTest : IntegrationTestBase() {
   @Test
   fun `Get Application Submitted Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username"
+      username = "username",
     )
 
     webTestClient.get()
@@ -48,7 +48,7 @@ class DomainEventTest : IntegrationTestBase() {
   fun `Get Application Submitted Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
     val eventId = UUID.randomUUID()
@@ -57,7 +57,7 @@ class DomainEventTest : IntegrationTestBase() {
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.application.submitted",
-      eventDetails = ApplicationSubmittedFactory().produce()
+      eventDetails = ApplicationSubmittedFactory().produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
@@ -90,7 +90,7 @@ class DomainEventTest : IntegrationTestBase() {
   @Test
   fun `Get Application Assessed Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username"
+      username = "username",
     )
 
     webTestClient.get()
@@ -105,7 +105,7 @@ class DomainEventTest : IntegrationTestBase() {
   fun `Get Application Assessed Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
     val eventId = UUID.randomUUID()
@@ -114,7 +114,7 @@ class DomainEventTest : IntegrationTestBase() {
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.application.assessed",
-      eventDetails = ApplicationAssessedFactory().produce()
+      eventDetails = ApplicationAssessedFactory().produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
@@ -147,7 +147,7 @@ class DomainEventTest : IntegrationTestBase() {
   @Test
   fun `Get Booking Made Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username"
+      username = "username",
     )
 
     webTestClient.get()
@@ -162,7 +162,7 @@ class DomainEventTest : IntegrationTestBase() {
   fun `Get Booking Made Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
     val eventId = UUID.randomUUID()
@@ -171,7 +171,7 @@ class DomainEventTest : IntegrationTestBase() {
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.booking.made",
-      eventDetails = BookingMadeFactory().produce()
+      eventDetails = BookingMadeFactory().produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
@@ -204,7 +204,7 @@ class DomainEventTest : IntegrationTestBase() {
   @Test
   fun `Get Person Arrived Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username"
+      username = "username",
     )
 
     webTestClient.get()
@@ -219,7 +219,7 @@ class DomainEventTest : IntegrationTestBase() {
   fun `Get Person Arrived Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
     val eventId = UUID.randomUUID()
@@ -228,7 +228,7 @@ class DomainEventTest : IntegrationTestBase() {
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.person.arrived",
-      eventDetails = PersonArrivedFactory().produce()
+      eventDetails = PersonArrivedFactory().produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
@@ -261,7 +261,7 @@ class DomainEventTest : IntegrationTestBase() {
   @Test
   fun `Get Person Not Arrived Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username"
+      username = "username",
     )
 
     webTestClient.get()
@@ -276,7 +276,7 @@ class DomainEventTest : IntegrationTestBase() {
   fun `Get Person Not Arrived Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
     val eventId = UUID.randomUUID()
@@ -285,7 +285,7 @@ class DomainEventTest : IntegrationTestBase() {
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.person.not-arrived",
-      eventDetails = PersonNotArrivedFactory().produce()
+      eventDetails = PersonNotArrivedFactory().produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
@@ -318,7 +318,7 @@ class DomainEventTest : IntegrationTestBase() {
   @Test
   fun `Get Person Departed Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username"
+      username = "username",
     )
 
     webTestClient.get()
@@ -333,7 +333,7 @@ class DomainEventTest : IntegrationTestBase() {
   fun `Get Person Departed Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
     val eventId = UUID.randomUUID()
@@ -342,7 +342,7 @@ class DomainEventTest : IntegrationTestBase() {
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.person.departed",
-      eventDetails = PersonDepartedFactory().produce()
+      eventDetails = PersonDepartedFactory().produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
@@ -375,7 +375,7 @@ class DomainEventTest : IntegrationTestBase() {
   @Test
   fun `Get Booking Not Made Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username"
+      username = "username",
     )
 
     webTestClient.get()
@@ -390,7 +390,7 @@ class DomainEventTest : IntegrationTestBase() {
   fun `Get Booking Not Made Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS")
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
     val eventId = UUID.randomUUID()
@@ -399,7 +399,7 @@ class DomainEventTest : IntegrationTestBase() {
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.booking.not-made",
-      eventDetails = BookingNotMadeFactory().produce()
+      eventDetails = BookingNotMadeFactory().produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {

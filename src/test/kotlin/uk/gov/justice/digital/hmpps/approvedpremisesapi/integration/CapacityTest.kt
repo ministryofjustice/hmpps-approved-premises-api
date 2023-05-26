@@ -135,7 +135,7 @@ class CapacityTest : IntegrationTestBase() {
           DateCapacity(date = LocalDate.now().plusDays(2), availableBeds = 30),
           DateCapacity(date = LocalDate.now().plusDays(3), availableBeds = 30),
           DateCapacity(date = LocalDate.now().plusDays(4), availableBeds = 29),
-          DateCapacity(date = LocalDate.now().plusDays(5), availableBeds = 29)
+          DateCapacity(date = LocalDate.now().plusDays(5), availableBeds = 29),
         )
     }
   }

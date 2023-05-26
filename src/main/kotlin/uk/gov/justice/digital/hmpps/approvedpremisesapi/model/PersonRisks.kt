@@ -12,14 +12,14 @@ data class RiskWithStatus<T>(val status: RiskStatus, val value: T? = null) {
 enum class RiskStatus {
   Retrieved,
   NotFound,
-  Error
+  Error,
 }
 
 data class PersonRisks(
   val roshRisks: RiskWithStatus<RoshRisks>,
   val mappa: RiskWithStatus<Mappa>,
   val tier: RiskWithStatus<RiskTier>,
-  val flags: RiskWithStatus<List<String>>
+  val flags: RiskWithStatus<List<String>>,
 )
 
 data class RoshRisks(
@@ -28,17 +28,17 @@ data class RoshRisks(
   val riskToPublic: String,
   val riskToKnownAdult: String,
   val riskToStaff: String,
-  val lastUpdated: LocalDate?
+  val lastUpdated: LocalDate?,
 )
 
 data class Mappa(
   val level: String,
-  val lastUpdated: LocalDate
+  val lastUpdated: LocalDate,
 )
 
 data class RiskTier(
   val level: String,
-  val lastUpdated: LocalDate
+  val lastUpdated: LocalDate,
 )
 
 @Converter(autoApply = true)

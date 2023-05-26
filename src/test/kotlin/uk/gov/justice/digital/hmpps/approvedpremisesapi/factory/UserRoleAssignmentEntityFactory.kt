@@ -27,6 +27,6 @@ class UserRoleAssignmentEntityFactory : Factory<UserRoleAssignmentEntity> {
   override fun produce(): UserRoleAssignmentEntity = UserRoleAssignmentEntity(
     id = this.id(),
     user = this.user?.invoke() ?: throw RuntimeException("Must provide a User"),
-    role = this.role()
+    role = this.role(),
   )
 }

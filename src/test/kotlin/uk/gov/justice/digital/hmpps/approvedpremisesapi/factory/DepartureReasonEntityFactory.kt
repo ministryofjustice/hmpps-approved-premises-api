@@ -39,6 +39,6 @@ class DepartureReasonEntityFactory : Factory<DepartureReasonEntity> {
     name = this.name(),
     isActive = this.isActive(),
     serviceScope = this.serviceScope(),
-    legacyDeliusReasonCode = this.legacyDeliusCategoryCode()
+    legacyDeliusReasonCode = this.legacyDeliusCategoryCode(),
   )
 }

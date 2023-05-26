@@ -14,7 +14,7 @@ class GroupedDocumentsFactory : Factory<GroupedDocuments> {
   }
 
   fun withConvictionLevelDocument(convictionId: String, convictionLevelDocument: Document) = apply {
-    if (! this.convictionLevelDocuments.containsKey(convictionId)) {
+    if (!this.convictionLevelDocuments.containsKey(convictionId)) {
       this.convictionLevelDocuments[convictionId] = mutableListOf()
     }
 
@@ -26,8 +26,8 @@ class GroupedDocumentsFactory : Factory<GroupedDocuments> {
     convictions = convictionLevelDocuments.map {
       ConvictionDocuments(
         convictionId = it.key,
-        documents = it.value
+        documents = it.value,
       )
-    }
+    },
   )
 }

@@ -86,7 +86,7 @@ class AllocationQueryTest : IntegrationTestBase() {
         approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(user)
           withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-        }
+        },
       )
       withSubmittedAt(null)
       withAssessmentSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())

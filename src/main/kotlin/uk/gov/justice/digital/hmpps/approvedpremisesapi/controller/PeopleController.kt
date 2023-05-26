@@ -59,7 +59,7 @@ class PeopleController(
     }
 
     return ResponseEntity.ok(
-      personTransformer.transformModelToApi(offenderDetails, inmateDetail)
+      personTransformer.transformModelToApi(offenderDetails, inmateDetail),
     )
   }
 
@@ -171,8 +171,8 @@ class PeopleController(
         riskToTheIndividual,
         riskManagementPlan,
         needs,
-        selectedSections ?: emptyList()
-      )
+        selectedSections ?: emptyList(),
+      ),
     )
   }
 
@@ -183,7 +183,7 @@ class PeopleController(
     val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
 
     return ResponseEntity.ok(
-      activeConvictions.flatMap(convictionTransformer::transformToApi)
+      activeConvictions.flatMap(convictionTransformer::transformToApi),
     )
   }
 

@@ -66,6 +66,6 @@ class PersonNotArrivedFactory : Factory<PersonNotArrived> {
     premises = this.premises(),
     notes = this.notes(),
     expectedArrivalOn = this.expectedArrivalOn(),
-    recordedBy = this.recordedBy()
+    recordedBy = this.recordedBy(),
   )
 }

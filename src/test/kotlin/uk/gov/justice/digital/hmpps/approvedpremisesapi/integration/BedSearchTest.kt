@@ -165,7 +165,7 @@ class BedSearchTest : IntegrationTestBase() {
     }
 
     `Given a User`(
-      probationRegion = probationRegion
+      probationRegion = probationRegion,
     ) { _, jwt ->
       val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -250,7 +250,7 @@ class BedSearchTest : IntegrationTestBase() {
     }
 
     `Given a User`(
-      probationRegion = probationRegion
+      probationRegion = probationRegion,
     ) { _, jwt ->
       val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 

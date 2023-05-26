@@ -20,6 +20,6 @@ class DestinationProviderFactory : Factory<DestinationProvider> {
 
   override fun produce() = DestinationProvider(
     id = this.id(),
-    description = this.description()
+    description = this.description(),
   )
 }

@@ -70,7 +70,7 @@ class RoshRatingsFactory : AssessmentInfoFactory<RoshRatings>() {
       riskKnownAdultCustody = this.riskKnownAdultCustody(),
       riskKnownAdultCommunity = this.riskKnownAdultCommunity(),
       riskPublicCustody = this.riskPublicCustody(),
-      riskPublicCommunity = this.riskPublicCommunity()
-    )
+      riskPublicCommunity = this.riskPublicCommunity(),
+    ),
   )
 }

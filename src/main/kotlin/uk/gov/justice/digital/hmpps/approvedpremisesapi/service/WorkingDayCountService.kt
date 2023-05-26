@@ -10,7 +10,7 @@ import java.time.LocalDate
 
 @Service
 class WorkingDayCountService(
-  private val govUKBankHolidaysApiClient: GovUKBankHolidaysApiClient
+  private val govUKBankHolidaysApiClient: GovUKBankHolidaysApiClient,
 ) {
 
   fun getWorkingDaysCount(from: LocalDate, to: LocalDate): Int {

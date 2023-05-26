@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 import java.time.LocalDate
 
 data class Registrations(
-  val registrations: List<Registration>
+  val registrations: List<Registration>,
 )
 
 data class Registration(
@@ -28,18 +28,18 @@ data class Registration(
   val deregisteringProbationArea: RegistrationKeyValue?,
   val deregisteringNotes: String?,
   val numberOfPreviousDeregistrations: Int,
-  val registrationReviews: List<RegistrationReview>?
+  val registrationReviews: List<RegistrationReview>?,
 )
 
 data class RegistrationKeyValue(
   val code: String,
-  val description: String
+  val description: String,
 )
 
 data class RegistrationStaffHuman(
   val code: String,
   val forenames: String,
-  val surname: String
+  val surname: String,
 )
 
 data class RegistrationReview(
@@ -48,5 +48,5 @@ data class RegistrationReview(
   val notes: String?,
   val reviewingTeam: RegistrationKeyValue,
   val reviewingOfficer: RegistrationStaffHuman,
-  val completed: Boolean
+  val completed: Boolean,
 )

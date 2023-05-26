@@ -76,8 +76,11 @@ class BookingTransformer(
   private fun determineTemporaryAccommodationStatus(jpa: BookingEntity): BookingStatus {
     val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
     val hasZeroDayTurnaround = jpa.turnaround == null || jpa.turnaround!!.workingDayCount == 0
-    val turnaroundPeriodEnded = if (! hasNonZeroDayTurnaround) false else
+    val turnaroundPeriodEnded = if (!hasNonZeroDayTurnaround) {
+      false
+    } else {
       workingDayCountService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount).isBefore(LocalDate.now())
+    }
 
     return when {
       jpa.cancellation != null -> BookingStatus.cancelled

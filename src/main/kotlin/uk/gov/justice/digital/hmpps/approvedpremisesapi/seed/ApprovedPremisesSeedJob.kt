@@ -20,10 +20,10 @@ class ApprovedPremisesSeedJob(
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
-  private val characteristicRepository: CharacteristicRepository
+  private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesSeedCsvRow>(
   fileName = fileName,
-  requiredColumns = 12
+  requiredColumns = 12,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -69,7 +69,7 @@ class ApprovedPremisesSeedJob(
     apCode = columns["apCode"]!!,
     qCode = columns["qCode"]!!,
     latitude = columns["latitude"]!!.toDoubleOrNull(),
-    longitude = columns["longitude"]!!.toDoubleOrNull()
+    longitude = columns["longitude"]!!.toDoubleOrNull(),
   )
 
   override fun processRow(row: ApprovedPremisesSeedCsvRow) {
@@ -126,7 +126,7 @@ class ApprovedPremisesSeedJob(
     row: ApprovedPremisesSeedCsvRow,
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
-    characteristics: List<CharacteristicEntity>
+    characteristics: List<CharacteristicEntity>,
   ) {
     log.info("Creating new Approved Premises: ${row.apCode} ${row.name}")
 
@@ -153,8 +153,8 @@ class ApprovedPremisesSeedJob(
         status = row.status,
         longitude = row.longitude,
         latitude = row.latitude,
-        point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null
-      )
+        point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null,
+      ),
     )
 
     approvedPremises.characteristics.addAll(characteristics)
@@ -178,7 +178,7 @@ class ApprovedPremisesSeedJob(
     existingApprovedPremises: ApprovedPremisesEntity,
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
-    characteristics: List<CharacteristicEntity>
+    characteristics: List<CharacteristicEntity>,
   ) {
     log.info("Updating existing Approved Premises: ${row.apCode} ${row.name}")
 
@@ -250,7 +250,7 @@ private fun requiredHeaders(): Set<String> {
 
 data class CharacteristicValue(
   val propertyName: String,
-  val value: Boolean
+  val value: Boolean,
 )
 
 data class ApprovedPremisesSeedCsvRow(
@@ -287,5 +287,5 @@ data class ApprovedPremisesSeedCsvRow(
   val apCode: String,
   val qCode: String,
   val latitude: Double?,
-  val longitude: Double?
+  val longitude: Double?,
 )

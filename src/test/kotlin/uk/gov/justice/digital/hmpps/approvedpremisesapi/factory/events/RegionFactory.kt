@@ -19,6 +19,6 @@ class RegionFactory : Factory<Region> {
 
   override fun produce() = Region(
     code = this.code(),
-    name = this.name()
+    name = this.name(),
   )
 }

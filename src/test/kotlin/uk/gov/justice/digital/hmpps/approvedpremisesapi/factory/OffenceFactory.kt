@@ -131,7 +131,7 @@ class OffenceFactory : Factory<Offence> {
       subCategoryDescription = this.subCategoryDescription(),
       form20Code = this.form20Code(),
       subCategoryAbbreviation = this.subCategoryAbbreviation(),
-      cjitCode = this.cjitCode()
+      cjitCode = this.cjitCode(),
     ),
     offenceDate = this.offenceDate(),
     offenceCount = this.offenceCount(),
@@ -139,6 +139,6 @@ class OffenceFactory : Factory<Offence> {
     verdict = this.verdict(),
     offenderId = this.offenderId(),
     createdDatetime = this.createdDatetime(),
-    lastUpdatedDatetime = this.lastUpdatedDatetime()
+    lastUpdatedDatetime = this.lastUpdatedDatetime(),
   )
 }

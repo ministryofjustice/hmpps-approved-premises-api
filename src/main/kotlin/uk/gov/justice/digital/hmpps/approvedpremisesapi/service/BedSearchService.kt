@@ -108,7 +108,7 @@ class BedSearchService(
           probationDeliveryUnit = probationDeliveryUnit,
           startDate = startDate,
           durationInDays = durationInDays,
-          probationRegionId = user.probationRegion.id
+          probationRegionId = user.probationRegion.id,
         )
 
         val bedIds = candidateResults.map { it.bedId }
@@ -119,7 +119,7 @@ class BedSearchService(
         val results = candidateResults.filter { !bedsWithABookingInTurnaround.contains(it.bedId) }
 
         return@validated success(
-          results
+          results,
         )
       },
     )

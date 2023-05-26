@@ -9,12 +9,12 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMemb
   mockSuccessfulGetCallWithJsonResponse(
     url = "/approved-premises/$qCode/staff",
     responseBody = StaffMembersPage(
-      content = listOf(staffMember)
-    )
+      content = listOf(staffMember),
+    ),
   )
 
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulTeamsManagingCaseCall(crn: String, staffCode: String, response: ManagingTeamsResponse) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/teams/managingCase/$crn?staffCode=$staffCode",
-    responseBody = response
+    responseBody = response,
   )

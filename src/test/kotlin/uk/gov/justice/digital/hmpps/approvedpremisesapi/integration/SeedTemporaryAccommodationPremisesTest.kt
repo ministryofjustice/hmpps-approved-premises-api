@@ -20,9 +20,9 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         listOf(
           TemporaryAccommodationPremisesSeedCsvRowFactory()
             .withProbationRegion("Not Real Region")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationPremises, "invalid-probation-ta")
@@ -48,9 +48,9 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
           TemporaryAccommodationPremisesSeedCsvRowFactory()
             .withProbationRegion(probationRegion.name)
             .withLocalAuthorityArea("Not Real Authority")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationPremises, "invalid-local-authority-ta")
@@ -86,9 +86,9 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       "new-ta-premises",
       temporaryAccommodationPremisesSeedCsvRowsToCsv(
         listOf(
-          csvRow
-        )
-      )
+          csvRow,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationPremises, "new-ta-premises")
@@ -147,9 +147,9 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       "update-ta-premises",
       temporaryAccommodationPremisesSeedCsvRowsToCsv(
         listOf(
-          csvRow
-        )
-      )
+          csvRow,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationPremises, "update-ta-premises")
@@ -183,7 +183,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         "Park nearby",
         "School nearby",
         // Sample of characteristics
-        "Optional notes"
+        "Optional notes",
       )
       .newRow()
 

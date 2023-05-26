@@ -13,7 +13,7 @@ class InmateDetailsCacheRefreshWorker(
   private val prisonsApiClient: PrisonsApiClient,
   private val loggingEnabled: Boolean,
   private val delayMs: Long,
-  redLock: RedLock
+  redLock: RedLock,
 ) : CacheRefreshWorker(redLock, "inmateDetails") {
   override fun work(checkShouldStop: () -> Boolean) {
     val distinctNomsNumbers = (applicationRepository.getDistinctNomsNumbers() + bookingRepository.getDistinctNomsNumbers()).distinct()
@@ -37,7 +37,7 @@ class InmateDetailsCacheRefreshWorker(
 
       val prisonsApiResult = prisonsApiClient.getInmateDetailsWithCall(it)
       if (prisonsApiResult is ClientResult.Failure.StatusCode) {
-        if (! prisonsApiResult.isPreemptivelyCachedResponse) {
+        if (!prisonsApiResult.isPreemptivelyCachedResponse) {
           log.error("Unable to refresh Inmate Details for $it, response status: ${prisonsApiResult.status}")
         }
       }

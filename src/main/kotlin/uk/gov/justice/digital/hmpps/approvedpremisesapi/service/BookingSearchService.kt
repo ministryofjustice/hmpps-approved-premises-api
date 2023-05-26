@@ -64,7 +64,7 @@ class BookingSearchService(
     return AuthorisableActionResult.Success(
       validated {
         return@validated success(results.sortedWith(comparator))
-      }
+      },
     )
   }
 }

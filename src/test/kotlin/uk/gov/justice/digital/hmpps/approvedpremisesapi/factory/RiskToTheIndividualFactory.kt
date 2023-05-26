@@ -64,7 +64,7 @@ class RiskToTheIndividualFactory : AssessmentInfoFactory<RisksToTheIndividual>()
       currentVulnerability = this.currentVulnerability(),
       previousVulnerability = this.previousVulnerability(),
       riskOfSeriousHarm = this.riskOfSeriousHarm(),
-      currentConcernsBreachOfTrustText = this.currentConcernsBreachOfTrustText()
-    )
+      currentConcernsBreachOfTrustText = this.currentConcernsBreachOfTrustText(),
+    ),
   )
 }

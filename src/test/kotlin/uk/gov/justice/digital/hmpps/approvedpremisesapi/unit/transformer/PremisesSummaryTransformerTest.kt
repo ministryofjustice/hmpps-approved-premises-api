@@ -39,7 +39,7 @@ class PremisesSummaryTransformerTest {
         pdu = "North east",
         status = PropertyStatus.active,
         bedCount = 1,
-      )
+      ),
     )
   }
 
@@ -54,7 +54,7 @@ class PremisesSummaryTransformerTest {
       postcode = "123ABC",
       status = PropertyStatus.active,
       bedCount = 1,
-      apCode = "APCODE"
+      apCode = "APCODE",
     )
 
     val result = premisesSummaryTransformer.transformDomainToApi(domainPremisesSummary)
@@ -68,8 +68,8 @@ class PremisesSummaryTransformerTest {
         postcode = "123ABC",
         status = PropertyStatus.active,
         bedCount = 1,
-        apCode = "APCODE"
-      )
+        apCode = "APCODE",
+      ),
     )
   }
 }

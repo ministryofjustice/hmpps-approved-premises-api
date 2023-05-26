@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 fun IntegrationTestBase.`Given an Application`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
-  block: (application: ApplicationEntity) -> Unit
+  block: (application: ApplicationEntity) -> Unit,
 ) {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()

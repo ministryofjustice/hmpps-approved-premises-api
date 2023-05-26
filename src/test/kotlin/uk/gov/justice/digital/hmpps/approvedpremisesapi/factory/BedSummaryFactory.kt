@@ -36,6 +36,6 @@ class BedSummaryFactory : Factory<DomainBedSummary> {
     roomId = this.roomId(),
     roomName = this.roomName(),
     bedBooked = this.bedBooked,
-    bedOutOfService = this.bedOutOfService
+    bedOutOfService = this.bedOutOfService,
   )
 }

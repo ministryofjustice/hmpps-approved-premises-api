@@ -86,7 +86,7 @@ class UserServiceTest {
         .withForenames("Jim")
         .withSurname("Jimmerson")
         .withStaffIdentifier(5678)
-        .produce()
+        .produce(),
     )
 
     every { mockProbationRegionRepository.findByDeliusCode(any()) } returns ProbationRegionEntityFactory()
@@ -160,7 +160,7 @@ class UserServiceTest {
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
         HttpStatus.OK,
-        deliusUser
+        deliusUser,
       )
 
       val result = userService.updateUserFromCommunityApiById(id)
@@ -192,7 +192,7 @@ class UserServiceTest {
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
         HttpStatus.OK,
-        deliusUser
+        deliusUser,
       )
 
       val result = userService.updateUserFromCommunityApiById(id)
@@ -211,6 +211,7 @@ class UserServiceTest {
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
     }
+
     @Test
     fun `it does not save the object if the email, telephone number and staff code are the same as Delius`() {
       val email = "foo@example.com"
@@ -235,7 +236,7 @@ class UserServiceTest {
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
         HttpStatus.OK,
-        deliusUser
+        deliusUser,
       )
 
       val result = userService.updateUserFromCommunityApiById(id)

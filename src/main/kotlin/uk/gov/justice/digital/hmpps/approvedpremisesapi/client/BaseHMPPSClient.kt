@@ -112,7 +112,7 @@ abstract class BaseHMPPSClient(
           refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
           method = null,
           path = null,
-          hasResponseBody = result.body != null
+          hasResponseBody = result.body != null,
         )
 
         writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
@@ -130,7 +130,7 @@ abstract class BaseHMPPSClient(
           refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
           method = method,
           path = requestBuilder.path ?: "",
-          hasResponseBody = body != null
+          hasResponseBody = body != null,
         )
 
         writeToRedis(qualifiedKey, cacheEntry, body, cacheConfig.hardTtlSeconds.toLong())
@@ -150,13 +150,13 @@ abstract class BaseHMPPSClient(
   private fun writeToRedis(cacheKeySet: CacheKeySet, cacheEntry: PreemptiveCacheMetadata, body: String?, hardTtlSeconds: Long) {
     redisTemplate.boundValueOps(cacheKeySet.metadataKey).set(
       objectMapper.writeValueAsString(cacheEntry),
-      Duration.ofSeconds(hardTtlSeconds)
+      Duration.ofSeconds(hardTtlSeconds),
     )
 
     if (body != null) {
       redisTemplate.boundValueOps(cacheKeySet.dataKey).set(
         body,
-        Duration.ofSeconds(hardTtlSeconds)
+        Duration.ofSeconds(hardTtlSeconds),
       )
     }
   }
@@ -164,7 +164,7 @@ abstract class BaseHMPPSClient(
   private fun getCacheEntryMetadataIfExists(metaDataKey: String): PreemptiveCacheMetadata? {
     if (redisTemplate.hasKey(metaDataKey)) {
       return objectMapper.readValue<PreemptiveCacheMetadata>(
-        redisTemplate.boundValueOps(metaDataKey).get()!!
+        redisTemplate.boundValueOps(metaDataKey).get()!!,
       )
     }
 
@@ -182,7 +182,9 @@ abstract class BaseHMPPSClient(
   private fun <ResponseType> resultFromCacheMetadata(cacheEntry: PreemptiveCacheMetadata, cacheKeySet: CacheKeySet, typeReference: TypeReference<ResponseType>?, clazz: Class<ResponseType>?): ClientResult<ResponseType> {
     val cachedBody = if (cacheEntry.hasResponseBody) {
       getCacheEntryBody(cacheKeySet.dataKey)
-    } else null
+    } else {
+      null
+    }
 
     if (cacheEntry.httpStatus.is2xxSuccessful) {
       return ClientResult.Success(
@@ -192,7 +194,7 @@ abstract class BaseHMPPSClient(
         } else {
           objectMapper.readValue(cachedBody, clazz)
         },
-        isPreemptivelyCachedResponse = true
+        isPreemptivelyCachedResponse = true,
       )
     }
 
@@ -201,7 +203,7 @@ abstract class BaseHMPPSClient(
       body = cachedBody,
       method = cacheEntry.method!!,
       path = cacheEntry.path!!,
-      isPreemptivelyCachedResponse = true
+      isPreemptivelyCachedResponse = true,
     )
   }
 
@@ -221,7 +223,7 @@ abstract class BaseHMPPSClient(
     val cacheName: String,
     val successSoftTtlSeconds: Int,
     val failureSoftTtlSeconds: Int,
-    val hardTtlSeconds: Int
+    val hardTtlSeconds: Int,
   )
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -230,7 +232,7 @@ abstract class BaseHMPPSClient(
     val refreshableAfter: Instant,
     val method: HttpMethod?,
     val path: String?,
-    val hasResponseBody: Boolean
+    val hasResponseBody: Boolean,
   )
 }
 
@@ -264,7 +266,7 @@ sealed interface ClientResult<ResponseType> {
 class CacheKeySet(
   private val prefix: String,
   private val cacheName: String,
-  private val key: String
+  private val key: String,
 ) {
   val metadataKey: String
     get() { return "$prefix-$cacheName-$key-metadata" }

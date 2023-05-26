@@ -84,7 +84,7 @@ class DomainEventService(
       applicationId = domainEventEntity.applicationId,
       crn = domainEventEntity.crn,
       occurredAt = domainEventEntity.occurredAt.toInstant(),
-      data = data
+      data = data,
     )
   }
 
@@ -96,7 +96,7 @@ class DomainEventService(
       typeDescription = "An application has been submitted for an Approved Premises placement",
       detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -107,7 +107,7 @@ class DomainEventService(
       typeDescription = "An application has been assessed for an Approved Premises placement",
       detailUrl = applicationAssessedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -118,7 +118,7 @@ class DomainEventService(
       typeDescription = "An Approved Premises booking has been made",
       detailUrl = bookingMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -129,7 +129,7 @@ class DomainEventService(
       typeDescription = "Someone has arrived at an Approved Premises for their Booking",
       detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -140,7 +140,7 @@ class DomainEventService(
       typeDescription = "Someone has failed to arrive at an Approved Premises for their Booking",
       detailUrl = personNotArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -151,7 +151,7 @@ class DomainEventService(
       typeDescription = "Someone has left an Approved Premises",
       detailUrl = personDepartedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -162,7 +162,7 @@ class DomainEventService(
       typeDescription = "It was not possible to create a Booking on this attempt",
       detailUrl = bookingNotMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   private fun saveAndEmit(
@@ -171,7 +171,7 @@ class DomainEventService(
     typeDescription: String,
     detailUrl: String,
     crn: String,
-    nomsNumber: String
+    nomsNumber: String,
   ) {
     domainEventRepository.save(
       DomainEventEntity(
@@ -181,8 +181,8 @@ class DomainEventService(
         type = enumTypeFromDataType(domainEvent.data!!::class.java),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
-        data = objectMapper.writeValueAsString(domainEvent.data)
-      )
+        data = objectMapper.writeValueAsString(domainEvent.data),
+      ),
     )
 
     if (emitDomainEventsEnabled) {
@@ -193,19 +193,19 @@ class DomainEventService(
         detailUrl = detailUrl,
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         additionalInformation = SnsEventAdditionalInformation(
-          applicationId = domainEvent.applicationId
+          applicationId = domainEvent.applicationId,
         ),
         personReference = SnsEventPersonReferenceCollection(
           identifiers = listOf(
             SnsEventPersonReference("CRN", crn),
-            SnsEventPersonReference("NOMS", nomsNumber)
-          )
-        )
+            SnsEventPersonReference("NOMS", nomsNumber),
+          ),
+        ),
       )
 
       val publishResult = domainTopic.snsClient.publish(
         PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
-          .withMessageAttributes(mapOf("eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType)))
+          .withMessageAttributes(mapOf("eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType))),
       )
 
       log.info("Emitted SNS event (Message Id: ${publishResult.messageId}, Sequence Id: ${publishResult.sequenceNumber}) for Domain Event: ${domainEvent.id} of type: ${snsEvent.eventType}")

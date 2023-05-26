@@ -8,7 +8,7 @@ fun throwIfNotLoopbackRequest() {
   val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
   val remoteAddress = request.remoteAddr
 
-  if (! listOf("127.0.0.1", "localhost").contains(remoteAddress)) {
+  if (!listOf("127.0.0.1", "localhost").contains(remoteAddress)) {
     throw UnauthenticatedProblem("This endpoint can only be called locally, was requested from: $remoteAddress")
   }
 }

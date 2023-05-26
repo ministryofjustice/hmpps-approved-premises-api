@@ -8,11 +8,13 @@ class EnumConverterTest {
   @Suppress("UNUSED") // Should be accessed by the enum converter under test
   private enum class OpenApiLike(val value: String) {
     OPTION_ONE("the-first-option"),
-    OPTION_TWO("the-second-option");
+    OPTION_TWO("the-second-option"),
+    ;
   }
   private enum class Standard {
     OPTION_ONE,
-    OPTION_TWO;
+    OPTION_TWO,
+    ;
   }
 
   @Test

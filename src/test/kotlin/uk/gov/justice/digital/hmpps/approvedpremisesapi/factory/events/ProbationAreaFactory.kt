@@ -19,6 +19,6 @@ class ProbationAreaFactory : Factory<ProbationArea> {
 
   override fun produce() = ProbationArea(
     code = this.code(),
-    name = this.name()
+    name = this.name(),
   )
 }

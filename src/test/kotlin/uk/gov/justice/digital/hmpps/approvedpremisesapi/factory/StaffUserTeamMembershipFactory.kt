@@ -70,11 +70,11 @@ class StaffUserTeamMembershipFactory : Factory<StaffUserTeamMembership> {
     district = this.district(),
     borough = this.borough(),
     startDate = this.startDate(),
-    endDate = this.endDate()
+    endDate = this.endDate(),
   )
 
   private fun randomKeyValue() = KeyValue(
     code = randomStringMultiCaseWithNumbers(5),
-    description = randomStringMultiCaseWithNumbers(10)
+    description = randomStringMultiCaseWithNumbers(10),
   )
 }
