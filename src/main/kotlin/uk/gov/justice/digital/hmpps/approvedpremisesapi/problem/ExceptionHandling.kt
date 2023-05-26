@@ -12,8 +12,10 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
 import org.springframework.web.bind.MissingRequestHeaderException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.context.request.NativeWebRequest
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.zalando.problem.Problem
 import org.zalando.problem.Status
@@ -42,6 +44,18 @@ class ExceptionHandling(
     if (throwable is MissingRequestHeaderException) {
       return BadRequestProblem(
         errorDetail = "Missing required header ${throwable.headerName}",
+      )
+    }
+
+    if (throwable is MissingServletRequestParameterException) {
+      return BadRequestProblem(
+        errorDetail = "Missing required query parameter ${throwable.parameterName}"
+      )
+    }
+
+    if (throwable is MethodArgumentTypeMismatchException) {
+      return BadRequestProblem(
+        errorDetail = "Invalid type for query parameter ${throwable.parameter.parameterName} expected ${throwable.parameter.parameterType.name}"
       )
     }
 

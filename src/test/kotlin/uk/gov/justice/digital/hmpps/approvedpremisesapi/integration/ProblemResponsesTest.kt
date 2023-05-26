@@ -7,6 +7,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
@@ -240,6 +241,40 @@ class ProblemResponsesTest : IntegrationTestBase() {
 
     assertThat(validationResult!!.detail).isEqualTo("There was an unexpected problem")
   }
+
+  @Test
+  fun `A missing required query parameter will return a problem response with detail`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val validationResult = webTestClient.get()
+      .uri("/deserialization-test/query-params")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .returnResult<ValidationError>()
+      .responseBody
+      .blockFirst()
+
+    assertThat(validationResult!!.detail).isEqualTo("Missing required query parameter requiredProperty")
+  }
+
+  @Test
+  fun `A query parameter of the wrong type will return a problem response with detail`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val validationResult = webTestClient.get()
+      .uri("/deserialization-test/query-params?requiredProperty=notanint")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .returnResult<ValidationError>()
+      .responseBody
+      .blockFirst()
+
+    assertThat(validationResult!!.detail).isEqualTo("Invalid type for query parameter requiredProperty expected int")
+  }
 }
 
 @RestController
@@ -256,6 +291,11 @@ class DeserializationTestController {
 
   @PostMapping(path = ["deserialization-test/special-json-primitives"], consumes = ["application/json"])
   fun testDeserialization(@RequestBody body: AllSpecialJSONPrimitives): ResponseEntity<Unit> {
+    return ResponseEntity.ok(Unit)
+  }
+
+  @GetMapping(path = ["deserialization-test/query-params"])
+  fun testQueryParams(@RequestParam(value = "requiredProperty", required = true) requiredProperty: Int): ResponseEntity<Unit> {
     return ResponseEntity.ok(Unit)
   }
 
