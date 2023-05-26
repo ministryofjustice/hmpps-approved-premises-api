@@ -1,9 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.benmanes.caffeine.cache.Caffeine
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.caffeine.CaffeineCache
+import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -21,10 +24,13 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
+import java.time.Duration
 import java.util.Base64
 
 @EnableWebSecurity
@@ -176,6 +182,28 @@ class LoggingInMemoryOAuth2AuthorizedClientService(clientRegistrationRepository:
   }
 
   override fun removeAuthorizedClient(clientRegistrationId: String?, principalName: String?) = backingImplementation.removeAuthorizedClient(clientRegistrationId, principalName)
+}
+
+@Configuration
+class JwksCacheConfig {
+  @Bean
+  fun locallyCachedJwtDecoder(
+    applicationContext: ApplicationContext,
+    @Value("\${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}") jwkSetUri: String,
+    @Value("\${caches.jwks.expiry-seconds}") jwksExpirySeconds: Long,
+  ): JwtDecoder {
+    val cache = CaffeineCache(
+      "jwks",
+      Caffeine.newBuilder()
+        .expireAfterWrite(Duration.ofSeconds(jwksExpirySeconds))
+        .build(),
+    )
+
+    return NimbusJwtDecoder
+      .withJwkSetUri(jwkSetUri)
+      .cache(cache)
+      .build()
+  }
 }
 
 data class JwtLogInfo(
