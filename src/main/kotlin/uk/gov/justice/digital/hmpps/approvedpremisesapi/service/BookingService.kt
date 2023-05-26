@@ -87,7 +87,7 @@ class BookingService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val turnaroundRepository: TurnaroundRepository,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)

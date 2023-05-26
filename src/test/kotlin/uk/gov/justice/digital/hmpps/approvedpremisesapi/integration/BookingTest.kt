@@ -461,7 +461,7 @@ class BookingTest : IntegrationTestBase() {
 
         assertThat(emittedMessage.eventType).isEqualTo("approved-premises.booking.made")
         assertThat(emittedMessage.description).isEqualTo("An Approved Premises booking has been made")
-        assertThat(emittedMessage.detailUrl).matches("http://frontend/events/booking-made/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+        assertThat(emittedMessage.detailUrl).matches("http://api/events/booking-made/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(linkedApplication.id)
         assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
           SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),

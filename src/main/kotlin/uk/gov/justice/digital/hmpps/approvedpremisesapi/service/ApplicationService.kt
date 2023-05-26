@@ -62,7 +62,7 @@ class ApplicationService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val objectMapper: ObjectMapper,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
