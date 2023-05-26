@@ -240,7 +240,7 @@ class AcceptAssessmentTest {
   }
 
   @Test
-  fun `acceptAssessment returns updated assessment, emits domain event, does not create placement request when no date information provided`() {
+  fun `acceptAssessment returns updated assessment, emits domain event, sends email, does not create placement request when no date information provided`() {
     val assessment = assessmentFactory.produce()
 
     val placementRequirementEntity = PlacementRequirementsEntityFactory()
@@ -272,6 +272,8 @@ class AcceptAssessmentTest {
 
     every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.Success(placementRequirementEntity)
 
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -289,10 +291,21 @@ class AcceptAssessmentTest {
     verify(exactly = 0) {
       placementRequestServiceMock.createPlacementRequest(any(), any(), any())
     }
+
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        any(),
+        "ddf87b15-8866-4bad-a87b-47eba69eb6db",
+        match {
+          it["name"] == assessment.application.createdByUser.name &&
+            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        },
+      )
+    }
   }
 
   @Test
-  fun `acceptAssessment returns updated assessment, emits domain event, creates placement request when requirements provided`() {
+  fun `acceptAssessment returns updated assessment, emits domain event, sends email, creates placement request when requirements provided`() {
     val assessment = assessmentFactory.produce()
 
     val placementRequirementEntity = PlacementRequirementsEntityFactory()
@@ -343,6 +356,8 @@ class AcceptAssessmentTest {
 
     every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
 
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, placementDates, notes)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -359,6 +374,17 @@ class AcceptAssessmentTest {
 
     verify(exactly = 1) {
       placementRequestServiceMock.createPlacementRequest(placementRequirementEntity, placementDates, notes)
+    }
+
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        any(),
+        "ddf87b15-8866-4bad-a87b-47eba69eb6db",
+        match {
+          it["name"] == assessment.application.createdByUser.name &&
+            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        },
+      )
     }
   }
 

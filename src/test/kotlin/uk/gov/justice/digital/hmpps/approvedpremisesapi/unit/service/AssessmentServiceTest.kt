@@ -906,7 +906,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `rejectAssessment returns updated assessment, emits domain event`() {
+  fun `rejectAssessment returns updated assessment, emits domain event, sends email`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -950,6 +950,8 @@ class AssessmentServiceTest {
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
     val offenderDetails = OffenderDetailsSummaryFactory().produce()
 
@@ -1008,6 +1010,17 @@ class AssessmentServiceTest {
           ) &&
             data.decision == "REJECTED" &&
             data.decisionRationale == "reasoning"
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        any(),
+        "b3a98c60-8fe0-4450-8fd0-6430198ee43b",
+        match {
+          it["name"] == assessment.application.createdByUser.name &&
+            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
         },
       )
     }
@@ -1250,7 +1263,7 @@ class AssessmentServiceTest {
         match {
           it["name"] == assigneeUser.name &&
             (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        }
+        },
       )
     }
   }
