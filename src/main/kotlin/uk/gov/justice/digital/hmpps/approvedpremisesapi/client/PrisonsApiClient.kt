@@ -22,7 +22,7 @@ class PrisonsApiClient(
     cacheName = "inmateDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
     failureSoftTtlSeconds = Duration.ofMinutes(30).toSeconds().toInt(),
-    hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt()
+    hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt(),
   )
 
   fun getInmateDetailsWithWait(nomsNumber: String) = getRequest<InmateDetail> {

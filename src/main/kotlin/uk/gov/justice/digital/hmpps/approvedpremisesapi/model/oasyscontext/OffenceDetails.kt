@@ -11,7 +11,7 @@ class OffenceDetails(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val offence: OffenceDetailsInner?
+  val offence: OffenceDetailsInner?,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
@@ -20,7 +20,7 @@ class OffenceDetails(
   initiationDate,
   assessmentStatus,
   superStatus,
-  limitedAccessOffender
+  limitedAccessOffender,
 )
 
 data class OffenceDetailsInner(
@@ -32,5 +32,5 @@ data class OffenceDetailsInner(
   val victimPerpetratorRel: String?,
   val victimInfo: String?,
   val patternOffending: String?,
-  val acceptsResponsibility: String?
+  val acceptsResponsibility: String?,
 )

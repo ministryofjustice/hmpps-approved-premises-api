@@ -214,7 +214,7 @@ WHERE
     probationDeliveryUnit: String,
     startDate: LocalDate,
     durationInDays: Int,
-    probationRegionId: UUID
+    probationRegionId: UUID,
   ): List<TemporaryAccommodationBedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)

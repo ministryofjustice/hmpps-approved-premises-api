@@ -146,7 +146,7 @@ class PremisesController(
         body.notes,
         body.status,
         Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-        body.turnaroundWorkingDayCount
+        body.turnaroundWorkingDayCount,
       )
 
     val validationResult = when (updatePremisesResult) {
@@ -183,7 +183,7 @@ class PremisesController(
           .values.first().getFreeCapacity(it.totalBeds)
 
         premisesTransformer.transformJpaToApi(it, availableBedsForToday)
-      }
+      },
     )
   }
 
@@ -213,8 +213,8 @@ class PremisesController(
         characteristicIds = body.characteristicIds,
         status = body.status,
         probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-        turnaroundWorkingDayCount = body.turnaroundWorkingDayCount
-      )
+        turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
+      ),
     )
     return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)
   }
@@ -275,7 +275,7 @@ class PremisesController(
         }
 
         bookingTransformer.transformJpaToApi(it, offenderResult.entity, inmateDetailResult.entity, staffMember)
-      }
+      },
     )
   }
 
@@ -359,7 +359,7 @@ class PremisesController(
           nomsNumber = inmate.offenderNo,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
-          bedId = body.bedId
+          bedId = body.bedId,
         )
       }
 
@@ -398,7 +398,7 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
     premisesId: UUID,
     bookingId: UUID,
-    body: NewArrival
+    body: NewArrival,
   ): ResponseEntity<Arrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
@@ -420,7 +420,7 @@ class PremisesController(
       expectedDepartureDate = body.expectedDepartureDate,
       notes = body.notes,
       keyWorkerStaffCode = body.keyWorkerStaffCode,
-      user = user
+      user = user,
     )
 
     val arrival = extractResultEntityOrThrow(result)
@@ -431,7 +431,7 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdNonArrivalsPost(
     premisesId: UUID,
     bookingId: UUID,
-    body: NewNonarrival
+    body: NewNonarrival,
   ): ResponseEntity<Nonarrival> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
@@ -446,7 +446,7 @@ class PremisesController(
       booking = booking,
       date = body.date,
       reasonId = body.reason,
-      notes = body.notes
+      notes = body.notes,
     )
 
     val nonArrivalEntity = extractResultEntityOrThrow(result)
@@ -457,7 +457,7 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdCancellationsPost(
     premisesId: UUID,
     bookingId: UUID,
-    body: NewCancellation
+    body: NewCancellation,
   ): ResponseEntity<Cancellation> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
@@ -469,7 +469,7 @@ class PremisesController(
       booking = booking,
       date = body.date,
       reasonId = body.reason,
-      notes = body.notes
+      notes = body.notes,
     )
 
     val cancellation = extractResultEntityOrThrow(result)
@@ -502,7 +502,7 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdDeparturesPost(
     premisesId: UUID,
     bookingId: UUID,
-    body: NewDeparture
+    body: NewDeparture,
   ): ResponseEntity<Departure> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
@@ -519,7 +519,7 @@ class PremisesController(
       reasonId = body.reasonId,
       moveOnCategoryId = body.moveOnCategoryId,
       destinationProviderId = body.destinationProviderId,
-      notes = body.notes
+      notes = body.notes,
     )
 
     val departure = extractResultEntityOrThrow(result)
@@ -530,7 +530,7 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdExtensionsPost(
     premisesId: UUID,
     bookingId: UUID,
-    body: NewExtension
+    body: NewExtension,
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
@@ -547,7 +547,7 @@ class PremisesController(
     val result = bookingService.createExtension(
       booking = booking,
       newDepartureDate = body.newDepartureDate,
-      notes = body.notes
+      notes = body.notes,
     )
 
     val extension = extractResultEntityOrThrow(result)
@@ -634,7 +634,7 @@ class PremisesController(
         body.endDate,
         body.reason,
         body.referenceNumber,
-        body.notes
+        body.notes,
       )
 
     val validationResult = when (updateLostBedResult) {
@@ -697,17 +697,17 @@ class PremisesController(
       maxOf(
         LocalDate.now(),
         lastBookingDate ?: LocalDate.now(),
-        lastLostBedsDate ?: LocalDate.now()
-      )
+        lastLostBedsDate ?: LocalDate.now(),
+      ),
     )
 
     return ResponseEntity.ok(
       capacityForPeriod.map {
         DateCapacity(
           date = it.key,
-          availableBeds = it.value.getFreeCapacity(premises.totalBeds)
+          availableBeds = it.value.getFreeCapacity(premises.totalBeds),
         )
-      }
+      },
     )
   }
 
@@ -752,7 +752,7 @@ class PremisesController(
     }
 
     val room = extractResultEntityOrThrow(
-      roomService.createRoom(premises, newRoom.name, newRoom.notes, newRoom.characteristicIds)
+      roomService.createRoom(premises, newRoom.name, newRoom.notes, newRoom.characteristicIds),
     )
 
     return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)
@@ -773,7 +773,7 @@ class PremisesController(
   override fun premisesPremisesIdRoomsRoomIdPut(
     premisesId: UUID,
     roomId: UUID,
-    updateRoom: UpdateRoom
+    updateRoom: UpdateRoom,
   ): ResponseEntity<Room> {
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -856,7 +856,7 @@ class PremisesController(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID
+    bedId: UUID,
   ) {
     bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedId)?.let {
       throw ConflictProblem(it.id, "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates")
@@ -867,7 +867,7 @@ class PremisesController(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
-    bedId: UUID
+    bedId: UUID,
   ) {
     bookingService.getLostBedWithConflictingDates(startDate, endDate, thisEntityId, bedId)?.let {
       throw ConflictProblem(it.id, "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates")

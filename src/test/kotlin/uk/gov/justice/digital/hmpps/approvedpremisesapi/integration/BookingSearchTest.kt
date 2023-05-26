@@ -403,7 +403,7 @@ class BookingSearchTest : IntegrationTestBase() {
             name = booking.bed!!.name,
           ),
         )
-      }
+      },
     )
   }
 }

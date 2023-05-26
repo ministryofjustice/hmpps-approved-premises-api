@@ -35,7 +35,7 @@ class TemporaryAccommodationApplicationJsonSchemaEntityFactory : Factory<Tempora
           "type": "object",
           "properties": { }
         }
-        """
+        """,
     )
   }
 

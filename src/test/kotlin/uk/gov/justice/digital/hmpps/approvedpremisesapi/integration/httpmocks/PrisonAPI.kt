@@ -8,23 +8,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 fun IntegrationTestBase.PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail: InmateDetail) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/api/offenders/${inmateDetail.offenderNo}",
-    responseBody = inmateDetail
+    responseBody = inmateDetail,
   )
 
 fun IntegrationTestBase.PrisonAPI_mockNotFoundInmateDetailsCall(offenderNo: String) =
   mockUnsuccessfulGetCall(
     url = "/api/offenders/$offenderNo",
-    responseStatus = 404
+    responseStatus = 404,
   )
 
 fun IntegrationTestBase.PrisonAPI_mockSuccessfulAlertsCall(nomsNumber: String, alerts: List<Alert>) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/api/offenders/$nomsNumber/alerts/v2?alertCodes=HA&sort=dateCreated&direction=DESC",
-    responseBody = alerts
+    responseBody = alerts,
   )
 
 fun IntegrationTestBase.PrisonAPI_mockSuccessfulAdjudicationsCall(nomsNumber: String, response: AdjudicationsPage) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/api/offenders/$nomsNumber/adjudications",
-    responseBody = response
+    responseBody = response,
   )

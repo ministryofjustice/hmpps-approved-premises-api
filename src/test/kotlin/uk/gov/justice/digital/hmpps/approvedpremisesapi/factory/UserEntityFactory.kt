@@ -79,9 +79,9 @@ class UserEntityFactory : Factory<UserEntity> {
         .withApArea(
           ApAreaEntityFactory()
             .withIdentifier("APAREA")
-            .produce()
+            .produce(),
         )
-        .produce()
+        .produce(),
     )
   }
 
@@ -96,6 +96,6 @@ class UserEntityFactory : Factory<UserEntity> {
     applications = this.applications(),
     roles = mutableListOf(),
     qualifications = this.qualifications(),
-    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided")
+    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
   )
 }

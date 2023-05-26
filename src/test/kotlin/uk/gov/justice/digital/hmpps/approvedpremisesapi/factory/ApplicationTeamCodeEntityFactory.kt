@@ -25,6 +25,6 @@ class ApplicationTeamCodeEntityFactory : Factory<ApplicationTeamCodeEntity> {
   override fun produce() = ApplicationTeamCodeEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an Application"),
-    teamCode = this.teamCode()
+    teamCode = this.teamCode(),
   )
 }

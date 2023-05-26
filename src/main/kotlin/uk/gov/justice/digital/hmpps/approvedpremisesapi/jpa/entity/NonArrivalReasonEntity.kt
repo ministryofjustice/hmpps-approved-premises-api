@@ -16,7 +16,7 @@ data class NonArrivalReasonEntity(
   @Id
   val id: UUID,
   val name: String,
-  val isActive: Boolean
+  val isActive: Boolean,
 ) {
   override fun toString() = "NonArrivalReasonEntity:$id"
 }

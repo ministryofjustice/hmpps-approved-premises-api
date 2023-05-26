@@ -82,5 +82,5 @@ data class PlacementRequestEntity(
   @OneToMany(mappedBy = "placementRequest")
   var bookingNotMades: MutableList<BookingNotMadeEntity>,
 
-  var reallocatedAt: OffsetDateTime?
+  var reallocatedAt: OffsetDateTime?,
 )

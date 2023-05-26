@@ -55,6 +55,6 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     createdByUser = this.createdBy?.invoke() ?: throw RuntimeException("Must provide a createdBy"),
     query = this.query(),
     response = this.response(),
-    responseReceivedOn = this.responseReceivedOn()
+    responseReceivedOn = this.responseReceivedOn(),
   )
 }

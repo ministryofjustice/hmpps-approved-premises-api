@@ -43,7 +43,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       "WHERE b.bed.id = :bedId " +
       "AND b.arrivalDate <= :date " +
       "AND SIZE(b.cancellations) = 0 " +
-      "AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)"
+      "AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)",
   )
   fun findByBedIdAndArrivingBeforeDate(bedId: UUID, date: LocalDate, thisEntityId: UUID?): List<BookingEntity>
 
@@ -55,7 +55,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       "  AND b2.bed.id IN :bedIds " +
       "  AND SIZE(b2.cancellations) = 0 " +
       "  GROUP BY b2.bed " +
-      ")"
+      ")",
   )
   fun findClosestBookingBeforeDateForBeds(date: LocalDate, bedIds: List<UUID>): List<BookingEntity>
 }
@@ -99,7 +99,7 @@ data class BookingEntity(
   val createdAt: OffsetDateTime,
   @OneToMany(mappedBy = "booking")
   var turnarounds: MutableList<TurnaroundEntity>,
-  var nomsNumber: String
+  var nomsNumber: String,
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }

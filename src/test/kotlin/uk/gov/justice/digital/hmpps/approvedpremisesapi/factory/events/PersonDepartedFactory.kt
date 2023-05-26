@@ -74,6 +74,6 @@ class PersonDepartedFactory : Factory<PersonDeparted> {
     departedAt = this.departedAt(),
     reason = this.reason(),
     legacyReasonCode = this.legacyReasonCode(),
-    destination = this.personDepartedDestination()
+    destination = this.personDepartedDestination(),
   )
 }

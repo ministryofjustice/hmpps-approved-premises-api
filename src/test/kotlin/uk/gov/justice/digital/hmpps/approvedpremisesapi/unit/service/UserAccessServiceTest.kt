@@ -35,7 +35,7 @@ class UserAccessServiceTest {
     .withId(probationRegionId)
     .withApArea(
       ApAreaEntityFactory()
-        .produce()
+        .produce(),
     )
     .produce()
 
@@ -47,7 +47,7 @@ class UserAccessServiceTest {
     .withProbationRegion(probationRegion)
     .withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
-        .produce()
+        .produce(),
     )
     .produce()
 
@@ -55,7 +55,7 @@ class UserAccessServiceTest {
     .withProbationRegion(probationRegion)
     .withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
-        .produce()
+        .produce(),
     )
     .produce()
 
@@ -64,13 +64,13 @@ class UserAccessServiceTest {
       ProbationRegionEntityFactory()
         .withApArea(
           ApAreaEntityFactory()
-            .produce()
+            .produce(),
         )
-        .produce()
+        .produce(),
     )
     .withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
-        .produce()
+        .produce(),
     )
     .produce()
 

@@ -58,6 +58,6 @@ class AlertFactory : Factory<Alert> {
     dateCreated = this.dateCreated(),
     dateExpires = this.dateExpires(),
     expired = this.dateExpires() != null,
-    active = this.active()
+    active = this.active(),
   )
 }

@@ -19,7 +19,7 @@ class ClientResultRedisSerializerTest {
       method = HttpMethod.GET,
       path = "/an/endpoint",
       status = HttpStatus.BAD_REQUEST,
-      body = "Something went wrong"
+      body = "Something went wrong",
     )
 
     val cachedByteArray = clientResponseRedisSerializer.serialize(clientResult)
@@ -38,7 +38,7 @@ class ClientResultRedisSerializerTest {
     val clientResult = ClientResult.Failure.Other<ClientResponseBody>(
       method = HttpMethod.GET,
       path = "/an/endpoint",
-      exception = RuntimeException("Something went wrong")
+      exception = RuntimeException("Something went wrong"),
     )
 
     val cachedByteArray = clientResponseRedisSerializer.serialize(clientResult)
@@ -56,8 +56,8 @@ class ClientResultRedisSerializerTest {
     val clientResult = ClientResult.Success(
       status = HttpStatus.OK,
       body = ClientResponseBody(
-        property = "hello"
-      )
+        property = "hello",
+      ),
     )
 
     val cachedByteArray = clientResponseRedisSerializer.serialize(clientResult)
@@ -72,5 +72,5 @@ class ClientResultRedisSerializerTest {
 }
 
 data class ClientResponseBody(
-  val property: String
+  val property: String,
 )

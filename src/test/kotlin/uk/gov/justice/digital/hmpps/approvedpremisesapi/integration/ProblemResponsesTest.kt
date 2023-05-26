@@ -88,7 +88,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
              "anInstant": "not an instant",
              "aUUID": "not a uuid"
           }
-        """
+        """,
       )
       .exchange()
       .expectStatus()
@@ -116,8 +116,8 @@ class ProblemResponsesTest : IntegrationTestBase() {
         InvalidParam(propertyName = "$.aLocalDateTime", errorType = "invalid"),
         InvalidParam(propertyName = "$.anOffsetDateTime", errorType = "invalid"),
         InvalidParam(propertyName = "$.anInstant", errorType = "invalid"),
-        InvalidParam(propertyName = "$.aUUID", errorType = "invalid")
-      )
+        InvalidParam(propertyName = "$.aUUID", errorType = "invalid"),
+      ),
     )
   }
 
@@ -159,7 +159,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
              "anInstant": "not an instant",
              "aUUID": "not a uuid"
           }]
-        """
+        """,
       )
       .exchange()
       .expectStatus()
@@ -187,8 +187,8 @@ class ProblemResponsesTest : IntegrationTestBase() {
         InvalidParam(propertyName = "$[0].aLocalDateTime", errorType = "invalid"),
         InvalidParam(propertyName = "$[0].anOffsetDateTime", errorType = "invalid"),
         InvalidParam(propertyName = "$[0].anInstant", errorType = "invalid"),
-        InvalidParam(propertyName = "$[0].aUUID", errorType = "invalid")
-      )
+        InvalidParam(propertyName = "$[0].aUUID", errorType = "invalid"),
+      ),
     )
   }
 
@@ -210,7 +210,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
             "instant": "2023-04-12T16:52:00+01:00",
             "uuid": "61f22c65-4d42-4cc1-8955-e4ea89088194"
           }
-        """
+        """,
       )
       .exchange()
       .expectStatus()
@@ -220,7 +220,7 @@ class ProblemResponsesTest : IntegrationTestBase() {
       .blockFirst()
 
     assertThat(validationResult!!.invalidParams).containsExactly(
-      InvalidParam(propertyName = "$.missingString", errorType = "empty")
+      InvalidParam(propertyName = "$.missingString", errorType = "empty"),
     )
   }
 
@@ -277,13 +277,13 @@ data class DeserializationTestBody(
   val aLocalDateTime: LocalDateTime,
   val anOffsetDateTime: OffsetDateTime,
   val anInstant: Instant,
-  val aUUID: UUID
+  val aUUID: UUID,
 )
 
 data class DeserializationTestBodyNested(
   val requiredString: String,
   val optionalBoolean: Boolean?,
-  val optionalLocalDate: LocalDate?
+  val optionalLocalDate: LocalDate?,
 )
 
 data class AllSpecialJSONPrimitives(

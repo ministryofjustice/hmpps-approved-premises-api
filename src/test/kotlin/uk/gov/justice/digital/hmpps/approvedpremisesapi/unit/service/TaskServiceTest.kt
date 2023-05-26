@@ -41,7 +41,7 @@ class TaskServiceTest {
     applicationRepositoryMock,
     userServiceMock,
     placementRequestServiceMock,
-    userTransformerMock
+    userTransformerMock,
   )
 
   private val requestUserWithPermission = UserEntityFactory()
@@ -109,8 +109,8 @@ class TaskServiceTest {
 
     every { assessmentServiceMock.reallocateAssessment(assigneeUser, application) } returns AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
-        assessment
-      )
+        assessment,
+      ),
     )
 
     val transformedUser = mockk<ApprovedPremisesUser>()
@@ -119,7 +119,7 @@ class TaskServiceTest {
 
     val reallocation = Reallocation(
       taskType = TaskType.assessment,
-      user = transformedUser
+      user = transformedUser,
     )
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, application.id)
@@ -144,15 +144,15 @@ class TaskServiceTest {
         AssessmentEntityFactory()
           .withApplication(application)
           .withAllocatedToUser(assigneeUser)
-          .produce()
+          .produce(),
       )
       .withAllocatedToUser(assigneeUser)
       .produce()
 
     every { placementRequestServiceMock.reallocatePlacementRequest(assigneeUser, application) } returns AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
-        placementRequest
-      )
+        placementRequest,
+      ),
     )
 
     val transformedUser = mockk<ApprovedPremisesUser>()
@@ -161,7 +161,7 @@ class TaskServiceTest {
 
     val reallocation = Reallocation(
       taskType = TaskType.placementRequest,
-      user = transformedUser
+      user = transformedUser,
     )
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementRequest, assigneeUser.id, application.id)
@@ -198,7 +198,7 @@ class TaskServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 

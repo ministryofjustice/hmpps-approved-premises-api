@@ -58,7 +58,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 
     mockSuccessfulGetCallWithJsonResponse(
       url = "/secure/offenders/crn/$crn",
-      responseBody = offenderDetailsResponseOne
+      responseBody = offenderDetailsResponseOne,
     )
 
     every { Instant.now() } returns firstCallInstant
@@ -79,7 +79,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 
     mockSuccessfulGetCallWithJsonResponse(
       url = "/secure/offenders/crn/$crn",
-      responseBody = offenderDetailsResponseTwo
+      responseBody = offenderDetailsResponseTwo,
     )
 
     // The next call after successSoftTtlSeconds should make an upstream request and replace the original cached value
@@ -107,7 +107,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 
     mockSuccessfulGetCallWithJsonResponse(
       url = "/secure/offenders/crn/$crn",
-      responseBody = offenderDetailsResponse
+      responseBody = offenderDetailsResponse,
     )
 
     // The first call should return a ClientResult.Failure.PreemptiveCacheTimeout as no cache entry is present in Redis
@@ -125,17 +125,17 @@ class PreemptiveCacheTest : IntegrationTestBase() {
         refreshableAfter = Instant.now().plusSeconds(10),
         method = null,
         path = null,
-        hasResponseBody = true
+        hasResponseBody = true,
       )
 
       redisTemplate.boundValueOps(qualifiedMetadataKey).set(
         objectMapper.writeValueAsString(cacheEntry),
-        Duration.ofSeconds(10)
+        Duration.ofSeconds(10),
       )
 
       redisTemplate.boundValueOps(qualifiedDataKey).set(
         objectMapper.writeValueAsString(offenderDetailsResponse),
-        Duration.ofSeconds(10)
+        Duration.ofSeconds(10),
       )
     }.start()
 
@@ -157,7 +157,7 @@ class PreemptivelyCachedClient(
     cacheName = "offenderDetailSummary",
     successSoftTtlSeconds = 5,
     failureSoftTtlSeconds = 1,
-    hardTtlSeconds = 30
+    hardTtlSeconds = 30,
   )
 
   fun getOffenderDetailSummaryWithCall(crn: String) = getRequest<OffenderDetailSummary> {

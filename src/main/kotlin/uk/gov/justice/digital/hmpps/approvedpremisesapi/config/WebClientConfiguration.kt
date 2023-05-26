@@ -31,7 +31,7 @@ class WebClientConfiguration {
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
-    @Value("\${services.community-api.base-url}") communityApiBaseUrl: String
+    @Value("\${services.community-api.base-url}") communityApiBaseUrl: String,
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -47,7 +47,7 @@ class WebClientConfiguration {
   fun apDeliusContextApiWebClient(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
-    @Value("\${services.ap-delius-context-api.base-url}") communityApiBaseUrl: String
+    @Value("\${services.ap-delius-context-api.base-url}") communityApiBaseUrl: String,
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
@@ -63,7 +63,7 @@ class WebClientConfiguration {
   fun hmppsTierApiWebClient(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
-    @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String
+    @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String,
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
@@ -80,7 +80,7 @@ class WebClientConfiguration {
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
-    @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String
+    @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String,
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -96,7 +96,7 @@ class WebClientConfiguration {
   fun caseNotesWebClient(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
-    @Value("\${services.case-notes.base-url}") caseNotesBaseUrl: String
+    @Value("\${services.case-notes.base-url}") caseNotesBaseUrl: String,
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
@@ -112,7 +112,7 @@ class WebClientConfiguration {
   fun apOASysContextApiWebClient(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
-    @Value("\${services.ap-oasys-context-api.base-url}") apOASysContextApiBaseUrl: String
+    @Value("\${services.ap-oasys-context-api.base-url}") apOASysContextApiBaseUrl: String,
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
@@ -126,7 +126,7 @@ class WebClientConfiguration {
 
   @Bean(name = ["govUKBankHolidaysApiWebClient"])
   fun govUKBankHolidaysApiClient(
-    @Value("\${services.gov-uk-bank-holidays-api.base-url}") govUKBankHolidaysApiBaseUrl: String
+    @Value("\${services.gov-uk-bank-holidays-api.base-url}") govUKBankHolidaysApiBaseUrl: String,
   ): WebClient {
     return WebClient.builder()
       .baseUrl(govUKBankHolidaysApiBaseUrl)

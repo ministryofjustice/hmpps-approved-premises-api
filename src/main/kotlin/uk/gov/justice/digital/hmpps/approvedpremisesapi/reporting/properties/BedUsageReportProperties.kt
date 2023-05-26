@@ -7,5 +7,5 @@ data class BedUsageReportProperties(
   val serviceName: ServiceName,
   val probationRegionId: UUID?,
   val year: Int,
-  val month: Int
+  val month: Int,
 )

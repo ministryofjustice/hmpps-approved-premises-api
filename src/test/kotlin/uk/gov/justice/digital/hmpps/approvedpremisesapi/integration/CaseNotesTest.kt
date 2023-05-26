@@ -28,7 +28,7 @@ class CaseNotesTest : IntegrationTestBase() {
   fun `Getting case notes with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -43,7 +43,7 @@ class CaseNotesTest : IntegrationTestBase() {
   fun `Getting case notes without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -64,8 +64,8 @@ class CaseNotesTest : IntegrationTestBase() {
           .willReturn(
             WireMock.aResponse()
               .withHeader("Content-Type", "application/json")
-              .withStatus(404)
-          )
+              .withStatus(404),
+          ),
       )
       loadPreemptiveCacheForOffenderDetails(crn)
 
@@ -86,7 +86,7 @@ class CaseNotesTest : IntegrationTestBase() {
           CaseNoteFactory().produce(),
           CaseNoteFactory().produce(),
           CaseNoteFactory().produce(),
-          CaseNoteFactory().produce()
+          CaseNoteFactory().produce(),
         )
 
         CaseNotesAPI_mockSuccessfulCaseNotesCall(
@@ -97,8 +97,8 @@ class CaseNotesTest : IntegrationTestBase() {
             totalElements = 4,
             totalPages = 1,
             number = 1,
-            content = caseNotes
-          )
+            content = caseNotes,
+          ),
         )
 
         webTestClient.get()
@@ -109,7 +109,7 @@ class CaseNotesTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(caseNotes.map(caseNoteTransformer::transformModelToApi))
+            objectMapper.writeValueAsString(caseNotes.map(caseNoteTransformer::transformModelToApi)),
           )
       }
     }

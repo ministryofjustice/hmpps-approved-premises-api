@@ -39,6 +39,6 @@ class EventPremisesFactory : Factory<Premises> {
     name = this.name(),
     apCode = this.apCode(),
     legacyApCode = this.legacyApCode(),
-    localAuthorityAreaName = this.localAuthorityAreaName()
+    localAuthorityAreaName = this.localAuthorityAreaName(),
   )
 }

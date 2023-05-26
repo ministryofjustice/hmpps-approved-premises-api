@@ -12,6 +12,6 @@ class AlertTransformer {
     dateCreated = alert.dateCreated,
     expired = alert.expired,
     active = alert.active,
-    dateExpires = alert.dateExpires
+    dateExpires = alert.dateExpires,
   )
 }

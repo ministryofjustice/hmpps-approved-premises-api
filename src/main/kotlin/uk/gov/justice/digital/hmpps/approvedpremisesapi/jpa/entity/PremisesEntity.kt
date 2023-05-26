@@ -39,7 +39,7 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
         WHERE 
           pr.id = :regionId
         GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status
-      """
+      """,
   )
   fun findAllTemporaryAccommodationSummary(regionId: UUID): List<TemporaryAccommodationPremisesSummary>
 
@@ -98,7 +98,7 @@ abstract class PremisesEntity(
   )
   var characteristics: MutableList<CharacteristicEntity>,
   @Enumerated(value = EnumType.STRING)
-  var status: PropertyStatus
+  var status: PropertyStatus,
 )
 
 @Entity
@@ -125,7 +125,7 @@ class ApprovedPremisesEntity(
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
-  val point: Point? // TODO: Make not-null once Premises have had point added in all environments
+  val point: Point?, // TODO: Make not-null once Premises have had point added in all environments
 ) : PremisesEntity(
   id,
   name,
@@ -143,7 +143,7 @@ class ApprovedPremisesEntity(
   lostBeds,
   rooms,
   characteristics,
-  status
+  status,
 )
 
 @Entity
@@ -171,7 +171,7 @@ class TemporaryAccommodationPremisesEntity(
   @ManyToOne
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
-  var turnaroundWorkingDayCount: Int
+  var turnaroundWorkingDayCount: Int,
 ) : PremisesEntity(
   id,
   name,
@@ -189,7 +189,7 @@ class TemporaryAccommodationPremisesEntity(
   lostBeds,
   rooms,
   characteristics,
-  status
+  status,
 )
 
 data class ApprovedPremisesSummary(
@@ -200,7 +200,7 @@ data class ApprovedPremisesSummary(
   val postcode: String,
   val status: PropertyStatus,
   val bedCount: Int,
-  val apCode: String
+  val apCode: String,
 )
 
 data class TemporaryAccommodationPremisesSummary(

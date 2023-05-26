@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEnti
 class DepartureTransformer(
   private val destinationProviderTransformer: DestinationProviderTransformer,
   private val departureReasonTransformer: DepartureReasonTransformer,
-  private val moveOnCategoryTransformer: MoveOnCategoryTransformer
+  private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
 ) {
   fun transformJpaToApi(jpa: DepartureEntity?) = jpa?.let {
     Departure(

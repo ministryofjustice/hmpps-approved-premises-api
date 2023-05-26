@@ -39,6 +39,6 @@ class MoveOnCategoryEntityFactory : Factory<MoveOnCategoryEntity> {
     name = this.name(),
     isActive = this.isActive(),
     serviceScope = this.serviceScope(),
-    legacyDeliusCategoryCode = this.legacyDeliusCategoryCode()
+    legacyDeliusCategoryCode = this.legacyDeliusCategoryCode(),
   )
 }

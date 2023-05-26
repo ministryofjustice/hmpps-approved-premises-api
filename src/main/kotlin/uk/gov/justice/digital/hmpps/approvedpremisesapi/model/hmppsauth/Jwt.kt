@@ -13,5 +13,5 @@ data class Jwt(
   val userId: String?,
   @JsonProperty("passed_mfa")
   val passedMfa: Boolean?,
-  val exp: Long
+  val exp: Long,
 )

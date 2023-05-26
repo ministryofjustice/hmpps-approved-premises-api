@@ -81,7 +81,7 @@ class CacheClearTest : IntegrationTestBase() {
       withProbationRegion(
         probationRegionEntityFactory.produceAndPersist {
           withApArea(apAreaEntityFactory.produceAndPersist())
-        }
+        },
       )
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }

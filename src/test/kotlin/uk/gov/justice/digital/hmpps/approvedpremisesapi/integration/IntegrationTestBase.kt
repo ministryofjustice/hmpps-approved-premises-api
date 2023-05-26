@@ -480,7 +480,7 @@ abstract class IntegrationTestBase {
   fun mockClientCredentialsJwtRequest(
     username: String? = null,
     roles: List<String> = listOf(),
-    authSource: String = "none"
+    authSource: String = "none",
   ) {
     wiremockServer.stubFor(
       post(urlEqualTo("/auth/oauth/token"))
@@ -494,7 +494,7 @@ abstract class IntegrationTestBase {
                   accessToken = jwtAuthHelper.createClientCredentialsJwt(
                     username = username,
                     roles = roles,
-                    authSource = authSource
+                    authSource = authSource,
                   ),
                   tokenType = "bearer",
                   expiresIn = Duration.ofHours(1).toSeconds().toInt(),
@@ -502,11 +502,11 @@ abstract class IntegrationTestBase {
                   sub = username?.uppercase() ?: "integration-test-client-id",
                   authSource = authSource,
                   jti = UUID.randomUUID().toString(),
-                  iss = "http://localhost:9092/auth/issuer"
-                )
-              )
-            )
-        )
+                  iss = "http://localhost:9092/auth/issuer",
+                ),
+              ),
+            ),
+        ),
     )
   }
 
@@ -517,9 +517,9 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(offenderDetails)
-          )
-      )
+            objectMapper.writeValueAsString(offenderDetails),
+          ),
+      ),
   )
 
   fun mockOffenderUserAccessCommunityApiCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) {
@@ -535,11 +535,11 @@ abstract class IntegrationTestBase {
                   UserOffenderAccess(
                     userRestricted = false,
                     userExcluded = false,
-                    restrictionMessage = null
-                  )
-                )
-              )
-          )
+                    restrictionMessage = null,
+                  ),
+                ),
+              ),
+          ),
       )
       return
     }
@@ -555,11 +555,11 @@ abstract class IntegrationTestBase {
                 UserOffenderAccess(
                   userRestricted = inclusion,
                   userExcluded = exclusion,
-                  restrictionMessage = null
-                )
-              )
-            )
-        )
+                  restrictionMessage = null,
+                ),
+              ),
+            ),
+        ),
     )
   }
 
@@ -572,11 +572,11 @@ abstract class IntegrationTestBase {
           .withBody(
             objectMapper.writeValueAsString(
               StaffMembersPage(
-                content = listOf(staffMember)
-              )
-            )
-          )
-      )
+                content = listOf(staffMember),
+              ),
+            ),
+          ),
+      ),
   )
 
   fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
@@ -586,9 +586,9 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(inmateDetail)
-          )
-      )
+            objectMapper.writeValueAsString(inmateDetail),
+          ),
+      ),
   )
 
   fun mockStaffUserInfoCommunityApiCall(staffUserDetails: StaffUserDetails, createProbationRegionForStaffAreaCode: Boolean = true): StubMapping? {
@@ -606,9 +606,9 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
             .withBody(
-              objectMapper.writeValueAsString(staffUserDetails)
-            )
-        )
+              objectMapper.writeValueAsString(staffUserDetails),
+            ),
+        ),
     )
   }
 
@@ -617,8 +617,8 @@ abstract class IntegrationTestBase {
       .willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(404)
-      )
+          .withStatus(404),
+      ),
   )
 
   fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) =
@@ -630,9 +630,9 @@ abstract class IntegrationTestBase {
               .withHeader("Content-Type", "application/json")
               .withStatus(responseStatus)
               .withBody(
-                objectMapper.writeValueAsString(responseBody)
-              )
-          )
+                objectMapper.writeValueAsString(responseBody),
+              ),
+          ),
       )
     }
 
@@ -642,13 +642,13 @@ abstract class IntegrationTestBase {
         WireMock.get(urlEqualTo(url))
           .willReturn(
             aResponse()
-              .withStatus(responseStatus)
-          )
+              .withStatus(responseStatus),
+          ),
       )
     }
 
   fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit) {
-    if (! clientCredentialsCallMocked) {
+    if (!clientCredentialsCallMocked) {
       mockClientCredentialsJwtRequest()
 
       clientCredentialsCallMocked = true

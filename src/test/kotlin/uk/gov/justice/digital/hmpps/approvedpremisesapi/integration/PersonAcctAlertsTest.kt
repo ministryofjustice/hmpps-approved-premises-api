@@ -26,7 +26,7 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
   fun `Getting ACCT alerts for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -41,7 +41,7 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
   fun `Getting ACCT alerts for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -76,7 +76,7 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
         val alerts = listOf(
           AlertFactory().produce(),
           AlertFactory().produce(),
-          AlertFactory().produce()
+          AlertFactory().produce(),
         )
 
         PrisonAPI_mockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, alerts)
@@ -90,8 +90,8 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              alerts.map(alertTransformer::transformToApi)
-            )
+              alerts.map(alertTransformer::transformToApi),
+            ),
           )
       }
     }

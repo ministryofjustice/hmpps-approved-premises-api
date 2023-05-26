@@ -133,7 +133,7 @@ class DeleteBookingTest : IntegrationTestBase() {
     withProbationRegion(
       probationRegionEntityFactory.produceAndPersist {
         withApArea(apAreaEntityFactory.produceAndPersist())
-      }
+      },
     )
 
     withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())

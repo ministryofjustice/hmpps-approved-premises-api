@@ -105,7 +105,7 @@ class ApplicationServiceTest {
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockObjectMapper,
-    "http://frontend/applications/#id"
+    "http://frontend/applications/#id",
   )
 
   @Test
@@ -150,7 +150,7 @@ class ApplicationServiceTest {
         override fun getLatestAssessmentDecision(): AssessmentDecision? = null
         override fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean = false
         override fun getHasBooking(): Boolean = false
-      }
+      },
     )
 
     every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
@@ -160,10 +160,10 @@ class ApplicationServiceTest {
           listOf(
             StaffUserTeamMembershipFactory()
               .withCode("TEAM1")
-              .produce()
-          )
+              .produce(),
+          ),
         )
-        .produce()
+        .produce(),
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
@@ -209,7 +209,7 @@ class ApplicationServiceTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -217,14 +217,14 @@ class ApplicationServiceTest {
       .withTeams(
         listOf(
           StaffUserTeamMembershipFactory()
-            .produce()
-        )
+            .produce(),
+        ),
       )
       .produce()
 
     every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
       status = HttpStatus.OK,
-      body = staffUserDetails
+      body = staffUserDetails,
     )
 
     assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
@@ -303,7 +303,7 @@ class ApplicationServiceTest {
     applicationEntity.teamCodes += ApplicationTeamCodeEntity(
       id = UUID.randomUUID(),
       application = applicationEntity,
-      teamCode = "TEAM1"
+      teamCode = "TEAM1",
     )
 
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
@@ -315,14 +315,14 @@ class ApplicationServiceTest {
         listOf(
           StaffUserTeamMembershipFactory()
             .withCode("TEAM1")
-            .produce()
-        )
+            .produce(),
+        ),
       )
       .produce()
 
     every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
       status = HttpStatus.OK,
-      body = staffUserDetails
+      body = staffUserDetails,
     )
 
     val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
@@ -366,7 +366,7 @@ class ApplicationServiceTest {
         UserRoleAssignmentEntityFactory()
           .withUser(userEntity)
           .withRole(role)
-          .produce()
+          .produce(),
       )
 
       val applicationEntity = ApprovedPremisesApplicationEntityFactory()
@@ -425,7 +425,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce()
+      OffenderDetailsSummaryFactory().produce(),
     )
 
     val user = userWithUsername(username)
@@ -433,8 +433,8 @@ class ApplicationServiceTest {
     every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
       HttpStatus.OK,
       ManagingTeamsResponse(
-        teamCodes = emptyList()
-      )
+        teamCodes = emptyList(),
+      ),
     )
 
     val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
@@ -450,7 +450,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce()
+      OffenderDetailsSummaryFactory().produce(),
     )
 
     val user = userWithUsername(username)
@@ -458,8 +458,8 @@ class ApplicationServiceTest {
     every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
       HttpStatus.OK,
       ManagingTeamsResponse(
-        teamCodes = listOf("TEAMCODE")
-      )
+        teamCodes = listOf("TEAMCODE"),
+      ),
     )
 
     val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
@@ -483,12 +483,12 @@ class ApplicationServiceTest {
     every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
       HttpStatus.OK,
       ManagingTeamsResponse(
-        teamCodes = listOf("TEAMCODE")
-      )
+        teamCodes = listOf("TEAMCODE"),
+      ),
     )
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce()
+      OffenderDetailsSummaryFactory().produce(),
     )
     every { mockUserService.getUserForRequest() } returns user
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
@@ -504,25 +504,25 @@ class ApplicationServiceTest {
             riskToPublic = "Low",
             riskToKnownAdult = "High",
             riskToStaff = "High",
-            lastUpdated = null
-          )
-        )
+            lastUpdated = null,
+          ),
+        ),
       )
       .withMappa(
         RiskWithStatus(
           value = Mappa(
             level = "",
-            lastUpdated = LocalDate.parse("2022-12-12")
-          )
-        )
+            lastUpdated = LocalDate.parse("2022-12-12"),
+          ),
+        ),
       )
       .withFlags(
         RiskWithStatus(
           value = listOf(
             "flag1",
-            "flag2"
-          )
-        )
+            "flag2",
+          ),
+        ),
       )
       .produce()
 
@@ -576,7 +576,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce()
+      OffenderDetailsSummaryFactory().produce(),
     )
 
     val user = userWithUsername(username)
@@ -600,7 +600,7 @@ class ApplicationServiceTest {
     val user = userWithUsername(username)
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce()
+      OffenderDetailsSummaryFactory().produce(),
     )
     every { mockUserService.getUserForRequest() } returns user
     every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
@@ -615,25 +615,25 @@ class ApplicationServiceTest {
             riskToPublic = "Low",
             riskToKnownAdult = "High",
             riskToStaff = "High",
-            lastUpdated = null
-          )
-        )
+            lastUpdated = null,
+          ),
+        ),
       )
       .withMappa(
         RiskWithStatus(
           value = Mappa(
             level = "",
-            lastUpdated = LocalDate.parse("2022-12-12")
-          )
-        )
+            lastUpdated = LocalDate.parse("2022-12-12"),
+          ),
+        ),
       )
       .withFlags(
         RiskWithStatus(
           value = listOf(
             "flag1",
-            "flag2"
-          )
-        )
+            "flag2",
+          ),
+        ),
       )
       .produce()
 
@@ -665,8 +665,8 @@ class ApplicationServiceTest {
         arrivalDate = null,
         data = "{}",
         username = username,
-        isInapplicable = null
-      ) is AuthorisableActionResult.NotFound
+        isInapplicable = null,
+      ) is AuthorisableActionResult.NotFound,
     ).isTrue
   }
 
@@ -708,8 +708,8 @@ class ApplicationServiceTest {
         arrivalDate = null,
         data = "{}",
         username = username,
-        isInapplicable = null
-      ) is AuthorisableActionResult.Unauthorised
+        isInapplicable = null,
+      ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
   }
 
@@ -748,7 +748,7 @@ class ApplicationServiceTest {
       arrivalDate = null,
       data = "{}",
       username = username,
-      isInapplicable = null
+      isInapplicable = null,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -798,7 +798,7 @@ class ApplicationServiceTest {
       arrivalDate = null,
       data = "{}",
       username = username,
-      isInapplicable = null
+      isInapplicable = null,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -855,7 +855,7 @@ class ApplicationServiceTest {
       arrivalDate = LocalDate.parse("2023-04-17"),
       data = updatedData,
       username = username,
-      isInapplicable = false
+      isInapplicable = false,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -885,8 +885,8 @@ class ApplicationServiceTest {
       applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username
-      ) is AuthorisableActionResult.NotFound
+        username = username,
+      ) is AuthorisableActionResult.NotFound,
     ).isTrue
   }
 
@@ -923,8 +923,8 @@ class ApplicationServiceTest {
       applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username
-      ) is AuthorisableActionResult.Unauthorised
+        username = username,
+      ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
   }
 
@@ -959,7 +959,7 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = "{}",
-      username = username
+      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1005,7 +1005,7 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = "{}",
-      username = username
+      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1058,7 +1058,7 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = updatedData,
-      username = username
+      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1090,7 +1090,7 @@ class ApplicationServiceTest {
       isPipeApplication = true,
       isWomensApplication = false,
       targetLocation = "SW1A 1AA",
-      releaseType = ReleaseTypeOption.licence
+      releaseType = ReleaseTypeOption.licence,
     )
 
     private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
@@ -1227,7 +1227,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-        offenderDetails
+        offenderDetails,
       )
 
       val risks = PersonRisksFactory()
@@ -1236,28 +1236,28 @@ class ApplicationServiceTest {
             status = RiskStatus.Retrieved,
             value = Mappa(
               level = "CAT C1/LEVEL L1",
-              lastUpdated = LocalDate.now()
-            )
-          )
+              lastUpdated = LocalDate.now(),
+            ),
+          ),
         )
         .produce()
 
       every { mockOffenderService.getRiskByCrn(application.crn, any(), user.deliusUsername) } returns AuthorisableActionResult.Success(
-        risks
+        risks,
       )
 
       val staffUserDetails = StaffUserDetailsFactory()
         .withTeams(
           listOf(
             StaffUserTeamMembershipFactory()
-              .produce()
-          )
+              .produce(),
+          ),
         )
         .produce()
 
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
         status = HttpStatus.OK,
-        body = staffUserDetails
+        body = staffUserDetails,
       )
 
       val schema = application.schemaVersion as ApprovedPremisesApplicationJsonSchemaEntity
@@ -1291,7 +1291,7 @@ class ApplicationServiceTest {
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
               crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
@@ -1303,29 +1303,29 @@ class ApplicationServiceTest {
                 staffIdentifier = staffUserDetails.staffIdentifier,
                 forenames = staffUserDetails.staff.forenames,
                 surname = staffUserDetails.staff.surname,
-                username = staffUserDetails.username
+                username = staffUserDetails.username,
               ),
               probationArea = ProbationArea(
                 code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description
+                name = staffUserDetails.probationArea.description,
               ),
               team = Team(
                 code = firstTeam.code,
-                name = firstTeam.description
+                name = firstTeam.description,
               ),
               ldu = Ldu(
                 code = firstTeam.teamType.code,
-                name = firstTeam.teamType.description
+                name = firstTeam.teamType.description,
               ),
               region = Region(
                 code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description
-              )
+                name = staffUserDetails.probationArea.description,
+              ),
             ) &&
               data.mappa == risks.mappa.value!!.level &&
               data.sentenceLengthInMonths == null &&
               data.offenceId == application.offenceId
-          }
+          },
         )
       }
     }
@@ -1489,7 +1489,7 @@ class ApplicationServiceTest {
       OfflineApplicationEntityFactory()
         .produce(),
       OfflineApplicationEntityFactory()
-        .produce()
+        .produce(),
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
@@ -1528,7 +1528,7 @@ class ApplicationServiceTest {
       OfflineApplicationEntityFactory()
         .produce(),
       OfflineApplicationEntityFactory()
-        .produce()
+        .produce(),
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
@@ -1648,7 +1648,7 @@ class ApplicationServiceTest {
     .withProbationRegion(
       ProbationRegionEntityFactory()
         .withApArea(ApAreaEntityFactory().produce())
-        .produce()
+        .produce(),
     )
     .produce()
 }

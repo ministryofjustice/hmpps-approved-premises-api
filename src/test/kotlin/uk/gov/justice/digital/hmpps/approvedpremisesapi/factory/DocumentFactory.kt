@@ -65,11 +65,11 @@ class DocumentFactory : Factory<Document> {
     author = this.author(),
     type = DocumentType(
       code = this.typeCode(),
-      description = this.typeDescription()
+      description = this.typeDescription(),
     ),
     extendedDescription = this.extendedDescription(),
     lastModifiedAt = this.lastModifiedAt(),
     createdAt = this.createdAt(),
-    parentPrimaryKeyId = this.parentPrimaryKeyId()
+    parentPrimaryKeyId = this.parentPrimaryKeyId(),
   )
 }

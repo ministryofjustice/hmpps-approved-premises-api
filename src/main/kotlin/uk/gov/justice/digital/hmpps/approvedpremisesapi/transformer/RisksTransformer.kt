@@ -22,32 +22,32 @@ class RisksTransformer {
           riskToPublic = it.riskToPublic,
           riskToKnownAdult = it.riskToKnownAdult,
           riskToStaff = it.riskToStaff,
-          lastUpdated = it.lastUpdated
+          lastUpdated = it.lastUpdated,
         )
-      }
+      },
     ),
     mappa = MappaEnvelope(
       status = transformDomainToApi(domain.mappa.status),
       value = domain.mappa.value?.let {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Mappa(
           level = it.level,
-          lastUpdated = it.lastUpdated
+          lastUpdated = it.lastUpdated,
         )
-      }
+      },
     ),
     tier = RiskTierEnvelope(
       status = transformDomainToApi(domain.tier.status),
       value = domain.tier.value?.let {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTier(
           level = it.level,
-          lastUpdated = it.lastUpdated
+          lastUpdated = it.lastUpdated,
         )
-      }
+      },
     ),
     flags = FlagsEnvelope(
       status = transformDomainToApi(domain.flags.status),
-      value = domain.flags.value
-    )
+      value = domain.flags.value,
+    ),
   )
 
   private fun transformDomainToApi(domain: RiskStatus) = when (domain) {

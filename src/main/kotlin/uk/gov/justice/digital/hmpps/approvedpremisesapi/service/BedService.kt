@@ -11,7 +11,7 @@ import java.util.UUID
 @Service
 class BedService(
   private val bedRepository: BedRepository,
-  private val characteristicRepository: CharacteristicRepository
+  private val characteristicRepository: CharacteristicRepository,
 ) {
 
   fun getBedAndRoomCharacteristics(id: UUID): AuthorisableActionResult<Pair<DomainBedSummary, List<CharacteristicEntity>>> {

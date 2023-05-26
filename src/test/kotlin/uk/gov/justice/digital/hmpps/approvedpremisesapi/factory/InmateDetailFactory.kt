@@ -27,6 +27,6 @@ class InmateDetailFactory : Factory<InmateDetail> {
   override fun produce(): InmateDetail = InmateDetail(
     offenderNo = this.offenderNo(),
     inOutStatus = this.inOutStatus(),
-    assignedLivingUnit = this.assignedLivingUnit()
+    assignedLivingUnit = this.assignedLivingUnit(),
   )
 }

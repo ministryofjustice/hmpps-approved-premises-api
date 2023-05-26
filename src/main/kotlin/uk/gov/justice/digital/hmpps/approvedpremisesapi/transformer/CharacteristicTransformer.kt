@@ -22,6 +22,6 @@ class CharacteristicTransformer {
       "room" -> Characteristic.ModelScope.room
       "*" -> Characteristic.ModelScope.star
       else -> throw RuntimeException("Unsupported service scope: ${jpa.modelScope}")
-    }
+    },
   )
 }

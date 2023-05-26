@@ -188,6 +188,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     application = this.application(),
     offlineApplication = this.offlineApplication(),
     turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
-    nomsNumber = this.nomsNumber()
+    nomsNumber = this.nomsNumber(),
   )
 }

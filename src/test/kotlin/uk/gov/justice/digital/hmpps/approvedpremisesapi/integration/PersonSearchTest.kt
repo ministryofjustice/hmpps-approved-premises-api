@@ -27,7 +27,7 @@ class PersonSearchTest : IntegrationTestBase() {
   fun `Searching for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -42,7 +42,7 @@ class PersonSearchTest : IntegrationTestBase() {
   fun `Searching for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -62,14 +62,14 @@ class PersonSearchTest : IntegrationTestBase() {
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withStatus(404)
-        )
+            .withStatus(404),
+        ),
     )
 
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
+      roles = listOf("ROLE_PROBATION"),
     )
 
     webTestClient.get()
@@ -104,10 +104,10 @@ class PersonSearchTest : IntegrationTestBase() {
               agencyId = "BRI",
               locationId = 5,
               description = "B-2F-004",
-              agencyName = "HMP Bristol"
-            )
+              agencyName = "HMP Bristol",
+            ),
           )
-        }
+        },
       ) { offenderDetails, inmateDetails ->
         webTestClient.get()
           .uri("/people/search?crn=CRN")
@@ -128,9 +128,9 @@ class PersonSearchTest : IntegrationTestBase() {
                 nationality = "English",
                 religionOrBelief = "Judaism",
                 genderIdentity = "This is a self described identity",
-                prisonName = "HMP Bristol"
-              )
-            )
+                prisonName = "HMP Bristol",
+              ),
+            ),
           )
       }
     }
@@ -142,10 +142,11 @@ class PersonSearchTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusStaffCode,
+          offenderDetails.otherIds.crn,
+          userEntity.deliusStaffCode,
           ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1")
-          )
+            teamCodes = listOf("TEAM1"),
+          ),
         )
 
         webTestClient.get()
@@ -164,10 +165,11 @@ class PersonSearchTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn, userEntity.deliusStaffCode,
+          offenderDetails.otherIds.crn,
+          userEntity.deliusStaffCode,
           ManagingTeamsResponse(
-            teamCodes = emptyList()
-          )
+            teamCodes = emptyList(),
+          ),
         )
 
         webTestClient.get()

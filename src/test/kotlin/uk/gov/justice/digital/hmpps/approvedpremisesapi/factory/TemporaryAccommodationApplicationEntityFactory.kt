@@ -118,6 +118,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     offenceId = this.offenceId(),
     riskRatings = this.riskRatings(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
-    nomsNumber = this.nomsNumber()
+    nomsNumber = this.nomsNumber(),
   )
 }

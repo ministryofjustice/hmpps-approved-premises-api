@@ -40,6 +40,6 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
     crn = this.crn(),
     service = this.service(),
     submittedAt = this.submittedAt(),
-    createdAt = this.createdAt()
+    createdAt = this.createdAt(),
   )
 }

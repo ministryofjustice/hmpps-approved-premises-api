@@ -6,5 +6,5 @@ import java.util.UUID
 data class Tier(
   val tierScore: String,
   val calculationId: UUID,
-  val calculationDate: LocalDateTime
+  val calculationDate: LocalDateTime,
 )

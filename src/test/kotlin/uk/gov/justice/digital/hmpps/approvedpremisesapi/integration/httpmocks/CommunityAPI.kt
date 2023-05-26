@@ -12,25 +12,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffe
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails: StaffUserDetails) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/staff/username/${staffUserDetails.username}",
-    responseBody = staffUserDetails
+    responseBody = staffUserDetails,
   )
 
 fun IntegrationTestBase.CommunityAPI_mockNotFoundStaffUserDetailsCall(username: String) =
   mockUnsuccessfulGetCall(
     url = "/secure/staff/username/$username",
-    responseStatus = 404
+    responseStatus = 404,
   )
 
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails: OffenderDetailSummary) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/${offenderDetails.otherIds.crn}",
-    responseBody = offenderDetails
+    responseBody = offenderDetails,
   )
 
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulDocumentsCall(crn: String, groupedDocuments: GroupedDocuments) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/documents/grouped",
-    responseBody = groupedDocuments
+    responseBody = groupedDocuments,
   )
 
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulDocumentDownloadCall(crn: String, documentId: String, fileContents: ByteArray) =
@@ -41,27 +41,27 @@ fun IntegrationTestBase.CommunityAPI_mockSuccessfulDocumentDownloadCall(crn: Str
           WireMock.aResponse()
             .withHeader("Content-Type", "application/octet-stream")
             .withStatus(200)
-            .withBody(fileContents)
-        )
+            .withBody(fileContents),
+        ),
     )
   }
 
 fun IntegrationTestBase.CommunityAPI_mockNotFoundOffenderDetailsCall(crn: String) =
   mockUnsuccessfulGetCall(
     url = "/secure/offenders/crn/$crn",
-    responseStatus = 404
+    responseStatus = 404,
   )
 
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulConvictionsCall(crn: String, response: List<Conviction>) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/convictions",
-    responseBody = response
+    responseBody = response,
   )
 
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulRegistrationsCall(crn: String, response: Registrations) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/registrations?activeOnly=true",
-    responseBody = response
+    responseBody = response,
   )
 
 fun IntegrationTestBase.CommunityAPI_mockOffenderUserAccessCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) =
@@ -78,11 +78,11 @@ fun IntegrationTestBase.CommunityAPI_mockOffenderUserAccessCall(username: String
                   UserOffenderAccess(
                     userRestricted = false,
                     userExcluded = false,
-                    restrictionMessage = null
-                  )
-                )
-              )
-          )
+                    restrictionMessage = null,
+                  ),
+                ),
+              ),
+          ),
       )
       return@mockOAuth2ClientCredentialsCallIfRequired
     }
@@ -98,10 +98,10 @@ fun IntegrationTestBase.CommunityAPI_mockOffenderUserAccessCall(username: String
                 UserOffenderAccess(
                   userRestricted = inclusion,
                   userExcluded = exclusion,
-                  restrictionMessage = null
-                )
-              )
-            )
-        )
+                  restrictionMessage = null,
+                ),
+              ),
+            ),
+        ),
     )
   }

@@ -28,9 +28,9 @@ class SeedUsersTest : SeedTestBase() {
         listOf(
           UserRoleAssignmentsSeedCsvRowFactory()
             .withDeliusUsername("INVALID-USER")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.user, "invalid-user")
@@ -56,7 +56,7 @@ class SeedUsersTest : SeedTestBase() {
         .withUsername("UNKNOWN-USER")
         .withStaffIdentifier(6789)
         .withProbationAreaCode(probationRegion.deliusCode)
-        .produce()
+        .produce(),
     )
 
     withCsv(
@@ -67,9 +67,9 @@ class SeedUsersTest : SeedTestBase() {
             .withDeliusUsername("unknown-user")
             .withTypedRoles(listOf(UserRole.ASSESSOR, UserRole.WORKFLOW_MANAGER))
             .withTypedQualifications(listOf(UserQualification.PIPE))
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.user, "unknown-user")
@@ -80,10 +80,10 @@ class SeedUsersTest : SeedTestBase() {
     assertThat(persistedUser!!.deliusStaffIdentifier).isEqualTo(6789)
     assertThat(persistedUser.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
       UserRole.ASSESSOR,
-      UserRole.WORKFLOW_MANAGER
+      UserRole.WORKFLOW_MANAGER,
     )
     assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
-      UserQualification.PIPE
+      UserQualification.PIPE,
     )
   }
 
@@ -106,9 +106,9 @@ class SeedUsersTest : SeedTestBase() {
             .withDeliusUsername("KNOWN-USER")
             .withTypedRoles(listOf(UserRole.ASSESSOR, UserRole.WORKFLOW_MANAGER))
             .withTypedQualifications(listOf(UserQualification.PIPE))
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.user, "known-user")
@@ -118,10 +118,10 @@ class SeedUsersTest : SeedTestBase() {
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
       UserRole.ASSESSOR,
-      UserRole.WORKFLOW_MANAGER
+      UserRole.WORKFLOW_MANAGER,
     )
     assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
-      UserQualification.PIPE
+      UserQualification.PIPE,
     )
   }
 
@@ -144,9 +144,9 @@ class SeedUsersTest : SeedTestBase() {
             .withDeliusUsername("known-user")
             .withUntypedRoles(listOf("WORKFLOW_MANAGEF"))
             .withTypedQualifications(listOf(UserQualification.PIPE))
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.user, "unknown-role")
@@ -178,9 +178,9 @@ class SeedUsersTest : SeedTestBase() {
           UserRoleAssignmentsSeedCsvRowFactory()
             .withDeliusUsername("known-user")
             .withUntypedQualifications(listOf("PIPEE"))
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.user, "unknown-qualification")
@@ -199,7 +199,7 @@ class SeedUsersTest : SeedTestBase() {
       .withUnquotedFields(
         "deliusUsername",
         "roles",
-        "qualifications"
+        "qualifications",
       )
       .newRow()
 
@@ -243,12 +243,12 @@ class UserRoleAssignmentsSeedCsvRowFactory : Factory<UsersSeedUntypedEnumsCsvRow
   override fun produce() = UsersSeedUntypedEnumsCsvRow(
     deliusUsername = this.deliusUsername(),
     roles = this.roles(),
-    qualifications = this.qualifications()
+    qualifications = this.qualifications(),
   )
 }
 
 data class UsersSeedUntypedEnumsCsvRow(
   val deliusUsername: String,
   val roles: List<String>,
-  val qualifications: List<String>
+  val qualifications: List<String>,
 )

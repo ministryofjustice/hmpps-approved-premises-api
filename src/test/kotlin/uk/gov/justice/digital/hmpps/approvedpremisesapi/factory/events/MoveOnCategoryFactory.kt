@@ -27,6 +27,6 @@ class MoveOnCategoryFactory : Factory<MoveOnCategory> {
   override fun produce() = MoveOnCategory(
     description = this.description(),
     legacyMoveOnCategoryCode = this.legacyMoveOnCategoryCode(),
-    id = this.id()
+    id = this.id(),
   )
 }

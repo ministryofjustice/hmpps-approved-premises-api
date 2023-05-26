@@ -47,7 +47,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -57,7 +57,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -67,7 +67,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -77,7 +77,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -87,7 +87,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -97,7 +97,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -107,7 +107,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -117,7 +117,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -127,7 +127,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -137,7 +137,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -147,7 +147,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -157,7 +157,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -167,7 +167,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -177,7 +177,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -187,7 +187,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -197,7 +197,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       HealthDetail(
         community = community,
         electronicMonitoring = electronicMonitoring,
-        programme = programme
+        programme = programme,
       )
     }
   }
@@ -232,7 +232,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
       literacyProblems = this.literacyProblems(),
       poorCommunicationSkills = this.poorCommunicationSkills(),
       needForInterpreter = this.needForInterpreter(),
-      alcoholMisuse = this.alcoholMisuse()
-    )
+      alcoholMisuse = this.alcoholMisuse(),
+    ),
   )
 }

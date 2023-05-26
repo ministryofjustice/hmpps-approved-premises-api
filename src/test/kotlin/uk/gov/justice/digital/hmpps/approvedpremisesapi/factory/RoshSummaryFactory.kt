@@ -46,7 +46,7 @@ class RoshSummaryFactory : AssessmentInfoFactory<RoshSummary>() {
       natureOfRisk = this.natureOfRisk(),
       riskGreatest = this.riskGreatest(),
       riskIncreaseLikelyTo = this.riskIncreaseLikelyTo(),
-      riskReductionLikelyTo = this.riskReductionLikelyTo()
-    )
+      riskReductionLikelyTo = this.riskReductionLikelyTo(),
+    ),
   )
 }

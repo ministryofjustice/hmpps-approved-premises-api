@@ -541,7 +541,7 @@ class BedSearchServiceTest {
         startDate = LocalDate.parse("2023-03-22"),
         durationInDays = 7,
         probationDeliveryUnit = "PDU-1",
-        probationRegionId = user.probationRegion.id
+        probationRegionId = user.probationRegion.id,
       )
     } returns repositorySearchResults
 
@@ -633,7 +633,7 @@ class BedSearchServiceTest {
         startDate = LocalDate.parse("2023-03-22"),
         durationInDays = 7,
         probationDeliveryUnit = "PDU-1",
-        probationRegionId = user.probationRegion.id
+        probationRegionId = user.probationRegion.id,
       )
     } returns repositorySearchResults
 
@@ -642,7 +642,7 @@ class BedSearchServiceTest {
       .withProbationRegion(user.probationRegion)
       .withLocalAuthorityArea(
         LocalAuthorityEntityFactory()
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -675,7 +675,7 @@ class BedSearchServiceTest {
       .withProbationRegion(user.probationRegion)
       .withLocalAuthorityArea(
         LocalAuthorityEntityFactory()
-          .produce()
+          .produce(),
       )
       .produce()
 

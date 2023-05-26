@@ -56,19 +56,19 @@ class TasksTest : IntegrationTestBase() {
           `Given an Assessment for Approved Premises`(
             allocatedToUser = otherUser,
             createdByUser = otherUser,
-            crn = offenderDetails.otherIds.crn
+            crn = offenderDetails.otherIds.crn,
           ) { assessment, _ ->
             `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              reallocated = true
+              reallocated = true,
             ) { _, _ ->
               `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
-                crn = offenderDetails.otherIds.crn
+                crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
                 webTestClient.get()
                   .uri("/tasks")
@@ -84,10 +84,10 @@ class TasksTest : IntegrationTestBase() {
                         taskTransformer.transformPlacementRequestToTask(
                           placementRequest,
                           offenderDetails,
-                          inmateDetails
-                        )
-                      )
-                    )
+                          inmateDetails,
+                        ),
+                      ),
+                    ),
                   )
               }
             }
@@ -113,7 +113,7 @@ class TasksTest : IntegrationTestBase() {
         `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
-          crn = offenderDetails.otherIds.crn
+          crn = offenderDetails.otherIds.crn,
         ) { _, application ->
           webTestClient.get()
             .uri("/applications/${application.id}/tasks/unknown-task")
@@ -131,13 +131,13 @@ class TasksTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.ASSESSOR)
+          roles = listOf(UserRole.ASSESSOR),
         ) { allocatableUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given an Assessment for Approved Premises`(
               allocatedToUser = user,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { assessment, application ->
               webTestClient.get()
                 .uri("/applications/${application.id}/tasks/assessment")
@@ -150,9 +150,9 @@ class TasksTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     TaskWrapper(
                       task = taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
-                      users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises))
-                    )
-                  )
+                      users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
+                    ),
+                  ),
                 )
             }
           }
@@ -166,14 +166,14 @@ class TasksTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.MATCHER)
+          roles = listOf(UserRole.MATCHER),
         ) { allocatableUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = user,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { placementRequest, application ->
               webTestClient.get()
                 .uri("/applications/${application.id}/tasks/placement-request")
@@ -186,9 +186,9 @@ class TasksTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     TaskWrapper(
                       task = taskTransformer.transformPlacementRequestToTask(placementRequest, offenderDetails, inmateDetails),
-                      users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises))
-                    )
-                  )
+                      users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
+                    ),
+                  ),
                 )
             }
           }
@@ -204,7 +204,7 @@ class TasksTest : IntegrationTestBase() {
         `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
-          crn = offenderDetails.otherIds.crn
+          crn = offenderDetails.otherIds.crn,
         ) { _, application ->
           webTestClient.get()
             .uri("/applications/${application.id}/tasks/booking-appeal")
@@ -223,8 +223,8 @@ class TasksTest : IntegrationTestBase() {
       .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/tasks/assessment/allocations")
       .bodyValue(
         NewReallocation(
-          userId = UUID.randomUUID()
-        )
+          userId = UUID.randomUUID(),
+        ),
       )
       .exchange()
       .expectStatus()
@@ -239,8 +239,8 @@ class TasksTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewReallocation(
-            userId = UUID.randomUUID()
-          )
+            userId = UUID.randomUUID(),
+          ),
         )
         .exchange()
         .expectStatus()
@@ -253,13 +253,13 @@ class TasksTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User`(roles = listOf(UserRole.ASSESSOR)) { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.ASSESSOR)
+          roles = listOf(UserRole.ASSESSOR),
         ) { assigneeUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             `Given an Assessment for Approved Premises`(
               allocatedToUser = user,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn
+              crn = offenderDetails.otherIds.crn,
             ) { existingAssessment, application ->
 
               webTestClient.post()
@@ -267,8 +267,8 @@ class TasksTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   NewReallocation(
-                    userId = assigneeUser.id
-                  )
+                    userId = assigneeUser.id,
+                  ),
                 )
                 .exchange()
                 .expectStatus()
@@ -278,9 +278,9 @@ class TasksTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     Reallocation(
                       user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
-                      taskType = TaskType.assessment
-                    )
-                  )
+                      taskType = TaskType.assessment,
+                    ),
+                  ),
                 )
 
               val assessments = assessmentRepository.findAll()
@@ -299,22 +299,22 @@ class TasksTest : IntegrationTestBase() {
   fun `Reallocating a placement request to different assessor returns 201, creates new placement request, deallocates old one`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
       `Given a User`(
-        roles = listOf(UserRole.MATCHER)
+        roles = listOf(UserRole.MATCHER),
       ) { assigneeUser, _ ->
         `Given an Offender` { offenderDetails, _ ->
           `Given a Placement Request`(
             createdByUser = user,
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
-            crn = offenderDetails.otherIds.crn
+            crn = offenderDetails.otherIds.crn,
           ) { existingPlacementRequest, application ->
             webTestClient.post()
               .uri("/applications/${application.id}/tasks/placement-request/allocations")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 NewReallocation(
-                  userId = assigneeUser.id
-                )
+                  userId = assigneeUser.id,
+                ),
               )
               .exchange()
               .expectStatus()
@@ -324,9 +324,9 @@ class TasksTest : IntegrationTestBase() {
                 objectMapper.writeValueAsString(
                   Reallocation(
                     user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
-                    taskType = TaskType.placementRequest
-                  )
-                )
+                    taskType = TaskType.placementRequest,
+                  ),
+                ),
               )
 
             val placementRequests = placementRequestRepository.findAll()
@@ -356,8 +356,8 @@ class TasksTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewReallocation(
-                userId = userToReallocate.id
-              )
+                userId = userToReallocate.id,
+              ),
             )
             .exchange()
             .expectStatus()
@@ -377,8 +377,8 @@ class TasksTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewReallocation(
-                userId = userToReallocate.id
-              )
+                userId = userToReallocate.id,
+              ),
             )
             .exchange()
             .expectStatus()

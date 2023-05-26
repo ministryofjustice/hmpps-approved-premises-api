@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeserializationV
 @ControllerAdvice
 class ExceptionHandling(
   private val objectMapper: ObjectMapper,
-  private val deserializationValidationService: DeserializationValidationService
+  private val deserializationValidationService: DeserializationValidationService,
 ) : ProblemHandling, MessageNotReadableAdviceTrait {
   override fun toProblem(throwable: Throwable, status: StatusType): ThrowableProblem? {
     Sentry.captureException(throwable)
@@ -41,18 +41,18 @@ class ExceptionHandling(
 
     if (throwable is MissingRequestHeaderException) {
       return BadRequestProblem(
-        errorDetail = "Missing required header ${throwable.headerName}"
+        errorDetail = "Missing required header ${throwable.headerName}",
       )
     }
 
     return InternalServerErrorProblem(
-      detail = "There was an unexpected problem"
+      detail = "There was an unexpected problem",
     )
   }
 
   override fun handleMessageNotReadableException(
     exception: HttpMessageNotReadableException,
-    request: NativeWebRequest
+    request: NativeWebRequest,
   ): ResponseEntity<Problem> {
     val responseBuilder = Problem.builder()
       .withStatus(Status.BAD_REQUEST)
@@ -81,8 +81,8 @@ class ExceptionHandling(
           BadRequestProblem(
             invalidParams = deserializationValidationService.validateArray(
               targetType = arrayItemsType,
-              jsonArray = jsonTree as ArrayNode
-            )
+              jsonArray = jsonTree as ArrayNode,
+            ),
           )
         } else {
           val objectType = (mismatchedInputException.path[0].from as Class<*>).kotlin
@@ -90,8 +90,8 @@ class ExceptionHandling(
           BadRequestProblem(
             invalidParams = deserializationValidationService.validateObject(
               targetType = objectType,
-              jsonObject = jsonTree as ObjectNode
-            )
+              jsonObject = jsonTree as ObjectNode,
+            ),
           )
         }
 

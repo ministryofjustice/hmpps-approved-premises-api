@@ -151,6 +151,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     releaseType = this.releaseType(),
     arrivalDate = this.arrivalDate(),
     isInapplicable = this.isInapplicable(),
-    nomsNumber = this.nomsNumber()
+    nomsNumber = this.nomsNumber(),
   )
 }

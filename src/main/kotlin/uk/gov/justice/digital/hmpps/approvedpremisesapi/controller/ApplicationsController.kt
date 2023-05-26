@@ -74,7 +74,7 @@ class ApplicationsController(
   private val taskTransformer: TaskTransformer,
   private val enumConverterFactory: EnumConverterFactory,
   private val placementRequestService: PlacementRequestService,
-  private val taskService: TaskService
+  private val taskService: TaskService,
 ) : ApplicationsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -151,12 +151,12 @@ class ApplicationsController(
         releaseType = body.releaseType?.name,
         arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,
-        username = username
+        username = username,
       )
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = serializedData,
-        username = username
+        username = username,
       )
       else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
     }
@@ -179,7 +179,7 @@ class ApplicationsController(
 
   override fun applicationsApplicationIdSubmissionPost(
     applicationId: UUID,
-    submitApplication: SubmitApplication
+    submitApplication: SubmitApplication,
   ): ResponseEntity<Unit> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
@@ -246,11 +246,11 @@ class ApplicationsController(
 
   override fun applicationsApplicationIdTasksTaskTypeGet(
     applicationId: UUID,
-    taskName: String
+    taskName: String,
   ): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
     val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskName.kebabCaseToPascalCase()
+      taskName.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskName, "TaskType")
 
     val transformedTask: Task
@@ -270,7 +270,7 @@ class ApplicationsController(
           assessment,
           user.deliusUsername,
           offenderService,
-          taskTransformer::transformAssessmentToTask
+          taskTransformer::transformAssessmentToTask,
         )
 
         transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(assessment.application.getRequiredQualifications(), listOf(UserRole.ASSESSOR))
@@ -301,8 +301,8 @@ class ApplicationsController(
     return ResponseEntity.ok(
       TaskWrapper(
         task = transformedTask,
-        users = transformedAllocatableUsers
-      )
+        users = transformedAllocatableUsers,
+      ),
     )
   }
 
@@ -311,7 +311,7 @@ class ApplicationsController(
     val user = userService.getUserForRequest()
 
     val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskName.kebabCaseToPascalCase()
+      taskName.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskName, "TaskType")
 
     val validationResult = when (val authorisationResult = taskService.reallocateTask(user, taskType, body.userId, applicationId)) {

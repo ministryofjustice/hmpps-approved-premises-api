@@ -32,6 +32,6 @@ class AdjudicationChargeFactory : Factory<AdjudicationCharge> {
     oicChargeId = this.oicChargeId(),
     offenceCode = this.offenceCode(),
     offenceDescription = this.offenceDescription(),
-    findingCode = this.findingCode()
+    findingCode = this.findingCode(),
   )
 }

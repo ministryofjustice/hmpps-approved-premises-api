@@ -30,7 +30,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withProbationRegion(
             probationRegionEntityFactory.produceAndPersist {
               withApArea(apAreaEntityFactory.produceAndPersist())
-            }
+            },
           )
           withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
         }
@@ -153,7 +153,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withProbationRegion(
             probationRegionEntityFactory.produceAndPersist {
               withApArea(apAreaEntityFactory.produceAndPersist())
-            }
+            },
           )
           withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
         }

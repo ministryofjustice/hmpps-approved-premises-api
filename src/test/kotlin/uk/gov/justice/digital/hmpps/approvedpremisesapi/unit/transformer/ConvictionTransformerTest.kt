@@ -30,8 +30,8 @@ class ConvictionTransformerTest {
             .withMainCategoryDescription("Main Category 2")
             .withSubCategoryDescription("Sub Category 2")
             .withOffenceDate(LocalDateTime.parse("2022-12-05T00:00:00"))
-            .produce()
-        )
+            .produce(),
+        ),
       )
       .produce()
 
@@ -41,15 +41,15 @@ class ConvictionTransformerTest {
         offenceDescription = "Main Category 1 - Sub Category 1",
         offenceId = "1",
         convictionId = 12345,
-        offenceDate = LocalDate.parse("2022-12-06")
+        offenceDate = LocalDate.parse("2022-12-06"),
       ),
       ActiveOffence(
         deliusEventNumber = "5",
         offenceDescription = "Main Category 2 - Sub Category 2",
         offenceId = "2",
         convictionId = 12345,
-        offenceDate = LocalDate.parse("2022-12-05")
-      )
+        offenceDate = LocalDate.parse("2022-12-05"),
+      ),
     )
   }
 
@@ -66,7 +66,7 @@ class ConvictionTransformerTest {
             .withSubCategoryDescription("A Description")
             .withOffenceDate(LocalDateTime.parse("2022-12-06T00:00:00"))
             .produce(),
-        )
+        ),
       )
       .produce()
 
@@ -76,8 +76,8 @@ class ConvictionTransformerTest {
         offenceDescription = "A Description",
         offenceId = "1",
         convictionId = 12345,
-        offenceDate = LocalDate.parse("2022-12-06")
-      )
+        offenceDate = LocalDate.parse("2022-12-06"),
+      ),
     )
   }
 }

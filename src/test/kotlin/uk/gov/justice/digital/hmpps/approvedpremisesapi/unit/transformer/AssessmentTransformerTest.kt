@@ -63,7 +63,7 @@ class AssessmentTransformerTest {
     fun assessmentDecisionPairs(): Stream<Arguments> = Stream.of(
       of("ACCEPTED", ApiAssessmentDecision.accepted),
       of("REJECTED", ApiAssessmentDecision.rejected),
-      of(null, null)
+      of(null, null),
     )
   }
 
@@ -91,8 +91,8 @@ class AssessmentTransformerTest {
       ApprovedPremisesAssessmentJsonSchemaEntity(
         id = UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"),
         addedAt = OffsetDateTime.now(),
-        schema = "{}"
-      )
+        schema = "{}",
+      ),
     )
     .withDecision(JpaAssessmentDecision.REJECTED)
     .withRejectionRationale("reasoning")
@@ -142,7 +142,7 @@ class AssessmentTransformerTest {
                 .withYieldedApArea { ApAreaEntityFactory().produce() }
                 .produce()
             }
-            .produce()
+            .produce(),
         )
         .produce(),
       AssessmentClarificationNoteEntityFactory()
@@ -154,9 +154,9 @@ class AssessmentTransformerTest {
                 .withYieldedApArea { ApAreaEntityFactory().produce() }
                 .produce()
             }
-            .produce()
+            .produce(),
         )
-        .produce()
+        .produce(),
     )
 
     assessment.clarificationNotes = clarificationNotes
@@ -227,7 +227,7 @@ class AssessmentTransformerTest {
       completed = false,
       decision = domainDecision,
       crn = randomStringMultiCaseWithNumbers(6),
-      isStarted = true
+      isStarted = true,
     )
 
     every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
@@ -257,7 +257,7 @@ class AssessmentTransformerTest {
       completed = false,
       decision = "ACCEPTED",
       crn = randomStringMultiCaseWithNumbers(6),
-      isStarted = true
+      isStarted = true,
     )
 
     every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()

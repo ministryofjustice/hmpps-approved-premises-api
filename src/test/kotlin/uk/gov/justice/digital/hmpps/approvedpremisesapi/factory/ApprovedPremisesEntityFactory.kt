@@ -120,7 +120,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
         .withIdentifier("LOCALAUTHORITY")
-        .produce()
+        .produce(),
     )
 
     this.withProbationRegion(
@@ -129,9 +129,9 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
         .withApArea(
           ApAreaEntityFactory()
             .withIdentifier("APAREA")
-            .produce()
+            .produce(),
         )
-        .produce()
+        .produce(),
     )
   }
 
@@ -160,6 +160,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     characteristics = this.characteristics(),
     status = this.status(),
     point = this.point?.invoke() ?: GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
-      .createPoint(Coordinate(this.latitude(), this.longitude()))
+      .createPoint(Coordinate(this.latitude(), this.longitude())),
   )
 }

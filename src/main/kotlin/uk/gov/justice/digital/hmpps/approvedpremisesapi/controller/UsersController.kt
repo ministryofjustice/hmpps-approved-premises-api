@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole as J
 @Service
 class UsersController(
   private val userService: UserService,
-  private val userTransformer: UserTransformer
+  private val userTransformer: UserTransformer,
 ) : UsersApiDelegate {
 
   override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
@@ -43,7 +43,7 @@ class UsersController(
 
     return ResponseEntity.ok(
       userService.getUsersWithQualificationsAndRoles(qualifications, roles)
-        .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
+        .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
     )
   }
 

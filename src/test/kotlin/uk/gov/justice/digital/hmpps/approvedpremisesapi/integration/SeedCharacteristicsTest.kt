@@ -20,7 +20,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
       "invalid-characteristics-missing-name",
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the door to this room at least 900mm wide?,approved-premises,room\n" +
-        "hasWideDoor,,temporary-accommodation,room\n"
+        "hasWideDoor,,temporary-accommodation,room\n",
     )
 
     seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-missing-name")
@@ -41,7 +41,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
       "invalid-characteristics-unknown-scope",
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the door to this room at least 900mm wide?,foo,room\n" +
-        "hasWideDoor,Is the entrance wide?,temporary-accommodation,bar\n"
+        "hasWideDoor,Is the entrance wide?,temporary-accommodation,bar\n",
     )
 
     seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-unknown-scope")
@@ -62,7 +62,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
       "invalid-characteristics-missing-scope",
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the door to this room at least 900mm wide?,,room\n" +
-        "hasWideDoor,Is the entrance wide?,temporary-accommodation,\n"
+        "hasWideDoor,Is the entrance wide?,temporary-accommodation,\n",
     )
 
     seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-missing-scope")
@@ -84,7 +84,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the door to this room at least 900mm wide?,approved-premises,room\n" +
         "hasWideDoor,Is the room entrance wide?,temporary-accommodation,room\n" +
-        "isIap,Is this an IAP?,approved-premises,premises\n"
+        "isIap,Is this an IAP?,approved-premises,premises\n",
     )
 
     seedService.seedData(SeedFileType.characteristics, "valid-characteristics")
@@ -93,17 +93,17 @@ class SeedCharacteristicsTest : SeedTestBase() {
     val apWideDoorRoom = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",
       serviceName = "approved-premises",
-      modelName = "room"
+      modelName = "room",
     )
     val taWideDoorRoom = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",
       serviceName = "temporary-accommodation",
-      modelName = "room"
+      modelName = "room",
     )
     val apIapPremises = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "isIap",
       serviceName = "approved-premises",
-      modelName = "premises"
+      modelName = "premises",
     )
 
     assertThat(apWideDoorRoom!!.name).isEqualTo("Is the door to this room at least 900mm wide?")
@@ -125,7 +125,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
     val characteristic = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",
       serviceName = "approved-premises",
-      modelName = "room"
+      modelName = "room",
     )
 
     assertThat(characteristicRepository.count()).isEqualTo(1)
@@ -134,7 +134,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
     withCsv(
       "valid-characteristics-update",
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
-        "hasWideDoor,Is the DOOR wide?,approved-premises,room\n"
+        "hasWideDoor,Is the DOOR wide?,approved-premises,room\n",
     )
 
     seedService.seedData(SeedFileType.characteristics, "valid-characteristics-update")
@@ -142,7 +142,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
     val updatedCharacteristic = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",
       serviceName = "approved-premises",
-      modelName = "room"
+      modelName = "room",
     )
 
     assertThat(characteristicRepository.count()).isEqualTo(1)

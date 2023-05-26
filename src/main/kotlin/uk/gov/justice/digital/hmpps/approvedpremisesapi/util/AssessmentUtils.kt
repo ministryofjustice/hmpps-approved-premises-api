@@ -13,7 +13,7 @@ fun <T> mapAndTransformAssessments(
   assessments: List<AssessmentEntity>,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> T
+  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> T,
 ): List<T> {
   return assessments.mapNotNull {
     val assessment = transformAssessment(log, it, deliusUsername, offenderService, transformer) ?: return@mapNotNull null
@@ -27,7 +27,7 @@ fun <T> transformAssessment(
   assessment: AssessmentEntity,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> T
+  transformer: (AssessmentEntity, OffenderDetailSummary, InmateDetail) -> T,
 ): T {
   val (offenderDetailSummary, inmateDetail) = getPersonDetailsForCrn(log, assessment.application.crn, deliusUsername, offenderService)
     ?: throw NotFoundProblem(assessment.application.crn, "Offender")
@@ -40,7 +40,7 @@ fun <T> mapAndTransformAssessmentSummaries(
   assessments: List<DomainAssessmentSummary>,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail) -> T
+  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail) -> T,
 ): List<T> {
   return assessments.mapNotNull {
     transformAssessmentSummary(log, it, deliusUsername, offenderService, transformer) ?: return@mapNotNull null
@@ -52,7 +52,7 @@ fun <T> transformAssessmentSummary(
   assessment: DomainAssessmentSummary,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail) -> T
+  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail) -> T,
 ): T {
   val (offenderDetailSummary, inmateDetail) = getPersonDetailsForCrn(log, assessment.crn, deliusUsername, offenderService)
     ?: throw NotFoundProblem(assessment.crn, "Offender")

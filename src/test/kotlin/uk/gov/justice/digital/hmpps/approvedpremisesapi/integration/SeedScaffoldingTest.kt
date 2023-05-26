@@ -15,8 +15,8 @@ class SeedScaffoldingTest : SeedTestBase() {
       .bodyValue(
         SeedRequest(
           seedType = SeedFileType.approvedPremises,
-          fileName = "file.csv"
-        )
+          fileName = "file.csv",
+        ),
       )
       .exchange()
       .expectStatus()
@@ -32,7 +32,7 @@ class SeedScaffoldingTest : SeedTestBase() {
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
         it.throwable.message!!.contains(
-          "Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied"
+          "Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied",
         )
     }
   }
@@ -46,7 +46,7 @@ class SeedScaffoldingTest : SeedTestBase() {
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
         it.throwable.message!!.contains(
-          "Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied"
+          "Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied",
         )
     }
   }
@@ -60,7 +60,7 @@ class SeedScaffoldingTest : SeedTestBase() {
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
         it.throwable.message!!.contains(
-          "Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied"
+          "Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied",
         )
     }
   }
@@ -74,7 +74,7 @@ class SeedScaffoldingTest : SeedTestBase() {
         it.message == "Unable to complete Seed Job" &&
         it.throwable != null &&
         it.throwable.message!!.contains(
-          "There was an issue opening the CSV file"
+          "There was an issue opening the CSV file",
         )
     }
   }
@@ -87,7 +87,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 deliusUsername,roles,qualifications
 RogerSmith,MANAGER,
 ,
-      """.trimIndent()
+      """.trimIndent(),
     )
 
     seedService.seedData(SeedFileType.user, "malformed")

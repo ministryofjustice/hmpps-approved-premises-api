@@ -103,7 +103,7 @@ class UserService(
         roles = mutableListOf(),
         qualifications = mutableListOf(),
         probationRegion = staffProbationRegion,
-      )
+      ),
     )
   }
 
@@ -134,9 +134,9 @@ class UserService(
         UserRoleAssignmentEntity(
           id = UUID.randomUUID(),
           user = user,
-          role = role
-        )
-      )
+          role = role,
+        ),
+      ),
     )
   }
 
@@ -148,9 +148,9 @@ class UserService(
         UserQualificationAssignmentEntity(
           id = UUID.randomUUID(),
           user = user,
-          qualification = qualification
-        )
-      )
+          qualification = qualification,
+        ),
+      ),
     )
   }
 

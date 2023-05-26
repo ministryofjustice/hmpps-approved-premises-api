@@ -34,7 +34,7 @@ class PersonOASysSectionsTest : IntegrationTestBase() {
   fun `Getting oasys sections for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -49,7 +49,7 @@ class PersonOASysSectionsTest : IntegrationTestBase() {
   fun `Getting oasys sections for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -117,9 +117,9 @@ class PersonOASysSectionsTest : IntegrationTestBase() {
                 risksToTheIndividual,
                 riskManagementPlan,
                 needsDetails,
-                listOf(11, 12)
-              )
-            )
+                listOf(11, 12),
+              ),
+            ),
           )
       }
     }

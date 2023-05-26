@@ -87,7 +87,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(approvedPremisesBed, temporaryAccommodationBed),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -160,7 +160,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -233,7 +233,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(2)
@@ -302,7 +302,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(bed),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -370,7 +370,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(bed),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -417,7 +417,7 @@ class BedUtilisationReportGeneratorTest {
     every {
       mockWorkingDayCountService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
-        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount
+        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-04-10")
 
@@ -439,7 +439,7 @@ class BedUtilisationReportGeneratorTest {
     every {
       mockWorkingDayCountService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
-        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount
+        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-05-01")
 
@@ -450,7 +450,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(bed),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -497,7 +497,7 @@ class BedUtilisationReportGeneratorTest {
     every {
       mockWorkingDayCountService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
-        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount
+        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-04-10")
 
@@ -519,7 +519,7 @@ class BedUtilisationReportGeneratorTest {
     every {
       mockWorkingDayCountService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
-        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount
+        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-05-01")
 
@@ -530,7 +530,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(bed),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -582,7 +582,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(bed),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -629,7 +629,7 @@ class BedUtilisationReportGeneratorTest {
     every {
       mockWorkingDayCountService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
-        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount
+        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-04-09")
 
@@ -651,7 +651,7 @@ class BedUtilisationReportGeneratorTest {
     every {
       mockWorkingDayCountService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
-        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount
+        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-05-01")
 
@@ -678,7 +678,7 @@ class BedUtilisationReportGeneratorTest {
 
     val result = bedUtilisationReportGenerator.createReport(
       listOf(bed),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4)
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)

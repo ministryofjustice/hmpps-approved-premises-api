@@ -35,7 +35,7 @@ class PersonTransformerTest {
         mostRecentPrisonNumber = null,
         niNumber = null,
         nomsNumber = "NOMS321",
-        pncNumber = null
+        pncNumber = null,
       ),
       offenderProfile = OffenderProfile(
         ethnicity = null,
@@ -47,7 +47,7 @@ class PersonTransformerTest {
           primaryLanguage = null,
           otherLanguages = listOf(),
           languageConcerns = null,
-          requiresInterpreter = null
+          requiresInterpreter = null,
         ),
         religion = "Sikh",
         sexualOrientation = null,
@@ -56,20 +56,20 @@ class PersonTransformerTest {
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = null,
-        selfDescribedGender = null
+        selfDescribedGender = null,
       ),
       softDeleted = null,
       currentDisposal = "",
       partitionArea = null,
       currentRestriction = false,
       currentExclusion = false,
-      isActiveProbationManagedSentence = false
+      isActiveProbationManagedSentence = false,
     )
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
       inOutStatus = InOutStatus.OUT,
-      assignedLivingUnit = null
+      assignedLivingUnit = null,
     )
 
     val result = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail)
@@ -85,8 +85,8 @@ class PersonTransformerTest {
         nationality = "Spanish",
         religionOrBelief = "Sikh",
         genderIdentity = null,
-        prisonName = null
-      )
+        prisonName = null,
+      ),
     )
   }
 
@@ -109,7 +109,7 @@ class PersonTransformerTest {
         mostRecentPrisonNumber = null,
         niNumber = null,
         nomsNumber = "NOMS321",
-        pncNumber = null
+        pncNumber = null,
       ),
       offenderProfile = OffenderProfile(
         ethnicity = null,
@@ -121,7 +121,7 @@ class PersonTransformerTest {
           primaryLanguage = null,
           otherLanguages = listOf(),
           languageConcerns = null,
-          requiresInterpreter = null
+          requiresInterpreter = null,
         ),
         religion = "Sikh",
         sexualOrientation = null,
@@ -130,20 +130,20 @@ class PersonTransformerTest {
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = "Female",
-        selfDescribedGender = null
+        selfDescribedGender = null,
       ),
       softDeleted = null,
       currentDisposal = "",
       partitionArea = null,
       currentRestriction = false,
       currentExclusion = false,
-      isActiveProbationManagedSentence = false
+      isActiveProbationManagedSentence = false,
     )
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
       inOutStatus = InOutStatus.OUT,
-      assignedLivingUnit = null
+      assignedLivingUnit = null,
     )
 
     val result = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail)
@@ -159,8 +159,8 @@ class PersonTransformerTest {
         nationality = "Spanish",
         religionOrBelief = "Sikh",
         genderIdentity = "Female",
-        prisonName = null
-      )
+        prisonName = null,
+      ),
     )
   }
 
@@ -183,7 +183,7 @@ class PersonTransformerTest {
         mostRecentPrisonNumber = null,
         niNumber = null,
         nomsNumber = "NOMS321",
-        pncNumber = null
+        pncNumber = null,
       ),
       offenderProfile = OffenderProfile(
         ethnicity = null,
@@ -195,7 +195,7 @@ class PersonTransformerTest {
           primaryLanguage = null,
           otherLanguages = listOf(),
           languageConcerns = null,
-          requiresInterpreter = null
+          requiresInterpreter = null,
         ),
         religion = "Sikh",
         sexualOrientation = null,
@@ -204,20 +204,20 @@ class PersonTransformerTest {
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = "Female",
-        selfDescribedGender = null
+        selfDescribedGender = null,
       ),
       softDeleted = null,
       currentDisposal = "",
       partitionArea = null,
       currentRestriction = false,
       currentExclusion = false,
-      isActiveProbationManagedSentence = false
+      isActiveProbationManagedSentence = false,
     )
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
       inOutStatus = InOutStatus.OUT,
-      assignedLivingUnit = null
+      assignedLivingUnit = null,
     )
 
     val result = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail)
@@ -233,8 +233,8 @@ class PersonTransformerTest {
         nationality = "Spanish",
         religionOrBelief = "Sikh",
         genderIdentity = "Female",
-        prisonName = null
-      )
+        prisonName = null,
+      ),
     )
   }
 
@@ -257,7 +257,7 @@ class PersonTransformerTest {
         mostRecentPrisonNumber = null,
         niNumber = null,
         nomsNumber = "NOMS321",
-        pncNumber = null
+        pncNumber = null,
       ),
       offenderProfile = OffenderProfile(
         ethnicity = null,
@@ -269,7 +269,7 @@ class PersonTransformerTest {
           primaryLanguage = null,
           otherLanguages = listOf(),
           languageConcerns = null,
-          requiresInterpreter = null
+          requiresInterpreter = null,
         ),
         religion = "Sikh",
         sexualOrientation = null,
@@ -278,14 +278,14 @@ class PersonTransformerTest {
         riskColour = null,
         disabilities = listOf(),
         genderIdentity = null,
-        selfDescribedGender = null
+        selfDescribedGender = null,
       ),
       softDeleted = null,
       currentDisposal = "",
       partitionArea = null,
       currentRestriction = false,
       currentExclusion = false,
-      isActiveProbationManagedSentence = false
+      isActiveProbationManagedSentence = false,
     )
 
     val inmateDetail = InmateDetail(
@@ -295,8 +295,8 @@ class PersonTransformerTest {
         agencyId = "BRI",
         locationId = 5,
         description = "B-2F-004",
-        agencyName = "HMP Bristol"
-      )
+        agencyName = "HMP Bristol",
+      ),
     )
 
     val result = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail)
@@ -312,8 +312,8 @@ class PersonTransformerTest {
         nationality = "Spanish",
         religionOrBelief = "Sikh",
         genderIdentity = null,
-        prisonName = "HMP Bristol"
-      )
+        prisonName = "HMP Bristol",
+      ),
     )
   }
 }

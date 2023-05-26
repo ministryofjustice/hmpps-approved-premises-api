@@ -30,23 +30,23 @@ class WorkingDayCountServiceTest {
     UKBankHolidays(
       englandAndWales = CountryBankHolidays(
         division = "england-and-wales",
-        events = listOf()
+        events = listOf(),
       ),
       scotland = CountryBankHolidays(
         division = "scotland",
-        events = listOf()
+        events = listOf(),
       ),
       northernIreland = CountryBankHolidays(
         division = "northern-ireland",
-        events = listOf()
-      )
-    )
+        events = listOf(),
+      ),
+    ),
   )
 
   @ParameterizedTest(name = "getWorkingDaysCount returns 0 if from and to are the same date = {0} and it is a weekend day")
   @MethodSource("weekendDayProvider")
   fun `getWorkingDaysCount returns 0 if from and to are the same date and it is a weekend day`(
-    from: LocalDate
+    from: LocalDate,
   ) {
     every {
       mockGovUKBankHolidaysApiClient.getUKBankHolidays()
@@ -57,7 +57,6 @@ class WorkingDayCountServiceTest {
 
   @Test
   fun `getWorkingDaysCount returns 0 if from and to are the same date and it is a week day bank holiday`() {
-
     val weekDayBankHoliday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.TUESDAY))
 
     val bankHolidays = ClientResult.Success(
@@ -70,19 +69,19 @@ class WorkingDayCountServiceTest {
               title = "sunny bank holiday",
               date = weekDayBankHoliday,
               notes = "",
-              bunting = true
-            )
-          )
+              bunting = true,
+            ),
+          ),
         ),
         scotland = CountryBankHolidays(
           division = "scotland",
-          events = listOf()
+          events = listOf(),
         ),
         northernIreland = CountryBankHolidays(
           division = "northern-ireland",
-          events = listOf()
-        )
-      )
+          events = listOf(),
+        ),
+      ),
     )
 
     every {
@@ -94,7 +93,6 @@ class WorkingDayCountServiceTest {
 
   @Test
   fun `getWorkingDaysCount returns 1 if from and to are the same date and it is not a weekend day and it is not a bank holiday`() {
-
     every {
       mockGovUKBankHolidaysApiClient.getUKBankHolidays()
     } returns emptyBankHolidays
@@ -132,25 +130,25 @@ class WorkingDayCountServiceTest {
               title = "sunny tuesday bank holiday",
               date = aTuesdayBankHoliday,
               notes = "",
-              bunting = true
+              bunting = true,
             ),
             BankHolidayEvent(
               title = "sunny thursday bank holiday",
               date = aThursdayBankHoliday,
               notes = "",
-              bunting = true
-            )
-          )
+              bunting = true,
+            ),
+          ),
         ),
         scotland = CountryBankHolidays(
           division = "scotland",
-          events = listOf()
+          events = listOf(),
         ),
         northernIreland = CountryBankHolidays(
           division = "northern-ireland",
-          events = listOf()
-        )
-      )
+          events = listOf(),
+        ),
+      ),
     )
 
     every {
@@ -195,25 +193,25 @@ class WorkingDayCountServiceTest {
               title = "Early May bank holiday",
               date = LocalDate.of(2023, 5, 1),
               notes = "",
-              bunting = true
+              bunting = true,
             ),
             BankHolidayEvent(
               title = "Bank holiday for the coronation of King Charles III",
               date = LocalDate.of(2023, 5, 8),
               notes = "",
-              bunting = true
-            )
-          )
+              bunting = true,
+            ),
+          ),
         ),
         scotland = CountryBankHolidays(
           division = "scotland",
-          events = listOf()
+          events = listOf(),
         ),
         northernIreland = CountryBankHolidays(
           division = "northern-ireland",
-          events = listOf()
-        )
-      )
+          events = listOf(),
+        ),
+      ),
     )
 
     every {

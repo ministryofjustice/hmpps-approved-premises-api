@@ -22,7 +22,7 @@ class RegistrationClientResponseFactory : Factory<Registration> {
   private var type: Yielded<RegistrationKeyValue> = {
     RegistrationKeyValue(
       code = "MAPP",
-      description = "MAPPA"
+      description = "MAPPA",
     )
   }
   private var riskColour: Yielded<String> = { "Red" }
@@ -33,32 +33,32 @@ class RegistrationClientResponseFactory : Factory<Registration> {
   private var registeringTeam: Yielded<RegistrationKeyValue> = {
     RegistrationKeyValue(
       code = randomStringMultiCaseWithNumbers(5),
-      description = randomStringMultiCaseWithNumbers(10)
+      description = randomStringMultiCaseWithNumbers(10),
     )
   }
   private var registeringOfficer: Yielded<RegistrationStaffHuman> = {
     RegistrationStaffHuman(
       code = randomStringMultiCaseWithNumbers(5),
       forenames = randomStringUpperCase(10),
-      surname = randomStringUpperCase(10)
+      surname = randomStringUpperCase(10),
     )
   }
   private var registeringProbationArea: Yielded<RegistrationKeyValue> = {
     RegistrationKeyValue(
       code = randomStringUpperCase(5),
-      description = randomStringUpperCase(20)
+      description = randomStringUpperCase(20),
     )
   }
   private var registerLevel: Yielded<RegistrationKeyValue?> = {
     RegistrationKeyValue(
       code = randomStringUpperCase(5),
-      description = randomStringUpperCase(20)
+      description = randomStringUpperCase(20),
     )
   }
   private var registerCategory: Yielded<RegistrationKeyValue> = {
     RegistrationKeyValue(
       code = "M2",
-      description = "MAPPA Cat 2"
+      description = "MAPPA Cat 2",
     )
   }
   private var warnUser: Yielded<Boolean> = { false }
@@ -68,13 +68,13 @@ class RegistrationClientResponseFactory : Factory<Registration> {
     RegistrationStaffHuman(
       code = randomStringUpperCase(5),
       forenames = randomStringUpperCase(5),
-      surname = randomStringUpperCase(5)
+      surname = randomStringUpperCase(5),
     )
   }
   private var deregisteringProbationArea: Yielded<RegistrationKeyValue?> = {
     RegistrationKeyValue(
       code = randomStringUpperCase(5),
-      description = randomStringUpperCase(20)
+      description = randomStringUpperCase(20),
     )
   }
   private var deregisteringNotes: Yielded<String?> = { randomStringUpperCase(10) }
@@ -187,6 +187,6 @@ class RegistrationClientResponseFactory : Factory<Registration> {
     deregisteringProbationArea = this.deregisteringProbationArea(),
     deregisteringNotes = this.deregisteringNotes(),
     numberOfPreviousDeregistrations = this.numberOfPreviousDeregistrations(),
-    registrationReviews = this.registrationReviews()
+    registrationReviews = this.registrationReviews(),
   )
 }

@@ -45,7 +45,7 @@ class AssessmentTransformer(
       submittedAt = jpa.submittedAt?.toInstant(),
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
-      status = getStatus(jpa)
+      status = getStatus(jpa),
     )
 
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationAssessment(
@@ -61,7 +61,7 @@ class AssessmentTransformer(
       submittedAt = jpa.submittedAt?.toInstant(),
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
-      status = getStatus(jpa)
+      status = getStatus(jpa),
     )
 
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")

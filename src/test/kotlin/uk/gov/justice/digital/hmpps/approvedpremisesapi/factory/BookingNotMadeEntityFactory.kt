@@ -34,6 +34,6 @@ class BookingNotMadeEntityFactory : Factory<BookingNotMadeEntity> {
     id = this.id(),
     createdAt = this.createdAt(),
     placementRequest = this.placementRequest?.invoke() ?: throw RuntimeException("Must provide a Placement Request"),
-    notes = this.notes()
+    notes = this.notes(),
   )
 }

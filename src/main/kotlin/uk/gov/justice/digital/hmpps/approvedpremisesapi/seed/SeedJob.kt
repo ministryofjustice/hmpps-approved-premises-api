@@ -2,10 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import java.util.UUID
 
-abstract class SeedJob <RowType> (
+abstract class SeedJob<RowType> (
   val id: UUID = UUID.randomUUID(),
   val fileName: String,
-  val requiredColumns: Int
+  val requiredColumns: Int,
 ) {
   init {
     if (fileName.contains("/") || fileName.contains("\\") || fileName.contains(".")) {

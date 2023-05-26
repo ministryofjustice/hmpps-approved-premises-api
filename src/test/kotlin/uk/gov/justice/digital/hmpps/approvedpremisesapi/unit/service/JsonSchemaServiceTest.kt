@@ -29,7 +29,7 @@ class JsonSchemaServiceTest {
   private val jsonSchemaService = JsonSchemaService(
     objectMapper = jacksonObjectMapper(),
     jsonSchemaRepository = mockJsonSchemaRepository,
-    applicationRepository = mockApplicationRepository
+    applicationRepository = mockApplicationRepository,
   )
 
   @Test
@@ -51,7 +51,7 @@ class JsonSchemaServiceTest {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
       )
       .produce()
 
@@ -66,7 +66,7 @@ class JsonSchemaServiceTest {
           "type": "object",
           "properties": { }
         }
-        """
+        """,
       )
       .produce()
 
@@ -90,7 +90,7 @@ class JsonSchemaServiceTest {
           {
              "thingId": 123
           }
-          """
+          """,
       )
       .produce()
 
@@ -138,7 +138,7 @@ class JsonSchemaServiceTest {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
       )
       .produce()
 
@@ -153,7 +153,7 @@ class JsonSchemaServiceTest {
           "type": "object",
           "properties": { }
         }
-        """
+        """,
       )
       .produce()
 
@@ -177,7 +177,7 @@ class JsonSchemaServiceTest {
           {
              "thingId": 123
           }
-          """
+          """,
       )
       .withProbationRegion(userEntity.probationRegion)
       .produce()
@@ -227,7 +227,7 @@ class JsonSchemaServiceTest {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
       )
       .produce()
 
@@ -253,7 +253,7 @@ class JsonSchemaServiceTest {
           },
           "required": [ "thingId" ]
         }
-        """
+        """,
       )
       .produce()
 
@@ -264,8 +264,8 @@ class JsonSchemaServiceTest {
         {
            "thingId": 123
         }
-      """
-      )
+      """,
+      ),
     ).isTrue
   }
 }

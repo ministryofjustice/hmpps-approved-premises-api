@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsers
 class MigrationJobService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
-  private val migrationLogger: MigrationLogger
+  private val migrationLogger: MigrationLogger,
 ) {
   @Async
   fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType)
@@ -26,7 +26,7 @@ class MigrationJobService(
       val job: MigrationJob = when (migrationJobType) {
         MigrationJobType.updateAllUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
           applicationContext.getBean(UserRepository::class.java),
-          applicationContext.getBean(UserService::class.java)
+          applicationContext.getBean(UserService::class.java),
         )
       }
 

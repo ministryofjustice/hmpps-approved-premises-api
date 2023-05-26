@@ -25,7 +25,7 @@ class ProfileTest : IntegrationTestBase() {
   fun `Getting own profile with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -71,7 +71,7 @@ class ProfileTest : IntegrationTestBase() {
         withEmail(email)
         withTelephoneNumber(telephoneNumber)
       },
-      probationRegion = region
+      probationRegion = region,
     ) { userEntity, jwt ->
       webTestClient.get()
         .uri("/profile")
@@ -93,8 +93,8 @@ class ProfileTest : IntegrationTestBase() {
               roles = listOf(ApiUserRole.assessor),
               qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
               service = ServiceName.approvedPremises.value,
-            )
-          )
+            ),
+          ),
         )
     }
   }
@@ -109,7 +109,7 @@ class ProfileTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = deliusUsername,
       authSource = "delius",
-      roles = listOf("ROLE_PROBATION")
+      roles = listOf("ROLE_PROBATION"),
     )
 
     val region = probationRegionEntityFactory.produceAndPersist {
@@ -149,8 +149,8 @@ class ProfileTest : IntegrationTestBase() {
             region = ProbationRegion(region.id, region.name),
             roles = listOf(ApiUserRole.assessor),
             service = ServiceName.temporaryAccommodation.value,
-          )
-        )
+          ),
+        ),
       )
   }
 }

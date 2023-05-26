@@ -16,15 +16,15 @@ class BadRequestProblem(private val invalidParams: Map<String, String>? = null, 
         invalidParams?.map {
           ParamError(
             propertyName = it.key,
-            errorType = it.value
+            errorType = it.value,
           )
         } ?: emptyList()
-        )
+        ),
     )
   }
 }
 
 data class ParamError(
   val propertyName: String,
-  val errorType: String
+  val errorType: String,
 )

@@ -26,6 +26,6 @@ class DestinationProviderEntityFactory : Factory<DestinationProviderEntity> {
   override fun produce(): DestinationProviderEntity = DestinationProviderEntity(
     id = this.id(),
     name = this.name(),
-    isActive = this.isActive()
+    isActive = this.isActive(),
   )
 }

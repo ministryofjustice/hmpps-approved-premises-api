@@ -24,6 +24,6 @@ class AgencyFactory : Factory<Agency> {
   override fun produce(): Agency = Agency(
     agencyId = this.agencyId(),
     description = this.description(),
-    agencyType = this.agencyType()
+    agencyType = this.agencyType(),
   )
 }

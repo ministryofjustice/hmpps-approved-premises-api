@@ -25,7 +25,7 @@ class DocumentTransformerTest {
           .withTypeDescription("Type 1 Description")
           .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
           .withExtendedDescription("Extended Description 1")
-          .produce()
+          .produce(),
       )
       .withConvictionLevelDocument(
         "12345",
@@ -37,7 +37,7 @@ class DocumentTransformerTest {
           .withTypeDescription("Type 2 Description")
           .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
           .withExtendedDescription("Extended Description 2")
-          .produce()
+          .produce(),
       )
       .withConvictionLevelDocument(
         "6789",
@@ -48,7 +48,7 @@ class DocumentTransformerTest {
           .withTypeDescription("Type 2 Description")
           .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
           .withExtendedDescription("Extended Description 2")
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -62,7 +62,7 @@ class DocumentTransformerTest {
         createdAt = Instant.parse("2022-12-07T11:40:00Z"),
         typeCode = "TYPE-1",
         typeDescription = "Type 1 Description",
-        description = "Extended Description 1"
+        description = "Extended Description 1",
       ),
       Document(
         id = UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString(),
@@ -71,8 +71,8 @@ class DocumentTransformerTest {
         createdAt = Instant.parse("2022-12-07T10:40:00Z"),
         typeCode = "TYPE-2",
         typeDescription = "Type 2 Description",
-        description = "Extended Description 2"
-      )
+        description = "Extended Description 2",
+      ),
     )
   }
 }

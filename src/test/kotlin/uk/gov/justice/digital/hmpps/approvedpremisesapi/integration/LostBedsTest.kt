@@ -111,7 +111,7 @@ class LostBedsTest : IntegrationTestBase() {
                 withYieldedPremises { premises }
               }
             }
-          }
+          },
         )
         withPremises(premises)
       }
@@ -188,7 +188,7 @@ class LostBedsTest : IntegrationTestBase() {
               withYieldedPremises { premises }
             }
           }
-        }
+        },
       )
       withPremises(premises)
     }
@@ -254,7 +254,7 @@ class LostBedsTest : IntegrationTestBase() {
                 withYieldedPremises { premises }
               }
             }
-          }
+          },
         )
         withPremises(premises)
       }
@@ -378,8 +378,8 @@ class LostBedsTest : IntegrationTestBase() {
           bedId = bed.id,
           reason = UUID.randomUUID(),
           referenceNumber = "REF-123",
-          notes = null
-        )
+          notes = null,
+        ),
       )
       .exchange()
       .expectStatus()
@@ -414,8 +414,8 @@ class LostBedsTest : IntegrationTestBase() {
             reason = reason.id,
             referenceNumber = "REF-123",
             notes = "notes",
-            bedId = UUID.randomUUID()
-          )
+            bedId = UUID.randomUUID(),
+          ),
         )
         .exchange()
         .expectStatus()
@@ -460,8 +460,8 @@ class LostBedsTest : IntegrationTestBase() {
             bedId = bed.id,
             reason = reason.id,
             referenceNumber = "REF-123",
-            notes = "notes"
-          )
+            notes = "notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -518,8 +518,8 @@ class LostBedsTest : IntegrationTestBase() {
             reason = reason.id,
             referenceNumber = "REF-123",
             notes = "notes",
-            bedId = bed.id
-          )
+            bedId = bed.id,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -578,8 +578,8 @@ class LostBedsTest : IntegrationTestBase() {
             reason = reason.id,
             referenceNumber = "REF-123",
             notes = "notes",
-            bedId = bed.id
-          )
+            bedId = bed.id,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -607,7 +607,7 @@ class LostBedsTest : IntegrationTestBase() {
                 withYieldedPremises { premises }
               }
             }
-          }
+          },
         )
         withStartDate(LocalDate.now().minusDays(2))
         withEndDate(LocalDate.now().plusDays(2))
@@ -651,7 +651,7 @@ class LostBedsTest : IntegrationTestBase() {
               withYieldedPremises { premises }
             }
           }
-        }
+        },
       )
       withPremises(premises)
     }
@@ -673,7 +673,7 @@ class LostBedsTest : IntegrationTestBase() {
           reason = UUID.randomUUID(),
           referenceNumber = "REF-123",
           notes = null,
-        )
+        ),
       )
       .exchange()
       .expectStatus()
@@ -693,8 +693,8 @@ class LostBedsTest : IntegrationTestBase() {
           endDate = LocalDate.parse("2022-08-18"),
           reason = UUID.randomUUID(),
           referenceNumber = "REF-123",
-          notes = null
-        )
+          notes = null,
+        ),
       )
       .exchange()
       .expectStatus()
@@ -721,8 +721,8 @@ class LostBedsTest : IntegrationTestBase() {
           endDate = LocalDate.parse("2022-08-18"),
           reason = UUID.randomUUID(),
           referenceNumber = "REF-123",
-          notes = null
-        )
+          notes = null,
+        ),
       )
       .exchange()
       .expectStatus()
@@ -770,8 +770,8 @@ class LostBedsTest : IntegrationTestBase() {
             endDate = LocalDate.parse("2022-08-18"),
             reason = reason.id,
             referenceNumber = "REF-123",
-            notes = "notes"
-          )
+            notes = "notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -833,8 +833,8 @@ class LostBedsTest : IntegrationTestBase() {
             endDate = LocalDate.parse("2022-08-18"),
             reason = reason.id,
             referenceNumber = "REF-123",
-            notes = "notes"
-          )
+            notes = "notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -898,8 +898,8 @@ class LostBedsTest : IntegrationTestBase() {
             endDate = LocalDate.parse("2022-08-18"),
             reason = reason.id,
             referenceNumber = "REF-123",
-            notes = "notes"
-          )
+            notes = "notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -927,7 +927,7 @@ class LostBedsTest : IntegrationTestBase() {
               withYieldedPremises { premises }
             }
           }
-        }
+        },
       )
       withPremises(premises)
     }
@@ -936,8 +936,8 @@ class LostBedsTest : IntegrationTestBase() {
       .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
       .bodyValue(
         NewLostBedCancellation(
-          notes = "Unauthorized"
-        )
+          notes = "Unauthorized",
+        ),
       )
       .exchange()
       .expectStatus()
@@ -953,8 +953,8 @@ class LostBedsTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewLostBedCancellation(
-          notes = "Non-existent premises"
-        )
+          notes = "Non-existent premises",
+        ),
       )
       .exchange()
       .expectStatus()
@@ -977,8 +977,8 @@ class LostBedsTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewLostBedCancellation(
-          notes = "Non-existent lost bed"
-        )
+          notes = "Non-existent lost bed",
+        ),
       )
       .exchange()
       .expectStatus()
@@ -1008,7 +1008,7 @@ class LostBedsTest : IntegrationTestBase() {
                 withYieldedPremises { premises }
               }
             }
-          }
+          },
         )
         withPremises(premises)
       }
@@ -1022,8 +1022,8 @@ class LostBedsTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewLostBedCancellation(
-            notes = "Some cancellation notes"
-          )
+            notes = "Some cancellation notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1073,8 +1073,8 @@ class LostBedsTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewLostBedCancellation(
-            notes = "Some cancellation notes"
-          )
+            notes = "Some cancellation notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1126,8 +1126,8 @@ class LostBedsTest : IntegrationTestBase() {
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewLostBedCancellation(
-            notes = "Some cancellation notes"
-          )
+            notes = "Some cancellation notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1180,7 +1180,7 @@ class LostBedsTest : IntegrationTestBase() {
               referenceNumber = "REF-123",
               notes = "notes",
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1242,7 +1242,7 @@ class LostBedsTest : IntegrationTestBase() {
               referenceNumber = "REF-123",
               notes = "notes",
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1304,7 +1304,7 @@ class LostBedsTest : IntegrationTestBase() {
               referenceNumber = "REF-123",
               notes = "notes",
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1366,7 +1366,7 @@ class LostBedsTest : IntegrationTestBase() {
               referenceNumber = "REF-123",
               notes = "notes",
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1441,7 +1441,7 @@ class LostBedsTest : IntegrationTestBase() {
             reason = reason.id,
             referenceNumber = "REF-123",
             notes = "notes",
-          )
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1513,7 +1513,7 @@ class LostBedsTest : IntegrationTestBase() {
               reason = reason.id,
               referenceNumber = "REF-123",
               notes = "notes",
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1582,7 +1582,7 @@ class LostBedsTest : IntegrationTestBase() {
               reason = reason.id,
               referenceNumber = "REF-123",
               notes = "notes",
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1651,7 +1651,7 @@ class LostBedsTest : IntegrationTestBase() {
               reason = reason.id,
               referenceNumber = "REF-123",
               notes = "notes",
-            )
+            ),
           )
           .exchange()
           .expectStatus()

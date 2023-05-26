@@ -28,6 +28,6 @@ class ApAreaEntityFactory : Factory<ApAreaEntity> {
     id = this.id(),
     name = this.name(),
     identifier = this.identifier(),
-    probationRegions = mutableListOf()
+    probationRegions = mutableListOf(),
   )
 }

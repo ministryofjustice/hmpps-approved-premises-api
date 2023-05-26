@@ -101,6 +101,6 @@ class CaseNoteFactory : Factory<CaseNote> {
     amendments = listOf(),
     offenderIdentifier = this.offenderIdentifier(),
     eventId = this.eventId(),
-    sensitive = this.sensitive()
+    sensitive = this.sensitive(),
   )
 }

@@ -82,7 +82,7 @@ class DomainEventServiceTest {
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.application.submitted",
-      eventDetails = ApplicationSubmittedFactory().produce()
+      eventDetails = ApplicationSubmittedFactory().produce(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -101,8 +101,8 @@ class DomainEventServiceTest {
         applicationId = applicationId,
         crn = "CRN",
         occurredAt = occurredAt.toInstant(),
-        data = data
-      )
+        data = data,
+      ),
     )
   }
 
@@ -128,8 +128,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.submitted",
-        eventDetails = ApplicationSubmittedFactory().produce()
-      )
+        eventDetails = ApplicationSubmittedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -145,7 +145,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -162,7 +162,7 @@ class DomainEventServiceTest {
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        }
+        },
       )
     }
   }
@@ -189,8 +189,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.submitted",
-        eventDetails = ApplicationSubmittedFactory().produce()
-      )
+        eventDetails = ApplicationSubmittedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -208,7 +208,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -237,7 +237,7 @@ class DomainEventServiceTest {
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.application.assessed",
-      eventDetails = ApplicationAssessedFactory().produce()
+      eventDetails = ApplicationAssessedFactory().produce(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -256,8 +256,8 @@ class DomainEventServiceTest {
         applicationId = applicationId,
         crn = "CRN",
         occurredAt = occurredAt.toInstant(),
-        data = data
-      )
+        data = data,
+      ),
     )
   }
 
@@ -283,8 +283,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
-        eventDetails = ApplicationAssessedFactory().produce()
-      )
+        eventDetails = ApplicationAssessedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -300,7 +300,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -317,7 +317,7 @@ class DomainEventServiceTest {
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        }
+        },
       )
     }
   }
@@ -344,8 +344,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
-        eventDetails = ApplicationAssessedFactory().produce()
-      )
+        eventDetails = ApplicationAssessedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -363,7 +363,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -392,7 +392,7 @@ class DomainEventServiceTest {
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.booking.made",
-      eventDetails = BookingMadeFactory().produce()
+      eventDetails = BookingMadeFactory().produce(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -411,8 +411,8 @@ class DomainEventServiceTest {
         applicationId = applicationId,
         crn = "CRN",
         occurredAt = occurredAt.toInstant(),
-        data = data
-      )
+        data = data,
+      ),
     )
   }
 
@@ -438,8 +438,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.booking.made",
-        eventDetails = BookingMadeFactory().produce()
-      )
+        eventDetails = BookingMadeFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -455,7 +455,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -472,7 +472,7 @@ class DomainEventServiceTest {
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        }
+        },
       )
     }
   }
@@ -499,8 +499,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.booking.made",
-        eventDetails = BookingMadeFactory().produce()
-      )
+        eventDetails = BookingMadeFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -518,7 +518,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -547,7 +547,7 @@ class DomainEventServiceTest {
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.person.arrived",
-      eventDetails = PersonArrivedFactory().produce()
+      eventDetails = PersonArrivedFactory().produce(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -566,8 +566,8 @@ class DomainEventServiceTest {
         applicationId = applicationId,
         crn = "CRN",
         occurredAt = occurredAt.toInstant(),
-        data = data
-      )
+        data = data,
+      ),
     )
   }
 
@@ -593,8 +593,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.arrived",
-        eventDetails = PersonArrivedFactory().produce()
-      )
+        eventDetails = PersonArrivedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -610,7 +610,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -627,7 +627,7 @@ class DomainEventServiceTest {
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        }
+        },
       )
     }
   }
@@ -654,8 +654,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.arrived",
-        eventDetails = PersonArrivedFactory().produce()
-      )
+        eventDetails = PersonArrivedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -673,7 +673,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -702,7 +702,7 @@ class DomainEventServiceTest {
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.person.not-arrived",
-      eventDetails = PersonNotArrivedFactory().produce()
+      eventDetails = PersonNotArrivedFactory().produce(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -721,8 +721,8 @@ class DomainEventServiceTest {
         applicationId = applicationId,
         crn = "CRN",
         occurredAt = occurredAt.toInstant(),
-        data = data
-      )
+        data = data,
+      ),
     )
   }
 
@@ -748,8 +748,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.not-arrived",
-        eventDetails = PersonNotArrivedFactory().produce()
-      )
+        eventDetails = PersonNotArrivedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -765,7 +765,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -782,7 +782,7 @@ class DomainEventServiceTest {
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        }
+        },
       )
     }
   }
@@ -809,8 +809,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.not-arrived",
-        eventDetails = PersonNotArrivedFactory().produce()
-      )
+        eventDetails = PersonNotArrivedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -828,7 +828,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -857,7 +857,7 @@ class DomainEventServiceTest {
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.person.departed",
-      eventDetails = PersonDepartedFactory().produce()
+      eventDetails = PersonDepartedFactory().produce(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -876,8 +876,8 @@ class DomainEventServiceTest {
         applicationId = applicationId,
         crn = "CRN",
         occurredAt = occurredAt.toInstant(),
-        data = data
-      )
+        data = data,
+      ),
     )
   }
 
@@ -903,8 +903,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.departed",
-        eventDetails = PersonDepartedFactory().produce()
-      )
+        eventDetails = PersonDepartedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -920,7 +920,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -937,7 +937,7 @@ class DomainEventServiceTest {
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        }
+        },
       )
     }
   }
@@ -964,8 +964,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.person.departed",
-        eventDetails = PersonDepartedFactory().produce()
-      )
+        eventDetails = PersonDepartedFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -983,7 +983,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -1012,7 +1012,7 @@ class DomainEventServiceTest {
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.booking.not-made",
-      eventDetails = BookingNotMadeFactory().produce()
+      eventDetails = BookingNotMadeFactory().produce(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -1031,8 +1031,8 @@ class DomainEventServiceTest {
         applicationId = applicationId,
         crn = "CRN",
         occurredAt = occurredAt.toInstant(),
-        data = data
-      )
+        data = data,
+      ),
     )
   }
 
@@ -1058,8 +1058,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.booking.not-made",
-        eventDetails = BookingNotMadeFactory().produce()
-      )
+        eventDetails = BookingNotMadeFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -1075,7 +1075,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 
@@ -1092,7 +1092,7 @@ class DomainEventServiceTest {
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        }
+        },
       )
     }
   }
@@ -1119,8 +1119,8 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.booking.not-made",
-        eventDetails = BookingNotMadeFactory().produce()
-      )
+        eventDetails = BookingNotMadeFactory().produce(),
+      ),
     )
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
@@ -1138,7 +1138,7 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
-        }
+        },
       )
     }
 

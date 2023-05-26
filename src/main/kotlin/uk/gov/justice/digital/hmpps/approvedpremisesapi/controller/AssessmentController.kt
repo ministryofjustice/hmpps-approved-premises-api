@@ -52,8 +52,8 @@ class AssessmentController(
         summaries,
         user.deliusUsername,
         offenderService,
-        assessmentTransformer::transformDomainToApiSummary
-      )
+        assessmentTransformer::transformDomainToApiSummary,
+      ),
     )
   }
 
@@ -86,7 +86,7 @@ class AssessmentController(
     }
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
+      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
     )
   }
 
@@ -129,7 +129,7 @@ class AssessmentController(
     }
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails)
+      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
     )
   }
 
@@ -143,7 +143,7 @@ class AssessmentController(
       user = user,
       assessmentId = assessmentId,
       document = serializedData,
-      placementRequirements = assessmentAcceptance.requirements
+      placementRequirements = assessmentAcceptance.requirements,
     )
 
     val assessmentValidationResult = when (assessmentAuthResult) {
@@ -188,7 +188,7 @@ class AssessmentController(
 
   override fun assessmentsAssessmentIdNotesPost(
     assessmentId: UUID,
-    newClarificationNote: NewClarificationNote
+    newClarificationNote: NewClarificationNote,
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
 
@@ -200,14 +200,14 @@ class AssessmentController(
     }
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNote)
+      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNote),
     )
   }
 
   override fun assessmentsAssessmentIdNotesNoteIdPut(
     assessmentId: UUID,
     noteId: UUID,
-    updatedClarificationNote: UpdatedClarificationNote
+    updatedClarificationNote: UpdatedClarificationNote,
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
     val clarificationNoteResult = assessmentService.updateAssessmentClarificationNote(
@@ -215,7 +215,7 @@ class AssessmentController(
       assessmentId,
       noteId,
       updatedClarificationNote.response,
-      updatedClarificationNote.responseReceivedOn
+      updatedClarificationNote.responseReceivedOn,
     )
 
     val clarificationNoteEntityResult = when (clarificationNoteResult) {
@@ -230,7 +230,7 @@ class AssessmentController(
     }
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNoteForResponse)
+      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNoteForResponse),
     )
   }
 }

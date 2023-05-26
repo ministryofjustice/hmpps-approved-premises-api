@@ -52,12 +52,12 @@ class StaffWithoutUsernameUserDetailsFactory : Factory<StaffWithoutUsernameUserD
     staffIdentifier = this.staffIdentifier(),
     staff = StaffNames(
       forenames = this.forenames(),
-      surname = this.surname()
+      surname = this.surname(),
     ),
     teams = this.teams(),
     probationArea = StaffProbationArea(
       code = this.probationAreaCode(),
-      description = this.probationAreaDescription()
+      description = this.probationAreaDescription(),
     ),
   )
 }

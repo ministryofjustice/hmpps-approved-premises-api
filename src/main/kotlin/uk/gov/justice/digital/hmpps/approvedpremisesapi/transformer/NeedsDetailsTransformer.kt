@@ -11,55 +11,55 @@ class NeedsDetailsTransformer {
       section = 3,
       name = "Accommodation",
       linkedToHarm = needsDetails.linksToHarm?.accommodationLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.accommodationLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.accommodationLinkedToReOffending,
     ),
     OASysSection(
       section = 4,
       name = "Education, Training and Employment",
       linkedToHarm = needsDetails.linksToHarm?.educationTrainingEmploymentLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.educationTrainingEmploymentLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.educationTrainingEmploymentLinkedToReOffending,
     ),
     OASysSection(
       section = 5,
       name = "Finance",
       linkedToHarm = needsDetails.linksToHarm?.financeLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.financeLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.financeLinkedToReOffending,
     ),
     OASysSection(
       section = 6,
       name = "Relationships",
       linkedToHarm = needsDetails.linksToHarm?.relationshipLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.relationshipLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.relationshipLinkedToReOffending,
     ),
     OASysSection(
       section = 7,
       name = "Lifestyle",
       linkedToHarm = needsDetails.linksToHarm?.lifestyleLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending,
     ),
     OASysSection(
       section = 10,
       name = "Emotional",
       linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.emotionalLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.emotionalLinkedToReOffending,
     ),
     OASysSection(
       section = 11,
       name = "Thinking and Behavioural",
       linkedToHarm = needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.thinkingBehaviouralLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.thinkingBehaviouralLinkedToReOffending,
     ),
     OASysSection(
       section = 12,
       name = "Attitude",
       linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending
+      linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending,
     ),
     OASysSection(
       section = 13,
       name = "Health",
       linkedToHarm = null,
-      linkedToReOffending = null
-    )
+      linkedToReOffending = null,
+    ),
   )
 }

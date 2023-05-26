@@ -20,9 +20,9 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
         listOf(
           TemporaryAccommodationBedspaceSeedCsvRowFactory()
             .withPremisesName("Not a real premises")
-            .produce()
-        )
-      )
+            .produce(),
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "invalid-ta-bedspace-premises-name")
@@ -57,9 +57,9 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       "new-ta-bedspace",
       temporaryAccommodationBedspaceSeedCsvRowsToCsv(
         listOf(
-          csvRow
-        )
-      )
+          csvRow,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "new-ta-bedspace")
@@ -107,9 +107,9 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       "update-ta-bedspace",
       temporaryAccommodationBedspaceSeedCsvRowsToCsv(
         listOf(
-          csvRow
-        )
-      )
+          csvRow,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "update-ta-bedspace")

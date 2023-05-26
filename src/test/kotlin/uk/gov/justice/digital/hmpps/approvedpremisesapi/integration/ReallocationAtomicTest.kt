@@ -39,8 +39,8 @@ class ReallocationAtomicTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewReallocation(
-                userId = assigneeUser.id
-              )
+                userId = assigneeUser.id,
+              ),
             )
             .exchange()
             .expectStatus()

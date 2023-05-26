@@ -15,6 +15,6 @@ class PrisonCaseNoteTransformer {
     authorName = domain.authorName,
     type = domain.typeDescription ?: domain.type,
     subType = domain.subTypeDescription ?: domain.subType,
-    note = domain.text
+    note = domain.text,
   )
 }

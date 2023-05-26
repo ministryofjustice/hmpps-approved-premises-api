@@ -39,6 +39,6 @@ class StaffMemberFactory : Factory<StaffMember> {
     staffIdentifier = this.staffIdentifier(),
     forenames = this.forenames(),
     surname = this.surname(),
-    username = this.username()
+    username = this.username(),
   )
 }

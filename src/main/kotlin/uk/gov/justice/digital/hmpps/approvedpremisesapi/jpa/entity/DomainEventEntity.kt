@@ -26,7 +26,7 @@ data class DomainEventEntity(
   val occurredAt: OffsetDateTime,
   val createdAt: OffsetDateTime,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
-  val data: String
+  val data: String,
 )
 
 enum class DomainEventType {

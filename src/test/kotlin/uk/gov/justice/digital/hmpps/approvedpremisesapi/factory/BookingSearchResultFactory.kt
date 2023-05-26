@@ -27,7 +27,7 @@ class BookingSearchResultFactory : Factory<BookingSearchResult> {
         "cancelled",
         "provisional",
         "confirmed",
-      )
+      ),
     )
   }
   private var bookingStartDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }

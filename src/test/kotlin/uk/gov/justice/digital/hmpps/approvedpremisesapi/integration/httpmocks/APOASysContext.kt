@@ -11,35 +11,35 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshS
 fun IntegrationTestBase.APOASysContext_mockSuccessfulOffenceDetailsCall(crn: String, response: OffenceDetails) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/offence-details/$crn",
-    responseBody = response
+    responseBody = response,
   )
 
 fun IntegrationTestBase.APOASysContext_mockSuccessfulRoSHSummaryCall(crn: String, response: RoshSummary) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/rosh-summary/$crn",
-    responseBody = response
+    responseBody = response,
   )
 
 fun IntegrationTestBase.APOASysContext_mockSuccessfulRiskToTheIndividualCall(crn: String, response: RisksToTheIndividual) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/risk-to-the-individual/$crn",
-    responseBody = response
+    responseBody = response,
   )
 
 fun IntegrationTestBase.APOASysContext_mockSuccessfulRiskManagementPlanCall(crn: String, response: RiskManagementPlan) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/risk-management-plan/$crn",
-    responseBody = response
+    responseBody = response,
   )
 
 fun IntegrationTestBase.APOASysContext_mockSuccessfulNeedsDetailsCall(crn: String, response: NeedsDetails) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/needs-details/$crn",
-    responseBody = response
+    responseBody = response,
   )
 
 fun IntegrationTestBase.APOASysContext_mockSuccessfulRoshRatingsCall(crn: String, response: RoshRatings) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/rosh/$crn",
-    responseBody = response
+    responseBody = response,
   )

@@ -27,6 +27,6 @@ class UserQualificationAssignmentEntityFactory : Factory<UserQualificationAssign
   override fun produce(): UserQualificationAssignmentEntity = UserQualificationAssignmentEntity(
     id = this.id(),
     user = this.user?.invoke() ?: throw RuntimeException("Must provide a User"),
-    qualification = this.qualification()
+    qualification = this.qualification(),
   )
 }

@@ -13,7 +13,7 @@ data class Conviction(
   val awaitingPsr: Boolean,
   val convictionDate: LocalDate?,
   val referralDate: LocalDate,
-  val offences: List<Offence>?
+  val offences: List<Offence>?,
 )
 
 data class Offence(
@@ -41,5 +41,5 @@ data class OffenceDetail(
   val subCategoryDescription: String,
   val form20Code: String?,
   val subCategoryAbbreviation: String?,
-  val cjitCode: String?
+  val cjitCode: String?,
 )

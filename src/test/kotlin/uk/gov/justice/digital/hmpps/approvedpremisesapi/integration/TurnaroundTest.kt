@@ -19,8 +19,8 @@ class TurnaroundTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewTurnaround(
-            workingDays = 2
-          )
+            workingDays = 2,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -45,8 +45,8 @@ class TurnaroundTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewTurnaround(
-            workingDays = 2
-          )
+            workingDays = 2,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -84,8 +84,8 @@ class TurnaroundTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewTurnaround(
-            workingDays = 0
-          )
+            workingDays = 0,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -135,8 +135,8 @@ class TurnaroundTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewTurnaround(
-            workingDays = 2
-          )
+            workingDays = 2,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -190,8 +190,8 @@ class TurnaroundTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewTurnaround(
-            workingDays = 2
-          )
+            workingDays = 2,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -233,8 +233,8 @@ class TurnaroundTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewTurnaround(
-            workingDays = 2
-          )
+            workingDays = 2,
+          ),
         )
         .exchange()
         .expectStatus()

@@ -14,5 +14,5 @@ data class GetTokenResponse(
   @JsonProperty("auth_source")
   val authSource: String,
   val jti: String,
-  val iss: String
+  val iss: String,
 )

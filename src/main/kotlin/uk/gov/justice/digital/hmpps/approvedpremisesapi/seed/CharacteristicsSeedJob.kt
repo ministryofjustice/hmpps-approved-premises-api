@@ -8,11 +8,11 @@ import java.util.UUID
 
 class CharacteristicsSeedJob(
   fileName: String,
-  private val characteristicRepository: CharacteristicRepository
+  private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<CharacteristicsSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
-  requiredColumns = 4
+  requiredColumns = 4,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -24,7 +24,7 @@ class CharacteristicsSeedJob(
     name = throwIfBlank(columns["characteristic_name"]!!, "characteristic_name"),
     propertyName = columns["characteristic_property_name"]!!,
     serviceScope = throwIfBlankOrInvalid(columns["service_scope"]!!, "service_scope"),
-    modelScope = throwIfBlankOrInvalid(columns["model_scope"]!!, "model_scope")
+    modelScope = throwIfBlankOrInvalid(columns["model_scope"]!!, "model_scope"),
   )
 
   override fun processRow(row: CharacteristicsSeedCsvRow) {
@@ -36,7 +36,7 @@ class CharacteristicsSeedJob(
     val existingCharacteristic = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = row.propertyName,
       serviceName = row.serviceScope,
-      modelName = row.modelScope
+      modelName = row.modelScope,
     )
 
     if (existingCharacteristic != null) {
@@ -71,7 +71,7 @@ class CharacteristicsSeedJob(
   }
 
   private fun createNewCharacteristic(
-    row: CharacteristicsSeedCsvRow
+    row: CharacteristicsSeedCsvRow,
   ) {
     log.info("Creating new Characteristic: ${row.propertyName}")
 
@@ -83,13 +83,13 @@ class CharacteristicsSeedJob(
         serviceScope = row.serviceScope,
         modelScope = row.modelScope,
         isActive = true,
-      )
+      ),
     )
   }
 
   private fun updateExistingCharacteristic(
     row: CharacteristicsSeedCsvRow,
-    existingCharacteristic: CharacteristicEntity
+    existingCharacteristic: CharacteristicEntity,
   ) {
     log.info("Updating Characteristic: '${row.propertyName}' with name '${row.name}'")
 
@@ -105,5 +105,5 @@ data class CharacteristicsSeedCsvRow(
   val name: String,
   val propertyName: String,
   val serviceScope: String,
-  val modelScope: String
+  val modelScope: String,
 )

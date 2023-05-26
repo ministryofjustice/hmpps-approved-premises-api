@@ -10,6 +10,6 @@ class BookingNotMadeTransformer {
     id = jpa.id,
     placementRequestId = jpa.placementRequest.id,
     createdAt = jpa.createdAt.toInstant(),
-    notes = jpa.notes
+    notes = jpa.notes,
   )
 }

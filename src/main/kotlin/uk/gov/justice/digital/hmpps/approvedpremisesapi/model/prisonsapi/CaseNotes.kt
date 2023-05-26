@@ -6,7 +6,7 @@ data class CaseNotesPage(
   val totalElements: Int,
   val totalPages: Int,
   val number: Int,
-  val content: List<CaseNote>
+  val content: List<CaseNote>,
 )
 
 data class CaseNote(
@@ -25,11 +25,11 @@ data class CaseNote(
   val locationId: String?,
   val eventId: Int,
   val sensitive: Boolean,
-  val amendments: List<CaseNoteAmendment>
+  val amendments: List<CaseNoteAmendment>,
 )
 
 data class CaseNoteAmendment(
   val creationDateTime: LocalDateTime,
   val authorName: String,
-  val additionalNoteText: String
+  val additionalNoteText: String,
 )

@@ -26,7 +26,7 @@ data class ArrivalEntity(
   val createdAt: OffsetDateTime,
   @OneToOne
   @JoinColumn(name = "booking_id")
-  var booking: BookingEntity
+  var booking: BookingEntity,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

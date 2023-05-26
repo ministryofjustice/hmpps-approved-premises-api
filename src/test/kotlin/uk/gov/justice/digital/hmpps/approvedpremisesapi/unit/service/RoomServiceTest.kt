@@ -41,7 +41,7 @@ class RoomServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.name", "empty")
+      entry("$.name", "empty"),
     )
   }
 
@@ -64,7 +64,7 @@ class RoomServiceTest {
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.name", "empty")
+      entry("$.name", "empty"),
     )
   }
 

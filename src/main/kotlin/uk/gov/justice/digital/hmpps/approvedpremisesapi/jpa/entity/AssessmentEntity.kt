@@ -55,9 +55,8 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
      where a.reallocated_at is null
            and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
     """,
-  resultSetMapping = "DomainAssessmentSummaryMapping"
+  resultSetMapping = "DomainAssessmentSummaryMapping",
 )
-
 @SqlResultSetMapping(
   name = "DomainAssessmentSummaryMapping",
   classes = [
@@ -75,11 +74,10 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
         ColumnResult(name = "isStarted"),
         ColumnResult(name = "decision"),
         ColumnResult(name = "crn"),
-      ]
-    )
-  ]
+      ],
+    ),
+  ],
 )
-
 @Entity
 @Table(name = "assessments")
 data class AssessmentEntity(
@@ -118,7 +116,7 @@ data class AssessmentEntity(
   var clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
 
   @Transient
-  var schemaUpToDate: Boolean
+  var schemaUpToDate: Boolean,
 )
 
 /**
@@ -136,12 +134,12 @@ open class DomainAssessmentSummary(
   val completed: Boolean,
   val isStarted: Boolean,
   val decision: String?,
-  val crn: String
+  val crn: String,
 )
 
 enum class AssessmentDecision {
   ACCEPTED,
-  REJECTED
+  REJECTED,
 }
 
 @Repository
@@ -168,5 +166,5 @@ data class AssessmentClarificationNoteEntity(
 
   var response: String?,
 
-  var responseReceivedOn: LocalDate?
+  var responseReceivedOn: LocalDate?,
 )

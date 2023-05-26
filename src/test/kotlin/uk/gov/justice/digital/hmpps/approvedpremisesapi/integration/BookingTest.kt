@@ -80,8 +80,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, keyWorker)
-            )
+              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, keyWorker),
+            ),
           )
       }
     }
@@ -122,8 +122,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, null)
-            )
+              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, null),
+            ),
           )
       }
     }
@@ -262,7 +262,7 @@ class BookingTest : IntegrationTestBase() {
         val expectedJson = objectMapper.writeValueAsString(
           bookings.map {
             bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetails, keyWorker)
-          }
+          },
         )
 
         webTestClient.get()
@@ -348,8 +348,8 @@ class BookingTest : IntegrationTestBase() {
           arrivalDate = LocalDate.parse("2022-08-12"),
           departureDate = LocalDate.parse("2022-08-30"),
           serviceName = ServiceName.approvedPremises,
-          bedId = UUID.randomUUID()
-        )
+          bedId = UUID.randomUUID(),
+        ),
       )
       .exchange()
       .expectStatus()
@@ -359,7 +359,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Approved Premises Booking returns Bad Request when no application exists for CRN`() {
     `Given a User`(
-      roles = listOf(UserRole.MATCHER)
+      roles = listOf(UserRole.MATCHER),
     ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -386,8 +386,8 @@ class BookingTest : IntegrationTestBase() {
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
-              bedId = bed.id
-            )
+              bedId = bed.id,
+            ),
           )
           .exchange()
           .expectStatus()
@@ -433,8 +433,8 @@ class BookingTest : IntegrationTestBase() {
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
-              bedId = bed.id
-            )
+              bedId = bed.id,
+            ),
           )
           .exchange()
           .expectStatus()
@@ -465,7 +465,7 @@ class BookingTest : IntegrationTestBase() {
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(linkedApplication.id)
         assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
           SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!)
+          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
         )
       }
     }
@@ -504,7 +504,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -554,7 +554,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = UUID.randomUUID(),
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -599,7 +599,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -653,7 +653,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -716,7 +716,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-09-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -777,7 +777,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -845,7 +845,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -901,7 +901,7 @@ class BookingTest : IntegrationTestBase() {
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
               enableTurnarounds = true,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -962,7 +962,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1024,7 +1024,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
               bedId = bed.id,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1042,8 +1042,8 @@ class BookingTest : IntegrationTestBase() {
           arrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-14"),
           notes = null,
-          keyWorkerStaffCode = "123"
-        )
+          keyWorkerStaffCode = "123",
+        ),
       )
       .exchange()
       .expectStatus()
@@ -1100,7 +1100,7 @@ class BookingTest : IntegrationTestBase() {
               expectedDepartureDate = LocalDate.parse("2022-07-16"),
               notes = "Moved in late due to sickness",
               keyWorkerStaffCode = null,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1160,7 +1160,7 @@ class BookingTest : IntegrationTestBase() {
               expectedDepartureDate = LocalDate.parse("2022-07-16"),
               notes = "Moved in late due to sickness",
               keyWorkerStaffCode = null,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1211,8 +1211,8 @@ class BookingTest : IntegrationTestBase() {
             arrivalDate = LocalDate.parse("2022-08-12"),
             expectedDepartureDate = LocalDate.parse("2022-08-14"),
             notes = "Hello",
-            keyWorkerStaffCode = keyWorker.code
-          )
+            keyWorkerStaffCode = keyWorker.code,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1268,8 +1268,8 @@ class BookingTest : IntegrationTestBase() {
               arrivalDate = LocalDate.parse("2022-08-12"),
               expectedDepartureDate = LocalDate.parse("2022-08-14"),
               notes = "Hello",
-              keyWorkerStaffCode = keyWorker.code
-            )
+              keyWorkerStaffCode = keyWorker.code,
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1330,8 +1330,8 @@ class BookingTest : IntegrationTestBase() {
               arrivalDate = LocalDate.parse("2022-08-12"),
               expectedDepartureDate = LocalDate.parse("2022-08-14"),
               notes = "Hello",
-              keyWorkerStaffCode = null
-            )
+              keyWorkerStaffCode = null,
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1394,8 +1394,8 @@ class BookingTest : IntegrationTestBase() {
               arrivalDate = LocalDate.parse("2022-08-12"),
               expectedDepartureDate = LocalDate.parse("2022-08-14"),
               notes = "Hello",
-              keyWorkerStaffCode = null
-            )
+              keyWorkerStaffCode = null,
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1446,7 +1446,7 @@ class BookingTest : IntegrationTestBase() {
             moveOnCategoryId = moveOnCategory.id,
             destinationProviderId = destinationProvider.id,
             notes = "Hello",
-          )
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1514,7 +1514,7 @@ class BookingTest : IntegrationTestBase() {
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = destinationProvider.id,
               notes = "Hello",
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1586,7 +1586,7 @@ class BookingTest : IntegrationTestBase() {
             moveOnCategoryId = moveOnCategory.id,
             destinationProviderId = destinationProvider.id,
             notes = "Corrected date",
-          )
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1635,7 +1635,7 @@ class BookingTest : IntegrationTestBase() {
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = null,
               notes = "Hello",
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1703,7 +1703,7 @@ class BookingTest : IntegrationTestBase() {
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = null,
               notes = "Corrected date",
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1759,7 +1759,7 @@ class BookingTest : IntegrationTestBase() {
               moveOnCategoryId = moveOnCategory.id,
               destinationProviderId = null,
               notes = "Hello",
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1776,8 +1776,8 @@ class BookingTest : IntegrationTestBase() {
         NewCancellation(
           date = LocalDate.parse("2022-08-17"),
           reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
-          notes = null
-        )
+          notes = null,
+        ),
       )
       .exchange()
       .expectStatus()
@@ -1810,8 +1810,8 @@ class BookingTest : IntegrationTestBase() {
           NewCancellation(
             date = LocalDate.parse("2022-08-17"),
             reason = cancellationReason.id,
-            notes = null
-          )
+            notes = null,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1859,8 +1859,8 @@ class BookingTest : IntegrationTestBase() {
           NewCancellation(
             date = LocalDate.parse("2022-08-18"),
             reason = cancellationReason.id,
-            notes = "Corrected date"
-          )
+            notes = "Corrected date",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1899,8 +1899,8 @@ class BookingTest : IntegrationTestBase() {
           NewCancellation(
             date = LocalDate.parse("2022-08-17"),
             reason = cancellationReason.id,
-            notes = null
-          )
+            notes = null,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1938,8 +1938,8 @@ class BookingTest : IntegrationTestBase() {
           NewCancellation(
             date = LocalDate.parse("2022-08-18"),
             reason = cancellationReason.id,
-            notes = "Corrected date"
-          )
+            notes = "Corrected date",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -1962,8 +1962,8 @@ class BookingTest : IntegrationTestBase() {
       .bodyValue(
         NewExtension(
           newDepartureDate = LocalDate.parse("2022-08-20"),
-          notes = null
-        )
+          notes = null,
+        ),
       )
       .exchange()
       .expectStatus()
@@ -2018,7 +2018,7 @@ class BookingTest : IntegrationTestBase() {
             NewExtension(
               newDepartureDate = LocalDate.parse("2022-07-16"),
               notes = null,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -2087,7 +2087,7 @@ class BookingTest : IntegrationTestBase() {
             NewExtension(
               newDepartureDate = LocalDate.parse("2022-07-13"),
               notes = null,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -2145,7 +2145,7 @@ class BookingTest : IntegrationTestBase() {
             NewExtension(
               newDepartureDate = LocalDate.parse("2022-07-16"),
               notes = null,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -2213,7 +2213,7 @@ class BookingTest : IntegrationTestBase() {
             NewExtension(
               newDepartureDate = LocalDate.parse("2022-07-13"),
               notes = null,
-            )
+            ),
           )
           .exchange()
           .expectStatus()
@@ -2265,8 +2265,8 @@ class BookingTest : IntegrationTestBase() {
         .bodyValue(
           NewExtension(
             newDepartureDate = LocalDate.parse("2022-08-22"),
-            notes = "notes"
-          )
+            notes = "notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -2310,8 +2310,8 @@ class BookingTest : IntegrationTestBase() {
         .bodyValue(
           NewExtension(
             newDepartureDate = LocalDate.parse("2022-08-22"),
-            notes = "notes"
-          )
+            notes = "notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -2325,8 +2325,8 @@ class BookingTest : IntegrationTestBase() {
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/confirmations")
       .bodyValue(
         NewConfirmation(
-          notes = null
-        )
+          notes = null,
+        ),
       )
       .exchange()
       .expectStatus()
@@ -2354,8 +2354,8 @@ class BookingTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewConfirmation(
-            notes = null
-          )
+            notes = null,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -2388,8 +2388,8 @@ class BookingTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewConfirmation(
-            notes = null
-          )
+            notes = null,
+          ),
         )
         .exchange()
         .expectStatus()
@@ -2432,8 +2432,8 @@ class BookingTest : IntegrationTestBase() {
           NewNonarrival(
             date = booking.arrivalDate,
             reason = nonArrivalReason.id,
-            notes = "Notes"
-          )
+            notes = "Notes",
+          ),
         )
         .exchange()
         .expectStatus()
@@ -2445,6 +2445,7 @@ class BookingTest : IntegrationTestBase() {
         .jsonPath("$.notes").isEqualTo("Notes")
     }
   }
+
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking for a premises that's not in the user's region returns 403 Forbidden`() {
     `Given a User` { userEntity, jwt ->
@@ -2469,8 +2470,8 @@ class BookingTest : IntegrationTestBase() {
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewConfirmation(
-            notes = null
-          )
+            notes = null,
+          ),
         )
         .exchange()
         .expectStatus()

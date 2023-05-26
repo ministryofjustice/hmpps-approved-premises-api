@@ -92,8 +92,8 @@ class BedUtilisationReportGenerator(
         voidDays = voidDays,
         totalBookedDays = totalBookedDays,
         totalDaysInTheMonth = daysInMonth,
-        occupancyRate = totalBookedDays.toDouble() / daysInMonth
-      )
+        occupancyRate = totalBookedDays.toDouble() / daysInMonth,
+      ),
     )
   }
 }

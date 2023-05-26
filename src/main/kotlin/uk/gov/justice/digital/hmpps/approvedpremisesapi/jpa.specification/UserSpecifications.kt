@@ -22,8 +22,8 @@ fun hasQualificationsAndRoles(qualifications: List<UserQualification>?, roles: L
 
       predicates.add(
         criteriaBuilder.and(
-          userQualifications.`in`(qualifications)
-        )
+          userQualifications.`in`(qualifications),
+        ),
       )
     }
 
@@ -34,8 +34,8 @@ fun hasQualificationsAndRoles(qualifications: List<UserQualification>?, roles: L
 
       predicates.add(
         criteriaBuilder.and(
-          userRoles.`in`(roles)
-        )
+          userRoles.`in`(roles),
+        ),
       )
     }
 

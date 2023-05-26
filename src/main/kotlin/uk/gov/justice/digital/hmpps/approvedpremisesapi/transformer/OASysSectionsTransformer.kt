@@ -18,7 +18,7 @@ class OASysSectionsTransformer : OASysTransformer() {
     risksToTheIndividual: RisksToTheIndividual,
     riskManagementPlan: RiskManagementPlan,
     needsDetails: NeedsDetails,
-    requestedOptionalSections: List<Int>
+    requestedOptionalSections: List<Int>,
   ): OASysSections {
     return OASysSections(
       assessmentId = offenceDetails.assessmentId,
@@ -32,14 +32,14 @@ class OASysSectionsTransformer : OASysTransformer() {
         oASysQuestionWithSingleAnswer("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
         oASysQuestionWithSingleAnswer("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
         oASysQuestionWithSingleAnswer("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
-        oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending)
+        oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending),
       ),
       roshSummary = listOf(
         oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
         oASysQuestionWithSingleAnswer("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
         oASysQuestionWithSingleAnswer("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
         oASysQuestionWithSingleAnswer("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
-        oASysQuestionWithSingleAnswer("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo)
+        oASysQuestionWithSingleAnswer("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
       ),
       supportingInformation = transformSupportingInformation(needsDetails, requestedOptionalSections),
       riskToSelf = listOf(
@@ -55,8 +55,8 @@ class OASysSectionsTransformer : OASysTransformer() {
         oASysQuestionWithSingleAnswer("Interventions and treatment", "RM32", riskManagementPlan.riskManagementPlan?.interventionsAndTreatment),
         oASysQuestionWithSingleAnswer("Monitoring and control", "RM31", riskManagementPlan.riskManagementPlan?.monitoringAndControl),
         oASysQuestionWithSingleAnswer("Supervision", "RM30", riskManagementPlan.riskManagementPlan?.supervision),
-        oASysQuestionWithSingleAnswer("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation)
-      )
+        oASysQuestionWithSingleAnswer("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
+      ),
     )
   }
 
@@ -70,7 +70,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 3,
         linkedToHarm = needsDetails.linksToHarm?.accommodationLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.accommodationLinkedToReOffending,
-        answer = needsDetails.needs?.accommodationIssuesDetails
+        answer = needsDetails.needs?.accommodationIssuesDetails,
       )
     }
 
@@ -81,7 +81,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 4,
         linkedToHarm = needsDetails.linksToHarm?.educationTrainingEmploymentLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.educationTrainingEmploymentLinkedToReOffending,
-        answer = needsDetails.needs?.educationTrainingEmploymentIssuesDetails
+        answer = needsDetails.needs?.educationTrainingEmploymentIssuesDetails,
       )
     }
 
@@ -92,7 +92,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 5,
         linkedToHarm = needsDetails.linksToHarm?.financeLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.financeLinkedToReOffending,
-        answer = needsDetails.needs?.financeIssuesDetails
+        answer = needsDetails.needs?.financeIssuesDetails,
       )
     }
 
@@ -103,7 +103,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 6,
         linkedToHarm = needsDetails.linksToHarm?.relationshipLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.relationshipLinkedToReOffending,
-        answer = needsDetails.needs?.relationshipIssuesDetails
+        answer = needsDetails.needs?.relationshipIssuesDetails,
       )
     }
 
@@ -114,7 +114,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 7,
         linkedToHarm = needsDetails.linksToHarm?.lifestyleLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending,
-        answer = needsDetails.needs?.lifestyleIssuesDetails
+        answer = needsDetails.needs?.lifestyleIssuesDetails,
       )
     }
 
@@ -124,7 +124,7 @@ class OASysSectionsTransformer : OASysTransformer() {
       sectionNumber = 8,
       linkedToHarm = needsDetails.linksToHarm?.drugLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.drugLinkedToReOffending,
-      answer = needsDetails.needs?.drugIssuesDetails
+      answer = needsDetails.needs?.drugIssuesDetails,
     )
 
     supportingInformation += OASysSupportingInformationQuestion(
@@ -133,7 +133,7 @@ class OASysSectionsTransformer : OASysTransformer() {
       sectionNumber = 9,
       linkedToHarm = needsDetails.linksToHarm?.alcoholLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.alcoholLinkedToReOffending,
-      answer = needsDetails.needs?.alcoholIssuesDetails
+      answer = needsDetails.needs?.alcoholIssuesDetails,
     )
 
     if (needsDetails.linksToHarm?.emotionalLinkedToHarm == true || requestedOptionalSections.contains(10)) {
@@ -143,7 +143,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 10,
         linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.emotionalLinkedToReOffending,
-        answer = needsDetails.needs?.emotionalIssuesDetails
+        answer = needsDetails.needs?.emotionalIssuesDetails,
       )
     }
 
@@ -154,7 +154,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 11,
         linkedToHarm = needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.thinkingBehaviouralLinkedToReOffending,
-        answer = needsDetails.needs?.thinkingBehaviouralIssuesDetails
+        answer = needsDetails.needs?.thinkingBehaviouralIssuesDetails,
       )
     }
 
@@ -165,7 +165,7 @@ class OASysSectionsTransformer : OASysTransformer() {
         sectionNumber = 12,
         linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,
         linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending,
-        answer = needsDetails.needs?.attitudeIssuesDetails
+        answer = needsDetails.needs?.attitudeIssuesDetails,
       )
     }
 

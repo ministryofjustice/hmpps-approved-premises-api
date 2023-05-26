@@ -229,7 +229,7 @@ class ApplicationService(
         releaseType = null,
         arrivalDate = null,
         isInapplicable = null,
-        nomsNumber = offenderDetails.otherIds.nomsNumber
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )
 
@@ -312,7 +312,7 @@ class ApplicationService(
         riskRatings = riskRatings,
         assessments = mutableListOf(),
         probationRegion = user.probationRegion,
-        nomsNumber = offenderDetails.otherIds.nomsNumber
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )
 
@@ -327,7 +327,7 @@ class ApplicationService(
     arrivalDate: LocalDate?,
     data: String,
     isInapplicable: Boolean?,
-    username: String
+    username: String,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -375,7 +375,7 @@ class ApplicationService(
   fun updateTemporaryAccommodationApplication(
     applicationId: UUID,
     data: String,
-    username: String
+    username: String,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -487,7 +487,7 @@ class ApplicationService(
   @Transactional
   fun submitTemporaryAccommodationApplication(
     applicationId: UUID,
-    submitApplication: SubmitTemporaryAccommodationApplication
+    submitApplication: SubmitTemporaryAccommodationApplication,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()

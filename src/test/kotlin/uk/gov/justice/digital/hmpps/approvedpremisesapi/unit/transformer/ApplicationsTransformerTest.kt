@@ -53,7 +53,7 @@ class ApplicationsTransformerTest {
   private val applicationsTransformer = ApplicationsTransformer(
     objectMapper,
     mockPersonTransformer,
-    mockRisksTransformer
+    mockRisksTransformer,
   )
 
   private val user = UserEntityFactory()
@@ -133,7 +133,7 @@ class ApplicationsTransformerTest {
         ProbationRegionEntityFactory()
           .withApArea(
             ApAreaEntityFactory()
-              .produce()
+              .produce(),
           )
           .produce()
       }
@@ -163,7 +163,7 @@ class ApplicationsTransformerTest {
         ProbationRegionEntityFactory()
           .withApArea(
             ApAreaEntityFactory()
-              .produce()
+              .produce(),
           )
           .produce()
       }
@@ -186,7 +186,7 @@ class ApplicationsTransformerTest {
         .produce(),
       awaitingClarificationNoteFactory
         .withAssessment(assessment)
-        .produce()
+        .produce(),
     )
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
@@ -201,7 +201,7 @@ class ApplicationsTransformerTest {
         ProbationRegionEntityFactory()
           .withApArea(
             ApAreaEntityFactory()
-              .produce()
+              .produce(),
           )
           .produce()
       }
@@ -215,7 +215,7 @@ class ApplicationsTransformerTest {
         .produce(),
       awaitingClarificationNoteFactory
         .withAssessment(assessment)
-        .produce()
+        .produce(),
     )
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as TemporaryAccommodationApplication
@@ -231,7 +231,7 @@ class ApplicationsTransformerTest {
     assessment.clarificationNotes = mutableListOf(
       completedClarificationNoteFactory
         .withAssessment(assessment)
-        .produce()
+        .produce(),
     )
 
     application.assessments = mutableListOf(assessment)
@@ -290,7 +290,7 @@ class ApplicationsTransformerTest {
       .withAllocatedToUser(
         UserEntityFactory()
           .withUnitTestControlProbationRegion()
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -316,7 +316,7 @@ class ApplicationsTransformerTest {
       .withPremises(
         ApprovedPremisesEntityFactory()
           .withUnitTestControlTestProbationAreaAndLocalAuthority()
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -327,7 +327,7 @@ class ApplicationsTransformerTest {
       .withAllocatedToUser(
         UserEntityFactory()
           .withUnitTestControlProbationRegion()
-          .produce()
+          .produce(),
       )
       .produce()
 
@@ -345,7 +345,7 @@ class ApplicationsTransformerTest {
         ProbationRegionEntityFactory()
           .withApArea(
             ApAreaEntityFactory()
-              .produce()
+              .produce(),
           )
           .produce()
       }
@@ -355,7 +355,7 @@ class ApplicationsTransformerTest {
     assessment.clarificationNotes = mutableListOf(
       completedClarificationNoteFactory
         .withAssessment(assessment)
-        .produce()
+        .produce(),
     )
 
     application.assessments = mutableListOf(assessment)
@@ -372,7 +372,7 @@ class ApplicationsTransformerTest {
         ProbationRegionEntityFactory()
           .withApArea(
             ApAreaEntityFactory()
-              .produce()
+              .produce(),
           )
           .produce()
       }
@@ -387,13 +387,13 @@ class ApplicationsTransformerTest {
     oldAssessment.clarificationNotes = mutableListOf(
       awaitingClarificationNoteFactory
         .withAssessment(oldAssessment)
-        .produce()
+        .produce(),
     )
 
     latestAssessment.clarificationNotes = mutableListOf(
       completedClarificationNoteFactory
         .withAssessment(latestAssessment)
-        .produce()
+        .produce(),
     )
 
     application.assessments = mutableListOf(oldAssessment, latestAssessment)

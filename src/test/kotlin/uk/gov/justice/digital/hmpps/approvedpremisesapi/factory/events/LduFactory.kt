@@ -19,6 +19,6 @@ class LduFactory : Factory<Ldu> {
 
   override fun produce() = Ldu(
     code = this.code(),
-    name = this.name()
+    name = this.name(),
   )
 }

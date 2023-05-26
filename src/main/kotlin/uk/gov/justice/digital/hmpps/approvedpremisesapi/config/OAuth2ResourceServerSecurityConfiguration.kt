@@ -69,8 +69,8 @@ class OAuth2ResourceServerSecurityConfiguration {
                   val status = 401
                   val detail =
                     "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint"
-                }
-              )
+                },
+              ),
             )
           }
         }
@@ -127,7 +127,7 @@ class AuthAwareTokenConverter() : Converter<Jwt, AbstractAuthenticationToken> {
 class AuthAwareAuthenticationToken(
   jwt: Jwt,
   private val aPrincipal: String,
-  authorities: Collection<GrantedAuthority>
+  authorities: Collection<GrantedAuthority>,
 ) : JwtAuthenticationToken(jwt, authorities) {
   override fun getPrincipal(): String {
     return aPrincipal
@@ -138,7 +138,7 @@ class AuthAwareAuthenticationToken(
 class AuthorizedClientServiceConfiguration(
   @Value("\${log-client-credentials-jwt-info}") private val logClintCredentialsJwtInfo: Boolean,
   private val clientRegistrationRepository: ClientRegistrationRepository,
-  private val objectMapper: ObjectMapper
+  private val objectMapper: ObjectMapper,
 ) {
   @Bean
   fun inMemoryOAuth2AuthorizedClientService(): OAuth2AuthorizedClientService {
@@ -154,7 +154,7 @@ class LoggingInMemoryOAuth2AuthorizedClientService(clientRegistrationRepository:
 
   override fun <T : OAuth2AuthorizedClient?> loadAuthorizedClient(
     clientRegistrationId: String?,
-    principalName: String?
+    principalName: String?,
   ): T = backingImplementation.loadAuthorizedClient<T>(clientRegistrationId, principalName)
 
   override fun saveAuthorizedClient(authorizedClient: OAuth2AuthorizedClient?, principal: Authentication?) {
@@ -181,5 +181,5 @@ class LoggingInMemoryOAuth2AuthorizedClientService(clientRegistrationRepository:
 data class JwtLogInfo(
   val authorities: List<String>,
   val scope: List<String>,
-  val exp: Long
+  val exp: Long,
 )

@@ -35,6 +35,6 @@ class PersonRisksFactory : Factory<PersonRisks> {
     roshRisks = this.roshRisks(),
     mappa = this.mappa(),
     tier = this.tier(),
-    flags = this.flags()
+    flags = this.flags(),
   )
 }

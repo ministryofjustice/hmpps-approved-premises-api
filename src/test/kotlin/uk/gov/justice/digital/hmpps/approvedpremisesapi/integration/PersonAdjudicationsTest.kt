@@ -28,7 +28,7 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
   fun `Getting adjudications for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis"
+      authSource = "nomis",
     )
 
     webTestClient.get()
@@ -43,7 +43,7 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
   fun `Getting adjudications for a CRN without ROLE_PROBATION returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
-      authSource = "delius"
+      authSource = "delius",
     )
 
     webTestClient.get()
@@ -79,14 +79,14 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
           .withResults(
             listOf(
               AdjudicationFactory().withAgencyId("AGNCY1").produce(),
-              AdjudicationFactory().withAgencyId("AGNCY2").produce()
-            )
+              AdjudicationFactory().withAgencyId("AGNCY2").produce(),
+            ),
           )
           .withAgencies(
             listOf(
               AgencyFactory().withAgencyId("AGNCY1").produce(),
-              AgencyFactory().withAgencyId("AGNCY2").produce()
-            )
+              AgencyFactory().withAgencyId("AGNCY2").produce(),
+            ),
           )
           .produce()
 
@@ -100,7 +100,7 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse))
+            objectMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse)),
           )
       }
     }

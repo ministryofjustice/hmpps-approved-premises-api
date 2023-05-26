@@ -64,7 +64,7 @@ class RiskManagementPlanFactory : AssessmentInfoFactory<RiskManagementPlan>() {
       interventionsAndTreatment = this.interventionsAndTreatment(),
       monitoringAndControl = this.monitoringAndControl(),
       supervision = this.supervision(),
-      keyInformationAboutCurrentSituation = this.keyInformationAboutCurrentSituation()
-    )
+      keyInformationAboutCurrentSituation = this.keyInformationAboutCurrentSituation(),
+    ),
   )
 }

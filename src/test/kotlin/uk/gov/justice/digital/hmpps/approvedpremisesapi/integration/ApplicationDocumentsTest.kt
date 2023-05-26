@@ -69,7 +69,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 1 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
               .withExtendedDescription("Extended Description 1")
-              .produce()
+              .produce(),
           )
           .withConvictionLevelDocument(
             "12345",
@@ -80,7 +80,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 2 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
               .withExtendedDescription("Extended Description 2")
-              .produce()
+              .produce(),
           )
           .produce()
 
@@ -95,8 +95,8 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              documentTransformer.transformToApi(groupedDocuments, 12345)
-            )
+              documentTransformer.transformToApi(groupedDocuments, 12345),
+            ),
           )
       }
     }
@@ -123,7 +123,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 1 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
               .withExtendedDescription("Extended Description 1")
-              .produce()
+              .produce(),
           )
           .withConvictionLevelDocument(
             "12345",
@@ -134,7 +134,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 2 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
               .withExtendedDescription("Extended Description 2")
-              .produce()
+              .produce(),
           )
           .produce()
 
@@ -150,8 +150,8 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              documentTransformer.transformToApi(groupedDocuments, 12345)
-            )
+              documentTransformer.transformToApi(groupedDocuments, 12345),
+            ),
           )
       }
     }
@@ -177,7 +177,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 1 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
               .withExtendedDescription("Extended Description 1")
-              .produce()
+              .produce(),
           )
           .withConvictionLevelDocument(
             "12345",
@@ -188,7 +188,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 2 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
               .withExtendedDescription("Extended Description 2")
-              .produce()
+              .produce(),
           )
           .produce()
 
@@ -224,7 +224,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 1 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
               .withExtendedDescription("Extended Description 1")
-              .produce()
+              .produce(),
           )
           .withConvictionLevelDocument(
             "12345",
@@ -235,7 +235,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
               .withTypeDescription("Type 2 Description")
               .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
               .withExtendedDescription("Extended Description 2")
-              .produce()
+              .produce(),
           )
           .produce()
 

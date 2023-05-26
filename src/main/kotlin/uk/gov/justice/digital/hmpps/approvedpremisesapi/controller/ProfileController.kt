@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 @Service
 class ProfileController(
   private val userService: UserService,
-  private val userTransformer: UserTransformer
+  private val userTransformer: UserTransformer,
 ) : ProfileApiDelegate {
   override fun profileGet(xServiceName: ServiceName): ResponseEntity<User> {
     val userEntity = userService.getUserForRequest()

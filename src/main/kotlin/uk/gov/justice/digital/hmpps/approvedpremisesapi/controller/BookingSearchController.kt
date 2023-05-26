@@ -25,7 +25,7 @@ class BookingSearchController(
     xServiceName: ServiceName,
     status: BookingStatus?,
     sortOrder: SortOrder?,
-    sortField: BookingSearchSortField?
+    sortField: BookingSearchSortField?,
   ): ResponseEntity<BookingSearchResults> {
     val sortOrder = sortOrder ?: SortOrder.ascending
     val sortField = sortField ?: BookingSearchSortField.bookingCreatedAt

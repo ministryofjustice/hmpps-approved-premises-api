@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class AdjudicationsPage(
   val results: List<Adjudication>,
-  val agencies: List<Agency>
+  val agencies: List<Agency>,
 )
 
 data class Adjudication(
@@ -13,18 +13,18 @@ data class Adjudication(
   val agencyIncidentId: Long,
   val agencyId: String,
   val partySeq: Long,
-  val adjudicationCharges: List<AdjudicationCharge>
+  val adjudicationCharges: List<AdjudicationCharge>,
 )
 
 data class AdjudicationCharge(
   val oicChargeId: String,
   val offenceCode: String,
   val offenceDescription: String,
-  val findingCode: String?
+  val findingCode: String?,
 )
 
 data class Agency(
   val agencyId: String,
   val description: String,
-  val agencyType: String
+  val agencyType: String,
 )

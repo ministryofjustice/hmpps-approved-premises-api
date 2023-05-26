@@ -25,8 +25,8 @@ class BookingsReportGenerator : ReportGenerator<BookingEntity, BookingsReportRow
           this.arrival?.arrivalDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
         },
         actualNightsStayed = if (this.arrival?.arrivalDate == null) null else this.departure?.dateTime?.let { ChronoUnit.DAYS.between(this.arrival?.arrivalDate, it.toLocalDate()).toInt() },
-        accommodationOutcome = this.departure?.moveOnCategory?.name
-      )
+        accommodationOutcome = this.departure?.moveOnCategory?.name,
+      ),
     )
   }
 

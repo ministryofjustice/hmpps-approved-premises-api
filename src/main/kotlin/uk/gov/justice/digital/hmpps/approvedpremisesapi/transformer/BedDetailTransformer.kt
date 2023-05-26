@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainBedSumm
 
 @Component
 class BedDetailTransformer(
-  private val bedSummaryTransformer: BedSummaryTransformer
+  private val bedSummaryTransformer: BedSummaryTransformer,
 ) {
   fun transformToApi(summaryAndCharacteristics: Pair<DomainBedSummary, List<CharacteristicEntity>>): BedDetail {
     val summary = summaryAndCharacteristics.first

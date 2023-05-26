@@ -81,6 +81,6 @@ class LostBedsEntityFactory : Factory<LostBedsEntity> {
     notes = this.notes(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed?.invoke() ?: throw RuntimeException("Must provide a Bed"),
-    cancellation = this.lostBedCancellation?.invoke()
+    cancellation = this.lostBedCancellation?.invoke(),
   )
 }

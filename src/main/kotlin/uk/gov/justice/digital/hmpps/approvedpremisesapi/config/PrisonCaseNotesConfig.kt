@@ -14,7 +14,7 @@ class PrisonCaseNotesConfigBindingModel {
 data class PrisonCaseNotesConfig(
   val lookbackDays: Int,
   val prisonApiPageSize: Int,
-  val excludedCategories: List<ExcludedCategory>
+  val excludedCategories: List<ExcludedCategory>,
 )
 
 class ExcludedCategoryBindingModel {
@@ -27,7 +27,7 @@ class ExcludedCategoryBindingModel {
 
 data class ExcludedCategory(
   val category: String,
-  val subcategory: String?
+  val subcategory: String?,
 ) {
   fun excluded(otherCategory: String, otherSubcategory: String) = (otherCategory == category && subcategory == null) || (otherCategory == category && otherSubcategory == subcategory)
 }

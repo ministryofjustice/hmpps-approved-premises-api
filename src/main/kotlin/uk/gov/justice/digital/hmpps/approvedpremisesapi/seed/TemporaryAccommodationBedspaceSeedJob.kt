@@ -56,7 +56,7 @@ class TemporaryAccommodationBedspaceSeedJob(
   private fun createNewRoom(
     row: TemporaryAccommodationBedspaceSeedCsvRow,
     premises: TemporaryAccommodationPremisesEntity,
-    characteristics: List<CharacteristicEntity>
+    characteristics: List<CharacteristicEntity>,
   ) {
     log.info("Creating new Temporary Accommodation bedspace '${row.bedspaceName}' on premises '${row.premisesName}'")
 
@@ -67,7 +67,7 @@ class TemporaryAccommodationBedspaceSeedJob(
     row: TemporaryAccommodationBedspaceSeedCsvRow,
     existingRoom: RoomEntity,
     premises: TemporaryAccommodationPremisesEntity,
-    characteristics: List<CharacteristicEntity>
+    characteristics: List<CharacteristicEntity>,
   ) {
     log.info("Updating existing Temporary Accommodation bedspace '${row.bedspaceName}' on premises '${row.premisesName}'")
 
