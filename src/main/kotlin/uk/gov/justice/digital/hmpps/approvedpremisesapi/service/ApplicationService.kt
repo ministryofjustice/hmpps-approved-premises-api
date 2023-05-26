@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
@@ -61,6 +62,8 @@ class ApplicationService(
   private val communityApiClient: CommunityApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
+  private val emailNotificationService: EmailNotificationService,
+  private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
@@ -542,6 +545,15 @@ class ApplicationService(
     }
 
     application = applicationRepository.save(application)
+
+    emailNotificationService.sendEmail(
+      user = user,
+      templateId = notifyConfig.templates.applicationSubmitted,
+      personalisation = mapOf(
+        "name" to user.name,
+        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+      ),
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),

@@ -16,6 +16,7 @@ class NotifyConfig {
 }
 
 class NotifyTemplates {
+  var applicationSubmitted = "c9944bd8-63c4-473c-8dce-b3636e47d3dd"
   var assessmentAllocated = "f3d78814-383f-4b5f-a681-9bd3ab912888"
   var assessmentDeallocated = "331ce452-ea83-4f0c-aec0-5eafe85094f2"
 }

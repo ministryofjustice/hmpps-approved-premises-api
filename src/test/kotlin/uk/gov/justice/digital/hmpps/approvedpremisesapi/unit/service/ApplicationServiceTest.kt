@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -68,6 +69,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -90,6 +92,7 @@ class ApplicationServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
+  private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
 
   private val applicationService = ApplicationService(
@@ -104,6 +107,8 @@ class ApplicationServiceTest {
     mockCommunityApiClient,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
+    mockEmailNotificationService,
+    NotifyConfig(),
     mockObjectMapper,
     "http://frontend/applications/#id",
   )
@@ -1428,7 +1433,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitTemporaryAccommodationApplication returns Success`() {
+    fun `submitTemporaryAccommodationApplication returns Success, sends confirmation email`() {
       val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
       val application = TemporaryAccommodationApplicationEntityFactory()
@@ -1448,6 +1453,8 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+
       val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplication)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1458,6 +1465,16 @@ class ApplicationServiceTest {
       verify { mockApplicationRepository.save(any()) }
       verify { mockAssessmentService wasNot called }
       verify { mockDomainEventService wasNot called }
+      verify(exactly = 1) {
+        mockEmailNotificationService.sendEmail(
+          any(),
+          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
+          match {
+            it["name"] == user.name &&
+              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+          },
+        )
+      }
     }
   }
 
