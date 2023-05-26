@@ -33,8 +33,8 @@ class EmailNotificationServiceTest {
       templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888",
       personalisation = mapOf(
         "name" to "Jim",
-        "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444"
-      )
+        "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
+      ),
     )
 
     verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) }
@@ -56,7 +56,7 @@ class EmailNotificationServiceTest {
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
       "name" to "Jim",
-      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444"
+      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
     )
 
     every {
@@ -64,14 +64,14 @@ class EmailNotificationServiceTest {
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         user.email,
         personalisation,
-        null
+        null,
       )
     } returns mockk()
 
     emailNotificationService.sendEmail(
       user = user,
       templateId = templateId,
-      personalisation = personalisation
+      personalisation = personalisation,
     )
 
     verify(exactly = 1) {
@@ -79,7 +79,7 @@ class EmailNotificationServiceTest {
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         user.email,
         personalisation,
-        null
+        null,
       )
     }
 
@@ -101,7 +101,7 @@ class EmailNotificationServiceTest {
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
       "name" to "Jim",
-      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444"
+      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
     )
 
     every {
@@ -109,14 +109,14 @@ class EmailNotificationServiceTest {
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         user.email,
         personalisation,
-        null
+        null,
       )
     } returns mockk()
 
     emailNotificationService.sendEmail(
       user = user,
       templateId = templateId,
-      personalisation = personalisation
+      personalisation = personalisation,
     )
 
     verify(exactly = 1) {
@@ -124,7 +124,7 @@ class EmailNotificationServiceTest {
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         user.email,
         personalisation,
-        null
+        null,
       )
     }
 
@@ -144,7 +144,7 @@ class EmailNotificationServiceTest {
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
       "name" to "Jim",
-      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444"
+      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
     )
 
     every {
@@ -152,14 +152,14 @@ class EmailNotificationServiceTest {
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         user.email,
         personalisation,
-        null
+        null,
       )
     } returns mockk()
 
     emailNotificationService.sendEmail(
       user = user,
       templateId = templateId,
-      personalisation = personalisation
+      personalisation = personalisation,
     )
 
     verify(exactly = 1) {
@@ -167,7 +167,7 @@ class EmailNotificationServiceTest {
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         user.email,
         personalisation,
-        null
+        null,
       )
     }
 
@@ -180,6 +180,6 @@ class EmailNotificationServiceTest {
     notifyConfig = NotifyConfig().apply(configBlock),
     normalNotificationClient = mockNormalNotificationClient,
     guestListNotificationClient = mockGuestListNotificationClient,
-    guestListUserRepository = mockNotifyGuestListUserRepository
+    guestListUserRepository = mockNotifyGuestListUserRepository,
   )
 }
