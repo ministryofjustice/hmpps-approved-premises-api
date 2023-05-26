@@ -45,6 +45,9 @@ generic-service:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ACCESS_KEY_ID: "access_key_id"
       HMPPS_SQS_TOPICS_DOMAINEVENTS_SECRET_ACCESS_KEY: "secret_access_key"
+    hmpps-approved-premises-api:
+      NOTIFY_APIKEY: "NOTIFY_APIKEY"
+      NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
 
   allowlist:
     unilink-aovpn1: "194.75.210.216/29"
