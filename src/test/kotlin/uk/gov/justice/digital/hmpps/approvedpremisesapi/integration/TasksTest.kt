@@ -335,11 +335,11 @@ class TasksTest : IntegrationTestBase() {
             Assertions.assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
             Assertions.assertThat(allocatedPlacementRequest).isNotNull
 
-            val desirableCriteria = allocatedPlacementRequest!!.desirableCriteria.map { it.propertyName }
-            val essentialCriteria = allocatedPlacementRequest!!.essentialCriteria.map { it.propertyName }
+            val desirableCriteria = allocatedPlacementRequest!!.placementRequirements.desirableCriteria.map { it.propertyName }
+            val essentialCriteria = allocatedPlacementRequest!!.placementRequirements.essentialCriteria.map { it.propertyName }
 
-            Assertions.assertThat(desirableCriteria).isEqualTo(existingPlacementRequest.desirableCriteria.map { it.propertyName })
-            Assertions.assertThat(essentialCriteria).isEqualTo(existingPlacementRequest.essentialCriteria.map { it.propertyName })
+            Assertions.assertThat(desirableCriteria).isEqualTo(existingPlacementRequest.placementRequirements.desirableCriteria.map { it.propertyName })
+            Assertions.assertThat(essentialCriteria).isEqualTo(existingPlacementRequest.placementRequirements.essentialCriteria.map { it.propertyName })
           }
         }
       }

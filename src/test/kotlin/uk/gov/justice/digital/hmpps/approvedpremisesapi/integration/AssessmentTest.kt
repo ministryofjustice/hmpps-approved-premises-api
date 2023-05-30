@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -196,21 +197,23 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Accept assessment without JWT returns 401`() {
+    val placementDates = PlacementDates(
+      expectedArrival = LocalDate.now(),
+      duration = 12,
+    )
+
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
       type = ApType.normal,
-      expectedArrival = LocalDate.now(),
-      duration = 12,
       location = "B74",
       radius = 50,
       essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
       desirableCriteria = listOf(PlacementCriteria.isCatered, PlacementCriteria.acceptsSexOffenders),
-      notes = "Some Notes",
     )
 
     webTestClient.post()
       .uri("/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/acceptance")
-      .bodyValue(AssessmentAcceptance(document = "{}", requirements = placementRequirements))
+      .bodyValue(AssessmentAcceptance(document = "{}", requirements = placementRequirements, placementDates = placementDates, notes = "Some Notes"))
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -252,22 +255,24 @@ class AssessmentTest : IntegrationTestBase() {
             val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
             val desirableCriteria = listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
 
+            val placementDates = PlacementDates(
+              expectedArrival = LocalDate.now(),
+              duration = 12,
+            )
+
             val placementRequirements = PlacementRequirements(
               gender = Gender.male,
               type = ApType.normal,
-              expectedArrival = LocalDate.now(),
-              duration = 12,
               location = postcodeDistrict.outcode,
               radius = 50,
               essentialCriteria = essentialCriteria,
               desirableCriteria = desirableCriteria,
-              notes = "Some Notes",
             )
 
             webTestClient.post()
               .uri("/assessments/${assessment.id}/acceptance")
               .header("Authorization", "Bearer $jwt")
-              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements))
+              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements, placementDates = placementDates, notes = "Some Notes"))
               .exchange()
               .expectStatus()
               .isOk
@@ -292,9 +297,9 @@ class AssessmentTest : IntegrationTestBase() {
 
             assertThat(persistedPlacementRequest.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
             assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
-            assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementRequirements.expectedArrival)
-            assertThat(persistedPlacementRequest.duration).isEqualTo(placementRequirements.duration)
-            assertThat(persistedPlacementRequest.notes).isEqualTo(placementRequirements.notes)
+            assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
+            assertThat(persistedPlacementRequest.duration).isEqualTo(placementDates.duration)
+            assertThat(persistedPlacementRequest.notes).isEqualTo("Some Notes")
 
             val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
 
@@ -312,7 +317,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Accept assessment returns 200, persists decision, does not create a Placement Request, and emits SNS domain event message when requirements not provided`() {
+  fun `Accept assessment returns 200, persists decision, does not create a Placement Request, creates Placement Requirements and emits SNS domain event message when placement date information not provided`() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
@@ -342,12 +347,24 @@ class AssessmentTest : IntegrationTestBase() {
 
             val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
+            val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
+            val desirableCriteria = listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
+
+            val placementRequirements = PlacementRequirements(
+              gender = Gender.male,
+              type = ApType.normal,
+              location = postcodeDistrict.outcode,
+              radius = 50,
+              essentialCriteria = essentialCriteria,
+              desirableCriteria = desirableCriteria,
+            )
+
             assessment.schemaUpToDate = true
 
             webTestClient.post()
               .uri("/assessments/${assessment.id}/acceptance")
               .header("Authorization", "Bearer $jwt")
-              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = null))
+              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements, notes = "Some Notes"))
               .exchange()
               .expectStatus()
               .isOk
@@ -369,6 +386,16 @@ class AssessmentTest : IntegrationTestBase() {
             )
 
             assertThat(placementRequestRepository.findByApplication(application)).isNull()
+
+            val persistedPlacementRequirements = placementRequirementsRepository.findByApplication(application)!!
+
+            assertThat(persistedPlacementRequirements.apType).isEqualTo(placementRequirements.type)
+            assertThat(persistedPlacementRequirements.gender).isEqualTo(placementRequirements.gender)
+            assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
+            assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
+
+            assertThat(persistedPlacementRequirements.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.desirableCriteria.map { it.toString() })
+            assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.essentialCriteria.map { it.toString() })
           }
         }
       }
@@ -409,11 +436,14 @@ class AssessmentTest : IntegrationTestBase() {
             val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
             val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
 
+            val placementDates = PlacementDates(
+              expectedArrival = LocalDate.now(),
+              duration = 12,
+            )
+
             val placementRequirements = PlacementRequirements(
               gender = Gender.male,
               type = ApType.normal,
-              expectedArrival = LocalDate.now(),
-              duration = 12,
               location = "SW1",
               radius = 50,
               essentialCriteria = essentialCriteria,
@@ -423,7 +453,7 @@ class AssessmentTest : IntegrationTestBase() {
             webTestClient.post()
               .uri("/assessments/${assessment.id}/acceptance")
               .header("Authorization", "Bearer $jwt")
-              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements))
+              .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements, placementDates = placementDates))
               .exchange()
               .expectStatus()
               .is4xxClientError

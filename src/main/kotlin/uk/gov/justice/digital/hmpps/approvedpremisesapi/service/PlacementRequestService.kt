@@ -9,25 +9,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
@@ -37,16 +32,13 @@ import javax.transaction.Transactional
 @Service
 class PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
-  private val postcodeDistrictRepository: PostcodeDistrictRepository,
-  private val characteristicRepository: CharacteristicRepository,
   private val userRepository: UserRepository,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
-  private val placementRequirementsRepository: PlacementRequirementsRepository,
-  @Value("\${application-url-template}") private val applicationUrlTemplate: String
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
@@ -85,13 +77,13 @@ class PlacementRequestService(
 
     if (currentPlacementRequest.booking != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This placement request has already been completed")
+        ValidatableActionResult.GeneralValidationError("This placement request has already been completed"),
       )
     }
 
     if (!assigneeUser.hasRole(UserRole.MATCHER)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" })
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" }),
       )
     }
 
@@ -113,63 +105,37 @@ class PlacementRequestService(
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
-        newPlacementRequest
-      )
+        newPlacementRequest,
+      ),
     )
   }
 
-  fun createPlacementRequest(assessment: AssessmentEntity, requirements: PlacementRequirements): ValidatableActionResult<PlacementRequestEntity> =
-    validated {
-      val postcodeDistrict = postcodeDistrictRepository.findByOutcode(requirements.location)
-        ?: return@validated ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.postcodeDistrict"] = "doesNotExist" })
+  fun createPlacementRequest(placementRequirements: PlacementRequirementsEntity, placementDates: PlacementDates, notes: String?): PlacementRequestEntity {
+    val user = userRepository.findRandomMatcher() ?: throw RuntimeException("No Matchers could be found")
 
-      val user = userRepository.findRandomMatcher() ?: throw RuntimeException("No Matchers could be found")
-
-      val desirableCriteria = characteristicRepository.findAllWherePropertyNameIn(requirements.desirableCriteria.map { it.toString() })
-      val essentialCriteria = characteristicRepository.findAllWherePropertyNameIn(requirements.essentialCriteria.map { it.toString() })
-
-      val application = (assessment.application as? ApprovedPremisesApplicationEntity) ?: throw RuntimeException("Only Approved Premises Assessments are currently supported for Placement Requests")
-
-      val placementRequirements = placementRequirementsRepository.save(
-        PlacementRequirementsEntity(
-          id = UUID.randomUUID(),
-          apType = requirements.type,
-          gender = requirements.gender,
-          postcodeDistrict = postcodeDistrict!!,
-          radius = requirements.radius,
-          desirableCriteria = desirableCriteria,
-          essentialCriteria = essentialCriteria,
-          createdAt = OffsetDateTime.now(),
-          application = application,
-          assessment = assessment,
-        )
-      )
-
-      val placementRequestEntity = placementRequestRepository.save(
-        PlacementRequestEntity(
-          id = UUID.randomUUID(),
-          placementRequirements = placementRequirements,
-          expectedArrival = requirements.expectedArrival,
-          duration = requirements.duration,
-          createdAt = OffsetDateTime.now(),
-          application = application,
-          assessment = assessment,
-          allocatedToUser = user,
-          booking = null,
-          bookingNotMades = mutableListOf(),
-          reallocatedAt = null,
-          notes = requirements.notes,
-        )
-      )
-
-      return success(placementRequestEntity)
-    }
+    return placementRequestRepository.save(
+      PlacementRequestEntity(
+        id = UUID.randomUUID(),
+        duration = placementDates.duration,
+        expectedArrival = placementDates.expectedArrival,
+        placementRequirements = placementRequirements,
+        createdAt = OffsetDateTime.now(),
+        assessment = placementRequirements.assessment,
+        application = placementRequirements.application,
+        allocatedToUser = user,
+        booking = null,
+        bookingNotMades = mutableListOf(),
+        reallocatedAt = null,
+        notes = notes,
+      ),
+    )
+  }
 
   @Transactional
   fun createBookingNotMade(
     user: UserEntity,
     placementRequestId: UUID,
-    notes: String?
+    notes: String?,
   ): AuthorisableActionResult<BookingNotMadeEntity> {
     val bookingNotCreatedAt = OffsetDateTime.now()
 
@@ -184,13 +150,13 @@ class PlacementRequestService(
       id = UUID.randomUUID(),
       placementRequest = placementRequest,
       createdAt = bookingNotCreatedAt,
-      notes = notes
+      notes = notes,
     )
 
     saveBookingNotMadeDomainEvent(user, placementRequest, bookingNotCreatedAt, notes)
 
     return AuthorisableActionResult.Success(
-      bookingNotMadeRepository.save(bookingNotMade)
+      bookingNotMadeRepository.save(bookingNotMade),
     )
   }
 
@@ -198,7 +164,7 @@ class PlacementRequestService(
     user: UserEntity,
     placementRequest: PlacementRequestEntity,
     bookingNotCreatedAt: OffsetDateTime,
-    notes: String?
+    notes: String?,
   ) {
     val domainEventId = UUID.randomUUID()
 
@@ -231,7 +197,7 @@ class PlacementRequestService(
             applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = application.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ),
             deliusEventNumber = application.eventNumber,
             attemptedAt = bookingNotCreatedAt.toInstant(),
@@ -241,16 +207,16 @@ class PlacementRequestService(
                 staffIdentifier = staffDetails.staffIdentifier,
                 forenames = staffDetails.staff.forenames,
                 surname = staffDetails.staff.surname,
-                username = staffDetails.username
+                username = staffDetails.username,
               ),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
-              )
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
             ),
-            failureDescription = notes
-          )
-        )
-      )
+            failureDescription = notes,
+          ),
+        ),
+      ),
     )
   }
 }

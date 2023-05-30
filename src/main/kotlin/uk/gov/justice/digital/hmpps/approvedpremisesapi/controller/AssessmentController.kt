@@ -144,6 +144,8 @@ class AssessmentController(
       assessmentId = assessmentId,
       document = serializedData,
       placementRequirements = assessmentAcceptance.requirements,
+      placementDates = assessmentAcceptance.placementDates,
+      notes = assessmentAcceptance.notes,
     )
 
     val assessmentValidationResult = when (assessmentAuthResult) {

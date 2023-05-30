@@ -4539,9 +4539,13 @@ components:
           $ref: '#/components/schemas/AnyValue'
         requirements:
           $ref: '#/components/schemas/PlacementRequirements'
-
+        placementDates:
+          $ref: '#/components/schemas/PlacementDates'
+        notes:
+          type: string
       required:
         - document
+        - requirements
     AssessmentRejection:
       type: object
       properties:
@@ -5105,6 +5109,17 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
+    PlacementDates:
+      type: object
+      properties:
+        expectedArrival:
+          type: string
+          format: date
+        duration:
+          type: integer
+      required:
+        - expectedArrival
+        - duration
     PlacementRequirements:
       type: object
       properties:
@@ -5112,11 +5127,6 @@ components:
           $ref: '#/components/schemas/Gender'
         type:
           $ref: '#/components/schemas/ApType'
-        expectedArrival:
-          type: string
-          format: date
-        duration:
-          type: integer
         location:
           type: string
           example: B74
@@ -5130,13 +5140,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlacementCriteria'
-        notes:
-          type: string
       required:
         - gender
         - type
-        - expectedArrival
-        - duration
         - location
         - radius
         - essentialCriteria
@@ -5144,6 +5150,7 @@ components:
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'
+        - $ref: '#/components/schemas/PlacementDates'
         - type: object
           properties:
             id:
@@ -5170,6 +5177,8 @@ components:
               format: date-time
             assessor:
               $ref: '#/components/schemas/ApprovedPremisesUser'
+            notes:
+              type: string
           required:
             - person
             - risks

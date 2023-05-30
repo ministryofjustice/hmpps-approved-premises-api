@@ -27,11 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -44,11 +41,8 @@ import java.util.UUID
 
 class PlacementRequestServiceTest {
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
-  private val postcodeDistrictRepository = mockk<PostcodeDistrictRepository>()
-  private val characteristicRepository = mockk<CharacteristicRepository>()
   private val userRepository = mockk<UserRepository>()
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
-  private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
   private val domainEventService = mockk<DomainEventService>()
   private val offenderService = mockk<OffenderService>()
   private val communityApiClient = mockk<CommunityApiClient>()
@@ -56,16 +50,13 @@ class PlacementRequestServiceTest {
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
-    postcodeDistrictRepository,
-    characteristicRepository,
     userRepository,
     bookingNotMadeRepository,
     domainEventService,
     offenderService,
     communityApiClient,
     cruService,
-    placementRequirementsRepository,
-    "http://frontend/applications/#id"
+    "http://frontend/applications/#id",
   )
 
   private val previousUser = UserEntityFactory()
@@ -238,14 +229,14 @@ class PlacementRequestServiceTest {
 
     assertThat(newPlacementRequest.application).isEqualTo(application)
     assertThat(newPlacementRequest.allocatedToUser).isEqualTo(assigneeUser)
-    assertThat(newPlacementRequest.radius).isEqualTo(previousPlacementRequest.radius)
-    assertThat(newPlacementRequest.postcodeDistrict).isEqualTo(previousPlacementRequest.postcodeDistrict)
-    assertThat(newPlacementRequest.gender).isEqualTo(previousPlacementRequest.gender)
+    assertThat(newPlacementRequest.placementRequirements.radius).isEqualTo(previousPlacementRequest.placementRequirements.radius)
+    assertThat(newPlacementRequest.placementRequirements.postcodeDistrict).isEqualTo(previousPlacementRequest.placementRequirements.postcodeDistrict)
+    assertThat(newPlacementRequest.placementRequirements.gender).isEqualTo(previousPlacementRequest.placementRequirements.gender)
     assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
-    assertThat(newPlacementRequest.apType).isEqualTo(previousPlacementRequest.apType)
+    assertThat(newPlacementRequest.placementRequirements.apType).isEqualTo(previousPlacementRequest.placementRequirements.apType)
     assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
-    assertThat(newPlacementRequest.desirableCriteria).isEqualTo(previousPlacementRequest.desirableCriteria)
-    assertThat(newPlacementRequest.essentialCriteria).isEqualTo(previousPlacementRequest.essentialCriteria)
+    assertThat(newPlacementRequest.placementRequirements.desirableCriteria).isEqualTo(previousPlacementRequest.placementRequirements.desirableCriteria)
+    assertThat(newPlacementRequest.placementRequirements.essentialCriteria).isEqualTo(previousPlacementRequest.placementRequirements.essentialCriteria)
   }
 
   @Test
