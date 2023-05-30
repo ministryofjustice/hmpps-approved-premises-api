@@ -1,0 +1,18 @@
+#!/bin/sh
+
+cd "$(dirname "$0")/.."
+
+GIT_VERSION="$(git rev-parse --short HEAD)"
+IMAGE_NAME="hmpps-approved-premises-api-$GIT_VERSION"
+
+docker build . -t $IMAGE_NAME
+
+TRIVY_CONTAINER="$(docker create -v trivy-cache:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --exit-code 100 --no-progress --severity HIGH,CRITICAL --ignore-unfixed --skip-dirs /usr/local/lib/node_modules/npm --skip-files /app/agent.jar $IMAGE_NAME)"
+
+if [ ! -f ./.trivyignore ]; then
+  ./gradlew init
+fi
+
+docker cp ./.trivyignore $TRIVY_CONTAINER:.
+
+docker start --attach $TRIVY_CONTAINER
