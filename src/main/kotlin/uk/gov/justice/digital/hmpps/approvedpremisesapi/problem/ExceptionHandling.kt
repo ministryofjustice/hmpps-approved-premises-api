@@ -49,13 +49,13 @@ class ExceptionHandling(
 
     if (throwable is MissingServletRequestParameterException) {
       return BadRequestProblem(
-        errorDetail = "Missing required query parameter ${throwable.parameterName}"
+        errorDetail = "Missing required query parameter ${throwable.parameterName}",
       )
     }
 
     if (throwable is MethodArgumentTypeMismatchException) {
       return BadRequestProblem(
-        errorDetail = "Invalid type for query parameter ${throwable.parameter.parameterName} expected ${throwable.parameter.parameterType.name}"
+        errorDetail = "Invalid type for query parameter ${throwable.parameter.parameterName} expected ${throwable.parameter.parameterType.name}",
       )
     }
 
