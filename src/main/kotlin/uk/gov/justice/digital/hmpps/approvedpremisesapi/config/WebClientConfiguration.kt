@@ -139,8 +139,8 @@ class WebClientConfiguration {
           HttpClient
             .create()
             .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt())
-        )
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+        ),
       )
       .build()
   }
