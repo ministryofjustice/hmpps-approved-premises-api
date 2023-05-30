@@ -75,8 +75,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withDecision(AssessmentDecision.ACCEPTED)
           }
 
-          val placementRequest = placementRequestFactory.produceAndPersist {
-            withAllocatedToUser(user)
+          val placementRequirements = placementRequirementsFactory.produceAndPersist {
             withApplication(application1)
             withAssessment(assessment1)
             withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
@@ -88,20 +87,21 @@ class PlacementRequestsTest : IntegrationTestBase() {
             )
           }
 
+          val postcodeDistrict = postCodeDistrictRepository.findAll()[0]
+
+          val placementRequest = placementRequestFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application1)
+            withAssessment(assessment1)
+            withPlacementRequirements(placementRequirements)
+          }
+
           placementRequestFactory.produceAndPersistMultiple(2) {
             withAllocatedToUser(user)
             withReallocatedAt(OffsetDateTime.now())
             withApplication(application2)
             withAssessment(assessment2)
-            withPostcodeDistrict(
-              postCodeDistrictRepository.findAll()[0],
-            )
-            withDesirableCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(5),
-            )
-            withEssentialCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(3),
-            )
+            withPlacementRequirements(placementRequirements)
           }
 
           webTestClient.get()

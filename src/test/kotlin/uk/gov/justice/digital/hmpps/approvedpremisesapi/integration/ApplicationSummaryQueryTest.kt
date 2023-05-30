@@ -90,14 +90,20 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withApplication(submittedApplication)
         }
 
+        val placementRequirements = placementRequirementsFactory.produceAndPersist {
+          withPostcodeDistrict(postcodeDistrict)
+          withEssentialCriteria(emptyList())
+          withDesirableCriteria(emptyList())
+          withApplication(submittedApplication)
+          withAssessment(assessmentForSubmittedApplication)
+        }
+
         val placementRequest = placementRequestFactory.produceAndPersist {
           withApplication(submittedApplication)
           withAssessment(assessmentForSubmittedApplication)
           withAllocatedToUser(user)
-          withPostcodeDistrict(postcodeDistrict)
-          withEssentialCriteria(emptyList())
-          withDesirableCriteria(emptyList())
           withBooking(booking)
+          withPlacementRequirements(placementRequirements)
         }
 
         val results = realApplicationRepository.findAllApprovedPremisesSummaries()
@@ -238,14 +244,20 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withApplication(submittedApplication)
         }
 
+        val placementRequirements = placementRequirementsFactory.produceAndPersist {
+          withApplication(submittedApplication)
+          withAssessment(assessmentForSubmittedApplication)
+          withPostcodeDistrict(postcodeDistrict)
+          withEssentialCriteria(emptyList())
+          withDesirableCriteria(emptyList())
+        }
+
         val placementRequest = placementRequestFactory.produceAndPersist {
           withApplication(submittedApplication)
           withAssessment(assessmentForSubmittedApplication)
           withAllocatedToUser(user)
-          withPostcodeDistrict(postcodeDistrict)
-          withEssentialCriteria(emptyList())
-          withDesirableCriteria(emptyList())
           withBooking(booking)
+          withPlacementRequirements(placementRequirements)
         }
 
         val results = realApplicationRepository.findApprovedPremisesSummariesForManagingTeams(listOf("TEAM1"))

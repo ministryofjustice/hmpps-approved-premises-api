@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -48,6 +49,7 @@ class AssessmentService(
   private val placementRequestService: PlacementRequestService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
+  private val placementRequirementsService: PlacementRequirementsService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
@@ -179,7 +181,7 @@ class AssessmentService(
     )
   }
 
-  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements, placementDates: PlacementDates?, notes: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
     val acceptedAt = OffsetDateTime.now()
 
@@ -228,15 +230,16 @@ class AssessmentService(
     assessment.decision = AssessmentDecision.ACCEPTED
 
     val savedAssessment = assessmentRepository.save(assessment)
+    val placementRequirementsValidationResult = placementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
 
-    if (placementRequirements != null) {
-      val placementRequestValidationResult = placementRequestService.createPlacementRequest(assessment, placementRequirements)
+    if (placementRequirementsValidationResult !is ValidatableActionResult.Success) {
+      return AuthorisableActionResult.Success(
+        placementRequirementsValidationResult.translateError(),
+      )
+    }
 
-      if (placementRequestValidationResult !is ValidatableActionResult.Success) {
-        return AuthorisableActionResult.Success(
-          placementRequestValidationResult.translateError(),
-        )
-      }
+    if (placementDates != null) {
+      placementRequestService.createPlacementRequest(placementRequirementsValidationResult.entity, placementDates, notes)
     }
 
     val application = savedAssessment.application

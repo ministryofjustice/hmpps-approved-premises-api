@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import java.time.OffsetDateTime
@@ -27,15 +28,21 @@ class BookingNotMadeTransformerTest {
       .withCreatedByUser(otherUser)
       .produce()
 
-    val placementRequest = PlacementRequestEntityFactory()
-      .withAllocatedToUser(requestingUser)
+    val assessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAssessment(
-        AssessmentEntityFactory()
+      .withAllocatedToUser(otherUser)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
           .withApplication(application)
-          .withAllocatedToUser(otherUser)
+          .withAssessment(assessment)
           .produce(),
       )
+      .withAllocatedToUser(requestingUser)
+      .withApplication(application)
+      .withAssessment(assessment)
       .produce()
 
     val bookingNotMade = BookingNotMadeEntityFactory()
