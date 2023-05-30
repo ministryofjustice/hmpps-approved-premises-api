@@ -6,6 +6,6 @@
 
 set -e
 
-curl --location --request DELETE 'http://127.0.0.1:8080/cache/'$1'/clear'
+curl --location --request DELETE "http://127.0.0.1:8080/cache/$1"
 
 echo "Requested cache clear - check the application logs for status"
