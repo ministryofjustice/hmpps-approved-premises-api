@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
@@ -2310,14 +2311,20 @@ class BookingServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
-    val placementRequest = PlacementRequestEntityFactory()
+    val assessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAssessment(
-        AssessmentEntityFactory()
+      .withAllocatedToUser(otherUser)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
           .withApplication(application)
-          .withAllocatedToUser(otherUser)
+          .withAssessment(assessment)
           .produce(),
       )
+      .withApplication(application)
+      .withAssessment(assessment)
       .withAllocatedToUser(otherUser)
       .produce()
 
@@ -2353,14 +2360,20 @@ class BookingServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
+    val assessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(otherUser)
+      .produce()
+
     val placementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
-      .withAssessment(
-        AssessmentEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
           .withApplication(application)
-          .withAllocatedToUser(otherUser)
+          .withAssessment(assessment)
           .produce(),
       )
+      .withAssessment(assessment)
       .withAllocatedToUser(user)
       .produce()
 
@@ -2415,14 +2428,20 @@ class BookingServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
+    val assessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(otherUser)
+      .produce()
+
     val placementRequest = PlacementRequestEntityFactory()
       .withApplication(application)
-      .withAssessment(
-        AssessmentEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
           .withApplication(application)
-          .withAllocatedToUser(otherUser)
+          .withAssessment(assessment)
           .produce(),
       )
+      .withAssessment(assessment)
       .withAllocatedToUser(user)
       .produce()
 
@@ -2486,14 +2505,20 @@ class BookingServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
-    val placementRequest = PlacementRequestEntityFactory()
+    val assessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAssessment(
-        AssessmentEntityFactory()
+      .withAllocatedToUser(otherUser)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
           .withApplication(application)
-          .withAllocatedToUser(otherUser)
+          .withAssessment(assessment)
           .produce(),
       )
+      .withApplication(application)
+      .withAssessment(assessment)
       .withAllocatedToUser(user)
       .produce()
 
@@ -2558,14 +2583,20 @@ class BookingServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
-    val placementRequest = PlacementRequestEntityFactory()
+    val assessment = AssessmentEntityFactory()
       .withApplication(application)
-      .withAssessment(
-        AssessmentEntityFactory()
+      .withAllocatedToUser(otherUser)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
           .withApplication(application)
-          .withAllocatedToUser(otherUser)
+          .withAssessment(assessment)
           .produce(),
       )
+      .withApplication(application)
+      .withAssessment(assessment)
       .withAllocatedToUser(user)
       .produce()
 

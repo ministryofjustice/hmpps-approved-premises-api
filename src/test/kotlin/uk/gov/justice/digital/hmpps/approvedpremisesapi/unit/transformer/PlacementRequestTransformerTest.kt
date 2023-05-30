@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -67,7 +68,7 @@ class PlacementRequestTransformerTest {
     .withSubmittedAt(submittedAt)
     .produce()
 
-  private val placementRequestFactory = PlacementRequestEntityFactory()
+  private val placementRequirementsFactory = PlacementRequirementsEntityFactory()
     .withApplication(application)
     .withAssessment(assessment)
     .withEssentialCriteria(
@@ -85,6 +86,10 @@ class PlacementRequestTransformerTest {
         CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
       ),
     )
+
+  private val placementRequestFactory = PlacementRequestEntityFactory()
+    .withApplication(application)
+    .withAssessment(assessment)
     .withAllocatedToUser(user)
 
   private val mockRisks = mockk<PersonRisks>()
@@ -103,7 +108,7 @@ class PlacementRequestTransformerTest {
 
   @Test
   fun `transformJpaToApi transforms a basic placement request entity`() {
-    val placementRequestEntity = placementRequestFactory
+    val placementRequirementsEntity = placementRequirementsFactory
       .withEssentialCriteria(
         listOf(
           CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
@@ -119,6 +124,10 @@ class PlacementRequestTransformerTest {
           CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
         ),
       )
+      .produce()
+
+    val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsEntity)
       .withNotes("Some notes")
       .produce()
 
@@ -127,12 +136,12 @@ class PlacementRequestTransformerTest {
     assertThat(result).isEqualTo(
       PlacementRequest(
         id = placementRequestEntity.id,
-        gender = placementRequestEntity.gender,
-        type = placementRequestEntity.apType,
+        gender = placementRequirementsEntity.gender,
+        type = placementRequirementsEntity.apType,
         expectedArrival = placementRequestEntity.expectedArrival,
         duration = placementRequestEntity.duration,
-        location = placementRequestEntity.postcodeDistrict.outcode,
-        radius = placementRequestEntity.radius,
+        location = placementRequirementsEntity.postcodeDistrict.outcode,
+        radius = placementRequirementsEntity.radius,
         essentialCriteria = listOf(PlacementCriteria.isSemiSpecialistMentalHealth, PlacementCriteria.isRecoveryFocussed),
         desirableCriteria = listOf(PlacementCriteria.isWheelchairDesignated, PlacementCriteria.isSingleRoom, PlacementCriteria.hasEnSuite),
         person = mockPerson,
@@ -165,7 +174,10 @@ class PlacementRequestTransformerTest {
       .withPremises(premises)
       .produce()
 
+    val placementRequirementsEntity = placementRequirementsFactory.produce()
+
     val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsEntity)
       .withBooking(booking)
       .produce()
 
@@ -176,7 +188,11 @@ class PlacementRequestTransformerTest {
 
   @Test
   fun `transformJpaToApi returns a status of unableToMatch when a placement request has a bookingNotMade entity`() {
-    val placementRequestEntity = placementRequestFactory.produce()
+    val placementRequirementsEntity = placementRequirementsFactory.produce()
+
+    val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsEntity)
+      .produce()
 
     val bookingNotMade = BookingNotMadeEntityFactory()
       .withPlacementRequest(placementRequestEntity)

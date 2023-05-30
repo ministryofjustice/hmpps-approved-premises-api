@@ -39,20 +39,28 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withDecision(AssessmentDecision.ACCEPTED)
   }
 
-  val placementRequest = placementRequestFactory.produceAndPersist {
-    withAllocatedToUser(placementRequestAllocatedTo)
+  val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+  val placementRequirements = placementRequirementsFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
-    withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+    withPostcodeDistrict(postcodeDistrict)
     withDesirableCriteria(
       characteristicEntityFactory.produceAndPersistMultiple(5),
     )
     withEssentialCriteria(
       characteristicEntityFactory.produceAndPersistMultiple(3),
     )
+  }
+
+  val placementRequest = placementRequestFactory.produceAndPersist {
+    withAllocatedToUser(placementRequestAllocatedTo)
+    withApplication(application)
+    withAssessment(assessment)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
+    withPlacementRequirements(placementRequirements)
   }
 
   block(placementRequest, application)

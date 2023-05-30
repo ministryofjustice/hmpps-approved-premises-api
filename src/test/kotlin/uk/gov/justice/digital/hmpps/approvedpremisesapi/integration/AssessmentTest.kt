@@ -292,16 +292,19 @@ class AssessmentTest : IntegrationTestBase() {
 
             assertThat(persistedPlacementRequest.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
             assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
-            assertThat(persistedPlacementRequest.duration).isEqualTo(placementRequirements.duration)
-            assertThat(persistedPlacementRequest.apType).isEqualTo(placementRequirements.type)
             assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementRequirements.expectedArrival)
-            assertThat(persistedPlacementRequest.gender).isEqualTo(placementRequirements.gender)
-            assertThat(persistedPlacementRequest.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
-            assertThat(persistedPlacementRequest.radius).isEqualTo(placementRequirements.radius)
+            assertThat(persistedPlacementRequest.duration).isEqualTo(placementRequirements.duration)
             assertThat(persistedPlacementRequest.notes).isEqualTo(placementRequirements.notes)
 
-            assertThat(persistedPlacementRequest.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.desirableCriteria.map { it.toString() })
-            assertThat(persistedPlacementRequest.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.essentialCriteria.map { it.toString() })
+            val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
+
+            assertThat(persistedPlacementRequirements.apType).isEqualTo(placementRequirements.type)
+            assertThat(persistedPlacementRequirements.gender).isEqualTo(placementRequirements.gender)
+            assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
+            assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
+
+            assertThat(persistedPlacementRequirements.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.desirableCriteria.map { it.toString() })
+            assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(placementRequirements.essentialCriteria.map { it.toString() })
           }
         }
       }

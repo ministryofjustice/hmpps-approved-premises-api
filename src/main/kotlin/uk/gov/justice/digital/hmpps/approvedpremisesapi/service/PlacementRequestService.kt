@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -43,7 +45,8 @@ class PlacementRequestService(
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  private val placementRequirementsRepository: PlacementRequirementsRepository,
+  @Value("\${application-url-template}") private val applicationUrlTemplate: String
 ) {
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
@@ -82,13 +85,13 @@ class PlacementRequestService(
 
     if (currentPlacementRequest.booking != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This placement request has already been completed"),
+        ValidatableActionResult.GeneralValidationError("This placement request has already been completed")
       )
     }
 
     if (!assigneeUser.hasRole(UserRole.MATCHER)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" }),
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" })
       )
     }
 
@@ -104,15 +107,14 @@ class PlacementRequestService(
         reallocatedAt = null,
         allocatedToUser = assigneeUser,
         createdAt = dateTimeNow,
-        desirableCriteria = currentPlacementRequest.desirableCriteria.toList(),
-        essentialCriteria = currentPlacementRequest.essentialCriteria.toList(),
+        placementRequirements = currentPlacementRequest.placementRequirements,
       ),
     )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
-        newPlacementRequest,
-      ),
+        newPlacementRequest
+      )
     )
   }
 
@@ -128,17 +130,27 @@ class PlacementRequestService(
 
       val application = (assessment.application as? ApprovedPremisesApplicationEntity) ?: throw RuntimeException("Only Approved Premises Assessments are currently supported for Placement Requests")
 
-      val placementRequestEntity = placementRequestRepository.save(
-        PlacementRequestEntity(
+      val placementRequirements = placementRequirementsRepository.save(
+        PlacementRequirementsEntity(
           id = UUID.randomUUID(),
           apType = requirements.type,
           gender = requirements.gender,
-          expectedArrival = requirements.expectedArrival,
-          duration = requirements.duration,
           postcodeDistrict = postcodeDistrict!!,
           radius = requirements.radius,
           desirableCriteria = desirableCriteria,
           essentialCriteria = essentialCriteria,
+          createdAt = OffsetDateTime.now(),
+          application = application,
+          assessment = assessment,
+        )
+      )
+
+      val placementRequestEntity = placementRequestRepository.save(
+        PlacementRequestEntity(
+          id = UUID.randomUUID(),
+          placementRequirements = placementRequirements,
+          expectedArrival = requirements.expectedArrival,
+          duration = requirements.duration,
           createdAt = OffsetDateTime.now(),
           application = application,
           assessment = assessment,
@@ -147,7 +159,7 @@ class PlacementRequestService(
           bookingNotMades = mutableListOf(),
           reallocatedAt = null,
           notes = requirements.notes,
-        ),
+        )
       )
 
       return success(placementRequestEntity)
@@ -157,7 +169,7 @@ class PlacementRequestService(
   fun createBookingNotMade(
     user: UserEntity,
     placementRequestId: UUID,
-    notes: String?,
+    notes: String?
   ): AuthorisableActionResult<BookingNotMadeEntity> {
     val bookingNotCreatedAt = OffsetDateTime.now()
 
@@ -172,13 +184,13 @@ class PlacementRequestService(
       id = UUID.randomUUID(),
       placementRequest = placementRequest,
       createdAt = bookingNotCreatedAt,
-      notes = notes,
+      notes = notes
     )
 
     saveBookingNotMadeDomainEvent(user, placementRequest, bookingNotCreatedAt, notes)
 
     return AuthorisableActionResult.Success(
-      bookingNotMadeRepository.save(bookingNotMade),
+      bookingNotMadeRepository.save(bookingNotMade)
     )
   }
 
@@ -186,7 +198,7 @@ class PlacementRequestService(
     user: UserEntity,
     placementRequest: PlacementRequestEntity,
     bookingNotCreatedAt: OffsetDateTime,
-    notes: String?,
+    notes: String?
   ) {
     val domainEventId = UUID.randomUUID()
 
@@ -219,7 +231,7 @@ class PlacementRequestService(
             applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = application.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
+              noms = offenderDetails.otherIds.nomsNumber!!
             ),
             deliusEventNumber = application.eventNumber,
             attemptedAt = bookingNotCreatedAt.toInstant(),
@@ -229,16 +241,16 @@ class PlacementRequestService(
                 staffIdentifier = staffDetails.staffIdentifier,
                 forenames = staffDetails.staff.forenames,
                 surname = staffDetails.staff.surname,
-                username = staffDetails.username,
+                username = staffDetails.username
               ),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
-              ),
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code)
+              )
             ),
-            failureDescription = notes,
-          ),
-        ),
-      ),
+            failureDescription = notes
+          )
+        )
+      )
     )
   }
 }

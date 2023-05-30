@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarif
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -1044,6 +1045,12 @@ class AssessmentServiceTest {
 
     every { placementRequestServiceMock.createPlacementRequest(assessment, requirements) } returns ValidatableActionResult.Success(
       PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
+            .withAssessment(assessment)
+            .produce(),
+        )
         .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
         .withAssessment(assessment)
         .withAllocatedToUser(user)
