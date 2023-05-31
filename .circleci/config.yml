@@ -220,8 +220,6 @@ workflows:
           slack_channel: << pipeline.parameters.alerts-slack-channel >>
           context:
             - hmpps-common-vars
-          requires:
-            - build_docker
       - hmpps/trivy_pipeline_scan:
           context:
             - hmpps-common-vars
