@@ -299,6 +299,15 @@ class AssessmentService(
       ),
     )
 
+    emailNotificationService.sendEmail(
+      user = application.createdByUser,
+      templateId = notifyConfig.templates.assessmentAccepted,
+      personalisation = mapOf(
+        "name" to application.createdByUser.name,
+        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+      ),
+    )
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),
     )
@@ -412,6 +421,15 @@ class AssessmentService(
       ),
     )
 
+    emailNotificationService.sendEmail(
+      user = application.createdByUser,
+      templateId = notifyConfig.templates.assessmentRejected,
+      personalisation = mapOf(
+        "name" to application.createdByUser.name,
+        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+      ),
+    )
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),
     )
@@ -469,6 +487,15 @@ class AssessmentService(
     emailNotificationService.sendEmail(
       user = assigneeUser,
       templateId = notifyConfig.templates.assessmentAllocated,
+      personalisation = mapOf(
+        "name" to assigneeUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+      ),
+    )
+
+    emailNotificationService.sendEmail(
+      user = assigneeUser,
+      templateId = notifyConfig.templates.assessmentDeallocated,
       personalisation = mapOf(
         "name" to assigneeUser.name,
         "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),

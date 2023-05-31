@@ -16,7 +16,11 @@ class NotifyConfig {
 }
 
 class NotifyTemplates {
+  var applicationSubmitted = "c9944bd8-63c4-473c-8dce-b3636e47d3dd"
   var assessmentAllocated = "f3d78814-383f-4b5f-a681-9bd3ab912888"
+  var assessmentDeallocated = "331ce452-ea83-4f0c-aec0-5eafe85094f2"
+  var assessmentAccepted = "ddf87b15-8866-4bad-a87b-47eba69eb6db"
+  var assessmentRejected = "b3a98c60-8fe0-4450-8fd0-6430198ee43b"
 }
 
 enum class NotifyMode {

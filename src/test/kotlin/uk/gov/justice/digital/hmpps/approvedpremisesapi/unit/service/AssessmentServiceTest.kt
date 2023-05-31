@@ -906,7 +906,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `rejectAssessment returns updated assessment, emits domain event`() {
+  fun `rejectAssessment returns updated assessment, emits domain event, sends email`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -950,6 +950,8 @@ class AssessmentServiceTest {
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
     val offenderDetails = OffenderDetailsSummaryFactory().produce()
 
@@ -1008,6 +1010,17 @@ class AssessmentServiceTest {
           ) &&
             data.decision == "REJECTED" &&
             data.decisionRationale == "reasoning"
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        any(),
+        "b3a98c60-8fe0-4450-8fd0-6430198ee43b",
+        match {
+          it["name"] == assessment.application.createdByUser.name &&
+            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
         },
       )
     }
@@ -1163,7 +1176,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one, sends allocation email`() {
+  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1237,6 +1250,16 @@ class AssessmentServiceTest {
       emailNotificationServiceMock.sendEmail(
         any(),
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
+        match {
+          it["name"] == assigneeUser.name &&
+            (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        },
+      )
+    }
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        any(),
+        "331ce452-ea83-4f0c-aec0-5eafe85094f2",
         match {
           it["name"] == assigneeUser.name &&
             (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
