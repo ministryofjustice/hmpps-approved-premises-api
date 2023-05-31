@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -41,7 +42,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Making a request with isPreemptiveCall = true behaves correctly`() {
+  fun `Making a request with isPreemptiveCall = true behaves correctly for 2xx responses`() {
     val firstCallInstant = Instant.parse("2023-04-25T11:35:00+01:00")
     val fourSecondsLaterInstant = Instant.parse("2023-04-25T11:35:04+01:00")
     val sixSecondsLaterInstant = Instant.parse("2023-04-25T11:35:06+01:00")
@@ -98,6 +99,75 @@ class PreemptiveCacheTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Making a request with isPreemptiveCall = true behaves correctly for non-2xx responses`() {
+    val firstCallInstant = Instant.parse("2023-04-25T11:35:00+01:00")
+    val fourSecondsLaterInstant = Instant.parse("2023-04-25T11:35:04+01:00")
+    val sixSecondsLaterInstant = Instant.parse("2023-04-25T11:35:06+01:00")
+
+    val crn = "ABCD1234"
+
+    val offenderDetailsResponseOne = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
+    val offenderDetailsResponseTwo = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
+    mockUnsuccessfulGetCall(
+      url = "/secure/offenders/crn/$crn",
+      responseStatus = 404,
+    )
+
+    every { Instant.now() } returns firstCallInstant
+
+    // The first call should make an upstream request, attempt number in metadata should be set to 1
+    val firstResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
+    assertThat(firstResult is ClientResult.Failure.StatusCode).isTrue
+    assertThat((firstResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponseOne.otherIds.crn}")))
+
+    val firstMetadata = objectMapper.readValue<BaseHMPPSClient.PreemptiveCacheMetadata>(
+      redisTemplate.boundValueOps("$preemptiveCacheKeyPrefix-offenderDetailSummary-$crn-metadata").get()!!,
+    )
+
+    assertThat(firstMetadata.attempt).isEqualTo(1)
+
+    // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds should return the cached value without making an upstream request
+    every { Instant.now() } returns fourSecondsLaterInstant
+
+    val secondResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
+    assertThat(secondResult is ClientResult.Failure.StatusCode).isTrue
+    assertThat((secondResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponseOne.otherIds.crn}")))
+
+    mockUnsuccessfulGetCall(
+      url = "/secure/offenders/crn/$crn",
+      responseStatus = 500,
+    )
+
+    // The next call after successSoftTtlSeconds should make an upstream request and replace the original cached value, attempt number in metadata should increase to 2
+    every { Instant.now() } returns sixSecondsLaterInstant
+
+    val thirdResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
+    assertThat(thirdResult is ClientResult.Failure.StatusCode).isTrue
+    assertThat((thirdResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+    wiremockServer.verify(exactly(2), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponseOne.otherIds.crn}")))
+
+    val secondMetadata = objectMapper.readValue<BaseHMPPSClient.PreemptiveCacheMetadata>(
+      redisTemplate.boundValueOps("$preemptiveCacheKeyPrefix-offenderDetailSummary-$crn-metadata").get()!!,
+    )
+
+    assertThat(secondMetadata.attempt).isEqualTo(2)
+
+    // The next call should not make an upstream request and return the second cached value
+    val fourthResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
+    assertThat(fourthResult is ClientResult.Failure.StatusCode).isTrue
+    assertThat((fourthResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+    wiremockServer.verify(exactly(2), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponseOne.otherIds.crn}")))
+  }
+
+  @Test
   fun `Making a request with isPreemptiveCall = false behaves correctly`() {
     val crn = "ABCD1234"
 
@@ -126,6 +196,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
         method = null,
         path = null,
         hasResponseBody = true,
+        attempt = null,
       )
 
       redisTemplate.boundValueOps(qualifiedMetadataKey).set(
@@ -156,7 +227,7 @@ class PreemptivelyCachedClient(
   private val cacheConfig = PreemptiveCacheConfig(
     cacheName = "offenderDetailSummary",
     successSoftTtlSeconds = 5,
-    failureSoftTtlSeconds = 1,
+    failureSoftTtlBackoffSeconds = listOf(5, 10, 20),
     hardTtlSeconds = 30,
   )
 
