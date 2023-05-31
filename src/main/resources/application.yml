@@ -164,6 +164,8 @@ caches:
     expiry-seconds: 21600
   ukBankHolidays:
     expiry-seconds: 86400
+  jwks:
+    expiry-seconds: 14400
 
 seed:
   file-prefix: "/tmp/seed"
