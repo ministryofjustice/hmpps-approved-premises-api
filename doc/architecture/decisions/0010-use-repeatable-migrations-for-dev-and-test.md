@@ -62,7 +62,7 @@ To ensure these migrations are run on deploy, we add the paths to the
 directories, i.e:
 
 ```yaml
-SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev
+SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev+test
 ```
 
 ```yaml

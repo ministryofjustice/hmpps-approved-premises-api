@@ -2,16 +2,16 @@
 
 # script/generate_migration: Create an empty database migration, e.g.
 #                            script/generate_migration all "my migration" - creates a migration that applies to all profiles
-#                            script/generate_migration local+dev "my migration" - creates a migration that applies only to the local & dev profiles
+#                            script/generate_migration local+dev+test "my migration" - creates a migration that applies only to the local & dev profiles
 
 set -e
 
-if [ $1 == "local+dev" ]; then
-    dir="local+dev"
+if [ $1 == "local+dev+test" ]; then
+    dir="local+dev+test"
 elif [ $1 == "all" ]; then
     dir="all"
 else
-    echo "Unrecognised option: $1 - must be either 'all' or 'local+dev'"
+    echo "Unrecognised option: $1 - must be either 'all' or 'local+dev+test'"
     exit 1
 fi
 
