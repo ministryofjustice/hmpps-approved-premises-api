@@ -25,6 +25,8 @@ generic-service:
     SENTRY_ENVIRONMENT: test
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
     DOMAIN-EVENTS_EMIT-ENABLED: false
+    SEED_AUTO_ENABLED: true
+    SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-test.hmpps.service.justice.gov.uk/assessments/#id
