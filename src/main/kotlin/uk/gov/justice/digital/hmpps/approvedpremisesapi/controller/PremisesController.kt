@@ -115,6 +115,7 @@ class PremisesController(
 
         summaries.map(premisesSummaryTransformer::transformDomainToApi)
       }
+      ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> {
         val user = usersService.getUserForRequest()
         val summaries = premisesService.getAllTemporaryAccommodationPremisesSummaries(user.probationRegion.id)

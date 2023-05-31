@@ -70,6 +70,19 @@ class PremisesSummaryTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all Premises throws error with incorrect service name`() {
+    `Given a User` { _, jwt ->
+      webTestClient.get()
+        .uri("/premises/summary")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "service-name")
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+    }
+  }
+
+  @Test
   fun `Get all CAS1 Premises returns OK with correct body`() {
     `Given a User` { _, jwt ->
       val uuid = UUID.randomUUID()

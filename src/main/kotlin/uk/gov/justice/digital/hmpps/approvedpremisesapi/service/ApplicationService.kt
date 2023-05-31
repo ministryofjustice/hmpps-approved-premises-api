@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -70,7 +71,6 @@ class ApplicationService(
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
-
     val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
     val userDetails = when (userDetailsResult) {
       is ClientResult.Success -> userDetailsResult.body
@@ -81,6 +81,8 @@ class ApplicationService(
       applicationRepository.findAllApprovedPremisesSummaries()
     } else if (serviceName == ServiceName.approvedPremises) {
       applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
+    } else if (serviceName == ServiceName.cas2) {
+      applicationRepository.findAllCas2ApplicationSummaries()
     } else {
       applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(userEntity.id)
     }

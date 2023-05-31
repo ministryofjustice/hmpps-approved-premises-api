@@ -39,7 +39,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var confirmation: Yielded<ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
-  private var serviceName: Yielded<ServiceName> = { randomOf(ServiceName.values().asList()) }
+  private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
   private var bed: Yielded<BedEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
   private var application: Yielded<ApplicationEntity?> = { null }

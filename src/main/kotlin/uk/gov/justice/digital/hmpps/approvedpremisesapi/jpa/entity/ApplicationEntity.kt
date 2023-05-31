@@ -122,6 +122,22 @@ WHERE a.created_by_user_id = :userId
 
   @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a")
   fun getDistinctNomsNumbers(): List<String>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    CAST(apa.risk_ratings AS TEXT) as riskRatings
+FROM cas_2_applications apa
+LEFT JOIN applications a ON a.id = apa.id
+""",
+    nativeQuery = true,
+  )
+  fun findAllCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
 }
 
 @Entity

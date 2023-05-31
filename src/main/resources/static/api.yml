@@ -4184,6 +4184,7 @@ components:
         mapping:
           Offline: '#/components/schemas/OfflineApplication'
           CAS1: '#/components/schemas/ApprovedPremisesApplication'
+          CAS2: '#/components/schemas/Cas2Application'
           CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
         - id
@@ -4204,6 +4205,38 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            arrivalDate:
+              type: string
+              format: date-time
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+            createdByUserId:
+              type: string
+              format: uuid
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            data:
+              $ref: '#/components/schemas/AnyValue'
+            document:
+              $ref: '#/components/schemas/AnyValue'
+            status:
+              $ref: '#/components/schemas/ApplicationStatus'
+            submittedAt:
+              type: string
+              format: date-time
+          required:
+            - createdByUserId
+            - schemaVersion
+            - outdatedSchema
+            - status
+    Cas2Application:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          properties:
             arrivalDate:
               type: string
               format: date-time
@@ -4279,6 +4312,7 @@ components:
         mapping:
           Offline: '#/components/schemas/OfflineApplicationSummary'
           CAS1: '#/components/schemas/ApprovedPremisesApplicationSummary'
+          CAS2: '#/components/schemas/Cas2ApplicationSummary'
           CAS3: '#/components/schemas/TemporaryAccommodationApplicationSummary'
       required:
         - id
@@ -4327,6 +4361,18 @@ components:
           required:
             - createdByUserId
             - status
+    Cas2ApplicationSummary:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationSummary'
+        - type: object
+          properties:
+            createdByUserId:
+              type: string
+              format: uuid
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+          required:
+            - createdByUserId
     ApplicationStatus:
       type: string
       enum:
@@ -4811,9 +4857,11 @@ components:
       type: string
       enum:
         - approved-premises
+        - cas2
         - temporary-accommodation
       x-enum-varnames:
         - approvedPremises
+        - cas2
         - temporaryAccommodation
     NewRoom:
       type: object
