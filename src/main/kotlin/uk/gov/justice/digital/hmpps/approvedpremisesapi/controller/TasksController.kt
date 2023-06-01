@@ -9,10 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformPlacementApplications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformPlacementRequests
 
 @Service
@@ -22,6 +24,7 @@ class TasksController(
   private val placementRequestService: PlacementRequestService,
   private val taskTransformer: TaskTransformer,
   private val offenderService: OffenderService,
+  private val placementApplicationService: PlacementApplicationService,
 ) : TasksApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -45,7 +48,15 @@ class TasksController(
         taskTransformer::transformPlacementRequestToTask,
       )
 
-      return ResponseEntity.ok(placementRequests + assessments)
+      val placementApplications = mapAndTransformPlacementApplications(
+        log,
+        placementApplicationService.getAllReallocatable(),
+        user.deliusUsername,
+        this.offenderService,
+        taskTransformer::transformPlacementApplicationToTask,
+      )
+
+      return ResponseEntity.ok(placementRequests + assessments + placementApplications)
     } else {
       throw ForbiddenProblem()
     }

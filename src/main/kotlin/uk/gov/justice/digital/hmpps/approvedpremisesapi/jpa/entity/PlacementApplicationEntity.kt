@@ -14,7 +14,9 @@ import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
-interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEntity, UUID>
+interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEntity, UUID> {
+  fun findAllByReallocatedAtNullAndDecisionNull(): List<PlacementApplicationEntity>
+}
 
 @Entity
 @Table(name = "placement_applications")

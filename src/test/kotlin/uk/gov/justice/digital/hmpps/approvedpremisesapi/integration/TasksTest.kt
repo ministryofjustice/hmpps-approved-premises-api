@@ -10,11 +10,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -70,25 +72,59 @@ class TasksTest : IntegrationTestBase() {
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
-                webTestClient.get()
-                  .uri("/tasks")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      listOf(
-                        taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
-                        taskTransformer.transformPlacementRequestToTask(
-                          placementRequest,
-                          offenderDetails,
-                          inmateDetails,
-                        ),
-                      ),
-                    ),
-                  )
+                `Given a Placement Application`(
+                  createdByUser = user,
+                  allocatedToUser = user,
+                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withPermissiveSchema()
+                  },
+                  crn = offenderDetails.otherIds.crn,
+                ) { placementApplication ->
+                  `Given a Placement Application`(
+                    createdByUser = user,
+                    allocatedToUser = user,
+                    schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                      withPermissiveSchema()
+                    },
+                    decision = PlacementApplicationDecision.ACCEPTED,
+                    crn = offenderDetails.otherIds.crn,
+                  ) { _ ->
+                    `Given a Placement Application`(
+                      createdByUser = user,
+                      allocatedToUser = user,
+                      schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                        withPermissiveSchema()
+                      },
+                      reallocated = true,
+                      crn = offenderDetails.otherIds.crn,
+                    ) { _ ->
+                      webTestClient.get()
+                        .uri("/tasks")
+                        .header("Authorization", "Bearer $jwt")
+                        .exchange()
+                        .expectStatus()
+                        .isOk
+                        .expectBody()
+                        .json(
+                          objectMapper.writeValueAsString(
+                            listOf(
+                              taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
+                              taskTransformer.transformPlacementRequestToTask(
+                                placementRequest,
+                                offenderDetails,
+                                inmateDetails,
+                              ),
+                              taskTransformer.transformPlacementApplicationToTask(
+                                placementApplication,
+                                offenderDetails,
+                                inmateDetails,
+                              ),
+                            ),
+                          ),
+                        )
+                    }
+                  }
+                }
               }
             }
           }
