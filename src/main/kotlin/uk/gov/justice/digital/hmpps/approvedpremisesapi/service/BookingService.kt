@@ -230,7 +230,7 @@ class BookingService(
         .filter { it.submittedAt != null }
         .maxByOrNull { it.submittedAt!! }
       val newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
-        .maxByOrNull { it.submittedAt }
+        .maxByOrNull { it.createdAt }
 
       if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
         validationErrors["$.crn"] = "doesNotHaveApplication"
@@ -241,7 +241,7 @@ class BookingService(
       }
 
       val associateWithOfflineApplication = (newestOfflineApplication != null && newestSubmittedOnlineApplication == null) ||
-        (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.submittedAt > newestSubmittedOnlineApplication.submittedAt)
+        (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt > newestSubmittedOnlineApplication.submittedAt)
 
       val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && !associateWithOfflineApplication
 

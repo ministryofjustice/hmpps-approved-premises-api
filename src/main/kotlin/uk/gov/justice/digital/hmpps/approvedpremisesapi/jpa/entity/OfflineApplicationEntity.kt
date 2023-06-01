@@ -21,6 +21,5 @@ data class OfflineApplicationEntity(
   val id: UUID,
   val crn: String,
   val service: String,
-  val submittedAt: OffsetDateTime,
   val createdAt: OffsetDateTime,
 )
