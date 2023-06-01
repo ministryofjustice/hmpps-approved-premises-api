@@ -234,6 +234,44 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get a Placement Application Task for an application returns 200`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User` { user, _ ->
+        `Given a User`(
+          roles = listOf(UserRole.ASSESSOR),
+        ) { allocatableUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+            ) { placementApplication ->
+              webTestClient.get()
+                .uri("/applications/${placementApplication.application.id}/tasks/placement-application")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    TaskWrapper(
+                      task = taskTransformer.transformPlacementApplicationToTask(placementApplication, offenderDetails, inmateDetails),
+                      users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
+                    ),
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
   fun `Get an non-implemented task type for an application returns 405`() {
     `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
       `Given an Offender` { offenderDetails, _ ->

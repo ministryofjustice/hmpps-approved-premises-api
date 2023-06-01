@@ -55,11 +55,14 @@ class PlacementApplicationService(
 
   fun getApplication(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
     val placementApplication = placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java)
 
-    placementApplication.schemaUpToDate = placementApplication.schemaVersion.id == latestSchema.id
+    return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
+  }
 
-    return AuthorisableActionResult.Success(placementApplication)
+  fun getPlacementApplicationForApplicationId(applicationId: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
+    val placementApplication = placementApplicationRepository.findByApplicationId(applicationId) ?: return AuthorisableActionResult.NotFound()
+
+    return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
   }
 
   fun updateApplication(id: UUID, data: String): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
@@ -126,6 +129,14 @@ class PlacementApplicationService(
 
   fun getAllReallocatable(): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllByReallocatedAtNullAndDecisionNull()
+  }
+
+  private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
+    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java)
+
+    placementApplicationEntity.schemaUpToDate = placementApplicationEntity.schemaVersion.id == latestSchema.id
+
+    return placementApplicationEntity
   }
 
   private fun getApplicationForUpdateOrSubmit(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
