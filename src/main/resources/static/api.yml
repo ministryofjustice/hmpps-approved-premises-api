@@ -4179,9 +4179,6 @@ components:
         createdAt:
           type: string
           format: date-time
-        submittedAt:
-          type: string
-          format: date-time
       discriminator:
         propertyName: type
         mapping:
@@ -4226,6 +4223,9 @@ components:
               $ref: '#/components/schemas/AnyValue'
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            submittedAt:
+              type: string
+              format: date-time
           required:
             - createdByUserId
             - schemaVersion
@@ -4252,6 +4252,9 @@ components:
               $ref: '#/components/schemas/ApplicationStatus'
             risks:
               $ref: '#/components/schemas/PersonRisks'
+            submittedAt:
+              type: string
+              format: date-time
           required:
             - createdByUserId
             - schemaVersion

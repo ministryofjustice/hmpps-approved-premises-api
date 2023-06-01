@@ -12,7 +12,6 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var service: Yielded<String> = { "approved-premises" }
-  private var submittedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
 
   fun withId(id: UUID) = apply {
@@ -27,10 +26,6 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
     this.service = { service }
   }
 
-  fun withSubmittedAt(submittedAt: OffsetDateTime) = apply {
-    this.submittedAt = { submittedAt }
-  }
-
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
   }
@@ -39,7 +34,6 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
     id = this.id(),
     crn = this.crn(),
     service = this.service(),
-    submittedAt = this.submittedAt(),
     createdAt = this.createdAt(),
   )
 }

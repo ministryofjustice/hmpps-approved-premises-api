@@ -715,8 +715,7 @@ class ApplicationTest : IntegrationTestBase() {
         assertThat(responseBody).matches {
           offlineApplicationEntity.id == it.id &&
             offlineApplicationEntity.crn == it.person.crn &&
-            offlineApplicationEntity.createdAt.toInstant() == it.createdAt &&
-            offlineApplicationEntity.submittedAt.toInstant() == it.submittedAt
+            offlineApplicationEntity.createdAt.toInstant() == it.createdAt
         }
       }
     }

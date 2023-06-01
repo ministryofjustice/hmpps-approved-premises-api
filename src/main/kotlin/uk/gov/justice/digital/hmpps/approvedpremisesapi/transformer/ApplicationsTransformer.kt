@@ -103,14 +103,12 @@ class ApplicationsTransformer(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
-    submittedAt = jpa.submittedAt.toInstant(),
   )
 
   fun transformJpaToApiSummary(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = OfflineApplicationSummary(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
-    submittedAt = jpa.submittedAt.toInstant(),
   )
 
   private fun getStatus(entity: ApplicationEntity): ApplicationStatus {

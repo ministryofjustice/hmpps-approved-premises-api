@@ -2026,7 +2026,7 @@ class BookingServiceTest {
 
     val existingApplication = OfflineApplicationEntityFactory()
       .withCrn(crn)
-      .withSubmittedAt(OffsetDateTime.now())
+      .withCreatedAt(OffsetDateTime.now())
       .produce()
 
     every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
