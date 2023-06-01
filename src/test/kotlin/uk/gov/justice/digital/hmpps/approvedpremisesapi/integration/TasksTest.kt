@@ -421,21 +421,49 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Reallocating a placement request review returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
-      `Given a User` { userToReallocate, _ ->
-        `Given an Application`(createdByUser = user) { application ->
-          webTestClient.post()
-            .uri("/applications/${application.id}/tasks/placement-request-review/allocations")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              NewReallocation(
-                userId = userToReallocate.id,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+  fun `Reallocating a placement application to different assessor returns 201, creates new placement application, deallocates old one`() {
+    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User` { user, _ ->
+        `Given a User`(
+          roles = listOf(UserRole.ASSESSOR),
+        ) { assigneeUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+            ) { placementApplication ->
+              webTestClient.post()
+                .uri("/applications/${placementApplication.application.id}/tasks/placement-application/allocations")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  NewReallocation(
+                    userId = assigneeUser.id,
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isCreated
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    Reallocation(
+                      user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+                      taskType = TaskType.placementApplication,
+                    ),
+                  ),
+                )
+
+              val placementApplications = placementApplicationRepository.findAll()
+              val allocatedPlacementApplication = placementApplications.find { it.allocatedToUser!!.id == assigneeUser.id }
+
+              Assertions.assertThat(placementApplications.first { it.id == placementApplication.id }.reallocatedAt).isNotNull
+              Assertions.assertThat(allocatedPlacementApplication).isNotNull
+            }
+          }
         }
       }
     }

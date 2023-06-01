@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -25,6 +26,7 @@ class TaskService(
   private val userService: UserService,
   private val placementRequestService: PlacementRequestService,
   private val userTransformer: UserTransformer,
+  private val placementApplicationService: PlacementApplicationService,
 ) {
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
     if (!requestUser.hasRole(UserRole.WORKFLOW_MANAGER)) {
@@ -49,6 +51,9 @@ class TaskService(
       }
       TaskType.placementRequest -> {
         placementRequestService.reallocatePlacementRequest(assigneeUser, application)
+      }
+      TaskType.placementApplication -> {
+        placementApplicationService.reallocateApplication(assigneeUser, application)
       }
       else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
@@ -77,6 +82,7 @@ class TaskService(
     val allocatedToUser = when (entity) {
       is PlacementRequestEntity -> entity.allocatedToUser
       is AssessmentEntity -> entity.allocatedToUser
+      is PlacementApplicationEntity -> entity.allocatedToUser!!
       else -> throw RuntimeException("Unexpected type")
     }
 

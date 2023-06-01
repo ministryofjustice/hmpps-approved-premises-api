@@ -20,6 +20,8 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
 
   @Query("SELECT a FROM PlacementApplicationEntity a WHERE a.application.id = :id")
   fun findByApplicationId(id: UUID): PlacementApplicationEntity?
+
+  fun findByApplication_IdAndReallocatedAtNull(id: UUID): PlacementApplicationEntity?
 }
 
 @Entity

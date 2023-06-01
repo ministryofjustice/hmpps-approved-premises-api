@@ -3,12 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -63,6 +65,44 @@ class PlacementApplicationService(
     val placementApplication = placementApplicationRepository.findByApplicationId(applicationId) ?: return AuthorisableActionResult.NotFound()
 
     return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
+  }
+
+  fun reallocateApplication(assigneeUser: UserEntity, application: ApprovedPremisesApplicationEntity): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+    val currentPlacementApplication = placementApplicationRepository.findByApplication_IdAndReallocatedAtNull(application.id)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (currentPlacementApplication.decision != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This placement application has already been completed"),
+      )
+    }
+
+    if (!assigneeUser.hasRole(UserRole.ASSESSOR)) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
+      )
+    }
+
+    currentPlacementApplication.reallocatedAt = OffsetDateTime.now()
+    placementApplicationRepository.save(currentPlacementApplication)
+
+    // Make the timestamp precision less precise, so we don't have any issues with microsecond resolution in tests
+    val dateTimeNow = OffsetDateTime.now().withNano(0)
+
+    val newPlacementApplication = placementApplicationRepository.save(
+      currentPlacementApplication.copy(
+        id = UUID.randomUUID(),
+        reallocatedAt = null,
+        allocatedToUser = assigneeUser,
+        createdAt = dateTimeNow,
+      ),
+    )
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        newPlacementApplication,
+      ),
+    )
   }
 
   fun updateApplication(id: UUID, data: String): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
