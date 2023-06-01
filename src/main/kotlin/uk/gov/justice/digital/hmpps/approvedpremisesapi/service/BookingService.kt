@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -70,6 +71,7 @@ class BookingService(
   private val cruService: CruService,
   private val applicationService: ApplicationService,
   private val workingDayCountService: WorkingDayCountService,
+  private val emailNotificationService: EmailNotificationService,
   private val communityApiClient: CommunityApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
@@ -87,7 +89,9 @@ class BookingService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val turnaroundRepository: TurnaroundRepository,
+  private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
@@ -167,6 +171,19 @@ class BookingService(
         booking = booking,
         user = user,
         bookingCreatedAt = bookingCreatedAt,
+      )
+
+      val applicationSubmittedByUser = placementRequest.application.createdByUser
+
+      emailNotificationService.sendEmail(
+        user = applicationSubmittedByUser,
+        templateId = notifyConfig.templates.bookingMade,
+        personalisation = mapOf(
+          "name" to applicationSubmittedByUser.name,
+          "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
+          "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
+            .replace("#bookingId", booking.id.toString()),
+        ),
       )
 
       return@validated success(booking)
@@ -261,6 +278,19 @@ class BookingService(
           booking = booking,
           user = user,
           bookingCreatedAt = bookingCreatedAt,
+        )
+
+        val applicationSubmittedByUser = newestSubmittedOnlineApplication!!.createdByUser
+
+        emailNotificationService.sendEmail(
+          user = applicationSubmittedByUser,
+          templateId = notifyConfig.templates.bookingMade,
+          personalisation = mapOf(
+            "name" to applicationSubmittedByUser.name,
+            "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
+            "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
+              .replace("#bookingId", booking.id.toString()),
+          ),
         )
       }
 

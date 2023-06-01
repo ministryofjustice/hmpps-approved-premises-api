@@ -117,5 +117,6 @@ url-templates:
   frontend:
     application: http://frontend/applications/#id
     assessment: http://frontend/assessments/#id
+    booking: http://frontend/premises/{premisesId}/bookings/{bookingId}
 
 preemptive-cache-delay-ms: 250

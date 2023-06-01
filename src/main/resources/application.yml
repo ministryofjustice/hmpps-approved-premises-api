@@ -184,6 +184,7 @@ url-templates:
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id
+    booking: http://localhost:3000/premises/{premisesId}/bookings/{bookingId}
 
 preemptive-cache-key-prefix: ""
 preemptive-cache-logging-enabled: false
