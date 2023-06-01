@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -14,6 +15,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
   data: String? = "{ \"some\": \"data\"}",
+  decision: AssessmentDecision? = null,
   block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
 ) {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -36,6 +38,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
     withData(data)
+    withDecision(decision)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }

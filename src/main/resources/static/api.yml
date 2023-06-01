@@ -2364,6 +2364,128 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-applications:
+    post:
+      tags:
+        - Placement applications
+      summary: Creates an application for a placement
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully recorded that a placement application has been made
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}:
+    get:
+      tags:
+        - Placement applications
+      summary: Retrieves an application for a placement request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Placement applications
+      summary: Updates an application for a placement request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdatePlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/submission:
+    post:
+      tags:
+        - Placement applications
+      summary: Submits an application for a placement request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit a placement application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SubmitPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the placement application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -5147,6 +5269,62 @@ components:
         - radius
         - essentialCriteria
         - desirableCriteria
+    PlacementApplication:
+      allOf:
+        - $ref: '#/components/schemas/NewPlacementApplication'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            createdByUserId:
+              type: string
+              format: uuid
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            createdAt:
+              type: string
+              format: date-time
+            submittedAt:
+              type: string
+              format: date-time
+            data:
+              $ref: '#/components/schemas/AnyValue'
+            document:
+              $ref: '#/components/schemas/AnyValue'
+          required:
+            - id
+            - createdByUserId
+            - schemaVersion
+            - outdatedScheme
+            - createdAt
+    NewPlacementApplication:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+      required:
+        - applicationId
+    UpdatePlacementApplication:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AnyValue'
+      required:
+        - data
+    SubmitPlacementApplication:
+      type: object
+      properties:
+        translatedDocument:
+          $ref: '#/components/schemas/AnyValue'
+      required:
+        - translatedDocument
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

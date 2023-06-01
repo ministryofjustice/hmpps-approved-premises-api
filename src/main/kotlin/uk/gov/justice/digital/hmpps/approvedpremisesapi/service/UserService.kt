@@ -45,6 +45,8 @@ class UserService(
     return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
   }
 
+  fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
+
   fun updateUserFromCommunityApiById(id: UUID): AuthorisableActionResult<UserEntity> {
     var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
