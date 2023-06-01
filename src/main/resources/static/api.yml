@@ -5147,6 +5147,38 @@ components:
         - radius
         - essentialCriteria
         - desirableCriteria
+    PlacementApplication:
+      allOf:
+        - $ref: '#/components/schemas/NewPlacementApplication'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            createdByUserId:
+              type: string
+              format: uuid
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            createdAt:
+              type: string
+              format: date-time
+            submittedAt:
+              type: string
+              format: date-time
+            data:
+              $ref: '#/components/schemas/AnyValue'
+            document:
+              $ref: '#/components/schemas/AnyValue'
+          required:
+            - id
+            - createdByUserId
+            - schemaVersion
+            - outdatedScheme
+            - createdAt
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'
