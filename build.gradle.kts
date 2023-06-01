@@ -30,7 +30,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-data-rest:$springDocVersion")
 
-  implementation("org.zalando:problem-spring-web-starter:0.27.0")
+  implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
