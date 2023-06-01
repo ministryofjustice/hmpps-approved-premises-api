@@ -2447,6 +2447,45 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/submission:
+    post:
+      tags:
+        - Placement applications
+      summary: Submits an application for a placement request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit a placement application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SubmitPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the placement application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -5279,6 +5318,13 @@ components:
             $ref: '#/components/schemas/AnyValue'
       required:
         - data
+    SubmitPlacementApplication:
+      type: object
+      properties:
+        translatedDocument:
+          $ref: '#/components/schemas/AnyValue'
+      required:
+        - translatedDocument
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

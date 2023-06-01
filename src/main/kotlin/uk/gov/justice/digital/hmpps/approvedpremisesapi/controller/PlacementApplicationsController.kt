@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
@@ -53,6 +54,20 @@ class PlacementApplicationsController(
     val serializedData = objectMapper.writeValueAsString(updatePlacementApplication.data)
 
     val result = placementApplicationService.updateApplication(id, serializedData)
+
+    val validationResult = extractEntityFromAuthorisableActionResult(result, id.toString(), "Placement Application")
+    val placementApplication = extractEntityFromValidatableActionResult(validationResult)
+
+    return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
+  }
+
+  override fun placementApplicationsIdSubmissionPost(
+    id: UUID,
+    submitPlacementApplication: SubmitPlacementApplication,
+  ): ResponseEntity<PlacementApplication> {
+    val serializedData = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
+
+    val result = placementApplicationService.submitApplication(id, serializedData)
 
     val validationResult = extractEntityFromAuthorisableActionResult(result, id.toString(), "Placement Application")
     val placementApplication = extractEntityFromValidatableActionResult(validationResult)
