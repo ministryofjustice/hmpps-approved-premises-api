@@ -31,7 +31,7 @@ class UsersSeedJob(
 
     val roles = roleNames.mapNotNull {
       try {
-        UserRole.valueOf(it)
+        parseUserRole(it)
       } catch (_: Exception) {
         unknownRoles += it
         null
@@ -81,6 +81,16 @@ class UsersSeedJob(
     row.qualifications.forEach {
       userService.addQualificationToUser(user, it)
     }
+  }
+
+  private fun parseUserRole(value: String) = when (value) {
+    "APPLICANT" -> UserRole.CAS1_APPLICANT
+    "ASSESSOR" -> UserRole.CAS1_ASSESSOR
+    "MANAGER" -> UserRole.CAS1_MANAGER
+    "MATCHER" -> UserRole.CAS1_MATCHER
+    "ROLE_ADMIN" -> UserRole.CAS1_ADMIN
+    "WORKFLOW_MANAGER" -> UserRole.CAS1_WORKFLOW_MANAGER
+    else -> UserRole.valueOf(value)
   }
 }
 

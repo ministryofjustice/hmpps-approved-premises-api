@@ -194,6 +194,48 @@ class SeedUsersTest : SeedTestBase() {
     }
   }
 
+  @Test
+  fun `Attempting to assign legacy roles to a user succeeds`() {
+    userEntityFactory.produceAndPersist {
+      withDeliusUsername("KNOWN-USER")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    withCsv(
+      "known-user",
+      userRoleAssignmentSeedCsvRowsToCsv(
+        listOf(
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername("KNOWN-USER")
+            .withUntypedRoles(listOf("APPLICANT", "ASSESSOR", "MANAGER", "MATCHER", "ROLE_ADMIN", "WORKFLOW_MANAGER"))
+            .withTypedQualifications(listOf(UserQualification.PIPE))
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.user, "known-user")
+
+    val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
+
+    assertThat(persistedUser).isNotNull
+    assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+      UserRole.CAS1_APPLICANT,
+      UserRole.CAS1_ASSESSOR,
+      UserRole.CAS1_MANAGER,
+      UserRole.CAS1_MATCHER,
+      UserRole.CAS1_ADMIN,
+      UserRole.CAS1_WORKFLOW_MANAGER,
+    )
+    assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
+      UserQualification.PIPE,
+    )
+  }
+
   private fun userRoleAssignmentSeedCsvRowsToCsv(rows: List<UsersSeedUntypedEnumsCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
