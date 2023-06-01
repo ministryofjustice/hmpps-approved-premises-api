@@ -2415,6 +2415,38 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Placement applications
+      summary: Updates an application for a placement request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdatePlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -5238,6 +5270,15 @@ components:
           format: uuid
       required:
         - applicationId
+    UpdatePlacementApplication:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AnyValue'
+      required:
+        - data
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

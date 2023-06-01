@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -54,5 +55,57 @@ class PlacementApplicationService(
     placementApplication.schemaUpToDate = placementApplication.schemaVersion.id == latestSchema.id
 
     return AuthorisableActionResult.Success(placementApplication)
+  }
+
+  fun updateApplication(id: UUID, data: String): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+
+    when (placementApplicationAuthorisationResult) {
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.Success -> Unit
+    }
+
+    val placementApplicationValidationResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationAuthorisationResult.entity)
+
+    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
+      return AuthorisableActionResult.Success(placementApplicationValidationResult)
+    }
+
+    val placementApplicationEntity = placementApplicationValidationResult.entity
+
+    placementApplicationEntity.data = data
+
+    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  private fun getApplicationForUpdateOrSubmit(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
+    val placementApplication = placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    val user = userService.getUserForRequest()
+
+    if (placementApplication.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    return AuthorisableActionResult.Success(placementApplication)
+  }
+
+  private fun confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationEntity: PlacementApplicationEntity): ValidatableActionResult<PlacementApplicationEntity> {
+    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java)
+    placementApplicationEntity.schemaUpToDate = placementApplicationEntity.schemaVersion.id == latestSchema.id
+
+    if (!placementApplicationEntity.schemaUpToDate) {
+      return ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+    }
+
+    if (placementApplicationEntity.submittedAt != null) {
+      return ValidatableActionResult.GeneralValidationError("This application has already been submitted")
+    }
+
+    return ValidatableActionResult.Success(placementApplicationEntity)
   }
 }

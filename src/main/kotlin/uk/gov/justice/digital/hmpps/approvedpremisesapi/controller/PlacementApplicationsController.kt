@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -19,6 +21,7 @@ class PlacementApplicationsController(
   private val applicationService: ApplicationService,
   private val placementApplicationService: PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
+  private val objectMapper: ObjectMapper,
 ) : PlacementApplicationsApiDelegate {
   override fun placementApplicationsPost(newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()
@@ -39,6 +42,20 @@ class PlacementApplicationsController(
   override fun placementApplicationsIdGet(id: UUID): ResponseEntity<PlacementApplication> {
     val result = placementApplicationService.getApplication(id)
     val placementApplication = extractEntityFromAuthorisableActionResult(result, id.toString(), "Application")
+
+    return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
+  }
+
+  override fun placementApplicationsIdPut(
+    id: UUID,
+    updatePlacementApplication: UpdatePlacementApplication,
+  ): ResponseEntity<PlacementApplication> {
+    val serializedData = objectMapper.writeValueAsString(updatePlacementApplication.data)
+
+    val result = placementApplicationService.updateApplication(id, serializedData)
+
+    val validationResult = extractEntityFromAuthorisableActionResult(result, id.toString(), "Placement Application")
+    val placementApplication = extractEntityFromValidatableActionResult(validationResult)
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
