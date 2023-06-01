@@ -30,7 +30,7 @@ jobs:
               workflow_id: 'generate-types.yml',
               ref: 'main'
             })
-      - name: Trigger Supported Accommodation UI Type Generation Workflow
+      - name: Trigger CAS-2 UI Type Generation Workflow
         if: ${{ github.ref == 'refs/heads/main' }}
         id: sa-trigger-ui-workflow
         uses: actions/github-script@v6
@@ -39,7 +39,7 @@ jobs:
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
-              repo: 'hmpps-supported-accommodation-ui',
+              repo: 'hmpps-community-accommodation-tier-2-ui',
               workflow_id: 'generate-types.yml',
               ref: 'main'
             })
