@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+import java.util.UUID
 
 @Service
 class PlacementApplicationsController(
@@ -31,6 +32,13 @@ class PlacementApplicationsController(
     val placementApplication = extractEntityFromValidatableActionResult(
       placementApplicationService.createApplication(application, user),
     )
+
+    return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
+  }
+
+  override fun placementApplicationsIdGet(id: UUID): ResponseEntity<PlacementApplication> {
+    val result = placementApplicationService.getApplication(id)
+    val placementApplication = extractEntityFromAuthorisableActionResult(result, id.toString(), "Application")
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }

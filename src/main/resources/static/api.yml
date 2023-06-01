@@ -2389,6 +2389,32 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-applications/{id}:
+    get:
+      tags:
+        - Placement applications
+      summary: Retrieves an application for a placement request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:

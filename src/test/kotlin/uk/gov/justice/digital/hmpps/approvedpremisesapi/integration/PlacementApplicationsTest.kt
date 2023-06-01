@@ -144,4 +144,68 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       }
     }
   }
+
+  @Nested
+  inner class GetPlacementApplicationTest {
+    @Test
+    fun `getting a placement request application JWT returns 401`() {
+      `Given a User` { user, _ ->
+        `Given a Placement Application`(
+          createdByUser = user,
+          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+        ) { placementApplicationEntity ->
+          webTestClient.get()
+            .uri("/placement-request-applications/${placementApplicationEntity.id}")
+            .exchange()
+            .expectStatus()
+            .isUnauthorized
+        }
+      }
+    }
+
+    @Test
+    fun `getting a nonexistent placement request application returns 404`() {
+      `Given a User` { _, jwt ->
+        webTestClient.get()
+          .uri("/placement-applications/${UUID.randomUUID()}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `getting a placement application returns the transformed object`() {
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
+          createdByUser = user,
+          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+        ) { placementApplicationEntity ->
+          val rawResult = webTestClient.get()
+            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+          assertThat(body.id).isEqualTo(placementApplicationEntity.id)
+          assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
+          assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
+          assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
+          assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
+          assertThat(body.submittedAt).isNull()
+        }
+      }
+    }
+  }
 }

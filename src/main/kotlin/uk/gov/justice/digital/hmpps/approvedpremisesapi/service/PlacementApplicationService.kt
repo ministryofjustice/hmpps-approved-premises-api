@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -43,5 +45,14 @@ class PlacementApplicationService(
     )
 
     return success(createdApplication.apply { schemaUpToDate = true })
+  }
+
+  fun getApplication(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
+    val placementApplication = placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java)
+
+    placementApplication.schemaUpToDate = placementApplication.schemaVersion.id == latestSchema.id
+
+    return AuthorisableActionResult.Success(placementApplication)
   }
 }
