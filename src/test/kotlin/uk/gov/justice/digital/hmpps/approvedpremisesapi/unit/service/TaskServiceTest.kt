@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -36,6 +38,7 @@ class TaskServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val userTransformerMock = mockk<UserTransformer>()
+  private val placementApplicationServiceMock = mockk<PlacementApplicationService>()
 
   private val taskService = TaskService(
     assessmentServiceMock,
@@ -43,6 +46,7 @@ class TaskServiceTest {
     userServiceMock,
     placementRequestServiceMock,
     userTransformerMock,
+    placementApplicationServiceMock,
   )
 
   private val requestUserWithPermission = UserEntityFactory()
@@ -171,6 +175,51 @@ class TaskServiceTest {
     )
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementRequest, assigneeUser.id, application.id)
+
+    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    validationResult as ValidatableActionResult.Success
+
+    Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
+  }
+
+  @Test
+  fun `reallocateTask reallocates a placementApplication`() {
+    val assigneeUser = generateAndStubAssigneeUser()
+    val application = generateAndStubApplication()
+
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .produce()
+
+    every { placementApplicationServiceMock.reallocateApplication(assigneeUser, application) } returns AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        placementApplication,
+      ),
+    )
+
+    val transformedUser = mockk<ApprovedPremisesUser>()
+
+    every { userTransformerMock.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) } returns transformedUser
+
+    val reallocation = Reallocation(
+      taskType = TaskType.placementApplication,
+      user = transformedUser,
+    )
+
+    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementApplication, assigneeUser.id, application.id)
 
     Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task.Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -33,6 +34,21 @@ class TaskTransformer(
     status = getPlacementRequestStatus(placementRequest),
     taskType = TaskType.placementRequest,
   )
+
+  fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Task(
+    applicationId = placementApplication.application.id,
+    person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+    dueDate = placementApplication.createdAt.plusDays(10).toLocalDate(),
+    allocatedToStaffMember = userTransformer.transformJpaToApi(placementApplication.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
+    status = getPlacementApplicationStatus(placementApplication),
+    taskType = TaskType.placementApplication,
+  )
+
+  private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): Status = when {
+    entity.data.isNullOrEmpty() -> Status.notStarted
+    entity.decision !== null -> Status.complete
+    else -> Status.inProgress
+  }
 
   private fun getAssessmentStatus(entity: AssessmentEntity): Status = when {
     entity.data.isNullOrEmpty() -> Status.notStarted

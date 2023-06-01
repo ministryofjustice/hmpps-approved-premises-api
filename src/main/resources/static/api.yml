@@ -3213,7 +3213,7 @@ components:
       enum:
         - Assessment
         - PlacementRequest
-        - PlacementRequestReview
+        - PlacementApplication
         - BookingAppeal
     LocalAuthorityArea:
       type: object

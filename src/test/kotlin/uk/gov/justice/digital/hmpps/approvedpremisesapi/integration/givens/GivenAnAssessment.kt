@@ -16,6 +16,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   reallocated: Boolean = false,
   data: String? = "{ \"some\": \"data\"}",
   decision: AssessmentDecision? = null,
+  submittedAt: OffsetDateTime? = null,
   block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
 ) {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -39,6 +40,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withAssessmentSchema(assessmentSchema)
     withData(data)
     withDecision(decision)
+    withSubmittedAt(submittedAt)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
