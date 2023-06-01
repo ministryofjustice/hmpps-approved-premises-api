@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
@@ -18,9 +19,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ApiCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary as ApiTemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as DomainApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity as DomainCas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity as DomainTemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
 
@@ -48,6 +52,19 @@ class ApplicationsTransformer(
       status = getStatus(jpa),
     )
     is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
+      id = jpa.id,
+      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+      createdByUserId = jpa.createdByUser.id,
+      schemaVersion = jpa.schemaVersion.id,
+      outdatedSchema = !jpa.schemaUpToDate,
+      createdAt = jpa.createdAt.toInstant(),
+      submittedAt = jpa.submittedAt?.toInstant(),
+      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
+      status = getStatus(jpa),
+    )
+    is DomainCas2ApplicationEntity -> Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
       createdByUserId = jpa.createdByUser.id,
@@ -96,6 +113,21 @@ class ApplicationsTransformer(
         status = getStatusFromSummary(domain),
       )
     }
+
+    is DomainCas2ApplicationSummary -> {
+      val riskRatings =
+        if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+
+      ApiCas2ApplicationSummary(
+        id = domain.getId(),
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        createdByUserId = domain.getCreatedByUserId(),
+        createdAt = domain.getCreatedAt().toInstant(),
+        submittedAt = domain.getSubmittedAt()?.toInstant(),
+        risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
+      )
+    }
+
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
   }
 
