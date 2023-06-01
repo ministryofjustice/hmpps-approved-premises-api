@@ -2364,6 +2364,31 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-applications:
+    post:
+      tags:
+        - Placement applications
+      summary: Creates an application for a placement
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully recorded that a placement application has been made
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -5179,6 +5204,14 @@ components:
             - schemaVersion
             - outdatedScheme
             - createdAt
+    NewPlacementApplication:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+      required:
+        - applicationId
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

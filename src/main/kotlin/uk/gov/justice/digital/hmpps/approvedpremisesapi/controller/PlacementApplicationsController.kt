@@ -1,0 +1,37 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
+
+import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementApplicationsApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+
+@Service
+class PlacementApplicationsController(
+  private val userService: UserService,
+  private val applicationService: ApplicationService,
+  private val placementApplicationService: PlacementApplicationService,
+  private val placementApplicationTransformer: PlacementApplicationTransformer,
+) : PlacementApplicationsApiDelegate {
+  override fun placementApplicationsPost(newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> {
+    val user = userService.getUserForRequest()
+
+    val application = extractEntityFromAuthorisableActionResult(
+      applicationService.getApplicationForUsername(newPlacementApplication.applicationId, user.deliusUsername),
+      newPlacementApplication.applicationId.toString(),
+      "Placement Application",
+    )
+
+    val placementApplication = extractEntityFromValidatableActionResult(
+      placementApplicationService.createApplication(application, user),
+    )
+
+    return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
+  }
+}
