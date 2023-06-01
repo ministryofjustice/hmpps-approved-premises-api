@@ -5223,6 +5223,7 @@ components:
         - temporary_accommodation_bedspace
         - user
         - characteristics
+        - approved_premises_offline_applications
     MigrationJobRequest:
       type: object
       properties:

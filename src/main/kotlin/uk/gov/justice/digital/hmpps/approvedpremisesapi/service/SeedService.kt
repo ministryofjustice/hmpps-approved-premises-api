@@ -13,10 +13,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesOfflineApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CharacteristicsSeedJob
@@ -121,6 +123,11 @@ class SeedService(
           applicationContext.getBean(PremisesRepository::class.java),
           applicationContext.getBean(CharacteristicService::class.java),
           applicationContext.getBean(RoomService::class.java),
+        )
+
+        SeedFileType.approvedPremisesOfflineApplications -> ApprovedPremisesOfflineApplicationsSeedJob(
+          filename,
+          applicationContext.getBean(OfflineApplicationRepository::class.java),
         )
       }
 
