@@ -34,7 +34,7 @@ class UsersController(
 
   override fun usersGet(xServiceName: ServiceName, roles: List<UserRole>?, qualifications: List<UserQualification>?): ResponseEntity<List<User>> {
     val user = userService.getUserForRequest()
-    if (!user.hasAnyRole(JpaUserRole.ROLE_ADMIN, JpaUserRole.WORKFLOW_MANAGER)) {
+    if (!user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
@@ -48,13 +48,13 @@ class UsersController(
   }
 
   private fun transformApiRole(apiRole: UserRole): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole = when (apiRole) {
-    UserRole.roleAdmin -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.ROLE_ADMIN
-    UserRole.applicant -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.APPLICANT
-    UserRole.assessor -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.ASSESSOR
-    UserRole.manager -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.MANAGER
-    UserRole.matcher -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.MATCHER
-    UserRole.workflowManager -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.WORKFLOW_MANAGER
-    UserRole.matcher -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.MATCHER
+    UserRole.roleAdmin -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ADMIN
+    UserRole.applicant -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_APPLICANT
+    UserRole.assessor -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
+    UserRole.manager -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MANAGER
+    UserRole.matcher -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MATCHER
+    UserRole.workflowManager -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
+    UserRole.matcher -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MATCHER
   }
 
   private fun transformApiQualification(apiQualification: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification = when (apiQualification) {

@@ -83,7 +83,7 @@ class PlacementApplicationServiceTest {
       assigneeUser.apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.ASSESSOR)
+          .withRole(UserRole.CAS1_ASSESSOR)
           .produce()
       }
 

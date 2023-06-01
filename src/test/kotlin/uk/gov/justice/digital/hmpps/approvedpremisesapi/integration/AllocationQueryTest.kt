@@ -49,7 +49,7 @@ class AllocationQueryTest : IntegrationTestBase() {
 
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
-      withRole(UserRole.ASSESSOR)
+      withRole(UserRole.CAS1_ASSESSOR)
     }
 
     return user
@@ -67,7 +67,7 @@ class AllocationQueryTest : IntegrationTestBase() {
 
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
-      withRole(UserRole.ASSESSOR)
+      withRole(UserRole.CAS1_ASSESSOR)
     }
 
     userQualificationAssignmentEntityFactory.produceAndPersist {
@@ -107,7 +107,7 @@ class AllocationQueryTest : IntegrationTestBase() {
 
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(user)
-      withRole(UserRole.ASSESSOR)
+      withRole(UserRole.CAS1_ASSESSOR)
     }
 
     userQualificationAssignmentEntityFactory.produceAndPersist {

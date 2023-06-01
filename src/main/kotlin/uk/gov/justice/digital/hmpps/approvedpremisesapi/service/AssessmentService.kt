@@ -55,7 +55,7 @@ class AssessmentService(
 ) {
   fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
     assessmentRepository.findAllAssessmentSummariesNotReallocated(
-      if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
+      if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
         null
       } else {
         user.id.toString()
@@ -81,7 +81,7 @@ class AssessmentService(
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (!user.hasRole(UserRole.WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -96,7 +96,7 @@ class AssessmentService(
     val assessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationID)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (!user.hasRole(UserRole.WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -447,7 +447,7 @@ class AssessmentService(
 
     val requiredQualifications = application.getRequiredQualifications()
 
-    if (!assigneeUser.hasRole(UserRole.ASSESSOR)) {
+    if (!assigneeUser.hasRole(UserRole.CAS1_ASSESSOR)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
       )

@@ -29,7 +29,7 @@ class TaskService(
   private val placementApplicationService: PlacementApplicationService,
 ) {
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
-    if (!requestUser.hasRole(UserRole.WORKFLOW_MANAGER)) {
+    if (!requestUser.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       return AuthorisableActionResult.Unauthorised()
     }
 

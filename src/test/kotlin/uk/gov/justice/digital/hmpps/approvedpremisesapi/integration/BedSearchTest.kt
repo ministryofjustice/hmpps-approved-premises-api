@@ -62,7 +62,7 @@ class BedSearchTest : IntegrationTestBase() {
   @Test
   fun `Searching for an Approved Premises Bed returns 200 with correct body`() {
     `Given a User`(
-      roles = listOf(UserRole.MATCHER),
+      roles = listOf(UserRole.CAS1_MATCHER),
     ) { _, jwt ->
       val postCodeDistrictLatLong = LatLong(50.1044, -2.3992)
       val tenMilesFromPostcodeDistrict = postCodeDistrictLatLong.plusLatitudeMiles(10)

@@ -53,7 +53,7 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (placementRequest.allocatedToUser.id != user.id && !user.hasRole(UserRole.WORKFLOW_MANAGER)) {
+    if (placementRequest.allocatedToUser.id != user.id && !user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -64,7 +64,7 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByApplication_IdAndReallocatedAtNull(applicationID)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (!user.hasRole(UserRole.WORKFLOW_MANAGER) && placementRequest.allocatedToUser != user) {
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.allocatedToUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -81,7 +81,7 @@ class PlacementRequestService(
       )
     }
 
-    if (!assigneeUser.hasRole(UserRole.MATCHER)) {
+    if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" }),
       )

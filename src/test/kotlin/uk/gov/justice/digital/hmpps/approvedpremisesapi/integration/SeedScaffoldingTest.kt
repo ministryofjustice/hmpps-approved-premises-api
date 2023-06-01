@@ -85,7 +85,7 @@ class SeedScaffoldingTest : SeedTestBase() {
       "malformed",
       """
 deliusUsername,roles,qualifications
-RogerSmith,MANAGER,
+RogerSmith,CAS1_MANAGER,
 ,
       """.trimIndent(),
     )

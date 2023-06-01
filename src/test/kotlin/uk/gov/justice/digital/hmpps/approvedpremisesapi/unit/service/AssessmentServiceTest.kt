@@ -97,7 +97,7 @@ class AssessmentServiceTest {
 
     user.roles.add(
       UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.WORKFLOW_MANAGER)
+        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
         .withUser(user)
         .produce(),
     )
@@ -121,7 +121,7 @@ class AssessmentServiceTest {
 
     user.roles.add(
       UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.ASSESSOR)
+        .withRole(UserRole.CAS1_ASSESSOR)
         .withUser(user)
         .produce(),
     )
@@ -147,7 +147,7 @@ class AssessmentServiceTest {
 
     user.roles.add(
       UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.WORKFLOW_MANAGER)
+        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
         .withUser(user)
         .produce(),
     )
@@ -335,7 +335,7 @@ class AssessmentServiceTest {
 
     user.roles.add(
       UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.WORKFLOW_MANAGER)
+        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
         .withUser(user)
         .produce(),
     )
@@ -1133,7 +1133,7 @@ class AssessmentServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.ASSESSOR)
+          .withRole(UserRole.CAS1_ASSESSOR)
           .produce()
       }
 
@@ -1187,7 +1187,7 @@ class AssessmentServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.ASSESSOR)
+          .withRole(UserRole.CAS1_ASSESSOR)
           .produce()
 
         qualifications += UserQualificationAssignmentEntityFactory()
@@ -1470,7 +1470,7 @@ class AssessmentServiceTest {
         .apply {
           roles += UserRoleAssignmentEntityFactory()
             .withUser(this)
-            .withRole(UserRole.ASSESSOR)
+            .withRole(UserRole.CAS1_ASSESSOR)
             .produce()
 
           qualifications += UserQualificationAssignmentEntityFactory()

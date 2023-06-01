@@ -202,7 +202,7 @@ class BookingService(
     departureDate: LocalDate,
     bedId: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    if (!user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)) {
+    if (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
       return AuthorisableActionResult.Unauthorised()
     }
 

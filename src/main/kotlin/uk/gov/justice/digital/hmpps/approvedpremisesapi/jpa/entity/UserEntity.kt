@@ -25,7 +25,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     FROM "users"  u
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
-    WHERE ura.role = 'ASSESSOR' AND 
+    WHERE ura.role = 'CAS1_ASSESSOR' AND 
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications 
     ORDER BY 
       (SELECT COUNT(1) FROM assessments a WHERE a.allocated_to_user_id = u.id AND a.submitted_at IS NULL) ASC 
@@ -43,7 +43,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
         users
         LEFT JOIN user_role_assignments AS ura ON ura.user_id = users.id
       WHERE
-        role = 'MATCHER'
+        role = 'CAS1_MATCHER'
       OFFSET
         floor(
           random() * (
@@ -53,7 +53,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
               users
               LEFT JOIN user_role_assignments AS ura ON ura.user_id = users.id
             WHERE
-              role = 'MATCHER'
+              role = 'CAS1_MATCHER'
           )
         )
       LIMIT
@@ -110,12 +110,12 @@ data class UserRoleAssignmentEntity(
 }
 
 enum class UserRole {
-  ASSESSOR,
-  MATCHER,
-  MANAGER,
-  WORKFLOW_MANAGER,
-  APPLICANT,
-  ROLE_ADMIN,
+  CAS1_ASSESSOR,
+  CAS1_MATCHER,
+  CAS1_MANAGER,
+  CAS1_WORKFLOW_MANAGER,
+  CAS1_APPLICANT,
+  CAS1_ADMIN,
 }
 
 @Repository

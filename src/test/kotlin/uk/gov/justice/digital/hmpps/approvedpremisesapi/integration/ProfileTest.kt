@@ -64,7 +64,7 @@ class ProfileTest : IntegrationTestBase() {
 
     `Given a User`(
       id = id,
-      roles = listOf(UserRole.ASSESSOR),
+      roles = listOf(UserRole.CAS1_ASSESSOR),
       qualifications = listOf(UserQualification.PIPE),
       staffUserDetailsConfigBlock = {
         withUsername(deliusUsername)
@@ -126,7 +126,7 @@ class ProfileTest : IntegrationTestBase() {
 
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(userEntity)
-      withRole(UserRole.ASSESSOR)
+      withRole(UserRole.CAS1_ASSESSOR)
     }
 
     userQualificationAssignmentEntityFactory.produceAndPersist {

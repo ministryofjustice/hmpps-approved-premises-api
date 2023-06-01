@@ -469,7 +469,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting an in-progress placement request application returns successfully and updates the application`() {
-      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
             createdByUser = user,

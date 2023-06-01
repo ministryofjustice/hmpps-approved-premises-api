@@ -77,7 +77,7 @@ class ApplicationService(
       is ClientResult.Failure -> userDetailsResult.throwException()
     }
 
-    val applicationSummaries = if (serviceName == ServiceName.approvedPremises && userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+    val applicationSummaries = if (serviceName == ServiceName.approvedPremises && userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
       applicationRepository.findAllApprovedPremisesSummaries()
     } else if (serviceName == ServiceName.approvedPremises) {
       applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
@@ -95,7 +95,7 @@ class ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(deliusUsername)
       ?: return emptyList()
 
-    val applications = if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+    val applications = if (userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
       offlineApplicationRepository.findAllByService(serviceName.value)
     } else {
       emptyList()
@@ -114,7 +114,7 @@ class ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
 
-    if (userEntity.id == applicationEntity.createdByUser.id || userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER)) {
+    if (userEntity.id == applicationEntity.createdByUser.id || userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
       return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
     }
 
@@ -140,7 +140,7 @@ class ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(deliusUsername)
       ?: throw RuntimeException("Could not get user")
 
-    if (userEntity.hasAnyRole(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER) &&
+    if (userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER) &&
       offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
     ) {
       return AuthorisableActionResult.Success(applicationEntity)

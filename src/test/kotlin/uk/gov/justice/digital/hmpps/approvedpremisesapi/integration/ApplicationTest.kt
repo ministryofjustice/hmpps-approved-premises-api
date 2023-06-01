@@ -221,7 +221,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER"])
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
   fun `Get all applications returns 200 with correct body - when user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns all applications`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
@@ -692,7 +692,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single offline application returns 200 with correct body`() {
-    `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
@@ -1028,7 +1028,7 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Update existing AP application returns 200 with correct body`() {
     `Given a User` { submittingUser, jwt ->
-      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE)) { assessorUser, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -1098,7 +1098,7 @@ class ApplicationTest : IntegrationTestBase() {
         )
       },
     ) { submittingUser, jwt ->
-      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -1228,7 +1228,7 @@ class ApplicationTest : IntegrationTestBase() {
         )
       },
     ) { submittingUser, jwt ->
-      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -1438,9 +1438,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get assessment for application returns an application's assessment when the requesting user is a workflow manager`() {
-      `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { requestUser, jwt ->
-        `Given a User`(roles = listOf(UserRole.ASSESSOR)) { applicant, _ ->
-          `Given a User`(roles = listOf(UserRole.ASSESSOR)) { assignee, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { requestUser, jwt ->
+        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { applicant, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { assignee, _ ->
             `Given an Offender` { offenderDetails, inmateDetails ->
               val (application, assessment) = produceAndPersistApplicationAndAssessment(
                 applicant,
