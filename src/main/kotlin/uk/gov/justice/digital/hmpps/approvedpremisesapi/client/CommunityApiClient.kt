@@ -33,7 +33,7 @@ class CommunityApiClient(
   private val offenderDetailCacheConfig = PreemptiveCacheConfig(
     cacheName = "offenderDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
-    failureSoftTtlSeconds = Duration.ofMinutes(30).toSeconds().toInt(),
+    failureSoftTtlBackoffSeconds = listOf(30, Duration.ofMinutes(5).toSeconds().toInt(), Duration.ofMinutes(10).toSeconds().toInt(), Duration.ofMinutes(30).toSeconds().toInt()),
     hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt(),
   )
 

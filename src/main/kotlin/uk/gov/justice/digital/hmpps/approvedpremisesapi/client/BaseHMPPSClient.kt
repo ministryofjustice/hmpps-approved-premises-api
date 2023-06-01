@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.sentry.Sentry
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -60,6 +61,8 @@ abstract class BaseHMPPSClient(
 
     val cacheConfig = requestBuilder.preemptiveCacheConfig
 
+    var attempt = 1
+
     try {
       if (cacheConfig != null) {
         val cacheKeySet = getCacheKeySet(requestBuilder, cacheConfig)
@@ -82,6 +85,8 @@ abstract class BaseHMPPSClient(
         }
 
         val cacheEntry = getCacheEntryMetadataIfExists(cacheKeySet.metadataKey)
+
+        attempt = cacheEntry?.attempt?.plus(1) ?: 1
 
         if (cacheEntry != null && cacheEntry.refreshableAfter.isAfter(Instant.now())) {
           return resultFromCacheMetadata(cacheEntry, cacheKeySet, typeReference, clazz)
@@ -113,6 +118,7 @@ abstract class BaseHMPPSClient(
           method = null,
           path = null,
           hasResponseBody = result.body != null,
+          attempt = null,
         )
 
         writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
@@ -125,13 +131,24 @@ abstract class BaseHMPPSClient(
 
         val body = exception.responseBodyAsString
 
+        val backoffSeconds = if (attempt <= cacheConfig.failureSoftTtlBackoffSeconds.size) {
+          cacheConfig.failureSoftTtlBackoffSeconds[attempt - 1].toLong()
+        } else {
+          cacheConfig.failureSoftTtlBackoffSeconds.last().toLong()
+        }
+
         val cacheEntry = PreemptiveCacheMetadata(
           httpStatus = exception.statusCode,
-          refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
+          refreshableAfter = Instant.now().plusSeconds(backoffSeconds),
           method = method,
           path = requestBuilder.path ?: "",
           hasResponseBody = body != null,
+          attempt = attempt,
         )
+
+        if (attempt >= 4) {
+          Sentry.captureException(RuntimeException("Unable to make upstream request after $attempt attempts", exception))
+        }
 
         writeToRedis(qualifiedKey, cacheEntry, body, cacheConfig.hardTtlSeconds.toLong())
       }
@@ -222,7 +239,7 @@ abstract class BaseHMPPSClient(
   data class PreemptiveCacheConfig(
     val cacheName: String,
     val successSoftTtlSeconds: Int,
-    val failureSoftTtlSeconds: Int,
+    val failureSoftTtlBackoffSeconds: List<Int>,
     val hardTtlSeconds: Int,
   )
 
@@ -233,6 +250,7 @@ abstract class BaseHMPPSClient(
     val method: HttpMethod?,
     val path: String?,
     val hasResponseBody: Boolean,
+    val attempt: Int?,
   )
 }
 
