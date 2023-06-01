@@ -43,7 +43,7 @@ dependencies {
 
   implementation("com.networknt:json-schema-validator:1.0.81")
 
-  implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.0")
+  implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.1")
 
   implementation("org.jetbrains.kotlinx:dataframe:0.10.0")
 
