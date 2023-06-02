@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -26,11 +27,13 @@ class PlacementApplicationServiceTest {
   private val placementApplicationRepository = mockk<PlacementApplicationRepository>()
   private val jsonSchemaService = mockk<JsonSchemaService>()
   private val userService = mockk<UserService>()
+  private val placementDateRepository = mockk<PlacementDateRepository>()
 
   private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
     jsonSchemaService,
     userService,
+    placementDateRepository,
   )
 
   @Nested

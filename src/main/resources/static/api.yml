@@ -5327,8 +5327,22 @@ components:
       properties:
         translatedDocument:
           $ref: '#/components/schemas/AnyValue'
+        placementType:
+          $ref: '#/components/schemas/PlacementType'
+        placementDates:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlacementDates'
       required:
         - translatedDocument
+        - placementType
+        - placementDates
+    PlacementType:
+      type: string
+      enum:
+        - rotl
+        - release_following_decision
+        - additional_placement
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

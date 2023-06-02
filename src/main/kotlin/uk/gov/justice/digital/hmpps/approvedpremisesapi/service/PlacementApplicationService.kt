@@ -8,6 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -16,12 +19,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates as ApiPlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 
 @Service
 class PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
+  private val placementDateRepository: PlacementDateRepository,
 ) {
 
   fun createApplication(
@@ -49,6 +55,8 @@ class PlacementApplicationService(
         decision = null,
         allocatedAt = null,
         reallocatedAt = null,
+        placementDates = mutableListOf(),
+        placementType = null,
       ),
     )
 
@@ -131,7 +139,7 @@ class PlacementApplicationService(
     )
   }
 
-  fun submitApplication(id: UUID, translatedDocument: String): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  fun submitApplication(id: UUID, translatedDocument: String, apiPlacementType: ApiPlacementType, apiPlacementDates: List<ApiPlacementDates>): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
     when (placementApplicationAuthorisationResult) {
@@ -158,13 +166,36 @@ class PlacementApplicationService(
       allocatedToUser = allocatedUser
       submittedAt = OffsetDateTime.now()
       allocatedAt = OffsetDateTime.now()
+      placementType = getPlacementType(apiPlacementType)
     }
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
+    val placementDates = apiPlacementDates.map {
+      PlacementDateEntity(
+        id = UUID.randomUUID(),
+        expectedArrival = it.expectedArrival,
+        duration = it.duration,
+        placementApplication = placementApplicationEntity,
+        createdAt = OffsetDateTime.now(),
+      )
+    }.toMutableList()
+
+    placementDateRepository.saveAll(placementDates)
+
+    placementApplicationEntity.placementDates = placementDates
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
     )
+  }
+
+  private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType {
+    return when (apiPlacementType) {
+      ApiPlacementType.additionalPlacement -> PlacementType.ADDITIONAL_PLACEMENT
+      ApiPlacementType.rotl -> PlacementType.ROTL
+      ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
+    }
   }
 
   fun getAllReallocatable(): List<PlacementApplicationEntity> {

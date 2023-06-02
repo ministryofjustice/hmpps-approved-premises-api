@@ -12,6 +12,7 @@ import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -64,7 +65,18 @@ data class PlacementApplicationEntity(
 
   @Enumerated(value = EnumType.STRING)
   var decision: PlacementApplicationDecision?,
+
+  var placementType: PlacementType?,
+
+  @OneToMany(mappedBy = "placementApplication")
+  var placementDates: MutableList<PlacementDateEntity>,
 )
+
+enum class PlacementType {
+  ROTL,
+  RELEASE_FOLLOWING_DECISION,
+  ADDITIONAL_PLACEMENT,
+}
 
 enum class PlacementApplicationDecision {
   ACCEPTED,

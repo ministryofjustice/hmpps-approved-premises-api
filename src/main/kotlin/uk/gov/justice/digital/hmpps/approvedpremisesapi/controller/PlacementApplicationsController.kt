@@ -67,7 +67,7 @@ class PlacementApplicationsController(
   ): ResponseEntity<PlacementApplication> {
     val serializedData = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
-    val result = placementApplicationService.submitApplication(id, serializedData)
+    val result = placementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, submitPlacementApplication.placementDates)
 
     val validationResult = extractEntityFromAuthorisableActionResult(result, id.toString(), "Placement Application")
     val placementApplication = extractEntityFromValidatableActionResult(validationResult)

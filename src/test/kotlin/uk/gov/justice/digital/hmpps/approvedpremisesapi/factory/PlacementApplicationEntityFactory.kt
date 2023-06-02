@@ -84,5 +84,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     allocatedAt = null,
     reallocatedAt = this.reallocatedAt(),
     decision = this.decision(),
+    placementType = null,
+    placementDates = mutableListOf(),
   )
 }
