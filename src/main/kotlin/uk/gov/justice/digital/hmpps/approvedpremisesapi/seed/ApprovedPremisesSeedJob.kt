@@ -23,7 +23,6 @@ class ApprovedPremisesSeedJob(
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesSeedCsvRow>(
   fileName = fileName,
-  requiredColumns = 12,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

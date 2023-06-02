@@ -12,7 +12,6 @@ class CharacteristicsSeedJob(
 ) : SeedJob<CharacteristicsSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
-  requiredColumns = 4,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

@@ -12,7 +12,6 @@ class UsersSeedJob(
 ) : SeedJob<UsersSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
-  requiredColumns = 2,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

@@ -12,7 +12,6 @@ class ApprovedPremisesOfflineApplicationsSeedJob(
   private val offlineApplicationRepository: OfflineApplicationRepository,
 ) : SeedJob<OfflineApplicationsSeedCsvRow>(
   fileName = fileName,
-  requiredColumns = 12,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

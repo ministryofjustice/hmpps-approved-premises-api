@@ -18,7 +18,6 @@ class TemporaryAccommodationBedspaceSeedJob(
 ) : SeedJob<TemporaryAccommodationBedspaceSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
-  requiredColumns = 11,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

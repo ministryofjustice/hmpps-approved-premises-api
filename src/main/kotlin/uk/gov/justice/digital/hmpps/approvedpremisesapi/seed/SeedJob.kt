@@ -5,7 +5,6 @@ import java.util.UUID
 abstract class SeedJob<RowType> (
   val id: UUID = UUID.randomUUID(),
   val fileName: String,
-  val requiredColumns: Int,
 ) {
   init {
     if (fileName.contains("/") || fileName.contains("\\") || fileName.contains(".")) {
