@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPort
 import javax.annotation.PreDestroy
 
 class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
+  private var postgresPort = System.getenv("POSTGRES_PORT") ?: "5433"
+
   override fun initialize(applicationContext: ConfigurableApplicationContext?) {
     val wiremockPort = WiremockPortHolder.getPort()
 
@@ -41,7 +43,7 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
           "wiremock.port" to wiremockPort.toString(),
           "preemptive-cache-key-prefix" to wiremockPort.toString(),
           "hmpps.sqs.topics.domainevents.arn" to "arn:aws:sns:eu-west-2:000000000000:domainevents-int-test-${randomStringLowerCase(10)}",
-          "spring.datasource.url" to "jdbc:postgresql://localhost:5433/$databaseName",
+          "spring.datasource.url" to "jdbc:postgresql://localhost:$postgresPort/$databaseName",
         ) + upstreamServiceUrlsToOverride,
       ).applyTo(applicationContext)
   }
@@ -49,7 +51,7 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
   private fun setupDatabase(): String {
     val driver = DriverManagerDataSource().apply {
       setDriverClassName("org.postgresql.Driver")
-      url = "jdbc:postgresql://localhost:5433/postgres"
+      url = "jdbc:postgresql://localhost:$postgresPort/postgres"
       username = "integration_test"
       password = "integration_test_password"
     }

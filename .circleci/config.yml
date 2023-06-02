@@ -15,6 +15,28 @@ parameters:
     type: boolean
     default: false
 
+executors:
+  test-gradle:
+    resource_class: medium+
+    docker:
+      - image: cimg/openjdk:17.0
+      - image: "postgis/postgis"
+        environment:
+          - POSTGRES_USER=integration_test
+          - POSTGRES_PASSWORD=integration_test_password
+          - POSTGRES_DB=approved_premises_integration_test
+      - image: "bitnami/redis:7.0.11"
+        environment:
+          - ALLOW_EMPTY_PASSWORD=yes
+      - image: localstack/localstack:1.3.1
+        environment:
+          - SERVICES=sns,sqs
+          - DEBUG=${DEBUG- }
+          - DOCKER_HOST=unix:///var/run/docker.sock
+          - DEFAULT_REGION=eu-west-2
+          - ES_PORT_EXTERNAL=4571
+          - DATA_DIR=/tmp/localstack/data
+
 jobs:
   trigger-ui-tests:
     docker: 
@@ -115,11 +137,96 @@ jobs:
           root: .
           paths:
             - docker_cache
+  build:
+    environment:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-
+      - run:
+          name: Install dependencies
+          command: ./gradlew build -x test --build-cache
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "build.gradle.kts" }}
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+  lint:
+    environment:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run ktlint
+          command: ./gradlew ktlintCheck --build-cache -x openApiGenerateDomainEvents -x openApiGenerate
+  test:
+    parallelism: 4
+    environment:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+      POSTGRES_PORT: 5432
+      SPRING_REDIS_PORT: 6379
+    executor:
+      name: test-gradle
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests in parallel
+          # Use "./gradlew test" instead if tests are not run in parallel
+          command: |
+            cd src/test/kotlin
+            # Get list of classnames of tests that should run on this node
+            CLASSNAMES=$(circleci tests glob "**/*Test.kt" \
+              | cut -c 1- | sed 's@/@.@g' \
+              | sed 's/.\{3\}$//' \
+              | circleci tests split --split-by=timings --timings-type=classname)
+            cd ../../..
+            # Format the arguments to "./gradlew test"
+            GRADLE_ARGS=$(echo $CLASSNAMES | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+            echo "Prepared arguments for Gradle: $GRADLE_ARGS"
+            ./gradlew test --build-cache -x openApiGenerateDomainEvents -x openApiGenerate $GRADLE_ARGS
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "build.gradle.kts" }}
+      - store_test_results:
+          path: build/test-results
+      - store_artifacts:
+          path: build/reports/tests
 
 workflows:
   version: 2
   build-test-and-deploy:
     jobs:
+      - build
+      - lint:
+          filters:
+            tags:
+              ignore: /.*/
+          requires:
+            - build
+      - test:
+          filters:
+            tags:
+              ignore: /.*/
+          requires:
+            - lint
       - hmpps/helm_lint:
           name: helm_lint
       - hmpps/build_multiplatform_docker:
