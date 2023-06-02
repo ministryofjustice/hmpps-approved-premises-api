@@ -9,6 +9,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -375,6 +378,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         .bodyValue(
           SubmitPlacementApplication(
             translatedDocument = mapOf("thingId" to 123),
+            placementType = PlacementType.additionalPlacement,
+            placementDates = listOf(
+              PlacementDates(
+                expectedArrival = LocalDate.now(),
+                duration = 12,
+              ),
+            ),
           ),
         )
         .exchange()
@@ -398,6 +408,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
+                placementType = PlacementType.additionalPlacement,
+                placementDates = listOf(
+                  PlacementDates(
+                    expectedArrival = LocalDate.now(),
+                    duration = 12,
+                  ),
+                ),
               ),
             )
             .exchange()
@@ -429,6 +446,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
+                placementType = PlacementType.additionalPlacement,
+                placementDates = listOf(
+                  PlacementDates(
+                    expectedArrival = LocalDate.now(),
+                    duration = 12,
+                  ),
+                ),
               ),
             )
             .exchange()
@@ -458,6 +482,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
+                placementType = PlacementType.additionalPlacement,
+                placementDates = listOf(
+                  PlacementDates(
+                    expectedArrival = LocalDate.now(),
+                    duration = 12,
+                  ),
+                ),
               ),
             )
             .exchange()
@@ -477,12 +508,20 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
+            val placementDates = listOf(
+              PlacementDates(
+                expectedArrival = LocalDate.now(),
+                duration = 12,
+              ),
+            )
             val rawResult = webTestClient.post()
               .uri("/placement-applications/${placementApplicationEntity.id}/submission")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
+                  placementType = PlacementType.additionalPlacement,
+                  placementDates = placementDates,
                 ),
               )
               .exchange()
@@ -514,6 +553,14 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser!!.id).isEqualTo(assessorUser.id)
             assertThat(updatedPlacementApplication.allocatedAt).isNotNull()
+
+            val createdPlacementDates = placementDateRepository.findAllByPlacementApplication(placementApplicationEntity)
+
+            assertThat(createdPlacementDates.size).isEqualTo(1)
+
+            assertThat(createdPlacementDates[0].placementApplication.id).isEqualTo(placementApplicationEntity.id)
+            assertThat(createdPlacementDates[0].duration).isEqualTo(placementDates[0].duration)
+            assertThat(createdPlacementDates[0].expectedArrival).isEqualTo(placementDates[0].expectedArrival)
           }
         }
       }

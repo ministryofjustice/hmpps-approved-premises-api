@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
@@ -25,6 +26,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
+  private var placementDates: Yielded<MutableList<PlacementDateEntity>?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -70,6 +72,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.reallocatedAt = { reallocatedAt }
   }
 
+  fun withPlacementDates(placementDates: MutableList<PlacementDateEntity>) = apply {
+    this.placementDates = { placementDates }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
@@ -84,5 +90,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     allocatedAt = null,
     reallocatedAt = this.reallocatedAt(),
     decision = this.decision(),
+    placementType = null,
+    placementDates = this.placementDates() ?: mutableListOf(),
   )
 }
