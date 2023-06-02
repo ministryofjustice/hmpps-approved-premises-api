@@ -12,6 +12,8 @@ import javax.persistence.Table
 interface CancellationReasonRepository : JpaRepository<CancellationReasonEntity, UUID> {
   @Query("SELECT c FROM CancellationReasonEntity c WHERE c.serviceScope = :serviceName OR c.serviceScope = '*'")
   fun findAllByServiceScope(serviceName: String): List<CancellationReasonEntity>
+
+  fun findByNameAndServiceScope(name: String, serviceScope: String): CancellationReasonEntity?
 }
 
 @Entity

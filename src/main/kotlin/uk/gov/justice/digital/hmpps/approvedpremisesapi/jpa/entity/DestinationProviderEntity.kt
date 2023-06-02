@@ -8,7 +8,9 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Repository
-interface DestinationProviderRepository : JpaRepository<DestinationProviderEntity, UUID>
+interface DestinationProviderRepository : JpaRepository<DestinationProviderEntity, UUID> {
+  fun findByName(name: String): DestinationProviderEntity?
+}
 
 @Entity
 @Table(name = "destination_providers")

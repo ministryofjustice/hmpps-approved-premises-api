@@ -201,7 +201,10 @@ class BookingService(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,
+    bookingId: UUID? = null,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
+    val bookingId = bookingId ?: UUID.randomUUID()
+
     if (user != null && (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER))) {
       return AuthorisableActionResult.Unauthorised()
     }
@@ -250,7 +253,7 @@ class BookingService(
 
       val booking = bookingRepository.save(
         BookingEntity(
-          id = UUID.randomUUID(),
+          id = bookingId,
           crn = crn,
           arrivalDate = arrivalDate,
           departureDate = departureDate,

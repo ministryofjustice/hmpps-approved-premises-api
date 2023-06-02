@@ -48,7 +48,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
     this.crn = { crn }
   }
 
-  fun withNomsNumber(nomsNumber: String) = apply {
+  fun withNomsNumber(nomsNumber: String?) = apply {
     this.nomsNumber = { nomsNumber }
   }
 
