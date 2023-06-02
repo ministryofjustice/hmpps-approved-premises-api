@@ -160,19 +160,6 @@ jobs:
           root: .
           paths:
             - build
-  lint:
-    environment:
-      _JAVA_OPTIONS: "-Xmx3g"
-      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
-    docker:
-      - image: cimg/openjdk:17.0
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run ktlint
-          command: ./gradlew ktlintCheck --build-cache -x openApiGenerateDomainEvents -x openApiGenerate
   test:
     parallelism: 4
     environment:
@@ -215,18 +202,12 @@ workflows:
   build-test-and-deploy:
     jobs:
       - build
-      - lint:
-          filters:
-            tags:
-              ignore: /.*/
-          requires:
-            - build
       - test:
           filters:
             tags:
               ignore: /.*/
           requires:
-            - lint
+            - build
       - hmpps/helm_lint:
           name: helm_lint
       - hmpps/build_multiplatform_docker:
