@@ -290,6 +290,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     bedEntityFactory.produceAndPersist {
       withRoom(preExistingRoom)
       withCode("NEABC04")
+      withName("Original Name")
     }
 
     val reloadedRoom = roomRepository.findByCode("NEABC-4")
@@ -298,7 +299,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     assertThat(reloadedRoom!!.notes).isEqualTo("This is small")
     assertThat(reloadedRoom!!.beds.count()).isEqualTo(1)
 
-    // update the room with new notes, another characteristic and an additional bed
+    // update the room with new notes, another characteristic, change the bed's name and add an additional bed
 
     characteristicEntityFactory.produceAndPersist {
       withPropertyName("isGroundFloor")
@@ -312,6 +313,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       .withIsArsonSuitable("yes")
       .withIsGroundFloor("yes")
       .withRoomNumber("4")
+      .withBedCount("5")
       .withNotes("This is large")
       .produce()
 
@@ -348,6 +350,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     ).isEqualTo(listOf("isArsonSuitable", "isGroundFloor"))
 
     assertThat(updatedRoom!!.beds.count()).isEqualTo(2)
+    assertThat(updatedRoom.beds.filter { it.name == "4 - 5" }.size).isEqualTo(1)
   }
 
   private fun approvedPremisesRoomsSeedCsvRowsToCsv(rows: List<ApprovedPremisesRoomsSeedCsvRow>): String {
@@ -455,6 +458,10 @@ class ApprovedPremisesRoomsSeedCsvRowFactory : Factory<ApprovedPremisesRoomsSeed
 
   fun withRoomNumber(roomNumber: String) = apply {
     this.roomNumber = { roomNumber }
+  }
+
+  fun withBedCount(bedCount: String) = apply {
+    this.bedCount = { bedCount }
   }
 
   fun withIsArsonSuitable(boolString: String) = apply {

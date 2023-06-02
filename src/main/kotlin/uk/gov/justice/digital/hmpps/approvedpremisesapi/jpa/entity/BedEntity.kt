@@ -88,7 +88,7 @@ const val bedSummaryQuery =
 data class BedEntity(
   @Id
   val id: UUID,
-  val name: String,
+  var name: String,
   val code: String?,
   @ManyToOne
   @JoinColumn(name = "room_id")
