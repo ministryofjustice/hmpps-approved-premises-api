@@ -32,7 +32,7 @@ class BedSearchService(
     durationInDays: Int,
     requiredCharacteristics: List<PlacementCriteria>,
   ): AuthorisableActionResult<ValidatableActionResult<List<ApprovedPremisesBedSearchResult>>> {
-    if (!user.hasRole(UserRole.MATCHER)) {
+    if (!user.hasRole(UserRole.CAS1_MATCHER)) {
       return AuthorisableActionResult.Unauthorised()
     }
 

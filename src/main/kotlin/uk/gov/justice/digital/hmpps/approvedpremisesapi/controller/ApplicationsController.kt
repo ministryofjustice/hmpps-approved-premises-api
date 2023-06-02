@@ -275,7 +275,7 @@ class ApplicationsController(
           taskTransformer::transformAssessmentToTask,
         )
 
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(assessment.application.getRequiredQualifications(), listOf(UserRole.ASSESSOR))
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(assessment.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
           .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementRequest -> {
@@ -296,7 +296,7 @@ class ApplicationsController(
           taskTransformer.transformPlacementRequestToTask(placementRequest, personDetail.first, personDetail.second)
 
         transformedAllocatableUsers =
-          userService.getUsersWithQualificationsAndRoles(emptyList(), listOf(UserRole.MATCHER))
+          userService.getUsersWithQualificationsAndRoles(emptyList(), listOf(UserRole.CAS1_MATCHER))
             .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementApplication -> {
@@ -314,7 +314,7 @@ class ApplicationsController(
 
         transformedTask = taskTransformer.transformPlacementApplicationToTask(placementApplication, personDetail.first, personDetail.second)
 
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(placementApplication.application.getRequiredQualifications(), listOf(UserRole.ASSESSOR))
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(placementApplication.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
           .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       } else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")

@@ -65,7 +65,7 @@ class SeedUsersTest : SeedTestBase() {
         listOf(
           UserRoleAssignmentsSeedCsvRowFactory()
             .withDeliusUsername("unknown-user")
-            .withTypedRoles(listOf(UserRole.ASSESSOR, UserRole.WORKFLOW_MANAGER))
+            .withTypedRoles(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_WORKFLOW_MANAGER))
             .withTypedQualifications(listOf(UserQualification.PIPE))
             .produce(),
         ),
@@ -79,8 +79,8 @@ class SeedUsersTest : SeedTestBase() {
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.deliusStaffIdentifier).isEqualTo(6789)
     assertThat(persistedUser.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
-      UserRole.ASSESSOR,
-      UserRole.WORKFLOW_MANAGER,
+      UserRole.CAS1_ASSESSOR,
+      UserRole.CAS1_WORKFLOW_MANAGER,
     )
     assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
       UserQualification.PIPE,
@@ -104,7 +104,7 @@ class SeedUsersTest : SeedTestBase() {
         listOf(
           UserRoleAssignmentsSeedCsvRowFactory()
             .withDeliusUsername("KNOWN-USER")
-            .withTypedRoles(listOf(UserRole.ASSESSOR, UserRole.WORKFLOW_MANAGER))
+            .withTypedRoles(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_WORKFLOW_MANAGER))
             .withTypedQualifications(listOf(UserQualification.PIPE))
             .produce(),
         ),
@@ -117,8 +117,8 @@ class SeedUsersTest : SeedTestBase() {
 
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
-      UserRole.ASSESSOR,
-      UserRole.WORKFLOW_MANAGER,
+      UserRole.CAS1_ASSESSOR,
+      UserRole.CAS1_WORKFLOW_MANAGER,
     )
     assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
       UserQualification.PIPE,
@@ -194,6 +194,48 @@ class SeedUsersTest : SeedTestBase() {
     }
   }
 
+  @Test
+  fun `Attempting to assign legacy roles to a user succeeds`() {
+    userEntityFactory.produceAndPersist {
+      withDeliusUsername("KNOWN-USER")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    withCsv(
+      "known-user",
+      userRoleAssignmentSeedCsvRowsToCsv(
+        listOf(
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername("KNOWN-USER")
+            .withUntypedRoles(listOf("APPLICANT", "ASSESSOR", "MANAGER", "MATCHER", "ROLE_ADMIN", "WORKFLOW_MANAGER"))
+            .withTypedQualifications(listOf(UserQualification.PIPE))
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.user, "known-user")
+
+    val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
+
+    assertThat(persistedUser).isNotNull
+    assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+      UserRole.CAS1_APPLICANT,
+      UserRole.CAS1_ASSESSOR,
+      UserRole.CAS1_MANAGER,
+      UserRole.CAS1_MATCHER,
+      UserRole.CAS1_ADMIN,
+      UserRole.CAS1_WORKFLOW_MANAGER,
+    )
+    assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
+      UserQualification.PIPE,
+    )
+  }
+
   private fun userRoleAssignmentSeedCsvRowsToCsv(rows: List<UsersSeedUntypedEnumsCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
@@ -217,7 +259,7 @@ class SeedUsersTest : SeedTestBase() {
 
 class UserRoleAssignmentsSeedCsvRowFactory : Factory<UsersSeedUntypedEnumsCsvRow> {
   private var deliusUsername: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
-  private var roles: Yielded<List<String>> = { listOf(UserRole.ASSESSOR.name) }
+  private var roles: Yielded<List<String>> = { listOf(UserRole.CAS1_ASSESSOR.name) }
   private var qualifications: Yielded<List<String>> = { listOf(UserQualification.PIPE.name) }
 
   fun withDeliusUsername(deliusUsername: String) = apply {

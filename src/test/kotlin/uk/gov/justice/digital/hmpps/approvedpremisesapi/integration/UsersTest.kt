@@ -225,7 +225,7 @@ class UsersTest : IntegrationTestBase() {
   @Nested
   inner class GetUsers {
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["MANAGER", "MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `GET to users with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -252,10 +252,10 @@ class UsersTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["ROLE_ADMIN", "WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns full list ordered by name`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.MANAGER)) { manager, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { userWithNoRole, _ ->
             `Given a User`(roles = listOf(role)) { requestUser, jwt ->
               webTestClient.get()
@@ -280,10 +280,10 @@ class UsersTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["ROLE_ADMIN", "WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by roles`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.MANAGER)) { manager, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { _, _ ->
             `Given a User`(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
@@ -308,7 +308,7 @@ class UsersTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["ROLE_ADMIN", "WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by qualifications`(role: UserRole) {
       `Given a User`(qualifications = listOf(UserQualification.WOMENS)) { womensUser, _ ->
         `Given a User`(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
@@ -336,11 +336,11 @@ class UsersTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["ROLE_ADMIN", "WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by role and qualifications`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.WOMENS)) { womensAssessor1, _ ->
-        `Given a User`(roles = listOf(UserRole.ASSESSOR), qualifications = listOf(UserQualification.WOMENS)) { womensAssessor2, _ ->
-          `Given a User`(roles = listOf(UserRole.ASSESSOR)) { _, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.WOMENS)) { womensAssessor1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.WOMENS)) { womensAssessor2, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { _, _ ->
             `Given a User` { _, _ ->
               `Given a User`(roles = listOf(role)) { _, jwt ->
                 webTestClient.get()

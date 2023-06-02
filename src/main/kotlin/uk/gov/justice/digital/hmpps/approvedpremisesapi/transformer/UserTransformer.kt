@@ -37,12 +37,12 @@ class UserTransformer(
   }
 
   private fun transformRoleToApi(userRole: UserRoleAssignmentEntity): ApiUserRole = when (userRole.role) {
-    UserRole.ROLE_ADMIN -> ApiUserRole.roleAdmin
-    UserRole.ASSESSOR -> ApiUserRole.assessor
-    UserRole.MATCHER -> ApiUserRole.matcher
-    UserRole.MANAGER -> ApiUserRole.manager
-    UserRole.WORKFLOW_MANAGER -> ApiUserRole.workflowManager
-    UserRole.APPLICANT -> ApiUserRole.applicant
+    UserRole.CAS1_ADMIN -> ApiUserRole.roleAdmin
+    UserRole.CAS1_ASSESSOR -> ApiUserRole.assessor
+    UserRole.CAS1_MATCHER -> ApiUserRole.matcher
+    UserRole.CAS1_MANAGER -> ApiUserRole.manager
+    UserRole.CAS1_WORKFLOW_MANAGER -> ApiUserRole.workflowManager
+    UserRole.CAS1_APPLICANT -> ApiUserRole.applicant
   }
 
   private fun transformQualificationToApi(userQualification: UserQualificationAssignmentEntity): ApiUserQualification = when (userQualification.qualification) {

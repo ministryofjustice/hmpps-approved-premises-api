@@ -58,7 +58,7 @@ class TaskServiceTest {
     .produce()
     .apply {
       roles += UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.WORKFLOW_MANAGER)
+        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
         .withUser(this)
         .produce()
     }

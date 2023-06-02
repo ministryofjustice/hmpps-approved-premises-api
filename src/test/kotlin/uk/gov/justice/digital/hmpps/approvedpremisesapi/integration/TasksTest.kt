@@ -52,7 +52,7 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Get all tasks returns 200 with correct body`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           `Given an Assessment for Approved Premises`(
@@ -144,7 +144,7 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Get an unknown task type for an application returns 404`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
@@ -164,10 +164,10 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Get an assessment task for an application returns 200 with correct body`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.ASSESSOR),
+          roles = listOf(UserRole.CAS1_ASSESSOR),
         ) { allocatableUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given an Assessment for Approved Premises`(
@@ -199,10 +199,10 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Get a Placement Request Task for an application returns 200`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.MATCHER),
+          roles = listOf(UserRole.CAS1_MATCHER),
         ) { allocatableUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given a Placement Request`(
@@ -235,10 +235,10 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Get a Placement Application Task for an application returns 200`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.ASSESSOR),
+          roles = listOf(UserRole.CAS1_ASSESSOR),
         ) { allocatableUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given a Placement Application`(
@@ -273,7 +273,7 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Get an non-implemented task type for an application returns 405`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
@@ -324,10 +324,10 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
-      `Given a User`(roles = listOf(UserRole.ASSESSOR)) { user, _ ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.ASSESSOR),
+          roles = listOf(UserRole.CAS1_ASSESSOR),
         ) { assigneeUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             `Given an Assessment for Approved Premises`(
@@ -371,9 +371,9 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Reallocating a placement request to different assessor returns 201, creates new placement request, deallocates old one`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
       `Given a User`(
-        roles = listOf(UserRole.MATCHER),
+        roles = listOf(UserRole.CAS1_MATCHER),
       ) { assigneeUser, _ ->
         `Given an Offender` { offenderDetails, _ ->
           `Given a Placement Request`(
@@ -422,10 +422,10 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Reallocating a placement application to different assessor returns 201, creates new placement application, deallocates old one`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
       `Given a User` { user, _ ->
         `Given a User`(
-          roles = listOf(UserRole.ASSESSOR),
+          roles = listOf(UserRole.CAS1_ASSESSOR),
         ) { assigneeUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             `Given a Placement Application`(
@@ -471,7 +471,7 @@ class TasksTest : IntegrationTestBase() {
 
   @Test
   fun `Reallocating a booking appeal returns a NotAllowedProblem`() {
-    `Given a User`(roles = listOf(UserRole.WORKFLOW_MANAGER)) { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
       `Given a User` { userToReallocate, _ ->
         `Given an Application`(createdByUser = user) { application ->
           webTestClient.post()

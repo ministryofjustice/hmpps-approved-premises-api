@@ -340,7 +340,7 @@ class ApplicationServiceTest {
 
   @Test
   fun `getApplicationForUsername where application not created by caller but user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Success result with entity from db`() {
-    listOf(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER).forEach { role ->
+    listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER).forEach { role ->
       val distinguishedName = "SOMEPERSON"
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
@@ -1520,7 +1520,7 @@ class ApplicationServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER"])
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
   fun `Get all offline applications where Probation Officer exists returns repository results for user with any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`(role: UserRole) {
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
@@ -1587,7 +1587,7 @@ class ApplicationServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["WORKFLOW_MANAGER", "ASSESSOR", "MATCHER", "MANAGER"])
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
   fun `getOfflineApplicationForUsername where user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER but does not pass LAO check returns Unauthorised result`(role: UserRole) {
     val distinguishedName = "SOMEPERSON"
     val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
@@ -1623,7 +1623,7 @@ class ApplicationServiceTest {
 
   @Test
   fun `getOfflineApplicationForUsername where user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER and passes LAO check returns Success result with entity from db`() {
-    listOf(UserRole.WORKFLOW_MANAGER, UserRole.ASSESSOR, UserRole.MATCHER, UserRole.MANAGER).forEach { role ->
+    listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER).forEach { role ->
       val distinguishedName = "SOMEPERSON"
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")

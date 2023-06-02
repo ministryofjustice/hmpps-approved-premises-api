@@ -224,8 +224,8 @@ class AssessmentTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
-      `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
-        `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
@@ -321,8 +321,8 @@ class AssessmentTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
-      `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
-        `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
@@ -407,8 +407,8 @@ class AssessmentTest : IntegrationTestBase() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
-      `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher1, _ ->
-        `Given a User`(roles = listOf(UserRole.MATCHER)) { matcher2, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()

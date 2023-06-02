@@ -51,7 +51,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `List Lost Beds on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -213,7 +213,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Lost Bed for non-existent lost bed returns 404`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -233,7 +233,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Lost Bed on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -427,7 +427,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Lost Beds on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -589,7 +589,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds on Approved Premises for current day does not break GET all Premises endpoint`() {
-    `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withTotalBeds(3)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -730,7 +730,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Update Lost Beds on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -986,7 +986,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Cancel Lost Bed on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {

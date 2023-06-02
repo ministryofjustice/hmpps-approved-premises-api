@@ -52,7 +52,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
@@ -195,7 +195,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -215,7 +215,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get all Bookings returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
@@ -359,7 +359,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Approved Premises Booking returns Bad Request when no application exists for CRN`() {
     `Given a User`(
-      roles = listOf(UserRole.MATCHER),
+      roles = listOf(UserRole.CAS1_MATCHER),
     ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -400,7 +400,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Booking returns OK with correct body emits domain event`() {
-    `Given a User`(roles = listOf(UserRole.MATCHER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1174,7 +1174,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -1228,7 +1228,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival updates arrival and departure date for an Approved Premises booking`() {
-    `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
         APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -1405,7 +1405,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Departure on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -1463,7 +1463,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure updates departure date for an Approved Premises booking`() {
-    `Given a User`(roles = listOf(UserRole.MANAGER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
         APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -1537,7 +1537,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Departure on Approved Premises Booking when a departure already exists returns 400 Bad Request`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -1785,7 +1785,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Cancellation on Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
@@ -1828,7 +1828,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Cancellation on Approved Premises Booking when a cancellation already exists returns 400 Bad Request`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
@@ -2227,7 +2227,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -2334,7 +2334,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
@@ -2403,7 +2403,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Create Non Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()

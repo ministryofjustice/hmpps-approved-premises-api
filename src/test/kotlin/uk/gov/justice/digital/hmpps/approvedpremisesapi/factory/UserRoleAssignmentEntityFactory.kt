@@ -10,7 +10,7 @@ import java.util.UUID
 class UserRoleAssignmentEntityFactory : Factory<UserRoleAssignmentEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var user: Yielded<UserEntity>? = null
-  private var role: Yielded<UserRole> = { UserRole.APPLICANT }
+  private var role: Yielded<UserRole> = { UserRole.CAS1_APPLICANT }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

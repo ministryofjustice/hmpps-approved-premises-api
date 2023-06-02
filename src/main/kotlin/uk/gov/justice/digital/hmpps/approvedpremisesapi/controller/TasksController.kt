@@ -31,7 +31,7 @@ class TasksController(
   override fun tasksGet(): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
-    if (user.hasRole(UserRole.WORKFLOW_MANAGER)) {
+    if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       val assessments = mapAndTransformAssessments(
         log,
         assessmentService.getAllReallocatable(),

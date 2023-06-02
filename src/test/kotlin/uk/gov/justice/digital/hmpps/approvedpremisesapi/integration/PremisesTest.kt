@@ -1351,7 +1351,7 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val qCode = "NOTFOUND"
@@ -1427,7 +1427,7 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Approved Premises Staff for Approved Premises returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val qCode = "FOUND"
@@ -1480,7 +1480,7 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "MANAGER", "MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Approved Premises Staff caches response when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val qCode = "FOUND"

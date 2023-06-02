@@ -53,7 +53,7 @@ class UserAccessService(
     userCanManagePremisesBookings(userService.getUserForRequest(), premises)
 
   fun userCanManagePremisesBookings(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id)
     else -> false
   }
@@ -62,7 +62,7 @@ class UserAccessService(
     userCanManagePremisesLostBeds(userService.getUserForRequest(), premises)
 
   fun userCanManagePremisesLostBeds(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id)
     else -> false
   }
@@ -71,7 +71,7 @@ class UserAccessService(
     userCanViewPremisesCapacity(userService.getUserForRequest(), premises)
 
   fun userCanViewPremisesCapacity(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id)
     else -> false
   }
@@ -80,7 +80,7 @@ class UserAccessService(
     userCanViewPremisesStaff(userService.getUserForRequest(), premises)
 
   fun userCanViewPremisesStaff(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.MANAGER, UserRole.MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id)
     else -> false
   }

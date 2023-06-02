@@ -183,7 +183,7 @@ class PlacementRequestServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -330,7 +330,7 @@ class PlacementRequestServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.WORKFLOW_MANAGER)
+          .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
           .produce()
       }
 

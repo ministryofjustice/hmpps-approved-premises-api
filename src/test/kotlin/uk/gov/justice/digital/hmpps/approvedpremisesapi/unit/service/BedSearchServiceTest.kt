@@ -71,7 +71,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -115,7 +115,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -163,7 +163,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -207,7 +207,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -255,7 +255,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -305,7 +305,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -353,7 +353,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -401,7 +401,7 @@ class BedSearchServiceTest {
       .apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.MATCHER)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
