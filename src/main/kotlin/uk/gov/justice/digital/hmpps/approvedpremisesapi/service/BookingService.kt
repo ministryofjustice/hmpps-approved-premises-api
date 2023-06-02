@@ -180,6 +180,7 @@ class BookingService(
         templateId = notifyConfig.templates.bookingMade,
         personalisation = mapOf(
           "name" to applicationSubmittedByUser.name,
+          "apName" to bed.room.premises.name,
           "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
           "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
             .replace("#bookingId", booking.id.toString()),
@@ -287,6 +288,7 @@ class BookingService(
           templateId = notifyConfig.templates.bookingMade,
           personalisation = mapOf(
             "name" to applicationSubmittedByUser.name,
+            "apName" to bed.room.premises.name,
             "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
             "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
               .replace("#bookingId", booking.id.toString()),
