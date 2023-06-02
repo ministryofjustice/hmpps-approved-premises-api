@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -22,6 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
 
 class PlacementApplicationServiceTest {
   private val placementApplicationRepository = mockk<PlacementApplicationRepository>()
@@ -81,6 +85,16 @@ class PlacementApplicationServiceTest {
       )
       .produce()
 
+    private val placementDates = mutableListOf(
+      PlacementDateEntity(
+        id = UUID.randomUUID(),
+        createdAt = OffsetDateTime.now(),
+        duration = 12,
+        expectedArrival = LocalDate.now(),
+        placementApplication = mockk<PlacementApplicationEntity>(),
+      ),
+    )
+
     @Test
     fun `Reallocating an application returns successfully`() {
       assigneeUser.apply {
@@ -90,10 +104,27 @@ class PlacementApplicationServiceTest {
           .produce()
       }
 
+      previousPlacementApplication.placementDates = placementDates
+
+      val newPlacementDates = mutableListOf(
+        PlacementDateEntity(
+          id = UUID.randomUUID(),
+          createdAt = OffsetDateTime.now(),
+          duration = 12,
+          expectedArrival = LocalDate.now(),
+          placementApplication = mockk<PlacementApplicationEntity>(),
+        ),
+      )
+
       every { placementApplicationRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementApplication
 
       every { placementApplicationRepository.save(previousPlacementApplication) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every {
+        placementDateRepository.saveAll<PlacementDateEntity>(
+          match { it.first().expectedArrival == placementDates[0].expectedArrival && it.first().duration == placementDates[0].duration },
+        )
+      } answers { newPlacementDates }
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, application)
 
@@ -111,10 +142,12 @@ class PlacementApplicationServiceTest {
 
       assertThat(newPlacementApplication.application).isEqualTo(application)
       assertThat(newPlacementApplication.allocatedToUser).isEqualTo(assigneeUser)
-      assertThat(newPlacementApplication.createdByUser).isEqualTo(newPlacementApplication.createdByUser)
-      assertThat(newPlacementApplication.data).isEqualTo(newPlacementApplication.data)
-      assertThat(newPlacementApplication.document).isEqualTo(newPlacementApplication.document)
-      assertThat(newPlacementApplication.schemaVersion).isEqualTo(newPlacementApplication.schemaVersion)
+      assertThat(newPlacementApplication.createdByUser).isEqualTo(previousPlacementApplication.createdByUser)
+      assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
+      assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
+      assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
+      assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
+      assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
     }
 
     @Test

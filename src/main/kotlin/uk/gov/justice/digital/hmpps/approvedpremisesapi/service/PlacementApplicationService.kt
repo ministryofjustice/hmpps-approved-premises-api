@@ -106,6 +106,20 @@ class PlacementApplicationService(
       ),
     )
 
+    val newPlacementDates = placementDateRepository.saveAll(
+      currentPlacementApplication.placementDates.map {
+        PlacementDateEntity(
+          id = UUID.randomUUID(),
+          expectedArrival = it.expectedArrival,
+          duration = it.duration,
+          placementApplication = newPlacementApplication,
+          createdAt = dateTimeNow,
+        )
+      },
+    )
+
+    newPlacementApplication.placementDates = newPlacementDates
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
         newPlacementApplication,

@@ -436,6 +436,10 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
             ) { placementApplication ->
+              val placementDate = placementDateFactory.produceAndPersist {
+                withPlacementApplication(placementApplication)
+              }
+
               webTestClient.post()
                 .uri("/applications/${placementApplication.application.id}/tasks/placement-application/allocations")
                 .header("Authorization", "Bearer $jwt")
@@ -462,6 +466,12 @@ class TasksTest : IntegrationTestBase() {
 
               Assertions.assertThat(placementApplications.first { it.id == placementApplication.id }.reallocatedAt).isNotNull
               Assertions.assertThat(allocatedPlacementApplication).isNotNull
+
+              val placementDates = allocatedPlacementApplication!!.placementDates
+
+              Assertions.assertThat(placementDates.size).isEqualTo(1)
+              Assertions.assertThat(placementDates[0].expectedArrival).isEqualTo(placementDate.expectedArrival)
+              Assertions.assertThat(placementDates[0].duration).isEqualTo(placementDate.duration)
             }
           }
         }
