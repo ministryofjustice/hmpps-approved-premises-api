@@ -70,7 +70,7 @@ class ApprovedPremisesRoomsSeedJob(
       premises = premises,
     )
 
-    createBedUnlessPresent(room, row)
+    createOrUpdateBed(room, row)
   }
 
   private fun createOrUpdateRoom(row: ApprovedPremisesRoomsSeedCsvRow, characteristics: List<CharacteristicEntity>, premises: PremisesEntity): RoomEntity {
@@ -110,13 +110,10 @@ class ApprovedPremisesRoomsSeedJob(
     return room
   }
 
-  private fun createBedUnlessPresent(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): BedEntity {
+  private fun createOrUpdateBed(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): BedEntity {
     val bed = when (val existingBed = bedRepository.findByCode(row.bedCode)) {
       null -> createBed(room, row)
-      else -> {
-        log.info("Bed: ${row.bedCode} already exists (AP: ${row.apCode} | Room: ${room.code})")
-        existingBed
-      }
+      else -> updateExistingBed(existingBed, row)
     }
 
     return bed
@@ -126,7 +123,7 @@ class ApprovedPremisesRoomsSeedJob(
     val bed = bedRepository.save(
       BedEntity(
         id = UUID.randomUUID(),
-        name = row.bedCode,
+        name = "${row.roomNumber} - ${row.bedCount}",
         code = row.bedCode,
         room = room,
       ),
@@ -134,6 +131,14 @@ class ApprovedPremisesRoomsSeedJob(
     log.info("New bed created: ${row.bedCode} (AP: ${row.apCode} | Room: ${room.code})")
 
     return bed
+  }
+
+  private fun updateExistingBed(bed: BedEntity, row: ApprovedPremisesRoomsSeedCsvRow): BedEntity {
+    bed.apply {
+      name = "${row.roomNumber} - ${row.bedCount}"
+    }
+
+    return bedRepository.save(bed)
   }
 
   private fun findExistingPremisesOrThrow(row: ApprovedPremisesRoomsSeedCsvRow): PremisesEntity {
