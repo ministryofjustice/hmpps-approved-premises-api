@@ -17,7 +17,7 @@ class UserTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
 ) {
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
-    ServiceName.approvedPremises -> ApprovedPremisesUser(
+    ServiceName.approvedPremises, ServiceName.cas2 -> ApprovedPremisesUser(
       id = jpa.id,
       deliusUsername = jpa.deliusUsername,
       roles = jpa.roles.map(::transformRoleToApi),

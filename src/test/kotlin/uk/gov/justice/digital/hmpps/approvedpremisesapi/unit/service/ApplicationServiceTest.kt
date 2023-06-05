@@ -54,6 +54,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
@@ -652,6 +654,147 @@ class ApplicationServiceTest {
     assertThat(result.entity.createdByUser).isEqualTo(user)
     val temporaryAccommodationApplication = result.entity as TemporaryAccommodationApplicationEntity
     assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+  }
+
+  @Test
+  fun `createCas2Application returns FieldValidationError when Offender is not found`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
+
+    val user = userWithUsername(username)
+
+    val result = applicationService.createCas2Application(crn, user, "jwt")
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
+  }
+
+  @Test
+  fun `createCas2Application returns FieldValidationError when user is not authorised to view CRN`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
+
+    val user = userWithUsername(username)
+
+    val result = applicationService.createCas2Application(crn, user, "jwt")
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+  }
+
+  @Test
+  fun `createCas2Application returns FieldValidationError when getRiskByCrn returns Offender not found`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withGender("male")
+      .withCrn(crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      offenderDetails,
+    )
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.NotFound()
+
+    val user = userWithUsername(username)
+
+    val result = applicationService.createCas2Application(crn, user, "jwt")
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
+  }
+
+  @Test
+  fun `createCas2Application returns FieldValidationError when getRiskByCrn returns user not authorised`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withGender("male")
+      .withCrn(crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      offenderDetails,
+    )
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Unauthorised()
+
+    val user = userWithUsername(username)
+
+    val result = applicationService.createCas2Application(crn, user, "jwt")
+
+    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+    result as ValidatableActionResult.FieldValidationError
+    assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+  }
+
+  @Test
+  fun `createCas2Application returns Success with created Application + persisted Risk data`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+    val user = userWithUsername(username)
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val riskRatings = PersonRisksFactory()
+      .withRoshRisks(
+        RiskWithStatus(
+          value = RoshRisks(
+            overallRisk = "High",
+            riskToChildren = "Medium",
+            riskToPublic = "Low",
+            riskToKnownAdult = "High",
+            riskToStaff = "High",
+            lastUpdated = null,
+          ),
+        ),
+      )
+      .withMappa(
+        RiskWithStatus(
+          value = Mappa(
+            level = "",
+            lastUpdated = LocalDate.parse("2022-12-12"),
+          ),
+        ),
+      )
+      .withFlags(
+        RiskWithStatus(
+          value = listOf(
+            "flag1",
+            "flag2",
+          ),
+        ),
+      )
+      .produce()
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
+
+    val result = applicationService.createCas2Application(crn, user, "jwt")
+
+    assertThat(result is ValidatableActionResult.Success).isTrue
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.crn).isEqualTo(crn)
+    assertThat(result.entity.createdByUser).isEqualTo(user)
+    val cas2Application = result.entity as Cas2ApplicationEntity
+    assertThat(cas2Application.riskRatings).isEqualTo(riskRatings)
   }
 
   @Test

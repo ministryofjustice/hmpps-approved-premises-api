@@ -41,6 +41,7 @@ abstract class ReportGenerator<Input : Any, Output : Any, Properties>(private va
   protected fun checkServiceType(serviceName: ServiceName, premisesEntity: PremisesEntity) =
     when (serviceName) {
       ServiceName.approvedPremises -> premisesEntity is ApprovedPremisesEntity
+      ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> premisesEntity is TemporaryAccommodationPremisesEntity
     }
 }

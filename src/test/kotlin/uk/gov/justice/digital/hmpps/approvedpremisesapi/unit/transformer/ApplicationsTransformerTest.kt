@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -39,6 +42,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
 
 class ApplicationsTransformerTest {
@@ -75,6 +79,8 @@ class ApplicationsTransformerTest {
 
   private val approvedPremisesApplicationFactory = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(user)
+
+  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
 
   private val temporaryAccommodationApplicationEntityFactory = TemporaryAccommodationApplicationEntityFactory()
     .withCreatedByUser(user)
@@ -124,6 +130,20 @@ class ApplicationsTransformerTest {
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(ApplicationStatus.inapplicable)
+  }
+
+  @Test
+  fun `transformJpaToApi transforms an in progress CAS-2 application correctly`() {
+    val application = cas2ApplicationFactory
+      .withSubmittedAt(null)
+      .produce()
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as Cas2Application
+
+    assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.createdByUserId).isEqualTo(user.id)
+    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+    assertThat(result.risks).isNotNull
   }
 
   @Test
@@ -641,6 +661,28 @@ class ApplicationsTransformerTest {
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.risks).isNotNull
+  }
+
+  @Test
+  fun `transformDomainToApiSummary transforms a CAS2 application correctly`() {
+    val application = object : DomainCas2ApplicationSummary {
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getSubmittedAt() = null
+      override fun getLatestAssessmentSubmittedAt() = null
+      override fun getLatestAssessmentDecision() = null
+      override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
+      override fun getHasBooking() = false
+    }
+
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as Cas2ApplicationSummary
+
+    assertThat(result.id).isEqualTo(application.getId())
+    assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
     assertThat(result.risks).isNotNull
   }
 }

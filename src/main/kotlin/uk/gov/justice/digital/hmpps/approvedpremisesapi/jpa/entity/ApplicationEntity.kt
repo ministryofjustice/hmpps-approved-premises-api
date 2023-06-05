@@ -122,6 +122,22 @@ WHERE a.created_by_user_id = :userId
 
   @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a")
   fun getDistinctNomsNumbers(): List<String>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    CAST(c2a.risk_ratings AS TEXT) as riskRatings
+FROM cas_2_applications c2a
+LEFT JOIN applications a ON a.id = c2a.id
+""",
+    nativeQuery = true,
+  )
+  fun findAllCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
 }
 
 @Entity
@@ -241,6 +257,41 @@ data class ApplicationTeamCodeEntity(
 )
 
 @Entity
+@DiscriminatorValue("cas-2")
+@Table(name = "cas_2_applications")
+@PrimaryKeyJoinColumn(name = "id")
+class Cas2ApplicationEntity(
+  id: UUID,
+  crn: String,
+  createdByUser: UserEntity,
+  data: String?,
+  document: String?,
+  schemaVersion: JsonSchemaEntity,
+  createdAt: OffsetDateTime,
+  submittedAt: OffsetDateTime?,
+  schemaUpToDate: Boolean,
+  assessments: MutableList<AssessmentEntity>,
+  nomsNumber: String,
+  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Convert(disableConversion = true)
+  val riskRatings: PersonRisks?,
+) : ApplicationEntity(
+  id,
+  crn,
+  createdByUser,
+  data,
+  document,
+  schemaVersion,
+  createdAt,
+  submittedAt,
+  schemaUpToDate,
+  assessments,
+  nomsNumber,
+) {
+  override fun getRequiredQualifications(): List<UserQualification> = emptyList()
+}
+
+@Entity
 @DiscriminatorValue("temporary-accommodation")
 @Table(name = "temporary_accommodation_applications")
 @PrimaryKeyJoinColumn(name = "id")
@@ -302,5 +353,9 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
+  fun getRiskRatings(): String?
+}
+
+interface Cas2ApplicationSummary : ApplicationSummary {
   fun getRiskRatings(): String?
 }
