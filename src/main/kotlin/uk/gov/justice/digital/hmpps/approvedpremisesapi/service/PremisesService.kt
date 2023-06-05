@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusi
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class PremisesService(
@@ -43,6 +45,7 @@ class PremisesService(
   private val lostBedCancellationRepository: LostBedCancellationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
+  private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
 ) {
   private val serviceNameToEntityType = mapOf(
@@ -432,6 +435,23 @@ class PremisesService(
   }
 
   fun getBeds(premisesId: UUID) = bedRepository.findAllBedsForPremises(premisesId)
+
+  @Transactional
+  fun deletePremises(premises: PremisesEntity): ValidatableActionResult<Unit> = validated {
+    if (premises.bookings.any()) {
+      return premises.id hasConflictError "A premises cannot be hard-deleted if it has any bookings associated with it"
+    }
+
+    premises.rooms.forEach { room ->
+      room.beds.forEach { bed ->
+        bedRepository.delete(bed)
+      }
+      roomRepository.delete(room)
+    }
+    premisesRepository.delete(premises)
+
+    success(Unit)
+  }
 
   private fun serviceScopeMatches(scope: String, premises: PremisesEntity) = when (scope) {
     "*" -> true

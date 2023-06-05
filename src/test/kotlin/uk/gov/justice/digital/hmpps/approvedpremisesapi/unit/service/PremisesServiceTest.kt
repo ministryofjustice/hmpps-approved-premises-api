@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -51,6 +52,7 @@ class PremisesServiceTest {
   private val lostBedCancellationRepositoryMock = mockk<LostBedCancellationRepository>()
   private val probationDeliveryUnitRepositoryMock = mockk<ProbationDeliveryUnitRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
+  private val roomRepositoryMock = mockk<RoomRepository>()
   private val bedRepositoryMock = mockk<BedRepository>()
 
   private val premisesService = PremisesService(
@@ -63,6 +65,7 @@ class PremisesServiceTest {
     lostBedCancellationRepositoryMock,
     probationDeliveryUnitRepositoryMock,
     characteristicServiceMock,
+    roomRepositoryMock,
     bedRepositoryMock,
   )
 
