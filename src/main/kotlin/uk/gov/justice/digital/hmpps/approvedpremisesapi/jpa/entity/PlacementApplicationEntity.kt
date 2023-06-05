@@ -33,7 +33,7 @@ data class PlacementApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "application_id")
-  val application: ApplicationEntity,
+  val application: ApprovedPremisesApplicationEntity,
 
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
@@ -13,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 @Component
 class TaskTransformer(
@@ -45,13 +48,29 @@ class TaskTransformer(
   )
 
   fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = PlacementApplicationTask(
+    id = placementApplication.id,
     applicationId = placementApplication.application.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     dueDate = placementApplication.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementApplication.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
+    risks = risksTransformer.transformDomainToApi(placementApplication.application.riskRatings!!, placementApplication.application.crn),
+    placementDates = placementApplication.placementDates.map {
+      PlacementDates(
+        expectedArrival = it.expectedArrival,
+        duration = it.duration,
+      )
+    },
+    releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType)!!,
+    placementType = getPlacementType(placementApplication.placementType!!),
   )
+
+  private fun getPlacementType(placementType: JpaPlacementType): ApiPlacementType = when (placementType) {
+    JpaPlacementType.ROTL -> ApiPlacementType.rotl
+    JpaPlacementType.ADDITIONAL_PLACEMENT -> ApiPlacementType.additionalPlacement
+    JpaPlacementType.RELEASE_FOLLOWING_DECISION -> ApiPlacementType.releaseFollowingDecision
+  }
 
   private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): TaskStatus = when {
     entity.data.isNullOrEmpty() -> TaskStatus.notStarted

@@ -2,11 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
@@ -16,7 +17,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var createdByUser: Yielded<UserEntity>? = null
   private var allocatedToUser: Yielded<UserEntity?> = { null }
-  private var application: Yielded<ApplicationEntity>? = null
+  private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
   private var schemaVersion: Yielded<JsonSchemaEntity> = {
     ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory().produce()
   }
@@ -27,6 +28,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var placementDates: Yielded<MutableList<PlacementDateEntity>?> = { null }
+  private var placementType: Yielded<PlacementType?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -60,7 +62,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.submittedAt = { submittedAt }
   }
 
-  fun withApplication(applicationEntity: ApplicationEntity) = apply {
+  fun withApplication(applicationEntity: ApprovedPremisesApplicationEntity) = apply {
     this.application = { applicationEntity }
   }
 
@@ -74,6 +76,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
 
   fun withPlacementDates(placementDates: MutableList<PlacementDateEntity>) = apply {
     this.placementDates = { placementDates }
+  }
+
+  fun withPlacementType(placementType: PlacementType) = apply {
+    this.placementType = { placementType }
   }
 
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
@@ -90,7 +96,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     allocatedAt = null,
     reallocatedAt = this.reallocatedAt(),
     decision = this.decision(),
-    placementType = null,
+    placementType = this.placementType(),
     placementDates = this.placementDates() ?: mutableListOf(),
   )
 }

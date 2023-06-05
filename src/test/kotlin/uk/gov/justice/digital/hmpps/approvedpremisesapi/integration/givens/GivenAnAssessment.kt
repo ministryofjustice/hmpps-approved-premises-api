@@ -32,6 +32,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withCrn(crn)
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
+    withReleaseType("licence")
   }
 
   val assessment = assessmentEntityFactory.produceAndPersist {

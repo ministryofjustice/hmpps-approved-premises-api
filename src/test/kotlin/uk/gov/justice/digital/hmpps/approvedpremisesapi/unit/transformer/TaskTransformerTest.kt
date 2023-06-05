@@ -6,9 +6,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
@@ -19,11 +22,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -33,6 +40,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 class TaskTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
@@ -72,6 +82,11 @@ class TaskTransformerTest {
     .withApplication(application)
     .withAssessment(assessmentFactory.produce())
     .withAllocatedToUser(user)
+
+  val placementApplicationFactory = PlacementApplicationEntityFactory()
+    .withApplication(application)
+    .withAllocatedToUser(user)
+    .withCreatedByUser(user)
 
   private val taskTransformer = TaskTransformer(
     mockPersonTransformer,
@@ -124,6 +139,93 @@ class TaskTransformerTest {
         .produce()
 
       var result = taskTransformer.transformAssessmentToTask(assessment, mockOffenderDetailSummary, mockInmateDetail)
+
+      assertThat(result.status).isEqualTo(TaskStatus.complete)
+    }
+  }
+
+  @Nested
+  inner class TransformPlacementApplicationsTest {
+    private val placementApplication = placementApplicationFactory
+      .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+      .withData(null)
+      .produce()
+    val application = placementApplication.application
+    private val mockRisks = mockk<PersonRisks>()
+    private val releaseType = ReleaseTypeOption.licence
+
+    @BeforeEach
+    fun setup() {
+      every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
+      every { mockPlacementRequestTransformer.getReleaseType(application.releaseType) } returns releaseType
+    }
+
+    @Test
+    fun `Placement application is correctly transformed`() {
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntity(
+          id = UUID.randomUUID(),
+          createdAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 12,
+          placementApplication = placementApplication,
+        ),
+      )
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
+
+      assertThat(result.status).isEqualTo(TaskStatus.notStarted)
+      assertThat(result.id).isEqualTo(placementApplication.id)
+      assertThat(result.risks).isEqualTo(mockRisks)
+      assertThat(result.releaseType).isEqualTo(releaseType)
+      assertThat(result.placementDates).isEqualTo(
+        mutableListOf(
+          PlacementDates(
+            placementApplication.placementDates[0].expectedArrival,
+            placementApplication.placementDates[0].duration,
+          ),
+        ),
+      )
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = JpaPlacementType::class)
+    fun `Placement types are transformed correctly`(placementType: JpaPlacementType) {
+      val placementApplication = placementApplicationFactory
+        .withPlacementType(placementType)
+        .produce()
+
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
+
+      if (placementType === JpaPlacementType.ROTL) {
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.rotl)
+      } else if (placementType === JpaPlacementType.ADDITIONAL_PLACEMENT) {
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.additionalPlacement)
+      } else if (placementType === JpaPlacementType.RELEASE_FOLLOWING_DECISION) {
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.releaseFollowingDecision)
+      }
+    }
+
+    @Test
+    fun `In-progress placement application is correctly transformed`() {
+      val placementApplication = placementApplicationFactory
+        .withData("{}")
+        .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+        .produce()
+
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
+
+      assertThat(result.status).isEqualTo(TaskStatus.inProgress)
+    }
+
+    @Test
+    fun `Completed placement application is correctly transformed`() {
+      val placementApplication = placementApplicationFactory
+        .withData("{}")
+        .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .produce()
+
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
     }
