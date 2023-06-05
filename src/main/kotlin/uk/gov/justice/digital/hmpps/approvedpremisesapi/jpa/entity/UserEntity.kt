@@ -116,6 +116,8 @@ enum class UserRole {
   CAS1_WORKFLOW_MANAGER,
   CAS1_APPLICANT,
   CAS1_ADMIN,
+  CAS3_ASSESSOR,
+  CAS3_REFERRER,
 }
 
 @Repository

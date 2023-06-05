@@ -20,7 +20,7 @@ class UserTransformer(
     ServiceName.approvedPremises, ServiceName.cas2 -> ApprovedPremisesUser(
       id = jpa.id,
       deliusUsername = jpa.deliusUsername,
-      roles = jpa.roles.map(::transformRoleToApi),
+      roles = jpa.roles.mapNotNull(::transformRoleToApi),
       email = jpa.email,
       name = jpa.name,
       telephoneNumber = jpa.telephoneNumber,
@@ -30,19 +30,20 @@ class UserTransformer(
     )
     ServiceName.temporaryAccommodation -> TemporaryAccommodationUser(
       id = jpa.id,
-      roles = jpa.roles.map(::transformRoleToApi),
+      roles = jpa.roles.mapNotNull(::transformRoleToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = ServiceName.temporaryAccommodation.value,
     )
   }
 
-  private fun transformRoleToApi(userRole: UserRoleAssignmentEntity): ApiUserRole = when (userRole.role) {
+  private fun transformRoleToApi(userRole: UserRoleAssignmentEntity): ApiUserRole? = when (userRole.role) {
     UserRole.CAS1_ADMIN -> ApiUserRole.roleAdmin
     UserRole.CAS1_ASSESSOR -> ApiUserRole.assessor
     UserRole.CAS1_MATCHER -> ApiUserRole.matcher
     UserRole.CAS1_MANAGER -> ApiUserRole.manager
     UserRole.CAS1_WORKFLOW_MANAGER -> ApiUserRole.workflowManager
     UserRole.CAS1_APPLICANT -> ApiUserRole.applicant
+    else -> null
   }
 
   private fun transformQualificationToApi(userQualification: UserQualificationAssignmentEntity): ApiUserQualification = when (userQualification.qualification) {
