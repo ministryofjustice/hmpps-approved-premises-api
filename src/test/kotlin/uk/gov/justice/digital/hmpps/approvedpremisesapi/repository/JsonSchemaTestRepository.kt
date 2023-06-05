@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import java.util.UUID
 
@@ -13,6 +14,9 @@ interface ApprovedPremisesApplicationJsonSchemaTestRepository : JpaRepository<Ap
 
 @Repository
 interface TemporaryAccommodationApplicationJsonSchemaTestRepository : JpaRepository<TemporaryAccommodationApplicationJsonSchemaEntity, UUID>
+
+@Repository
+interface Cas2ApplicationJsonSchemaTestRepository : JpaRepository<Cas2ApplicationJsonSchemaEntity, UUID>
 
 @Repository
 interface ApprovedPremisesAssessmentJsonSchemaTestRepository : JpaRepository<ApprovedPremisesAssessmentJsonSchemaEntity, UUID>
