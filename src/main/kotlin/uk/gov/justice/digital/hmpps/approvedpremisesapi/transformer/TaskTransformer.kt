@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task.Status
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -17,7 +19,7 @@ class TaskTransformer(
   private val personTransformer: PersonTransformer,
   private val userTransformer: UserTransformer,
 ) {
-  fun transformAssessmentToTask(assessment: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Task(
+  fun transformAssessmentToTask(assessment: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = AssessmentTask(
     applicationId = assessment.application.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     dueDate = assessment.createdAt.plusDays(10).toLocalDate(),
@@ -26,7 +28,7 @@ class TaskTransformer(
     taskType = TaskType.assessment,
   )
 
-  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Task(
+  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = PlacementRequestTask(
     applicationId = placementRequest.application.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     dueDate = placementRequest.createdAt.plusDays(10).toLocalDate(),
@@ -35,7 +37,7 @@ class TaskTransformer(
     taskType = TaskType.placementRequest,
   )
 
-  fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = Task(
+  fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = PlacementApplicationTask(
     applicationId = placementApplication.application.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     dueDate = placementApplication.createdAt.plusDays(10).toLocalDate(),
@@ -44,20 +46,20 @@ class TaskTransformer(
     taskType = TaskType.placementApplication,
   )
 
-  private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): Status = when {
-    entity.data.isNullOrEmpty() -> Status.notStarted
-    entity.decision !== null -> Status.complete
-    else -> Status.inProgress
+  private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): TaskStatus = when {
+    entity.data.isNullOrEmpty() -> TaskStatus.notStarted
+    entity.decision !== null -> TaskStatus.complete
+    else -> TaskStatus.inProgress
   }
 
-  private fun getAssessmentStatus(entity: AssessmentEntity): Status = when {
-    entity.data.isNullOrEmpty() -> Status.notStarted
-    entity.decision !== null -> Status.complete
-    else -> Status.inProgress
+  private fun getAssessmentStatus(entity: AssessmentEntity): TaskStatus = when {
+    entity.data.isNullOrEmpty() -> TaskStatus.notStarted
+    entity.decision !== null -> TaskStatus.complete
+    else -> TaskStatus.inProgress
   }
 
-  private fun getPlacementRequestStatus(entity: PlacementRequestEntity): Status = when {
-    entity.booking !== null -> Status.complete
-    else -> Status.notStarted
+  private fun getPlacementRequestStatus(entity: PlacementRequestEntity): TaskStatus = when {
+    entity.booking !== null -> TaskStatus.complete
+    else -> TaskStatus.notStarted
   }
 }

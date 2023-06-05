@@ -3194,13 +3194,16 @@ components:
         allocatedToStaffMember:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:
-          type: string
-          enum:
-            - not_started
-            - in_progress
-            - complete
+          $ref: '#/components/schemas/TaskStatus'
         taskType:
           $ref: '#/components/schemas/TaskType'
+      discriminator:
+        propertyName: taskType
+        mapping:
+          Assessment: '#/components/schemas/AssessmentTask'
+          PlacementRequest: '#/components/schemas/PlacementRequestTask'
+          PlacementApplication: '#/components/schemas/PlacementApplicationTask'
+          BookingAppeal: '#/components/schemas/BookingAppealTask'
       required: 
         - applicationId
         - person
@@ -3208,6 +3211,24 @@ components:
         - allocatedToStaffMember
         - status
         - taskType
+    TaskStatus:
+      type: string
+      enum:
+        - not_started
+        - in_progress
+        - complete
+    AssessmentTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+    PlacementRequestTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+    PlacementApplicationTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+    BookingAppealTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
     TaskType:
       type: string
       enum:

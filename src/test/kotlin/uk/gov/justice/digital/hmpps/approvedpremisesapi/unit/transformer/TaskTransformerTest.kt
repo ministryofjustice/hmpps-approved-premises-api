@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task.Status
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -66,7 +66,7 @@ class TaskTransformerTest {
 
     var result = taskTransformer.transformAssessmentToTask(assessment, mockOffenderDetailSummary, mockInmateDetail)
 
-    assertThat(result.status).isEqualTo(Status.notStarted)
+    assertThat(result.status).isEqualTo(TaskStatus.notStarted)
     assertThat(result.taskType).isEqualTo(TaskType.assessment)
     assertThat(result.applicationId).isEqualTo(application.id)
     assertThat(result.dueDate).isEqualTo(LocalDate.parse("2022-12-17"))
@@ -83,7 +83,7 @@ class TaskTransformerTest {
 
     var result = taskTransformer.transformAssessmentToTask(assessment, mockOffenderDetailSummary, mockInmateDetail)
 
-    assertThat(result.status).isEqualTo(Status.inProgress)
+    assertThat(result.status).isEqualTo(TaskStatus.inProgress)
   }
 
   @Test
@@ -95,6 +95,6 @@ class TaskTransformerTest {
 
     var result = taskTransformer.transformAssessmentToTask(assessment, mockOffenderDetailSummary, mockInmateDetail)
 
-    assertThat(result.status).isEqualTo(Status.complete)
+    assertThat(result.status).isEqualTo(TaskStatus.complete)
   }
 }
