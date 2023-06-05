@@ -19,9 +19,8 @@ fun IntegrationTestBase.`Given a Placement Application`(
   submittedAt: OffsetDateTime? = null,
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
-  block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
-) {
-  `Given an Assessment for Approved Premises`(
+): PlacementApplicationEntity {
+  val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
     submittedAt = OffsetDateTime.now(),
     crn = crn,
@@ -39,20 +38,43 @@ fun IntegrationTestBase.`Given a Placement Application`(
         }
       }
     },
-  ) { _, application ->
-    val placementApplicationEntity = placementApplicationFactory.produceAndPersist {
-      withCreatedByUser(createdByUser)
-      withAllocatedToUser(allocatedToUser)
-      withApplication(application)
-      withSchemaVersion(schema)
-      withSubmittedAt(submittedAt)
-      withDecision(decision)
-      withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
-      if (reallocated) {
-        withReallocatedAt(OffsetDateTime.now())
-      }
-    }
+  )
 
-    block(placementApplicationEntity)
+  return placementApplicationFactory.produceAndPersist {
+    withCreatedByUser(createdByUser)
+    withAllocatedToUser(allocatedToUser)
+    withApplication(application)
+    withSchemaVersion(schema)
+    withSubmittedAt(submittedAt)
+    withDecision(decision)
+    withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+    if (reallocated) {
+      withReallocatedAt(OffsetDateTime.now())
+    }
   }
+}
+
+fun IntegrationTestBase.`Given a Placement Application`(
+  assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
+  createdByUser: UserEntity,
+  schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
+  crn: String = randomStringMultiCaseWithNumbers(8),
+  allocatedToUser: UserEntity? = null,
+  submittedAt: OffsetDateTime? = null,
+  decision: PlacementApplicationDecision? = null,
+  reallocated: Boolean = false,
+  block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
+) {
+  block(
+    `Given a Placement Application`(
+      assessmentDecision,
+      createdByUser,
+      schema,
+      crn,
+      allocatedToUser,
+      submittedAt,
+      decision,
+      reallocated,
+    ),
+  )
 }

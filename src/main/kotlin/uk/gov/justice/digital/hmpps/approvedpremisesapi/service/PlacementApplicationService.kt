@@ -29,6 +29,10 @@ class PlacementApplicationService(
   private val placementDateRepository: PlacementDateRepository,
 ) {
 
+  fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
+    return placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+  }
+
   fun createApplication(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,

@@ -2252,6 +2252,26 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /tasks/reallocatable:
+    get:
+      tags:
+        - Task data
+      summary: List all reallocatable tasks
+      responses:
+        200:
+          description: successfully retrieved tasks
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-requests:
     get:
       tags:

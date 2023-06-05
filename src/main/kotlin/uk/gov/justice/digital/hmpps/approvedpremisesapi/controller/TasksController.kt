@@ -28,7 +28,7 @@ class TasksController(
 ) : TasksApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun tasksGet(): ResponseEntity<List<Task>> {
+  override fun tasksReallocatableGet(): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
@@ -60,5 +60,30 @@ class TasksController(
     } else {
       throw ForbiddenProblem()
     }
+  }
+
+  override fun tasksGet(): ResponseEntity<List<Task>> {
+    val user = userService.getUserForRequest()
+    val tasks = mutableListOf<Task>()
+
+    if (user.hasRole(UserRole.CAS1_MATCHER)) {
+      tasks += mapAndTransformPlacementRequests(
+        log,
+        placementRequestService.getVisiblePlacementRequestsForUser(user),
+        user.deliusUsername,
+        this.offenderService,
+        taskTransformer::transformPlacementRequestToTask,
+      )
+
+      tasks += mapAndTransformPlacementApplications(
+        log,
+        placementApplicationService.getVisiblePlacementApplicationsForUser(user),
+        user.deliusUsername,
+        this.offenderService,
+        taskTransformer::transformPlacementApplicationToTask,
+      )
+    }
+
+    return ResponseEntity.ok(tasks)
   }
 }
