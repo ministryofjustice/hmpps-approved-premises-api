@@ -123,6 +123,7 @@ class ApplicationsController(
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
       ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
+      ServiceName.cas2 -> applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
       ServiceName.temporaryAccommodation -> applicationService.createTemporaryAccommodationApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
     }
 

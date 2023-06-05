@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -247,6 +248,53 @@ class ApplicationService(
         ),
       )
     }
+
+    return success(createdApplication.apply { schemaUpToDate = true })
+  }
+
+  fun createCas2Application(crn: String, user: UserEntity, jwt: String) = validated<ApplicationEntity> {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+
+    val offenderDetails = when (offenderDetailsResult) {
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    }
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    var riskRatings: PersonRisks? = null
+
+    val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+
+    riskRatings = when (riskRatingsResult) {
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+      is AuthorisableActionResult.Success -> riskRatingsResult.entity
+    }
+
+    val createdApplication = applicationRepository.save(
+      Cas2ApplicationEntity(
+        id = UUID.randomUUID(),
+        crn = crn,
+        createdByUser = user,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
+        createdAt = OffsetDateTime.now(),
+        submittedAt = null,
+        schemaUpToDate = true,
+        riskRatings = riskRatings,
+        assessments = mutableListOf(),
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+      ),
+    )
 
     return success(createdApplication.apply { schemaUpToDate = true })
   }
