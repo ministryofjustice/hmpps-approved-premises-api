@@ -3223,6 +3223,21 @@ components:
     PlacementRequestTask:
       allOf:
         - $ref: '#/components/schemas/Task'
+        - $ref: '#/components/schemas/PlacementDates'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 6abb5fa3-e93f-4445-887b-30d081688f44
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
+          required:
+            - id
+            - risks
+            - releaseType
     PlacementApplicationTask:
       allOf:
         - $ref: '#/components/schemas/Task'

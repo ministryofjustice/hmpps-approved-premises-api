@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 class TaskTransformer(
   private val personTransformer: PersonTransformer,
   private val userTransformer: UserTransformer,
+  private val risksTransformer: RisksTransformer,
+  private val placementRequestTransformer: PlacementRequestTransformer,
 ) {
   fun transformAssessmentToTask(assessment: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = AssessmentTask(
     applicationId = assessment.application.id,
@@ -29,12 +31,17 @@ class TaskTransformer(
   )
 
   fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = PlacementRequestTask(
+    id = placementRequest.id,
     applicationId = placementRequest.application.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     dueDate = placementRequest.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementRequest.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementRequestStatus(placementRequest),
     taskType = TaskType.placementRequest,
+    risks = risksTransformer.transformDomainToApi(placementRequest.application.riskRatings!!, placementRequest.application.crn),
+    expectedArrival = placementRequest.expectedArrival,
+    duration = placementRequest.duration,
+    releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType)!!,
   )
 
   fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = PlacementApplicationTask(
