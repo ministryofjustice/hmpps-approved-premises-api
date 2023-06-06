@@ -1,0 +1,3 @@
+UPDATE json_schemas
+SET type = 'CAS_2_APPLICATION'
+WHERE id = '20c06750-27d3-4dc6-8ac6-948c8f0a0210';
