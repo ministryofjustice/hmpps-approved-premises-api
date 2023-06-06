@@ -15,9 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -38,6 +41,8 @@ class PlacementRequestService(
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
+  private val placementRequirementsRepository: PlacementRequirementsRepository,
+  private val placementDateRepository: PlacementDateRepository,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -108,6 +113,28 @@ class PlacementRequestService(
         newPlacementRequest,
       ),
     )
+  }
+
+  fun createPlacementRequestsFromPlacementApplication(placementApplicationEntity: PlacementApplicationEntity, notes: String?): AuthorisableActionResult<List<PlacementRequestEntity>> {
+    val placementRequirements = placementRequirementsRepository.findByApplication(
+      placementApplicationEntity.application,
+    ) ?: return AuthorisableActionResult.NotFound("Placement Requirements", placementApplicationEntity.application.id.toString())
+
+    val placementDateEntities = placementDateRepository.findAllByPlacementApplication(placementApplicationEntity)
+
+    if (placementDateEntities.isEmpty()) {
+      return AuthorisableActionResult.NotFound("Placement Dates for Placement Application", placementApplicationEntity.id.toString())
+    }
+
+    val placementRequests = placementDateEntities.map {
+      val placementDates = PlacementDates(
+        expectedArrival = it.expectedArrival,
+        duration = it.duration,
+      )
+      this.createPlacementRequest(placementRequirements, placementDates, notes)
+    }
+
+    return AuthorisableActionResult.Success(placementRequests)
   }
 
   fun createPlacementRequest(placementRequirements: PlacementRequirementsEntity, placementDates: PlacementDates, notes: String?): PlacementRequestEntity {

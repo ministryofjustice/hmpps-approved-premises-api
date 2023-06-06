@@ -83,4 +83,6 @@ enum class PlacementType {
 enum class PlacementApplicationDecision {
   ACCEPTED,
   REJECTED,
+  WITHDRAW,
+  WITHDRAWN_BY_PP,
 }

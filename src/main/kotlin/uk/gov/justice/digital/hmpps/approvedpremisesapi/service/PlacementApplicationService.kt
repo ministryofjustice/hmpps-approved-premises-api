@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -18,8 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates as ApiPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
 @Service
 class PlacementApplicationService(
@@ -27,6 +31,7 @@ class PlacementApplicationService(
   private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
+  private val placementRequestService: PlacementRequestService,
 ) {
 
   fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
@@ -201,6 +206,45 @@ class PlacementApplicationService(
     placementDateRepository.saveAll(placementDates)
 
     placementApplicationEntity.placementDates = placementDates
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  @Transactional
+  fun recordDecision(id: UUID, placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+    val user = userService.getUserForRequest()
+    val placementApplicationEntity = placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+
+    if (placementApplicationEntity.allocatedToUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (placementApplicationEntity.decision != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already had a decision set"),
+      )
+    }
+
+    if (placementApplicationDecisionEnvelope.decision == ApiPlacementApplicationDecision.accepted) {
+      val placementRequestResult = placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplicationEntity, placementApplicationDecisionEnvelope.decisionSummary)
+
+      if (placementRequestResult is AuthorisableActionResult.NotFound) {
+        return AuthorisableActionResult.NotFound(placementRequestResult.entityType, placementRequestResult.id)
+      }
+    }
+
+    placementApplicationEntity.apply {
+      decision = when (placementApplicationDecisionEnvelope.decision) {
+        ApiPlacementApplicationDecision.accepted -> JpaPlacementApplicationDecision.ACCEPTED
+        ApiPlacementApplicationDecision.rejected -> JpaPlacementApplicationDecision.REJECTED
+        ApiPlacementApplicationDecision.withdraw -> JpaPlacementApplicationDecision.WITHDRAW
+        ApiPlacementApplicationDecision.withdrawnByPp -> JpaPlacementApplicationDecision.WITHDRAWN_BY_PP
+      }
+    }
+
+    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),

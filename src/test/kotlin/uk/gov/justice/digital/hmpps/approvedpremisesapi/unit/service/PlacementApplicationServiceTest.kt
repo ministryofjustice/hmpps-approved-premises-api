@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -32,12 +33,14 @@ class PlacementApplicationServiceTest {
   private val jsonSchemaService = mockk<JsonSchemaService>()
   private val userService = mockk<UserService>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
+  private val placementRequestService = mockk<PlacementRequestService>()
 
   private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
     jsonSchemaService,
     userService,
     placementDateRepository,
+    placementRequestService,
   )
 
   @Nested
