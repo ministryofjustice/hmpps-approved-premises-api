@@ -47,7 +47,7 @@ class PlacementApplicationsController(
 
   override fun placementApplicationsIdGet(id: UUID): ResponseEntity<PlacementApplication> {
     val result = placementApplicationService.getApplication(id)
-    val placementApplication = extractEntityFromAuthorisableActionResult(result, id.toString(), "Application")
+    val placementApplication = extractEntityFromAuthorisableActionResult(result)
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
@@ -60,7 +60,7 @@ class PlacementApplicationsController(
 
     val result = placementApplicationService.updateApplication(id, serializedData)
 
-    val validationResult = extractEntityFromAuthorisableActionResult(result, id.toString(), "Placement Application")
+    val validationResult = extractEntityFromAuthorisableActionResult(result)
     val placementApplication = extractEntityFromValidatableActionResult(validationResult)
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
@@ -74,7 +74,7 @@ class PlacementApplicationsController(
 
     val result = placementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, submitPlacementApplication.placementDates)
 
-    val validationResult = extractEntityFromAuthorisableActionResult(result, id.toString(), "Placement Application")
+    val validationResult = extractEntityFromAuthorisableActionResult(result)
     val placementApplication = extractEntityFromValidatableActionResult(validationResult)
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
