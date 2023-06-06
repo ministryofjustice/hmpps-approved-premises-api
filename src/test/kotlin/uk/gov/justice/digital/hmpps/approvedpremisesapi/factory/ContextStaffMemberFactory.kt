@@ -11,6 +11,18 @@ class ContextStaffMemberFactory : Factory<StaffMember> {
   private var forenames: Yielded<String> = { randomStringUpperCase(6) }
   private var surname: Yielded<String> = { randomStringUpperCase(6) }
 
+  fun withStaffCode(staffCode: String) = apply {
+    this.staffCode = { staffCode }
+  }
+
+  fun withForenames(forenames: String) = apply {
+    this.forenames = { forenames }
+  }
+
+  fun withSurname(surname: String) = apply {
+    this.surname = { surname }
+  }
+
   override fun produce(): StaffMember = StaffMember(
     code = this.staffCode(),
     keyWorker = false,
