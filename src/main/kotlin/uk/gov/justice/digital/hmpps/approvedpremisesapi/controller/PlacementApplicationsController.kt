@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -32,6 +33,10 @@ class PlacementApplicationsController(
       newPlacementApplication.applicationId.toString(),
       "Placement Application",
     )
+
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw RuntimeException("Only CAS1 Applications are currently supported")
+    }
 
     val placementApplication = extractEntityFromValidatableActionResult(
       placementApplicationService.createApplication(application, user),

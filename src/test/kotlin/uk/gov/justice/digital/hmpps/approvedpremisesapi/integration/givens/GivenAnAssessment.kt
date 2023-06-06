@@ -17,8 +17,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   data: String? = "{ \"some\": \"data\"}",
   decision: AssessmentDecision? = null,
   submittedAt: OffsetDateTime? = null,
-  block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
-) {
+): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
   }
@@ -32,6 +31,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withCrn(crn)
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
+    withReleaseType("licence")
   }
 
   val assessment = assessmentEntityFactory.produceAndPersist {
@@ -47,6 +47,29 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   }
 
   assessment.schemaUpToDate = true
+
+  return Pair(assessment, application)
+}
+
+fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
+  allocatedToUser: UserEntity,
+  createdByUser: UserEntity,
+  crn: String = randomStringMultiCaseWithNumbers(8),
+  reallocated: Boolean = false,
+  data: String? = "{ \"some\": \"data\"}",
+  decision: AssessmentDecision? = null,
+  submittedAt: OffsetDateTime? = null,
+  block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
+) {
+  val (assessment, application) = `Given an Assessment for Approved Premises`(
+    allocatedToUser,
+    createdByUser,
+    crn,
+    reallocated,
+    data,
+    decision,
+    submittedAt,
+  )
 
   block(assessment, application)
 }

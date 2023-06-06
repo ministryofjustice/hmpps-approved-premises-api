@@ -2252,6 +2252,26 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /tasks/reallocatable:
+    get:
+      tags:
+        - Task data
+      summary: List all reallocatable tasks
+      responses:
+        200:
+          description: successfully retrieved tasks
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-requests:
     get:
       tags:
@@ -3194,13 +3214,16 @@ components:
         allocatedToStaffMember:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:
-          type: string
-          enum:
-            - not_started
-            - in_progress
-            - complete
+          $ref: '#/components/schemas/TaskStatus'
         taskType:
           $ref: '#/components/schemas/TaskType'
+      discriminator:
+        propertyName: taskType
+        mapping:
+          Assessment: '#/components/schemas/AssessmentTask'
+          PlacementRequest: '#/components/schemas/PlacementRequestTask'
+          PlacementApplication: '#/components/schemas/PlacementApplicationTask'
+          BookingAppeal: '#/components/schemas/BookingAppealTask'
       required: 
         - applicationId
         - person
@@ -3208,6 +3231,60 @@ components:
         - allocatedToStaffMember
         - status
         - taskType
+    TaskStatus:
+      type: string
+      enum:
+        - not_started
+        - in_progress
+        - complete
+    AssessmentTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+    PlacementRequestTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+        - $ref: '#/components/schemas/PlacementDates'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 6abb5fa3-e93f-4445-887b-30d081688f44
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
+          required:
+            - id
+            - risks
+            - releaseType
+    PlacementApplicationTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 6abb5fa3-e93f-4445-887b-30d081688f44
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
+            placementType:
+              $ref: '#/components/schemas/PlacementType'
+            placementDates:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlacementDates'
+          required:
+            - id
+            - risks
+            - releaseType
+            - placementType
+    BookingAppealTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
     TaskType:
       type: string
       enum:

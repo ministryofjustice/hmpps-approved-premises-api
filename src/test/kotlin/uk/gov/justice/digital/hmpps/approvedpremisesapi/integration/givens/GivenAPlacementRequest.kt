@@ -14,8 +14,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
-  block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
-) {
+): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
   }
@@ -63,5 +62,24 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withPlacementRequirements(placementRequirements)
   }
 
-  block(placementRequest, application)
+  return Pair(placementRequest, application)
+}
+
+fun IntegrationTestBase.`Given a Placement Request`(
+  placementRequestAllocatedTo: UserEntity,
+  assessmentAllocatedTo: UserEntity,
+  createdByUser: UserEntity,
+  crn: String = randomStringMultiCaseWithNumbers(8),
+  reallocated: Boolean = false,
+  block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
+) {
+  val result = `Given a Placement Request`(
+    placementRequestAllocatedTo,
+    assessmentAllocatedTo,
+    createdByUser,
+    crn,
+    reallocated,
+  )
+
+  block(result.first, result.second)
 }

@@ -23,6 +23,8 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   fun findByApplicationId(id: UUID): PlacementApplicationEntity?
 
   fun findByApplication_IdAndReallocatedAtNull(id: UUID): PlacementApplicationEntity?
+
+  fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementApplicationEntity>
 }
 
 @Entity
@@ -33,7 +35,7 @@ data class PlacementApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "application_id")
-  val application: ApplicationEntity,
+  val application: ApprovedPremisesApplicationEntity,
 
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")

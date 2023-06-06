@@ -63,7 +63,7 @@ class PlacementRequestTransformer(
     }
   }
 
-  private fun getReleaseType(releaseType: String?): ReleaseTypeOption? = when (releaseType) {
+  fun getReleaseType(releaseType: String?): ReleaseTypeOption? = when (releaseType) {
     "licence" -> ReleaseTypeOption.licence
     "rotl" -> ReleaseTypeOption.rotl
     "hdc" -> ReleaseTypeOption.hdc
