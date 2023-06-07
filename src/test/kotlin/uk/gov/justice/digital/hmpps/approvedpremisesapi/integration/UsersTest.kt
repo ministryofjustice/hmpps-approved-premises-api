@@ -225,6 +225,20 @@ class UsersTest : IntegrationTestBase() {
   @Nested
   inner class GetUsers {
     @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to users with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `GET to users with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
