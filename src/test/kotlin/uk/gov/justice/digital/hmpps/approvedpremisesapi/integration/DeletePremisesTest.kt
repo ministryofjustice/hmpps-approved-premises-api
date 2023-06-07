@@ -6,7 +6,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 
 class DeletePremisesTest : IntegrationTestBase() {
   @SpykBean
@@ -26,6 +29,8 @@ class DeletePremisesTest : IntegrationTestBase() {
       }
     }
 
+    val lostBed = createLostBed(premises, beds.first())
+
     webTestClient.delete()
       .uri("/internal/premises/${premises.id}")
       .exchange()
@@ -35,10 +40,12 @@ class DeletePremisesTest : IntegrationTestBase() {
     val premisesFromDatabase = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
     val roomsFromDatabase = rooms.map { roomRepository.findByIdOrNull(it.id) }
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
+    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
 
     assertThat(premisesFromDatabase).isNull()
     roomsFromDatabase.forEach { assertThat(it).isNull() }
     bedsFromDatabase.forEach { assertThat(it).isNull() }
+    assertThat(lostBedFromDatabase).isNull()
   }
 
   @Test
@@ -55,6 +62,8 @@ class DeletePremisesTest : IntegrationTestBase() {
       }
     }
 
+    val lostBed = createLostBed(premises, beds.first())
+
     every { realBedRepository.delete(match { it.id == beds.last().id }) } throws RuntimeException("Database Exception")
 
     webTestClient.delete()
@@ -66,10 +75,12 @@ class DeletePremisesTest : IntegrationTestBase() {
     val premisesFromDatabase = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
     val roomsFromDatabase = rooms.map { roomRepository.findByIdOrNull(it.id) }
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
+    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
 
     assertThat(premisesFromDatabase).isNotNull
     roomsFromDatabase.forEach { assertThat(it).isNotNull }
     bedsFromDatabase.forEach { assertThat(it).isNotNull }
+    assertThat(lostBedFromDatabase).isNotNull
   }
 
   @Test
@@ -86,6 +97,8 @@ class DeletePremisesTest : IntegrationTestBase() {
       }
     }
 
+    val lostBed = createLostBed(premises, beds.first())
+
     val booking = bookingEntityFactory.produceAndPersist {
       withPremises(premises)
       withBed(beds.last())
@@ -101,11 +114,13 @@ class DeletePremisesTest : IntegrationTestBase() {
     val roomsFromDatabase = rooms.map { roomRepository.findByIdOrNull(it.id) }
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
     val bookingFromDatabase = bookingRepository.findByIdOrNull(booking.id)
+    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
 
     assertThat(premisesFromDatabase).isNotNull
     roomsFromDatabase.forEach { assertThat(it).isNotNull }
     bedsFromDatabase.forEach { assertThat(it).isNotNull }
     assertThat(bookingFromDatabase).isNotNull
+    assertThat(lostBedFromDatabase).isNotNull
   }
 
   private fun createPremises() = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -116,5 +131,15 @@ class DeletePremisesTest : IntegrationTestBase() {
     )
 
     withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+  }
+
+  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = lostBedsEntityFactory.produceAndPersist {
+    withPremises(premises)
+    withBed(bed)
+    withYieldedReason {
+      lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+    }
   }
 }

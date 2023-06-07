@@ -442,6 +442,10 @@ class PremisesService(
       return premises.id hasConflictError "A premises cannot be hard-deleted if it has any bookings associated with it"
     }
 
+    premises.lostBeds.forEach { lostBed ->
+      lostBedsRepository.delete(lostBed)
+    }
+
     premises.rooms.forEach { room ->
       room.beds.forEach { bed ->
         bedRepository.delete(bed)
