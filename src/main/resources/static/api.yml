@@ -3254,10 +3254,13 @@ components:
               $ref: '#/components/schemas/PersonRisks'
             releaseType:
               $ref: '#/components/schemas/ReleaseTypeOption'
+            placementRequestStatus:
+              $ref: '#/components/schemas/PlacementRequestStatus'
           required:
             - id
             - risks
             - releaseType
+            - placementRequestStatus
     PlacementApplicationTask:
       allOf:
         - $ref: '#/components/schemas/Task'

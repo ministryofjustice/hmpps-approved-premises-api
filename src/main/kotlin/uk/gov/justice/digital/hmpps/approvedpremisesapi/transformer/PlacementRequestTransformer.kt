@@ -43,7 +43,7 @@ class PlacementRequestTransformer(
     )
   }
 
-  private fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
+  fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
     if (placementRequest.booking == null) {
       if (placementRequest.bookingNotMades.any()) {
         return PlacementRequestStatus.unableToMatch
