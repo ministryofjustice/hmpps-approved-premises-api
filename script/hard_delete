@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# script/hard_delete:    Use internal endpoint to delete an object.  e.g.
+#                        script/hard_delete booking {booking id}
+#                        Or:
+#                        script/hard_delete premises {premises id}
+
+set -e
+
+curl --location --request DELETE "http://127.0.0.1:8080/internal/$1/$2"
