@@ -214,10 +214,6 @@ class BookingService(
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
 
-      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-      }
-
       getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
@@ -916,8 +912,10 @@ class BookingService(
     notes: String?,
   ) = validated<ExtensionEntity> {
     val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
-    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
-      return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+    if (booking.service != ServiceName.approvedPremises.value) {
+      getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+      }
     }
     getLostBedWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bed!!.id)?.let {
       return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"

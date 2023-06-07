@@ -1890,6 +1890,121 @@ class BookingServiceTest {
     assertThat(runtimeException.message).isEqualTo("Unable to complete GET request to /staff-details/${user.deliusUsername}: 404 NOT_FOUND")
   }
 
+  @Test
+  fun `createApprovedPremisesAdHocBooking succeeds when creating a double Booking`() {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-22")
+    val departureDate = LocalDate.parse("2023-02-23")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(UserRole.CAS1_MANAGER)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf(
+      BookingEntityFactory()
+        .withPremises(premises)
+        .withBed(bed)
+        .withArrivalDate(LocalDate.parse("2023-02-20"))
+        .withDepartureDate(LocalDate.parse("2023-02-22"))
+        .produce(),
+    )
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCrn(crn)
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withUsername(user.deliusUsername)
+      .produce()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+    every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
+    every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+
+    every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    assertThat(authorisableResult is AuthorisableActionResult.Success)
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.Success)
+
+    verify(exactly = 1) {
+      mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventService.saveBookingMadeDomainEvent(
+        match {
+          val data = (it.data as BookingMadeEnvelope).eventDetails
+
+          it.applicationId == existingApplication.id &&
+            it.crn == crn &&
+            data.applicationId == existingApplication.id &&
+            data.applicationUrl == "http://frontend/applications/${existingApplication.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!,
+          ) &&
+            data.deliusEventNumber == existingApplication.eventNumber &&
+            data.premises == Premises(
+            id = premises.id,
+            name = premises.name,
+            apCode = premises.apCode,
+            legacyApCode = premises.qCode,
+            localAuthorityAreaName = premises.localAuthorityArea!!.name,
+          ) &&
+            data.arrivalOn == arrivalDate
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockEmailNotificationService.sendEmail(
+        any(),
+        "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+        match {
+          it["name"] == user.name &&
+            (it["apName"] as String) == premises.name &&
+            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
+            (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        },
+      )
+    }
+  }
+
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `createApprovedPremisesAdHocBooking saves Booking and creates Domain Event when associated Application is an Online Application`(role: UserRole) {
