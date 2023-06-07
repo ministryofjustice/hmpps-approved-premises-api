@@ -264,8 +264,6 @@ class ApplicationsController(
       TaskType.assessment -> {
         val assessment = extractEntityFromAuthorisableActionResult(
           assessmentService.getAssessmentForUserAndApplication(user, applicationId),
-          applicationId.toString(),
-          "Assessment",
         )
 
         transformedTask = transformAssessment(
@@ -282,8 +280,6 @@ class ApplicationsController(
       TaskType.placementRequest -> {
         val placementRequest = extractEntityFromAuthorisableActionResult(
           placementRequestService.getPlacementRequestForUserAndApplication(user, applicationId),
-          applicationId.toString(),
-          "Placement Request",
         )
 
         val personDetail =
@@ -303,8 +299,6 @@ class ApplicationsController(
       TaskType.placementApplication -> {
         val placementApplication = extractEntityFromAuthorisableActionResult(
           placementApplicationService.getPlacementApplicationForApplicationId(applicationId),
-          applicationId.toString(),
-          "Placement Application",
         )
 
         val personDetail = getPersonDetailsForCrn(log, placementApplication.application.crn, user.deliusUsername, offenderService)

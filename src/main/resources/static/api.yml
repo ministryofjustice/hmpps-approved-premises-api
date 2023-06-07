@@ -2506,6 +2506,45 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/decision:
+    post:
+      tags:
+        - Placement applications
+      summary: Submits a decision for a placement application
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit a placement application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/PlacementApplicationDecisionEnvelope'
+        required: true
+      responses:
+        200:
+          description: successfully made a decision on the placement application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application already has a decision made
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -5465,6 +5504,26 @@ components:
         - translatedDocument
         - placementType
         - placementDates
+    PlacementApplicationDecisionEnvelope:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/PlacementApplicationDecision'
+        summaryOfChanges:
+          type: string
+        decisionSummary:
+          type: string
+      required:
+        - decision
+        - summaryOfChanges
+        - decisionSummary
+    PlacementApplicationDecision:
+      type: string
+      enum:
+        - accepted
+        - rejected
+        - withdraw
+        - withdrawn_by_pp
     PlacementType:
       type: string
       enum:

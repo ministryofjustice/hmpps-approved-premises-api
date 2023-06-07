@@ -9,6 +9,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
@@ -17,12 +19,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
 class PlacementApplicationsTest : IntegrationTestBase() {
 
@@ -564,6 +573,264 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           }
         }
       }
+    }
+  }
+
+  @Nested
+  inner class CreatePlacementApplicationDecisionTest {
+
+    @Test
+    fun `submitting a placement request application decision without a JWT returns 401`() {
+      webTestClient.post()
+        .uri("/placement-applications/${UUID.randomUUID()}/decision")
+        .bodyValue(
+          PlacementApplicationDecisionEnvelope(
+            decision = PlacementApplicationDecision.accepted,
+            summaryOfChanges = "ChangeSummary",
+            decisionSummary = "DecisionSummary",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `submitting a placement application decision when the placement application does not exist returns 404`() {
+      `Given a User` { _, jwt ->
+        webTestClient.post()
+          .uri("/placement-applications/${UUID.randomUUID()}/decision")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            PlacementApplicationDecisionEnvelope(
+              decision = PlacementApplicationDecision.accepted,
+              summaryOfChanges = "ChangeSummary",
+              decisionSummary = "DecisionSummary",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `submitting a placement request application decision with a decision already set returns an error`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a submitted Placement Application`(
+            allocatedToUser = user,
+            offenderDetails = offenderDetails,
+            decision = JpaPlacementApplicationDecision.REJECTED,
+          ) { placementApplicationEntity ->
+            webTestClient.post()
+              .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                PlacementApplicationDecisionEnvelope(
+                  decision = PlacementApplicationDecision.accepted,
+                  summaryOfChanges = "ChangeSummary",
+                  decisionSummary = "DecisionSummary",
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isBadRequest
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `submitting a placement request application that is not assigned to me returns an error`() {
+      `Given a User` { _, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given a submitted Placement Application`(
+              allocatedToUser = otherUser,
+              offenderDetails = offenderDetails,
+              decision = JpaPlacementApplicationDecision.REJECTED,
+            ) { placementApplicationEntity ->
+              webTestClient.post()
+                .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  PlacementApplicationDecisionEnvelope(
+                    decision = PlacementApplicationDecision.accepted,
+                    summaryOfChanges = "ChangeSummary",
+                    decisionSummary = "DecisionSummary",
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `submitting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
+            webTestClient.post()
+              .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                PlacementApplicationDecisionEnvelope(
+                  decision = PlacementApplicationDecision.accepted,
+                  summaryOfChanges = "ChangeSummary",
+                  decisionSummary = "DecisionSummary",
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isNotFound
+
+            val updatedPlacementApplication =
+              placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
+
+            assertThat(updatedPlacementApplication.decision).isEqualTo(null)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `submitting a placement application decision when the placement dates do not exist returns 404 and does not update the decision`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
+            `Given placement requirements`(placementApplicationEntity = placementApplicationEntity) { _ ->
+              webTestClient.post()
+                .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  PlacementApplicationDecisionEnvelope(
+                    decision = PlacementApplicationDecision.accepted,
+                    summaryOfChanges = "ChangeSummary",
+                    decisionSummary = "DecisionSummary",
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isNotFound
+
+              val updatedPlacementApplication =
+                placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
+
+              assertThat(updatedPlacementApplication.decision).isEqualTo(null)
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `accepting a placement request application decision records the decision and creates and assigns a placement request`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
+          `Given a User` { user, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
+              `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
+                `Given placement requirements`(placementApplicationEntity = placementApplicationEntity) { placementRequirements ->
+                  `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
+                    webTestClient.post()
+                      .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                      .header("Authorization", "Bearer $jwt")
+                      .bodyValue(
+                        PlacementApplicationDecisionEnvelope(
+                          decision = PlacementApplicationDecision.accepted,
+                          summaryOfChanges = "ChangeSummary",
+                          decisionSummary = "DecisionSummary",
+                        ),
+                      )
+                      .exchange()
+                      .expectStatus()
+                      .isOk
+
+                    val updatedPlacementApplication =
+                      placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
+
+                    assertThat(updatedPlacementApplication.decision).isEqualTo(JpaPlacementApplicationDecision.ACCEPTED)
+
+                    val createdPlacementRequests =
+                      placementRequestRepository.findAllByApplication(placementApplicationEntity.application)
+
+                    assertThat(createdPlacementRequests.size).isEqualTo(1)
+
+                    val createdPlacementApplication = createdPlacementRequests[0]
+
+                    assertThat(createdPlacementApplication.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
+                    assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
+                    assertThat(createdPlacementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
+                    assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
+                    assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    private fun `Given a submitted Placement Application`(
+      allocatedToUser: UserEntity,
+      offenderDetails: OffenderDetailSummary,
+      decision: JpaPlacementApplicationDecision? = null,
+      block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
+    ) {
+      val placementApplication = `Given a Placement Application`(
+        allocatedToUser = allocatedToUser,
+        createdByUser = userEntityFactory.produceAndPersist {
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        },
+        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+        submittedAt = OffsetDateTime.now(),
+        crn = offenderDetails.otherIds.crn,
+        decision = decision,
+      )
+
+      block(placementApplication)
+    }
+
+    private fun `Given placement requirements`(
+      placementApplicationEntity: PlacementApplicationEntity,
+      block: (placementRequirements: PlacementRequirementsEntity) -> Unit,
+    ) {
+      val placementRequirements = placementRequirementsFactory.produceAndPersist {
+        withApplication(placementApplicationEntity.application)
+        withAssessment(placementApplicationEntity.application.getLatestAssessment()!!)
+        withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+        withDesirableCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(5),
+        )
+        withEssentialCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(3),
+        )
+      }
+
+      block(placementRequirements)
+    }
+
+    private fun `Given placement dates`(
+      placementApplicationEntity: PlacementApplicationEntity,
+      block: (placementDates: PlacementDateEntity) -> Unit,
+    ) {
+      block(
+        placementDateFactory.produceAndPersist {
+          withPlacementApplication(placementApplicationEntity)
+        },
+      )
     }
   }
 

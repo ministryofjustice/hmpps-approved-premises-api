@@ -27,8 +27,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -47,6 +49,8 @@ class PlacementRequestServiceTest {
   private val offenderService = mockk<OffenderService>()
   private val communityApiClient = mockk<CommunityApiClient>()
   private val cruService = mockk<CruService>()
+  private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
+  private val placementDateRepository = mockk<PlacementDateRepository>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
@@ -56,6 +60,8 @@ class PlacementRequestServiceTest {
     offenderService,
     communityApiClient,
     cruService,
+    placementRequirementsRepository,
+    placementDateRepository,
     "http://frontend/applications/#id",
   )
 

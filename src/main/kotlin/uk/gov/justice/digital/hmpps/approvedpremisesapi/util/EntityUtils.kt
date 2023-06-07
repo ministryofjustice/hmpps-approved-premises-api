@@ -7,9 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 
-fun <EntityType> extractEntityFromAuthorisableActionResult(result: AuthorisableActionResult<EntityType>, id: String, entityType: String) = when (result) {
+fun <EntityType> extractEntityFromAuthorisableActionResult(result: AuthorisableActionResult<EntityType>) = when (result) {
   is AuthorisableActionResult.Success -> result.entity
-  is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, entityType)
+  is AuthorisableActionResult.NotFound -> throw NotFoundProblem(result.id.toString(), result.entityType.toString())
   is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
 }
 
