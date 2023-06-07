@@ -1652,7 +1652,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createApprovedPremisesBooking returns Unauthorised if user does not have either MANAGER or MATCHER role`() {
+  fun `createApprovedPremisesAdHocBooking returns Unauthorised if user does not have either MANAGER or MATCHER role`() {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
@@ -1668,7 +1668,7 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesBooking returns FieldValidationError if Departure Date is before Arrival Date`(role: UserRole) {
+  fun `createApprovedPremisesAdHocBooking returns FieldValidationError if Departure Date is before Arrival Date`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-23")
     val departureDate = LocalDate.parse("2023-02-22")
@@ -1715,7 +1715,7 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesBooking returns FieldValidationError if Bed does not exist`(role: UserRole) {
+  fun `createApprovedPremisesAdHocBooking returns FieldValidationError if Bed does not exist`(role: UserRole) {
     val crn = "CRN123"
     val bedId = UUID.fromString("5c0d77ff-3ec8-45e1-9e1f-a68e73bf45ec")
     val arrivalDate = LocalDate.parse("2023-02-22")
@@ -1751,7 +1751,7 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesBooking returns FieldValidationError if there are no existing Applications for the CRN`(role: UserRole) {
+  fun `createApprovedPremisesAdHocBooking returns FieldValidationError if there are no existing Applications for the CRN`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")
     val departureDate = LocalDate.parse("2023-02-23")
@@ -1794,7 +1794,7 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesBooking throws if unable to get Offender Details`(role: UserRole) {
+  fun `createApprovedPremisesAdHocBooking throws if unable to get Offender Details`(role: UserRole) {
     val arrivalDate = LocalDate.parse("2023-02-22")
     val departureDate = LocalDate.parse("2023-02-23")
 
@@ -1841,7 +1841,7 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesBooking throws if unable to get Staff Details`(role: UserRole) {
+  fun `createApprovedPremisesAdHocBooking throws if unable to get Staff Details`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")
     val departureDate = LocalDate.parse("2023-02-23")
@@ -1892,7 +1892,7 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesBooking saves Booking and creates Domain Event when associated Application is an Online Application`(role: UserRole) {
+  fun `createApprovedPremisesAdHocBooking saves Booking and creates Domain Event when associated Application is an Online Application`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")
     val departureDate = LocalDate.parse("2023-02-23")
@@ -2001,7 +2001,7 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesBooking saves Booking but does not create Domain Event when associated Application is an Offline Application as Event Number is not present`(role: UserRole) {
+  fun `createApprovedPremisesAdHocBooking saves Booking but does not create Domain Event when associated Application is an Offline Application as Event Number is not present`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")
     val departureDate = LocalDate.parse("2023-02-23")
