@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
@@ -238,11 +239,13 @@ class TaskTransformerTest {
     val application = placementRequest.application
     private val mockRisks = mockk<PersonRisks>()
     private val releaseType = ReleaseTypeOption.licence
+    private val placementRequestStatus = PlacementRequestStatus.notMatched
 
     @BeforeEach
     fun setup() {
       every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
       every { mockPlacementRequestTransformer.getReleaseType(application.releaseType) } returns releaseType
+      every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
     }
 
     @Test
@@ -255,6 +258,7 @@ class TaskTransformerTest {
       assertThat(result.releaseType).isEqualTo(releaseType)
       assertThat(result.expectedArrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.duration).isEqualTo(placementRequest.duration)
+      assertThat(result.placementRequestStatus).isEqualTo(placementRequestStatus)
     }
 
     @Test
@@ -273,6 +277,8 @@ class TaskTransformerTest {
             .produce(),
         )
         .produce()
+
+      every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
 
       val result = taskTransformer.transformPlacementRequestToTask(placementRequest, mockOffenderDetailSummary, mockInmateDetail)
 

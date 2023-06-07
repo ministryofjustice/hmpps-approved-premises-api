@@ -44,6 +44,7 @@ class TaskTransformer(
     risks = risksTransformer.transformDomainToApi(placementRequest.application.riskRatings!!, placementRequest.application.crn),
     expectedArrival = placementRequest.expectedArrival,
     duration = placementRequest.duration,
+    placementRequestStatus = placementRequestTransformer.getStatus(placementRequest),
     releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType)!!,
   )
 
