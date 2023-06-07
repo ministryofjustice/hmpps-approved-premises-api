@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingCancelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesOfflineApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
@@ -149,6 +150,11 @@ class SeedService(
           applicationContext.getBean(DestinationProviderRepository::class.java),
           applicationContext.getBean(NonArrivalReasonRepository::class.java),
           applicationContext.getBean(CancellationReasonRepository::class.java),
+        )
+
+        SeedFileType.approvedPremisesCancelBookings -> ApprovedPremisesBookingCancelSeedJob(
+          filename,
+          applicationContext.getBean(BookingService::class.java),
         )
       }
 
