@@ -2792,7 +2792,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/UserRole'
+              $ref: '#/components/schemas/ApprovedPremisesUserRole'
         - in: query
           name: qualifications
           required: false
@@ -4915,10 +4915,6 @@ components:
           format: uuid
         region:
           $ref: '#/components/schemas/ProbationRegion'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserRole'
         service:
           type: string
           example: CAS1
@@ -4930,7 +4926,6 @@ components:
       required:
         - id
         - region
-        - roles
         - service
     ApprovedPremisesUser:
       allOf:
@@ -4949,16 +4944,27 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/UserQualification'
+            roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApprovedPremisesUserRole'
           required:
             - name
             - deliusUsername
             - qualifications
+            - roles
     TemporaryAccommodationUser:
       allOf:
         - $ref: '#/components/schemas/User'
         - type: object
-          properties: {}
-    UserRole:
+          properties:
+            roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/TemporaryAccommodationUserRole'
+          required:
+            - roles
+    ApprovedPremisesUserRole:
       type: string
       enum:
         - assessor
@@ -4967,6 +4973,11 @@ components:
         - workflow_manager
         - applicant
         - role_admin
+    TemporaryAccommodationUserRole:
+      type: string
+      enum:
+        - assessor
+        - referrer
     UserQualification:
       type: string
       enum:
