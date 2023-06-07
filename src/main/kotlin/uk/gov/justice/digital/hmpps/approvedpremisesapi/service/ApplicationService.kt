@@ -252,6 +252,9 @@ class ApplicationService(
     return success(createdApplication.apply { schemaUpToDate = true })
   }
 
+  fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) =
+    offlineApplicationRepository.save(offlineApplication)
+
   fun createCas2Application(crn: String, user: UserEntity, jwt: String) = validated<ApplicationEntity> {
     val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
 

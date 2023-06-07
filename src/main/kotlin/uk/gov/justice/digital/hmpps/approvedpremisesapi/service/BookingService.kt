@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
@@ -229,11 +230,18 @@ class BookingService(
       val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
         .filter { it.submittedAt != null }
         .maxByOrNull { it.submittedAt!! }
-      val newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+      var newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
         .maxByOrNull { it.createdAt }
 
       if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
-        validationErrors["$.crn"] = "doesNotHaveApplication"
+        newestOfflineApplication = applicationService.createOfflineApplication(
+          OfflineApplicationEntity(
+            id = UUID.randomUUID(),
+            crn = crn,
+            service = ServiceName.approvedPremises.value,
+            createdAt = OffsetDateTime.now(),
+          ),
+        )
       }
 
       if (validationErrors.any()) {

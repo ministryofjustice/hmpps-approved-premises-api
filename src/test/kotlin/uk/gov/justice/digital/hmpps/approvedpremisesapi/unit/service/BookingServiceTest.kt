@@ -80,6 +80,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
@@ -1751,49 +1752,6 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesAdHocBooking returns FieldValidationError if there are no existing Applications for the CRN`(role: UserRole) {
-    val crn = "CRN123"
-    val arrivalDate = LocalDate.parse("2023-02-22")
-    val departureDate = LocalDate.parse("2023-02-23")
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(role)
-
-    val premises = ApprovedPremisesEntityFactory()
-      .withUnitTestControlTestProbationAreaAndLocalAuthority()
-      .produce()
-
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-
-    val bed = BedEntityFactory()
-      .withRoom(room)
-      .produce()
-
-    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
-
-    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
-    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
-
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
-    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-
-    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
-
-    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.crn", "doesNotHaveApplication"),
-    )
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `createApprovedPremisesAdHocBooking throws if unable to get Offender Details`(role: UserRole) {
     val arrivalDate = LocalDate.parse("2023-02-22")
     val departureDate = LocalDate.parse("2023-02-23")
@@ -2171,6 +2129,68 @@ class BookingServiceTest {
 
     verify(exactly = 0) {
       mockDomainEventService.saveBookingMadeDomainEvent(any())
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `createApprovedPremisesAdHocBooking saves Booking and creates an Offline Application when neither an Offline Application or normal Application are present`(role: UserRole) {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-22")
+    val departureDate = LocalDate.parse("2023-02-23")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+    every {
+      mockApplicationService.createOfflineApplication(
+        match { it.crn == crn && it.service == ServiceName.approvedPremises.value },
+      )
+    } answers { it.invocation.args[0] as OfflineApplicationEntity }
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.Success).isTrue
+
+    verify(exactly = 1) {
+      mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate
+        },
+      )
+    }
+
+    verify {
+      mockApplicationService.createOfflineApplication(
+        match { it.crn == crn && it.service == ServiceName.approvedPremises.value },
+      )
     }
   }
 
