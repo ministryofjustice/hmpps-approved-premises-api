@@ -9,15 +9,24 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingCancelSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesOfflineApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
@@ -128,6 +137,24 @@ class SeedService(
         SeedFileType.approvedPremisesOfflineApplications -> ApprovedPremisesOfflineApplicationsSeedJob(
           filename,
           applicationContext.getBean(OfflineApplicationRepository::class.java),
+        )
+
+        SeedFileType.approvedPremisesBookings -> ApprovedPremisesBookingSeedJob(
+          filename,
+          applicationContext.getBean(BookingRepository::class.java),
+          applicationContext.getBean(BookingService::class.java),
+          applicationContext.getBean(CommunityApiClient::class.java),
+          applicationContext.getBean(BedRepository::class.java),
+          applicationContext.getBean(DepartureReasonRepository::class.java),
+          applicationContext.getBean(MoveOnCategoryRepository::class.java),
+          applicationContext.getBean(DestinationProviderRepository::class.java),
+          applicationContext.getBean(NonArrivalReasonRepository::class.java),
+          applicationContext.getBean(CancellationReasonRepository::class.java),
+        )
+
+        SeedFileType.approvedPremisesCancelBookings -> ApprovedPremisesBookingCancelSeedJob(
+          filename,
+          applicationContext.getBean(BookingService::class.java),
         )
       }
 

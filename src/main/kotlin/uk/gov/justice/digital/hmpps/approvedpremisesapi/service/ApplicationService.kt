@@ -713,5 +713,5 @@ class ApplicationService(
   }
 
   fun getOfflineApplicationsForCrn(crn: String, serviceName: ServiceName) =
-    offlineApplicationRepository.findAllByServiceAndCrn(crn, serviceName.value)
+    offlineApplicationRepository.findAllByServiceAndCrn(serviceName.value, crn)
 }

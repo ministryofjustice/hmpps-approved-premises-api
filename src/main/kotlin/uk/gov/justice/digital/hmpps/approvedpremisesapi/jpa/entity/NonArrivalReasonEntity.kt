@@ -8,7 +8,9 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Repository
-interface NonArrivalReasonRepository : JpaRepository<NonArrivalReasonEntity, UUID>
+interface NonArrivalReasonRepository : JpaRepository<NonArrivalReasonEntity, UUID> {
+  fun findByName(name: String): NonArrivalReasonEntity?
+}
 
 @Entity
 @Table(name = "non_arrival_reasons")

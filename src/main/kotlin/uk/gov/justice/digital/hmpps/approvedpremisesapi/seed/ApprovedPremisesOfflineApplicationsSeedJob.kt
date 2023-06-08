@@ -12,17 +12,11 @@ class ApprovedPremisesOfflineApplicationsSeedJob(
   private val offlineApplicationRepository: OfflineApplicationRepository,
 ) : SeedJob<OfflineApplicationsSeedCsvRow>(
   fileName = fileName,
-  requiredColumns = 12,
+  requiredHeaders = setOf(
+    "crn",
+  ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
-
-  override fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
-    val missingHeaders = requiredHeaders() - headers
-
-    if (missingHeaders.any()) {
-      throw RuntimeException("required headers: $missingHeaders")
-    }
-  }
 
   override fun deserializeRow(columns: Map<String, String>) = OfflineApplicationsSeedCsvRow(
     crn = columns["crn"]!!,
@@ -42,12 +36,6 @@ class ApprovedPremisesOfflineApplicationsSeedJob(
       )
     }
   }
-}
-
-private fun requiredHeaders(): Set<String> {
-  return setOf(
-    "crn",
-  )
 }
 
 data class OfflineApplicationsSeedCsvRow(

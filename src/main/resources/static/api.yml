@@ -5391,6 +5391,8 @@ components:
         - user
         - characteristics
         - approved_premises_offline_applications
+        - approved_premises_bookings
+        - approved_premises_cancel_bookings
     MigrationJobRequest:
       type: object
       properties:

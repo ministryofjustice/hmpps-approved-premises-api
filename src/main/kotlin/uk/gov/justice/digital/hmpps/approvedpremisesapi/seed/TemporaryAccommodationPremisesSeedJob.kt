@@ -24,13 +24,8 @@ class TemporaryAccommodationPremisesSeedJob(
 ) : SeedJob<TemporaryAccommodationPremisesSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
-  requiredColumns = 18,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
-
-  override fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
-    log.info("The list of headers provided ($headers) can now be tested here")
-  }
 
   override fun deserializeRow(columns: Map<String, String>) = TemporaryAccommodationPremisesSeedCsvRow(
     name = columns["Property reference"]!!.trim(),

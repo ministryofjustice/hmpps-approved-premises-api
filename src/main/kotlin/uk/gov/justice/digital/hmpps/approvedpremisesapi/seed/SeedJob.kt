@@ -5,7 +5,7 @@ import java.util.UUID
 abstract class SeedJob<RowType> (
   val id: UUID = UUID.randomUUID(),
   val fileName: String,
-  val requiredColumns: Int,
+  val requiredHeaders: Set<String>? = null,
 ) {
   init {
     if (fileName.contains("/") || fileName.contains("\\") || fileName.contains(".")) {
@@ -13,7 +13,16 @@ abstract class SeedJob<RowType> (
     }
   }
 
-  abstract fun verifyPresenceOfRequiredHeaders(headers: Set<String>)
+  open fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
+    if (requiredHeaders == null) return
+
+    val missingHeaders = requiredHeaders - headers
+
+    if (missingHeaders.any()) {
+      throw RuntimeException("required headers: $missingHeaders")
+    }
+  }
+
   abstract fun deserializeRow(columns: Map<String, String>): RowType
   abstract fun processRow(row: RowType)
 }

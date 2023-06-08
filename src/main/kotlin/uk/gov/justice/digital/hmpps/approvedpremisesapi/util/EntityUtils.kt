@@ -19,3 +19,8 @@ fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableAct
   is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   is ValidatableActionResult.Success -> result.entity
 }
+
+fun <EntityType> extractEntityFromNestedAuthorisableValidatableActionResult(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>): EntityType {
+  val validatableResult = extractEntityFromAuthorisableActionResult(result)
+  return extractEntityFromValidatableActionResult(validatableResult)
+}

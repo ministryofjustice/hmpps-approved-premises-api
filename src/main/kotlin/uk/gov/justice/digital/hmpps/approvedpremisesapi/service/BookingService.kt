@@ -195,14 +195,17 @@ class BookingService(
 
   @Transactional
   fun createApprovedPremisesAdHocBooking(
-    user: UserEntity,
+    user: UserEntity? = null,
     crn: String,
     nomsNumber: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,
+    bookingId: UUID? = null,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    if (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
+    val bookingId = bookingId ?: UUID.randomUUID()
+
+    if (user != null && (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER))) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -250,7 +253,7 @@ class BookingService(
 
       val booking = bookingRepository.save(
         BookingEntity(
-          id = UUID.randomUUID(),
+          id = bookingId,
           crn = crn,
           arrivalDate = arrivalDate,
           departureDate = departureDate,
@@ -274,7 +277,7 @@ class BookingService(
         ),
       )
 
-      if (associateWithOnlineApplication) {
+      if (associateWithOnlineApplication && user != null) {
         saveBookingMadeDomainEvent(
           booking = booking,
           user = user,
@@ -492,7 +495,7 @@ class BookingService(
 
   @Transactional
   fun createArrival(
-    user: UserEntity,
+    user: UserEntity? = null,
     booking: BookingEntity,
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
@@ -539,7 +542,7 @@ class BookingService(
     booking.departureDate = expectedDepartureDate
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
@@ -604,7 +607,7 @@ class BookingService(
   }
 
   fun createNonArrival(
-    user: UserEntity,
+    user: UserEntity?,
     booking: BookingEntity,
     date: LocalDate,
     reasonId: UUID,
@@ -640,7 +643,7 @@ class BookingService(
       ),
     )
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
@@ -760,7 +763,7 @@ class BookingService(
   }
 
   fun createDeparture(
-    user: UserEntity,
+    user: UserEntity?,
     booking: BookingEntity,
     dateTime: OffsetDateTime,
     reasonId: UUID,
@@ -831,7 +834,7 @@ class BookingService(
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {

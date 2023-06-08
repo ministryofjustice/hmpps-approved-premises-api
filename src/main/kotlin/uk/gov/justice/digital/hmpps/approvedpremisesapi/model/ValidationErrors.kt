@@ -6,6 +6,8 @@ import java.util.UUID
 @JvmInline
 value class ValidationErrors(private val errorMap: MutableMap<String, String>) : MutableMap<String, String> by errorMap {
   constructor() : this(mutableMapOf())
+
+  override fun toString() = errorMap.map { "${it.key}: ${it.value}" }.joinToString(",")
 }
 
 private fun singleValidationErrorOf(propertyNameToMessage: Pair<String, String>) = ValidationErrors().apply { this[propertyNameToMessage.first] = propertyNameToMessage.second }

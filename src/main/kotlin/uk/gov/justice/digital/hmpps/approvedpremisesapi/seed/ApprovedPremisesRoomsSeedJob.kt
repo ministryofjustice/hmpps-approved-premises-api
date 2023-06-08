@@ -20,17 +20,36 @@ class ApprovedPremisesRoomsSeedJob(
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesRoomsSeedCsvRow>(
   fileName = fileName,
-  requiredColumns = 26,
+  requiredHeaders = setOf(
+    "apCode",
+    "bedCode",
+    "roomNumber",
+    "bedCount",
+    "isSingle",
+    "isGroundFloor",
+    "isFullyFm",
+    "hasCrib7Bedding",
+    "hasSmokeDetector",
+    "isTopFloorVulnerable",
+    "isGroundFloorNrOffice",
+    "hasNearbySprinkler",
+    "isArsonSuitable",
+    "isArsonDesignated",
+    "hasArsonInsuranceConditions",
+    "isSuitedForSexOffenders",
+    "hasEnSuite",
+    "isWheelchairAccessible",
+    "hasWideDoor",
+    "hasStepFreeAccess",
+    "hasFixedMobilityAids",
+    "hasTurningSpace",
+    "hasCallForAssistance",
+    "isWheelchairDesignated",
+    "isStepFreeDesignated",
+    "notes",
+  ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
-
-  override fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
-    val missingHeaders = requiredHeaders() - headers
-
-    if (missingHeaders.any()) {
-      throw RuntimeException("required headers: $missingHeaders")
-    }
-  }
 
   override fun deserializeRow(columns: Map<String, String>) = ApprovedPremisesRoomsSeedCsvRow(
     apCode = columns["apCode"]!!,
@@ -189,37 +208,6 @@ class ApprovedPremisesRoomsSeedJob(
   private fun castBooleanString(booleanString: String): Boolean {
     return booleanString == "YES"
   }
-}
-
-private fun requiredHeaders(): Set<String> {
-  return setOf(
-    "apCode",
-    "bedCode",
-    "roomNumber",
-    "bedCount",
-    "isSingle",
-    "isGroundFloor",
-    "isFullyFm",
-    "hasCrib7Bedding",
-    "hasSmokeDetector",
-    "isTopFloorVulnerable",
-    "isGroundFloorNrOffice",
-    "hasNearbySprinkler",
-    "isArsonSuitable",
-    "isArsonDesignated",
-    "hasArsonInsuranceConditions",
-    "isSuitedForSexOffenders",
-    "hasEnSuite",
-    "isWheelchairAccessible",
-    "hasWideDoor",
-    "hasStepFreeAccess",
-    "hasFixedMobilityAids",
-    "hasTurningSpace",
-    "hasCallForAssistance",
-    "isWheelchairDesignated",
-    "isStepFreeDesignated",
-    "notes",
-  )
 }
 
 data class ApprovedPremisesRoomsSeedCsvRow(

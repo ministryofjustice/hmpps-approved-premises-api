@@ -58,6 +58,8 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       ")",
   )
   fun findClosestBookingBeforeDateForBeds(date: LocalDate, bedIds: List<UUID>): List<BookingEntity>
+
+  fun findAllByCrn(crn: String): List<BookingEntity>
 }
 
 @Entity
