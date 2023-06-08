@@ -150,6 +150,7 @@ class BookingTransformerTest {
     offlineApplication = null,
     turnarounds = mutableListOf(),
     nomsNumber = "NOMS123",
+    placementRequest = null,
   )
 
   private val staffMember = StaffMember(
