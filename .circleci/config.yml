@@ -161,9 +161,9 @@ jobs:
           paths:
             - build
   test:
-    parallelism: 4
+    parallelism: 5
     environment:
-      _JAVA_OPTIONS: "-Xmx2g"
+      _JAVA_OPTIONS: "-Xmx1g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
       POSTGRES_PORT: 5432
       SPRING_REDIS_PORT: 6379
