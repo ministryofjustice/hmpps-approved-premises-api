@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
@@ -214,10 +215,6 @@ class BookingService(
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
 
-      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-      }
-
       getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
@@ -233,11 +230,18 @@ class BookingService(
       val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
         .filter { it.submittedAt != null }
         .maxByOrNull { it.submittedAt!! }
-      val newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+      var newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
         .maxByOrNull { it.createdAt }
 
       if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
-        validationErrors["$.crn"] = "doesNotHaveApplication"
+        newestOfflineApplication = applicationService.createOfflineApplication(
+          OfflineApplicationEntity(
+            id = UUID.randomUUID(),
+            crn = crn,
+            service = ServiceName.approvedPremises.value,
+            createdAt = OffsetDateTime.now(),
+          ),
+        )
       }
 
       if (validationErrors.any()) {
@@ -916,8 +920,10 @@ class BookingService(
     notes: String?,
   ) = validated<ExtensionEntity> {
     val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
-    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
-      return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+    if (booking.service != ServiceName.approvedPremises.value) {
+      getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+      }
     }
     getLostBedWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bed!!.id)?.let {
       return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"

@@ -357,48 +357,6 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Approved Premises Booking returns Bad Request when no application exists for CRN`() {
-    `Given a User`(
-      roles = listOf(UserRole.CAS1_MATCHER),
-    ) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-        }
-
-        webTestClient.post()
-          .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewBooking(
-              crn = offenderDetails.otherIds.crn,
-              arrivalDate = LocalDate.parse("2022-08-12"),
-              departureDate = LocalDate.parse("2022-08-30"),
-              serviceName = ServiceName.approvedPremises,
-              bedId = bed.id,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isBadRequest
-          .expectBody()
-          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotHaveApplication")
-      }
-    }
-  }
-
-  @Test
   fun `Create Approved Premises Booking returns OK with correct body emits domain event`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
