@@ -2,14 +2,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRole as ApiUserRole
 
 class ProfileTest : IntegrationTestBase() {
   @Test
@@ -90,7 +91,7 @@ class ProfileTest : IntegrationTestBase() {
               email = email,
               name = userEntity.name,
               telephoneNumber = telephoneNumber,
-              roles = listOf(ApiUserRole.assessor),
+              roles = listOf(ApprovedPremisesUserRole.assessor),
               qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
               service = ServiceName.approvedPremises.value,
             ),
@@ -126,7 +127,7 @@ class ProfileTest : IntegrationTestBase() {
 
     userRoleAssignmentEntityFactory.produceAndPersist {
       withUser(userEntity)
-      withRole(UserRole.CAS1_ASSESSOR)
+      withRole(UserRole.CAS3_ASSESSOR)
     }
 
     userQualificationAssignmentEntityFactory.produceAndPersist {
@@ -147,7 +148,7 @@ class ProfileTest : IntegrationTestBase() {
           TemporaryAccommodationUser(
             id = id,
             region = ProbationRegion(region.id, region.name),
-            roles = listOf(ApiUserRole.assessor),
+            roles = listOf(TemporaryAccommodationUserRole.assessor),
             service = ServiceName.temporaryAccommodation.value,
           ),
         ),
