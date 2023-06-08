@@ -95,6 +95,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
@@ -113,6 +114,7 @@ class BookingServiceTest {
   private val mockApplicationService = mockk<ApplicationService>()
   private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
+  private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
@@ -140,6 +142,7 @@ class BookingServiceTest {
     applicationService = mockApplicationService,
     workingDayCountService = mockWorkingDayCountService,
     emailNotificationService = mockEmailNotificationService,
+    placementRequestService = mockPlacementRequestService,
     communityApiClient = mockCommunityApiClient,
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
@@ -2565,6 +2568,80 @@ class BookingServiceTest {
     val validationError = result.entity as ValidatableActionResult.FieldValidationError
 
     assertThat(validationError.validationMessages["$.bedId"]).isEqualTo("mustBelongToApprovedPremises")
+  }
+
+  @Test
+  fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if a Booking has already been made from the Placement Request`() {
+    val arrivalDate = LocalDate.parse("2023-03-28")
+    val departureDate = LocalDate.parse("2023-03-30")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val otherUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(otherUser)
+      .produce()
+
+    val assessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(otherUser)
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withAssessment(assessment)
+      .withAllocatedToUser(user)
+      .withBooking(
+        BookingEntityFactory()
+          .withBed(bed)
+          .withPremises(premises)
+          .produce(),
+      )
+      .produce()
+
+    every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
+    val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
+      user = user,
+      placementRequestId = placementRequest.id,
+      bedId = bed.id,
+      arrivalDate = arrivalDate,
+      departureDate = departureDate,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
+    val validationError = result.entity as ValidatableActionResult.ConflictError
+
+    assertThat(validationError.message).isEqualTo("A Booking has already been made for this Placement Request")
   }
 
   @Test

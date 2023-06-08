@@ -73,6 +73,7 @@ class BookingService(
   private val applicationService: ApplicationService,
   private val workingDayCountService: WorkingDayCountService,
   private val emailNotificationService: EmailNotificationService,
+  private val placementRequestService: PlacementRequestService,
   private val communityApiClient: CommunityApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
@@ -113,6 +114,10 @@ class BookingService(
     }
 
     val validationResult = validated {
+      if (placementRequest.booking != null) {
+        return@validated placementRequest.booking!!.id hasConflictError "A Booking has already been made for this Placement Request"
+      }
+
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
@@ -162,6 +167,7 @@ class BookingService(
           offlineApplication = null,
           turnarounds = mutableListOf(),
           nomsNumber = placementRequest.application.nomsNumber,
+          placementRequest = null,
         ),
       )
 
@@ -278,6 +284,7 @@ class BookingService(
           offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null,
           turnarounds = mutableListOf(),
           nomsNumber = nomsNumber,
+          placementRequest = null,
         ),
       )
 
@@ -440,6 +447,7 @@ class BookingService(
           application = null,
           offlineApplication = null,
           turnarounds = mutableListOf(),
+          placementRequest = null,
         ),
       )
 
@@ -709,6 +717,7 @@ class BookingService(
     return success(nonArrivalEntity)
   }
 
+  @Transactional
   fun createCancellation(
     booking: BookingEntity,
     date: LocalDate,
