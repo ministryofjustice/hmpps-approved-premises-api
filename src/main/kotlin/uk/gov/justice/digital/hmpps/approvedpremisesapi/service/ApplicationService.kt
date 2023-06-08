@@ -72,26 +72,38 @@ class ApplicationService(
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
-    val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
-    val userDetails = when (userDetailsResult) {
-      is ClientResult.Success -> userDetailsResult.body
-      is ClientResult.Failure -> userDetailsResult.throwException()
-    }
 
-    val applicationSummaries = if (serviceName == ServiceName.approvedPremises && userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
-      applicationRepository.findAllApprovedPremisesSummaries()
-    } else if (serviceName == ServiceName.approvedPremises) {
-      applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
-    } else if (serviceName == ServiceName.cas2) {
-      applicationRepository.findAllCas2ApplicationSummaries()
-    } else {
-      applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(userEntity.id)
+    val applicationSummaries = when (serviceName) {
+      ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
+      ServiceName.cas2 -> getAllCas2ApplicationsForUser(userEntity)
+      ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
 
     return applicationSummaries
       .filter {
         offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
       }
+  }
+
+  private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
+    return if (user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
+      applicationRepository.findAllApprovedPremisesSummaries()
+    } else {
+      val userDetails = when (val userDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+        is ClientResult.Success -> userDetailsResult.body
+        is ClientResult.Failure -> userDetailsResult.throwException()
+      }
+
+      applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
+    }
+  }
+
+  private fun getAllCas2ApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
+    return applicationRepository.findAllCas2ApplicationSummaries()
+  }
+
+  private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
+    return applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
   }
 
   fun getAllOfflineApplicationsForUsername(deliusUsername: String, serviceName: ServiceName): List<OfflineApplicationEntity> {
