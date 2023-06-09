@@ -31,11 +31,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
@@ -403,6 +405,150 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(responseBody).anyMatch {
               applicationEntityWithAwaitingAnswerState.id == it.id &&
                 it.status == ApplicationStatus.requestedFurtherInformation
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get all applications returns 200 with correct body for Temporary Accommodation - when user has CAS3_ASSESSOR role then returns all submitted applications in region`() {
+    `Given a Probation Region` { probationRegion ->
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR), probationRegion = probationRegion) { assessorUser, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withSubmittedAt(OffsetDateTime.now())
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            val notSubmittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withSubmittedAt(null)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            val notInRegionApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withYieldedProbationRegion {
+                probationRegionEntityFactory.produceAndPersist {
+                  withYieldedApArea {
+                    apAreaEntityFactory.produceAndPersist()
+                  }
+                }
+              }
+            }
+
+            CommunityAPI_mockOffenderUserAccessCall(assessorUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {})
+
+            assertThat(responseBody).anyMatch {
+              application.id == it.id &&
+                application.crn == it.person.crn &&
+                application.createdAt.toInstant() == it.createdAt &&
+                application.createdByUser.id == it.createdByUserId &&
+                application.submittedAt?.toInstant() == it.submittedAt
+            }
+
+            assertThat(responseBody).noneMatch {
+              notInRegionApplication.id == it.id
+            }
+
+            assertThat(responseBody).noneMatch {
+              notSubmittedApplication.id == it.id
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get all applications returns 200 with correct body for Temporary Accommodation - when user has CAS3_REFERRER role then returns all applications created by user`() {
+    `Given a Probation Region` { probationRegion ->
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { referrerUser, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(referrerUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            val anotherUsersApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            CommunityAPI_mockOffenderUserAccessCall(referrerUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {})
+
+            assertThat(responseBody).anyMatch {
+              application.id == it.id &&
+                application.crn == it.person.crn &&
+                application.createdAt.toInstant() == it.createdAt &&
+                application.createdByUser.id == it.createdByUserId &&
+                application.submittedAt?.toInstant() == it.submittedAt
+            }
+
+            assertThat(responseBody).noneMatch {
+              anotherUsersApplication.id == it.id
             }
           }
         }

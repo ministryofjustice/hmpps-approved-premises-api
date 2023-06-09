@@ -69,11 +69,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Mana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.sql.Timestamp
 import java.time.Instant
@@ -94,6 +96,7 @@ class ApplicationServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
+  private val mockUserAccessService = mockk<UserAccessService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
 
@@ -110,6 +113,7 @@ class ApplicationServiceTest {
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockEmailNotificationService,
+    mockUserAccessService,
     NotifyConfig(),
     mockObjectMapper,
     "http://frontend/applications/#id",
@@ -174,6 +178,7 @@ class ApplicationServiceTest {
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockUserAccessService.getApprovedPremisesApplicationAccessLevelForUser(userEntity) } returns ApprovedPremisesApplicationAccessLevel.TEAM
     every { mockApplicationRepository.findApprovedPremisesSummariesForManagingTeams(listOf("TEAM1")) } returns applicationSummaries
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 

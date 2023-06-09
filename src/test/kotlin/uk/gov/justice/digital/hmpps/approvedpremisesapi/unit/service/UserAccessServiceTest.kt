@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TemporaryAccommodationApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
@@ -501,5 +503,69 @@ class UserAccessServiceTest {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
+  fun `getApprovedPremisesApplicationAccessLevelForUser returns ALL if the user has one of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, or CAS1_MANAGER roles`(role: UserRole) {
+    user.addRoleForUnitTest(role)
+
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)).isEqualTo(ApprovedPremisesApplicationAccessLevel.ALL)
+  }
+
+  @Test
+  fun `getApprovedPremisesApplicationAccessLevelForUser returns TEAM if the user has no suitable role`() {
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)).isEqualTo(ApprovedPremisesApplicationAccessLevel.TEAM)
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
+  fun `getApprovedPremisesApplicationAccessLevelForCurrentUser returns ALL if the user has one of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, or CAS1_MANAGER roles`(role: UserRole) {
+    user.addRoleForUnitTest(role)
+
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForCurrentUser()).isEqualTo(ApprovedPremisesApplicationAccessLevel.ALL)
+  }
+
+  @Test
+  fun `getApprovedPremisesApplicationAccessLevelForCurrentUser returns TEAM if the user has no suitable role`() {
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForCurrentUser()).isEqualTo(ApprovedPremisesApplicationAccessLevel.TEAM)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForUser returns SUBMITTED_IN_REGION if the user has the CAS3_ASSESSOR role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForUser returns SELF if the user has the CAS3_REFERRER role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SELF)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForUser returns NONE if the user has no suitable role`() {
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)).isEqualTo(TemporaryAccommodationApplicationAccessLevel.NONE)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns SUBMITTED_IN_REGION if the user has the CAS3_ASSESSOR role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns SELF if the user has the CAS3_REFERRER role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SELF)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns NONE if the user has no suitable role`() {
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.NONE)
   }
 }

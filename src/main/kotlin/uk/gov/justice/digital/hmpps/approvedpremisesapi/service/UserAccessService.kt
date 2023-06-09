@@ -84,4 +84,32 @@ class UserAccessService(
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id)
     else -> false
   }
+
+  fun getApprovedPremisesApplicationAccessLevelForCurrentUser(): ApprovedPremisesApplicationAccessLevel =
+    getApprovedPremisesApplicationAccessLevelForUser(userService.getUserForRequest())
+
+  fun getApprovedPremisesApplicationAccessLevelForUser(user: UserEntity): ApprovedPremisesApplicationAccessLevel = when {
+    user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER) -> ApprovedPremisesApplicationAccessLevel.ALL
+    else -> ApprovedPremisesApplicationAccessLevel.TEAM
+  }
+
+  fun getTemporaryAccommodationApplicationAccessLevelForCurrentUser(): TemporaryAccommodationApplicationAccessLevel =
+    getTemporaryAccommodationApplicationAccessLevelForUser(userService.getUserForRequest())
+
+  fun getTemporaryAccommodationApplicationAccessLevelForUser(user: UserEntity): TemporaryAccommodationApplicationAccessLevel = when {
+    user.hasRole(UserRole.CAS3_ASSESSOR) -> TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION
+    user.hasRole(UserRole.CAS3_REFERRER) -> TemporaryAccommodationApplicationAccessLevel.SELF
+    else -> TemporaryAccommodationApplicationAccessLevel.NONE
+  }
+}
+
+enum class ApprovedPremisesApplicationAccessLevel {
+  ALL,
+  TEAM,
+}
+
+enum class TemporaryAccommodationApplicationAccessLevel {
+  SUBMITTED_IN_REGION,
+  SELF,
+  NONE,
 }

@@ -65,6 +65,7 @@ class ApplicationService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val emailNotificationService: EmailNotificationService,
+  private val userAccessService: UserAccessService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
@@ -86,15 +87,16 @@ class ApplicationService(
   }
 
   private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
-    return if (user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
-      applicationRepository.findAllApprovedPremisesSummaries()
-    } else {
-      val userDetails = when (val userDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
-        is ClientResult.Success -> userDetailsResult.body
-        is ClientResult.Failure -> userDetailsResult.throwException()
-      }
+    return when (userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)) {
+      ApprovedPremisesApplicationAccessLevel.ALL -> applicationRepository.findAllApprovedPremisesSummaries()
+      ApprovedPremisesApplicationAccessLevel.TEAM -> {
+        val userDetails = when (val userDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+          is ClientResult.Success -> userDetailsResult.body
+          is ClientResult.Failure -> userDetailsResult.throwException()
+        }
 
-      applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
+        applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
+      }
     }
   }
 
@@ -103,7 +105,11 @@ class ApplicationService(
   }
 
   private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
-    return applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+    return when (userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)) {
+      TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION -> applicationRepository.findAllSubmittedTemporaryAccommodationSummariesByRegion(user.probationRegion.id)
+      TemporaryAccommodationApplicationAccessLevel.SELF -> applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+      TemporaryAccommodationApplicationAccessLevel.NONE -> emptyList()
+    }
   }
 
   fun getAllOfflineApplicationsForUsername(deliusUsername: String, serviceName: ServiceName): List<OfflineApplicationEntity> {
