@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@7.3.1
+  hmpps: ministryofjustice/hmpps@7.3.2
   mem: circleci/rememborb@0.0.2
 
 parameters:
