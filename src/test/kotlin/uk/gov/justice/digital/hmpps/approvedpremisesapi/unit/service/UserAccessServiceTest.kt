@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import java.time.OffsetDateTime
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 
@@ -55,12 +56,23 @@ class UserAccessServiceTest {
     )
     .produce()
 
+  private val anotherProbationRegion = ProbationRegionEntityFactory()
+    .withApArea(
+      ApAreaEntityFactory()
+        .produce(),
+    )
+    .produce()
+
   private val user = UserEntityFactory()
     .withProbationRegion(probationRegion)
     .produce()
 
   private val anotherUserInRegion = UserEntityFactory()
     .withProbationRegion(probationRegion)
+    .produce()
+
+  private val anotherUserNotInRegion = UserEntityFactory()
+    .withProbationRegion(anotherProbationRegion)
     .produce()
 
   val approvedPremises = ApprovedPremisesEntityFactory()
@@ -80,14 +92,7 @@ class UserAccessServiceTest {
     .produce()
 
   val temporaryAccommodationPremisesNotInUserRegion = TemporaryAccommodationPremisesEntityFactory()
-    .withProbationRegion(
-      ProbationRegionEntityFactory()
-        .withApArea(
-          ApAreaEntityFactory()
-            .produce(),
-        )
-        .produce(),
-    )
+    .withProbationRegion(anotherProbationRegion)
     .withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
         .produce(),
@@ -719,13 +724,38 @@ class UserAccessServiceTest {
       .withCreatedByUser(user)
       .withApplicationSchema(newestJsonSchema)
       .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
   }
 
   @Test
-  fun `userCanViewApplication returns false otherwise for Temporary Accommodation`() {
+  fun `userCanViewApplication returns false if the user has the CAS3_ASSESSOR role but the application is not in their region for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserNotInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(anotherProbationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewApplication returns false if the user has the CAS3_ASSESSOR role and the application is in their region but it has not been submitted for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
     val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
@@ -734,6 +764,45 @@ class UserAccessServiceTest {
       .withCreatedByUser(anotherUserInRegion)
       .withApplicationSchema(newestJsonSchema)
       .withProbationRegion(probationRegion)
+      .withSubmittedAt(null)
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewApplication returns true if the application has been submitted, is in the user's region, and the user has the CAS3_ASSESSOR role for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+  }
+
+  @Test
+  fun `userCanViewApplication returns false otherwise for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse

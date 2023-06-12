@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -114,6 +115,7 @@ class UserAccessService(
 
     return when (application) {
       is ApprovedPremisesApplicationEntity -> userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(user, application)
+      is TemporaryAccommodationApplicationEntity -> userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(user, application)
       else -> false
     }
   }
@@ -132,6 +134,15 @@ class UserAccessService(
     }
 
     return application.hasAnyTeamCode(userDetails.teams?.map { it.code } ?: emptyList())
+  }
+
+  private fun userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(
+    user: UserEntity,
+    application: TemporaryAccommodationApplicationEntity,
+  ): Boolean {
+    return userCanAccessRegion(user, application.probationRegion.id) &&
+      user.hasRole(UserRole.CAS3_ASSESSOR) &&
+      application.submittedAt != null
   }
 }
 
