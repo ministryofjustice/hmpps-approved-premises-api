@@ -2,6 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -14,6 +18,7 @@ import javax.servlet.http.HttpServletRequest
 class UserAccessService(
   private val userService: UserService,
   private val currentRequest: HttpServletRequest,
+  private val communityApiClient: CommunityApiClient,
 ) {
   fun currentUserCanAccessRegion(probationRegionId: UUID?) =
     userCanAccessRegion(userService.getUserForRequest(), probationRegionId)
@@ -100,6 +105,33 @@ class UserAccessService(
     user.hasRole(UserRole.CAS3_ASSESSOR) -> TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION
     user.hasRole(UserRole.CAS3_REFERRER) -> TemporaryAccommodationApplicationAccessLevel.SELF
     else -> TemporaryAccommodationApplicationAccessLevel.NONE
+  }
+
+  fun userCanViewApplication(user: UserEntity, application: ApplicationEntity): Boolean {
+    if (user.id == application.createdByUser.id) {
+      return true
+    }
+
+    return when (application) {
+      is ApprovedPremisesApplicationEntity -> userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(user, application)
+      else -> false
+    }
+  }
+
+  private fun userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(
+    user: UserEntity,
+    application: ApprovedPremisesApplicationEntity,
+  ): Boolean {
+    if (user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
+      return true
+    }
+
+    val userDetails = when (val userDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+      is ClientResult.Success -> userDetailsResult.body
+      is ClientResult.Failure -> userDetailsResult.throwException()
+    }
+
+    return application.hasAnyTeamCode(userDetails.teams?.map { it.code } ?: emptyList())
   }
 }
 

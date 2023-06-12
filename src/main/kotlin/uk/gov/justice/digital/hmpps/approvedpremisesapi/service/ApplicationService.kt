@@ -135,23 +135,13 @@ class ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
 
-    if (userEntity.id == applicationEntity.createdByUser.id || userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
-      return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
+
+    return if (canAccess) {
+      AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    } else {
+      AuthorisableActionResult.Unauthorised()
     }
-
-    if (applicationEntity is ApprovedPremisesApplicationEntity) {
-      val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
-      val userDetails = when (userDetailsResult) {
-        is ClientResult.Success -> userDetailsResult.body
-        is ClientResult.Failure -> userDetailsResult.throwException()
-      }
-
-      if (applicationEntity.hasAnyTeamCode(userDetails.teams?.map { it.code } ?: emptyList())) {
-        return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
-      }
-    }
-
-    return AuthorisableActionResult.Unauthorised()
   }
 
   fun getOfflineApplicationForUsername(applicationId: UUID, deliusUsername: String): AuthorisableActionResult<OfflineApplicationEntity> {

@@ -200,11 +200,11 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `getApplicationForUsername where application was not created by caller, not in case load and where caller is not one of one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
+  fun `getApplicationForUsername where user cannot access the application returns Unauthorised result`() {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory()
+    every { mockUserRepository.findByDeliusUsername(any()) } returns UserEntityFactory()
       .withDeliusUsername(distinguishedName)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -213,7 +213,7 @@ class ApplicationServiceTest {
       }
       .produce()
 
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApprovedPremisesApplicationEntityFactory()
+    every { mockApplicationRepository.findByIdOrNull(any()) } returns ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(
         UserEntityFactory()
           .withYieldedProbationRegion {
@@ -225,25 +225,13 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withTeams(
-        listOf(
-          StaffUserTeamMembershipFactory()
-            .produce(),
-        ),
-      )
-      .produce()
-
-    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = staffUserDetails,
-    )
+    every { mockUserAccessService.userCanViewApplication(any(), any()) } returns false
 
     assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `getApplicationForUsername where application was created by caller returns Success result with entity from db`() {
+  fun `getApplicationForUsername where user can access the application returns Success result with entity from db`() {
     val distinguishedName = "SOMEPERSON"
     val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
@@ -268,8 +256,9 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
+    every { mockUserRepository.findByDeliusUsername(any()) } returns userEntity
+    every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
 
     val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
 
@@ -277,126 +266,6 @@ class ApplicationServiceTest {
     result as AuthorisableActionResult.Success
 
     assertThat(result.entity).isEqualTo(applicationEntity)
-  }
-
-  @Test
-  fun `getApplicationForUsername where application CRN is managed by team caller is in returns Success result with entity from db`() {
-    val distinguishedName = "SOMEPERSON"
-    val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
-    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
-
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
-    val userEntity = UserEntityFactory()
-      .withId(userId)
-      .withDeliusUsername(distinguishedName)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val otherUserEntity = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val applicationEntity = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(otherUserEntity)
-      .withApplicationSchema(newestJsonSchema)
-      .produce()
-
-    applicationEntity.teamCodes += ApplicationTeamCodeEntity(
-      id = UUID.randomUUID(),
-      application = applicationEntity,
-      teamCode = "TEAM1",
-    )
-
-    every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withTeams(
-        listOf(
-          StaffUserTeamMembershipFactory()
-            .withCode("TEAM1")
-            .produce(),
-        ),
-      )
-      .produce()
-
-    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = staffUserDetails,
-    )
-
-    val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity).isEqualTo(applicationEntity)
-  }
-
-  @Test
-  fun `getApplicationForUsername where application not created by caller but user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Success result with entity from db`() {
-    listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER).forEach { role ->
-      val distinguishedName = "SOMEPERSON"
-      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
-      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
-
-      val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
-      val userEntity = UserEntityFactory()
-        .withId(userId)
-        .withDeliusUsername(distinguishedName)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      val otherUserEntity = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      userEntity.roles.add(
-        UserRoleAssignmentEntityFactory()
-          .withUser(userEntity)
-          .withRole(role)
-          .produce(),
-      )
-
-      val applicationEntity = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(otherUserEntity)
-        .withApplicationSchema(newestJsonSchema)
-        .produce()
-
-      every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-      every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-
-      val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity).isEqualTo(applicationEntity)
-    }
   }
 
   @Test
