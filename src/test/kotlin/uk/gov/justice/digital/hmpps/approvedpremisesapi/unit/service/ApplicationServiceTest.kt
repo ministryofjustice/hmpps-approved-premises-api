@@ -551,19 +551,47 @@ class ApplicationServiceTest {
   }
 
   @Test
+  fun `createTemporaryAccommodationApplication returns Unauthorised when user doesn't have CAS3_REFERRER role`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_ASSESSOR)
+          .produce(),
+      )
+    }
+
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+
+    assertThat(actionResult is AuthorisableActionResult.Unauthorised<*>).isTrue
+  }
+
+  @Test
   fun `createTemporaryAccommodationApplication returns FieldValidationError when CRN does not exist`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.crn", "doesNotExist")
   }
 
   @Test
@@ -573,13 +601,22 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.crn", "userPermission")
   }
 
   @Test
@@ -591,15 +628,24 @@ class ApplicationServiceTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", null, null, null)
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", null, null, null)
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.convictionId", "empty")
-    assertThat(result.validationMessages).containsEntry("$.deliusEventNumber", "empty")
-    assertThat(result.validationMessages).containsEntry("$.offenceId", "empty")
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.convictionId", "empty")
+    assertThat(validationResult.validationMessages).containsEntry("$.deliusEventNumber", "empty")
+    assertThat(validationResult.validationMessages).containsEntry("$.offenceId", "empty")
   }
 
   @Test
@@ -609,7 +655,14 @@ class ApplicationServiceTest {
 
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -651,13 +704,13 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.Success).isTrue
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.crn).isEqualTo(crn)
-    assertThat(result.entity.createdByUser).isEqualTo(user)
-    val temporaryAccommodationApplication = result.entity as TemporaryAccommodationApplicationEntity
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.Success
+    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
     assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
   }
 

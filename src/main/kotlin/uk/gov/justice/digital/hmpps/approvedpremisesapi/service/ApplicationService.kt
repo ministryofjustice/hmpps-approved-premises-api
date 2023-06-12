@@ -328,69 +328,75 @@ class ApplicationService(
     deliusEventNumber: String?,
     offenceId: String?,
     createWithRisks: Boolean? = true,
-  ) = validated<ApplicationEntity> {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
-
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    if (!user.hasRole(UserRole.CAS3_REFERRER)) {
+      return AuthorisableActionResult.Unauthorised()
     }
 
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-    }
+    return AuthorisableActionResult.Success(
+      validated {
+        val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
+          is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
+          is AuthorisableActionResult.Unauthorised -> return@validated "$.crn" hasSingleValidationError "userPermission"
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        }
 
-    if (convictionId == null) {
-      "$.convictionId" hasValidationError "empty"
-    }
+        if (offenderDetails.otherIds.nomsNumber == null) {
+          throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+        }
 
-    if (deliusEventNumber == null) {
-      "$.deliusEventNumber" hasValidationError "empty"
-    }
+        if (convictionId == null) {
+          "$.convictionId" hasValidationError "empty"
+        }
 
-    if (offenceId == null) {
-      "$.offenceId" hasValidationError "empty"
-    }
+        if (deliusEventNumber == null) {
+          "$.deliusEventNumber" hasValidationError "empty"
+        }
 
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
+        if (offenceId == null) {
+          "$.offenceId" hasValidationError "empty"
+        }
 
-    var riskRatings: PersonRisks? = null
+        if (validationErrors.any()) {
+          return@validated fieldValidationError
+        }
 
-    if (createWithRisks == true) {
-      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+        var riskRatings: PersonRisks? = null
 
-      riskRatings = when (riskRatingsResult) {
-        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-        is AuthorisableActionResult.Success -> riskRatingsResult.entity
-      }
-    }
+        if (createWithRisks == true) {
+          val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
 
-    val createdApplication = applicationRepository.save(
-      TemporaryAccommodationApplicationEntity(
-        id = UUID.randomUUID(),
-        crn = crn,
-        createdByUser = user,
-        data = null,
-        document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java),
-        createdAt = OffsetDateTime.now(),
-        submittedAt = null,
-        convictionId = convictionId!!,
-        eventNumber = deliusEventNumber!!,
-        offenceId = offenceId!!,
-        schemaUpToDate = true,
-        riskRatings = riskRatings,
-        assessments = mutableListOf(),
-        probationRegion = user.probationRegion,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-      ),
+          riskRatings = when (riskRatingsResult) {
+            is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
+            is AuthorisableActionResult.Unauthorised -> return@validated "$.crn" hasSingleValidationError "userPermission"
+            is AuthorisableActionResult.Success -> riskRatingsResult.entity
+          }
+        }
+
+        val createdApplication = applicationRepository.save(
+          TemporaryAccommodationApplicationEntity(
+            id = UUID.randomUUID(),
+            crn = crn,
+            createdByUser = user,
+            data = null,
+            document = null,
+            schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java),
+            createdAt = OffsetDateTime.now(),
+            submittedAt = null,
+            convictionId = convictionId!!,
+            eventNumber = deliusEventNumber!!,
+            offenceId = offenceId!!,
+            schemaUpToDate = true,
+            riskRatings = riskRatings,
+            assessments = mutableListOf(),
+            probationRegion = user.probationRegion,
+            nomsNumber = offenderDetails.otherIds.nomsNumber,
+          ),
+        )
+
+        success(createdApplication.apply { schemaUpToDate = true })
+      },
     )
-
-    return success(createdApplication.apply { schemaUpToDate = true })
   }
 
   fun updateApprovedPremisesApplication(
