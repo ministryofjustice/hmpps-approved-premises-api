@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -73,6 +74,7 @@ class BookingService(
   private val applicationService: ApplicationService,
   private val workingDayCountService: WorkingDayCountService,
   private val emailNotificationService: EmailNotificationService,
+  private val placementRequestService: PlacementRequestService,
   private val communityApiClient: CommunityApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
@@ -94,6 +96,8 @@ class BookingService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
 ) {
+  val approvedPremisesBookingAppealedCancellationReasonId: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
+
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
 
@@ -113,6 +117,10 @@ class BookingService(
     }
 
     val validationResult = validated {
+      if (placementRequest.booking != null) {
+        return@validated placementRequest.booking!!.id hasConflictError "A Booking has already been made for this Placement Request"
+      }
+
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
@@ -162,6 +170,7 @@ class BookingService(
           offlineApplication = null,
           turnarounds = mutableListOf(),
           nomsNumber = placementRequest.application.nomsNumber,
+          placementRequest = null,
         ),
       )
 
@@ -278,6 +287,7 @@ class BookingService(
           offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null,
           turnarounds = mutableListOf(),
           nomsNumber = nomsNumber,
+          placementRequest = null,
         ),
       )
 
@@ -440,6 +450,7 @@ class BookingService(
           application = null,
           offlineApplication = null,
           turnarounds = mutableListOf(),
+          placementRequest = null,
         ),
       )
 
@@ -709,6 +720,7 @@ class BookingService(
     return success(nonArrivalEntity)
   }
 
+  @Transactional
   fun createCancellation(
     booking: BookingEntity,
     date: LocalDate,
@@ -740,6 +752,18 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
+
+    if (reason.id == approvedPremisesBookingAppealedCancellationReasonId && booking.placementRequest != null) {
+      val placementRequest = booking.placementRequest!!
+      placementRequestService.createPlacementRequest(
+        placementRequirements = placementRequest.placementRequirements,
+        placementDates = PlacementDates(
+          expectedArrival = placementRequest.expectedArrival,
+          duration = placementRequest.duration,
+        ),
+        notes = placementRequest.notes,
+      )
+    }
 
     return success(cancellationEntity)
   }

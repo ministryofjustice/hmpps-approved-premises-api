@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -83,6 +84,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -95,6 +97,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
@@ -113,6 +116,7 @@ class BookingServiceTest {
   private val mockApplicationService = mockk<ApplicationService>()
   private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
+  private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
@@ -140,6 +144,7 @@ class BookingServiceTest {
     applicationService = mockApplicationService,
     workingDayCountService = mockWorkingDayCountService,
     emailNotificationService = mockEmailNotificationService,
+    placementRequestService = mockPlacementRequestService,
     communityApiClient = mockCommunityApiClient,
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
@@ -1415,6 +1420,100 @@ class BookingServiceTest {
   }
 
   @Test
+  fun `createCancellation returns Success and creates new Placement Request when cancellation reason is 'Booking successfully appealed' and cancelled Booking was linked to Placement Request`() {
+    val reasonId = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
+
+    val originalPlacementRequirements = PlacementRequirementsEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .produce()
+
+    val originalPlacementRequest = PlacementRequestEntityFactory()
+      .withPlacementRequirements(originalPlacementRequirements)
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withAllocatedToUser(user)
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withPlacementRequest(originalPlacementRequest)
+      .produce()
+
+    val reasonEntity = CancellationReasonEntityFactory()
+      .withId(reasonId)
+      .withServiceScope("*")
+      .produce()
+
+    every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+    every {
+      mockPlacementRequestService.createPlacementRequest(
+        placementRequirements = originalPlacementRequirements,
+        placementDates = PlacementDates(
+          expectedArrival = originalPlacementRequest.expectedArrival,
+          duration = originalPlacementRequest.duration,
+        ),
+        notes = originalPlacementRequest.notes,
+      )
+    } answers {
+      val placementRequirementsArgument = it.invocation.args[0] as PlacementRequirementsEntity
+      PlacementRequestEntityFactory()
+        .withPlacementRequirements(placementRequirementsArgument)
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .produce()
+    }
+
+    val result = bookingService.createCancellation(
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes",
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 1) {
+      mockPlacementRequestService.createPlacementRequest(
+        placementRequirements = originalPlacementRequirements,
+        placementDates = PlacementDates(
+          expectedArrival = originalPlacementRequest.expectedArrival,
+          duration = originalPlacementRequest.duration,
+        ),
+        notes = originalPlacementRequest.notes,
+      )
+    }
+  }
+
+  @Test
   fun `createExtension returns FieldValidationError with correct param to message map when an Approved Premises booking has a new departure date before the existing departure date`() {
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
@@ -2565,6 +2664,80 @@ class BookingServiceTest {
     val validationError = result.entity as ValidatableActionResult.FieldValidationError
 
     assertThat(validationError.validationMessages["$.bedId"]).isEqualTo("mustBelongToApprovedPremises")
+  }
+
+  @Test
+  fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if a Booking has already been made from the Placement Request`() {
+    val arrivalDate = LocalDate.parse("2023-03-28")
+    val departureDate = LocalDate.parse("2023-03-30")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val otherUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(otherUser)
+      .produce()
+
+    val assessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(otherUser)
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withAssessment(assessment)
+      .withAllocatedToUser(user)
+      .withBooking(
+        BookingEntityFactory()
+          .withBed(bed)
+          .withPremises(premises)
+          .produce(),
+      )
+      .produce()
+
+    every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
+    val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
+      user = user,
+      placementRequestId = placementRequest.id,
+      bedId = bed.id,
+      arrivalDate = arrivalDate,
+      departureDate = departureDate,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
+    val validationError = result.entity as ValidatableActionResult.ConflictError
+
+    assertThat(validationError.message).isEqualTo("A Booking has already been made for this Placement Request")
   }
 
   @Test

@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -46,6 +47,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
   private var turnarounds: Yielded<MutableList<TurnaroundEntity>>? = null
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
+  private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -167,6 +169,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.nomsNumber = { nomsNumber }
   }
 
+  fun withPlacementRequest(placementRequest: PlacementRequestEntity) = apply {
+    this.placementRequest = { placementRequest }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -189,5 +195,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     offlineApplication = this.offlineApplication(),
     turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
     nomsNumber = this.nomsNumber(),
+    placementRequest = this.placementRequest(),
   )
 }
