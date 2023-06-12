@@ -80,6 +80,8 @@ class ApprovedPremisesBookingSeedJob(
   )
 
   override fun processRow(row: ApprovedPremisesBookingSeedCsvRow) {
+    Thread.sleep(1_000)
+
     val existingBooking = bookingRepository.findByIdOrNull(row.id)
 
     if (existingBooking == null) {
