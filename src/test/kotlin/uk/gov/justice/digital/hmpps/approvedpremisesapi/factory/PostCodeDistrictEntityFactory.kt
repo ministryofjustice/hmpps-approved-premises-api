@@ -13,7 +13,7 @@ import java.util.UUID
 
 class PostCodeDistrictEntityFactory : Factory<PostCodeDistrictEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var outcode: Yielded<String> = { randomOf(listOf("SW18", "SY11", "YO51", "AB24")) }
+  private var outcode: Yielded<String> = { randomOf(listOf("SW10", "SW11", "SW12", "SW13", "SW14", "SW15", "SW16", "SW17", "SW18", "SY11", "YO51", "AB24")) }
   private var latitude: Yielded<Double> = { randomDouble(49.0, 59.0) }
   private var longitude: Yielded<Double> = { randomDouble(2.0, 8.0) }
   private var point: Yielded<Point>? = null
