@@ -428,7 +428,7 @@ class ApplicationTest : IntegrationTestBase() {
             val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
-              withSubmittedAt(OffsetDateTime.now())
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withProbationRegion(probationRegion)
@@ -446,6 +446,7 @@ class ApplicationTest : IntegrationTestBase() {
             val notInRegionApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withYieldedProbationRegion {
@@ -953,7 +954,7 @@ class ApplicationTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(createdByUser)
             withProbationRegion(createdByUser.probationRegion)
-            withSubmittedAt(OffsetDateTime.now())
+            withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
             withData(
               """
               {
