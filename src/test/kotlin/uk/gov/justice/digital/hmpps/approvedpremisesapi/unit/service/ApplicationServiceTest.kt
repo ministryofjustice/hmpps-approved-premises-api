@@ -1346,7 +1346,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event`() {
+    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`() {
       val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1411,6 +1411,7 @@ class ApplicationServiceTest {
       val schema = application.schemaVersion as ApprovedPremisesApplicationJsonSchemaEntity
 
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
       val result = applicationService.submitApprovedPremisesApplication(applicationId, submitApprovedPremisesApplication, username, "jwt")
 
@@ -1473,6 +1474,17 @@ class ApplicationServiceTest {
               data.mappa == risks.mappa.value!!.level &&
               data.sentenceLengthInMonths == null &&
               data.offenceId == application.offenceId
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockEmailNotificationService.sendEmail(
+          any(),
+          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
+          match {
+            it["name"] == user.name &&
+              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
           },
         )
       }
@@ -1576,7 +1588,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitTemporaryAccommodationApplication returns Success, sends confirmation email`() {
+    fun `submitTemporaryAccommodationApplication returns Success`() {
       val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
       val application = TemporaryAccommodationApplicationEntityFactory()
@@ -1596,8 +1608,6 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
-
       val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplication)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1608,16 +1618,6 @@ class ApplicationServiceTest {
       verify { mockApplicationRepository.save(any()) }
       verify { mockAssessmentService wasNot called }
       verify { mockDomainEventService wasNot called }
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
-          match {
-            it["name"] == user.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
     }
   }
 
