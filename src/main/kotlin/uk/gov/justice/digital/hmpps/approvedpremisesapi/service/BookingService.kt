@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -185,6 +186,10 @@ class BookingService(
 
       val applicationSubmittedByUser = placementRequest.application.createdByUser
 
+      val lengthOfStayDays = arrivalDate.getDaysUntilInclusive(departureDate).size
+      val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
+      val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
+
       emailNotificationService.sendEmail(
         user = applicationSubmittedByUser,
         templateId = notifyConfig.templates.bookingMade,
@@ -194,6 +199,11 @@ class BookingService(
           "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
           "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
             .replace("#bookingId", booking.id.toString()),
+          "crn" to placementRequest.application.crn,
+          "startDate" to arrivalDate.toString(),
+          "endDate" to departureDate.toString(),
+          "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks else lengthOfStayDays,
+          "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
         ),
       )
 
@@ -300,6 +310,10 @@ class BookingService(
 
         val applicationSubmittedByUser = newestSubmittedOnlineApplication!!.createdByUser
 
+        val lengthOfStayDays = arrivalDate.getDaysUntilInclusive(departureDate).size
+        val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
+        val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
+
         emailNotificationService.sendEmail(
           user = applicationSubmittedByUser,
           templateId = notifyConfig.templates.bookingMade,
@@ -309,6 +323,11 @@ class BookingService(
             "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
             "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
               .replace("#bookingId", booking.id.toString()),
+            "crn" to crn,
+            "startDate" to arrivalDate.toString(),
+            "endDate" to departureDate.toString(),
+            "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
+            "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
           ),
         )
       }
