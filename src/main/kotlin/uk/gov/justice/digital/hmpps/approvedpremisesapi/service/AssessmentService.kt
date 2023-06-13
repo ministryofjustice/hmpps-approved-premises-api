@@ -490,23 +490,27 @@ class AssessmentService(
       ),
     )
 
-    emailNotificationService.sendEmail(
-      user = assigneeUser,
-      templateId = notifyConfig.templates.assessmentAllocated,
-      personalisation = mapOf(
-        "name" to assigneeUser.name,
-        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
-      ),
-    )
+    if (application is ApprovedPremisesApplicationEntity) {
+      emailNotificationService.sendEmail(
+        user = assigneeUser,
+        templateId = notifyConfig.templates.assessmentAllocated,
+        personalisation = mapOf(
+          "name" to assigneeUser.name,
+          "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+          "crn" to application.crn,
+        ),
+      )
 
-    emailNotificationService.sendEmail(
-      user = assigneeUser,
-      templateId = notifyConfig.templates.assessmentDeallocated,
-      personalisation = mapOf(
-        "name" to assigneeUser.name,
-        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
-      ),
-    )
+      emailNotificationService.sendEmail(
+        user = assigneeUser,
+        templateId = notifyConfig.templates.assessmentDeallocated,
+        personalisation = mapOf(
+          "name" to assigneeUser.name,
+          "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+          "crn" to application.crn,
+        ),
+      )
+    }
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
