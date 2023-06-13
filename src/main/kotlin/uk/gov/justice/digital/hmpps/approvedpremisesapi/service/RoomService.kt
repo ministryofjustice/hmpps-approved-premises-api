@@ -4,6 +4,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
@@ -13,13 +15,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class RoomService(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
+  private val bookingRepository: BookingRepository,
+  private val lostBedsRepository: LostBedsRepository,
   private val characteristicService: CharacteristicService,
 ) {
+  fun getRoom(roomId: UUID) = roomRepository.findByIdOrNull(roomId)
 
   fun createRoom(
     premises: PremisesEntity,
@@ -159,4 +165,24 @@ class RoomService(
       room = room,
     ),
   )
+
+  @Transactional
+  fun deleteRoom(room: RoomEntity): ValidatableActionResult<Unit> = validated {
+    val bedIds = room.beds.map { it.id }
+
+    if (bookingRepository.findByBedIds(bedIds).any()) {
+      return room.id hasConflictError "A room cannot be hard-deleted if it has any bookings associated with it"
+    }
+
+    lostBedsRepository.findByBedIds(bedIds).forEach { lostBed ->
+      lostBedsRepository.delete(lostBed)
+    }
+
+    room.beds.forEach { bed ->
+      bedRepository.delete(bed)
+    }
+    roomRepository.delete(room)
+
+    success(Unit)
+  }
 }
