@@ -5523,6 +5523,15 @@ components:
             submittedAt:
               type: string
               format: date-time
+            assessmentId:
+              type: string
+              format: uuid
+            assessmentCompletedAt:
+              type: string
+              format: date-time
+            applicationCompletedAt:
+              type: string
+              format: date-time
             data:
               $ref: '#/components/schemas/AnyValue'
             document:
@@ -5533,6 +5542,9 @@ components:
             - schemaVersion
             - outdatedScheme
             - createdAt
+            - assessmentId
+            - assessmentCompletedAt
+            - applicationCompletedAt
     NewPlacementApplication:
       type: object
       properties:

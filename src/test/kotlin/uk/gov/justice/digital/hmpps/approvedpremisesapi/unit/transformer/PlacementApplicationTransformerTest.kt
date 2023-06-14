@@ -4,14 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
+import java.time.OffsetDateTime
 
 class PlacementApplicationTransformerTest {
   private val objectMapper = ObjectMapper().apply {
@@ -29,15 +35,31 @@ class PlacementApplicationTransformerTest {
     }
     .produce()
 
+  private var applicationMock = mockk<ApprovedPremisesApplicationEntity>()
+
   private var application = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(user)
+    .withSubmittedAt(OffsetDateTime.now())
     .produce()
+
+  private var assessment = AssessmentEntityFactory()
+    .withAllocatedToUser(user)
+    .withApplication(application)
+    .withSubmittedAt(OffsetDateTime.now())
+    .produce()
+
+  @BeforeEach
+  fun setup() {
+    every { applicationMock.getLatestAssessment() } returns assessment
+    every { applicationMock.id } returns application.id
+    every { applicationMock.submittedAt } returns application.submittedAt
+  }
 
   @Test
   fun `transformJpaToApi converts correctly when there is no data or document`() {
     val placementApplication = PlacementApplicationEntityFactory()
       .withCreatedByUser(user)
-      .withApplication(application)
+      .withApplication(applicationMock)
       .withData(null)
       .withDocument(null)
       .produce()
@@ -45,7 +67,10 @@ class PlacementApplicationTransformerTest {
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
     assertThat(result.id).isEqualTo(placementApplication.id)
-    assertThat(result.applicationId).isEqualTo(placementApplication.application.id)
+    assertThat(result.applicationId).isEqualTo(application.id)
+    assertThat(result.applicationCompletedAt).isEqualTo(application.submittedAt!!.toInstant())
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentCompletedAt).isEqualTo(assessment.submittedAt!!.toInstant())
     assertThat(result.createdByUserId).isEqualTo(placementApplication.createdByUser.id)
     assertThat(result.schemaVersion).isEqualTo(placementApplication.schemaVersion.id)
     assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
@@ -61,7 +86,7 @@ class PlacementApplicationTransformerTest {
     val document = "{\"document\": \"something\"}"
     val placementApplication = PlacementApplicationEntityFactory()
       .withCreatedByUser(user)
-      .withApplication(application)
+      .withApplication(applicationMock)
       .withData(data)
       .withDocument(document)
       .produce()
