@@ -65,9 +65,7 @@ dependencies {
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.3.0")
 
-  implementation("uk.gov.service.notify:notifications-java-client:4.1.0-RELEASE") {
-    exclude(group = "org.json", module = "json")
-  }
+  implementation("uk.gov.service.notify:notifications-java-client:4.1.0-RELEASE")
 }
 
 java {
