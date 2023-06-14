@@ -1,3 +1,5 @@
+import org.apache.commons.io.FileUtils
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.8.7"
   kotlin("plugin.spring") version "1.8.22"
@@ -65,9 +67,7 @@ dependencies {
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.3.0")
 
-  implementation("uk.gov.service.notify:notifications-java-client:4.1.0-RELEASE") {
-    exclude(group = "org.json", module = "json")
-  }
+  implementation("uk.gov.service.notify:notifications-java-client:4.1.0-RELEASE")
 }
 
 java {
@@ -170,6 +170,16 @@ tasks.get("openApiGenerate").doLast {
   File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/DocumentsApi.kt").delete()
   File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/DocumentsApiController.kt").delete()
   File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/DocumentsApiDelegate.kt").delete()
+
+  // This is a workaround for an issue where we end up with duplicate keys in output JSON because we declare properties both in the discriminator
+  // and as a regular property in the OpenAPI spec.  The Typescript generator does not support just the discriminator so there is no alternative.
+  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model").walk().forEach {
+    if (it.isFile && it.extension == "kt") {
+      val replacedFileContents = FileUtils.readFileToString(it, "UTF-8")
+        .replace("include = JsonTypeInfo.As.PROPERTY", "include = JsonTypeInfo.As.EXISTING_PROPERTY")
+      FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
+    }
+  }
 }
 
 ktlint {
