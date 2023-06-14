@@ -17,7 +17,7 @@ import javax.persistence.Table
 
 @Repository
 interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEntity, UUID> {
-  fun findAllByReallocatedAtNullAndDecisionNull(): List<PlacementApplicationEntity>
+  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(): List<PlacementApplicationEntity>
 
   @Query("SELECT a FROM PlacementApplicationEntity a WHERE a.application.id = :id")
   fun findByApplicationId(id: UUID): PlacementApplicationEntity?

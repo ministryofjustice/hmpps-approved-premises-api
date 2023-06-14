@@ -260,7 +260,7 @@ class PlacementApplicationService(
   }
 
   fun getAllReallocatable(): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllByReallocatedAtNullAndDecisionNull()
+    return placementApplicationRepository.findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull()
   }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
