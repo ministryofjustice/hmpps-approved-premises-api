@@ -1,4 +1,2 @@
 -- ${flyway:timestamp}
-
-TRUNCATE TABLE applications CASCADE;
-TRUNCATE table assessments CASCADE;
+-- This file intentionally left blank for historical reasons.
