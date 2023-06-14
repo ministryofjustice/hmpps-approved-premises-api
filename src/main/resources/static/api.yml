@@ -5665,7 +5665,7 @@ components:
         - isStepFreeDesignated
         - isArsonDesignated
         - isWheelchairDesignated
-        - isSingleRoom
+        - isSingle
         - isCatered
         - isSuitedForSexOffenders
         - isSuitableForVulnerable
