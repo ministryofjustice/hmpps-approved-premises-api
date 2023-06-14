@@ -81,7 +81,7 @@ class PlacementRequestTransformerTest {
     .withDesirableCriteria(
       listOf(
         CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
-        CharacteristicEntityFactory().withPropertyName("isSingleRoom").produce(),
+        CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
         CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
         CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
       ),
@@ -119,7 +119,7 @@ class PlacementRequestTransformerTest {
       .withDesirableCriteria(
         listOf(
           CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
-          CharacteristicEntityFactory().withPropertyName("isSingleRoom").produce(),
+          CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
           CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
           CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
         ),
@@ -143,7 +143,7 @@ class PlacementRequestTransformerTest {
         location = placementRequirementsEntity.postcodeDistrict.outcode,
         radius = placementRequirementsEntity.radius,
         essentialCriteria = listOf(PlacementCriteria.isSemiSpecialistMentalHealth, PlacementCriteria.isRecoveryFocussed),
-        desirableCriteria = listOf(PlacementCriteria.isWheelchairDesignated, PlacementCriteria.isSingleRoom, PlacementCriteria.hasEnSuite),
+        desirableCriteria = listOf(PlacementCriteria.isWheelchairDesignated, PlacementCriteria.isSingle, PlacementCriteria.hasEnSuite),
         person = mockPerson,
         risks = mockRisks,
         applicationId = application.id,
