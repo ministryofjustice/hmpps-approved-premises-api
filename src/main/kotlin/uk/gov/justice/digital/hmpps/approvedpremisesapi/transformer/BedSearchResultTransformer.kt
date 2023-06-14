@@ -86,7 +86,7 @@ class BedSearchResultTransformer {
         id = result.bedId,
         name = result.bedName,
       ),
-      serviceName = ServiceName.approvedPremises,
+      serviceName = ServiceName.temporaryAccommodation,
     )
   }
 }

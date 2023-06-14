@@ -3095,6 +3095,8 @@ components:
     Premises:
       type: object
       properties:
+        service:
+          type: string
         id:
           type: string
           format: uuid
@@ -3119,9 +3121,6 @@ components:
         availableBedsForToday:
           type: integer
           example: 20
-        service:
-          type: string
-          example: CAS3
         notes:
           type: string
           example: some notes about this property
@@ -3143,6 +3142,7 @@ components:
           CAS1: '#/components/schemas/ApprovedPremises'
           CAS3: '#/components/schemas/TemporaryAccommodationPremises'
       required:
+        - service
         - id
         - name
         - addressLine1
@@ -3155,6 +3155,8 @@ components:
     PremisesSummary:
       type: object
       properties:
+        service:
+          type: string
         id:
           type: string
           format: uuid
@@ -3181,6 +3183,7 @@ components:
           CAS1: '#/components/schemas/ApprovedPremisesSummary'
           CAS3: '#/components/schemas/TemporaryAccommodationPremisesSummary'
       required:
+        - service
         - id
         - name
         - addressLine1
@@ -3289,6 +3292,8 @@ components:
     Task:
       type: object
       properties:
+        taskType:
+          $ref: '#/components/schemas/TaskType'
         applicationId:
           type: string
           format: uuid
@@ -3302,8 +3307,6 @@ components:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:
           $ref: '#/components/schemas/TaskStatus'
-        taskType:
-          $ref: '#/components/schemas/TaskType'
       discriminator:
         propertyName: taskType
         mapping:
@@ -3311,13 +3314,13 @@ components:
           PlacementRequest: '#/components/schemas/PlacementRequestTask'
           PlacementApplication: '#/components/schemas/PlacementApplicationTask'
           BookingAppeal: '#/components/schemas/BookingAppealTask'
-      required: 
+      required:
+        - taskType
         - applicationId
         - person
         - dueDate
         - allocatedToStaffMember
         - status
-        - taskType
     TaskStatus:
       type: string
       enum:
@@ -4338,6 +4341,8 @@ components:
     Application:
       type: object
       properties:
+        type:
+          type: string
         id:
           type: string
           format: uuid
@@ -4354,15 +4359,13 @@ components:
           CAS2: '#/components/schemas/Cas2Application'
           CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
+        - type
         - id
         - person
         - createdAt
-        - type
     OfflineApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
-        - type: object
-          properties: { }
     ApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -4463,6 +4466,8 @@ components:
     ApplicationSummary:
       type: object
       properties:
+        type:
+          type: string
         id:
           type: string
           format: uuid
@@ -4482,15 +4487,13 @@ components:
           CAS2: '#/components/schemas/Cas2ApplicationSummary'
           CAS3: '#/components/schemas/TemporaryAccommodationApplicationSummary'
       required:
+        - type
         - id
         - person
         - createdAt
-        - type
     OfflineApplicationSummary:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
-        - type: object
-          properties: { }
     ApprovedPremisesApplicationSummary:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
@@ -4573,6 +4576,8 @@ components:
     UpdateApplication:
       type: object
       properties:
+        type:
+          type: string
         data:
           type: object
           additionalProperties:
@@ -4583,6 +4588,7 @@ components:
           CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
           CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
       required:
+        - type
         - data
     UpdateApprovedPremisesApplication:
       allOf:
@@ -4608,6 +4614,8 @@ components:
     SubmitApplication:
       type: object
       properties:
+        type:
+          type: string
         translatedDocument:
           $ref: '#/components/schemas/AnyValue'
       discriminator:
@@ -4616,6 +4624,7 @@ components:
           CAS1: '#/components/schemas/SubmitApprovedPremisesApplication'
           CAS3: '#/components/schemas/SubmitTemporaryAccommodationApplication'
       required:
+        - type
         - translatedDocument
     SubmitApprovedPremisesApplication:
       allOf:
@@ -4706,6 +4715,8 @@ components:
     Assessment:
       type: object
       properties:
+        service:
+          type: string
         id:
           type: string
           format: uuid
@@ -4741,6 +4752,7 @@ components:
           CAS1: '#/components/schemas/ApprovedPremisesAssessment'
           CAS3: '#/components/schemas/TemporaryAccommodationAssessment'
       required:
+        - service
         - id
         - allocatedToUser
         - schemaVersion
@@ -4958,23 +4970,22 @@ components:
     User:
       type: object
       properties:
+        service:
+          type: string
         id:
           type: string
           format: uuid
         region:
           $ref: '#/components/schemas/ProbationRegion'
-        service:
-          type: string
-          example: CAS1
       discriminator:
         propertyName: service
         mapping:
           CAS1: '#/components/schemas/ApprovedPremisesUser'
           CAS3: '#/components/schemas/TemporaryAccommodationUser'
       required:
+        - service
         - id
         - region
-        - service
     ApprovedPremisesUser:
       allOf:
         - $ref: '#/components/schemas/User'
@@ -5701,6 +5712,7 @@ components:
           type: integer
           description: The number of days the Bed will need to be free from the start_date until
       required:
+        - serviceName
         - startDate
         - durationDays
       discriminator:
@@ -5770,6 +5782,7 @@ components:
         bed:
           $ref: '#/components/schemas/BedSearchResultBedSummary'
       required:
+        - serviceName
         - premises
         - room
         - bed

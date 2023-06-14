@@ -1239,10 +1239,12 @@ class ApplicationServiceTest {
       isWomensApplication = false,
       targetLocation = "SW1A 1AA",
       releaseType = ReleaseTypeOption.licence,
+      type = "CAS1",
     )
 
     private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
       translatedDocument = {},
+      type = "CAS3",
     )
 
     @BeforeEach
