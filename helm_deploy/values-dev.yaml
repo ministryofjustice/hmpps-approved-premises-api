@@ -29,7 +29,6 @@ generic-service:
     PREEMPTIVE-CACHE-DELAY-MS: 60000
     SEED_AUTO_ENABLED: true
     SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
-    NOTIFY_MODE: TEST_AND_GUEST_LIST
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-dev.hmpps.service.justice.gov.uk/assessments/#id

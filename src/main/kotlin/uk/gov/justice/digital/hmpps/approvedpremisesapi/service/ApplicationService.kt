@@ -535,16 +535,6 @@ class ApplicationService(
 
     createApplicationSubmittedEvent(application, submitApplication, username, jwt)
 
-    emailNotificationService.sendEmail(
-      user = user,
-      templateId = notifyConfig.templates.applicationSubmitted,
-      personalisation = mapOf(
-        "name" to user.name,
-        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-        "crn" to application.crn,
-      ),
-    )
-
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
     )
@@ -608,6 +598,15 @@ class ApplicationService(
     }
 
     application = applicationRepository.save(application)
+
+    emailNotificationService.sendEmail(
+      user = user,
+      templateId = notifyConfig.templates.applicationSubmitted,
+      personalisation = mapOf(
+        "name" to user.name,
+        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+      ),
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),

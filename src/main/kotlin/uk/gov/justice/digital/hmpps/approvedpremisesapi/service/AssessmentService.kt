@@ -134,17 +134,14 @@ class AssessmentService(
       ),
     )
 
-    if (application is ApprovedPremisesApplicationEntity) {
-      emailNotificationService.sendEmail(
-        user = allocatedUser,
-        templateId = notifyConfig.templates.assessmentAllocated,
-        personalisation = mapOf(
-          "name" to allocatedUser.name,
-          "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
-    }
+    emailNotificationService.sendEmail(
+      user = allocatedUser,
+      templateId = notifyConfig.templates.assessmentAllocated,
+      personalisation = mapOf(
+        "name" to allocatedUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
+      ),
+    )
 
     return assessment
   }
@@ -259,60 +256,57 @@ class AssessmentService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    if (application is ApprovedPremisesApplicationEntity) {
-      domainEventService.saveApplicationAssessedDomainEvent(
-        DomainEvent(
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = acceptedAt.toInstant(),
+        data = ApplicationAssessedEnvelope(
           id = domainEventId,
-          applicationId = application.id,
-          crn = application.crn,
-          occurredAt = acceptedAt.toInstant(),
-          data = ApplicationAssessedEnvelope(
-            id = domainEventId,
-            timestamp = acceptedAt.toInstant(),
-            eventType = "approved-premises.application.assessed",
-            eventDetails = ApplicationAssessed(
-              applicationId = application.id,
-              applicationUrl = applicationUrlTemplate
-                .replace("#id", application.id.toString()),
-              personReference = PersonReference(
-                crn = offenderDetails.otherIds.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!,
-              ),
-              deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
-              assessedAt = acceptedAt.toInstant(),
-              assessedBy = ApplicationAssessedAssessedBy(
-                staffMember = StaffMember(
-                  staffCode = staffDetails.staffCode,
-                  staffIdentifier = staffDetails.staffIdentifier,
-                  forenames = staffDetails.staff.forenames,
-                  surname = staffDetails.staff.surname,
-                  username = staffDetails.username,
-                ),
-                probationArea = ProbationArea(
-                  code = staffDetails.probationArea.code,
-                  name = staffDetails.probationArea.description,
-                ),
-                cru = Cru(
-                  name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
-                ),
-              ),
-              decision = assessment.decision.toString(),
-              decisionRationale = assessment.rejectionRationale,
+          timestamp = acceptedAt.toInstant(),
+          eventType = "approved-premises.application.assessed",
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ),
+            deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+            assessedAt = acceptedAt.toInstant(),
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username,
+              ),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description,
+              ),
+              cru = Cru(
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale,
           ),
         ),
-      )
+      ),
+    )
 
-      emailNotificationService.sendEmail(
-        user = application.createdByUser,
-        templateId = notifyConfig.templates.assessmentAccepted,
-        personalisation = mapOf(
-          "name" to application.createdByUser.name,
-          "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
-    }
+    emailNotificationService.sendEmail(
+      user = application.createdByUser,
+      templateId = notifyConfig.templates.assessmentAccepted,
+      personalisation = mapOf(
+        "name" to application.createdByUser.name,
+        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+      ),
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),
@@ -384,60 +378,57 @@ class AssessmentService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    if (application is ApprovedPremisesApplicationEntity) {
-      domainEventService.saveApplicationAssessedDomainEvent(
-        DomainEvent(
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = rejectedAt.toInstant(),
+        data = ApplicationAssessedEnvelope(
           id = domainEventId,
-          applicationId = application.id,
-          crn = application.crn,
-          occurredAt = rejectedAt.toInstant(),
-          data = ApplicationAssessedEnvelope(
-            id = domainEventId,
-            timestamp = rejectedAt.toInstant(),
-            eventType = "approved-premises.application.assessed",
-            eventDetails = ApplicationAssessed(
-              applicationId = application.id,
-              applicationUrl = applicationUrlTemplate
-                .replace("#id", application.id.toString()),
-              personReference = PersonReference(
-                crn = offenderDetails.otherIds.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!,
-              ),
-              deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
-              assessedAt = rejectedAt.toInstant(),
-              assessedBy = ApplicationAssessedAssessedBy(
-                staffMember = StaffMember(
-                  staffCode = staffDetails.staffCode,
-                  staffIdentifier = staffDetails.staffIdentifier,
-                  forenames = staffDetails.staff.forenames,
-                  surname = staffDetails.staff.surname,
-                  username = staffDetails.username,
-                ),
-                probationArea = ProbationArea(
-                  code = staffDetails.probationArea.code,
-                  name = staffDetails.probationArea.description,
-                ),
-                cru = Cru(
-                  name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
-                ),
-              ),
-              decision = assessment.decision.toString(),
-              decisionRationale = assessment.rejectionRationale,
+          timestamp = rejectedAt.toInstant(),
+          eventType = "approved-premises.application.assessed",
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
             ),
+            deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+            assessedAt = rejectedAt.toInstant(),
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username,
+              ),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description,
+              ),
+              cru = Cru(
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale,
           ),
         ),
-      )
+      ),
+    )
 
-      emailNotificationService.sendEmail(
-        user = application.createdByUser,
-        templateId = notifyConfig.templates.assessmentRejected,
-        personalisation = mapOf(
-          "name" to application.createdByUser.name,
-          "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
-    }
+    emailNotificationService.sendEmail(
+      user = application.createdByUser,
+      templateId = notifyConfig.templates.assessmentRejected,
+      personalisation = mapOf(
+        "name" to application.createdByUser.name,
+        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+      ),
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),
@@ -493,27 +484,23 @@ class AssessmentService(
       ),
     )
 
-    if (application is ApprovedPremisesApplicationEntity) {
-      emailNotificationService.sendEmail(
-        user = assigneeUser,
-        templateId = notifyConfig.templates.assessmentAllocated,
-        personalisation = mapOf(
-          "name" to assigneeUser.name,
-          "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
+    emailNotificationService.sendEmail(
+      user = assigneeUser,
+      templateId = notifyConfig.templates.assessmentAllocated,
+      personalisation = mapOf(
+        "name" to assigneeUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+      ),
+    )
 
-      emailNotificationService.sendEmail(
-        user = assigneeUser,
-        templateId = notifyConfig.templates.assessmentDeallocated,
-        personalisation = mapOf(
-          "name" to assigneeUser.name,
-          "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
-    }
+    emailNotificationService.sendEmail(
+      user = assigneeUser,
+      templateId = notifyConfig.templates.assessmentDeallocated,
+      personalisation = mapOf(
+        "name" to assigneeUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+      ),
+    )
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
