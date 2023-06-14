@@ -16,8 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Submitted Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -72,7 +72,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `creating a placement application when the application does not belong to the user returns 401`() {
       `Given a User` { _, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Application`(createdByUser = otherUser) { application ->
+          `Given a Submitted Application`(createdByUser = otherUser) { application ->
             webTestClient.post()
               .uri("/placement-applications")
               .header("Authorization", "Bearer $jwt")
@@ -92,7 +92,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `creating a placement application when the application does not have an assessment returns an error`() {
       `Given a User` { user, jwt ->
-        `Given an Application`(createdByUser = user) { application ->
+        `Given a Submitted Application`(createdByUser = user) { application ->
           webTestClient.post()
             .uri("/placement-applications")
             .header("Authorization", "Bearer $jwt")
@@ -134,7 +134,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `creating a placement application when the application belongs to the user returns successfully`() {
       `Given a User` { user, jwt ->
-        `Given an Assessment for Approved Premises`(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user) { _, application ->
+        `Given an Assessment for Approved Premises`(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
           val schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }

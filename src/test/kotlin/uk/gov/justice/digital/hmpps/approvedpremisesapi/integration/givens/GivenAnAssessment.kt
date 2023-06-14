@@ -31,6 +31,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withCrn(crn)
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
+    withSubmittedAt(OffsetDateTime.now())
     withReleaseType("licence")
   }
 
