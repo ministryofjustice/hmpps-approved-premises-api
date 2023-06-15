@@ -1152,6 +1152,7 @@ class ApplicationTest : IntegrationTestBase() {
                 data = mapOf("thingId" to 123),
                 isWomensApplication = false,
                 isPipeApplication = true,
+                type = "CAS1",
               ),
             )
             .exchange()
@@ -1264,6 +1265,7 @@ class ApplicationTest : IntegrationTestBase() {
                 isWomensApplication = true,
                 targetLocation = "SW1A 1AA",
                 releaseType = ReleaseTypeOption.licence,
+                type = "CAS1",
               ),
             )
             .exchange()
@@ -1403,6 +1405,7 @@ class ApplicationTest : IntegrationTestBase() {
                     isWomensApplication = true,
                     targetLocation = "SW1A 1AA",
                     releaseType = ReleaseTypeOption.licence,
+                    type = "CAS1",
                   ),
                 )
                 .exchange()
@@ -1482,6 +1485,7 @@ class ApplicationTest : IntegrationTestBase() {
             .bodyValue(
               SubmitTemporaryAccommodationApplication(
                 translatedDocument = {},
+                type = "CAS3",
               ),
             )
             .exchange()

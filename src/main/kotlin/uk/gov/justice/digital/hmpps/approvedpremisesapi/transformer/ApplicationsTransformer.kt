@@ -50,6 +50,7 @@ class ApplicationsTransformer(
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
       status = getStatus(jpa),
+      type = "CAS1",
     )
     is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
       id = jpa.id,
@@ -63,6 +64,7 @@ class ApplicationsTransformer(
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
       status = getStatus(jpa),
+      type = "CAS3",
     )
     is DomainCas2ApplicationEntity -> Cas2Application(
       id = jpa.id,
@@ -76,6 +78,7 @@ class ApplicationsTransformer(
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
       status = getStatus(jpa),
+      type = "CAS2",
     )
     else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
   }
@@ -96,6 +99,7 @@ class ApplicationsTransformer(
         arrivalDate = domain.getArrivalDate()?.toInstant(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
         status = getStatusFromSummary(domain),
+        type = "CAS1",
       )
     }
 
@@ -111,6 +115,7 @@ class ApplicationsTransformer(
         submittedAt = domain.getSubmittedAt()?.toInstant(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
         status = getStatusFromSummary(domain),
+        type = "CAS3",
       )
     }
 
@@ -125,6 +130,7 @@ class ApplicationsTransformer(
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
+        type = "CAS2",
       )
     }
 
@@ -135,12 +141,14 @@ class ApplicationsTransformer(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
+    type = "Offline",
   )
 
   fun transformJpaToApiSummary(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = OfflineApplicationSummary(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
+    type = "Offline",
   )
 
   private fun getStatus(entity: ApplicationEntity): ApplicationStatus {

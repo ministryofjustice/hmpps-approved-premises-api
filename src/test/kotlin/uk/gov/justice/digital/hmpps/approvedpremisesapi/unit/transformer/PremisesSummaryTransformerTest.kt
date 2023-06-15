@@ -39,6 +39,7 @@ class PremisesSummaryTransformerTest {
         pdu = "North east",
         status = PropertyStatus.active,
         bedCount = 1,
+        service = "CAS3",
       ),
     )
   }
@@ -69,6 +70,7 @@ class PremisesSummaryTransformerTest {
         status = PropertyStatus.active,
         bedCount = 1,
         apCode = "APCODE",
+        service = "CAS1",
       ),
     )
   }

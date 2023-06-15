@@ -193,7 +193,7 @@ class BedSearchTest : IntegrationTestBase() {
           TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2023-03-23"),
             durationDays = 7,
-            serviceName = "approved-premises",
+            serviceName = "temporary-accommodation",
             probationDeliveryUnit = searchPdu.name,
           ),
         )
@@ -228,7 +228,7 @@ class BedSearchTest : IntegrationTestBase() {
                     id = bed.id,
                     name = bed.name,
                   ),
-                  serviceName = ServiceName.approvedPremises,
+                  serviceName = ServiceName.temporaryAccommodation,
                 ),
               ),
             ),
