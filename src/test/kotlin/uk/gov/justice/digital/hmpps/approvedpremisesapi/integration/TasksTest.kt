@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class TasksTest : IntegrationTestBase() {
@@ -85,6 +86,15 @@ class TasksTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             )
 
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+            )
+
             val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
@@ -105,6 +115,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
             )
 
             webTestClient.get()
