@@ -21,6 +21,9 @@ interface LostBedsRepository : JpaRepository<LostBedsEntity, UUID> {
   @Query("SELECT MAX(lb.endDate) FROM LostBedsEntity lb WHERE lb.premises.id = :premisesId")
   fun getHighestBookingDate(premisesId: UUID): LocalDate?
 
+  @Query("SELECT lb FROM LostBedsEntity lb WHERE lb.bed.id IN :lostBedIds")
+  fun findByBedIds(lostBedIds: List<UUID>): List<LostBedsEntity>
+
   @Query(
     """
     SELECT lb 
