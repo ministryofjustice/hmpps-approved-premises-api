@@ -505,10 +505,10 @@ class AssessmentService(
       )
 
       emailNotificationService.sendEmail(
-        user = assigneeUser,
+        user = currentAssessment.allocatedToUser,
         templateId = notifyConfig.templates.assessmentDeallocated,
         personalisation = mapOf(
-          "name" to assigneeUser.name,
+          "name" to currentAssessment.allocatedToUser.name,
           "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
           "crn" to application.crn,
         ),
