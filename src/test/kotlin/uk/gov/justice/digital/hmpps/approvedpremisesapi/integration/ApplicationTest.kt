@@ -31,11 +31,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
@@ -411,6 +413,151 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all applications returns 200 with correct body for Temporary Accommodation - when user has CAS3_ASSESSOR role then returns all submitted applications in region`() {
+    `Given a Probation Region` { probationRegion ->
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR), probationRegion = probationRegion) { assessorUser, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            val notSubmittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withSubmittedAt(null)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            val notInRegionApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withYieldedProbationRegion {
+                probationRegionEntityFactory.produceAndPersist {
+                  withYieldedApArea {
+                    apAreaEntityFactory.produceAndPersist()
+                  }
+                }
+              }
+            }
+
+            CommunityAPI_mockOffenderUserAccessCall(assessorUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {})
+
+            assertThat(responseBody).anyMatch {
+              application.id == it.id &&
+                application.crn == it.person.crn &&
+                application.createdAt.toInstant() == it.createdAt &&
+                application.createdByUser.id == it.createdByUserId &&
+                application.submittedAt?.toInstant() == it.submittedAt
+            }
+
+            assertThat(responseBody).noneMatch {
+              notInRegionApplication.id == it.id
+            }
+
+            assertThat(responseBody).noneMatch {
+              notSubmittedApplication.id == it.id
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get all applications returns 200 with correct body for Temporary Accommodation - when user has CAS3_REFERRER role then returns all applications created by user`() {
+    `Given a Probation Region` { probationRegion ->
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { referrerUser, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(referrerUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            val anotherUsersApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withProbationRegion(probationRegion)
+            }
+
+            CommunityAPI_mockOffenderUserAccessCall(referrerUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {})
+
+            assertThat(responseBody).anyMatch {
+              application.id == it.id &&
+                application.crn == it.person.crn &&
+                application.createdAt.toInstant() == it.createdAt &&
+                application.createdByUser.id == it.createdByUserId &&
+                application.submittedAt?.toInstant() == it.submittedAt
+            }
+
+            assertThat(responseBody).noneMatch {
+              anotherUsersApplication.id == it.id
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
   fun `Get list of applications returns 500 when a person cannot be found`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
@@ -738,6 +885,197 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get single application returns 200 with correct body for Temporary Accommodation when requesting user created application`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+        val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+          withSchema("{}")
+        }
+
+        val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(newestJsonSchema)
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withProbationRegion(userEntity.probationRegion)
+          withData(
+            """
+            {
+               "thingId": 123
+            }
+            """,
+          )
+        }
+
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+        val rawResponseBody = webTestClient.get()
+          .uri("/applications/${applicationEntity.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody = objectMapper.readValue(rawResponseBody, TemporaryAccommodationApplication::class.java)
+
+        assertThat(responseBody).matches {
+          applicationEntity.id == it.id &&
+            applicationEntity.crn == it.person.crn &&
+            applicationEntity.createdAt.toInstant() == it.createdAt &&
+            applicationEntity.createdByUser.id == it.createdByUserId &&
+            applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+            serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
+            newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get single application returns 200 with correct body for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests a submitted application in their region`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(createdByUser)
+            withProbationRegion(createdByUser.probationRegion)
+            withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+            withData(
+              """
+              {
+                 "thingId": 123
+              }
+              """,
+            )
+          }
+
+          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, TemporaryAccommodationApplication::class.java)
+
+          assertThat(responseBody).matches {
+            applicationEntity.id == it.id &&
+              applicationEntity.crn == it.person.crn &&
+              applicationEntity.createdAt.toInstant() == it.createdAt &&
+              applicationEntity.createdByUser.id == it.createdByUserId &&
+              applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+              serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
+              newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests an application not in their region`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given a User` { createdByUser, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(createdByUser)
+            withProbationRegion(createdByUser.probationRegion)
+            withSubmittedAt(OffsetDateTime.now())
+            withData(
+              """
+              {
+                 "thingId": 123
+              }
+              """,
+            )
+          }
+
+          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+          webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user without the CAS3_ASSESSOR role requests an application not created by them`() {
+    `Given a User` { userEntity, jwt ->
+      `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(createdByUser)
+            withProbationRegion(createdByUser.probationRegion)
+            withSubmittedAt(OffsetDateTime.now())
+            withData(
+              """
+              {
+                 "thingId": 123
+              }
+              """,
+            )
+          }
+
+          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+          webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+  }
+
+  @Test
   fun `Get single offline application returns 200 with correct body`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1035,8 +1373,31 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create new application for Temporary Accommodation returns 403 Forbidden when user doesn't have CAS3_REFERRER role`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Test
   fun `Create new application for Temporary Accommodation returns 201 with correct body and Location header`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())

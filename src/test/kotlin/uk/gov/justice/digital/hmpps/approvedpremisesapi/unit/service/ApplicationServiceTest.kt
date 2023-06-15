@@ -69,11 +69,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Mana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.sql.Timestamp
 import java.time.Instant
@@ -94,6 +96,7 @@ class ApplicationServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
+  private val mockUserAccessService = mockk<UserAccessService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
 
@@ -110,6 +113,7 @@ class ApplicationServiceTest {
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockEmailNotificationService,
+    mockUserAccessService,
     NotifyConfig(),
     mockObjectMapper,
     "http://frontend/applications/#id",
@@ -174,6 +178,7 @@ class ApplicationServiceTest {
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockUserAccessService.getApprovedPremisesApplicationAccessLevelForUser(userEntity) } returns ApprovedPremisesApplicationAccessLevel.TEAM
     every { mockApplicationRepository.findApprovedPremisesSummariesForManagingTeams(listOf("TEAM1")) } returns applicationSummaries
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
@@ -195,11 +200,11 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `getApplicationForUsername where application was not created by caller, not in case load and where caller is not one of one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
+  fun `getApplicationForUsername where user cannot access the application returns Unauthorised result`() {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory()
+    every { mockUserRepository.findByDeliusUsername(any()) } returns UserEntityFactory()
       .withDeliusUsername(distinguishedName)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -208,7 +213,7 @@ class ApplicationServiceTest {
       }
       .produce()
 
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns ApprovedPremisesApplicationEntityFactory()
+    every { mockApplicationRepository.findByIdOrNull(any()) } returns ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(
         UserEntityFactory()
           .withYieldedProbationRegion {
@@ -220,25 +225,13 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withTeams(
-        listOf(
-          StaffUserTeamMembershipFactory()
-            .produce(),
-        ),
-      )
-      .produce()
-
-    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = staffUserDetails,
-    )
+    every { mockUserAccessService.userCanViewApplication(any(), any()) } returns false
 
     assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `getApplicationForUsername where application was created by caller returns Success result with entity from db`() {
+  fun `getApplicationForUsername where user can access the application returns Success result with entity from db`() {
     val distinguishedName = "SOMEPERSON"
     val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
@@ -263,8 +256,9 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
+    every { mockUserRepository.findByDeliusUsername(any()) } returns userEntity
+    every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
 
     val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
 
@@ -272,126 +266,6 @@ class ApplicationServiceTest {
     result as AuthorisableActionResult.Success
 
     assertThat(result.entity).isEqualTo(applicationEntity)
-  }
-
-  @Test
-  fun `getApplicationForUsername where application CRN is managed by team caller is in returns Success result with entity from db`() {
-    val distinguishedName = "SOMEPERSON"
-    val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
-    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
-
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
-    val userEntity = UserEntityFactory()
-      .withId(userId)
-      .withDeliusUsername(distinguishedName)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val otherUserEntity = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val applicationEntity = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(otherUserEntity)
-      .withApplicationSchema(newestJsonSchema)
-      .produce()
-
-    applicationEntity.teamCodes += ApplicationTeamCodeEntity(
-      id = UUID.randomUUID(),
-      application = applicationEntity,
-      teamCode = "TEAM1",
-    )
-
-    every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withTeams(
-        listOf(
-          StaffUserTeamMembershipFactory()
-            .withCode("TEAM1")
-            .produce(),
-        ),
-      )
-      .produce()
-
-    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = staffUserDetails,
-    )
-
-    val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity).isEqualTo(applicationEntity)
-  }
-
-  @Test
-  fun `getApplicationForUsername where application not created by caller but user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Success result with entity from db`() {
-    listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER).forEach { role ->
-      val distinguishedName = "SOMEPERSON"
-      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
-      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
-
-      val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
-      val userEntity = UserEntityFactory()
-        .withId(userId)
-        .withDeliusUsername(distinguishedName)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      val otherUserEntity = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      userEntity.roles.add(
-        UserRoleAssignmentEntityFactory()
-          .withUser(userEntity)
-          .withRole(role)
-          .produce(),
-      )
-
-      val applicationEntity = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(otherUserEntity)
-        .withApplicationSchema(newestJsonSchema)
-        .produce()
-
-      every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-      every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-
-      val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity).isEqualTo(applicationEntity)
-    }
   }
 
   @Test
@@ -546,19 +420,47 @@ class ApplicationServiceTest {
   }
 
   @Test
+  fun `createTemporaryAccommodationApplication returns Unauthorised when user doesn't have CAS3_REFERRER role`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_ASSESSOR)
+          .produce(),
+      )
+    }
+
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+
+    assertThat(actionResult is AuthorisableActionResult.Unauthorised<*>).isTrue
+  }
+
+  @Test
   fun `createTemporaryAccommodationApplication returns FieldValidationError when CRN does not exist`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.crn", "doesNotExist")
   }
 
   @Test
@@ -568,13 +470,22 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.crn", "userPermission")
   }
 
   @Test
@@ -586,15 +497,24 @@ class ApplicationServiceTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", null, null, null)
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", null, null, null)
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.convictionId", "empty")
-    assertThat(result.validationMessages).containsEntry("$.deliusEventNumber", "empty")
-    assertThat(result.validationMessages).containsEntry("$.offenceId", "empty")
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.convictionId", "empty")
+    assertThat(validationResult.validationMessages).containsEntry("$.deliusEventNumber", "empty")
+    assertThat(validationResult.validationMessages).containsEntry("$.offenceId", "empty")
   }
 
   @Test
@@ -604,7 +524,14 @@ class ApplicationServiceTest {
 
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val user = userWithUsername(username)
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -646,13 +573,13 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
 
-    val result = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.Success).isTrue
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.crn).isEqualTo(crn)
-    assertThat(result.entity.createdByUser).isEqualTo(user)
-    val temporaryAccommodationApplication = result.entity as TemporaryAccommodationApplicationEntity
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.Success
+    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
     assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
   }
 

@@ -65,6 +65,7 @@ class ApplicationService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val emailNotificationService: EmailNotificationService,
+  private val userAccessService: UserAccessService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
@@ -72,26 +73,43 @@ class ApplicationService(
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
-    val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
-    val userDetails = when (userDetailsResult) {
-      is ClientResult.Success -> userDetailsResult.body
-      is ClientResult.Failure -> userDetailsResult.throwException()
-    }
 
-    val applicationSummaries = if (serviceName == ServiceName.approvedPremises && userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
-      applicationRepository.findAllApprovedPremisesSummaries()
-    } else if (serviceName == ServiceName.approvedPremises) {
-      applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
-    } else if (serviceName == ServiceName.cas2) {
-      applicationRepository.findAllCas2ApplicationSummaries()
-    } else {
-      applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(userEntity.id)
+    val applicationSummaries = when (serviceName) {
+      ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
+      ServiceName.cas2 -> getAllCas2ApplicationsForUser(userEntity)
+      ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
 
     return applicationSummaries
       .filter {
         offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
       }
+  }
+
+  private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
+    return when (userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)) {
+      ApprovedPremisesApplicationAccessLevel.ALL -> applicationRepository.findAllApprovedPremisesSummaries()
+      ApprovedPremisesApplicationAccessLevel.TEAM -> {
+        val userDetails = when (val userDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+          is ClientResult.Success -> userDetailsResult.body
+          is ClientResult.Failure -> userDetailsResult.throwException()
+        }
+
+        applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
+      }
+    }
+  }
+
+  private fun getAllCas2ApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
+    return applicationRepository.findAllCas2ApplicationSummaries()
+  }
+
+  private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
+    return when (userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)) {
+      TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION -> applicationRepository.findAllSubmittedTemporaryAccommodationSummariesByRegion(user.probationRegion.id)
+      TemporaryAccommodationApplicationAccessLevel.SELF -> applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+      TemporaryAccommodationApplicationAccessLevel.NONE -> emptyList()
+    }
   }
 
   fun getAllOfflineApplicationsForUsername(deliusUsername: String, serviceName: ServiceName): List<OfflineApplicationEntity> {
@@ -117,23 +135,13 @@ class ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
 
-    if (userEntity.id == applicationEntity.createdByUser.id || userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
-      return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
+
+    return if (canAccess) {
+      AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+    } else {
+      AuthorisableActionResult.Unauthorised()
     }
-
-    if (applicationEntity is ApprovedPremisesApplicationEntity) {
-      val userDetailsResult = communityApiClient.getStaffUserDetails(userEntity.deliusUsername)
-      val userDetails = when (userDetailsResult) {
-        is ClientResult.Success -> userDetailsResult.body
-        is ClientResult.Failure -> userDetailsResult.throwException()
-      }
-
-      if (applicationEntity.hasAnyTeamCode(userDetails.teams?.map { it.code } ?: emptyList())) {
-        return AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
-      }
-    }
-
-    return AuthorisableActionResult.Unauthorised()
   }
 
   fun getOfflineApplicationForUsername(applicationId: UUID, deliusUsername: String): AuthorisableActionResult<OfflineApplicationEntity> {
@@ -310,69 +318,75 @@ class ApplicationService(
     deliusEventNumber: String?,
     offenceId: String?,
     createWithRisks: Boolean? = true,
-  ) = validated<ApplicationEntity> {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
-
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    if (!user.hasRole(UserRole.CAS3_REFERRER)) {
+      return AuthorisableActionResult.Unauthorised()
     }
 
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-    }
+    return AuthorisableActionResult.Success(
+      validated {
+        val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
+          is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
+          is AuthorisableActionResult.Unauthorised -> return@validated "$.crn" hasSingleValidationError "userPermission"
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        }
 
-    if (convictionId == null) {
-      "$.convictionId" hasValidationError "empty"
-    }
+        if (offenderDetails.otherIds.nomsNumber == null) {
+          throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+        }
 
-    if (deliusEventNumber == null) {
-      "$.deliusEventNumber" hasValidationError "empty"
-    }
+        if (convictionId == null) {
+          "$.convictionId" hasValidationError "empty"
+        }
 
-    if (offenceId == null) {
-      "$.offenceId" hasValidationError "empty"
-    }
+        if (deliusEventNumber == null) {
+          "$.deliusEventNumber" hasValidationError "empty"
+        }
 
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
+        if (offenceId == null) {
+          "$.offenceId" hasValidationError "empty"
+        }
 
-    var riskRatings: PersonRisks? = null
+        if (validationErrors.any()) {
+          return@validated fieldValidationError
+        }
 
-    if (createWithRisks == true) {
-      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+        var riskRatings: PersonRisks? = null
 
-      riskRatings = when (riskRatingsResult) {
-        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-        is AuthorisableActionResult.Success -> riskRatingsResult.entity
-      }
-    }
+        if (createWithRisks == true) {
+          val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
 
-    val createdApplication = applicationRepository.save(
-      TemporaryAccommodationApplicationEntity(
-        id = UUID.randomUUID(),
-        crn = crn,
-        createdByUser = user,
-        data = null,
-        document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java),
-        createdAt = OffsetDateTime.now(),
-        submittedAt = null,
-        convictionId = convictionId!!,
-        eventNumber = deliusEventNumber!!,
-        offenceId = offenceId!!,
-        schemaUpToDate = true,
-        riskRatings = riskRatings,
-        assessments = mutableListOf(),
-        probationRegion = user.probationRegion,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-      ),
+          riskRatings = when (riskRatingsResult) {
+            is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
+            is AuthorisableActionResult.Unauthorised -> return@validated "$.crn" hasSingleValidationError "userPermission"
+            is AuthorisableActionResult.Success -> riskRatingsResult.entity
+          }
+        }
+
+        val createdApplication = applicationRepository.save(
+          TemporaryAccommodationApplicationEntity(
+            id = UUID.randomUUID(),
+            crn = crn,
+            createdByUser = user,
+            data = null,
+            document = null,
+            schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java),
+            createdAt = OffsetDateTime.now(),
+            submittedAt = null,
+            convictionId = convictionId!!,
+            eventNumber = deliusEventNumber!!,
+            offenceId = offenceId!!,
+            schemaUpToDate = true,
+            riskRatings = riskRatings,
+            assessments = mutableListOf(),
+            probationRegion = user.probationRegion,
+            nomsNumber = offenderDetails.otherIds.nomsNumber,
+          ),
+        )
+
+        success(createdApplication.apply { schemaUpToDate = true })
+      },
     )
-
-    return success(createdApplication.apply { schemaUpToDate = true })
   }
 
   fun updateApprovedPremisesApplication(

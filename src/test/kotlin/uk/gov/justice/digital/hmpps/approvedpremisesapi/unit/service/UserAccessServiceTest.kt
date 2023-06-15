@@ -7,27 +7,44 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTeamCodeEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TemporaryAccommodationApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import java.time.OffsetDateTime
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 
 class UserAccessServiceTest {
   private val userService = mockk<UserService>()
   private val currentRequest = mockk<HttpServletRequest>()
+  private val communityApiClient = mockk<CommunityApiClient>()
 
   private val userAccessService = UserAccessService(
     userService,
     currentRequest,
+    communityApiClient,
   )
 
   private val probationRegionId = UUID.randomUUID()
@@ -39,8 +56,23 @@ class UserAccessServiceTest {
     )
     .produce()
 
+  private val anotherProbationRegion = ProbationRegionEntityFactory()
+    .withApArea(
+      ApAreaEntityFactory()
+        .produce(),
+    )
+    .produce()
+
   private val user = UserEntityFactory()
     .withProbationRegion(probationRegion)
+    .produce()
+
+  private val anotherUserInRegion = UserEntityFactory()
+    .withProbationRegion(probationRegion)
+    .produce()
+
+  private val anotherUserNotInRegion = UserEntityFactory()
+    .withProbationRegion(anotherProbationRegion)
     .produce()
 
   val approvedPremises = ApprovedPremisesEntityFactory()
@@ -60,14 +92,7 @@ class UserAccessServiceTest {
     .produce()
 
   val temporaryAccommodationPremisesNotInUserRegion = TemporaryAccommodationPremisesEntityFactory()
-    .withProbationRegion(
-      ProbationRegionEntityFactory()
-        .withApArea(
-          ApAreaEntityFactory()
-            .produce(),
-        )
-        .produce(),
-    )
+    .withProbationRegion(anotherProbationRegion)
     .withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
         .produce(),
@@ -80,6 +105,21 @@ class UserAccessServiceTest {
 
   private fun currentRequestIsForArbitraryService() {
     every { currentRequest.getHeader("X-Service-Name") } returns "arbitrary-value"
+  }
+
+  private fun communityApiStaffUserDetailsReturnsTeamCodes(vararg teamCodes: String) {
+    every { communityApiClient.getStaffUserDetails(any()) } returns ClientResult.Success(
+      HttpStatus.OK,
+      StaffUserDetailsFactory()
+        .withTeams(
+          teamCodes.map {
+            StaffUserTeamMembershipFactory()
+              .withCode(it)
+              .produce()
+          },
+        )
+        .produce(),
+    )
   }
 
   @BeforeEach
@@ -501,5 +541,270 @@ class UserAccessServiceTest {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
+  fun `getApprovedPremisesApplicationAccessLevelForUser returns ALL if the user has one of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, or CAS1_MANAGER roles`(role: UserRole) {
+    user.addRoleForUnitTest(role)
+
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)).isEqualTo(ApprovedPremisesApplicationAccessLevel.ALL)
+  }
+
+  @Test
+  fun `getApprovedPremisesApplicationAccessLevelForUser returns TEAM if the user has no suitable role`() {
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)).isEqualTo(ApprovedPremisesApplicationAccessLevel.TEAM)
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
+  fun `getApprovedPremisesApplicationAccessLevelForCurrentUser returns ALL if the user has one of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, or CAS1_MANAGER roles`(role: UserRole) {
+    user.addRoleForUnitTest(role)
+
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForCurrentUser()).isEqualTo(ApprovedPremisesApplicationAccessLevel.ALL)
+  }
+
+  @Test
+  fun `getApprovedPremisesApplicationAccessLevelForCurrentUser returns TEAM if the user has no suitable role`() {
+    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForCurrentUser()).isEqualTo(ApprovedPremisesApplicationAccessLevel.TEAM)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForUser returns SUBMITTED_IN_REGION if the user has the CAS3_ASSESSOR role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForUser returns SELF if the user has the CAS3_REFERRER role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SELF)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForUser returns NONE if the user has no suitable role`() {
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)).isEqualTo(TemporaryAccommodationApplicationAccessLevel.NONE)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns SUBMITTED_IN_REGION if the user has the CAS3_ASSESSOR role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns SELF if the user has the CAS3_REFERRER role`() {
+    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
+
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SELF)
+  }
+
+  @Test
+  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns NONE if the user has no suitable role`() {
+    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.NONE)
+  }
+
+  @Test
+  fun `userCanViewApplication returns true if the user created the application for Approved Premises`() {
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withApplicationSchema(newestJsonSchema)
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
+  fun `userCanViewApplication returns true if the user did not create the application but has any of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, CAS1_MANAGER roles and it is an Approved Premises application`(role: UserRole) {
+    user.addRoleForUnitTest(role)
+
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+  }
+
+  @Test
+  fun `userCanViewApplication returns true if the application is an Approved Premises application and it is in the user's caseload`() {
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withTeamCodes(mutableListOf())
+      .produce()
+
+    application.teamCodes.add(
+      ApplicationTeamCodeEntityFactory()
+        .withTeamCode("TEAM1")
+        .withApplication(application)
+        .produce(),
+    )
+
+    communityApiStaffUserDetailsReturnsTeamCodes("TEAM1")
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+  }
+
+  @Test
+  fun `userCanViewApplication returns false otherwise for Approved Premises`() {
+    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withTeamCodes(mutableListOf())
+      .produce()
+
+    application.teamCodes.add(
+      ApplicationTeamCodeEntityFactory()
+        .withTeamCode("TEAM1")
+        .withApplication(application)
+        .produce(),
+    )
+
+    communityApiStaffUserDetailsReturnsTeamCodes("TEAM2")
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewApplication returns true if the user created the application for CAS2`() {
+    val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withApplicationSchema(newestJsonSchema)
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+  }
+
+  @Test
+  fun `userCanViewApplication returns false otherwise for CAS2`() {
+    val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewApplication returns true if the user created the application for Temporary Accommodation`() {
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+  }
+
+  @Test
+  fun `userCanViewApplication returns false if the user has the CAS3_ASSESSOR role but the application is not in their region for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserNotInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(anotherProbationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewApplication returns false if the user has the CAS3_ASSESSOR role and the application is in their region but it has not been submitted for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(null)
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewApplication returns true if the application has been submitted, is in the user's region, and the user has the CAS3_ASSESSOR role for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+  }
+
+  @Test
+  fun `userCanViewApplication returns false otherwise for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+      .withSchema("{}")
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withApplicationSchema(newestJsonSchema)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
   }
 }
