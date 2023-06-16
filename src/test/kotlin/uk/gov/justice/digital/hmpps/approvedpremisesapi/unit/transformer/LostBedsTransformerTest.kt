@@ -27,40 +27,40 @@ class LostBedsTransformerTest {
 
   private val lostBedsTransformer = LostBedsTransformer(lostBedReasonTransformer, lostBedCancellationTransformer)
 
+  val premises = TemporaryAccommodationPremisesEntityFactory()
+    .withYieldedProbationRegion {
+      ProbationRegionEntityFactory()
+        .withYieldedApArea {
+          ApAreaEntityFactory()
+            .produce()
+        }
+        .produce()
+    }
+    .withYieldedLocalAuthorityArea {
+      LocalAuthorityEntityFactory()
+        .produce()
+    }
+    .produce()
+
+  val room = RoomEntityFactory()
+    .withYieldedPremises { premises }
+    .produce()
+
+  val bed = BedEntityFactory()
+    .withYieldedRoom { room }
+    .produce()
+
+  private val lostBed = LostBedsEntityFactory()
+    .withYieldedReason {
+      LostBedReasonEntityFactory()
+        .produce()
+    }
+    .withYieldedPremises { premises }
+    .withYieldedBed { bed }
+    .produce()
+
   @Test
   fun `Lost Bed entity is correctly transformed`() {
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea {
-            ApAreaEntityFactory()
-              .produce()
-          }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea {
-        LocalAuthorityEntityFactory()
-          .produce()
-      }
-      .produce()
-
-    val lostBed = LostBedsEntityFactory()
-      .withYieldedReason {
-        LostBedReasonEntityFactory()
-          .produce()
-      }
-      .withYieldedPremises { premises }
-      .withYieldedBed {
-        BedEntityFactory()
-          .withYieldedRoom {
-            RoomEntityFactory()
-              .withYieldedPremises { premises }
-              .produce()
-          }
-          .produce()
-      }
-      .produce()
-
     every { lostBedReasonTransformer.transformJpaToApi(lostBed.reason) } returns LostBedReason(
       id = lostBed.reason.id,
       name = lostBed.reason.name,
@@ -78,43 +78,13 @@ class LostBedsTransformerTest {
     assertThat(result.referenceNumber).isEqualTo(lostBed.referenceNumber)
     assertThat(result.status).isEqualTo(LostBedStatus.active)
     assertThat(result.cancellation).isNull()
-    assertThat(result.bedId).isEqualTo(lostBed.bed.id)
+    assertThat(result.bedId).isEqualTo(bed.id)
+    assertThat(result.bedName).isEqualTo(bed.name)
+    assertThat(result.roomName).isEqualTo(room.name)
   }
 
   @Test
   fun `A cancelled lost bed entity is correctly transformed`() {
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea {
-            ApAreaEntityFactory()
-              .produce()
-          }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea {
-        LocalAuthorityEntityFactory()
-          .produce()
-      }
-      .produce()
-
-    val lostBed = LostBedsEntityFactory()
-      .withYieldedReason {
-        LostBedReasonEntityFactory()
-          .produce()
-      }
-      .withYieldedPremises { premises }
-      .withYieldedBed {
-        BedEntityFactory()
-          .withYieldedRoom {
-            RoomEntityFactory()
-              .withYieldedPremises { premises }
-              .produce()
-          }
-          .produce()
-      }
-      .produce()
-
     val lostBedCancellation = LostBedCancellationEntityFactory()
       .withYieldedLostBed { lostBed }
       .produce()
@@ -148,6 +118,8 @@ class LostBedsTransformerTest {
     assertThat(result.cancellation!!.id).isEqualTo(lostBed.cancellation!!.id)
     assertThat(result.cancellation!!.createdAt).isEqualTo(now)
     assertThat(result.cancellation!!.notes).isEqualTo("Some notes")
-    assertThat(result.bedId).isEqualTo(lostBed.bed.id)
+    assertThat(result.bedId).isEqualTo(bed.id)
+    assertThat(result.bedName).isEqualTo(bed.name)
+    assertThat(result.roomName).isEqualTo(room.name)
   }
 }

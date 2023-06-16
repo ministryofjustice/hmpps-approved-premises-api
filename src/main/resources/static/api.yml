@@ -3948,6 +3948,10 @@ components:
         bedId:
           type: string
           format: uuid
+        bedName:
+          type: string
+        roomName:
+          type: string
         reason:
           $ref: '#/components/schemas/LostBedReason'
         referenceNumber:
@@ -3965,6 +3969,8 @@ components:
         - startDate
         - endDate
         - bedId
+        - bedName
+        - roomName
         - reason
         - status
     NewLostBed:
