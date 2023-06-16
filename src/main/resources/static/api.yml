@@ -5668,6 +5668,17 @@ components:
             - assessmentDecision
             - assessmentDate
             - assessor
+    PlacementRequestDetail:
+      allOf:
+        - $ref: '#/components/schemas/PlacementRequest'
+        - type: object
+          properties:
+            cancellations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cancellation'
+          required:
+            - cancellations
     PlacementRequestStatus:
       type: string
       enum:
