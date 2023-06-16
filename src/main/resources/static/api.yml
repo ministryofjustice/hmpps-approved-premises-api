@@ -3753,11 +3753,14 @@ components:
         createdAt:
           type: string
           format: date-time
+        premisesName:
+          type: string
       required:
         - bookingId
         - date
         - reason
         - createdAt
+        - premisesName
     Extension:
       type: object
       properties:

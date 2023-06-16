@@ -434,6 +434,7 @@ class BookingTransformerTest {
       date = LocalDate.parse("2022-08-10"),
       reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+      premisesName = premisesEntity.name,
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails, inmateDetail, null)
@@ -463,6 +464,7 @@ class BookingTransformerTest {
           reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
           notes = null,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          premisesName = premisesEntity.name,
         ),
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
@@ -477,6 +479,7 @@ class BookingTransformerTest {
             reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
             notes = null,
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+            premisesName = premisesEntity.name,
           ),
         ),
         turnarounds = listOf(),
@@ -519,6 +522,7 @@ class BookingTransformerTest {
           date = LocalDate.parse("2022-08-10"),
           reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+          premisesName = premisesEntity.name,
         )
         UUID.fromString("d34415c3-d128-45a0-9950-b84491ab8d11") -> Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
@@ -526,6 +530,7 @@ class BookingTransformerTest {
           date = LocalDate.parse("2022-08-10"),
           reason = CancellationReason(id = UUID.fromString("dd6444f7-af56-436c-8451-ca993617471e"), name = "Some other reason", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
           createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
+          premisesName = premisesEntity.name,
         )
         else -> null
       }
@@ -558,6 +563,7 @@ class BookingTransformerTest {
           date = LocalDate.parse("2022-08-10"),
           reason = CancellationReason(id = UUID.fromString("dd6444f7-af56-436c-8451-ca993617471e"), name = "Some other reason", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
           createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
+          premisesName = premisesEntity.name,
         ),
         extensions = listOf(),
         serviceName = ServiceName.temporaryAccommodation,
@@ -572,6 +578,7 @@ class BookingTransformerTest {
             date = LocalDate.parse("2022-08-10"),
             reason = CancellationReason(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
             createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+            premisesName = premisesEntity.name,
           ),
           Cancellation(
             bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
@@ -579,6 +586,7 @@ class BookingTransformerTest {
             date = LocalDate.parse("2022-08-10"),
             reason = CancellationReason(id = UUID.fromString("dd6444f7-af56-436c-8451-ca993617471e"), name = "Some other reason", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
             createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
+            premisesName = premisesEntity.name,
           ),
         ),
         turnarounds = listOf(),
