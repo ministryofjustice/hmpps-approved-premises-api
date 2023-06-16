@@ -20,6 +20,8 @@ class LostBedsTransformer(
     status = determineStatus(jpa),
     cancellation = jpa.cancellation?.let { lostBedCancellationTransformer.transformJpaToApi(it) },
     bedId = jpa.bed.id,
+    bedName = jpa.bed.name,
+    roomName = jpa.bed.room.name,
   )
 
   private fun determineStatus(jpa: LostBedsEntity) = when {
