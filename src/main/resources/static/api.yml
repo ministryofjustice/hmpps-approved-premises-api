@@ -4400,6 +4400,8 @@ components:
               $ref: '#/components/schemas/AnyValue'
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            assessmentDecision:
+              $ref: '#/components/schemas/AssessmentDecision'
             submittedAt:
               type: string
               format: date-time

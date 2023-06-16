@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -34,53 +35,82 @@ class ApplicationsTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): Application = when (jpa) {
-    is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
-      id = jpa.id,
-      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-      createdByUserId = jpa.createdByUser.id,
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = !jpa.schemaUpToDate,
-      createdAt = jpa.createdAt.toInstant(),
-      submittedAt = jpa.submittedAt?.toInstant(),
-      isWomensApplication = jpa.isWomensApplication,
-      isPipeApplication = jpa.isPipeApplication,
-      arrivalDate = jpa.arrivalDate?.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
-      status = getStatus(jpa),
-      type = "CAS1",
-    )
-    is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
-      id = jpa.id,
-      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-      createdByUserId = jpa.createdByUser.id,
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = !jpa.schemaUpToDate,
-      createdAt = jpa.createdAt.toInstant(),
-      submittedAt = jpa.submittedAt?.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
-      status = getStatus(jpa),
-      type = "CAS3",
-    )
-    is DomainCas2ApplicationEntity -> Cas2Application(
-      id = jpa.id,
-      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-      createdByUserId = jpa.createdByUser.id,
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = !jpa.schemaUpToDate,
-      createdAt = jpa.createdAt.toInstant(),
-      submittedAt = jpa.submittedAt?.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      risks = if (jpa.riskRatings != null) risksTransformer.transformDomainToApi(jpa.riskRatings!!, jpa.crn) else null,
-      status = getStatus(jpa),
-      type = "CAS2",
-    )
-    else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
+  fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): Application {
+    val latestAssessment = jpa.getLatestAssessment()
+
+    return when (jpa) {
+      is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
+        id = jpa.id,
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        createdByUserId = jpa.createdByUser.id,
+        schemaVersion = jpa.schemaVersion.id,
+        outdatedSchema = !jpa.schemaUpToDate,
+        createdAt = jpa.createdAt.toInstant(),
+        submittedAt = jpa.submittedAt?.toInstant(),
+        isWomensApplication = jpa.isWomensApplication,
+        isPipeApplication = jpa.isPipeApplication,
+        arrivalDate = jpa.arrivalDate?.toInstant(),
+        data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+        document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+        risks = if (jpa.riskRatings != null) {
+          risksTransformer.transformDomainToApi(
+            jpa.riskRatings!!,
+            jpa.crn,
+          )
+        } else {
+          null
+        },
+        status = getStatus(jpa, latestAssessment),
+        assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
+        type = "CAS1",
+      )
+
+      is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
+        id = jpa.id,
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        createdByUserId = jpa.createdByUser.id,
+        schemaVersion = jpa.schemaVersion.id,
+        outdatedSchema = !jpa.schemaUpToDate,
+        createdAt = jpa.createdAt.toInstant(),
+        submittedAt = jpa.submittedAt?.toInstant(),
+        data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+        document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+        risks = if (jpa.riskRatings != null) {
+          risksTransformer.transformDomainToApi(
+            jpa.riskRatings!!,
+            jpa.crn,
+          )
+        } else {
+          null
+        },
+        status = getStatus(jpa, latestAssessment),
+        type = "CAS3",
+      )
+
+      is DomainCas2ApplicationEntity -> Cas2Application(
+        id = jpa.id,
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        createdByUserId = jpa.createdByUser.id,
+        schemaVersion = jpa.schemaVersion.id,
+        outdatedSchema = !jpa.schemaUpToDate,
+        createdAt = jpa.createdAt.toInstant(),
+        submittedAt = jpa.submittedAt?.toInstant(),
+        data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+        document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+        risks = if (jpa.riskRatings != null) {
+          risksTransformer.transformDomainToApi(
+            jpa.riskRatings!!,
+            jpa.crn,
+          )
+        } else {
+          null
+        },
+        status = getStatus(jpa, latestAssessment),
+        type = "CAS2",
+      )
+
+      else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
+    }
   }
 
   fun transformDomainToApiSummary(domain: DomainApplicationSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): ApiApplicationSummary = when (domain) {
@@ -151,9 +181,7 @@ class ApplicationsTransformer(
     type = "Offline",
   )
 
-  private fun getStatus(entity: ApplicationEntity): ApplicationStatus {
-    val latestAssessment = entity.getLatestAssessment()
-
+  private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus {
     if (entity is ApprovedPremisesApplicationEntity) {
       return when {
         entity.isInapplicable == true -> ApplicationStatus.inapplicable
@@ -192,5 +220,11 @@ class ApplicationsTransformer(
       entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
       else -> ApplicationStatus.inProgress
     }
+  }
+
+  fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {
+    AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
+    AssessmentDecision.REJECTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.rejected
+    null -> null
   }
 }

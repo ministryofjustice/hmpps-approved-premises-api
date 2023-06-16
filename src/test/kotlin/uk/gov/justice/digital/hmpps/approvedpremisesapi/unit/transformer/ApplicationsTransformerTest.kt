@@ -41,6 +41,7 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
@@ -119,6 +120,7 @@ class ApplicationsTransformerTest {
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+    assertThat(result.assessmentDecision).isNull()
   }
 
   @Test
@@ -130,6 +132,7 @@ class ApplicationsTransformerTest {
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(ApplicationStatus.inapplicable)
+    assertThat(result.assessmentDecision).isNull()
   }
 
   @Test
@@ -175,6 +178,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.assessmentDecision).isNull()
   }
 
   @Test
@@ -198,7 +202,10 @@ class ApplicationsTransformerTest {
   @Test
   fun `transformJpaToApi sets status as 'requested further information' when transforming an Approved Premises application with requested clarification notes`() {
     val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory.withApplication(application).produce()
+    val assessment = assessmentFactory
+      .withDecision(null)
+      .withApplication(application)
+      .produce()
 
     application.assessments = mutableListOf(assessment)
     assessment.clarificationNotes = mutableListOf(
@@ -213,6 +220,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.requestedFurtherInformation)
+    assertThat(result.assessmentDecision).isNull()
   }
 
   @Test
@@ -247,7 +255,9 @@ class ApplicationsTransformerTest {
   @Test
   fun `transformJpaToApi sets status as 'submitted' when transforming an Approved Premises application with a completed clarification note`() {
     val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory.withApplication(application).produce()
+    val assessment = assessmentFactory
+      .withDecision(null)
+      .withApplication(application).produce()
 
     assessment.clarificationNotes = mutableListOf(
       completedClarificationNoteFactory
@@ -260,6 +270,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.assessmentDecision).isNull()
   }
 
   @Test
@@ -276,6 +287,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.rejected)
+    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
   }
 
   @Test
@@ -292,6 +304,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.pending)
+    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
   }
 
   @Test
@@ -326,6 +339,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.awaitingPlacement)
+    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
   }
 
   @Test
@@ -369,6 +383,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.placed)
+    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
   }
 
   @Test
