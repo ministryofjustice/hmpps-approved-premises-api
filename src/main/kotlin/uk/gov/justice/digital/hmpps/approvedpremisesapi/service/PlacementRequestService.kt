@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -43,6 +45,7 @@ class PlacementRequestService(
   private val cruService: CruService,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
   private val placementDateRepository: PlacementDateRepository,
+  private val cancellationRepository: CancellationRepository,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -54,7 +57,7 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNull()
   }
 
-  fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<PlacementRequestEntity> {
+  fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -62,7 +65,9 @@ class PlacementRequestService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    return AuthorisableActionResult.Success(placementRequest)
+    val cancellations = cancellationRepository.getCancellationsForApplicationId(placementRequest.application.id)
+
+    return AuthorisableActionResult.Success(Pair(placementRequest, cancellations))
   }
 
   fun getPlacementRequestForUserAndApplication(user: UserEntity, applicationID: UUID): AuthorisableActionResult<PlacementRequestEntity> {
