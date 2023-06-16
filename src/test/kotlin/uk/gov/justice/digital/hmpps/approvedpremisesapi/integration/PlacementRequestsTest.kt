@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -125,6 +127,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
   @Nested
   inner class SinglePlacementRequest {
+
+    @Autowired
+    lateinit var placementRequestDetailTransformer: PlacementRequestDetailTransformer
+
     @Test
     fun `Get single Placement Request without a JWT returns 401`() {
       webTestClient.get()
@@ -180,10 +186,79 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .expectBody()
                   .json(
                     objectMapper.writeValueAsString(
-                      placementRequestTransformer.transformJpaToApi(
+                      placementRequestDetailTransformer.transformJpaToApi(
                         placementRequest,
                         offenderDetails,
                         inmateDetails,
+                        listOf(),
+                      ),
+                    ),
+                  )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single Placement Request that is allocated to calling User returns 200 with cancellations when they exist`() {
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                val premises = approvedPremisesEntityFactory.produceAndPersist {
+                  withProbationRegion(
+                    probationRegionEntityFactory.produceAndPersist {
+                      withApArea(apAreaEntityFactory.produceAndPersist())
+                    },
+                  )
+                  withLocalAuthorityArea(
+                    localAuthorityEntityFactory.produceAndPersist(),
+                  )
+                }
+
+                val room = roomEntityFactory.produceAndPersist {
+                  withPremises(premises)
+                }
+
+                val bed = bedEntityFactory.produceAndPersist {
+                  withRoom(room)
+                }
+
+                val booking = bookingEntityFactory.produceAndPersist {
+                  withPremises(premises)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withBed(bed)
+                  withServiceName(ServiceName.approvedPremises)
+                  withApplication(placementRequest.application)
+                }
+
+                val cancellations = cancellationEntityFactory.produceAndPersistMultiple(2) {
+                  withBooking(booking)
+                  withReason(cancellationReasonEntityFactory.produceAndPersist())
+                }
+
+                webTestClient.get()
+                  .uri("/placement-requests/${placementRequest.id}")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .expectBody()
+                  .json(
+                    objectMapper.writeValueAsString(
+                      placementRequestDetailTransformer.transformJpaToApi(
+                        placementRequest,
+                        offenderDetails,
+                        inmateDetails,
+                        cancellations,
                       ),
                     ),
                   )
