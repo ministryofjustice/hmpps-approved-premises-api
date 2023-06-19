@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.util.UUID
@@ -20,6 +21,8 @@ class PersonNotArrivedFactory : Factory<PersonNotArrived> {
   private var expectedArrivalOn: Yielded<LocalDate> = { LocalDate.now().minusDays(5) }
   private var recordedBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var notes: Yielded<String?> = { null }
+  private var reason: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
+  private var legacyReasonCode: Yielded<String> = { randomOf(listOf("A", "B", "C", "D", "1H", "4I")) }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -57,6 +60,14 @@ class PersonNotArrivedFactory : Factory<PersonNotArrived> {
     this.recordedBy = { recordedBy }
   }
 
+  fun withReason(reason: String) = apply {
+    this.reason = { reason }
+  }
+
+  fun withLegacyReasonCode(legacyReasonCode: String) = apply {
+    this.legacyReasonCode = { legacyReasonCode }
+  }
+
   override fun produce() = PersonNotArrived(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -67,5 +78,7 @@ class PersonNotArrivedFactory : Factory<PersonNotArrived> {
     notes = this.notes(),
     expectedArrivalOn = this.expectedArrivalOn(),
     recordedBy = this.recordedBy(),
+    reason = this.reason(),
+    legacyReasonCode = this.legacyReasonCode(),
   )
 }

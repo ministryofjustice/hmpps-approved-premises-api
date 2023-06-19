@@ -923,6 +923,12 @@ components:
         notes:
           type: string
           example: We learnt that Mr Smith is in hospital.
+        reason:
+          type: string
+          example: Arrested, remanded in custody, or sentenced
+        legacyReasonCode:
+          type: string
+          example: Q
       required:
         - personReference
         - deliusEventNumber
@@ -932,6 +938,8 @@ components:
         - premises
         - expectedArrivalOn
         - recordedBy
+        - reason
+        - legacyReasonCode
     PersonDepartedEnvelope:
       type: object
       properties:

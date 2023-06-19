@@ -19,6 +19,7 @@ data class NonArrivalReasonEntity(
   val id: UUID,
   val name: String,
   val isActive: Boolean,
+  val legacyDeliusReasonCode: String?,
 ) {
   override fun toString() = "NonArrivalReasonEntity:$id"
 }
