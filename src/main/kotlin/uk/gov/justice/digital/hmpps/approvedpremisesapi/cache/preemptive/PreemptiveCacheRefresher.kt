@@ -110,9 +110,13 @@ abstract class CacheRefreshWorker(
         val lockExpiresAt = System.currentTimeMillis() + lock.validity
 
         try {
-          work { shuttingDown || System.currentTimeMillis() > lockExpiresAt }
+          work { shouldStop(lockExpiresAt) }
         } catch (exception: Exception) {
           log.error("Unhandled exception refreshing cache $cacheName", exception)
+        }
+
+        while (!shouldStop(lockExpiresAt)) {
+          interruptableSleep(1000)
         }
 
         attemptToReleaseLock(lock)
@@ -124,6 +128,8 @@ abstract class CacheRefreshWorker(
       interruptableSleep(10000)
     }
   }
+
+  private fun shouldStop(lockExpiresAt: Double) = shuttingDown || System.currentTimeMillis() > lockExpiresAt
 
   private fun attemptToReleaseLock(lock: LockResult?) {
     if (lock == null) return
