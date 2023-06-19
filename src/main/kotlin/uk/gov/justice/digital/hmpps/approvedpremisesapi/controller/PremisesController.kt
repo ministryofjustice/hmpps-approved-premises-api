@@ -417,7 +417,10 @@ class PremisesController(
     val bedId = booking.bed?.id
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
-    throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
+    if (booking.premises !is ApprovedPremisesEntity) {
+      throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
+    }
+
     throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
     val result = bookingService.createArrival(
