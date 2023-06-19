@@ -14,7 +14,8 @@ class OffenderDetailsCacheRefreshWorker(
   private val loggingEnabled: Boolean,
   private val delayMs: Long,
   redLock: RedLock,
-) : CacheRefreshWorker(redLock, "offenderDetails") {
+  lockDurationMs: Int,
+) : CacheRefreshWorker(redLock, "offenderDetails", lockDurationMs) {
   override fun work(checkShouldStop: () -> Boolean) {
     val distinctCrns = (applicationRepository.getDistinctCrns() + bookingRepository.getDistinctCrns()).distinct()
 

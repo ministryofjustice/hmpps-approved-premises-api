@@ -27,6 +27,7 @@ class InmateDetailsCacheRefreshWorkerTest {
     false,
     0,
     mockRedLock,
+    10000,
   )
 
   @Test
