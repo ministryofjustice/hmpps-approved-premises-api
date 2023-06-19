@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -11,7 +12,10 @@ import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
-interface BedMoveRepository : JpaRepository<BedMoveEntity, UUID>
+interface BedMoveRepository : JpaRepository<BedMoveEntity, UUID> {
+  @Query("SELECT b FROM BedMoveEntity b WHERE b.booking.id = :bookingId")
+  fun findByBooking_IdOrNull(bookingId: UUID): BedMoveEntity?
+}
 
 @Entity
 @Table(name = "bed_moves")

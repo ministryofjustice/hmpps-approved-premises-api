@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBedMove
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
@@ -77,6 +78,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTran
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -435,6 +438,23 @@ class PremisesController(
     val arrival = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
+  }
+
+  override fun premisesPremisesIdBookingsBookingIdMovesPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewBedMove,
+  ): ResponseEntity<Unit> {
+    val user = usersService.getUserForRequest()
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+
+    extractEntityFromValidatableActionResult(
+      extractEntityFromAuthorisableActionResult(
+        bookingService.moveBooking(booking, body.bedId, body.notes, user),
+      ),
+    )
+
+    return ResponseEntity.ok(Unit)
   }
 
   override fun premisesPremisesIdBookingsBookingIdNonArrivalsPost(
