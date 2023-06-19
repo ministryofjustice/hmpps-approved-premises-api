@@ -1273,7 +1273,9 @@ class BookingServiceTest {
             forenames = staffUserDetails.staff.forenames,
             surname = staffUserDetails.staff.surname,
             username = staffUserDetails.username,
-          )
+          ) &&
+            data.reason == reasonEntity.name &&
+            data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode
         },
       )
     }

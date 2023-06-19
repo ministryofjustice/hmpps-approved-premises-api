@@ -730,6 +730,8 @@ class BookingService(
                 username = staffDetails.username,
               ),
               notes = notes,
+              reason = reason.name,
+              legacyReasonCode = reason.legacyDeliusReasonCode!!,
             ),
           ),
         ),
