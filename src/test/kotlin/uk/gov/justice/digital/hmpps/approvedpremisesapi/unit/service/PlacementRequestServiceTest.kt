@@ -27,6 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -51,6 +53,7 @@ class PlacementRequestServiceTest {
   private val cruService = mockk<CruService>()
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
+  private val cancellationRepository = mockk<CancellationRepository>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
@@ -62,6 +65,7 @@ class PlacementRequestServiceTest {
     cruService,
     placementRequirementsRepository,
     placementDateRepository,
+    cancellationRepository,
     "http://frontend/applications/#id",
   )
 
@@ -257,7 +261,7 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequestId)
 
-    assertThat(result is AuthorisableActionResult.NotFound)
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue()
   }
 
   @Test
@@ -291,7 +295,7 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised)
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue()
   }
 
   @Test
@@ -321,11 +325,19 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(requestingUser)
       .produce()
 
+    val mockCancellations = mockk<List<CancellationEntity>>()
+
     every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+    every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised)
+    assertThat(result is AuthorisableActionResult.Success).isTrue()
+
+    val (expectedPlacementRequest, expectedCancellations) = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
+    assertThat(expectedCancellations).isEqualTo(mockCancellations)
   }
 
   @Test
@@ -361,11 +373,19 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(assigneeUser)
       .produce()
 
+    val mockCancellations = mockk<List<CancellationEntity>>()
+
     every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+    every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised)
+    assertThat(result is AuthorisableActionResult.Success).isTrue()
+
+    val (expectedPlacementRequest, expectedCancellations) = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
+    assertThat(expectedCancellations).isEqualTo(mockCancellations)
   }
 
   @Test

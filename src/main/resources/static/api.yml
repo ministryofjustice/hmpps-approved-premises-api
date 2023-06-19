@@ -2359,7 +2359,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/PlacementRequest'
+                $ref: '#/components/schemas/PlacementRequestDetail'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -3753,11 +3753,14 @@ components:
         createdAt:
           type: string
           format: date-time
+        premisesName:
+          type: string
       required:
         - bookingId
         - date
         - reason
         - createdAt
+        - premisesName
     Extension:
       type: object
       properties:
@@ -5665,6 +5668,17 @@ components:
             - assessmentDecision
             - assessmentDate
             - assessor
+    PlacementRequestDetail:
+      allOf:
+        - $ref: '#/components/schemas/PlacementRequest'
+        - type: object
+          properties:
+            cancellations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cancellation'
+          required:
+            - cancellations
     PlacementRequestStatus:
       type: string
       enum:

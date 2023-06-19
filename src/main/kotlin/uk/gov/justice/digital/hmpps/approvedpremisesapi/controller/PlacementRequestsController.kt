@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.util.UUID
@@ -31,6 +33,7 @@ class PlacementRequestsController(
   private val userService: UserService,
   private val placementRequestService: PlacementRequestService,
   private val placementRequestTransformer: PlacementRequestTransformer,
+  private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
   private val bookingConfirmationTransformer: NewPlacementRequestBookingConfirmationTransformer,
@@ -56,22 +59,22 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsIdGet(id: UUID): ResponseEntity<PlacementRequest> {
+  override fun placementRequestsIdGet(id: UUID): ResponseEntity<PlacementRequestDetail> {
     val user = userService.getUserForRequest()
 
     val authorisationResult = placementRequestService.getPlacementRequestForUser(user, id)
 
-    val placementRequest = when (authorisationResult) {
+    val (placementRequest, cancellations) = when (authorisationResult) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "PlacementRequest")
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
 
-    val personDetail = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService)
+    val (offenderDetail, inmateDetail) = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService)
       ?: throw NotFoundProblem(placementRequest.application.crn, "Offender")
 
     return ResponseEntity.ok(
-      placementRequestTransformer.transformJpaToApi(placementRequest, personDetail.first, personDetail.second),
+      placementRequestDetailTransformer.transformJpaToApi(placementRequest, offenderDetail, inmateDetail, cancellations),
     )
   }
 
