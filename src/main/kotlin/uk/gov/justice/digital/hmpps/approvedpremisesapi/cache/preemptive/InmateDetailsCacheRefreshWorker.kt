@@ -14,7 +14,8 @@ class InmateDetailsCacheRefreshWorker(
   private val loggingEnabled: Boolean,
   private val delayMs: Long,
   redLock: RedLock,
-) : CacheRefreshWorker(redLock, "inmateDetails") {
+  lockDurationMs: Int,
+) : CacheRefreshWorker(redLock, "inmateDetails", lockDurationMs) {
   override fun work(checkShouldStop: () -> Boolean) {
     val distinctNomsNumbers = (applicationRepository.getDistinctNomsNumbers() + bookingRepository.getDistinctNomsNumbers()).distinct()
 

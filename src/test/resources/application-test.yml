@@ -120,3 +120,4 @@ url-templates:
     booking: http://frontend/premises/{premisesId}/bookings/{bookingId}
 
 preemptive-cache-delay-ms: 250
+preemptive-cache-lock-duration-ms: 10000

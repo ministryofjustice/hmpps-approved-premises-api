@@ -22,6 +22,7 @@ class PreemptiveCacheRefresher(
   private val prisonsApiClient: PrisonsApiClient,
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
   @Value("\${preemptive-cache-delay-ms}") private val delayMs: Long,
+  @Value("\${preemptive-cache-lock-duration-ms}") private val lockDurationMs: Int,
   redLock: RedLock,
 ) : DisposableBean {
   protected val log = LoggerFactory.getLogger(this::class.java)
@@ -44,6 +45,7 @@ class PreemptiveCacheRefresher(
         loggingEnabled,
         delayMs,
         redLock,
+        lockDurationMs,
       )
 
       preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
@@ -53,6 +55,7 @@ class PreemptiveCacheRefresher(
         loggingEnabled,
         delayMs,
         redLock,
+        lockDurationMs,
       )
 
       log.info("Starting preemptive cache refresh threads")
@@ -92,10 +95,9 @@ fun interruptableSleep(millis: Long) {
 abstract class CacheRefreshWorker(
   private val redLock: RedLock,
   private val cacheName: String,
+  private val lockDurationMs: Int,
 ) : Thread() {
   protected val log = LoggerFactory.getLogger(this::class.java)
-
-  private val twoMinutesInMilliseconds = 120_000
 
   @Volatile
   var shuttingDown = false
@@ -104,7 +106,7 @@ abstract class CacheRefreshWorker(
     while (!shuttingDown) {
       var lock: LockResult? = null
       try {
-        lock = redLock.lock(cacheName, twoMinutesInMilliseconds) ?: continue
+        lock = redLock.lock(cacheName, lockDurationMs) ?: continue
 
         log.info("Got cache refresh lock for $cacheName")
         val lockExpiresAt = System.currentTimeMillis() + lock.validity
