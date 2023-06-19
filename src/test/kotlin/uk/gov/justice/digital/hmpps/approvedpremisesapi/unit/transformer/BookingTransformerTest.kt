@@ -289,7 +289,7 @@ class BookingTransformerTest {
       nonArrival = NonArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         date = LocalDate.parse("2022-08-10"),
-        reason = NonArrivalReasonEntity(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true),
+        reason = NonArrivalReasonEntity(id = UUID.fromString("7a87f93d-b9d6-423d-a87a-dfc693ab82f9"), name = "Unknown", isActive = true, legacyDeliusReasonCode = "A"),
         notes = null,
         booking = this,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
