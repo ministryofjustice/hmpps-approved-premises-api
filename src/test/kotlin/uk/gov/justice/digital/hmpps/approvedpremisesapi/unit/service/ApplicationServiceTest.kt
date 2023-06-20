@@ -11,6 +11,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -66,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -326,6 +329,54 @@ class ApplicationServiceTest {
   }
 
   @Test
+  fun `createApprovedPremisesApplication throws InternalServerErrorProblem when nomsNumber not present`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory()
+        .withoutNomsNumber()
+        .produce(),
+    )
+
+    val user = userWithUsername(username)
+
+    val thrownException = assertThrows<InternalServerErrorProblem> {
+      applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
+    }
+
+    assertThat(thrownException.detail).isEqualTo("No nomsNumber present for CRN")
+  }
+
+  @Test
+  fun `createApprovedPremisesApplication throws InternalServerErrorProblem when no OASys needs present`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+
+    val user = userWithUsername(username)
+
+    every { mockOffenderService.getOASysNeeds(crn) } returns AuthorisableActionResult.NotFound()
+
+    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
+      HttpStatus.OK,
+      ManagingTeamsResponse(
+        teamCodes = listOf("TEAMCODE"),
+      ),
+    )
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+    every { mockUserService.getUserForRequest() } returns user
+
+    val thrownException = assertThrows<InternalServerErrorProblem> {
+      applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
+    }
+
+    assertThat(thrownException.detail).isEqualTo("No OASys present for CRN")
+  }
+
+  @Test
   fun `createApprovedPremisesApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
@@ -360,6 +411,10 @@ class ApplicationServiceTest {
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username)
+
+    every { mockOffenderService.getOASysNeeds(crn) } returns AuthorisableActionResult.Success(
+      NeedsDetailsFactory().produce(),
+    )
 
     every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
       HttpStatus.OK,
