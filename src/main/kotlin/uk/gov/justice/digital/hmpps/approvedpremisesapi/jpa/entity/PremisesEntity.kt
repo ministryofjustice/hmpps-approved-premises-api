@@ -125,7 +125,7 @@ class ApprovedPremisesEntity(
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
-  val point: Point?, // TODO: Make not-null once Premises have had point added in all environments
+  var point: Point?, // TODO: Make not-null once Premises have had point added in all environments
 ) : PremisesEntity(
   id,
   name,

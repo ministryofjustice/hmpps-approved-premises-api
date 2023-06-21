@@ -6,6 +6,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedCsvRow
@@ -299,6 +302,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       .withApCode(existingApprovedPremises.apCode)
       .withProbationRegion(updatedProbationRegion.name)
       .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
+      .withLatitude(12.5)
+      .withLongitude(30.1)
       .produce()
 
     withCsv(
@@ -324,6 +329,12 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
     assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
+    assertThat(persistedApprovedPremises.latitude).isEqualTo(csvRow.latitude!!)
+    assertThat(persistedApprovedPremises.longitude).isEqualTo(csvRow.longitude!!)
+    assertThat(persistedApprovedPremises.point).isEqualTo(
+      GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
+        .createPoint(Coordinate(csvRow.latitude!!, csvRow.longitude!!)),
+    )
   }
 
   private fun approvedPremisesSeedCsvRowsToCsv(rows: List<ApprovedPremisesSeedCsvRow>): String {
