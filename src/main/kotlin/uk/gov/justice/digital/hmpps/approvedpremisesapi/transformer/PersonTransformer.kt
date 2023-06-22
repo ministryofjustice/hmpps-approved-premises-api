@@ -15,6 +15,7 @@ class PersonTransformer {
     sex = offenderDetailSummary.gender,
     status = inOutStatusToApiStatus(inmateDetail.inOutStatus),
     nomsNumber = inmateDetail.offenderNo,
+    ethnicity = offenderDetailSummary.offenderProfile.ethnicity,
     nationality = offenderDetailSummary.offenderProfile.nationality,
     religionOrBelief = offenderDetailSummary.offenderProfile.religion,
     genderIdentity = when (offenderDetailSummary.offenderProfile.genderIdentity) {

@@ -3670,6 +3670,8 @@ components:
           format: date
         nomsNumber:
           type: string
+        ethnicity:
+          type: string
         nationality:
           type: string
         religionOrBelief:

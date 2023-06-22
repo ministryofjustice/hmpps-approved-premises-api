@@ -23,6 +23,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
   private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore() }
   private var currentRestriction: Yielded<Boolean> = { false }
   private var currentExclusion: Yielded<Boolean> = { false }
+  private var ethnicity: Yielded<String> = { randomStringUpperCase(6) }
   private var nationality: Yielded<String> = { randomStringUpperCase(6) }
   private var religionOrBelief: Yielded<String?> = { randomStringUpperCase(12) }
   private var genderIdentity: Yielded<String?> = { null }
@@ -72,6 +73,10 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
     this.currentExclusion = { currentExclusion }
   }
 
+  fun withEthnicity(ethnicity: String) = apply {
+    this.ethnicity = { ethnicity }
+  }
+
   fun withNationality(nationality: String) = apply {
     this.nationality = { nationality }
   }
@@ -108,7 +113,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       pncNumber = null,
     ),
     offenderProfile = OffenderProfile(
-      ethnicity = null,
+      ethnicity = this.ethnicity(),
       nationality = this.nationality(),
       secondaryNationality = null,
       notes = null,

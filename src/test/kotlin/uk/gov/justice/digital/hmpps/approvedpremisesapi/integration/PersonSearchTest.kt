@@ -91,6 +91,7 @@ class PersonSearchTest : IntegrationTestBase() {
           withFirstName("James")
           withLastName("Someone")
           withGender("Male")
+          withEthnicity("White British")
           withNationality("English")
           withReligionOrBelief("Judaism")
           withGenderIdentity("Prefer to self-describe")
@@ -125,6 +126,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 sex = "Male",
                 status = Person.Status.inCustody,
                 nomsNumber = "NOMS321",
+                ethnicity = "White British",
                 nationality = "English",
                 religionOrBelief = "Judaism",
                 genderIdentity = "This is a self described identity",
