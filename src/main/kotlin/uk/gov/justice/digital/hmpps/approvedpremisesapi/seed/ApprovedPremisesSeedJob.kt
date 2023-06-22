@@ -61,6 +61,7 @@ class ApprovedPremisesSeedJob(
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
+  private val geometryFactory = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
 
   override fun deserializeRow(columns: Map<String, String>) = ApprovedPremisesSeedCsvRow(
     name = columns["name"]!!,
@@ -157,8 +158,6 @@ class ApprovedPremisesSeedJob(
   ) {
     log.info("Creating new Approved Premises: ${row.apCode} ${row.name}")
 
-    val geometryFactory = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
-
     val approvedPremises = premisesRepository.save(
       ApprovedPremisesEntity(
         id = UUID.randomUUID(),
@@ -224,6 +223,7 @@ class ApprovedPremisesSeedJob(
       this.probationRegion = probationRegion
       this.localAuthorityArea = localAuthorityArea
       this.status = row.status
+      this.point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null
     }
 
     characteristics.forEach {
