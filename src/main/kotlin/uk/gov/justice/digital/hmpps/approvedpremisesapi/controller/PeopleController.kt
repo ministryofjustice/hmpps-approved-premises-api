@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
@@ -149,31 +152,40 @@ class PeopleController(
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
     getOffenderDetails(crn)
 
-    val needsResult = offenderService.getOASysNeeds(crn)
-    val needs = getSuccessEntityOrThrow(crn, needsResult)
+    return runBlocking(context = Dispatchers.IO) {
+      val needsResult = async {
+        offenderService.getOASysNeeds(crn)
+      }
+      val offenceDetailsResult = async {
+        offenderService.getOASysOffenceDetails(crn)
+      }
+      val roshSummaryResult = async {
+        offenderService.getOASysRoshSummary(crn)
+      }
+      val riskToTheIndividualResult = async {
+        offenderService.getOASysRiskToTheIndividual(crn)
+      }
+      val riskManagementPlanResult = async {
+        offenderService.getOASysRiskManagementPlan(crn)
+      }
 
-    val offenceDetailsResult = offenderService.getOASysOffenceDetails(crn)
-    val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult)
+      val needs = getSuccessEntityOrThrow(crn, needsResult.await())
+      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
+      val roshSummary = getSuccessEntityOrThrow(crn, roshSummaryResult.await())
+      val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
+      val riskManagementPlan = getSuccessEntityOrThrow(crn, riskManagementPlanResult.await())
 
-    val roshSummaryResult = offenderService.getOASysRoshSummary(crn)
-    val roshSummary = getSuccessEntityOrThrow(crn, roshSummaryResult)
-
-    val riskToTheIndividualResult = offenderService.getOASysRiskToTheIndividual(crn)
-    val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult)
-
-    val riskManagementPlanResult = offenderService.getOASysRiskManagementPlan(crn)
-    val riskManagementPlan = getSuccessEntityOrThrow(crn, riskManagementPlanResult)
-
-    return ResponseEntity.ok(
-      oaSysSectionsTransformer.transformToApi(
-        offenceDetails,
-        roshSummary,
-        riskToTheIndividual,
-        riskManagementPlan,
-        needs,
-        selectedSections ?: emptyList(),
-      ),
-    )
+      ResponseEntity.ok(
+        oaSysSectionsTransformer.transformToApi(
+          offenceDetails,
+          roshSummary,
+          riskToTheIndividual,
+          riskManagementPlan,
+          needs,
+          selectedSections ?: emptyList(),
+        ),
+      )
+    }
   }
 
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
