@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.Instant
@@ -178,7 +179,7 @@ class ApplicationService(
     }
 
     if (offenderDetails.otherIds.nomsNumber == null) {
-      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+      throw InternalServerErrorProblem("No nomsNumber present for CRN")
     }
 
     val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!)
@@ -206,6 +207,10 @@ class ApplicationService(
 
     if (validationErrors.any()) {
       return fieldValidationError
+    }
+
+    if (offenderService.getOASysNeeds(crn) !is AuthorisableActionResult.Success) {
+      throw InternalServerErrorProblem("No OASys present for CRN")
     }
 
     var riskRatings: PersonRisks? = null
