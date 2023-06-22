@@ -4394,7 +4394,6 @@ components:
           type: boolean
       required:
         - alertId
-        - comment
         - dateCreated
         - expired
         - active

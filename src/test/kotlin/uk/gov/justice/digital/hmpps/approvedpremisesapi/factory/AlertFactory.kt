@@ -13,7 +13,7 @@ class AlertFactory : Factory<Alert> {
   private var alertId: Yielded<Long> = { randomInt(0, 1000).toLong() }
   private var bookingId: Yielded<Long> = { randomInt(0, 1000).toLong() }
   private var offenderNo: Yielded<String> = { randomStringUpperCase(6) }
-  private var comment: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var comment: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
   private var dateCreated: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(10) }
   private var dateExpires: Yielded<LocalDate?> = { null }
   private var active: Yielded<Boolean> = { true }
@@ -30,7 +30,7 @@ class AlertFactory : Factory<Alert> {
     this.offenderNo = { offenderNo }
   }
 
-  fun withComment(comment: String) = apply {
+  fun withComment(comment: String?) = apply {
     this.comment = { comment }
   }
 

@@ -10,7 +10,7 @@ data class Alert(
   val alertTypeDescription: String,
   val alertCode: String,
   val alertCodeDescription: String,
-  val comment: String,
+  val comment: String?,
   val dateCreated: LocalDate,
   val dateExpires: LocalDate?,
   val expired: Boolean,
