@@ -26,6 +26,12 @@ fun IntegrationTestBase.APOASysContext_mockSuccessfulRiskToTheIndividualCall(crn
     responseBody = response,
   )
 
+fun IntegrationTestBase.APOASysContext_mockNotFoundRiskToTheIndividualCall(crn: String) =
+  mockUnsuccessfulGetCall(
+    url = "/risk-to-the-individual/$crn",
+    responseStatus = 404,
+  )
+
 fun IntegrationTestBase.APOASysContext_mockSuccessfulRiskManagementPlanCall(crn: String, response: RiskManagementPlan) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/risk-management-plan/$crn",
