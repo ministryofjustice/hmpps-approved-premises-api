@@ -16,10 +16,11 @@ class AllocationQueryTest : IntegrationTestBase() {
   fun `findQualifiedAssessorWithLeastPendingAllocations query works as described`() {
     `Given a User that is not an Assessor`()
     `Given a User that is an Assessor with no Qualifications`()
-    `Given a User that is an Assessor with both Qualifications and one pending allocated Assessment`()
-    val expectedAllocatedUser = `Given a User that is an Assessor with both Qualifications and zero pending allocated Assessments`()
+    `Given a User that is an Assessor with both Qualifications and two pending allocated Assessments`()
+    val expectedAllocatedUser = `Given a User that is an Assessor with both Qualifications and one pending allocated Assessments`()
+    val excludedAllocatedUser = `Given a User that is an Assessor with both Qualifications and zero pending allocated Assessments`()
 
-    val actualAllocatedUser = realUserRepository.findQualifiedAssessorWithLeastPendingAllocations(listOf("PIPE", "WOMENS"), 2)
+    val actualAllocatedUser = realUserRepository.findQualifiedAssessorWithLeastPendingAssessments(listOf("PIPE", "WOMENS"), 2, listOf(excludedAllocatedUser.id))
 
     assertThat(actualAllocatedUser!!.id).isEqualTo(expectedAllocatedUser.id)
   }
@@ -57,7 +58,6 @@ class AllocationQueryTest : IntegrationTestBase() {
 
   private fun `Given a User that is an Assessor with both Qualifications and one pending allocated Assessment`(): UserEntity {
     val user = userEntityFactory.produceAndPersist {
-      withDeliusUsername("ASSESSOR-ONE-ALLOCATION")
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {
           withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
@@ -118,6 +118,86 @@ class AllocationQueryTest : IntegrationTestBase() {
     userQualificationAssignmentEntityFactory.produceAndPersist {
       withUser(user)
       withQualification(UserQualification.WOMENS)
+    }
+
+    return user
+  }
+
+  private fun `Given a User that is an Assessor with both Qualifications and one pending allocated Assessments`(): UserEntity {
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("ASSESSOR-ONE-ALLOCATION")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(UserRole.CAS1_ASSESSOR)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withQualification(UserQualification.PIPE)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withQualification(UserQualification.WOMENS)
+    }
+
+    assessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(user)
+      withApplication(
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(user)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+        },
+      )
+      withSubmittedAt(null)
+      withAssessmentSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+    }
+
+    return user
+  }
+
+  private fun `Given a User that is an Assessor with both Qualifications and two pending allocated Assessments`(): UserEntity {
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("ASSESSOR-TWO-ALLOCATION")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withRole(UserRole.CAS1_ASSESSOR)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withQualification(UserQualification.PIPE)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(user)
+      withQualification(UserQualification.WOMENS)
+    }
+
+    assessmentEntityFactory.produceAndPersistMultiple(2) {
+      withAllocatedToUser(user)
+      withApplication(
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(user)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+        },
+      )
+      withSubmittedAt(null)
+      withAssessmentSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
     }
 
     return user

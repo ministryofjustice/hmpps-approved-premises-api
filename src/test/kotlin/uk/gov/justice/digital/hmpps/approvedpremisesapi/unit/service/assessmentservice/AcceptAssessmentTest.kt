@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -53,12 +52,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class AcceptAssessmentTest {
-  private val userRepositoryMock = mockk<UserRepository>()
+  private val userServiceMock = mockk<UserService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
@@ -71,7 +71,7 @@ class AcceptAssessmentTest {
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
 
   private val assessmentService = AssessmentService(
-    userRepositoryMock,
+    userServiceMock,
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
     jsonSchemaServiceMock,

@@ -7,6 +7,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -26,6 +27,7 @@ import java.util.UUID
 class UserService(
   @Value("\${assign-default-region-to-users-with-unknown-region}") private val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
   private val httpAuthService: HttpAuthService,
+  private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
   private val userRepository: UserRepository,
   private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
@@ -45,7 +47,37 @@ class UserService(
     return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
   }
 
-  fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
+  fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity {
+    val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
+    val qualifications = application.getRequiredQualifications()
+
+    while (true) {
+      val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
+        ?: throw RuntimeException("No Users with all of required qualifications (${qualifications.joinToString(", ")}) that also pass LAO could be found")
+
+      if (offenderService.getOffenderByCrn(application.crn, potentialUser.deliusUsername) !is AuthorisableActionResult.Success) {
+        unsuitableUsers += potentialUser.id
+      } else {
+        return potentialUser
+      }
+    }
+  }
+
+  fun getUserForPlacementApplicationAllocation(crn: String): UserEntity {
+    val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
+
+    while (true) {
+      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingPlacementApplications(unsuitableUsers)
+        ?: throw RuntimeException("No Users that pass LAO could be found")
+
+      // TODO: Potentially a lot of upstream calls - would be better if we had a bulk endpoint for checking LAO access
+      if (offenderService.getOffenderByCrn(crn, potentialUser.deliusUsername) !is AuthorisableActionResult.Success) {
+        unsuitableUsers += potentialUser.id
+      } else {
+        return potentialUser
+      }
+    }
+  }
 
   fun updateUserFromCommunityApiById(id: UUID): AuthorisableActionResult<UserEntity> {
     var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()

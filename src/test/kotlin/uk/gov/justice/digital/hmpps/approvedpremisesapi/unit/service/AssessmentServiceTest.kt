@@ -39,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -51,12 +50,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class AssessmentServiceTest {
-  private val userRepositoryMock = mockk<UserRepository>()
+  private val userServiceMock = mockk<UserService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
@@ -69,7 +69,7 @@ class AssessmentServiceTest {
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
 
   private val assessmentService = AssessmentService(
-    userRepositoryMock,
+    userServiceMock,
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
     jsonSchemaServiceMock,
@@ -1270,7 +1270,7 @@ class AssessmentServiceTest {
 
   @Nested
   inner class UpdateAssessmentClarificationNote {
-    private val userRepositoryMock = mockk<UserRepository>()
+    private val userServiceMock = mockk<UserService>()
     private val assessmentRepositoryMock = mockk<AssessmentRepository>()
     private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
@@ -1283,7 +1283,7 @@ class AssessmentServiceTest {
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
 
     private val assessmentService = AssessmentService(
-      userRepositoryMock,
+      userServiceMock,
       assessmentRepositoryMock,
       assessmentClarificationNoteRepositoryMock,
       jsonSchemaServiceMock,
@@ -1494,7 +1494,7 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
-      every { userRepositoryMock.findQualifiedAssessorWithLeastPendingAllocations(listOf("PIPE"), 1) } returns userWithLeastAllocatedAssessments
+      every { userServiceMock.getUserForAssessmentAllocation(application) } returns userWithLeastAllocatedAssessments
 
       every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 

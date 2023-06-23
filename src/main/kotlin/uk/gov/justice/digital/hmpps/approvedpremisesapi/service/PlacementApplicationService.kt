@@ -178,10 +178,7 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = placementApplicationValidationResult.entity
 
-    val requiredQualifications = placementApplicationEntity.application.getRequiredQualifications()
-
-    val allocatedUser = userService.getUserForAllocation(requiredQualifications)
-      ?: throw RuntimeException("No Users with all of required qualifications (${requiredQualifications.joinToString(", ")}) could be found")
+    val allocatedUser = userService.getUserForPlacementApplicationAllocation(placementApplicationEntity.application.crn)
 
     placementApplicationEntity.apply {
       document = translatedDocument

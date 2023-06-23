@@ -25,8 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -38,7 +36,7 @@ import java.util.UUID
 
 @Service
 class AssessmentService(
-  private val userRepository: UserRepository,
+  private val userService: UserService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
@@ -110,11 +108,7 @@ class AssessmentService(
       throw RuntimeException("Only CAS1 Applications are currently supported")
     }
 
-    val requiredQualifications = application.getRequiredQualifications()
-
-    // Might want to handle this more robustly in future if it emerges this is more common than initially thought
-    val allocatedUser = getUserForAllocation(requiredQualifications)
-      ?: throw RuntimeException("No Users with all of required qualifications (${requiredQualifications.joinToString(", ")}) could be found")
+    val allocatedUser = userService.getUserForAssessmentAllocation(application)
 
     val dateTimeNow = OffsetDateTime.now()
 
@@ -577,6 +571,4 @@ class AssessmentService(
       ValidatableActionResult.Success(savedNote),
     )
   }
-
-  private fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
 }
