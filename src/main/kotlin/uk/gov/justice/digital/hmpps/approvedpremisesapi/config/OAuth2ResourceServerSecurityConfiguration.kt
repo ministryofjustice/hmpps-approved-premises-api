@@ -119,7 +119,7 @@ class AuthAwareTokenConverter() : Converter<Jwt, AbstractAuthenticationToken> {
     if (jwt.claims.containsKey(CLAIM_AUTHORITY)) {
       @Suppress("UNCHECKED_CAST")
       val claimAuthorities = when (val claims = jwt.claims[CLAIM_AUTHORITY]) {
-        is String -> listOf(claims)
+        is String -> claims.split(',')
         is Collection<*> -> (claims as Collection<String>).toList()
         else -> emptyList()
       }
