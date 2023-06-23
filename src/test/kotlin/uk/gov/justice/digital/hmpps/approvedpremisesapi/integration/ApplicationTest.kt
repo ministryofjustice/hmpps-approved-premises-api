@@ -9,8 +9,6 @@ import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -19,7 +17,6 @@ import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
@@ -264,149 +261,6 @@ class ApplicationTest : IntegrationTestBase() {
 
             assertThat(responseBody).noneMatch {
               outdatedApplicationEntityNotManagedByTeam.id == it.id
-            }
-          }
-        }
-      }
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
-  fun `Get all applications returns 200 with correct body - when user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns all applications`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-      `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          `Given an Offender` { otherOffenderDetails, otherInmateDetails ->
-            approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
-            val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema(
-                """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-              )
-            }
-
-            val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-              withSchema(
-                """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": { }
-        }
-        """,
-              )
-            }
-
-            val upToDateApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-              withData(
-                """
-          {
-             "thingId": 123
-          }
-          """,
-              )
-            }
-
-            val outdatedApplicationEntityCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(olderJsonSchema)
-              withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-            }
-
-            val outdatedApplicationEntityNotCreatedByUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(olderJsonSchema)
-              withCreatedByUser(otherUser)
-              withCrn(otherOffenderDetails.otherIds.crn)
-              withData("{}")
-            }
-
-            val applicationEntityWithAwaitingAnswerState = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-              withAddedAt(OffsetDateTime.now())
-            }
-            val assessment = assessmentEntityFactory.produceAndPersist {
-              withApplication(applicationEntityWithAwaitingAnswerState)
-              withAssessmentSchema(assessmentSchema)
-              withAllocatedToUser(otherUser)
-            }
-
-            assessmentClarificationNoteEntityFactory.produceAndPersist {
-              withAssessment(assessment)
-              withCreatedBy(otherUser)
-            }
-
-            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
-            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, otherOffenderDetails.otherIds.crn, false, false)
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/applications")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
-
-            assertThat(responseBody).anyMatch {
-              outdatedApplicationEntityCreatedByUser.id == it.id &&
-                outdatedApplicationEntityCreatedByUser.crn == it.person?.crn &&
-                outdatedApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt &&
-                outdatedApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt
-            }
-
-            assertThat(responseBody).anyMatch {
-              upToDateApplicationEntityCreatedByUser.id == it.id &&
-                upToDateApplicationEntityCreatedByUser.crn == it.person?.crn &&
-                upToDateApplicationEntityCreatedByUser.createdAt.toInstant() == it.createdAt &&
-                upToDateApplicationEntityCreatedByUser.createdByUser.id == it.createdByUserId &&
-                upToDateApplicationEntityCreatedByUser.submittedAt?.toInstant() == it.submittedAt
-            }
-
-            assertThat(responseBody).anyMatch {
-              outdatedApplicationEntityNotCreatedByUser.id == it.id &&
-                outdatedApplicationEntityNotCreatedByUser.crn == it.person?.crn &&
-                outdatedApplicationEntityNotCreatedByUser.createdAt.toInstant() == it.createdAt &&
-                outdatedApplicationEntityNotCreatedByUser.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityNotCreatedByUser.submittedAt?.toInstant() == it.submittedAt
-            }
-
-            assertThat(responseBody).anyMatch {
-              applicationEntityWithAwaitingAnswerState.id == it.id &&
-                it.status == ApplicationStatus.requestedFurtherInformation
             }
           }
         }

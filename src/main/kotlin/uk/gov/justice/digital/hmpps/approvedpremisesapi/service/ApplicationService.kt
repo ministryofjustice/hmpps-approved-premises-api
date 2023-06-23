@@ -87,19 +87,8 @@ class ApplicationService(
       }
   }
 
-  private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
-    return when (userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)) {
-      ApprovedPremisesApplicationAccessLevel.ALL -> applicationRepository.findAllApprovedPremisesSummaries()
-      ApprovedPremisesApplicationAccessLevel.TEAM -> {
-        val userDetails = when (val userDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
-          is ClientResult.Success -> userDetailsResult.body
-          is ClientResult.Failure -> userDetailsResult.throwException()
-        }
-
-        applicationRepository.findApprovedPremisesSummariesForManagingTeams(userDetails.teams?.map { it.code } ?: emptyList())
-      }
-    }
-  }
+  private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) =
+    applicationRepository.findApprovedPremisesSummariesForUser(user.id)
 
   private fun getAllCas2ApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
     return applicationRepository.findAllCas2ApplicationSummaries()
