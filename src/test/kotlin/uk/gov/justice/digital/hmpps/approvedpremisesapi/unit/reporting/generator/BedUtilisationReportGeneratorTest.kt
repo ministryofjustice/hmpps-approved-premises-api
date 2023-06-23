@@ -12,9 +12,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
@@ -26,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtili
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class BedUtilisationReportGeneratorTest {
   private val mockBookingRepository = mockk<BookingRepository>()
@@ -590,7 +594,7 @@ class BedUtilisationReportGeneratorTest {
   }
 
   @Test
-  fun `totalBookedDays shows the combined total days in the month of all non-cancelled bookings, non-cancelled voids and turnarounds - totalDaysInTheMonth, occupancyRate show correctly`() {
+  fun `totalBookedDays shows the combined total days in the month of non-cancelled bookings, not non-cancelled voids or turnarounds - totalDaysInTheMonth, occupancyRate show correctly`() {
     val apArea = ApAreaEntityFactory()
       .produce()
 
@@ -613,6 +617,9 @@ class BedUtilisationReportGeneratorTest {
       .withRoom(room)
       .produce()
 
+    val departureReason = DepartureReasonEntityFactory().produce()
+    val moveOnCategory = MoveOnCategoryEntityFactory().produce()
+
     val relevantBookingStraddlingStartOfMonth = BookingEntityFactory()
       .withBed(bed)
       .withPremises(premises)
@@ -623,6 +630,16 @@ class BedUtilisationReportGeneratorTest {
         turnarounds += TurnaroundEntityFactory()
           .withBooking(this)
           .withWorkingDayCount(5)
+          .produce()
+        arrival = ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2023-03-28"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2023-04-04T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
           .produce()
       }
 
@@ -645,6 +662,16 @@ class BedUtilisationReportGeneratorTest {
         turnarounds += TurnaroundEntityFactory()
           .withBooking(this)
           .withWorkingDayCount(4)
+          .produce()
+        arrival = ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2023-04-25"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2023-04-27T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
           .produce()
       }
 
@@ -682,14 +709,17 @@ class BedUtilisationReportGeneratorTest {
     )
 
     assertThat(result.count()).isEqualTo(1)
+    // The following should be counted for a total of 7 booked days:
     // 4 days for relevantBookingStraddlingStartOfMonth
-    // 5 days for turnaround of relevantBookingStraddlingStartOfMonth
     // 3 days for relevantBookingStraddlingEndOfMonth
+    //
+    // These should not be counted:
+    // 5 days for turnaround of relevantBookingStraddlingStartOfMonth
     // 3 days for turnaround of relevantBookingStraddlingEndOfMonth
     // 4 days for relevantVoidStraddlingStartOfMonth
     // 6 days for relevantVoidStraddlingEndOfMonth
-    assertThat(result[0][BedUtilisationReportRow::totalBookedDays]).isEqualTo(25)
+    assertThat(result[0][BedUtilisationReportRow::totalBookedDays]).isEqualTo(7)
     assertThat(result[0][BedUtilisationReportRow::totalDaysInTheMonth]).isEqualTo(30)
-    assertThat(result[0][BedUtilisationReportRow::occupancyRate]).isEqualTo(25.toDouble() / 30)
+    assertThat(result[0][BedUtilisationReportRow::occupancyRate]).isEqualTo(7.toDouble() / 30)
   }
 }

@@ -75,7 +75,7 @@ class BedUtilisationReportGenerator(
       voidDays += daysOfVoidInMonth
     }
 
-    val totalBookedDays = bookedDaysActiveAndClosed + confirmedDays + provisionalDays + effectiveTurnaroundDays + voidDays
+    val totalBookedDays = bookedDaysActiveAndClosed
     val daysInMonth = YearMonth.of(properties.year, properties.month).lengthOfMonth()
 
     listOf(
