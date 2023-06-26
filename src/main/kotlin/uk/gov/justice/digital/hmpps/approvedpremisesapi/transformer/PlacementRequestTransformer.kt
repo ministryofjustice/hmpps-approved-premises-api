@@ -34,7 +34,7 @@ class PlacementRequestTransformer(
       risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
       applicationId = jpa.application.id,
       assessmentId = jpa.assessment.id,
-      releaseType = getReleaseType(jpa.application.releaseType)!!,
+      releaseType = getReleaseType(jpa.application.releaseType),
       status = getStatus(jpa),
       assessmentDecision = assessmentTransformer.transformJpaDecisionToApi(jpa.assessment.decision)!!,
       assessmentDate = jpa.assessment.submittedAt?.toInstant()!!,
@@ -63,12 +63,12 @@ class PlacementRequestTransformer(
     }
   }
 
-  fun getReleaseType(releaseType: String?): ReleaseTypeOption? = when (releaseType) {
+  fun getReleaseType(releaseType: String?): ReleaseTypeOption = when (releaseType) {
     "licence" -> ReleaseTypeOption.licence
     "rotl" -> ReleaseTypeOption.rotl
     "hdc" -> ReleaseTypeOption.hdc
     "pss" -> ReleaseTypeOption.pss
-    "in_community" -> ReleaseTypeOption.inCommunity
-    else -> { null }
+    "inCommunity" -> ReleaseTypeOption.inCommunity
+    else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 }
