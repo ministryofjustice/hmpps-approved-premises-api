@@ -52,13 +52,7 @@ class AssessmentService(
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
   fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
-    assessmentRepository.findAllAssessmentSummariesNotReallocated(
-      if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-        null
-      } else {
-        user.id.toString()
-      },
-    )
+    assessmentRepository.findAllAssessmentSummariesNotReallocated(user.id.toString())
 
   fun getAllReallocatable(): List<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)

@@ -86,31 +86,7 @@ class AssessmentServiceTest {
   )
 
   @Test
-  fun `getAssessmentSummariesForUser gets all assessment summaries for workflow manager`() {
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    user.roles.add(
-      UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-        .withUser(user)
-        .produce(),
-    )
-
-    every { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(any()) } returns emptyList()
-
-    assessmentService.getVisibleAssessmentSummariesForUser(user)
-
-    verify(exactly = 1) { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(null) }
-  }
-
-  @Test
-  fun `getAssessmentSummariesForUser only fetches allocated assessment summaries for non-workflow user`() {
+  fun `getVisibleAssessmentSummariesForUser only fetches assessments allocated to the user that have not been reallocated`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
