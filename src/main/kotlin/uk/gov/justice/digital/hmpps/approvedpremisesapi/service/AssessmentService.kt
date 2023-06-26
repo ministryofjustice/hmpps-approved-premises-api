@@ -66,8 +66,6 @@ class AssessmentService(
   }
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
-    // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
-
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
 
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
@@ -78,6 +76,12 @@ class AssessmentService(
     }
 
     assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
+
+    val offenderResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername)
+
+    if (offenderResult !is AuthorisableActionResult.Success) {
+      return AuthorisableActionResult.Unauthorised()
+    }
 
     return AuthorisableActionResult.Success(assessment)
   }

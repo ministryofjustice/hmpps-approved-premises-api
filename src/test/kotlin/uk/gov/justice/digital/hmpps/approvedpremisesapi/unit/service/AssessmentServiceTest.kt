@@ -111,8 +111,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `getAssessmentForUser gets any assessment for workflow manager`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -128,37 +126,39 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    val assessment =
-      AssessmentEntityFactory()
-        .withId(assessmentId)
-        .withAllocatedToUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
-        .produce()
+    val assessment = AssessmentEntityFactory()
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce(),
+          )
+          .produce(),
+      )
+      .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.getAssessmentForUser(user, assessmentId)
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.getAssessmentForUser(user, assessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
@@ -299,8 +299,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `addAssessmentClarificationNote adds note to assessment allocated to different user for workflow managers`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -316,8 +314,7 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -342,13 +339,19 @@ class AssessmentServiceTest {
       )
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
       it.invocation.args[0] as AssessmentClarificationNoteEntity
     }
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, "clarification note")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -357,8 +360,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `addAssessmentClarificationNote adds note to assessment allocated to calling user`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -367,8 +368,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -385,13 +385,19 @@ class AssessmentServiceTest {
       .withAllocatedToUser(user)
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
       it.invocation.args[0] as AssessmentClarificationNoteEntity
     }
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, "clarification note")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -445,8 +451,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `updateAssessment returns general validation error for Assessment where schema is outdated`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -455,8 +459,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -475,9 +478,15 @@ class AssessmentServiceTest {
       .withAllocatedToUser(user)
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.updateAssessment(user, assessmentId, "{}")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -488,8 +497,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `updateAssessment returns general validation error for Assessment where decision has already been taken`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -504,8 +511,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -525,9 +531,15 @@ class AssessmentServiceTest {
       .withAssessmentSchema(schema)
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
-    val result = assessmentService.updateAssessment(user, assessmentId, "{}")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -538,8 +550,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `updateAssessment returns general validation error for Assessment where assessment has been deallocated`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -554,8 +564,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -576,9 +585,15 @@ class AssessmentServiceTest {
       .withReallocatedAt(OffsetDateTime.now())
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
-    val result = assessmentService.updateAssessment(user, assessmentId, "{}")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -588,9 +603,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `updateAssessment returns updated assessment`() {
-    val assessmentId = UUID.randomUUID()
-
+  fun `updateAssessment returns unauthorised when user cannot view Offender (LAO)`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -605,8 +618,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -624,11 +636,64 @@ class AssessmentServiceTest {
       .withAssessmentSchema(schema)
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
-    val result = assessmentService.updateAssessment(user, assessmentId, "{\"test\": \"data\"}")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
+
+    val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `updateAssessment returns updated assessment`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = AssessmentEntityFactory()
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce(),
+          )
+          .produce(),
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -684,8 +749,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `rejectAssessment returns general validation error for Assessment where schema is outdated`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -694,8 +757,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -714,9 +776,15 @@ class AssessmentServiceTest {
       .withAllocatedToUser(user)
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -727,8 +795,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `rejectAssessment returns general validation error for Assessment where decision has already been taken`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -743,8 +809,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -764,9 +829,15 @@ class AssessmentServiceTest {
       .withAssessmentSchema(schema)
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
-    val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -777,8 +848,6 @@ class AssessmentServiceTest {
 
   @Test
   fun `rejectAssessment returns general validation error for Assessment where assessment has been deallocated`() {
-    val assessmentId = UUID.randomUUID()
-
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -793,8 +862,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
-      .withId(assessmentId)
+    val assessment = AssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -815,9 +883,15 @@ class AssessmentServiceTest {
       .withReallocatedAt(OffsetDateTime.now())
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
-    val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -828,6 +902,64 @@ class AssessmentServiceTest {
 
   @Test
   fun `rejectAssessment returns field validation error when JSON schema not satisfied by data`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = AssessmentEntityFactory()
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce(),
+          )
+          .produce(),
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns false
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.rejectAssessment(user, assessment.id, "{\"test\": \"data\"}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.FieldValidationError)
+    val fieldValidationError = (validationResult as ValidatableActionResult.FieldValidationError)
+    assertThat(fieldValidationError.validationMessages).contains(
+      entry("$.data", "invalid"),
+    )
+  }
+
+  @Test
+  fun `rejectAssessment returns unauthorised when user not allowed to view Offender (LAO)`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -844,7 +976,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+    val assessment = AssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -864,21 +996,21 @@ class AssessmentServiceTest {
       .withData("{\"test\": \"data\"}")
       .produce()
 
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
-    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns false
+    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
+
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.FieldValidationError)
-    val fieldValidationError = (validationResult as ValidatableActionResult.FieldValidationError)
-    assertThat(fieldValidationError.validationMessages).contains(
-      entry("$.data", "invalid"),
-    )
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test
@@ -1333,6 +1465,10 @@ class AssessmentServiceTest {
 
       every { assessmentClarificationNoteRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentClarificationNoteEntity }
 
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
       val result = assessmentService.updateAssessmentClarificationNote(
         user,
         assessment.id,
@@ -1360,6 +1496,10 @@ class AssessmentServiceTest {
         )
       } returns null
 
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
       val result = assessmentService.updateAssessmentClarificationNote(
         user,
         assessment.id,
@@ -1384,6 +1524,10 @@ class AssessmentServiceTest {
         .withCreatedBy(user)
         .withResponse("I already have a response!")
         .produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
 
       val result = assessmentService.updateAssessmentClarificationNote(
         user,
@@ -1422,6 +1566,10 @@ class AssessmentServiceTest {
             .produce(),
         )
         .produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
 
       val result = assessmentService.updateAssessmentClarificationNote(
         user,
