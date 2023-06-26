@@ -93,9 +93,9 @@ class PlacementApplicationService(
       )
     }
 
-    if (!assigneeUser.hasRole(UserRole.CAS1_ASSESSOR)) {
+    if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" }),
       )
     }
 
