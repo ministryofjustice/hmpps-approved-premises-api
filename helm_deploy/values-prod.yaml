@@ -23,6 +23,7 @@ generic-service:
     SENTRY_ENVIRONMENT: prod
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 300
     DOMAIN-EVENTS_EMIT-ENABLED: true
+    NOTIFY_MODE: ENABLED
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises.hmpps.service.justice.gov.uk/assessments/#id
@@ -41,3 +42,5 @@ generic-service:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ACCESS_KEY_ID: "access_key_id"
       HMPPS_SQS_TOPICS_DOMAINEVENTS_SECRET_ACCESS_KEY: "secret_access_key"
+    hmpps-approved-premises-api:
+      NOTIFY_APIKEY: "NOTIFY_APIKEY"
