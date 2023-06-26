@@ -5,6 +5,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.TasksApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -13,9 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformPlacementApplications
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformPlacementRequests
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 
 @Service
 class TasksController(
@@ -32,31 +34,11 @@ class TasksController(
     val user = userService.getUserForRequest()
 
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      val assessments = mapAndTransformAssessments(
-        log,
-        assessmentService.getAllReallocatable(),
-        user.deliusUsername,
-        this.offenderService,
-        taskTransformer::transformAssessmentToTask,
-      )
+      val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
+      val placementRequestTasks = getPlacementRequestTasks(placementRequestService.getAllReallocatable(), user)
+      val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
 
-      val placementRequests = mapAndTransformPlacementRequests(
-        log,
-        placementRequestService.getAllReallocatable(),
-        user.deliusUsername,
-        this.offenderService,
-        taskTransformer::transformPlacementRequestToTask,
-      )
-
-      val placementApplications = mapAndTransformPlacementApplications(
-        log,
-        placementApplicationService.getAllReallocatable(),
-        user.deliusUsername,
-        this.offenderService,
-        taskTransformer::transformPlacementApplicationToTask,
-      )
-
-      return ResponseEntity.ok(placementRequests + assessments + placementApplications)
+      return ResponseEntity.ok(assessmentTasks + placementRequestTasks + placementApplicationTasks)
     } else {
       throw ForbiddenProblem()
     }
@@ -67,23 +49,38 @@ class TasksController(
     val tasks = mutableListOf<Task>()
 
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
-      tasks += mapAndTransformPlacementRequests(
-        log,
-        placementRequestService.getVisiblePlacementRequestsForUser(user),
-        user.deliusUsername,
-        this.offenderService,
-        taskTransformer::transformPlacementRequestToTask,
-      )
+      tasks += getPlacementRequestTasks(placementRequestService.getVisiblePlacementRequestsForUser(user), user)
 
-      tasks += mapAndTransformPlacementApplications(
-        log,
-        placementApplicationService.getVisiblePlacementApplicationsForUser(user),
-        user.deliusUsername,
-        this.offenderService,
-        taskTransformer::transformPlacementApplicationToTask,
-      )
+      tasks += getPlacementApplicationTasks(placementApplicationService.getVisiblePlacementApplicationsForUser(user), user)
     }
 
     return ResponseEntity.ok(tasks)
+  }
+
+  private fun getAssessmentTasks(assessments: List<AssessmentEntity>, user: UserEntity) = assessments.map {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(it.application.crn, user.deliusUsername)
+
+    taskTransformer.transformAssessmentToTask(
+      assessment = it,
+      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+    )
+  }
+
+  private fun getPlacementRequestTasks(placementRequests: List<PlacementRequestEntity>, user: UserEntity) = placementRequests.map {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(it.application.crn, user.deliusUsername)
+
+    taskTransformer.transformPlacementRequestToTask(
+      placementRequest = it,
+      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+    )
+  }
+
+  private fun getPlacementApplicationTasks(placementApplications: List<PlacementApplicationEntity>, user: UserEntity) = placementApplications.map {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(it.application.crn, user.deliusUsername)
+
+    taskTransformer.transformPlacementApplicationToTask(
+      placementApplication = it,
+      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+    )
   }
 }

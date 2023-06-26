@@ -10,10 +10,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -32,6 +33,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -66,6 +69,18 @@ class TaskTransformerTest {
 
   private val application = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(user)
+    .withRiskRatings(
+      PersonRisksFactory()
+        .withTier(
+          RiskWithStatus(
+            RiskTier(
+              level = "M1",
+              lastUpdated = LocalDate.parse("2023-06-26"),
+            ),
+          ),
+        )
+        .produce(),
+    )
     .produce()
 
   private val assessmentFactory = AssessmentEntityFactory()
@@ -90,7 +105,6 @@ class TaskTransformerTest {
     .withCreatedByUser(user)
 
   private val taskTransformer = TaskTransformer(
-    mockPersonTransformer,
     mockUserTransformer,
     mockRisksTransformer,
     mockPlacementRequestTransformer,
@@ -110,13 +124,13 @@ class TaskTransformerTest {
 
       assessment.data = null
 
-      var result = taskTransformer.transformAssessmentToTask(assessment, mockOffenderDetailSummary, mockInmateDetail)
+      var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.taskType).isEqualTo(TaskType.assessment)
       assertThat(result.applicationId).isEqualTo(application.id)
       assertThat(result.dueDate).isEqualTo(LocalDate.parse("2022-12-17"))
-      assertThat(result.person).isEqualTo(mockPerson)
+      assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.allocatedToStaffMember).isEqualTo(mockUser)
     }
 
@@ -127,7 +141,7 @@ class TaskTransformerTest {
         .withData("{\"test\": \"data\"}")
         .produce()
 
-      var result = taskTransformer.transformAssessmentToTask(assessment, mockOffenderDetailSummary, mockInmateDetail)
+      var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.inProgress)
     }
@@ -139,7 +153,7 @@ class TaskTransformerTest {
         .withData("{\"test\": \"data\"}")
         .produce()
 
-      var result = taskTransformer.transformAssessmentToTask(assessment, mockOffenderDetailSummary, mockInmateDetail)
+      var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
     }
@@ -152,12 +166,12 @@ class TaskTransformerTest {
       .withData(null)
       .produce()
     val application = placementApplication.application
-    private val mockRisks = mockk<PersonRisks>()
+    private val mockTier = mockk<RiskTierEnvelope>()
     private val releaseType = ReleaseTypeOption.licence
 
     @BeforeEach
     fun setup() {
-      every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
+      every { mockRisksTransformer.transformTierDomainToApi(application.riskRatings!!.tier) } returns mockTier
       every { mockPlacementRequestTransformer.getReleaseType(application.releaseType) } returns releaseType
     }
 
@@ -172,11 +186,11 @@ class TaskTransformerTest {
           placementApplication = placementApplication,
         ),
       )
-      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.id).isEqualTo(placementApplication.id)
-      assertThat(result.risks).isEqualTo(mockRisks)
+      assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.releaseType).isEqualTo(releaseType)
       assertThat(result.placementDates).isEqualTo(
         mutableListOf(
@@ -195,7 +209,7 @@ class TaskTransformerTest {
         .withPlacementType(placementType)
         .produce()
 
-      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
 
       if (placementType === JpaPlacementType.ROTL) {
         assertThat(result.placementType).isEqualTo(ApiPlacementType.rotl)
@@ -213,7 +227,7 @@ class TaskTransformerTest {
         .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
         .produce()
 
-      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.inProgress)
     }
@@ -226,7 +240,7 @@ class TaskTransformerTest {
         .withDecision(PlacementApplicationDecision.ACCEPTED)
         .produce()
 
-      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, mockOffenderDetailSummary, mockInmateDetail)
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
     }
@@ -237,24 +251,24 @@ class TaskTransformerTest {
 
     val placementRequest = placementRequestFactory.produce()
     val application = placementRequest.application
-    private val mockRisks = mockk<PersonRisks>()
+    private val mockTier = mockk<RiskTierEnvelope>()
     private val releaseType = ReleaseTypeOption.licence
     private val placementRequestStatus = PlacementRequestStatus.notMatched
 
     @BeforeEach
     fun setup() {
-      every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
+      every { mockRisksTransformer.transformTierDomainToApi(application.riskRatings!!.tier) } returns mockTier
       every { mockPlacementRequestTransformer.getReleaseType(application.releaseType) } returns releaseType
       every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
     }
 
     @Test
     fun `Placement request is correctly transformed`() {
-      val result = taskTransformer.transformPlacementRequestToTask(placementRequest, mockOffenderDetailSummary, mockInmateDetail)
+      val result = taskTransformer.transformPlacementRequestToTask(placementRequest, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.id).isEqualTo(placementRequest.id)
-      assertThat(result.risks).isEqualTo(mockRisks)
+      assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.releaseType).isEqualTo(releaseType)
       assertThat(result.expectedArrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.duration).isEqualTo(placementRequest.duration)
@@ -280,7 +294,7 @@ class TaskTransformerTest {
 
       every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
 
-      val result = taskTransformer.transformPlacementRequestToTask(placementRequest, mockOffenderDetailSummary, mockInmateDetail)
+      val result = taskTransformer.transformPlacementRequestToTask(placementRequest, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
     }

@@ -128,16 +128,17 @@ class TasksTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    taskTransformer.transformAssessmentToTask(allocatableAssessment, offenderDetails, inmateDetails),
+                    taskTransformer.transformAssessmentToTask(
+                      allocatableAssessment,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
                     taskTransformer.transformPlacementRequestToTask(
                       allocatablePlacementRequest,
-                      offenderDetails,
-                      inmateDetails,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
                     ),
                     taskTransformer.transformPlacementApplicationToTask(
                       allocatablePlacementApplication,
-                      offenderDetails,
-                      inmateDetails,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
                     ),
                   ),
                 ),
@@ -226,13 +227,11 @@ class TasksTest : IntegrationTestBase() {
                   listOf(
                     taskTransformer.transformPlacementRequestToTask(
                       placementRequestAllocatedToMe,
-                      offenderDetails,
-                      inmateDetails,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
                     ),
                     taskTransformer.transformPlacementApplicationToTask(
                       placementApplicationAllocatedToMe,
-                      offenderDetails,
-                      inmateDetails,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
                     ),
                   ),
                 ),
@@ -297,7 +296,7 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       TaskWrapper(
-                        task = taskTransformer.transformAssessmentToTask(assessment, offenderDetails, inmateDetails),
+                        task = taskTransformer.transformAssessmentToTask(assessment, "${offenderDetails.firstName} ${offenderDetails.surname}"),
                         users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
                       ),
                     ),
@@ -333,7 +332,7 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       TaskWrapper(
-                        task = taskTransformer.transformPlacementRequestToTask(placementRequest, offenderDetails, inmateDetails),
+                        task = taskTransformer.transformPlacementRequestToTask(placementRequest, "${offenderDetails.firstName} ${offenderDetails.surname}"),
                         users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
                       ),
                     ),
@@ -371,7 +370,7 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       TaskWrapper(
-                        task = taskTransformer.transformPlacementApplicationToTask(placementApplication, offenderDetails, inmateDetails),
+                        task = taskTransformer.transformPlacementApplicationToTask(placementApplication, "${offenderDetails.firstName} ${offenderDetails.surname}"),
                         users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
                       ),
                     ),

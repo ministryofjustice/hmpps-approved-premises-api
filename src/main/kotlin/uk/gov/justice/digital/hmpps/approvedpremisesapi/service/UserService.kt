@@ -43,8 +43,11 @@ class UserService(
     return getUserForUsername(username)
   }
 
-  fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
-    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
+  fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?) =
+    userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
+
+  fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?) = userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name")).filter {
+    offenderService.getOffenderByCrn(crn, it.deliusUsername) is AuthorisableActionResult.Success
   }
 
   fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity {
