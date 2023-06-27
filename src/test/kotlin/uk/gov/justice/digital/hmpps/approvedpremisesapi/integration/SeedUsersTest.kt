@@ -51,11 +51,15 @@ class SeedUsersTest : SeedTestBase() {
       withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
     }
 
+    val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
     CommunityAPI_mockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername("UNKNOWN-USER")
         .withStaffIdentifier(6789)
-        .withProbationAreaCode(probationRegion.deliusCode)
+        .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
         .produce(),
     )
 

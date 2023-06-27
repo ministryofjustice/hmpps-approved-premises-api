@@ -13,9 +13,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
@@ -35,6 +37,7 @@ class UserServiceTest {
   private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
   private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
+  private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
 
   private val userService = UserService(
     false,
@@ -45,6 +48,7 @@ class UserServiceTest {
     mockUserRoleAssignmentRepository,
     mockUserQualificationAssignmentRepository,
     mockProbationRegionRepository,
+    mockProbationAreaProbationRegionMappingRepository,
   )
 
   @Test
@@ -89,11 +93,17 @@ class UserServiceTest {
         .withForenames("Jim")
         .withSurname("Jimmerson")
         .withStaffIdentifier(5678)
+        .withProbationAreaCode("AREACODE")
         .produce(),
     )
 
-    every { mockProbationRegionRepository.findByDeliusCode(any()) } returns ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
+    every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMappingEntityFactory()
+      .withProbationRegion(
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce(),
+      )
+      .withProbationAreaDeliusCode("AREACODE")
       .produce()
 
     assertThat(userService.getUserForRequest()).matches {
@@ -102,7 +112,7 @@ class UserServiceTest {
 
     verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
     verify(exactly = 1) { mockUserRepository.save(any()) }
-    verify(exactly = 1) { mockProbationRegionRepository.findByDeliusCode(any()) }
+    verify(exactly = 1) { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) }
   }
 
   @Nested
@@ -114,6 +124,7 @@ class UserServiceTest {
     private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
+    private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
 
     private val userService = UserService(
       false,
@@ -124,6 +135,7 @@ class UserServiceTest {
       mockUserRoleAssignmentRepository,
       mockUserQualificationAssignmentRepository,
       mockProbationRegionRepository,
+      mockProbationAreaProbationRegionMappingRepository,
     )
 
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
