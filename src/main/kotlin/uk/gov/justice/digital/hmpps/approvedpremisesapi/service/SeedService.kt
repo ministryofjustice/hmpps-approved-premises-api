@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.io.File
 import java.io.IOException
 import javax.annotation.PostConstruct
@@ -184,7 +185,8 @@ class SeedService(
           try {
             job.processRow(deserializedRow)
           } catch (exception: RuntimeException) {
-            errors.add("Error on row $rowNumber: ${exception.message}")
+            val rootCauseException = findRootCause(exception)
+            errors.add("Error on row $rowNumber: ${exception.message} ${if (rootCauseException != null) rootCauseException.message else "no exception cause"}")
             seedLogger.error("Error on row $rowNumber:", exception)
           }
 
