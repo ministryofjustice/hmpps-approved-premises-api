@@ -1170,9 +1170,9 @@ class AssessmentServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-    val result = assessmentService.reallocateAssessment(assigneeUser, application)
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1217,9 +1217,9 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-    val result = assessmentService.reallocateAssessment(assigneeUser, application)
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1271,9 +1271,9 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-    val result = assessmentService.reallocateAssessment(assigneeUser, application)
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1330,7 +1330,7 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    every { assessmentRepositoryMock.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousAssessment
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
@@ -1343,7 +1343,7 @@ class AssessmentServiceTest {
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
-    val result = assessmentService.reallocateAssessment(assigneeUser, application)
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity

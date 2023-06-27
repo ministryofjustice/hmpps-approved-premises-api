@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -70,19 +69,8 @@ class PlacementRequestService(
     return AuthorisableActionResult.Success(Pair(placementRequest, cancellations))
   }
 
-  fun getPlacementRequestForUserAndApplication(user: UserEntity, applicationID: UUID): AuthorisableActionResult<PlacementRequestEntity> {
-    val placementRequest = placementRequestRepository.findByApplication_IdAndReallocatedAtNull(applicationID)
-      ?: return AuthorisableActionResult.NotFound()
-
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.allocatedToUser != user) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    return AuthorisableActionResult.Success(placementRequest)
-  }
-
-  fun reallocatePlacementRequest(assigneeUser: UserEntity, application: ApprovedPremisesApplicationEntity): AuthorisableActionResult<ValidatableActionResult<PlacementRequestEntity>> {
-    val currentPlacementRequest = placementRequestRepository.findByApplication_IdAndReallocatedAtNull(application.id)
+  fun reallocatePlacementRequest(assigneeUser: UserEntity, id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementRequestEntity>> {
+    val currentPlacementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
     if (currentPlacementRequest.booking != null) {

@@ -95,7 +95,7 @@ class TasksController(
     when (taskType) {
       TaskType.assessment -> {
         val assessment = extractEntityFromAuthorisableActionResult(
-          assessmentService.getAssessmentForUserAndApplication(user, id),
+          assessmentService.getAssessmentForUser(user, id),
         )
 
         transformedTask = getAssessmentTask(assessment, user)
@@ -104,8 +104,8 @@ class TasksController(
           .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementRequest -> {
-        val placementRequest = extractEntityFromAuthorisableActionResult(
-          placementRequestService.getPlacementRequestForUserAndApplication(user, id),
+        val (placementRequest) = extractEntityFromAuthorisableActionResult(
+          placementRequestService.getPlacementRequestForUser(user, id),
         )
 
         transformedTask = getPlacementRequestTask(placementRequest, user)
@@ -116,7 +116,7 @@ class TasksController(
       }
       TaskType.placementApplication -> {
         val placementApplication = extractEntityFromAuthorisableActionResult(
-          placementApplicationService.getPlacementApplicationForApplicationId(id),
+          placementApplicationService.getApplication(id),
         )
 
         transformedTask = getPlacementApplicationTask(placementApplication, user)

@@ -6,6 +6,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -119,7 +120,7 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      every { placementApplicationRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementApplication
+      every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
       every { placementApplicationRepository.save(previousPlacementApplication) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -129,7 +130,7 @@ class PlacementApplicationServiceTest {
         )
       } answers { newPlacementDates }
 
-      val result = placementApplicationService.reallocateApplication(assigneeUser, application)
+      val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -159,9 +160,9 @@ class PlacementApplicationServiceTest {
         decision = PlacementApplicationDecision.ACCEPTED
       }
 
-      every { placementApplicationRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementApplication
+      every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
-      val result = placementApplicationService.reallocateApplication(assigneeUser, application)
+      val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -173,9 +174,9 @@ class PlacementApplicationServiceTest {
 
     @Test
     fun `Reallocating a placement application when user to assign to is not a MATCHER returns a field validation error`() {
-      every { placementApplicationRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementApplication
+      every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
-      val result = placementApplicationService.reallocateApplication(assigneeUser, application)
+      val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity

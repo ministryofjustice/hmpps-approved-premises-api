@@ -1,13 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -22,13 +19,12 @@ import java.util.UUID
 @Service
 class TaskService(
   private val assessmentService: AssessmentService,
-  private val applicationRepository: ApplicationRepository,
   private val userService: UserService,
   private val placementRequestService: PlacementRequestService,
   private val userTransformer: UserTransformer,
   private val placementApplicationService: PlacementApplicationService,
 ) {
-  fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, applicationId: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
+  fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
     if (!requestUser.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       return AuthorisableActionResult.Unauthorised()
     }
@@ -38,22 +34,15 @@ class TaskService(
       else -> return AuthorisableActionResult.NotFound()
     }
 
-    val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw RuntimeException("Only CAS1 Applications are currently supported")
-    }
-
     val result = when (taskType) {
       TaskType.assessment -> {
-        assessmentService.reallocateAssessment(assigneeUser, application)
+        assessmentService.reallocateAssessment(assigneeUser, id)
       }
       TaskType.placementRequest -> {
-        placementRequestService.reallocatePlacementRequest(assigneeUser, application)
+        placementRequestService.reallocatePlacementRequest(assigneeUser, id)
       }
       TaskType.placementApplication -> {
-        placementApplicationService.reallocateApplication(assigneeUser, application)
+        placementApplicationService.reallocateApplication(assigneeUser, id)
       }
       else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
