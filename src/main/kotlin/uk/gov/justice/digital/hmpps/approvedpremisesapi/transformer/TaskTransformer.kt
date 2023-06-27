@@ -42,7 +42,7 @@ class TaskTransformer(
     expectedArrival = placementRequest.expectedArrival,
     duration = placementRequest.duration,
     placementRequestStatus = placementRequestTransformer.getStatus(placementRequest),
-    releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType)!!,
+    releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType),
   )
 
   fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, personName: String) = PlacementApplicationTask(
@@ -60,7 +60,7 @@ class TaskTransformer(
         duration = it.duration,
       )
     },
-    releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType)!!,
+    releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
     placementType = getPlacementType(placementApplication.placementType!!),
   )
 
