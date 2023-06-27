@@ -23,11 +23,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.util.UUID
 
 class UserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()
+  private val mockOffenderService = mockk<OffenderService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockUserRepository = mockk<UserRepository>()
   private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
@@ -37,6 +39,7 @@ class UserServiceTest {
   private val userService = UserService(
     false,
     mockHttpAuthService,
+    mockOffenderService,
     mockCommunityApiClient,
     mockUserRepository,
     mockUserRoleAssignmentRepository,
@@ -105,6 +108,7 @@ class UserServiceTest {
   @Nested
   class UpdateUserFromCommunityApiById {
     private val mockHttpAuthService = mockk<HttpAuthService>()
+    private val mockOffenderService = mockk<OffenderService>()
     private val mockCommunityApiClient = mockk<CommunityApiClient>()
     private val mockUserRepository = mockk<UserRepository>()
     private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
@@ -114,6 +118,7 @@ class UserServiceTest {
     private val userService = UserService(
       false,
       mockHttpAuthService,
+      mockOffenderService,
       mockCommunityApiClient,
       mockUserRepository,
       mockUserRoleAssignmentRepository,

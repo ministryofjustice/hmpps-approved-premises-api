@@ -12,51 +12,48 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 @Component
 class TaskTransformer(
-  private val personTransformer: PersonTransformer,
   private val userTransformer: UserTransformer,
   private val risksTransformer: RisksTransformer,
   private val placementRequestTransformer: PlacementRequestTransformer,
 ) {
-  fun transformAssessmentToTask(assessment: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = AssessmentTask(
+  fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
     applicationId = assessment.application.id,
-    person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+    personName = personName,
     dueDate = assessment.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(assessment.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getAssessmentStatus(assessment),
     taskType = TaskType.assessment,
   )
 
-  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = PlacementRequestTask(
+  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, personName: String) = PlacementRequestTask(
     id = placementRequest.id,
     applicationId = placementRequest.application.id,
-    person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+    personName = personName,
     dueDate = placementRequest.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementRequest.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementRequestStatus(placementRequest),
     taskType = TaskType.placementRequest,
-    risks = risksTransformer.transformDomainToApi(placementRequest.application.riskRatings!!, placementRequest.application.crn),
+    tier = risksTransformer.transformTierDomainToApi(placementRequest.application.riskRatings!!.tier),
     expectedArrival = placementRequest.expectedArrival,
     duration = placementRequest.duration,
     placementRequestStatus = placementRequestTransformer.getStatus(placementRequest),
     releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType)!!,
   )
 
-  fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = PlacementApplicationTask(
+  fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, personName: String) = PlacementApplicationTask(
     id = placementApplication.id,
     applicationId = placementApplication.application.id,
-    person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+    personName = personName,
     dueDate = placementApplication.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementApplication.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
-    risks = risksTransformer.transformDomainToApi(placementApplication.application.riskRatings!!, placementApplication.application.crn),
+    tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
     placementDates = placementApplication.placementDates.map {
       PlacementDates(
         expectedArrival = it.expectedArrival,

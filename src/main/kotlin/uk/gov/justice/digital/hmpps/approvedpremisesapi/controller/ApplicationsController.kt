@@ -9,9 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDeleg
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
@@ -27,8 +30,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -54,9 +61,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTran
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformAssessment
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -272,15 +278,9 @@ class ApplicationsController(
           assessmentService.getAssessmentForUserAndApplication(user, applicationId),
         )
 
-        transformedTask = transformAssessment(
-          log,
-          assessment,
-          user.deliusUsername,
-          offenderService,
-          taskTransformer::transformAssessmentToTask,
-        )
+        transformedTask = getAssessmentTask(assessment, user)
 
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(assessment.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(assessment.application.crn, assessment.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
           .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementRequest -> {
@@ -288,18 +288,10 @@ class ApplicationsController(
           placementRequestService.getPlacementRequestForUserAndApplication(user, applicationId),
         )
 
-        val personDetail =
-          getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService)
-
-        if (personDetail === null) {
-          throw NotFoundProblem(placementRequest.application.crn, "Offender")
-        }
-
-        transformedTask =
-          taskTransformer.transformPlacementRequestToTask(placementRequest, personDetail.first, personDetail.second)
+        transformedTask = getPlacementRequestTask(placementRequest, user)
 
         transformedAllocatableUsers =
-          userService.getUsersWithQualificationsAndRoles(emptyList(), listOf(UserRole.CAS1_MATCHER))
+          userService.getUsersWithQualificationsAndRolesPassingLAO(placementRequest.application.crn, emptyList(), listOf(UserRole.CAS1_MATCHER))
             .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementApplication -> {
@@ -307,15 +299,9 @@ class ApplicationsController(
           placementApplicationService.getPlacementApplicationForApplicationId(applicationId),
         )
 
-        val personDetail = getPersonDetailsForCrn(log, placementApplication.application.crn, user.deliusUsername, offenderService)
+        transformedTask = getPlacementApplicationTask(placementApplication, user)
 
-        if (personDetail === null) {
-          throw NotFoundProblem(placementApplication.application.crn, "Offender")
-        }
-
-        transformedTask = taskTransformer.transformPlacementApplicationToTask(placementApplication, personDetail.first, personDetail.second)
-
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRoles(placementApplication.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(placementApplication.application.crn, placementApplication.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
           .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       } else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
@@ -375,6 +361,33 @@ class ApplicationsController(
     }
 
     return Pair(offenderResult.entity, inmateDetailResult.entity)
+  }
+
+  private fun getAssessmentTask(assessment: AssessmentEntity, user: UserEntity): AssessmentTask {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername)
+
+    return taskTransformer.transformAssessmentToTask(
+      assessment = assessment,
+      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+    )
+  }
+
+  private fun getPlacementRequestTask(placementRequest: PlacementRequestEntity, user: UserEntity): PlacementRequestTask {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(placementRequest.application.crn, user.deliusUsername)
+
+    return taskTransformer.transformPlacementRequestToTask(
+      placementRequest = placementRequest,
+      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+    )
+  }
+
+  private fun getPlacementApplicationTask(placementApplication: PlacementApplicationEntity, user: UserEntity): PlacementApplicationTask {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(placementApplication.application.crn, user.deliusUsername)
+
+    return taskTransformer.transformPlacementApplicationToTask(
+      placementApplication = placementApplication,
+      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+    )
   }
 
   private fun getPersonDetailAndTransform(application: ApplicationEntity): Application {

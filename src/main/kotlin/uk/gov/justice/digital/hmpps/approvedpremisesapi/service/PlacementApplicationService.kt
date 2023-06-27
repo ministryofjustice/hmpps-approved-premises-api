@@ -93,9 +93,9 @@ class PlacementApplicationService(
       )
     }
 
-    if (!assigneeUser.hasRole(UserRole.CAS1_ASSESSOR)) {
+    if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" }),
       )
     }
 
@@ -178,10 +178,7 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = placementApplicationValidationResult.entity
 
-    val requiredQualifications = placementApplicationEntity.application.getRequiredQualifications()
-
-    val allocatedUser = userService.getUserForAllocation(requiredQualifications)
-      ?: throw RuntimeException("No Users with all of required qualifications (${requiredQualifications.joinToString(", ")}) could be found")
+    val allocatedUser = userService.getUserForPlacementApplicationAllocation(placementApplicationEntity.application.crn)
 
     placementApplicationEntity.apply {
       document = translatedDocument

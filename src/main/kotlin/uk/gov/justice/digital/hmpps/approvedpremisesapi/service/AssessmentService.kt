@@ -25,8 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -38,7 +36,7 @@ import java.util.UUID
 
 @Service
 class AssessmentService(
-  private val userRepository: UserRepository,
+  private val userService: UserService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
@@ -54,13 +52,7 @@ class AssessmentService(
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
   fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
-    assessmentRepository.findAllAssessmentSummariesNotReallocated(
-      if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-        null
-      } else {
-        user.id.toString()
-      },
-    )
+    assessmentRepository.findAllAssessmentSummariesNotReallocated(user.id.toString())
 
   fun getAllReallocatable(): List<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
@@ -74,8 +66,6 @@ class AssessmentService(
   }
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
-    // TODO: Potentially needs LAO enforcing too: https://trello.com/c/alNxpm9e/856-investigate-whether-assessors-will-have-access-to-limited-access-offenders
-
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
 
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
@@ -86,6 +76,12 @@ class AssessmentService(
     }
 
     assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
+
+    val offenderResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername)
+
+    if (offenderResult !is AuthorisableActionResult.Success) {
+      return AuthorisableActionResult.Unauthorised()
+    }
 
     return AuthorisableActionResult.Success(assessment)
   }
@@ -110,11 +106,7 @@ class AssessmentService(
       throw RuntimeException("Only CAS1 Applications are currently supported")
     }
 
-    val requiredQualifications = application.getRequiredQualifications()
-
-    // Might want to handle this more robustly in future if it emerges this is more common than initially thought
-    val allocatedUser = getUserForAllocation(requiredQualifications)
-      ?: throw RuntimeException("No Users with all of required qualifications (${requiredQualifications.joinToString(", ")}) could be found")
+    val allocatedUser = userService.getUserForAssessmentAllocation(application)
 
     val dateTimeNow = OffsetDateTime.now()
 
@@ -577,6 +569,4 @@ class AssessmentService(
       ValidatableActionResult.Success(savedNote),
     )
   }
-
-  private fun getUserForAllocation(qualifications: List<UserQualification>): UserEntity? = userRepository.findQualifiedAssessorWithLeastPendingAllocations(qualifications.map(UserQualification::toString), qualifications.size.toLong())
 }

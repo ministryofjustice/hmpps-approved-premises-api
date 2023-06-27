@@ -103,7 +103,7 @@ class PlacementApplicationServiceTest {
       assigneeUser.apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.CAS1_ASSESSOR)
+          .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
@@ -172,7 +172,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Reallocating a placement application when user to assign to is not an ASSESSOR returns a field validation error`() {
+    fun `Reallocating a placement application when user to assign to is not a MATCHER returns a field validation error`() {
       every { placementApplicationRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementApplication
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, application)
@@ -182,7 +182,7 @@ class PlacementApplicationServiceTest {
 
       assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
       validationResult as ValidatableActionResult.FieldValidationError
-      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingAssessorRole")
+      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingMatcherRole")
     }
   }
 }

@@ -101,6 +101,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.offenceId = { offenceId }
   }
 
+  fun withRiskRatings(riskRatings: PersonRisks) = apply {
+    this.riskRatings = { riskRatings }
+  }
+
   fun withAssessments(assessments: MutableList<AssessmentEntity>) = apply {
     this.assessments = { assessments }
   }

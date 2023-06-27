@@ -15,11 +15,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Submitted Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
@@ -509,7 +511,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting an in-progress placement request application returns successfully and updates the application`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { matcherUser, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
             createdByUser = user,
@@ -517,6 +519,12 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
+            CommunityAPI_mockSuccessfulOffenderDetailsCall(
+              OffenderDetailsSummaryFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
+            )
+
             val placementDates = listOf(
               PlacementDates(
                 expectedArrival = LocalDate.now(),
@@ -560,7 +568,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
             assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
-            assertThat(updatedPlacementApplication.allocatedToUser!!.id).isEqualTo(assessorUser.id)
+            assertThat(updatedPlacementApplication.allocatedToUser!!.id).isEqualTo(matcherUser.id)
             assertThat(updatedPlacementApplication.allocatedAt).isNotNull()
 
             val createdPlacementDates = placementDateRepository.findAllByPlacementApplication(placementApplicationEntity)

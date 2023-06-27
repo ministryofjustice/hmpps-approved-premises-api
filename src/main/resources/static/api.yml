@@ -3347,8 +3347,8 @@ components:
           type: string
           format: uuid
           example: 6abb5fa3-e93f-4445-887b-30d081688f44
-        person:
-          $ref: '#/components/schemas/Person'
+        personName:
+          type: string
         dueDate:
           type: string
           format: date
@@ -3366,7 +3366,7 @@ components:
       required:
         - taskType
         - applicationId
-        - person
+        - personName
         - dueDate
         - allocatedToStaffMember
         - status
@@ -3389,15 +3389,15 @@ components:
               type: string
               format: uuid
               example: 6abb5fa3-e93f-4445-887b-30d081688f44
-            risks:
-              $ref: '#/components/schemas/PersonRisks'
+            tier:
+              $ref: '#/components/schemas/RiskTierEnvelope'
             releaseType:
               $ref: '#/components/schemas/ReleaseTypeOption'
             placementRequestStatus:
               $ref: '#/components/schemas/PlacementRequestStatus'
           required:
             - id
-            - risks
+            - tier
             - releaseType
             - placementRequestStatus
     PlacementApplicationTask:
@@ -3409,8 +3409,8 @@ components:
               type: string
               format: uuid
               example: 6abb5fa3-e93f-4445-887b-30d081688f44
-            risks:
-              $ref: '#/components/schemas/PersonRisks'
+            tier:
+              $ref: '#/components/schemas/RiskTierEnvelope'
             releaseType:
               $ref: '#/components/schemas/ReleaseTypeOption'
             placementType:
@@ -3421,7 +3421,7 @@ components:
                 $ref: '#/components/schemas/PlacementDates'
           required:
             - id
-            - risks
+            - tier
             - releaseType
             - placementType
     BookingAppealTask:
