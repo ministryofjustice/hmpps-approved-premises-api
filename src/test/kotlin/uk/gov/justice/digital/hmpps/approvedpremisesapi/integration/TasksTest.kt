@@ -247,7 +247,7 @@ class TasksTest : IntegrationTestBase() {
     @Test
     fun `Get a Task for an application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/applications/f601ff2d-b1e0-4878-8731-ccfa19a2ce84/tasks/assessment")
+        .uri("/tasks/assessment/f601ff2d-b1e0-4878-8731-ccfa19a2ce84")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -263,7 +263,7 @@ class TasksTest : IntegrationTestBase() {
             crn = offenderDetails.otherIds.crn,
           ) { _, application ->
             webTestClient.get()
-              .uri("/applications/${application.id}/tasks/unknown-task")
+              .uri("/tasks/unknown-task/${application.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -287,7 +287,7 @@ class TasksTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
               ) { assessment, application ->
                 webTestClient.get()
-                  .uri("/applications/${application.id}/tasks/assessment")
+                  .uri("/tasks/assessment/${application.id}")
                   .header("Authorization", "Bearer $jwt")
                   .exchange()
                   .expectStatus()
@@ -323,7 +323,7 @@ class TasksTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, application ->
                 webTestClient.get()
-                  .uri("/applications/${application.id}/tasks/placement-request")
+                  .uri("/tasks/placement-request/${application.id}")
                   .header("Authorization", "Bearer $jwt")
                   .exchange()
                   .expectStatus()
@@ -361,7 +361,7 @@ class TasksTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
               ) { placementApplication ->
                 webTestClient.get()
-                  .uri("/applications/${placementApplication.application.id}/tasks/placement-application")
+                  .uri("/tasks/placement-application/${placementApplication.application.id}")
                   .header("Authorization", "Bearer $jwt")
                   .exchange()
                   .expectStatus()
@@ -392,7 +392,7 @@ class TasksTest : IntegrationTestBase() {
             crn = offenderDetails.otherIds.crn,
           ) { _, application ->
             webTestClient.get()
-              .uri("/applications/${application.id}/tasks/booking-appeal")
+              .uri("/tasks/booking-appeal/${application.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -408,7 +408,7 @@ class TasksTest : IntegrationTestBase() {
     @Test
     fun `Reallocate application to different assessor without JWT returns 401`() {
       webTestClient.post()
-        .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/tasks/assessment/allocations")
+        .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
         .bodyValue(
           NewReallocation(
             userId = UUID.randomUUID(),
@@ -423,7 +423,7 @@ class TasksTest : IntegrationTestBase() {
     fun `Reallocate application to different assessor without WORKFLOW_MANAGER role returns 403`() {
       `Given a User` { _, jwt ->
         webTestClient.post()
-          .uri("/applications/9c7abdf6-fd39-4670-9704-98a5bbfec95e/tasks/assessment/allocations")
+          .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewReallocation(
@@ -451,7 +451,7 @@ class TasksTest : IntegrationTestBase() {
               ) { existingAssessment, application ->
 
                 webTestClient.post()
-                  .uri("/applications/${application.id}/tasks/assessment/allocations")
+                  .uri("/tasks/assessment/${application.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
                   .bodyValue(
                     NewReallocation(
@@ -497,7 +497,7 @@ class TasksTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             ) { existingPlacementRequest, application ->
               webTestClient.post()
-                .uri("/applications/${application.id}/tasks/placement-request/allocations")
+                .uri("/tasks/placement-request/${application.id}/allocations")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   NewReallocation(
@@ -555,7 +555,7 @@ class TasksTest : IntegrationTestBase() {
                 }
 
                 webTestClient.post()
-                  .uri("/applications/${placementApplication.application.id}/tasks/placement-application/allocations")
+                  .uri("/tasks/placement-application/${placementApplication.application.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
                   .bodyValue(
                     NewReallocation(
@@ -599,7 +599,7 @@ class TasksTest : IntegrationTestBase() {
         `Given a User` { userToReallocate, _ ->
           `Given an Application`(createdByUser = user) { application ->
             webTestClient.post()
-              .uri("/applications/${application.id}/tasks/booking-appeal/allocations")
+              .uri("/tasks/booking-appeal/${application.id}/allocations")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 NewReallocation(

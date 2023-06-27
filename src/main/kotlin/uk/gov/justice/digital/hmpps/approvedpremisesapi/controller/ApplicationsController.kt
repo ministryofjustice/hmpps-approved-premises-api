@@ -12,22 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -36,14 +29,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -51,18 +42,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -78,12 +63,7 @@ class ApplicationsController(
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
-  private val userTransformer: UserTransformer,
   private val taskTransformer: TaskTransformer,
-  private val enumConverterFactory: EnumConverterFactory,
-  private val placementRequestService: PlacementRequestService,
-  private val taskService: TaskService,
-  private val placementApplicationService: PlacementApplicationService,
 ) : ApplicationsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -258,86 +238,6 @@ class ApplicationsController(
 
     val (offender, inmate) = getPersonDetail(assessment.application.crn)
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, offender, inmate))
-  }
-
-  override fun applicationsApplicationIdTasksTaskTypeGet(
-    applicationId: UUID,
-    taskName: String,
-  ): ResponseEntity<TaskWrapper> {
-    val user = userService.getUserForRequest()
-    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskName.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskName, "TaskType")
-
-    val transformedTask: Task
-    var transformedAllocatableUsers: List<User>
-
-    when (taskType) {
-      TaskType.assessment -> {
-        val assessment = extractEntityFromAuthorisableActionResult(
-          assessmentService.getAssessmentForUserAndApplication(user, applicationId),
-        )
-
-        transformedTask = getAssessmentTask(assessment, user)
-
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(assessment.application.crn, assessment.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
-          .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
-      }
-      TaskType.placementRequest -> {
-        val placementRequest = extractEntityFromAuthorisableActionResult(
-          placementRequestService.getPlacementRequestForUserAndApplication(user, applicationId),
-        )
-
-        transformedTask = getPlacementRequestTask(placementRequest, user)
-
-        transformedAllocatableUsers =
-          userService.getUsersWithQualificationsAndRolesPassingLAO(placementRequest.application.crn, emptyList(), listOf(UserRole.CAS1_MATCHER))
-            .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
-      }
-      TaskType.placementApplication -> {
-        val placementApplication = extractEntityFromAuthorisableActionResult(
-          placementApplicationService.getPlacementApplicationForApplicationId(applicationId),
-        )
-
-        transformedTask = getPlacementApplicationTask(placementApplication, user)
-
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(placementApplication.application.crn, placementApplication.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
-          .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
-      } else -> {
-        throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
-      }
-    }
-
-    return ResponseEntity.ok(
-      TaskWrapper(
-        task = transformedTask,
-        users = transformedAllocatableUsers,
-      ),
-    )
-  }
-
-  @Transactional
-  override fun applicationsApplicationIdTasksTaskTypeAllocationsPost(applicationId: UUID, taskName: String, body: NewReallocation): ResponseEntity<Reallocation> {
-    val user = userService.getUserForRequest()
-
-    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskName.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskName, "TaskType")
-
-    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, taskType, body.userId, applicationId)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> authorisationResult.entity
-    }
-
-    val reallocatedTask = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-
-    return ResponseEntity(reallocatedTask, HttpStatus.CREATED)
   }
 
   private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {
