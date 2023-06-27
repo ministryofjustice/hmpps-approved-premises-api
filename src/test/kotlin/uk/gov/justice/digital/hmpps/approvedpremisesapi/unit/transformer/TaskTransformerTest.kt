@@ -126,6 +126,7 @@ class TaskTransformerTest {
 
       var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
+      assertThat(result.id).isEqualTo(assessment.id)
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.taskType).isEqualTo(TaskType.assessment)
       assertThat(result.applicationId).isEqualTo(application.id)

@@ -436,8 +436,8 @@ class AssessmentService(
     )
   }
 
-  fun reallocateAssessment(assigneeUser: UserEntity, application: ApprovedPremisesApplicationEntity): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    val currentAssessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)
+  fun reallocateAssessment(assigneeUser: UserEntity, id: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val currentAssessment = assessmentRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
     if (currentAssessment.submittedAt != null) {
@@ -446,6 +446,7 @@ class AssessmentService(
       )
     }
 
+    val application = currentAssessment.application
     val requiredQualifications = application.getRequiredQualifications()
 
     if (!assigneeUser.hasRole(UserRole.CAS1_ASSESSOR)) {

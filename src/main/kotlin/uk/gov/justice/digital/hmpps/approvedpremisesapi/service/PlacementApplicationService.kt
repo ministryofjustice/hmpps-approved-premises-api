@@ -77,14 +77,8 @@ class PlacementApplicationService(
     return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
   }
 
-  fun getPlacementApplicationForApplicationId(applicationId: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
-    val placementApplication = placementApplicationRepository.findByApplicationId(applicationId) ?: return AuthorisableActionResult.NotFound()
-
-    return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
-  }
-
-  fun reallocateApplication(assigneeUser: UserEntity, application: ApprovedPremisesApplicationEntity): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
-    val currentPlacementApplication = placementApplicationRepository.findByApplication_IdAndReallocatedAtNull(application.id)
+  fun reallocateApplication(assigneeUser: UserEntity, id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+    val currentPlacementApplication = placementApplicationRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
     if (currentPlacementApplication.decision != null) {

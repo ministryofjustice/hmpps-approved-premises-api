@@ -22,6 +22,7 @@ class TaskTransformer(
   private val placementRequestTransformer: PlacementRequestTransformer,
 ) {
   fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
+    id = assessment.id,
     applicationId = assessment.application.id,
     personName = personName,
     crn = assessment.application.crn,

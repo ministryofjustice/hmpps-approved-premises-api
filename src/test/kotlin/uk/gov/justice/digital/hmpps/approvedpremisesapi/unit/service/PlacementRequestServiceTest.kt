@@ -134,9 +134,9 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(previousUser)
       .produce()
 
-    every { placementRequestRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementRequest
+    every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
 
-    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, application)
+    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -169,9 +169,9 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(previousUser)
       .produce()
 
-    every { placementRequestRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementRequest
+    every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
 
-    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, application)
+    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -218,12 +218,12 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(previousUser)
       .produce()
 
-    every { placementRequestRepository.findByApplication_IdAndReallocatedAtNull(application.id) } returns previousPlacementRequest
+    every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
 
     every { placementRequestRepository.save(previousPlacementRequest) } answers { it.invocation.args[0] as PlacementRequestEntity }
     every { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, application)
+    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity

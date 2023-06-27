@@ -35,7 +35,7 @@ class ReallocationAtomicTest : IntegrationTestBase() {
           every { realAssessmentRepository.save(match { it.id != existingAssessment.id }) } throws RuntimeException("I am a database error")
 
           webTestClient.post()
-            .uri("/applications/${application.id}/tasks/assessment/allocations")
+            .uri("/tasks/assessment/${existingAssessment.id}/allocations")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewReallocation(

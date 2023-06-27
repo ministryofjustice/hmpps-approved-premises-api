@@ -1830,83 +1830,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /applications/{applicationId}/tasks/{taskType}:
-    get:
-      tags:
-        - Application data
-      summary: Gets a task for an application
-      parameters:
-        - in: path
-          name: applicationId
-          required: true
-          description: ID of the application
-          schema:
-            type: string
-            format: uuid
-        - in: path
-          name: taskType
-          required: true
-          description: Task type
-          schema:
-            type: string
-      responses:
-        200:
-          description: successfully retrieved task
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/TaskWrapper'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
-  /applications/{applicationId}/tasks/{taskType}/allocations:
-    post:
-      tags:
-        - Operations on applications
-      summary: Reallocates a task for an application
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - in: path
-          name: taskType
-          required: true
-          description: Task type
-          schema:
-            type: string
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/NewReallocation'
-        required: true
-      responses:
-        201:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Reallocation'
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
-      x-codegen-request-body-name: body
   /applications/{applicationId}/assessment:
     get:
       tags:
@@ -2369,6 +2292,83 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /tasks/{taskType}/{id}:
+    get:
+      tags:
+        - Application data
+      summary: Gets a task for an application
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID of the task
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
+      responses:
+        200:
+          description: successfully retrieved task
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/TaskWrapper'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /tasks/{taskType}/{id}/allocations:
+    post:
+      tags:
+        - Operations on applications
+      summary: Reallocates a task for an application
+      parameters:
+        - name: id
+          in: path
+          description: ID of the task
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewReallocation'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Reallocation'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /placement-requests:
     get:
       tags:
@@ -3343,6 +3343,10 @@ components:
       properties:
         taskType:
           $ref: '#/components/schemas/TaskType'
+        id:
+          type: string
+          format: uuid
+          example: 6abb5fa3-e93f-4445-887b-30d081688f44
         applicationId:
           type: string
           format: uuid
@@ -3366,6 +3370,7 @@ components:
           PlacementApplication: '#/components/schemas/PlacementApplicationTask'
           BookingAppeal: '#/components/schemas/BookingAppealTask'
       required:
+        - id
         - taskType
         - applicationId
         - personName
@@ -3388,10 +3393,6 @@ components:
         - $ref: '#/components/schemas/PlacementDates'
         - type: object
           properties:
-            id:
-              type: string
-              format: uuid
-              example: 6abb5fa3-e93f-4445-887b-30d081688f44
             tier:
               $ref: '#/components/schemas/RiskTierEnvelope'
             releaseType:
@@ -3399,7 +3400,6 @@ components:
             placementRequestStatus:
               $ref: '#/components/schemas/PlacementRequestStatus'
           required:
-            - id
             - tier
             - releaseType
             - placementRequestStatus
@@ -3408,10 +3408,6 @@ components:
         - $ref: '#/components/schemas/Task'
         - type: object
           properties:
-            id:
-              type: string
-              format: uuid
-              example: 6abb5fa3-e93f-4445-887b-30d081688f44
             tier:
               $ref: '#/components/schemas/RiskTierEnvelope'
             releaseType:
