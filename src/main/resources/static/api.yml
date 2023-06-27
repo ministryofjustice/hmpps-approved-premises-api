@@ -3349,6 +3349,8 @@ components:
           example: 6abb5fa3-e93f-4445-887b-30d081688f44
         personName:
           type: string
+        crn:
+          type: string
         dueDate:
           type: string
           format: date
@@ -3370,6 +3372,7 @@ components:
         - dueDate
         - allocatedToStaffMember
         - status
+        - crn
     TaskStatus:
       type: string
       enum:

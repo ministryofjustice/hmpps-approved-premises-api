@@ -131,6 +131,7 @@ class TaskTransformerTest {
       assertThat(result.applicationId).isEqualTo(application.id)
       assertThat(result.dueDate).isEqualTo(LocalDate.parse("2022-12-17"))
       assertThat(result.personName).isEqualTo("First Last")
+      assertThat(result.crn).isEqualTo(assessment.application.crn)
       assertThat(result.allocatedToStaffMember).isEqualTo(mockUser)
     }
 
@@ -192,6 +193,8 @@ class TaskTransformerTest {
       assertThat(result.id).isEqualTo(placementApplication.id)
       assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.releaseType).isEqualTo(releaseType)
+      assertThat(result.personName).isEqualTo("First Last")
+      assertThat(result.crn).isEqualTo(placementApplication.application.crn)
       assertThat(result.placementDates).isEqualTo(
         mutableListOf(
           PlacementDates(
@@ -269,6 +272,8 @@ class TaskTransformerTest {
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.id).isEqualTo(placementRequest.id)
       assertThat(result.tier).isEqualTo(mockTier)
+      assertThat(result.personName).isEqualTo("First Last")
+      assertThat(result.crn).isEqualTo(placementRequest.application.crn)
       assertThat(result.releaseType).isEqualTo(releaseType)
       assertThat(result.expectedArrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.duration).isEqualTo(placementRequest.duration)

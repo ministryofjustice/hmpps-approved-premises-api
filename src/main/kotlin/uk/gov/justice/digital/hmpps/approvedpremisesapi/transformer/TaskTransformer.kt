@@ -24,6 +24,7 @@ class TaskTransformer(
   fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
     applicationId = assessment.application.id,
     personName = personName,
+    crn = assessment.application.crn,
     dueDate = assessment.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(assessment.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getAssessmentStatus(assessment),
@@ -34,6 +35,7 @@ class TaskTransformer(
     id = placementRequest.id,
     applicationId = placementRequest.application.id,
     personName = personName,
+    crn = placementRequest.application.crn,
     dueDate = placementRequest.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementRequest.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementRequestStatus(placementRequest),
@@ -49,6 +51,7 @@ class TaskTransformer(
     id = placementApplication.id,
     applicationId = placementApplication.application.id,
     personName = personName,
+    crn = placementApplication.application.crn,
     dueDate = placementApplication.createdAt.plusDays(10).toLocalDate(),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementApplication.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementApplicationStatus(placementApplication),
