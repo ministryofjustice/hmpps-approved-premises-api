@@ -3343,6 +3343,10 @@ components:
       properties:
         taskType:
           $ref: '#/components/schemas/TaskType'
+        id:
+          type: string
+          format: uuid
+          example: 6abb5fa3-e93f-4445-887b-30d081688f44
         applicationId:
           type: string
           format: uuid
@@ -3366,6 +3370,7 @@ components:
           PlacementApplication: '#/components/schemas/PlacementApplicationTask'
           BookingAppeal: '#/components/schemas/BookingAppealTask'
       required:
+        - id
         - taskType
         - applicationId
         - personName
@@ -3388,10 +3393,6 @@ components:
         - $ref: '#/components/schemas/PlacementDates'
         - type: object
           properties:
-            id:
-              type: string
-              format: uuid
-              example: 6abb5fa3-e93f-4445-887b-30d081688f44
             tier:
               $ref: '#/components/schemas/RiskTierEnvelope'
             releaseType:
@@ -3399,7 +3400,6 @@ components:
             placementRequestStatus:
               $ref: '#/components/schemas/PlacementRequestStatus'
           required:
-            - id
             - tier
             - releaseType
             - placementRequestStatus
@@ -3408,10 +3408,6 @@ components:
         - $ref: '#/components/schemas/Task'
         - type: object
           properties:
-            id:
-              type: string
-              format: uuid
-              example: 6abb5fa3-e93f-4445-887b-30d081688f44
             tier:
               $ref: '#/components/schemas/RiskTierEnvelope'
             releaseType:
