@@ -61,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrictEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
@@ -115,6 +116,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
@@ -164,6 +166,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.OfflineApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PostCodeDistrictTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationAreaProbationRegionMappingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationDeliveryUnitTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationApplicationJsonSchemaTestRepository
@@ -405,6 +408,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var turnaroundRepository: TurnaroundTestRepository
 
+  @Autowired
+  lateinit var probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingTestRepository
+
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
@@ -452,6 +458,7 @@ abstract class IntegrationTestBase {
   lateinit var turnaroundFactory: PersistedFactory<TurnaroundEntity, UUID, TurnaroundEntityFactory>
   lateinit var placementApplicationFactory: PersistedFactory<PlacementApplicationEntity, UUID, PlacementApplicationEntityFactory>
   lateinit var placementDateFactory: PersistedFactory<PlacementDateEntity, UUID, PlacementDateEntityFactory>
+  lateinit var probationAreaProbationRegionMappingFactory: PersistedFactory<ProbationAreaProbationRegionMappingEntity, UUID, ProbationAreaProbationRegionMappingEntityFactory>
 
   private var clientCredentialsCallMocked = false
 
@@ -527,6 +534,7 @@ abstract class IntegrationTestBase {
     turnaroundFactory = PersistedFactory({ TurnaroundEntityFactory() }, turnaroundRepository)
     placementApplicationFactory = PersistedFactory({ PlacementApplicationEntityFactory() }, placementApplicationRepository)
     placementDateFactory = PersistedFactory({ PlacementDateEntityFactory() }, placementDateRepository)
+    probationAreaProbationRegionMappingFactory = PersistedFactory({ ProbationAreaProbationRegionMappingEntityFactory() }, probationAreaProbationRegionMappingRepository)
   }
 
   fun mockClientCredentialsJwtRequest(

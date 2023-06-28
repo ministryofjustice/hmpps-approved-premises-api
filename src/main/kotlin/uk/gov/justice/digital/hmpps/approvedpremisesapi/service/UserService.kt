@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -33,6 +34,7 @@ class UserService(
   private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
   private val probationRegionRepository: ProbationRegionRepository,
+  private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -116,7 +118,8 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    var staffProbationRegion = probationRegionRepository.findByDeliusCode(staffUserDetails.probationArea.code)
+    var staffProbationRegion = probationAreaProbationRegionMappingRepository
+      .findByProbationAreaDeliusCode(staffUserDetails.probationArea.code)?.probationRegion
 
     if (staffProbationRegion == null) {
       if (assignDefaultRegionToUsersWithUnknownRegion) {

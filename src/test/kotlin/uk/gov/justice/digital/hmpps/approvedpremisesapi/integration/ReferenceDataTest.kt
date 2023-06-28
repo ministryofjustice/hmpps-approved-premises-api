@@ -638,6 +638,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Probation Regions returns 200 with correct body`() {
+    probationAreaProbationRegionMappingRepository.deleteAll()
     probationDeliveryUnitRepository.deleteAll()
     probationRegionRepository.deleteAll()
 
