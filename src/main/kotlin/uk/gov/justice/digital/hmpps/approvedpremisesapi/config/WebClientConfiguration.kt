@@ -44,6 +44,14 @@ class WebClientConfiguration {
     return WebClient.builder()
       .baseUrl(communityApiBaseUrl)
       .filter(oauth2Client)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+        ),
+      )
       .build()
   }
 
@@ -61,6 +69,14 @@ class WebClientConfiguration {
     return WebClient.builder()
       .baseUrl(communityApiBaseUrl)
       .filter(oauth2Client)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+        ),
+      )
       .build()
   }
 
@@ -76,6 +92,14 @@ class WebClientConfiguration {
 
     return WebClient.builder()
       .baseUrl(hmppsTierApiBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+        ),
+      )
       .filter(oauth2Client)
       .build()
   }
@@ -93,6 +117,14 @@ class WebClientConfiguration {
 
     return WebClient.builder()
       .baseUrl(prisonsApiBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+        ),
+      )
       .filter(oauth2Client)
       .build()
   }
@@ -109,6 +141,14 @@ class WebClientConfiguration {
 
     return WebClient.builder()
       .baseUrl(caseNotesBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+        ),
+      )
       .filter(oauth2Client)
       .build()
   }
@@ -126,6 +166,14 @@ class WebClientConfiguration {
 
     return WebClient.builder()
       .baseUrl(apOASysContextApiBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofSeconds(10))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+        ),
+      )
       .filter(oauth2Client)
       .build()
   }
