@@ -56,5 +56,8 @@ class UserTransformer(
   private fun transformQualificationToApi(userQualification: UserQualificationAssignmentEntity): ApiUserQualification = when (userQualification.qualification) {
     UserQualification.PIPE -> ApiUserQualification.pipe
     UserQualification.WOMENS -> ApiUserQualification.womens
+    UserQualification.LAO -> ApiUserQualification.lao
+    UserQualification.ESAP -> ApiUserQualification.esap
+    UserQualification.EMERGENCY -> ApiUserQualification.emergency
   }
 }
