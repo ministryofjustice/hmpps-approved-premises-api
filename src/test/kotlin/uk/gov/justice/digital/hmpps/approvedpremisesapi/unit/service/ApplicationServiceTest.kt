@@ -373,7 +373,7 @@ class ApplicationServiceTest {
       applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
     }
 
-    assertThat(thrownException.detail).isEqualTo("No OASys present for CRN")
+    assertThat(thrownException.detail).isEqualTo("No OASys present for CRN: $crn")
   }
 
   @Test
