@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -15,6 +16,7 @@ import java.util.UUID
 class ArrivalEntityFactory : Factory<ArrivalEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
+  private var arrivalDateTime: Yielded<Instant> = { Instant.now().randomDateTimeBefore() }
   private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
@@ -26,6 +28,10 @@ class ArrivalEntityFactory : Factory<ArrivalEntity> {
 
   fun withArrivalDate(arrivalDate: LocalDate) = apply {
     this.arrivalDate = { arrivalDate }
+  }
+
+  fun withArrivalDateTime(arrivalDateTime: Instant) = apply {
+    this.arrivalDateTime = { arrivalDateTime }
   }
 
   fun withExpectedDepartureDate(expectedDepartureDate: LocalDate) = apply {
@@ -51,6 +57,7 @@ class ArrivalEntityFactory : Factory<ArrivalEntity> {
   override fun produce(): ArrivalEntity = ArrivalEntity(
     id = this.id(),
     arrivalDate = this.arrivalDate(),
+    arrivalDateTime = this.arrivalDateTime(),
     expectedDepartureDate = this.expectedDepartureDate(),
     notes = this.notes(),
     booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided"),

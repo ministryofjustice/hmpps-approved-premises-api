@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
@@ -21,6 +22,7 @@ data class ArrivalEntity(
   @Id
   val id: UUID,
   val arrivalDate: LocalDate,
+  val arrivalDateTime: Instant,
   val expectedDepartureDate: LocalDate,
   val notes: String?,
   val createdAt: OffsetDateTime,
