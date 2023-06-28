@@ -3692,34 +3692,11 @@ components:
         - dateOfBirth
         - sex
         - status
-    Arrival:
-      type: object
-      properties:
-        bookingId:
-          type: string
-          format: uuid
-        arrivalDate:
-          type: string
-          format: date
-        expectedDepartureDate:
-          type: string
-          format: date
-        notes:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-      required:
-        - bookingId
-        - arrivalDate
-        - expectedDepartureDate
-        - createdAt
     NewArrival:
       type: object
       properties:
-        arrivalDate:
+        type:
           type: string
-          format: date
         expectedDepartureDate:
           type: string
           format: date
@@ -3728,8 +3705,73 @@ components:
         keyWorkerStaffCode:
           type: string
       required:
-        - arrivalDate
+        - type
         - expectedDepartureDate
+      discriminator:
+        propertyName: type
+        mapping:
+          CAS1: '#/components/schemas/NewCas1Arrival'
+          CAS2: '#/components/schemas/NewCas2Arrival'
+          CAS3: '#/components/schemas/NewCas3Arrival'
+    NewCas1Arrival:
+      allOf:
+        - $ref: '#/components/schemas/NewArrival'
+        - type: object
+          properties:
+            arrivalDateTime:
+              type: string
+              format: date-time
+          required:
+            - arrivalDateTime
+    NewCas2Arrival:
+      allOf:
+        - $ref: '#/components/schemas/NewArrival'
+        - type: object
+          properties:
+            arrivalDate:
+              type: string
+              format: date
+          required:
+            - arrivalDate
+    NewCas3Arrival:
+      allOf:
+        - $ref: '#/components/schemas/NewArrival'
+        - type: object
+          properties:
+            arrivalDate:
+              type: string
+              format: date
+          required:
+            - arrivalDate
+    Arrival:
+      type: object
+      properties:
+        expectedDepartureDate:
+          type: string
+          format: date
+        arrivalDate:
+          type: string
+          format: date
+        arrivalTime:
+          type: string
+          format: time
+        notes:
+          type: string
+        keyWorkerStaffCode:
+          type: string
+        bookingId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - type
+        - bookingId
+        - expectedDepartureDate
+        - createdAt
+        - arrivalDate
+        - arrivalTime
     Nonarrival:
       type: object
       properties:
