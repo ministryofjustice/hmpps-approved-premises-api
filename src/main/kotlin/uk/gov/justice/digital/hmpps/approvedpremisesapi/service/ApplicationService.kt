@@ -199,7 +199,7 @@ class ApplicationService(
     }
 
     if (offenderService.getOASysNeeds(crn) !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("No OASys present for CRN")
+      throw InternalServerErrorProblem("No OASys present for CRN: $crn")
     }
 
     var riskRatings: PersonRisks? = null
