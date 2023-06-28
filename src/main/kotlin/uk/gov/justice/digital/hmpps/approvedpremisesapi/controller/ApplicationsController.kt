@@ -144,6 +144,8 @@ class ApplicationsController(
         data = serializedData,
         isWomensApplication = body.isWomensApplication,
         isPipeApplication = body.isPipeApplication,
+        isEmergencyApplication = body.isEmergencyApplication,
+        isEsapApplication = body.isEsapApplication,
         releaseType = body.releaseType?.name,
         arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,

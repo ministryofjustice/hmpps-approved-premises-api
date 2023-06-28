@@ -4475,6 +4475,10 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             arrivalDate:
               type: string
               format: date-time
@@ -4605,6 +4609,10 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             arrivalDate:
               type: string
               format: date-time
@@ -4703,6 +4711,10 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             targetLocation:
               type: string
             releaseType:
@@ -4737,6 +4749,10 @@ components:
               type: boolean
             isWomensApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             targetLocation:
               type: string
             releaseType:
@@ -4747,6 +4763,8 @@ components:
           required:
             - isPipeApplication
             - isWomensApplication
+            - isEmergencyApplication
+            - isEsapApplication
             - targetLocation
             - releaseType
     SubmitTemporaryAccommodationApplication:

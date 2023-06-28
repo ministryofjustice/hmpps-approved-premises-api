@@ -1,0 +1,2 @@
+ALTER TABLE approved_premises_applications ADD COLUMN is_emergency_application BOOLEAN;
+ALTER TABLE approved_premises_applications ADD COLUMN is_esap_application BOOLEAN;
