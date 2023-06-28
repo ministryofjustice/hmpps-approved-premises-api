@@ -57,8 +57,14 @@ class UserService(
     val qualifications = application.getRequiredQualifications()
 
     while (true) {
+      var errorMessage: String
+      if (qualifications.isEmpty()) {
+        errorMessage = "No Users that pass LAO for ${application.crn} could be found, submitting user: ${application.createdByUser.deliusUsername}"
+      } else {
+        errorMessage = "No Users with all of required qualifications (${qualifications.joinToString(", ")}) that also pass LAO for ${application.crn} could be found, submitting user: ${application.createdByUser.deliusUsername}"
+      }
       val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-        ?: throw RuntimeException("No Users with all of required qualifications (${qualifications.joinToString(", ")}) that also pass LAO could be found")
+        ?: throw RuntimeException(errorMessage)
 
       if (offenderService.getOffenderByCrn(application.crn, potentialUser.deliusUsername) !is AuthorisableActionResult.Success) {
         unsuitableUsers += potentialUser.id
