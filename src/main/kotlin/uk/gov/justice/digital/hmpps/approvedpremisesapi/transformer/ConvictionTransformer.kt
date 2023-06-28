@@ -13,7 +13,7 @@ class ConvictionTransformer {
       offenceDescription = nonRedundantDescription(it.detail),
       offenceId = it.offenceId,
       convictionId = conviction.convictionId,
-      offenceDate = it.offenceDate.toLocalDate(),
+      offenceDate = it.offenceDate?.toLocalDate(),
     )
   } ?: emptyList()
 

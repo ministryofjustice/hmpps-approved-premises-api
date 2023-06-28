@@ -20,7 +20,7 @@ data class Offence(
   val offenceId: String,
   val mainOffence: Boolean,
   val detail: OffenceDetail,
-  val offenceDate: LocalDateTime,
+  val offenceDate: LocalDateTime?,
   val offenceCount: Long,
   val tics: Long?,
   val verdict: String?,

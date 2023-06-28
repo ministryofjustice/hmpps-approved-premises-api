@@ -5468,7 +5468,6 @@ components:
         - offenceDescription
         - offenceId
         - convictionId
-        - offenceDate
     DocumentLevel:
       type: string
       description: The level at which a Document is associated - i.e. to the Offender or to a specific Conviction
