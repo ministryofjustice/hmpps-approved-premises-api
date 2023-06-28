@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 class OffenceFactory : Factory<Offence> {
   private var offenceId: Yielded<String> = { randomInt(0, 1000).toString() }
   private var mainOffence: Yielded<Boolean> = { true }
-  private var offenceDate: Yielded<LocalDateTime> = { LocalDateTime.now().minusDays(10) }
+  private var offenceDate: Yielded<LocalDateTime?> = { LocalDateTime.now().minusDays(10) }
   private var offenceCount: Yielded<Long> = { randomInt(1, 10).toLong() }
   private var tics: Yielded<Long> = { randomInt(1, 10).toLong() }
   private var verdict: Yielded<String> = { "Guilty" }
@@ -40,7 +40,7 @@ class OffenceFactory : Factory<Offence> {
     this.mainOffence = { mainOffence }
   }
 
-  fun withOffenceDate(offenceDate: LocalDateTime) = apply {
+  fun withOffenceDate(offenceDate: LocalDateTime?) = apply {
     this.offenceDate = { offenceDate }
   }
 
