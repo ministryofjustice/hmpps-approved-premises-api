@@ -617,6 +617,51 @@ class OffenderServiceTest {
     )
   }
 
+  @Test
+  fun `isLao returns true for Offender with current restriction`() {
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCurrentRestriction(true)
+      .withCurrentExclusion(false)
+      .produce()
+
+    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+      HttpStatus.OK,
+      offenderDetails,
+    )
+
+    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
+  }
+
+  @Test
+  fun `isLao returns true for Offender with current exclusion`() {
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCurrentRestriction(false)
+      .withCurrentExclusion(true)
+      .produce()
+
+    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+      HttpStatus.OK,
+      offenderDetails,
+    )
+
+    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
+  }
+
+  @Test
+  fun `isLao returns false for Offender without current exclusion or restriction`() {
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCurrentRestriction(false)
+      .withCurrentExclusion(false)
+      .produce()
+
+    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+      HttpStatus.OK,
+      offenderDetails,
+    )
+
+    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isFalse
+  }
+
   private fun mockExistingNonLaoOffender() {
     val resultBody = OffenderDetailsSummaryFactory()
       .withCrn("a-crn")

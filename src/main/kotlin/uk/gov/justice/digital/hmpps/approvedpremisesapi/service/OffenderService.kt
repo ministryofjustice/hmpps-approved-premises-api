@@ -114,6 +114,21 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
+  fun isLao(crn: String): Boolean {
+    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
+
+    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
+      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
+    }
+
+    val offender = when (offenderResponse) {
+      is ClientResult.Success -> offenderResponse.body
+      is ClientResult.Failure -> offenderResponse.throwException()
+    }
+
+    return offender.currentExclusion || offender.currentRestriction
+  }
+
   fun canAccessOffender(username: String, crn: String): Boolean {
     return when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(username, crn)) {
       is ClientResult.Success -> !accessResponse.body.userExcluded && !accessResponse.body.userRestricted
