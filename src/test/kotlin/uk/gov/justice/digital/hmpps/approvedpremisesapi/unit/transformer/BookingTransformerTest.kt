@@ -353,6 +353,7 @@ class BookingTransformerTest {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
+        arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
         expectedDepartureDate = LocalDate.parse("2022-08-16"),
         notes = null,
         booking = this,
@@ -363,6 +364,7 @@ class BookingTransformerTest {
     every { mockArrivalTransformer.transformJpaToApi(arrivalBooking.arrival) } returns Arrival(
       bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
       arrivalDate = LocalDate.parse("2022-08-10"),
+      arrivalTime = "00:00:00",
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
       notes = null,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -396,6 +398,7 @@ class BookingTransformerTest {
         arrival = Arrival(
           bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
           arrivalDate = LocalDate.parse("2022-08-10"),
+          arrivalTime = "00:00:00",
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null,
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -602,6 +605,7 @@ class BookingTransformerTest {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
+        arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
         expectedDepartureDate = LocalDate.parse("2022-08-16"),
         notes = null,
         booking = this,
@@ -642,6 +646,7 @@ class BookingTransformerTest {
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
       notes = null,
+      arrivalTime = "00:00:00",
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
@@ -700,6 +705,7 @@ class BookingTransformerTest {
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null,
+          arrivalTime = "00:00:00",
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         departure = Departure(
@@ -771,6 +777,7 @@ class BookingTransformerTest {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
+        arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
         expectedDepartureDate = LocalDate.parse("2022-08-16"),
         notes = null,
         booking = this,
@@ -818,6 +825,7 @@ class BookingTransformerTest {
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
       notes = null,
+      arrivalTime = "00:00:00",
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
@@ -883,6 +891,7 @@ class BookingTransformerTest {
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null,
+          arrivalTime = "00:00:00",
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         departure = Departure(
@@ -977,6 +986,7 @@ class BookingTransformerTest {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
+        arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
         expectedDepartureDate = departedAt.toLocalDate(),
         notes = null,
         booking = this,
@@ -1024,6 +1034,7 @@ class BookingTransformerTest {
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
       notes = null,
+      arrivalTime = "00:00:00",
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
@@ -1092,6 +1103,7 @@ class BookingTransformerTest {
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null,
+          arrivalTime = "00:00:00",
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         departure = Departure(
@@ -1187,6 +1199,7 @@ class BookingTransformerTest {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
+        arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
         expectedDepartureDate = departedAt.toLocalDate(),
         notes = null,
         booking = this,
@@ -1234,6 +1247,7 @@ class BookingTransformerTest {
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
       notes = null,
+      arrivalTime = "00:00:00",
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
@@ -1302,6 +1316,7 @@ class BookingTransformerTest {
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null,
+          arrivalTime = "00:00:00",
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         departure = Departure(
@@ -1388,6 +1403,7 @@ class BookingTransformerTest {
       arrival = ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
+        arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
         expectedDepartureDate = LocalDate.parse("2022-08-16"),
         notes = null,
         booking = this,
@@ -1454,6 +1470,7 @@ class BookingTransformerTest {
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
       notes = null,
+      arrivalTime = "00:00:00",
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
@@ -1544,6 +1561,7 @@ class BookingTransformerTest {
           arrivalDate = LocalDate.parse("2022-08-10"),
           expectedDepartureDate = LocalDate.parse("2022-08-16"),
           notes = null,
+          arrivalTime = "00:00:00",
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         departure = Departure(

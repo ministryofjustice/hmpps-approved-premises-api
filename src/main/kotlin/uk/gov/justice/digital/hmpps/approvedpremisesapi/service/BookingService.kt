@@ -62,8 +62,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -575,16 +577,22 @@ class BookingService(
   }
 
   @Transactional
-  fun createArrival(
+  fun createCas1Arrival(
     user: UserEntity? = null,
     booking: BookingEntity,
-    arrivalDate: LocalDate,
+    arrivalDateTime: Instant,
     expectedDepartureDate: LocalDate,
     notes: String?,
     keyWorkerStaffCode: String?,
   ) = validated<ArrivalEntity> {
     val premises = booking.premises
+
+    if (premises !is ApprovedPremisesEntity) {
+      return generalError("CAS1 Arrivals cannot be set on non-CAS1 premises")
+    }
+
     val occurredAt = OffsetDateTime.now()
+    val arrivalDate = LocalDate.ofInstant(arrivalDateTime, ZoneOffset.UTC)
 
     if (booking.arrival != null) {
       return generalError("This Booking already has an Arrival set")
@@ -594,24 +602,23 @@ class BookingService(
       return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
 
-    if (premises is ApprovedPremisesEntity) {
-      if (keyWorkerStaffCode == null) {
-        return "$.keyWorkerStaffCode" hasSingleValidationError "empty"
-      }
-
-      val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
-
-      if (staffMemberResponse !is AuthorisableActionResult.Success) {
-        return "$.keyWorkerStaffId" hasSingleValidationError "notFound"
-      }
-
-      updateBooking(booking.apply { this.keyWorkerStaffCode = keyWorkerStaffCode })
+    if (keyWorkerStaffCode == null) {
+      return "$.keyWorkerStaffCode" hasSingleValidationError "empty"
     }
+
+    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
+
+    if (staffMemberResponse !is AuthorisableActionResult.Success) {
+      return "$.keyWorkerStaffId" hasSingleValidationError "notFound"
+    }
+
+    updateBooking(booking.apply { this.keyWorkerStaffCode = keyWorkerStaffCode })
 
     val arrivalEntity = arrivalRepository.save(
       ArrivalEntity(
         id = UUID.randomUUID(),
         arrivalDate = arrivalDate,
+        arrivalDateTime = arrivalDateTime,
         expectedDepartureDate = expectedDepartureDate,
         notes = notes,
         booking = booking,
@@ -623,7 +630,7 @@ class BookingService(
     booking.departureDate = expectedDepartureDate
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (booking.application != null && user != null) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)) {
@@ -646,7 +653,7 @@ class BookingService(
           id = domainEventId,
           applicationId = application.id,
           crn = booking.crn,
-          occurredAt = arrivalDate.toLocalDateTime().toInstant(), // TODO: Endpoint should accept a date-time instead
+          occurredAt = arrivalDateTime,
           data = PersonArrivedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
@@ -675,7 +682,7 @@ class BookingService(
                 surname = keyWorkerStaffDetails.staff.surname,
                 username = null,
               ),
-              arrivedAt = arrivalDate.toLocalDateTime().toInstant(), // TODO: Endpoint should accept a date-time instead
+              arrivedAt = arrivalDateTime,
               expectedDepartureOn = expectedDepartureDate,
               notes = notes,
             ),
@@ -683,6 +690,42 @@ class BookingService(
         ),
       )
     }
+
+    return success(arrivalEntity)
+  }
+
+  @Transactional
+  fun createArrival(
+    user: UserEntity? = null,
+    booking: BookingEntity,
+    arrivalDate: LocalDate,
+    expectedDepartureDate: LocalDate,
+    notes: String?,
+    keyWorkerStaffCode: String?,
+  ) = validated<ArrivalEntity> {
+    if (booking.arrival != null) {
+      return generalError("This Booking already has an Arrival set")
+    }
+
+    if (expectedDepartureDate.isBefore(arrivalDate)) {
+      return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+    }
+
+    val arrivalEntity = arrivalRepository.save(
+      ArrivalEntity(
+        id = UUID.randomUUID(),
+        arrivalDate = arrivalDate,
+        arrivalDateTime = arrivalDate.toLocalDateTime().toInstant(),
+        expectedDepartureDate = expectedDepartureDate,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
+    booking.arrivalDate = arrivalDate
+    booking.departureDate = expectedDepartureDate
+    updateBooking(booking)
 
     return success(arrivalEntity)
   }

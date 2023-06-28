@@ -5,6 +5,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractResultFromClientResultOrThrow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -159,14 +161,25 @@ class ApprovedPremisesBookingSeedJob(
       if (keyWorker == null) throw RuntimeException("If arrivalDate is provided, keyWorkerDeliusUsername must also be provided.")
 
       val createdArrival = extractEntityFromValidatableActionResult(
-        bookingService.createArrival(
-          user = null,
-          booking = createdBooking,
-          arrivalDate = row.arrivalDate,
-          expectedDepartureDate = row.plannedDepartureDate,
-          notes = row.arrivalNotes,
-          keyWorkerStaffCode = keyWorker.staffCode,
-        ),
+        if (createdBooking.premises is ApprovedPremisesEntity) {
+          bookingService.createCas1Arrival(
+            user = null,
+            booking = createdBooking,
+            arrivalDateTime = row.arrivalDate.toLocalDateTime().toInstant(),
+            expectedDepartureDate = row.plannedDepartureDate,
+            notes = row.arrivalNotes,
+            keyWorkerStaffCode = keyWorker.staffCode,
+          )
+        } else {
+          bookingService.createArrival(
+            user = null,
+            booking = createdBooking,
+            arrivalDate = row.arrivalDate,
+            expectedDepartureDate = row.plannedDepartureDate,
+            notes = row.arrivalNotes,
+            keyWorkerStaffCode = keyWorker.staffCode,
+          )
+        },
       )
 
       log.info("Created Arrival: ${createdArrival.id}")
