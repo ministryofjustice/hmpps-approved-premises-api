@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -53,6 +54,7 @@ class AssessmentController(
         user.deliusUsername,
         offenderService,
         assessmentTransformer::transformDomainToApiSummary,
+        user.hasQualification(UserQualification.LAO),
       ),
     )
   }
@@ -69,7 +71,7 @@ class AssessmentController(
 
     val applicationCrn = assessment.application.crn
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
+    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
     val offenderDetails = when (offenderDetailsResult) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
       else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")

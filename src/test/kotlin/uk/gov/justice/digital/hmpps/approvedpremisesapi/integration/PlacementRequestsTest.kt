@@ -10,7 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
@@ -177,6 +179,136 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
+                webTestClient.get()
+                  .uri("/placement-requests/${placementRequest.id}")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .expectBody()
+                  .json(
+                    objectMapper.writeValueAsString(
+                      placementRequestDetailTransformer.transformJpaToApi(
+                        placementRequest,
+                        offenderDetails,
+                        inmateDetails,
+                        listOf(),
+                      ),
+                    ),
+                  )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single Placement Request that is allocated to calling User where Offender is LAO but user does not pass LAO check, does not have LAO qualification returns 403`() {
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender`(
+            offenderDetailsConfigBlock = {
+              withCurrentExclusion(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                CommunityAPI_mockOffenderUserAccessCall(
+                  username = user.deliusUsername,
+                  crn = offenderDetails.otherIds.crn,
+                  inclusion = false,
+                  exclusion = true,
+                )
+
+                webTestClient.get()
+                  .uri("/placement-requests/${placementRequest.id}")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isForbidden
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single Placement Request that is allocated to calling User where Offender is LAO, user does not have LAO qualification but does pass LAO check returns 200`() {
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender`(
+            offenderDetailsConfigBlock = {
+              withCurrentExclusion(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                CommunityAPI_mockOffenderUserAccessCall(
+                  username = user.deliusUsername,
+                  crn = offenderDetails.otherIds.crn,
+                  inclusion = false,
+                  exclusion = false,
+                )
+
+                webTestClient.get()
+                  .uri("/placement-requests/${placementRequest.id}")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .expectBody()
+                  .json(
+                    objectMapper.writeValueAsString(
+                      placementRequestDetailTransformer.transformJpaToApi(
+                        placementRequest,
+                        offenderDetails,
+                        inmateDetails,
+                        listOf(),
+                      ),
+                    ),
+                  )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single Placement Request that is allocated to calling User where Offender is LAO, user does not pass LAO check but does have LAO qualification returns 200`() {
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender`(
+            offenderDetailsConfigBlock = {
+              withCurrentExclusion(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                CommunityAPI_mockOffenderUserAccessCall(
+                  username = user.deliusUsername,
+                  crn = offenderDetails.otherIds.crn,
+                  inclusion = false,
+                  exclusion = true,
+                )
+
                 webTestClient.get()
                   .uri("/placement-requests/${placementRequest.id}")
                   .header("Authorization", "Bearer $jwt")

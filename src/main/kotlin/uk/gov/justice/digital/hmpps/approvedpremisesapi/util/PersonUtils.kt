@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
@@ -11,15 +12,16 @@ fun getPersonDetailsForCrn(
   crn: String,
   deliusUsername: String,
   offenderService: OffenderService,
+  ignoreLao: Boolean = false,
 ): Pair<OffenderDetailSummary, InmateDetail>? {
-  val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername)) {
+  val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLao)) {
     is AuthorisableActionResult.Success -> offenderDetailsResult.entity
     is AuthorisableActionResult.NotFound -> {
       log.error("Could not get Offender Details for CRN: $crn")
       return null
     }
 
-    is AuthorisableActionResult.Unauthorised -> return null
+    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
   }
 
   if (offenderDetails.otherIds.nomsNumber == null) {

@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -48,7 +49,7 @@ class PlacementRequestsController(
 
     return ResponseEntity.ok(
       requests.mapNotNull {
-        val personDetail = getPersonDetailsForCrn(log, it.application.crn, user.deliusUsername, offenderService)
+        val personDetail = getPersonDetailsForCrn(log, it.application.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
 
         if (personDetail === null) {
           return@mapNotNull null
@@ -70,7 +71,7 @@ class PlacementRequestsController(
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
 
-    val (offenderDetail, inmateDetail) = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService)
+    val (offenderDetail, inmateDetail) = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
       ?: throw NotFoundProblem(placementRequest.application.crn, "Offender")
 
     return ResponseEntity.ok(

@@ -74,7 +74,7 @@ class OffenderService(
     )
   }
 
-  fun getOffenderByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<OffenderDetailSummary> {
+  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLao: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
     var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
 
     if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
@@ -87,27 +87,29 @@ class OffenderService(
       is ClientResult.Failure -> offenderResponse.throwException()
     }
 
-    if (offender.currentExclusion || offender.currentRestriction) {
-      val access =
-        when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
-          is ClientResult.Success -> accessResponse.body
-          is ClientResult.Failure.StatusCode -> {
-            if (accessResponse.status == HttpStatus.FORBIDDEN) {
-              try {
-                accessResponse.deserializeTo<UserOffenderAccess>()
-                return AuthorisableActionResult.Unauthorised()
-              } catch (exception: Exception) {
-                accessResponse.throwException()
+    if (!ignoreLao) {
+      if (offender.currentExclusion || offender.currentRestriction) {
+        val access =
+          when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
+            is ClientResult.Success -> accessResponse.body
+            is ClientResult.Failure.StatusCode -> {
+              if (accessResponse.status == HttpStatus.FORBIDDEN) {
+                try {
+                  accessResponse.deserializeTo<UserOffenderAccess>()
+                  return AuthorisableActionResult.Unauthorised()
+                } catch (exception: Exception) {
+                  accessResponse.throwException()
+                }
               }
+
+              accessResponse.throwException()
             }
-
-            accessResponse.throwException()
+            is ClientResult.Failure -> accessResponse.throwException()
           }
-          is ClientResult.Failure -> accessResponse.throwException()
-        }
 
-      if (access.userExcluded || access.userRestricted) {
-        return AuthorisableActionResult.Unauthorised()
+        if (access.userExcluded || access.userRestricted) {
+          return AuthorisableActionResult.Unauthorised()
+        }
       }
     }
 

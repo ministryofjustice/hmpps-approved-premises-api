@@ -111,6 +111,23 @@ class OffenderServiceTest {
   }
 
   @Test
+  fun `getOffenderByCrn does not enforce LAO when ignoreLao is enabled (because user has LAO qualification)`() {
+    val resultBody = OffenderDetailsSummaryFactory()
+      .withCrn("a-crn")
+      .withFirstName("Bob")
+      .withLastName("Doe")
+      .withCurrentExclusion(true)
+      .produce()
+
+    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
+
+    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+
+    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name", true) is AuthorisableActionResult.Success).isTrue
+  }
+
+  @Test
   fun `getOffenderByCrn returns Unauthorised result when distinguished name is excluded from viewing`() {
     val resultBody = OffenderDetailsSummaryFactory()
       .withCrn("a-crn")
