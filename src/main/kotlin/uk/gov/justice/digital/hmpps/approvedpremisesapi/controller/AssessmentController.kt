@@ -114,7 +114,7 @@ class AssessmentController(
 
     val applicationCrn = assessment.application.crn
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername)
+    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
     val offenderDetails = when (offenderDetailsResult) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
       else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")

@@ -8,23 +8,23 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
 @Controller
 class DocumentsController(
-  private val httpAuthService: HttpAuthService,
+  private val userService: UserService,
   private val offenderService: OffenderService,
 ) {
   @RequestMapping(method = [RequestMethod.GET], value = ["/documents/{crn}/{documentId}"], produces = ["application/octet-stream"])
   fun documentsCrnDocumentIdGet(@PathVariable("crn") crn: String, @PathVariable("documentId") documentId: String): ResponseEntity<StreamingResponseBody> {
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = deliusPrincipal.name
+    val user = userService.getUserForRequest()
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, username)
+    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     when (offenderDetailsResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")

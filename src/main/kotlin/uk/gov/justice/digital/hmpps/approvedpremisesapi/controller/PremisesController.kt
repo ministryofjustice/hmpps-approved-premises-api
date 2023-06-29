@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -259,7 +260,7 @@ class PremisesController(
 
     return ResponseEntity.ok(
       premises.bookings.map {
-        val offenderResult = offenderService.getOffenderByCrn(it.crn, user.deliusUsername)
+        val offenderResult = offenderService.getOffenderByCrn(it.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
         if (offenderResult !is AuthorisableActionResult.Success) {
           throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
@@ -302,7 +303,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val offenderResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername)
+    val offenderResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     if (offenderResult !is AuthorisableActionResult.Success) {
       throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
@@ -347,7 +348,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val offenderResult = offenderService.getOffenderByCrn(body.crn, user.deliusUsername)
+    val offenderResult = offenderService.getOffenderByCrn(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
     val offender = when (offenderResult) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
@@ -919,7 +920,7 @@ class PremisesController(
     }
 
     val calendarResult = calendarService.getCalendarInfo(
-      username = user.deliusUsername,
+      user = user,
       premisesId = premises.id,
       startDate = startDate,
       endDate = endDate,

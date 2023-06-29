@@ -55,29 +55,23 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN that does not exist returns 404`() {
-    mockClientCredentialsJwtRequest(username = "username", authSource = "delius")
+    `Given a User` { userEntity, jwt ->
+      wiremockServer.stubFor(
+        get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(404),
+          ),
+      )
 
-    wiremockServer.stubFor(
-      get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(404),
-        ),
-    )
-
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PROBATION"),
-    )
-
-    webTestClient.get()
-      .uri("/people/search?crn=CRN")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isNotFound
+      webTestClient.get()
+        .uri("/people/search?crn=CRN")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
   }
 
   @Test

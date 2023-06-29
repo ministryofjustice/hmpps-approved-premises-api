@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBedInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBookingInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarLostBedInfo
@@ -35,7 +36,9 @@ class CalendarServiceTest {
     val premisesId = UUID.fromString("4aa9e9f0-e240-4786-8f18-b331c6255fa7")
     val startDate = LocalDate.of(2023, 6, 9)
     val endDate = LocalDate.of(2023, 6, 15)
-    val username = "SOMEUSER"
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
 
     val premises = ApprovedPremisesEntityFactory()
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
@@ -67,7 +70,7 @@ class CalendarServiceTest {
 
     every { calendarRepositoryMock.getCalendarInfo(premisesId, startDate, endDate) } returns repositoryResults
 
-    val result = calendarService.getCalendarInfo(username, premisesId, startDate, endDate)
+    val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
     assertThat(result).isEqualTo(repositoryResults)
   }
@@ -77,7 +80,9 @@ class CalendarServiceTest {
     val premisesId = UUID.fromString("4aa9e9f0-e240-4786-8f18-b331c6255fa7")
     val startDate = LocalDate.of(2023, 6, 9)
     val endDate = LocalDate.of(2023, 6, 15)
-    val username = "SOMEUSER"
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
     val crn = "CRN1"
 
     val premises = ApprovedPremisesEntityFactory()
@@ -111,9 +116,9 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
+    every { offenderServiceMock.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.NotFound()
 
-    val result = calendarService.getCalendarInfo(username, premisesId, startDate, endDate)
+    val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
     assertThat(result).isEqualTo(
       mapOf(
@@ -135,7 +140,9 @@ class CalendarServiceTest {
     val premisesId = UUID.fromString("4aa9e9f0-e240-4786-8f18-b331c6255fa7")
     val startDate = LocalDate.of(2023, 6, 9)
     val endDate = LocalDate.of(2023, 6, 15)
-    val username = "SOMEUSER"
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
     val crn = "CRN1"
 
     val premises = ApprovedPremisesEntityFactory()
@@ -169,9 +176,9 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
+    every { offenderServiceMock.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
 
-    val result = calendarService.getCalendarInfo(username, premisesId, startDate, endDate)
+    val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
     assertThat(result).isEqualTo(
       mapOf(
@@ -193,7 +200,9 @@ class CalendarServiceTest {
     val premisesId = UUID.fromString("4aa9e9f0-e240-4786-8f18-b331c6255fa7")
     val startDate = LocalDate.of(2023, 6, 9)
     val endDate = LocalDate.of(2023, 6, 15)
-    val username = "SOMEUSER"
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
     val crn = "CRN1"
 
     val premises = ApprovedPremisesEntityFactory()
@@ -227,14 +236,14 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+    every { offenderServiceMock.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory()
         .withFirstName("Firstname")
         .withLastName("Lastname")
         .produce(),
     )
 
-    val result = calendarService.getCalendarInfo(username, premisesId, startDate, endDate)
+    val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
     assertThat(result).isEqualTo(
       mapOf(

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -165,7 +166,7 @@ class TasksController(
   }
 
   private fun getAssessmentTask(assessment: AssessmentEntity, user: UserEntity): AssessmentTask {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername)
+    val offenderDetailsResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     return taskTransformer.transformAssessmentToTask(
       assessment = assessment,
@@ -174,7 +175,7 @@ class TasksController(
   }
 
   private fun getPlacementRequestTask(placementRequest: PlacementRequestEntity, user: UserEntity): PlacementRequestTask {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(placementRequest.application.crn, user.deliusUsername)
+    val offenderDetailsResult = offenderService.getOffenderByCrn(placementRequest.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     return taskTransformer.transformPlacementRequestToTask(
       placementRequest = placementRequest,
@@ -183,7 +184,7 @@ class TasksController(
   }
 
   private fun getPlacementApplicationTask(placementApplication: PlacementApplicationEntity, user: UserEntity): PlacementApplicationTask {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(placementApplication.application.crn, user.deliusUsername)
+    val offenderDetailsResult = offenderService.getOffenderByCrn(placementApplication.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     return taskTransformer.transformPlacementApplicationToTask(
       placementApplication = placementApplication,
