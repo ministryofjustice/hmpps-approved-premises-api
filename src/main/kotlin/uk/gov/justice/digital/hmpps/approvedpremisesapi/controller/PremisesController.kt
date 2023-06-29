@@ -86,6 +86,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -262,24 +263,14 @@ class PremisesController(
 
     return ResponseEntity.ok(
       premises.bookings.mapNotNull {
-        val offenderResult = offenderService.getOffenderByCrn(it.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+        val personDetails = getPersonDetailsForCrn(log, it.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
 
-        if (offenderResult !is AuthorisableActionResult.Success) {
+        if (personDetails == null) {
           log.warn("Unable to get Person via crn: ${it.crn}")
           return@mapNotNull null
         }
 
-        if (offenderResult.entity.otherIds.nomsNumber == null) {
-          log.warn("No nomsNumber present for CRN: ${it.crn}")
-          return@mapNotNull null
-        }
-
-        val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.crn, offenderResult.entity.otherIds.nomsNumber)
-
-        if (inmateDetailResult !is AuthorisableActionResult.Success) {
-          log.warn("Unable to get InmateDetail via crn: ${it.crn}")
-          return@mapNotNull null
-        }
+        val (offenderDetails, inmateDetails) = personDetails
 
         val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
           // TODO: Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
@@ -294,7 +285,7 @@ class PremisesController(
           staffMemberResult.entity
         }
 
-        bookingTransformer.transformJpaToApi(it, offenderResult.entity, inmateDetailResult.entity, staffMember)
+        bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetails, staffMember)
       },
     )
   }

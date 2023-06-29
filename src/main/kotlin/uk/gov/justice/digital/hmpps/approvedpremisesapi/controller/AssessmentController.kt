@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessmentSummaries
 import java.util.UUID
 import javax.transaction.Transactional
@@ -71,21 +72,7 @@ class AssessmentController(
 
     val applicationCrn = assessment.application.crn
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")
-    }
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
-    }
-
-    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber)
-    val inmateDetails = when (inmateDetailsResult) {
-      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")
-    }
+    val (offenderDetails, inmateDetails) = getPersonDetailsForCrn(log, applicationCrn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO)) ?: throw InternalServerErrorProblem("Unable to get Person via crn: $applicationCrn")
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
@@ -114,21 +101,7 @@ class AssessmentController(
 
     val applicationCrn = assessment.application.crn
 
-    val offenderDetailsResult = offenderService.getOffenderByCrn(applicationCrn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Offender Details for CRN: $applicationCrn")
-    }
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No NOMS number for CRN: $applicationCrn")
-    }
-
-    val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber)
-    val inmateDetails = when (inmateDetailsResult) {
-      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-      else -> throw InternalServerErrorProblem("Could not get Inmate Details for NOMS: ${offenderDetails.otherIds.nomsNumber}")
-    }
+    val (offenderDetails, inmateDetails) = getPersonDetailsForCrn(log, applicationCrn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO)) ?: throw InternalServerErrorProblem("Unable to get Person via crn: $applicationCrn")
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
