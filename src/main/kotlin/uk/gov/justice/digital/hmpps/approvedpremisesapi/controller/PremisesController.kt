@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CalendarService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LostBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
@@ -96,6 +97,7 @@ class PremisesController(
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
+  private val lostBedsService: LostBedService,
   private val bedService: BedService,
   private val calendarService: CalendarService,
   private val premisesTransformer: PremisesTransformer,
@@ -646,11 +648,13 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
+    val lostBeds = lostBedsService.getActiveLostBedsForPremisesId(premisesId)
+
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(premises.lostBeds.map(lostBedsTransformer::transformJpaToApi))
+    return ResponseEntity.ok(lostBeds.map(lostBedsTransformer::transformJpaToApi))
   }
 
   override fun premisesPremisesIdLostBedsLostBedIdGet(premisesId: UUID, lostBedId: UUID): ResponseEntity<LostBed> {
