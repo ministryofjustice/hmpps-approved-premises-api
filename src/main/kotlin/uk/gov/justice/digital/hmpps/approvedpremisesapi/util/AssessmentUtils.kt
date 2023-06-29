@@ -12,7 +12,7 @@ fun <T> mapAndTransformAssessmentSummaries(
   assessments: List<DomainAssessmentSummary>,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail) -> T,
+  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail?) -> T,
   ignoreLao: Boolean = false,
 ): List<T> {
   return assessments.mapNotNull {
@@ -25,7 +25,7 @@ fun <T> transformAssessmentSummary(
   assessment: DomainAssessmentSummary,
   deliusUsername: String,
   offenderService: OffenderService,
-  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail) -> T,
+  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail?) -> T,
   ignoreLao: Boolean,
 ): T {
   val (offenderDetailSummary, inmateDetail) = getPersonDetailsForCrn(log, assessment.crn, deliusUsername, offenderService, ignoreLao)

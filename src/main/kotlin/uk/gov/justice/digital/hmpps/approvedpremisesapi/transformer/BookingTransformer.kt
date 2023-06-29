@@ -28,7 +28,7 @@ class BookingTransformer(
   private val enumConverterFactory: EnumConverterFactory,
   private val workingDayCountService: WorkingDayCountService,
 ) {
-  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail, staffMember: StaffMember?): Booking {
+  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail?, staffMember: StaffMember?): Booking {
     val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
 
     return Booking(

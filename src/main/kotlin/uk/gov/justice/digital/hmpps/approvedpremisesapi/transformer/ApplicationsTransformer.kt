@@ -35,7 +35,7 @@ class ApplicationsTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): Application {
+  fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): Application {
     val latestAssessment = jpa.getLatestAssessment()
 
     return when (jpa) {
@@ -113,7 +113,7 @@ class ApplicationsTransformer(
     }
   }
 
-  fun transformDomainToApiSummary(domain: DomainApplicationSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): ApiApplicationSummary = when (domain) {
+  fun transformDomainToApiSummary(domain: DomainApplicationSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
       val riskRatings =
         if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
@@ -167,14 +167,14 @@ class ApplicationsTransformer(
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
   }
 
-  fun transformJpaToApi(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = OfflineApplication(
+  fun transformJpaToApi(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?) = OfflineApplication(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
     type = "Offline",
   )
 
-  fun transformJpaToApiSummary(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = OfflineApplicationSummary(
+  fun transformJpaToApiSummary(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?) = OfflineApplicationSummary(
     id = jpa.id,
     person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
