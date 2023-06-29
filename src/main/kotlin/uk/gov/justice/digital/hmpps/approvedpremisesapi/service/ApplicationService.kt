@@ -226,6 +226,8 @@ class ApplicationService(
         submittedAt = null,
         isWomensApplication = null,
         isPipeApplication = null,
+        isEmergencyApplication = null,
+        isEsapApplication = null,
         convictionId = convictionId!!,
         eventNumber = deliusEventNumber!!,
         offenceId = offenceId!!,
@@ -387,6 +389,8 @@ class ApplicationService(
     applicationId: UUID,
     isWomensApplication: Boolean?,
     isPipeApplication: Boolean?,
+    isEmergencyApplication: Boolean?,
+    isEsapApplication: Boolean?,
     releaseType: String?,
     arrivalDate: LocalDate?,
     data: String,
@@ -424,6 +428,8 @@ class ApplicationService(
       this.isInapplicable = isInapplicable
       this.isWomensApplication = isWomensApplication
       this.isPipeApplication = isPipeApplication
+      this.isEmergencyApplication = isEmergencyApplication
+      this.isEsapApplication = isEsapApplication
       this.releaseType = releaseType
       this.arrivalDate = if (arrivalDate !== null) OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC) else null
       this.data = data
@@ -531,6 +537,8 @@ class ApplicationService(
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
       isPipeApplication = submitApplication.isPipeApplication
+      this.isEmergencyApplication = isEmergencyApplication
+      this.isEsapApplication = isEsapApplication
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()

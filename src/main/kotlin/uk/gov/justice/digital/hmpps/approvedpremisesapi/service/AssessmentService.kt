@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -77,7 +78,7 @@ class AssessmentService(
 
     assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
 
-    val offenderResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername)
+    val offenderResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     if (offenderResult !is AuthorisableActionResult.Success) {
       return AuthorisableActionResult.Unauthorised()

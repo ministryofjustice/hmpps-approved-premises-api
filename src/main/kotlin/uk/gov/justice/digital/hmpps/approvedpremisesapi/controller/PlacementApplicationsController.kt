@@ -10,7 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
@@ -22,6 +26,7 @@ import java.util.UUID
 class PlacementApplicationsController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
+  private val offenderService: OffenderService,
   private val placementApplicationService: PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val objectMapper: ObjectMapper,
@@ -45,8 +50,16 @@ class PlacementApplicationsController(
   }
 
   override fun placementApplicationsIdGet(id: UUID): ResponseEntity<PlacementApplication> {
+    val user = userService.getUserForRequest()
+
     val result = placementApplicationService.getApplication(id)
     val placementApplication = extractEntityFromAuthorisableActionResult(result)
+
+    val offenderResult = offenderService.getOffenderByCrn(placementApplication.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+
+    if (offenderResult is AuthorisableActionResult.Unauthorised) {
+      throw ForbiddenProblem()
+    }
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }

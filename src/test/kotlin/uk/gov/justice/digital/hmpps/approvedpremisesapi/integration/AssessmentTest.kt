@@ -20,11 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -156,6 +158,162 @@ class AssessmentTest : IntegrationTestBase() {
   fun `Get assessment by ID returns 200 with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessment = assessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        assessment.schemaUpToDate = true
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+            ),
+          )
+      }
+    }
+  }
+
+  @Test
+  fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withCurrentExclusion(true)
+        },
+      ) { offenderDetails, inmateDetails ->
+        CommunityAPI_mockOffenderUserAccessCall(
+          username = userEntity.deliusUsername,
+          crn = offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = true,
+        )
+
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessment = assessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        assessment.schemaUpToDate = true
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Test
+  fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withCurrentExclusion(true)
+        },
+      ) { offenderDetails, inmateDetails ->
+        CommunityAPI_mockOffenderUserAccessCall(
+          username = userEntity.deliusUsername,
+          crn = offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = false,
+        )
+
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessment = assessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        assessment.schemaUpToDate = true
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+            ),
+          )
+      }
+    }
+  }
+
+  @Test
+  fun `Get assessment by ID returns 200 when Offender is LAO and user does have LAO qualification but does not pass the LAO check`() {
+    `Given a User`(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withCurrentRestriction(true)
+        },
+      ) { offenderDetails, inmateDetails ->
+        CommunityAPI_mockOffenderUserAccessCall(
+          username = userEntity.deliusUsername,
+          crn = offenderDetails.otherIds.crn,
+          inclusion = true,
+          exclusion = false,
+        )
+
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }

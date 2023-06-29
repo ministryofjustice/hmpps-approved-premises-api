@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -36,7 +35,7 @@ import javax.transaction.Transactional
 @Service
 class PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
-  private val userRepository: UserRepository,
+  private val userService: UserService,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
@@ -131,7 +130,7 @@ class PlacementRequestService(
   }
 
   fun createPlacementRequest(placementRequirements: PlacementRequirementsEntity, placementDates: PlacementDates, notes: String?): PlacementRequestEntity {
-    val user = userRepository.findRandomMatcher() ?: throw RuntimeException("No Matchers could be found")
+    val user = userService
 
     return placementRequestRepository.save(
       PlacementRequestEntity(
@@ -142,7 +141,7 @@ class PlacementRequestService(
         createdAt = OffsetDateTime.now(),
         assessment = placementRequirements.assessment,
         application = placementRequirements.application,
-        allocatedToUser = user,
+        allocatedToUser = user.getUserForPlacementRequestAllocation(placementRequirements.application.crn),
         booking = null,
         bookingNotMades = mutableListOf(),
         reallocatedAt = null,

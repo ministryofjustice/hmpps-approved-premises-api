@@ -55,45 +55,74 @@ class UserService(
   fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?) =
     userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
 
-  fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?) = userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name")).filter {
-    offenderService.getOffenderByCrn(crn, it.deliusUsername) is AuthorisableActionResult.Success
+  fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
+    val isLao = offenderService.isLao(crn)
+
+    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name")).filter {
+      !isLao || it.hasQualification(UserQualification.LAO) || offenderService.getOffenderByCrn(crn, it.deliusUsername) is AuthorisableActionResult.Success
+    }
   }
 
   fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity {
     val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
-    val qualifications = application.getRequiredQualifications()
+    val qualifications = application.getRequiredQualifications().toMutableList()
+
+    if (offenderService.isLao(application.crn)) {
+      qualifications += UserQualification.LAO
+    }
 
     while (true) {
-      var errorMessage: String
-      if (qualifications.isEmpty()) {
-        errorMessage = "No Users that pass LAO for ${application.crn} could be found, submitting user: ${application.createdByUser.deliusUsername}"
-      } else {
-        errorMessage = "No Users with all of required qualifications (${qualifications.joinToString(", ")}) that also pass LAO for ${application.crn} could be found, submitting user: ${application.createdByUser.deliusUsername}"
-      }
       val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-        ?: throw RuntimeException(errorMessage)
+        ?: throw RuntimeException("Could not find a suitable assessor for assessment with qualifications (${qualifications.joinToString(",")}): ${application.crn}")
 
-      if (offenderService.getOffenderByCrn(application.crn, potentialUser.deliusUsername) !is AuthorisableActionResult.Success) {
+      if ((qualifications.isEmpty() && potentialUser.qualifications.isNotEmpty()) || potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION)) {
         unsuitableUsers += potentialUser.id
-      } else {
-        return potentialUser
+        continue
       }
+
+      return potentialUser
+    }
+  }
+
+  fun getUserForPlacementRequestAllocation(crn: String): UserEntity {
+    val qualifications = mutableListOf<UserQualification>()
+    val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
+
+    if (offenderService.isLao(crn)) {
+      qualifications += UserQualification.LAO
+    }
+
+    while (true) {
+      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingPlacementRequests(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
+        ?: throw RuntimeException("Could not find a suitable matcher for placement request with qualifications (${qualifications.joinToString(",")}): $crn")
+
+      if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION)) {
+        unsuitableUsers += potentialUser.id
+        continue
+      }
+
+      return potentialUser
     }
   }
 
   fun getUserForPlacementApplicationAllocation(crn: String): UserEntity {
+    val qualifications = mutableListOf<UserQualification>()
     val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
 
-    while (true) {
-      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingPlacementApplications(unsuitableUsers)
-        ?: throw RuntimeException("No Users that pass LAO could be found")
+    if (offenderService.isLao(crn)) {
+      qualifications += UserQualification.LAO
+    }
 
-      // TODO: Potentially a lot of upstream calls - would be better if we had a bulk endpoint for checking LAO access
-      if (offenderService.getOffenderByCrn(crn, potentialUser.deliusUsername) !is AuthorisableActionResult.Success) {
+    while (true) {
+      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingPlacementApplications(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
+        ?: throw RuntimeException("Could not find a suitable matcher for placement application with qualifications (${qualifications.joinToString(",")}): $crn")
+
+      if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION)) {
         unsuitableUsers += potentialUser.id
-      } else {
-        return potentialUser
+        continue
       }
+
+      return potentialUser
     }
   }
 

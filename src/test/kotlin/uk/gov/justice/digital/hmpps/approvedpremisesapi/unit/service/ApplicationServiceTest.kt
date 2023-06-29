@@ -153,6 +153,8 @@ class ApplicationServiceTest {
         override fun getHasPlacementRequest(): Boolean = false
         override fun getIsWomensApplication(): Boolean? = true
         override fun getIsPipeApplication(): Boolean? = true
+        override fun getIsEsapApplication() = true
+        override fun getIsEmergencyApplication() = true
         override fun getArrivalDate(): Timestamp? = null
         override fun getRiskRatings(): String? = null
         override fun getId(): UUID = UUID.fromString("8ecbbd9c-3c66-4f0b-8f21-87f537676422")
@@ -791,6 +793,8 @@ class ApplicationServiceTest {
         applicationId = applicationId,
         isWomensApplication = false,
         isPipeApplication = null,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
         releaseType = null,
         arrivalDate = null,
         data = "{}",
@@ -834,6 +838,8 @@ class ApplicationServiceTest {
         applicationId = applicationId,
         isWomensApplication = false,
         isPipeApplication = null,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
         releaseType = null,
         arrivalDate = null,
         data = "{}",
@@ -874,6 +880,8 @@ class ApplicationServiceTest {
       applicationId = applicationId,
       isWomensApplication = false,
       isPipeApplication = null,
+      isEmergencyApplication = false,
+      isEsapApplication = false,
       releaseType = null,
       arrivalDate = null,
       data = "{}",
@@ -924,6 +932,8 @@ class ApplicationServiceTest {
       applicationId = applicationId,
       isWomensApplication = false,
       isPipeApplication = null,
+      isEmergencyApplication = false,
+      isEsapApplication = false,
       releaseType = null,
       arrivalDate = null,
       data = "{}",
@@ -981,6 +991,8 @@ class ApplicationServiceTest {
       applicationId = applicationId,
       isWomensApplication = false,
       isPipeApplication = true,
+      isEmergencyApplication = false,
+      isEsapApplication = false,
       releaseType = "rotl",
       arrivalDate = LocalDate.parse("2023-04-17"),
       data = updatedData,
@@ -1219,6 +1231,8 @@ class ApplicationServiceTest {
       translatedDocument = {},
       isPipeApplication = true,
       isWomensApplication = false,
+      isEmergencyApplication = false,
+      isEsapApplication = false,
       targetLocation = "SW1A 1AA",
       releaseType = ReleaseTypeOption.licence,
       type = "CAS1",

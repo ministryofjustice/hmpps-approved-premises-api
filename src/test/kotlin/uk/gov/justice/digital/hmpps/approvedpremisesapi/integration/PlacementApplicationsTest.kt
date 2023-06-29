@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -197,6 +198,129 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isNotFound
+      }
+    }
+
+    @Test
+    fun `getting a placement application where the Offender is LAO but user does not pass LAO check or have LAO qualification returns 403`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(true)
+          },
+        ) { offenderDetails, inmateDetails ->
+          `Given a Placement Application`(
+            crn = offenderDetails.otherIds.crn,
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          ) { placementApplicationEntity ->
+            CommunityAPI_mockOffenderUserAccessCall(
+              username = user.deliusUsername,
+              crn = offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = true,
+            )
+
+            val rawResult = webTestClient.get()
+              .uri("/placement-applications/${placementApplicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `getting a placement application where the Offender is LAO, does not have LAO qualification but does pass LAO check or returns 200`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(true)
+          },
+        ) { offenderDetails, inmateDetails ->
+          `Given a Placement Application`(
+            crn = offenderDetails.otherIds.crn,
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          ) { placementApplicationEntity ->
+            CommunityAPI_mockOffenderUserAccessCall(
+              username = user.deliusUsername,
+              crn = offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
+            )
+
+            val rawResult = webTestClient.get()
+              .uri("/placement-applications/${placementApplicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+            assertThat(body.id).isEqualTo(placementApplicationEntity.id)
+            assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
+            assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
+            assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
+            assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
+            assertThat(body.submittedAt).isNull()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `getting a placement application where the Offender is LAO, does not pass LAO check but does have LAO qualification returns 200`() {
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(true)
+          },
+        ) { offenderDetails, inmateDetails ->
+          `Given a Placement Application`(
+            crn = offenderDetails.otherIds.crn,
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          ) { placementApplicationEntity ->
+            CommunityAPI_mockOffenderUserAccessCall(
+              username = user.deliusUsername,
+              crn = offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = true,
+            )
+
+            val rawResult = webTestClient.get()
+              .uri("/placement-applications/${placementApplicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+            assertThat(body.id).isEqualTo(placementApplicationEntity.id)
+            assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
+            assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
+            assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
+            assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
+            assertThat(body.submittedAt).isNull()
+          }
+        }
       }
     }
 
@@ -511,7 +635,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting an in-progress placement request application returns successfully and updates the application`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { matcherUser, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
             createdByUser = user,

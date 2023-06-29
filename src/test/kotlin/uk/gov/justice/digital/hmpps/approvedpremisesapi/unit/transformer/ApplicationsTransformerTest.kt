@@ -456,6 +456,8 @@ class ApplicationsTransformerTest {
     val application = object : DomainApprovedPremisesApplicationSummary {
       override fun getHasPlacementRequest() = true
       override fun getIsWomensApplication() = false
+      override fun getIsEmergencyApplication() = true
+      override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
@@ -483,6 +485,8 @@ class ApplicationsTransformerTest {
       override fun getHasPlacementRequest() = true
       override fun getIsWomensApplication() = false
       override fun getIsPipeApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsEmergencyApplication() = true
       override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
@@ -509,6 +513,8 @@ class ApplicationsTransformerTest {
       override fun getHasPlacementRequest() = true
       override fun getIsWomensApplication() = false
       override fun getIsPipeApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsEmergencyApplication() = true
       override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
@@ -535,6 +541,8 @@ class ApplicationsTransformerTest {
       override fun getHasPlacementRequest() = true
       override fun getIsWomensApplication() = false
       override fun getIsPipeApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsEmergencyApplication() = true
       override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
@@ -561,6 +569,8 @@ class ApplicationsTransformerTest {
       override fun getHasPlacementRequest() = true
       override fun getIsWomensApplication() = false
       override fun getIsPipeApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsEmergencyApplication() = true
       override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
@@ -587,6 +597,8 @@ class ApplicationsTransformerTest {
       override fun getHasPlacementRequest() = false
       override fun getIsWomensApplication() = false
       override fun getIsPipeApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsEmergencyApplication() = true
       override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
@@ -613,6 +625,8 @@ class ApplicationsTransformerTest {
       override fun getHasPlacementRequest() = false
       override fun getIsWomensApplication() = false
       override fun getIsPipeApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsEmergencyApplication() = true
       override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")

@@ -4475,6 +4475,10 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             arrivalDate:
               type: string
               format: date-time
@@ -4605,6 +4609,10 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             arrivalDate:
               type: string
               format: date-time
@@ -4703,6 +4711,10 @@ components:
               type: boolean
             isPipeApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             targetLocation:
               type: string
             releaseType:
@@ -4737,6 +4749,10 @@ components:
               type: boolean
             isWomensApplication:
               type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              type: boolean
             targetLocation:
               type: string
             releaseType:
@@ -4747,6 +4763,8 @@ components:
           required:
             - isPipeApplication
             - isWomensApplication
+            - isEmergencyApplication
+            - isEsapApplication
             - targetLocation
             - releaseType
     SubmitTemporaryAccommodationApplication:
@@ -5134,6 +5152,9 @@ components:
         - workflow_manager
         - applicant
         - role_admin
+        - excluded_from_assess_allocation
+        - excluded_from_match_allocation
+        - excluded_from_placement_application_allocation
     TemporaryAccommodationUserRole:
       type: string
       enum:
@@ -5144,6 +5165,9 @@ components:
       enum:
         - womens
         - pipe
+        - lao
+        - emergency
+        - esap
     ServiceName:
       type: string
       enum:

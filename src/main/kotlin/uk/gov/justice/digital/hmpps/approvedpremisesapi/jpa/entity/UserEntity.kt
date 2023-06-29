@@ -43,6 +43,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_MATCHER' AND 
+        (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (:excludedUserIds)
     ORDER BY 
       (SELECT COUNT(1) FROM placement_applications pa WHERE pa.allocated_to_user_id = u.id AND pa.decision IS NULL) ASC 
@@ -50,35 +51,24 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     """,
     nativeQuery = true,
   )
-  fun findQualifiedMatcherWithLeastPendingPlacementApplications(excludedUserIds: List<UUID>): UserEntity?
+  fun findQualifiedMatcherWithLeastPendingPlacementApplications(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
 
   @Query(
     """
-      SELECT
-        *
-      FROM
-        users
-        LEFT JOIN user_role_assignments AS ura ON ura.user_id = users.id
-      WHERE
-        role = 'CAS1_MATCHER'
-      OFFSET
-        floor(
-          random() * (
-            SELECT
-              COUNT(*)
-            FROM
-              users
-              LEFT JOIN user_role_assignments AS ura ON ura.user_id = users.id
-            WHERE
-              role = 'CAS1_MATCHER'
-          )
-        )
-      LIMIT
-        1
+    SELECT u.*, ura.*, uqa2.* 
+    FROM "users"  u
+	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
+	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
+    WHERE ura.role = 'CAS1_MATCHER' AND 
+        (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
+        u.id NOT IN (:excludedUserIds)
+    ORDER BY 
+      (SELECT COUNT(1) FROM placement_requests pr WHERE pr.allocated_to_user_id = u.id AND pr.booking_id IS NULL) ASC 
+    LIMIT 1
     """,
     nativeQuery = true,
   )
-  fun findRandomMatcher(): UserEntity?
+  fun findQualifiedMatcherWithLeastPendingPlacementRequests(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
 }
 
 @Entity
@@ -133,6 +123,9 @@ enum class UserRole {
   CAS1_WORKFLOW_MANAGER,
   CAS1_APPLICANT,
   CAS1_ADMIN,
+  CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION,
+  CAS1_EXCLUDED_FROM_MATCH_ALLOCATION,
+  CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION,
   CAS3_ASSESSOR,
   CAS3_REFERRER,
 }
@@ -155,4 +148,7 @@ data class UserQualificationAssignmentEntity(
 enum class UserQualification {
   WOMENS,
   PIPE,
+  LAO,
+  ESAP,
+  EMERGENCY,
 }

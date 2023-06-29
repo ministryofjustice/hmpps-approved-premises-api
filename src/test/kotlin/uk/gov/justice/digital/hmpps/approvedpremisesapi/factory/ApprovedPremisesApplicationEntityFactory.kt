@@ -29,6 +29,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var isWomensApplication: Yielded<Boolean?> = { null }
   private var isPipeApplication: Yielded<Boolean?> = { null }
+  private var isEmergencyApplication: Yielded<Boolean?> = { null }
+  private var isEsapApplication: Yielded<Boolean?> = { null }
   private var convictionId: Yielded<Long> = { randomInt(0, 1000).toLong() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
@@ -133,6 +135,14 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.nomsNumber = { nomsNumber }
   }
 
+  fun withIsEmergencyApplication(isEmergencyApplication: Boolean?) = apply {
+    this.isEmergencyApplication = { isEmergencyApplication }
+  }
+
+  fun withIsEsapApplication(isEsapApplication: Boolean?) = apply {
+    this.isEsapApplication = { isEsapApplication }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -144,6 +154,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     submittedAt = this.submittedAt(),
     isWomensApplication = this.isWomensApplication(),
     isPipeApplication = this.isPipeApplication(),
+    isEmergencyApplication = this.isEmergencyApplication(),
+    isEsapApplication = this.isEsapApplication(),
     convictionId = this.convictionId(),
     eventNumber = this.eventNumber(),
     offenceId = this.offenceId(),

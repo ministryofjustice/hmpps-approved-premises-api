@@ -57,6 +57,8 @@ SELECT
     (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
     apa.is_womens_application as isWomensApplication,
     apa.is_pipe_application as isPipeApplication,
+    apa.is_emergency_application as isEmergencyApplication,
+    apa.is_esap_application as isEsapApplication,
     apa.arrival_date as arrivalDate,
     CAST(apa.risk_ratings AS TEXT) as riskRatings
 FROM approved_premises_applications apa
@@ -217,6 +219,8 @@ class ApprovedPremisesApplicationEntity(
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
   var isPipeApplication: Boolean?,
+  var isEmergencyApplication: Boolean?,
+  var isEsapApplication: Boolean?,
   var isInapplicable: Boolean?,
   val convictionId: Long,
   val eventNumber: String,
@@ -255,6 +259,14 @@ class ApprovedPremisesApplicationEntity(
 
     if (isWomensApplication == true) {
       requiredQualifications += UserQualification.WOMENS
+    }
+
+    if (isEmergencyApplication == true) {
+      requiredQualifications += UserQualification.EMERGENCY
+    }
+
+    if (isEsapApplication == true) {
+      requiredQualifications += UserQualification.ESAP
     }
 
     return requiredQualifications
@@ -370,6 +382,8 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getHasPlacementRequest(): Boolean
   fun getIsWomensApplication(): Boolean?
   fun getIsPipeApplication(): Boolean?
+  fun getIsEmergencyApplication(): Boolean?
+  fun getIsEsapApplication(): Boolean?
   fun getArrivalDate(): Timestamp?
   fun getRiskRatings(): String?
 }
