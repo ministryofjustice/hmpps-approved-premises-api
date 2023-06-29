@@ -16,4 +16,14 @@ class HttpAuthService {
 
     return principal
   }
+
+  fun getDeliusPrincipalOrNull(): AuthAwareAuthenticationToken? {
+    val principal = SecurityContextHolder.getContext().authentication as? AuthAwareAuthenticationToken ?: return null
+
+    if (principal.token.claims["auth_source"] != "delius") {
+      return null
+    }
+
+    return principal
+  }
 }

@@ -115,6 +115,53 @@ class UserServiceTest {
     verify(exactly = 1) { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) }
   }
 
+  @Test
+  fun `getUserForRequestOrNull returns User when exists, does not call Community API or save`() {
+    val username = "SOMEPERSON"
+    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+    every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+    every { mockPrincipal.name } returns username
+
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    every { mockUserRepository.findByDeliusUsername(username) } returns user
+
+    assertThat(userService.getUserForRequestOrNull()).isEqualTo(user)
+
+    verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
+    verify(exactly = 0) { mockUserRepository.save(any()) }
+  }
+
+  @Test
+  fun `getUserForRequestOrNull returns null when User does not already exist, does not call Community API or save`() {
+    val username = "SOMEPERSON"
+    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+    every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+    every { mockPrincipal.name } returns username
+
+    every { mockUserRepository.findByDeliusUsername(username) } returns null
+
+    assertThat(userService.getUserForRequestOrNull()).isNull()
+
+    verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
+    verify(exactly = 0) { mockUserRepository.save(any()) }
+  }
+
+  @Test
+  fun `getUserForRequestOrNull returns null when no principal is available`() {
+    every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
+
+    assertThat(userService.getUserForRequestOrNull()).isNull()
+  }
+
   @Nested
   class UpdateUserFromCommunityApiById {
     private val mockHttpAuthService = mockk<HttpAuthService>()
