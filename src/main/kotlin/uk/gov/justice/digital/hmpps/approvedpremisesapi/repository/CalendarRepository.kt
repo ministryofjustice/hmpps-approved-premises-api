@@ -16,11 +16,13 @@ class CalendarRepository(private val namedParameterJdbcTemplate: NamedParameterJ
            b.id AS booking_id, 
            b.arrival_date AS arrival_date, 
            b.departure_date AS departure_date,
-           b.crn AS crn
+           b.crn AS crn,
+           (c.id IS NULL) AS active
     FROM premises p 
     JOIN rooms r ON r.premises_id = p.id
     JOIN beds bed ON bed.room_id = r.id 
     LEFT JOIN bookings b ON b.bed_id = bed.id AND (b.arrival_date, b.departure_date) OVERLAPS (:startDate, :endDate)
+    LEFT JOIN cancellations c ON c.booking_id = b.id
     WHERE p.id = :premisesId
 """
 
@@ -30,11 +32,13 @@ class CalendarRepository(private val namedParameterJdbcTemplate: NamedParameterJ
            bed.name AS bed_name, 
            lb.id AS lost_bed_id, 
            lb.start_date AS start_date, 
-           lb.end_date AS end_date
+           lb.end_date AS end_date,
+           (c.id IS NULL) AS active
     FROM premises p 
     JOIN rooms r ON r.premises_id = p.id
     JOIN beds bed ON bed.room_id = r.id 
     LEFT JOIN lost_beds lb ON lb.bed_id = bed.id AND (lb.start_date, lb.end_date) OVERLAPS (:startDate, :endDate)
+    LEFT JOIN lost_bed_cancellations c ON c.lost_bed_id = lb.id
     WHERE p.id = :premisesId
 """
 
@@ -59,7 +63,7 @@ class CalendarRepository(private val namedParameterJdbcTemplate: NamedParameterJ
 
           resultsMap.putIfAbsent(bedKey, mutableListOf())
 
-          if (resultSet.getString("booking_id") != null) {
+          if (resultSet.getString("booking_id") != null && resultSet.getBoolean("active")) {
             resultsMap[bedKey]!! += CalendarBookingInfo(
               startDate = resultSet.getObject("arrival_date", LocalDate::class.java),
               endDate = resultSet.getObject("departure_date", LocalDate::class.java),
@@ -84,7 +88,7 @@ class CalendarRepository(private val namedParameterJdbcTemplate: NamedParameterJ
 
           resultsMap.putIfAbsent(bedKey, mutableListOf())
 
-          if (resultSet.getString("lost_bed_id") != null) {
+          if (resultSet.getString("lost_bed_id") != null && resultSet.getBoolean("active")) {
             resultsMap[bedKey]!! += CalendarLostBedInfo(
               startDate = resultSet.getObject("start_date", LocalDate::class.java),
               endDate = resultSet.getObject("end_date", LocalDate::class.java),
