@@ -51,7 +51,23 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       )
     }
 
+    val bedWithCancelledBooking = bedEntityFactory.produceAndPersist {
+      withRoom(
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        },
+      )
+    }
+
     val bedWithLostBed = bedEntityFactory.produceAndPersist {
+      withRoom(
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        },
+      )
+    }
+
+    val bedWithCancelledLostBed = bedEntityFactory.produceAndPersist {
       withRoom(
         roomEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -74,10 +90,34 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       withEndDate(LocalDate.now().plusDays((20).toLong()))
     }
 
+    val cancelledBooking = bookingEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withBed(bedWithCancelledBooking)
+      withArrivalDate(LocalDate.now().minusDays((7).toLong()))
+      withDepartureDate(LocalDate.now().plusDays((20).toLong()))
+    }
+
+    cancellationEntityFactory.produceAndPersist {
+      withBooking(cancelledBooking)
+      withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+    }
+
+    val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withBed(bedWithCancelledLostBed)
+      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withStartDate(LocalDate.now().minusDays((7).toLong()))
+      withEndDate(LocalDate.now().plusDays((20).toLong()))
+    }
+
+    lostBedCancellationEntityFactory.produceAndPersist {
+      withLostBed(cancelledLostBed)
+    }
+
     val results: List<DomainBedSummary> =
       realBedRepository.findAllBedsForPremises(premises.id)
 
-    assertThat(results.size).isEqualTo(3)
+    assertThat(results.size).isEqualTo(5)
 
     results.first { it.id == bedWithoutBooking.id }.let {
       assertThat(it.name).isEqualTo(bedWithoutBooking.name)
@@ -101,6 +141,22 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       assertThat(it.roomName).isEqualTo(bedWithLostBed.room.name)
       assertThat(it.bedBooked).isEqualTo(false)
       assertThat(it.bedOutOfService).isEqualTo(true)
+    }
+
+    results.first { it.id == bedWithCancelledLostBed.id }.let {
+      assertThat(it.name).isEqualTo(bedWithCancelledLostBed.name)
+      assertThat(it.roomId).isEqualTo(bedWithCancelledLostBed.room.id)
+      assertThat(it.roomName).isEqualTo(bedWithCancelledLostBed.room.name)
+      assertThat(it.bedBooked).isEqualTo(false)
+      assertThat(it.bedOutOfService).isEqualTo(false)
+    }
+
+    results.first { it.id == bedWithCancelledBooking.id }.let {
+      assertThat(it.name).isEqualTo(bedWithCancelledBooking.name)
+      assertThat(it.roomId).isEqualTo(bedWithCancelledBooking.room.id)
+      assertThat(it.roomName).isEqualTo(bedWithCancelledBooking.room.name)
+      assertThat(it.bedBooked).isEqualTo(false)
+      assertThat(it.bedOutOfService).isEqualTo(false)
     }
   }
 }
