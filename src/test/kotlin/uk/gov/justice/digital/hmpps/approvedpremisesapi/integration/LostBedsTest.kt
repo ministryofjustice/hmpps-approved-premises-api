@@ -69,7 +69,7 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBed = lostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
@@ -77,7 +77,19 @@ class LostBedsTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(listOf(lostBedsTransformer.transformJpaToApi(lostBeds)))
+      val cancelledLostBed = lostBedsEntityFactory.produceAndPersist() {
+        withStartDate(LocalDate.now().plusDays(2))
+        withEndDate(LocalDate.now().plusDays(4))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withBed(bed)
+        withPremises(premises)
+      }
+
+      lostBedCancellationEntityFactory.produceAndPersist() {
+        withLostBed(cancelledLostBed)
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(listOf(lostBedsTransformer.transformJpaToApi(lostBed)))
 
       webTestClient.get()
         .uri("/premises/${premises.id}/lost-beds")
