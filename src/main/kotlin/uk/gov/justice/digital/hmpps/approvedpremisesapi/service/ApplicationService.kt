@@ -41,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.Instant
@@ -181,10 +180,6 @@ class ApplicationService(
 
     if (validationErrors.any()) {
       return fieldValidationError
-    }
-
-    if (offenderService.getOASysNeeds(crn) !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("No OASys present for CRN: $crn")
     }
 
     var riskRatings: PersonRisks? = null

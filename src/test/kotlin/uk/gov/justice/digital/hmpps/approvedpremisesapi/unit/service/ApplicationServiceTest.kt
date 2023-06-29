@@ -11,7 +11,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
@@ -68,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -271,38 +269,6 @@ class ApplicationServiceTest {
     result as AuthorisableActionResult.Success
 
     assertThat(result.entity).isEqualTo(applicationEntity)
-  }
-
-  @Test
-  fun `createApprovedPremisesApplication throws InternalServerErrorProblem when no OASys needs present`() {
-    val crn = "CRN345"
-    val username = "SOMEPERSON"
-
-    val user = userWithUsername(username)
-
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(crn)
-      .produce()
-
-    every { mockOffenderService.getOASysNeeds(crn) } returns AuthorisableActionResult.NotFound()
-
-    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      ManagingTeamsResponse(
-        teamCodes = listOf("TEAMCODE"),
-      ),
-    )
-
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
-    every { mockUserService.getUserForRequest() } returns user
-
-    val thrownException = assertThrows<InternalServerErrorProblem> {
-      applicationService.createApprovedPremisesApplication(offenderDetails, user, "jwt", 123, "1", "A12HI")
-    }
-
-    assertThat(thrownException.detail).isEqualTo("No OASys present for CRN: $crn")
   }
 
   @Test
