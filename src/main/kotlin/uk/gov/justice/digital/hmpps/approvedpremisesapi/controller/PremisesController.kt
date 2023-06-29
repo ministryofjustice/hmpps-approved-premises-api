@@ -21,6 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBedMove
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1Arrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2Arrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
@@ -420,20 +423,49 @@ class PremisesController(
     val bedId = booking.bed?.id
       ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
-    if (booking.premises !is ApprovedPremisesEntity) {
-      throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
+    val result = when (body) {
+      is NewCas1Arrival -> {
+        val arrivalDate = LocalDate.from(body.arrivalDateTime.atZone(ZoneOffset.UTC))
+
+        throwIfLostBedDatesConflict(arrivalDate, body.expectedDepartureDate, null, bedId)
+
+        bookingService.createCas1Arrival(
+          booking = booking,
+          arrivalDateTime = body.arrivalDateTime,
+          expectedDepartureDate = body.expectedDepartureDate,
+          notes = body.notes,
+          keyWorkerStaffCode = body.keyWorkerStaffCode,
+          user = user,
+        )
+      }
+      is NewCas2Arrival -> {
+        throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
+        throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
+
+        bookingService.createArrival(
+          booking = booking,
+          arrivalDate = body.arrivalDate,
+          expectedDepartureDate = body.expectedDepartureDate,
+          notes = body.notes,
+          keyWorkerStaffCode = body.keyWorkerStaffCode,
+          user = user,
+        )
+      }
+      is NewCas3Arrival -> {
+        throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
+        throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
+
+        bookingService.createArrival(
+          booking = booking,
+          arrivalDate = body.arrivalDate,
+          expectedDepartureDate = body.expectedDepartureDate,
+          notes = body.notes,
+          keyWorkerStaffCode = body.keyWorkerStaffCode,
+          user = user,
+        )
+      }
+      else -> throw RuntimeException("Unsupported NewArrival type: ${body::class.qualifiedName}")
     }
-
-    throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
-
-    val result = bookingService.createArrival(
-      booking = booking,
-      arrivalDate = body.arrivalDate,
-      expectedDepartureDate = body.expectedDepartureDate,
-      notes = body.notes,
-      keyWorkerStaffCode = body.keyWorkerStaffCode,
-      user = user,
-    )
 
     val arrival = extractResultEntityOrThrow(result)
 

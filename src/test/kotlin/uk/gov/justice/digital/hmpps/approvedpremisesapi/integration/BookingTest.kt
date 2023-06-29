@@ -8,9 +8,10 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1Arrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
@@ -996,7 +997,8 @@ class BookingTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/arrivals")
       .bodyValue(
-        NewArrival(
+        NewCas3Arrival(
+          type = "CAS3",
           arrivalDate = LocalDate.parse("2022-08-12"),
           expectedDepartureDate = LocalDate.parse("2022-08-14"),
           notes = null,
@@ -1053,7 +1055,8 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewArrival(
+            NewCas3Arrival(
+              type = "CAS3",
               arrivalDate = LocalDate.parse("2022-06-16"),
               expectedDepartureDate = LocalDate.parse("2022-07-16"),
               notes = "Moved in late due to sickness",
@@ -1113,7 +1116,8 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewArrival(
+            NewCas3Arrival(
+              type = "CAS3",
               arrivalDate = LocalDate.parse("2022-06-16"),
               expectedDepartureDate = LocalDate.parse("2022-07-16"),
               notes = "Moved in late due to sickness",
@@ -1165,8 +1169,9 @@ class BookingTest : IntegrationTestBase() {
         .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          NewArrival(
-            arrivalDate = LocalDate.parse("2022-08-12"),
+          NewCas1Arrival(
+            type = "CAS1",
+            arrivalDateTime = Instant.parse("2022-08-12T15:30:00Z"),
             expectedDepartureDate = LocalDate.parse("2022-08-14"),
             notes = "Hello",
             keyWorkerStaffCode = keyWorker.code,
@@ -1178,6 +1183,7 @@ class BookingTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
         .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+        .jsonPath("$.arrivalTime").isEqualTo("15:30:00")
         .jsonPath("$.expectedDepartureDate").isEqualTo("2022-08-14")
         .jsonPath("$.notes").isEqualTo("Hello")
         .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
@@ -1227,8 +1233,9 @@ class BookingTest : IntegrationTestBase() {
         .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          NewArrival(
-            arrivalDate = LocalDate.parse("2023-05-20"),
+          NewCas1Arrival(
+            type = "CAS1",
+            arrivalDateTime = Instant.parse("2023-05-20T15:00:00Z"),
             expectedDepartureDate = LocalDate.parse("2023-06-05"),
             notes = "Hello",
             keyWorkerStaffCode = keyWorker.code,
@@ -1284,7 +1291,8 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewArrival(
+            NewCas3Arrival(
+              type = "CAS3",
               arrivalDate = LocalDate.parse("2022-08-12"),
               expectedDepartureDate = LocalDate.parse("2022-08-14"),
               notes = "Hello",
@@ -1346,7 +1354,8 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewArrival(
+            NewCas3Arrival(
+              type = "CAS3",
               arrivalDate = LocalDate.parse("2022-08-12"),
               expectedDepartureDate = LocalDate.parse("2022-08-14"),
               notes = "Hello",
@@ -1410,7 +1419,8 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
-            NewArrival(
+            NewCas3Arrival(
+              type = "CAS3",
               arrivalDate = LocalDate.parse("2022-08-12"),
               expectedDepartureDate = LocalDate.parse("2022-08-14"),
               notes = "Hello",
