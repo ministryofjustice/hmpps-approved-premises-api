@@ -45,6 +45,13 @@ class UserService(
     return getUserForUsername(username)
   }
 
+  fun getUserForRequestOrNull(): UserEntity? {
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrNull() ?: return null
+    val username = deliusPrincipal.name
+
+    return userRepository.findByDeliusUsername(username.uppercase())
+  }
+
   fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?) =
     userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
 
