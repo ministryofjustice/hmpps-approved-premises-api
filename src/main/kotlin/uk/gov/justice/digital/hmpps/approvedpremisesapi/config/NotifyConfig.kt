@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -30,9 +31,14 @@ enum class NotifyMode {
 
 @Configuration
 class NotifyClientConfig {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   @Bean("normalNotificationClient")
   fun normalNotificationClient(notifyConfig: NotifyConfig) = if (notifyConfig.mode != NotifyMode.DISABLED) {
-    NotificationClient(notifyConfig.apiKey)
+    log.info("Notify Api Key secret is: " + notifyConfig.apiKey?.length + " characters")
+    val client = NotificationClient(notifyConfig.apiKey)
+    log.info("Notify Api Service Id is: " + client.serviceId)
+    client
   } else {
     null
   }
