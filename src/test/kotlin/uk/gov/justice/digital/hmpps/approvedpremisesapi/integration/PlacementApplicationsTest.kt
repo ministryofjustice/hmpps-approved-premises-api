@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.time.LocalDate
@@ -511,7 +510,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting an in-progress placement request application returns successfully and updates the application`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { matcherUser, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
             createdByUser = user,

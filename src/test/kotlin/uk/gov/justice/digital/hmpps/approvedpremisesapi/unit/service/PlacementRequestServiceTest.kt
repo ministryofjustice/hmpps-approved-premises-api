@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -41,11 +40,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.util.UUID
 
 class PlacementRequestServiceTest {
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
-  private val userRepository = mockk<UserRepository>()
+  private val userService = mockk<UserService>()
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
   private val domainEventService = mockk<DomainEventService>()
   private val offenderService = mockk<OffenderService>()
@@ -57,7 +57,7 @@ class PlacementRequestServiceTest {
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
-    userRepository,
+    userService,
     bookingNotMadeRepository,
     domainEventService,
     offenderService,

@@ -261,6 +261,14 @@ class ApprovedPremisesApplicationEntity(
       requiredQualifications += UserQualification.WOMENS
     }
 
+    if (isEmergencyApplication == true) {
+      requiredQualifications += UserQualification.EMERGENCY
+    }
+
+    if (isEsapApplication == true) {
+      requiredQualifications += UserQualification.ESAP
+    }
+
     return requiredQualifications
   }
 
