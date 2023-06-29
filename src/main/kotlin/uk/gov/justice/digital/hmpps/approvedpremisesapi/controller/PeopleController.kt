@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAler
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -52,10 +53,21 @@ class PeopleController(
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
     }
 
-    val inmateDetail = when (val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(offenderDetails.otherIds.nomsNumber, "Inmate")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> inmateDetailResult.entity
+    var inmateDetail: InmateDetail?
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      inmateDetail = null
+    } else {
+      inmateDetail = when (
+        val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(
+          offenderDetails.otherIds.crn,
+          offenderDetails.otherIds.nomsNumber,
+        )
+      ) {
+        is AuthorisableActionResult.NotFound -> null
+        is AuthorisableActionResult.Unauthorised -> null
+        is AuthorisableActionResult.Success -> inmateDetailResult.entity
+      }
     }
 
     return ResponseEntity.ok(
