@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -126,24 +125,7 @@ class UserAccessService(
   private fun userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(
     user: UserEntity,
     application: ApprovedPremisesApplicationEntity,
-  ): Boolean {
-    val authorisedExceptLao = if (user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
-      true
-    } else {
-      val userDetails = when (val userDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
-        is ClientResult.Success -> userDetailsResult.body
-        is ClientResult.Failure -> userDetailsResult.throwException()
-      }
-
-      application.hasAnyTeamCode(userDetails.teams?.map { it.code } ?: emptyList())
-    }
-
-    if (!authorisedExceptLao) return false
-
-    val offenderResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-
-    return offenderResult is AuthorisableActionResult.Success
-  }
+  ) = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) is AuthorisableActionResult.Success
 
   private fun userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(
     user: UserEntity,

@@ -106,7 +106,7 @@ class ApplicationsController(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
-    val (offender, inmate) = getPersonDetail(body.crn)
+    val (offender, inmate) = getPersonDetail(body.crn, true)
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
       ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
@@ -243,10 +243,16 @@ class ApplicationsController(
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, offender, inmate))
   }
 
-  private fun getPersonDetail(crn: String): Pair<OffenderDetailSummary, InmateDetail> {
+  private fun getPersonDetail(crn: String, forceFullLaoCheck: Boolean = false): Pair<OffenderDetailSummary, InmateDetail> {
     val user = userService.getUserForRequest()
 
-    val offenderResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val ignoreLao = if (forceFullLaoCheck) {
+      false
+    } else {
+      user.hasQualification(UserQualification.LAO)
+    }
+
+    val offenderResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, ignoreLao)
 
     if (offenderResult !is AuthorisableActionResult.Success) {
       throw InternalServerErrorProblem("Unable to get Person via crn: $crn")

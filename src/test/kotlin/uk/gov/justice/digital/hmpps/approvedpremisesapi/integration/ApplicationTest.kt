@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -1057,49 +1056,6 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new application returns 400 when CRN not managed by any of User's teams`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
-
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          userEntity.deliusStaffCode!!,
-          ManagingTeamsResponse(
-            teamCodes = emptyList(),
-          ),
-        )
-
-        val result = webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isBadRequest
-          .returnResult<ValidationError>()
-          .responseBody
-          .blockFirst()
-
-        assertThat(result.invalidParams).anyMatch {
-          it.propertyName == "$.crn" &&
-            it.errorType == "notInCaseload"
-        }
-      }
-    }
-  }
-
-  @Test
   fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
@@ -1110,7 +1066,6 @@ class ApplicationTest : IntegrationTestBase() {
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
           offenderDetails.otherIds.crn,
-          userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
             teamCodes = listOf(offenderDetails.otherIds.crn),
           ),
@@ -1149,7 +1104,6 @@ class ApplicationTest : IntegrationTestBase() {
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
           offenderDetails.otherIds.crn,
-          userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1"),
           ),
@@ -1199,7 +1153,6 @@ class ApplicationTest : IntegrationTestBase() {
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
           offenderDetails.otherIds.crn,
-          userEntity.deliusStaffCode!!,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1"),
           ),

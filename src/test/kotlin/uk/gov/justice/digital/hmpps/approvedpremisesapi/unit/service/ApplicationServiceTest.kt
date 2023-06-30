@@ -306,31 +306,6 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApprovedPremisesApplication returns FieldValidationError when CRN is not managed by any teams the user is part of`() {
-    val crn = "CRN345"
-    val username = "SOMEPERSON"
-
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
-
-    val user = userWithUsername(username)
-
-    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
-      HttpStatus.OK,
-      ManagingTeamsResponse(
-        teamCodes = emptyList(),
-      ),
-    )
-
-    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
-
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "notInCaseload")
-  }
-
-  @Test
   fun `createApprovedPremisesApplication throws InternalServerErrorProblem when nomsNumber not present`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
@@ -359,7 +334,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getOASysNeeds(crn) } returns AuthorisableActionResult.NotFound()
 
-    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
+    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
       HttpStatus.OK,
       ManagingTeamsResponse(
         teamCodes = listOf("TEAMCODE"),
@@ -389,7 +364,7 @@ class ApplicationServiceTest {
 
     val user = userWithUsername(username)
 
-    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
+    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
       HttpStatus.OK,
       ManagingTeamsResponse(
         teamCodes = listOf("TEAMCODE"),
@@ -418,7 +393,7 @@ class ApplicationServiceTest {
       NeedsDetailsFactory().produce(),
     )
 
-    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!) } returns ClientResult.Success(
+    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
       HttpStatus.OK,
       ManagingTeamsResponse(
         teamCodes = listOf("TEAMCODE"),

@@ -626,48 +626,8 @@ class UserAccessServiceTest {
     assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
-  fun `userCanViewApplication for CAS1 returns false if the user did not create the application, has any of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, CAS1_MANAGER roles but they cannot view the Offender (LAO)`(role: UserRole) {
-    user.addRoleForUnitTest(role)
-
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
-      .produce()
-
-    every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
-
-    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
-  fun `userCanViewApplication for CAS1 returns true if the user did not create the application but has any of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, CAS1_MANAGER roles, and they can view the Offender (LAO)`(role: UserRole) {
-    user.addRoleForUnitTest(role)
-
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
-      .produce()
-
-    every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
-
-    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
-  }
-
   @Test
-  fun `userCanViewApplication returns true if the application is an Approved Premises application, it is in the user's caseload and the user can access the Offender (LAO)`() {
+  fun `userCanViewApplication returns true if the application is an Approved Premises application and the user can access the Offender (LAO)`() {
     val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
@@ -695,7 +655,7 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewApplication returns false if the application is an Approved Premises application, it is in the user's caseload but the user cannot access the Offender (LAO)`() {
+  fun `userCanViewApplication returns false if the application is an Approved Premises application and the user cannot access the Offender (LAO)`() {
     val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()
@@ -716,30 +676,6 @@ class UserAccessServiceTest {
     communityApiStaffUserDetailsReturnsTeamCodes("TEAM1")
 
     every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
-
-    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
-  }
-
-  @Test
-  fun `userCanViewApplication returns false otherwise for Approved Premises`() {
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
-      .withTeamCodes(mutableListOf())
-      .produce()
-
-    application.teamCodes.add(
-      ApplicationTeamCodeEntityFactory()
-        .withTeamCode("TEAM1")
-        .withApplication(application)
-        .produce(),
-    )
-
-    communityApiStaffUserDetailsReturnsTeamCodes("TEAM2")
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
   }
