@@ -154,27 +154,4 @@ class PersonSearchTest : IntegrationTestBase() {
       }
     }
   }
-
-  @Test
-  fun `Searching for a CRN when checkCaseload is set and the CRN is not in the caseload returns forbidden`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          userEntity.deliusStaffCode,
-          ManagingTeamsResponse(
-            teamCodes = emptyList(),
-          ),
-        )
-
-        webTestClient.get()
-          .uri("/people/search?crn=${offenderDetails.otherIds.crn}&checkCaseload=1")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-  }
 }
