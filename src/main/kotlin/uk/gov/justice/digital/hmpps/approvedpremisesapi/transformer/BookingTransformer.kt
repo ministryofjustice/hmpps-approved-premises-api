@@ -55,6 +55,8 @@ class BookingTransformer(
       turnarounds = jpa.turnarounds.map(turnaroundTransformer::transformJpaToApi),
       turnaroundStartDate = if (hasNonZeroDayTurnaround) workingDayCountService.addWorkingDays(jpa.departureDate, 1) else null,
       effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayCountService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
+      applicationId = jpa.application?.id,
+      assessmentId = jpa.application?.getLatestAssessment()?.id,
     )
   }
 
