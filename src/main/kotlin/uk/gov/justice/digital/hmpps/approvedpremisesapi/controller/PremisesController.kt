@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import arrow.core.Ior
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -121,6 +122,7 @@ class PremisesController(
   private val bedDetailTransformer: BedDetailTransformer,
   private val calendarTransformer: CalendarTransformer,
 ) : PremisesApiDelegate {
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun premisesSummaryGet(xServiceName: ServiceName): ResponseEntity<List<PremisesSummary>> {
     val transformedSummaries = when (xServiceName) {
@@ -259,21 +261,24 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(
-      premises.bookings.map {
+      premises.bookings.mapNotNull {
         val offenderResult = offenderService.getOffenderByCrn(it.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
         if (offenderResult !is AuthorisableActionResult.Success) {
-          throw InternalServerErrorProblem("Unable to get Person via crn: ${it.crn}")
+          log.warn("Unable to get Person via crn: ${it.crn}")
+          return@mapNotNull null
         }
 
         if (offenderResult.entity.otherIds.nomsNumber == null) {
-          throw InternalServerErrorProblem("No nomsNumber present for CRN")
+          log.warn("No nomsNumber present for CRN: ${it.crn}")
+          return@mapNotNull null
         }
 
         val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.crn, offenderResult.entity.otherIds.nomsNumber)
 
         if (inmateDetailResult !is AuthorisableActionResult.Success) {
-          throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${it.crn}")
+          log.warn("Unable to get InmateDetail via crn: ${it.crn}")
+          return@mapNotNull null
         }
 
         val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
