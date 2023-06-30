@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -189,7 +190,7 @@ class PlacementRequestService(
 
     val application = placementRequest.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
       is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Not Made Domain Event: Unauthorised")
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Not Made Domain Event: Not Found")

@@ -240,7 +240,7 @@ class AssessmentService(
 
     val application = savedAssessment.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
       is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
@@ -365,7 +365,7 @@ class AssessmentService(
 
     val application = savedAssessment.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername)) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
       is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
