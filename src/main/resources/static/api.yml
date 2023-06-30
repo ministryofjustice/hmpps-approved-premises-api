@@ -3652,6 +3652,12 @@ components:
             effectiveEndDate:
               type: string
               format: date
+            applicationId:
+              type: string
+              format: uuid
+            assessmentId:
+              type: string
+              format: uuid
           required:
             - status
             - extensions

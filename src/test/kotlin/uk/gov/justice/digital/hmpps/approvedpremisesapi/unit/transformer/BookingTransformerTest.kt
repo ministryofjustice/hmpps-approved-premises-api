@@ -24,8 +24,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -239,6 +244,81 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+      ),
+    )
+  }
+
+  @Test
+  fun `Approved Premises entity with application and assessment is correctly transformed`() {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory().withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }.produce(),
+      )
+      .produce()
+
+    val oldAssessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withCreatedAt(OffsetDateTime.now().minusDays(5))
+      .withAllocatedToUser(
+        UserEntityFactory().withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }.produce(),
+      )
+      .produce()
+
+    val latestAssessment = AssessmentEntityFactory()
+      .withApplication(application)
+      .withCreatedAt(OffsetDateTime.now().minusDays(2))
+      .withAllocatedToUser(
+        UserEntityFactory().withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }.produce(),
+      )
+      .produce()
+
+    application.assessments = mutableListOf(oldAssessment, latestAssessment)
+
+    val awaitingArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"), application = application)
+
+    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
+
+    assertThat(transformedBooking).isEqualTo(
+      Booking(
+        id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
+        person = Person(
+          crn = "crn",
+          name = "first last",
+          dateOfBirth = LocalDate.parse("2022-09-08"),
+          sex = "Male",
+          status = Person.Status.inCommunity,
+          nomsNumber = "NOMS321",
+          nationality = "English",
+          religionOrBelief = null,
+          genderIdentity = null,
+          prisonName = null,
+        ),
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = LocalDate.parse("2022-08-30"),
+        status = BookingStatus.awaitingMinusArrival,
+        extensions = listOf(),
+        serviceName = ServiceName.approvedPremises,
+        originalArrivalDate = LocalDate.parse("2022-08-10"),
+        originalDepartureDate = LocalDate.parse("2022-08-30"),
+        createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
+        departures = listOf(),
+        cancellations = listOf(),
+        turnarounds = listOf(),
+        effectiveEndDate = LocalDate.parse("2022-08-30"),
+        applicationId = application.id,
+        assessmentId = latestAssessment.id,
       ),
     )
   }
