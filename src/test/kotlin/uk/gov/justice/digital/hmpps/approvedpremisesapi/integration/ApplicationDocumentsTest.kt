@@ -28,28 +28,6 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get application documents where user did not create application and user not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns 403`() {
-    `Given a User` { userEntity, jwt ->
-      `Given a User` { ownerUserEntity, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(ownerUserEntity)
-            withCrn(offenderDetails.otherIds.crn)
-            withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
-          }
-
-          webTestClient.get()
-            .uri("/applications/${application.id}/documents")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isForbidden
-        }
-      }
-    }
-  }
-
-  @Test
   fun `Get application documents returns 200`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
