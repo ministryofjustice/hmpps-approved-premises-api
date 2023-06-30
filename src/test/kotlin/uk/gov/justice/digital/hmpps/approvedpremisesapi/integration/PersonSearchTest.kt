@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import java.time.LocalDate
@@ -128,29 +126,6 @@ class PersonSearchTest : IntegrationTestBase() {
               ),
             ),
           )
-      }
-    }
-  }
-
-  @Test
-  fun `Searching for a CRN when checkCaseload is set returns OK`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          userEntity.deliusStaffCode,
-          ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1"),
-          ),
-        )
-
-        webTestClient.get()
-          .uri("/people/search?crn=${offenderDetails.otherIds.crn}&checkCaseload=1")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
       }
     }
   }

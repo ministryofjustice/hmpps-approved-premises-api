@@ -171,15 +171,11 @@ class ApplicationService(
       throw InternalServerErrorProblem("No nomsNumber present for CRN")
     }
 
-    val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn, user.deliusStaffCode!!)
+    val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)
 
     val managingTeamCodes = when (managingTeamsResult) {
       is ClientResult.Success -> managingTeamsResult.body.teamCodes
       is ClientResult.Failure -> managingTeamsResult.throwException()
-    }
-
-    if (managingTeamCodes.isEmpty()) {
-      return "$.crn" hasSingleValidationError "notInCaseload"
     }
 
     if (convictionId == null) {

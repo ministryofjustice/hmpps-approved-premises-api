@@ -24,7 +24,7 @@ class ApDeliusContextApiClient(
   }
 
   @Cacheable(value = ["teamsManagingCaseCache"], unless = IS_NOT_SUCCESSFUL)
-  fun getTeamsManagingCase(crn: String, staffCode: String) = getRequest<ManagingTeamsResponse> {
-    path = "/teams/managingCase/$crn?staffCode=$staffCode"
+  fun getTeamsManagingCase(crn: String) = getRequest<ManagingTeamsResponse> {
+    path = "/teams/managingCase/$crn"
   }
 }
