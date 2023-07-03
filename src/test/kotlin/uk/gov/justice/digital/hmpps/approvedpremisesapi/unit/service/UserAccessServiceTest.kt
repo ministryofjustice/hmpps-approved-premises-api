@@ -945,4 +945,50 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
   }
+
+  @Test
+  fun `userCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanViewReport(user)).isTrue
+  }
+
+  @Test
+  fun `userCanViewReport returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanViewReport(user)).isFalse
+  }
+
+  @Test
+  fun `userCanViewReport returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.userCanViewReport(user)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isTrue
+  }
+
+  @Test
+  fun `currentUserCanViewReport returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewReport returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.currentUserCanViewReport()).isFalse
+  }
 }

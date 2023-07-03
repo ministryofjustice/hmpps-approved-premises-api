@@ -93,6 +93,15 @@ class UserAccessService(
     else -> false
   }
 
+  fun currentUserCanViewReport() =
+    userCanViewReport(userService.getUserForRequest())
+
+  fun userCanViewReport(user: UserEntity) =
+    when (currentRequest.getHeader("X-Service-Name")) {
+      ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
+      else -> false
+    }
+
   fun getApprovedPremisesApplicationAccessLevelForCurrentUser(): ApprovedPremisesApplicationAccessLevel =
     getApprovedPremisesApplicationAccessLevelForUser(userService.getUserForRequest())
 
