@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
+import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -81,6 +83,14 @@ class ApplicationTest : IntegrationTestBase() {
 
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
+
+  @AfterEach
+  fun afterEach() {
+    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
+    // Manually clearing after each test seems to fix this.
+    clearMocks(realApplicationTeamCodeRepository)
+  }
 
   @Test
   fun `Get all applications without JWT returns 401`() {
@@ -1047,62 +1057,6 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new application returns 500 when a person has no NOMS number`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, inmateDetails ->
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
-
-        webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is5xxServerError
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
-      }
-    }
-  }
-
-  @Test
-  fun `Create new application returns 500 when the person cannot be fetched from the prisons API`() {
-    `Given a User` { userEntity, jwt ->
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withNomsNumber("ABC123")
-        .produce()
-
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-
-      webTestClient.post()
-        .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewApplication(
-            crn = offenderDetails.otherIds.crn,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .is5xxServerError
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: ${offenderDetails.otherIds.crn}")
-    }
-  }
-
-  @Test
   fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
@@ -1234,6 +1188,95 @@ class ApplicationTest : IntegrationTestBase() {
           it.person.crn == offenderDetails.otherIds.crn &&
             it.schemaVersion == applicationSchema.id
         }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new application returns successfully when a person has no NOMS number`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = { withoutNomsNumber() },
+      ) { offenderDetails, inmateDetails ->
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+          offenderDetails.otherIds.crn,
+          ManagingTeamsResponse(
+            teamCodes = listOf(offenderDetails.otherIds.crn),
+          ),
+        )
+
+        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(ApprovedPremisesApplication::class.java)
+
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
+
+        assertThat(result.responseBody.blockFirst()).matches {
+          it.person.crn == offenderDetails.otherIds.crn
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
+    `Given a User` { userEntity, jwt ->
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withNomsNumber("ABC123")
+        .produce()
+
+      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
+      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+      APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+        offenderDetails.otherIds.crn,
+        ManagingTeamsResponse(
+          teamCodes = listOf(offenderDetails.otherIds.crn),
+        ),
+      )
+
+      val result = webTestClient.post()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewApplication(
+            crn = offenderDetails.otherIds.crn,
+            convictionId = 123,
+            deliusEventNumber = "1",
+            offenceId = "789",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .returnResult(ApprovedPremisesApplication::class.java)
+
+      assertThat(result.responseHeaders["Location"]).anyMatch {
+        it.matches(Regex("/applications/.+"))
+      }
+
+      assertThat(result.responseBody.blockFirst()).matches {
+        it.person.crn == offenderDetails.otherIds.crn
       }
     }
   }

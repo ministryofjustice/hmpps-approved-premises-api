@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -151,7 +152,7 @@ class ApplicationService(
   }
 
   fun createApprovedPremisesApplication(
-    crn: String,
+    offenderDetails: OffenderDetailSummary,
     user: UserEntity,
     jwt: String,
     convictionId: Long?,
@@ -159,21 +160,9 @@ class ApplicationService(
     offenceId: String?,
     createWithRisks: Boolean? = true,
   ) = validated<ApplicationEntity> {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+    val crn = offenderDetails.otherIds.crn
 
-    val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    }
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
-
-    val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)
-
-    val managingTeamCodes = when (managingTeamsResult) {
+    val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)) {
       is ClientResult.Success -> managingTeamsResult.body.teamCodes
       is ClientResult.Failure -> managingTeamsResult.throwException()
     }
@@ -210,7 +199,7 @@ class ApplicationService(
       }
     }
 
-    val createdApplication = applicationRepository.save(
+    val createdApplication = applicationRepository.saveAndFlush(
       ApprovedPremisesApplicationEntity(
         id = UUID.randomUUID(),
         crn = crn,

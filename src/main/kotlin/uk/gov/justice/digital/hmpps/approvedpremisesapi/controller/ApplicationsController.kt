@@ -110,7 +110,7 @@ class ApplicationsController(
     val (offender, inmate) = getPersonDetail(body.crn, true)
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
-      ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
+      ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(offender, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
       ServiceName.cas2 -> applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
       ServiceName.temporaryAccommodation -> {
         when (val actionResult = applicationService.createTemporaryAccommodationApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
