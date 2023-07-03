@@ -5,7 +5,7 @@ plugins {
   kotlin("plugin.spring") version "1.8.22"
   id("org.openapi.generator") version "5.4.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.8.22"
-  id("io.gatling.gradle") version "3.9.5"
+  id("io.gatling.gradle") version "3.9.5.1"
 }
 
 configurations {
