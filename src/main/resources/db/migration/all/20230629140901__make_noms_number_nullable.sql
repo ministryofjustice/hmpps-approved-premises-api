@@ -1,0 +1,2 @@
+ALTER TABLE applications ALTER COLUMN noms_number DROP NOT NULL;
+ALTER TABLE bookings ALTER COLUMN noms_number DROP NOT NULL;

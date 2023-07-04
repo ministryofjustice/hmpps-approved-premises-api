@@ -11,7 +11,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
@@ -68,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -274,93 +272,13 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApprovedPremisesApplication returns FieldValidationError when CRN does not exist`() {
-    val crn = "CRN345"
-    val username = "SOMEPERSON"
-
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
-
-    val user = userWithUsername(username)
-
-    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
-
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
-  }
-
-  @Test
-  fun `createApprovedPremisesApplication returns FieldValidationError when CRN is LAO restricted`() {
-    val crn = "CRN345"
-    val username = "SOMEPERSON"
-
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
-
-    val user = userWithUsername(username)
-
-    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
-
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
-  }
-
-  @Test
-  fun `createApprovedPremisesApplication throws InternalServerErrorProblem when nomsNumber not present`() {
-    val crn = "CRN345"
-    val username = "SOMEPERSON"
-
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory()
-        .withoutNomsNumber()
-        .produce(),
-    )
-
-    val user = userWithUsername(username)
-
-    val thrownException = assertThrows<InternalServerErrorProblem> {
-      applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
-    }
-
-    assertThat(thrownException.detail).isEqualTo("No nomsNumber present for CRN")
-  }
-
-  @Test
-  fun `createApprovedPremisesApplication throws InternalServerErrorProblem when no OASys needs present`() {
-    val crn = "CRN345"
-    val username = "SOMEPERSON"
-
-    val user = userWithUsername(username)
-
-    every { mockOffenderService.getOASysNeeds(crn) } returns AuthorisableActionResult.NotFound()
-
-    every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      ManagingTeamsResponse(
-        teamCodes = listOf("TEAMCODE"),
-      ),
-    )
-
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
-    every { mockUserService.getUserForRequest() } returns user
-
-    val thrownException = assertThrows<InternalServerErrorProblem> {
-      applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
-    }
-
-    assertThat(thrownException.detail).isEqualTo("No OASys present for CRN: $crn")
-  }
-
-  @Test
   fun `createApprovedPremisesApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
 
     val user = userWithUsername(username)
 
@@ -371,7 +289,7 @@ class ApplicationServiceTest {
       ),
     )
 
-    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", null, null, null)
+    val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, "jwt", null, null, null)
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -400,12 +318,13 @@ class ApplicationServiceTest {
       ),
     )
 
-    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
     every { mockUserService.getUserForRequest() } returns user
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
-    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
 
     val riskRatings = PersonRisksFactory()
@@ -441,7 +360,7 @@ class ApplicationServiceTest {
 
     every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
 
-    val result = applicationService.createApprovedPremisesApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, "jwt", 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.Success).isTrue
     result as ValidatableActionResult.Success

@@ -320,4 +320,73 @@ class PersonTransformerTest {
       ),
     )
   }
+
+  @Test
+  fun `transformModelToApi transforms correctly without a NOMS record`() {
+    val offenderDetailSummary = OffenderDetailSummary(
+      offenderId = 547839,
+      title = "Mr",
+      firstName = "Greggory",
+      middleNames = listOf(),
+      surname = "Someone",
+      previousSurname = null,
+      preferredName = null,
+      dateOfBirth = LocalDate.parse("1980-09-12"),
+      gender = "Male",
+      otherIds = OffenderIds(
+        crn = "CRN123",
+        croNumber = null,
+        immigrationNumber = null,
+        mostRecentPrisonNumber = null,
+        niNumber = null,
+        nomsNumber = "NOMS321",
+        pncNumber = null,
+      ),
+      offenderProfile = OffenderProfile(
+        ethnicity = "White and Asian",
+        nationality = "Spanish",
+        secondaryNationality = null,
+        notes = null,
+        immigrationStatus = null,
+        offenderLanguages = OffenderLanguages(
+          primaryLanguage = null,
+          otherLanguages = listOf(),
+          languageConcerns = null,
+          requiresInterpreter = null,
+        ),
+        religion = "Sikh",
+        sexualOrientation = null,
+        offenderDetails = null,
+        remandStatus = null,
+        riskColour = null,
+        disabilities = listOf(),
+        genderIdentity = null,
+        selfDescribedGender = null,
+      ),
+      softDeleted = null,
+      currentDisposal = "",
+      partitionArea = null,
+      currentRestriction = false,
+      currentExclusion = false,
+      isActiveProbationManagedSentence = false,
+    )
+
+    val result = personTransformer.transformModelToApi(offenderDetailSummary, null)
+
+    assertThat(result).isEqualTo(
+      Person(
+        crn = "CRN123",
+        name = "Greggory Someone",
+        dateOfBirth = LocalDate.parse("1980-09-12"),
+        sex = "Male",
+        status = Person.Status.unknown,
+        nomsNumber = null,
+        ethnicity = "White and Asian",
+        nationality = "Spanish",
+        religionOrBelief = "Sikh",
+        genderIdentity = null,
+        prisonName = null,
+      ),
+    )
+  }
 }

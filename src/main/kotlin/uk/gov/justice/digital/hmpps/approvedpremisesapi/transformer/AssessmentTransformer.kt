@@ -31,7 +31,7 @@ class AssessmentTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail) = when (jpa.application) {
+  fun transformJpaToApi(jpa: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?) = when (jpa.application) {
     is ApprovedPremisesApplicationEntity -> ApprovedPremisesAssessment(
       id = jpa.id,
       application = applicationsTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail) as ApprovedPremisesApplication,
@@ -69,7 +69,7 @@ class AssessmentTransformer(
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
 
-  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail): AssessmentSummary =
+  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): AssessmentSummary =
     AssessmentSummary(
       type = when (ase.type) {
         "approved-premises" -> AssessmentSummary.Type.cAS1

@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
+import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -80,6 +83,14 @@ class ApplicationTest : IntegrationTestBase() {
 
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
+
+  @AfterEach
+  fun afterEach() {
+    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
+    // Manually clearing after each test seems to fix this.
+    clearMocks(realApplicationTeamCodeRepository)
+  }
 
   @Test
   fun `Get all applications without JWT returns 401`() {
@@ -439,7 +450,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get list of applications returns 500 when a person has no NOMS number`() {
+  fun `Get list of applications returns successfully when a person has no NOMS number`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -448,24 +459,36 @@ class ApplicationTest : IntegrationTestBase() {
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() },
       ) { offenderDetails, inmateDetails ->
-        produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
+        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
         CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-        webTestClient.get()
+        val rawResponseBody = webTestClient.get()
           .uri("/applications")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .is5xxServerError
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody =
+          objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
+
+        assertThat(responseBody).matches {
+          application.id == it[0].id &&
+            application.crn == it[0].person.crn &&
+            it[0].person.nomsNumber == null &&
+            it[0].person.status == Person.Status.unknown &&
+            it[0].person.prisonName == null
+        }
       }
     }
   }
 
   @Test
-  fun `Get list of applications returns 500 when the person cannot be fetched from the prisons API`() {
+  fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -473,7 +496,7 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       val crn = "X1234"
 
-      produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withCrn(crn)
@@ -487,14 +510,26 @@ class ApplicationTest : IntegrationTestBase() {
       PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
       loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
-      webTestClient.get()
+      val rawResponseBody = webTestClient.get()
         .uri("/applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
-        .is5xxServerError
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody =
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
+
+      assertThat(responseBody).matches {
+        application.id == it[0].id &&
+          application.crn == it[0].person.crn &&
+          it[0].person.nomsNumber == null &&
+          it[0].person.status == Person.Status.unknown &&
+          it[0].person.prisonName == null
+      }
     }
   }
 
@@ -602,7 +637,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get single application returns 500 when a person has no NOMS number`() {
+  fun `Get single application returns successfully when a person has no NOMS number`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -615,20 +650,31 @@ class ApplicationTest : IntegrationTestBase() {
 
         CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-        webTestClient.get()
+        val rawResponseBody = webTestClient.get()
           .uri("/applications/${application.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .is5xxServerError
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+        assertThat(responseBody).matches {
+          application.id == it.id &&
+            application.crn == it.person.crn &&
+            it.person.nomsNumber == null &&
+            it.person.status == Person.Status.unknown &&
+            it.person.prisonName == null
+        }
       }
     }
   }
 
   @Test
-  fun `Get single application returns 500 when the person cannot be fetched from the prisons API`() {
+  fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -650,14 +696,25 @@ class ApplicationTest : IntegrationTestBase() {
 
       CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-      webTestClient.get()
+      val rawResponseBody = webTestClient.get()
         .uri("/applications/${application.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
-        .is5xxServerError
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: $crn")
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+      assertThat(responseBody).matches {
+        application.id == it.id &&
+          application.crn == it.person.crn &&
+          it.person.nomsNumber == null &&
+          it.person.status == Person.Status.unknown &&
+          it.person.prisonName == null
+      }
     }
   }
 
@@ -1000,62 +1057,6 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new application returns 500 when a person has no NOMS number`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, inmateDetails ->
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
-
-        webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is5xxServerError
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No nomsNumber present for CRN")
-      }
-    }
-  }
-
-  @Test
-  fun `Create new application returns 500 when the person cannot be fetched from the prisons API`() {
-    `Given a User` { userEntity, jwt ->
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withNomsNumber("ABC123")
-        .produce()
-
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-
-      webTestClient.post()
-        .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewApplication(
-            crn = offenderDetails.otherIds.crn,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .is5xxServerError
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("Unable to get InmateDetail via crn: ${offenderDetails.otherIds.crn}")
-    }
-  }
-
-  @Test
   fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
@@ -1187,6 +1188,95 @@ class ApplicationTest : IntegrationTestBase() {
           it.person.crn == offenderDetails.otherIds.crn &&
             it.schemaVersion == applicationSchema.id
         }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new application returns successfully when a person has no NOMS number`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = { withoutNomsNumber() },
+      ) { offenderDetails, inmateDetails ->
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+          offenderDetails.otherIds.crn,
+          ManagingTeamsResponse(
+            teamCodes = listOf(offenderDetails.otherIds.crn),
+          ),
+        )
+
+        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(ApprovedPremisesApplication::class.java)
+
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
+
+        assertThat(result.responseBody.blockFirst()).matches {
+          it.person.crn == offenderDetails.otherIds.crn
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
+    `Given a User` { userEntity, jwt ->
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withNomsNumber("ABC123")
+        .produce()
+
+      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
+      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
+      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+      APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+        offenderDetails.otherIds.crn,
+        ManagingTeamsResponse(
+          teamCodes = listOf(offenderDetails.otherIds.crn),
+        ),
+      )
+
+      val result = webTestClient.post()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewApplication(
+            crn = offenderDetails.otherIds.crn,
+            convictionId = 123,
+            deliusEventNumber = "1",
+            offenceId = "789",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .returnResult(ApprovedPremisesApplication::class.java)
+
+      assertThat(result.responseHeaders["Location"]).anyMatch {
+        it.matches(Regex("/applications/.+"))
+      }
+
+      assertThat(result.responseBody.blockFirst()).matches {
+        it.person.crn == offenderDetails.otherIds.crn
       }
     }
   }

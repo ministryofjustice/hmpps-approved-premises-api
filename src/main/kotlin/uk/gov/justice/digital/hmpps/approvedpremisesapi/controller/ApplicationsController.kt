@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -109,7 +110,7 @@ class ApplicationsController(
     val (offender, inmate) = getPersonDetail(body.crn, true)
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
-      ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
+      ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(offender, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
       ServiceName.cas2 -> applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
       ServiceName.temporaryAccommodation -> {
         when (val actionResult = applicationService.createTemporaryAccommodationApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
@@ -243,7 +244,7 @@ class ApplicationsController(
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, offender, inmate))
   }
 
-  private fun getPersonDetail(crn: String, forceFullLaoCheck: Boolean = false): Pair<OffenderDetailSummary, InmateDetail> {
+  private fun getPersonDetail(crn: String, forceFullLaoCheck: Boolean = false): Pair<OffenderDetailSummary, InmateDetail?> {
     val user = userService.getUserForRequest()
 
     val ignoreLao = if (forceFullLaoCheck) {
@@ -252,23 +253,8 @@ class ApplicationsController(
       user.hasQualification(UserQualification.LAO)
     }
 
-    val offenderResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, ignoreLao)
-
-    if (offenderResult !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
-    }
-
-    if (offenderResult.entity.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
-
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(crn, offenderResult.entity.otherIds.nomsNumber)
-
-    if (inmateDetailResult !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("Unable to get InmateDetail via crn: $crn")
-    }
-
-    return Pair(offenderResult.entity, inmateDetailResult.entity)
+    return getPersonDetailsForCrn(log, crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
+      ?: throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
   }
 
   private fun getAssessmentTask(assessment: AssessmentEntity, user: UserEntity): AssessmentTask {

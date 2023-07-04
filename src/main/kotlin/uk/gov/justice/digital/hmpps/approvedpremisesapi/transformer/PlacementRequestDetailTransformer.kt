@@ -12,7 +12,7 @@ class PlacementRequestDetailTransformer(
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val cancellationTransformer: CancellationTransformer,
 ) {
-  fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail, cancellations: List<CancellationEntity>): PlacementRequestDetail {
+  fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?, cancellations: List<CancellationEntity>): PlacementRequestDetail {
     val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, offenderDetailSummary, inmateDetail)
 
     return PlacementRequestDetail(

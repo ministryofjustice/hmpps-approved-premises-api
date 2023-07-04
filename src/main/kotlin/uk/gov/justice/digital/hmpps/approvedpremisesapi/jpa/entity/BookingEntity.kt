@@ -104,7 +104,7 @@ data class BookingEntity(
   val createdAt: OffsetDateTime,
   @OneToMany(mappedBy = "booking")
   var turnarounds: MutableList<TurnaroundEntity>,
-  var nomsNumber: String,
+  var nomsNumber: String?,
   @OneToOne(mappedBy = "booking")
   var placementRequest: PlacementRequestEntity?,
 ) {
