@@ -79,6 +79,25 @@ class CaseNotesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Getting case notes for a CRN without a NOMS number returns 404`() {
+    `Given a User` { _, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withNomsNumber(null)
+        },
+      ) { offenderDetails, _ ->
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+  }
+
+  @Test
   fun `Getting case notes returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->

@@ -96,4 +96,23 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
       }
     }
   }
+
+  @Test
+  fun `Getting ACCT alerts for a CRN without a NOMS number returns 404`() {
+    `Given a User` { _, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withNomsNumber(null)
+        },
+      ) { offenderDetails, _ ->
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+  }
 }

@@ -267,7 +267,7 @@ class BookingService(
   fun createApprovedPremisesAdHocBooking(
     user: UserEntity? = null,
     crn: String,
-    nomsNumber: String,
+    nomsNumber: String?,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,
@@ -426,7 +426,7 @@ class BookingService(
             bookingId = booking.id,
             personReference = PersonReference(
               crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
+              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = application.eventNumber,
             createdAt = bookingCreatedAt.toInstant(),
@@ -462,7 +462,7 @@ class BookingService(
     user: UserEntity,
     premises: TemporaryAccommodationPremisesEntity,
     crn: String,
-    nomsNumber: String,
+    nomsNumber: String?,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,

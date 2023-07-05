@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
@@ -15,9 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAler
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -31,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 
 @Service
 class PeopleController(
@@ -46,29 +46,15 @@ class PeopleController(
   private val convictionTransformer: ConvictionTransformer,
   private val userService: UserService,
 ) : PeopleApiDelegate {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
-    val offenderDetails = getOffenderDetailsIgnoringLaoQualification(crn)
+    val user = userService.getUserForRequest()
 
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
+    val personDetails = getPersonDetailsForCrn(log, crn, user.deliusUsername, offenderService, true)
+      ?: throw NotFoundProblem(crn, "Person")
 
-    var inmateDetail: InmateDetail?
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      inmateDetail = null
-    } else {
-      inmateDetail = when (
-        val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(
-          offenderDetails.otherIds.crn,
-          offenderDetails.otherIds.nomsNumber,
-        )
-      ) {
-        is AuthorisableActionResult.NotFound -> null
-        is AuthorisableActionResult.Unauthorised -> null
-        is AuthorisableActionResult.Success -> inmateDetailResult.entity
-      }
-    }
+    val (offenderDetails, inmateDetail) = personDetails
 
     return ResponseEntity.ok(
       personTransformer.transformModelToApi(offenderDetails, inmateDetail),
@@ -91,7 +77,7 @@ class PeopleController(
     val offenderDetails = getOffenderDetailsIgnoringLaoQualification(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
+      throw NotFoundProblem(crn, "Case Notes")
     }
 
     val nomsNumber = offenderDetails.otherIds.nomsNumber
@@ -110,7 +96,7 @@ class PeopleController(
     val offenderDetails = getOffenderDetailsIgnoringLaoQualification(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
+      throw NotFoundProblem(crn, "Adjudications")
     }
 
     val nomsNumber = offenderDetails.otherIds.nomsNumber
@@ -129,7 +115,7 @@ class PeopleController(
     val offenderDetails = getOffenderDetailsIgnoringLaoQualification(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
+      throw NotFoundProblem(crn, "ACCT Alerts")
     }
 
     val nomsNumber = offenderDetails.otherIds.nomsNumber
