@@ -299,21 +299,10 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val offenderResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personDetails = getPersonDetailsForCrn(log, booking.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
+      ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
 
-    if (offenderResult !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
-    }
-
-    if (offenderResult.entity.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
-
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.crn, offenderResult.entity.otherIds.nomsNumber)
-
-    if (inmateDetailResult !is AuthorisableActionResult.Success) {
-      throw InternalServerErrorProblem("Unable to get InmateDetail via crn: ${booking.crn}")
-    }
+    val (offenderDetails, inmateDetails) = personDetails
 
     val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
       val premises = booking.premises
@@ -330,7 +319,7 @@ class PremisesController(
       staffMemberResult.entity
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderResult.entity, inmateDetailResult.entity, staffMember))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, staffMember))
   }
 
   @Transactional
@@ -344,30 +333,17 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val offenderResult = offenderService.getOffenderByCrn(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-    val offender = when (offenderResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
-      is AuthorisableActionResult.Success -> offenderResult.entity
-    }
+    val personDetails = getPersonDetailsForCrn(log, body.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
+      ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${body.crn}")
 
-    if (offender.otherIds.nomsNumber == null) {
-      throw InternalServerErrorProblem("No nomsNumber present for CRN")
-    }
-
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(offenderResult.entity.otherIds.crn, offender.otherIds.nomsNumber)
-    val inmate = when (inmateDetailResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw BadRequestProblem(mapOf("$.crn" to "doesNotExist"))
-      is AuthorisableActionResult.Success -> inmateDetailResult.entity
-    }
+    val (offenderDetails, inmateDetails) = personDetails
 
     val authorisableResult = when (premises) {
       is ApprovedPremisesEntity -> {
         bookingService.createApprovedPremisesAdHocBooking(
           user = user,
           crn = body.crn,
-          nomsNumber = inmate.offenderNo,
+          nomsNumber = inmateDetails?.offenderNo,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId,
@@ -379,7 +355,7 @@ class PremisesController(
           user = user,
           premises = premises,
           crn = body.crn,
-          nomsNumber = inmate.offenderNo,
+          nomsNumber = inmateDetails?.offenderNo,
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId,
@@ -403,7 +379,7 @@ class PremisesController(
       is ValidatableActionResult.Success -> validatableResult.entity
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, offender, inmate, null))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, offenderDetails, inmateDetails, null))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(

@@ -129,4 +129,50 @@ class PersonSearchTest : IntegrationTestBase() {
       }
     }
   }
+
+  @Test
+  fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withCrn("CRN")
+          withDateOfBirth(LocalDate.parse("1985-05-05"))
+          withNomsNumber(null)
+          withFirstName("James")
+          withLastName("Someone")
+          withGender("Male")
+          withEthnicity("White British")
+          withNationality("English")
+          withReligionOrBelief("Judaism")
+          withGenderIdentity("Prefer to self-describe")
+          withSelfDescribedGenderIdentity("This is a self described identity")
+        },
+      ) { offenderDetails, _ ->
+        webTestClient.get()
+          .uri("/people/search?crn=CRN")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              Person(
+                crn = "CRN",
+                name = "James Someone",
+                dateOfBirth = LocalDate.parse("1985-05-05"),
+                sex = "Male",
+                status = Person.Status.unknown,
+                nomsNumber = null,
+                ethnicity = "White British",
+                nationality = "English",
+                religionOrBelief = "Judaism",
+                genderIdentity = "This is a self described identity",
+                prisonName = null,
+              ),
+            ),
+          )
+      }
+    }
+  }
 }

@@ -72,6 +72,25 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Getting adjudications alerts for a CRN without a NOMS number returns 404`() {
+    `Given a User` { _, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withNomsNumber(null)
+        },
+      ) { offenderDetails, _ ->
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+  }
+
+  @Test
   fun `Getting adjudications for a CRN returns OK with correct body`() {
     `Given a User` { _, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->

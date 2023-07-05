@@ -89,6 +89,46 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get a booking for an Approved Premises returns OK with the correct body when the NOMS number is null`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withNomsNumber(null)
+        },
+      ) { offenderDetails, _ ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+        }
+
+        val keyWorker = ContextStaffMemberFactory().produce()
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withStaffKeyWorkerCode(keyWorker.code)
+          withCrn(offenderDetails.otherIds.crn)
+          withNomsNumber(null)
+          withServiceName(ServiceName.approvedPremises)
+        }
+
+        webTestClient.get()
+          .uri("/premises/${premises.id}/bookings/${booking.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              bookingTransformer.transformJpaToApi(booking, offenderDetails, null, keyWorker),
+            ),
+          )
+      }
+    }
+  }
+
+  @Test
   fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
@@ -431,9 +471,139 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Approved Premises Booking returns OK with correct body when NOMS number is null`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withNomsNumber(null)
+        },
+      ) { offenderDetails, _ ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val linkedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+          withSubmittedAt(OffsetDateTime.now())
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              departureDate = LocalDate.parse("2022-08-30"),
+              serviceName = ServiceName.approvedPremises,
+              bedId = bed.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.keyWorker").isEqualTo(null)
+          .jsonPath("$.status").isEqualTo("awaiting-arrival")
+          .jsonPath("$.arrival").isEqualTo(null)
+          .jsonPath("$.departure").isEqualTo(null)
+          .jsonPath("$.nonArrival").isEqualTo(null)
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.serviceName").isEqualTo(ServiceName.approvedPremises.value)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo(bed.name)
+      }
+    }
+  }
+
+  @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              departureDate = LocalDate.parse("2022-08-30"),
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.keyWorker").isEqualTo(null)
+          .jsonPath("$.status").isEqualTo("provisional")
+          .jsonPath("$.arrival").isEqualTo(null)
+          .jsonPath("$.departure").isEqualTo(null)
+          .jsonPath("$.nonArrival").isEqualTo(null)
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.confirmation").isEqualTo(null)
+          .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo("test-bed")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns OK with correct body when NOMS number is null`() {
+    `Given a User` { _, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withNomsNumber(null)
+        },
+      ) { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
