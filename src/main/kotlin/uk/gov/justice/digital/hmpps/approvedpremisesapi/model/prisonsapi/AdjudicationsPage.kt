@@ -17,8 +17,8 @@ data class Adjudication(
 )
 
 data class AdjudicationCharge(
-  val oicChargeId: String,
-  val offenceCode: String,
+  val oicChargeId: String?,
+  val offenceCode: String?,
   val offenceDescription: String,
   val findingCode: String?,
 )
