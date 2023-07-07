@@ -66,7 +66,7 @@ class BookingSearchServiceTest {
   }
 
   @Test
-  fun `findBookings returns Unauthorised when the user is not authorised to get offender details for a particular CRN`() {
+  fun `findBookings filters out bookings where the user is not authorised to get offender details for a particular CRN`() {
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -90,14 +90,31 @@ class BookingSearchServiceTest {
     )
 
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returnsMany listOf(
-      AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce()),
-      AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce()),
+      AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory()
+          .withFirstName("Gregor")
+          .withLastName("Samsa")
+          .produce(),
+      ),
+      AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory()
+          .withFirstName("Franz")
+          .withLastName("Kafka")
+          .produce(),
+      ),
       AuthorisableActionResult.Unauthorised(),
     )
 
     val result = bookingSearchService.findBookings(ServiceName.temporaryAccommodation, null, SortOrder.ascending, BookingSearchSortField.bookingCreatedAt)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = result.entity as ValidatableActionResult.Success
+    assertThat(validationResult.entity).hasSize(2)
+    assertThat(validationResult.entity).matches { results ->
+      results.map { it.personName }.toSet() == setOf("Gregor Samsa", "Franz Kafka")
+    }
   }
 
   @Test

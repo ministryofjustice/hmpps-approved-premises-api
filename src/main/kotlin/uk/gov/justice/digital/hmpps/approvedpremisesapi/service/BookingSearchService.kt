@@ -35,16 +35,17 @@ class BookingSearchService(
       status,
       probationRegionId,
     )
+      .mapNotNull { result ->
+        val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(result.personCrn, user.deliusUsername)) {
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
+          is AuthorisableActionResult.NotFound -> null
+        }
 
-    results.forEach { result ->
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(result.personCrn, user.deliusUsername)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-        is AuthorisableActionResult.NotFound -> null
+        result.personName = offenderDetails?.let { "${it.firstName} ${it.surname}" }
+
+        result
       }
-
-      result.personName = offenderDetails?.let { "${it.firstName} ${it.surname}" }
-    }
 
     val comparator = Comparator<BookingSearchResult> { a, b ->
       val ascendingCompare = when (sortField) {
