@@ -240,6 +240,50 @@ class SeedUsersTest : SeedTestBase() {
     )
   }
 
+  @Test
+  fun `Service specific user seed jobs only overwrite roles for that service`() {
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("MULTI-SERVICE-USER")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    val roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS3_ASSESSOR).map { role ->
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(user)
+        withRole(role)
+      }
+    }
+
+    user.roles.addAll(roles)
+
+    withCsv(
+      "multi-service-user",
+      userRoleAssignmentSeedCsvRowsToCsv(
+        listOf(
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername("MULTI-SERVICE-USER")
+            .withTypedRoles(listOf(UserRole.CAS3_REFERRER))
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.temporaryAccommodationUsers, "multi-service-user")
+
+    val persistedUser = userRepository.findByDeliusUsername("MULTI-SERVICE-USER")
+
+    assertThat(persistedUser).isNotNull
+    assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+      UserRole.CAS1_ASSESSOR,
+      UserRole.CAS1_WORKFLOW_MANAGER,
+      UserRole.CAS3_REFERRER,
+    )
+  }
+
   private fun userRoleAssignmentSeedCsvRowsToCsv(rows: List<UsersSeedUntypedEnumsCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(

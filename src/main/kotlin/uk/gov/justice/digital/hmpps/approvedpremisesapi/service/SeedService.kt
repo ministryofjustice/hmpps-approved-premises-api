@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
@@ -114,6 +115,17 @@ class SeedService(
         )
         SeedFileType.user -> UsersSeedJob(
           filename,
+          ServiceName.values().toList(),
+          applicationContext.getBean(UserService::class.java),
+        )
+        SeedFileType.approvedPremisesUsers -> UsersSeedJob(
+          filename,
+          listOf(ServiceName.approvedPremises),
+          applicationContext.getBean(UserService::class.java),
+        )
+        SeedFileType.temporaryAccommodationUsers -> UsersSeedJob(
+          filename,
+          listOf(ServiceName.temporaryAccommodation),
           applicationContext.getBean(UserService::class.java),
         )
         SeedFileType.characteristics -> CharacteristicsSeedJob(
