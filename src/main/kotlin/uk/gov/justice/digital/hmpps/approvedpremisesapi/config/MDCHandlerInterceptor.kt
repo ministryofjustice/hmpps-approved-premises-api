@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
+import io.sentry.Scope
+import io.sentry.Sentry
 import org.slf4j.MDC
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
@@ -34,6 +36,9 @@ class MDCHandlerInterceptor(
       MDC.put("request.params.${it.key}", it.value.joinToString(","))
     }
     MDC.put("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified")
+
+    Sentry.configureScope { scope: Scope -> scope.setTag("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified") }
+
     MDC.put("request.user", userService.getUserForRequestOrNull()?.deliusUsername ?: "Anonymous")
   }
 
