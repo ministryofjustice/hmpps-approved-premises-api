@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -2338,6 +2339,8 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
           .header("Authorization", "Bearer $jwt")
@@ -2457,31 +2460,139 @@ class BookingTest : IntegrationTestBase() {
         withBed(bed)
       }
 
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-22")
+    }
+  }
 
-      webTestClient.post()
-        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewExtension(
-            newDepartureDate = LocalDate.parse("2022-08-22"),
-            notes = "notes",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-        .jsonPath(".previousDepartureDate").isEqualTo("2022-08-20")
-        .jsonPath(".newDepartureDate").isEqualTo("2022-08-22")
-        .jsonPath(".notes").isEqualTo("notes")
-        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+  @Test
+  fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
-      val actualBooking = bookingRepository.findByIdOrNull(booking.id)!!
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
 
-      assertThat(actualBooking.departureDate).isEqualTo(LocalDate.parse("2022-08-22"))
-      assertThat(actualBooking.originalDepartureDate).isEqualTo(LocalDate.parse("2022-08-20"))
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withArrivalDate(LocalDate.parse("2022-08-18"))
+        withDepartureDate(LocalDate.parse("2022-08-20"))
+        withStaffKeyWorkerCode(keyWorker.code)
+        withPremises(premises)
+        withBed(bed)
+      }
+
+      val conflictingBooking = bookingEntityFactory.produceAndPersist {
+        withServiceName(ServiceName.temporaryAccommodation)
+        withCrn("CRN123")
+        withYieldedPremises { premises }
+        withYieldedBed { bed }
+        withArrivalDate(LocalDate.parse("2022-07-15"))
+        withDepartureDate(LocalDate.parse("2022-08-15"))
+      }
+
+      creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-09-20")
+    }
+  }
+
+  @Test
+  fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the updated booking's turnaround time`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withName("test-bed")
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withName("test-room")
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val conflictingBooking = bookingEntityFactory.produceAndPersist {
+        withServiceName(ServiceName.temporaryAccommodation)
+        withCrn("CRN123")
+        withYieldedPremises { premises }
+        withYieldedBed { bed }
+        withArrivalDate(LocalDate.parse("2022-08-21"))
+        withDepartureDate(LocalDate.parse("2022-08-29"))
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withArrivalDate(LocalDate.parse("2022-08-18"))
+        withDepartureDate(LocalDate.parse("2022-08-20"))
+        withStaffKeyWorkerCode(keyWorker.code)
+        withPremises(premises)
+        withBed(bed)
+      }
+
+      creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-23")
+    }
+  }
+
+  @Test
+  fun `Create Approved Premises Extension returns OK when a lost bed for the same bed overlaps with the new departure date`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withName("test-bed")
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withName("test-room")
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val conflictingLostBed = lostBedsEntityFactory.produceAndPersist {
+        withBed(bed)
+        withPremises(premises)
+        withStartDate(LocalDate.parse("2022-07-15"))
+        withEndDate(LocalDate.parse("2022-08-22"))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withArrivalDate(LocalDate.parse("2022-08-18"))
+        withDepartureDate(LocalDate.parse("2022-08-20"))
+        withStaffKeyWorkerCode(keyWorker.code)
+        withPremises(premises)
+        withBed(bed)
+      }
+
+      creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-29")
     }
   }
 
@@ -2677,5 +2788,33 @@ class BookingTest : IntegrationTestBase() {
         .expectStatus()
         .isForbidden
     }
+  }
+
+  private fun creatingNewExtensionReturnsCorrectly(booking: BookingEntity, jwt: String, newDate: String) {
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+    webTestClient.post()
+      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewExtension(
+          newDepartureDate = LocalDate.parse(newDate),
+          notes = "notes",
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+      .jsonPath(".previousDepartureDate").isEqualTo(booking.departureDate.toString())
+      .jsonPath(".newDepartureDate").isEqualTo(newDate)
+      .jsonPath(".notes").isEqualTo("notes")
+      .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+    val actualBooking = bookingRepository.findByIdOrNull(booking.id)!!
+
+    assertThat(actualBooking.departureDate).isEqualTo(LocalDate.parse(newDate))
+    assertThat(actualBooking.originalDepartureDate).isEqualTo(booking.departureDate)
   }
 }

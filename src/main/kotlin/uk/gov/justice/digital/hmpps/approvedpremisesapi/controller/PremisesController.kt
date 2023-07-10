@@ -574,12 +574,6 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val bedId = booking.bed?.id
-      ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
-
-    throwIfBookingDatesConflict(booking.arrivalDate, body.newDepartureDate, bookingId, bedId)
-    throwIfLostBedDatesConflict(booking.arrivalDate, body.newDepartureDate, null, bedId)
-
     val result = bookingService.createExtension(
       booking = booking,
       newDepartureDate = body.newDepartureDate,
