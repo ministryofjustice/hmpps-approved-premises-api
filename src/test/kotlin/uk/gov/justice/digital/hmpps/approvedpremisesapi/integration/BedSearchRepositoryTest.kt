@@ -362,6 +362,25 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
 
     bedsThatShouldAppearInSearchResults += bedWithCancelledBooking
 
+    val bedWithNonArrivedBooking = bedEntityFactory.produceAndPersist {
+      withName("Matching Bed with nonArrived booking")
+      withRoom(roomMatchingEverythingInPremisesThree)
+    }
+
+    val nonArrivedBooking = bookingEntityFactory.produceAndPersist {
+      withPremises(premisesThreeMatchingEverything)
+      withBed(bedWithNonArrivedBooking)
+      withArrivalDate(LocalDate.parse("2023-03-08"))
+      withDepartureDate(LocalDate.parse("2023-03-10"))
+    }
+
+    nonArrivalEntityFactory.produceAndPersist {
+      withBooking(nonArrivedBooking)
+      withReason(nonArrivalReasonEntityFactory.produceAndPersist())
+    }
+
+    bedsThatShouldAppearInSearchResults += bedWithNonArrivedBooking
+
     val nonActivePremisesMatchingEverything = approvedPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)

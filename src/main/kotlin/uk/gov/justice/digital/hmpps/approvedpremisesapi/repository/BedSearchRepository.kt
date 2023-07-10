@@ -41,10 +41,12 @@ WHERE
     #OPTIONAL_FILTERS
     (SELECT COUNT(1) FROM bookings books
          LEFT JOIN cancellations books_cancel ON books_cancel.booking_id = books.id
+         LEFT JOIN non_arrivals books_non_arrival ON books_non_arrival.booking_id = books.id
      WHERE
          books.bed_id = b.id AND
          (books.arrival_date, books.departure_date) OVERLAPS (:start_date, :end_date) AND
          books_cancel.id IS NULL
+         AND books_non_arrival.id IS NULL
      ) = 0 AND
     (SELECT COUNT(1) FROM lost_beds lostbeds
          LEFT JOIN lost_bed_cancellations lostbeds_cancel ON lostbeds_cancel.lost_bed_id = lostbeds.id
