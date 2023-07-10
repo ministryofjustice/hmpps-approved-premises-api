@@ -4666,6 +4666,7 @@ components:
         - awaitingPlacement
         - placed
         - inapplicable
+        - withdrawn
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     NewApplication:
