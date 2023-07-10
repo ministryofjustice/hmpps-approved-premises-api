@@ -219,6 +219,7 @@ class ApplicationService(
         releaseType = null,
         arrivalDate = null,
         isInapplicable = null,
+        isWithdrawn = null,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )
@@ -375,6 +376,7 @@ class ApplicationService(
     arrivalDate: LocalDate?,
     data: String,
     isInapplicable: Boolean?,
+    isWithdrawn: Boolean?,
     username: String,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
@@ -406,6 +408,7 @@ class ApplicationService(
 
     application.apply {
       this.isInapplicable = isInapplicable
+      this.isWithdrawn = isWithdrawn
       this.isWomensApplication = isWomensApplication
       this.isPipeApplication = isPipeApplication
       this.isEmergencyApplication = isEmergencyApplication

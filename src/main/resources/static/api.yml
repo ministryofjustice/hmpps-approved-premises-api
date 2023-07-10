@@ -4709,6 +4709,8 @@ components:
           properties:
             isInapplicable:
               type: boolean
+            isWithdrawn:
+              type: boolean
             isWomensApplication:
               type: boolean
             isPipeApplication:

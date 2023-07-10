@@ -151,6 +151,7 @@ class ApplicationsController(
         releaseType = body.releaseType?.name,
         arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,
+        isWithdrawn = body.isWithdrawn,
         username = username,
       )
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(

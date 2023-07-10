@@ -694,6 +694,7 @@ class ApplicationServiceTest {
         data = "{}",
         username = username,
         isInapplicable = null,
+        isWithdrawn = null,
       ) is AuthorisableActionResult.NotFound,
     ).isTrue
   }
@@ -739,6 +740,7 @@ class ApplicationServiceTest {
         data = "{}",
         username = username,
         isInapplicable = null,
+        isWithdrawn = null,
       ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
   }
@@ -781,6 +783,7 @@ class ApplicationServiceTest {
       data = "{}",
       username = username,
       isInapplicable = null,
+      isWithdrawn = null,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -833,6 +836,7 @@ class ApplicationServiceTest {
       data = "{}",
       username = username,
       isInapplicable = null,
+      isWithdrawn = null,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -892,6 +896,7 @@ class ApplicationServiceTest {
       data = updatedData,
       username = username,
       isInapplicable = false,
+      isWithdrawn = false,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -907,6 +912,7 @@ class ApplicationServiceTest {
     assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
     assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
     assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
+    assertThat(approvedPremisesApplication.isWithdrawn).isEqualTo(false)
     assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
   }
 
