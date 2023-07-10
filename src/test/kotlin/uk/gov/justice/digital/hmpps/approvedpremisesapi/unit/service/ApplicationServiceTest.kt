@@ -182,7 +182,7 @@ class ApplicationServiceTest {
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
     every { mockUserAccessService.getApprovedPremisesApplicationAccessLevelForUser(userEntity) } returns ApprovedPremisesApplicationAccessLevel.TEAM
-    every { mockApplicationRepository.findApprovedPremisesSummariesForUser(userId) } returns applicationSummaries
+    every { mockApplicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(userId) } returns applicationSummaries
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     applicationSummaries.forEach {

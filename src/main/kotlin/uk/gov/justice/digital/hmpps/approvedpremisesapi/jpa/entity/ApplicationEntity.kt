@@ -57,45 +57,18 @@ SELECT
     (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
     apa.is_womens_application as isWomensApplication,
     apa.is_pipe_application as isPipeApplication,
-    apa.is_emergency_application as isEmergencyApplication,
-    apa.is_esap_application as isEsapApplication,
-    apa.arrival_date as arrivalDate,
-    CAST(apa.risk_ratings AS TEXT) as riskRatings
-FROM approved_premises_applications apa
-LEFT JOIN applications a ON a.id = apa.id
-LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL
-WHERE apa.is_inapplicable IS NOT TRUE;
-""",
-    nativeQuery = true,
-  )
-  fun findAllApprovedPremisesSummaries(): List<ApprovedPremisesApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    ass.submitted_at as latestAssessmentSubmittedAt,
-    ass.decision as latestAssessmentDecision,
-    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
-    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
-    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
-    apa.is_womens_application as isWomensApplication,
-    apa.is_pipe_application as isPipeApplication,
     apa.arrival_date as arrivalDate,
     CAST(apa.risk_ratings AS TEXT) as riskRatings
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
 WHERE a.created_by_user_id = :userId 
-AND apa.is_inapplicable IS NOT TRUE;
+AND apa.is_inapplicable IS NOT TRUE 
+AND apa.is_withdrawn = FALSE;
 """,
     nativeQuery = true,
   )
-  fun findApprovedPremisesSummariesForUser(userId: UUID): List<ApprovedPremisesApplicationSummary>
+  fun findNonWithdrawnApprovedPremisesSummariesForUser(userId: UUID): List<ApprovedPremisesApplicationSummary>
 
   @Query(
     """

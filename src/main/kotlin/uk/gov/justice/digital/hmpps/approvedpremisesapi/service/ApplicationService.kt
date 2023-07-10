@@ -88,7 +88,7 @@ class ApplicationService(
   }
 
   private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) =
-    applicationRepository.findApprovedPremisesSummariesForUser(user.id)
+    applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
 
   private fun getAllCas2ApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
     return applicationRepository.findAllCas2ApplicationSummaries()
