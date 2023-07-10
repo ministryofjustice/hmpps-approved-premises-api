@@ -219,6 +219,7 @@ class ApplicationService(
         releaseType = null,
         arrivalDate = null,
         isInapplicable = null,
+        isWithdrawn = false,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )
