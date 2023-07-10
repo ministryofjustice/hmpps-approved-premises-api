@@ -134,6 +134,57 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Results are correct for a Premises with a Room & Bed and a lost bed and non-arrived booking`() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withId(UUID.randomUUID())
+          withYieldedApArea {
+            apAreaEntityFactory.produceAndPersist()
+          }
+        }
+      }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withName("test-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("test-room")
+          withYieldedPremises { premises }
+        }
+      }
+    }
+
+    val booking = bookingEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withBed(bed)
+      withServiceName(ServiceName.approvedPremises)
+      withArrivalDate(LocalDate.of(2023, 6, 15))
+      withDepartureDate(LocalDate.of(2023, 6, 20))
+    }
+
+    nonArrivalEntityFactory.produceAndPersist {
+      withBooking(booking)
+      withYieldedReason {
+        nonArrivalReasonEntityFactory.produceAndPersist()
+      }
+    }
+
+    val result = calendarRepository.getCalendarInfo(premises.id, LocalDate.of(2023, 6, 9), LocalDate.of(2023, 7, 9))
+
+    val expectedBedKey = CalendarBedInfo(
+      bedId = bed.id,
+      bedName = bed.name,
+    )
+
+    assertThat(result).containsKey(expectedBedKey)
+
+    assertThat(result[expectedBedKey]).isEmpty()
+  }
+
+  @Test
   fun `Results are correct for a Premises with non-double-booked Bookings & Lost Bed`() {
     `Given an Offender` { offenderDetailsOne, _ ->
       `Given an Offender` { offenderDetailsTwo, _ ->

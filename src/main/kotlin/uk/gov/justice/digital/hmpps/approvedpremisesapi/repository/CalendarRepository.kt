@@ -17,12 +17,13 @@ class CalendarRepository(private val namedParameterJdbcTemplate: NamedParameterJ
            b.arrival_date AS arrival_date, 
            b.departure_date AS departure_date,
            b.crn AS crn,
-           (c.id IS NULL) AS active
+           ((n.id, c.id) IS NULL) AS active
     FROM premises p 
     JOIN rooms r ON r.premises_id = p.id
     JOIN beds bed ON bed.room_id = r.id 
     LEFT JOIN bookings b ON b.bed_id = bed.id AND (b.arrival_date, b.departure_date) OVERLAPS (:startDate, :endDate)
     LEFT JOIN cancellations c ON c.booking_id = b.id
+    LEFT JOIN non_arrivals n ON n.booking_id = b.id
     WHERE p.id = :premisesId
 """
 
