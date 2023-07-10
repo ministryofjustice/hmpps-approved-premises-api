@@ -36,10 +36,13 @@ const val bedSummaryQuery =
         from bookings booking
           left join cancellations cancellation
             on booking.id = cancellation.booking_id
+          left join non_arrivals non_arrival 
+            on non_arrival.booking_id = booking.id
         where booking.bed_id = b.id
           and booking.arrival_date <= CURRENT_DATE
           and booking.departure_date >= CURRENT_DATE
           and cancellation IS NULL
+          and non_arrival IS NULL
       ) > 0 as bedBooked,
       (
         select count(lost_bed.id)

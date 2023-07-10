@@ -59,6 +59,14 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       )
     }
 
+    val bedWithNonArrivedBooking = bedEntityFactory.produceAndPersist {
+      withRoom(
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        },
+      )
+    }
+
     val bedWithLostBed = bedEntityFactory.produceAndPersist {
       withRoom(
         roomEntityFactory.produceAndPersist {
@@ -102,6 +110,20 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
     }
 
+    val nonArrivedBooking = bookingEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withBed(bedWithNonArrivedBooking)
+      withArrivalDate(LocalDate.now().minusDays((7).toLong()))
+      withDepartureDate(LocalDate.now().plusDays((20).toLong()))
+    }
+
+    nonArrivalEntityFactory.produceAndPersist {
+      withBooking(nonArrivedBooking)
+      withYieldedReason {
+        nonArrivalReasonEntityFactory.produceAndPersist()
+      }
+    }
+
     val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
       withPremises(premises)
       withBed(bedWithCancelledLostBed)
@@ -117,7 +139,7 @@ class BedSummaryQueryTest : IntegrationTestBase() {
     val results: List<DomainBedSummary> =
       realBedRepository.findAllBedsForPremises(premises.id)
 
-    assertThat(results.size).isEqualTo(5)
+    assertThat(results.size).isEqualTo(6)
 
     results.first { it.id == bedWithoutBooking.id }.let {
       assertThat(it.name).isEqualTo(bedWithoutBooking.name)
@@ -155,6 +177,14 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       assertThat(it.name).isEqualTo(bedWithCancelledBooking.name)
       assertThat(it.roomId).isEqualTo(bedWithCancelledBooking.room.id)
       assertThat(it.roomName).isEqualTo(bedWithCancelledBooking.room.name)
+      assertThat(it.bedBooked).isEqualTo(false)
+      assertThat(it.bedOutOfService).isEqualTo(false)
+    }
+
+    results.first { it.id == bedWithNonArrivedBooking.id }.let {
+      assertThat(it.name).isEqualTo(bedWithNonArrivedBooking.name)
+      assertThat(it.roomId).isEqualTo(bedWithNonArrivedBooking.room.id)
+      assertThat(it.roomName).isEqualTo(bedWithNonArrivedBooking.room.name)
       assertThat(it.bedBooked).isEqualTo(false)
       assertThat(it.bedOutOfService).isEqualTo(false)
     }
