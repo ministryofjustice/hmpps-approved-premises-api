@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Applications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.net.URI
@@ -175,6 +176,19 @@ class ApplicationsController(
     }
 
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
+  }
+
+  override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    extractEntityFromNestedAuthorisableValidatableActionResult(
+      applicationService.withdrawApprovedPremisesApplication(
+        applicationId = applicationId,
+        user = user,
+      ),
+    )
+
+    return ResponseEntity.ok(Unit)
   }
 
   override fun applicationsApplicationIdSubmissionPost(
