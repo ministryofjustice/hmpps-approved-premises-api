@@ -423,6 +423,42 @@ class ApplicationService(
     )
   }
 
+  fun withdrawApprovedPremisesApplication(
+    applicationId: UUID,
+    user: UserEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    return AuthorisableActionResult.Success(
+      validated {
+        if (application !is ApprovedPremisesApplicationEntity) {
+          return@validated generalError("onlyCas1Supported")
+        }
+
+        if (application.submittedAt != null) {
+          return@validated generalError("applicationAlreadySubmitted")
+        }
+
+        if (application.isWithdrawn) {
+          return@validated generalError("applicationAlreadyWithdrawn")
+        }
+
+        applicationRepository.save(
+          application.apply {
+            isWithdrawn = true
+          },
+        )
+
+        return@validated success(Unit)
+      },
+    )
+  }
+
   fun updateTemporaryAccommodationApplication(
     applicationId: UUID,
     data: String,

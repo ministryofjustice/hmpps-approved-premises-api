@@ -1695,6 +1695,152 @@ class ApplicationServiceTest {
     }
   }
 
+  @Test
+  fun `withdrawApprovedPremisesApplication returns NotFound if Application does not exist`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val applicationId = UUID.fromString("bb13d346-f278-43d7-9c23-5c4077c031ca")
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+    val result = applicationService.withdrawApprovedPremisesApplication(applicationId, user)
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `withdrawApprovedPremisesApplication returns Unauthorised if Application not created by user`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val differentUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(differentUser)
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+
+    val result = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `withdrawApprovedPremisesApplication returns GeneralValidationError if Application is not AP Application`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withProbationRegion(user.probationRegion)
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+
+    assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
+
+    assertThat(validatableActionResult is ValidatableActionResult.GeneralValidationError).isTrue
+
+    val generalValidationError = (validatableActionResult as ValidatableActionResult.GeneralValidationError).message
+
+    assertThat(generalValidationError).isEqualTo("onlyCas1Supported")
+  }
+
+  @Test
+  fun `withdrawApprovedPremisesApplication returns GeneralValidationError if Application has been submitted`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.parse("2023-07-10T14:41:00+01:00"))
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+
+    assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
+
+    assertThat(validatableActionResult is ValidatableActionResult.GeneralValidationError).isTrue
+
+    val generalValidationError = (validatableActionResult as ValidatableActionResult.GeneralValidationError).message
+
+    assertThat(generalValidationError).isEqualTo("applicationAlreadySubmitted")
+  }
+
+  @Test
+  fun `withdrawApprovedPremisesApplication returns GeneralValidationError if Application has been withdrawn already`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withIsWithdrawn(true)
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+
+    assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
+
+    assertThat(validatableActionResult is ValidatableActionResult.GeneralValidationError).isTrue
+
+    val generalValidationError = (validatableActionResult as ValidatableActionResult.GeneralValidationError).message
+
+    assertThat(generalValidationError).isEqualTo("applicationAlreadyWithdrawn")
+  }
+
+  @Test
+  fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+
+    assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
+
+    assertThat(validatableActionResult is ValidatableActionResult.Success).isTrue
+
+    verify {
+      mockApplicationRepository.save(
+        match {
+          it.id == application.id &&
+            it is ApprovedPremisesApplicationEntity &&
+            it.isWithdrawn
+        },
+      )
+    }
+  }
+
   private fun userWithUsername(username: String) = UserEntityFactory()
     .withDeliusUsername(username)
     .withProbationRegion(
