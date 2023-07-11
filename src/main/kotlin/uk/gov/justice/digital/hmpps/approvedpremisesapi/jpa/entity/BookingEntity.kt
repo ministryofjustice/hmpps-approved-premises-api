@@ -92,6 +92,8 @@ data class BookingEntity(
   var offlineApplication: OfflineApplicationEntity?,
   @OneToMany(mappedBy = "booking")
   var extensions: MutableList<ExtensionEntity>,
+  @OneToMany(mappedBy = "booking")
+  var dateChanges: MutableList<DateChangeEntity>,
   @ManyToOne
   @JoinColumn(name = "premises_id")
   var premises: PremisesEntity,

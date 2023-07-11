@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
@@ -39,6 +40,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var cancellations: Yielded<MutableList<CancellationEntity>>? = null
   private var confirmation: Yielded<ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
+  private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
   private var bed: Yielded<BedEntity>? = null
@@ -125,6 +127,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.extensions = { extensions }
   }
 
+  fun withDateChanges(dateChanges: MutableList<DateChangeEntity>) = apply {
+    this.dateChanges = { dateChanges }
+  }
+
   fun withYieldedPremises(premises: Yielded<PremisesEntity>) = apply {
     this.premises = premises
   }
@@ -185,6 +191,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     cancellations = this.cancellations?.invoke() ?: mutableListOf(),
     confirmation = this.confirmation?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
+    dateChanges = this.dateChanges?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed?.invoke(),
     service = this.serviceName.invoke().value,
