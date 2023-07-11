@@ -27,6 +27,11 @@ class DocumentTransformerTest {
           .withExtendedDescription("Extended Description 1")
           .produce(),
       )
+      .withOffenderLevelDocument(
+        DocumentFactory()
+          .withId(null)
+          .produce(),
+      )
       .withConvictionLevelDocument(
         "12345",
         DocumentFactory()
@@ -37,6 +42,12 @@ class DocumentTransformerTest {
           .withTypeDescription("Type 2 Description")
           .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
           .withExtendedDescription("Extended Description 2")
+          .produce(),
+      )
+      .withConvictionLevelDocument(
+        "12345",
+        DocumentFactory()
+          .withId(null)
           .produce(),
       )
       .withConvictionLevelDocument(
