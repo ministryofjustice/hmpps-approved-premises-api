@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -236,9 +237,10 @@ class UserService(
     )
   }
 
-  fun clearRoles(user: UserEntity) {
-    userRoleAssignmentRepository.deleteAllById(user.roles.map(UserRoleAssignmentEntity::id))
-    user.roles.clear()
+  fun clearRolesForService(user: UserEntity, service: ServiceName) {
+    val rolesToClear = UserRole.getAllRolesForService(service)
+    val userRoleAssignmentsToDelete = user.roles.filter { rolesToClear.contains(it.role) }.map(UserRoleAssignmentEntity::id)
+    userRoleAssignmentRepository.deleteAllById(userRoleAssignmentsToDelete)
   }
 
   fun clearQualifications(user: UserEntity) {

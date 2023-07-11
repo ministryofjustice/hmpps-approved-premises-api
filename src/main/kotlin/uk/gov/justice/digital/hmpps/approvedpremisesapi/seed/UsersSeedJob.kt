@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -8,6 +9,7 @@ import java.util.UUID
 
 class UsersSeedJob(
   fileName: String,
+  private val useRolesForServices: List<ServiceName>,
   private val userService: UserService,
 ) : SeedJob<UsersSeedCsvRow>(
   id = UUID.randomUUID(),
@@ -73,7 +75,8 @@ class UsersSeedJob(
       throw RuntimeException("Could not get user ${row.deliusUsername}", exception)
     }
 
-    userService.clearRoles(user)
+    useRolesForServices.forEach { userService.clearRolesForService(user, it) }
+
     userService.clearQualifications(user)
     row.roles.forEach {
       userService.addRoleToUser(user, it)
@@ -91,6 +94,8 @@ class UsersSeedJob(
     "ROLE_ADMIN" -> UserRole.CAS1_ADMIN
     "WORKFLOW_MANAGER" -> UserRole.CAS1_WORKFLOW_MANAGER
     else -> UserRole.valueOf(value)
+  }.let {
+    if (useRolesForServices.contains(it.service)) it else null
   }
 }
 

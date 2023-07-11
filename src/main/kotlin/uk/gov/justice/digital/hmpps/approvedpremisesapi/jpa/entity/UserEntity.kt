@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
@@ -116,18 +117,23 @@ data class UserRoleAssignmentEntity(
   override fun hashCode() = Objects.hash(id, role)
 }
 
-enum class UserRole {
-  CAS1_ASSESSOR,
-  CAS1_MATCHER,
-  CAS1_MANAGER,
-  CAS1_WORKFLOW_MANAGER,
-  CAS1_APPLICANT,
-  CAS1_ADMIN,
-  CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION,
-  CAS1_EXCLUDED_FROM_MATCH_ALLOCATION,
-  CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION,
-  CAS3_ASSESSOR,
-  CAS3_REFERRER,
+enum class UserRole(val service: ServiceName) {
+  CAS1_ASSESSOR(ServiceName.approvedPremises),
+  CAS1_MATCHER(ServiceName.approvedPremises),
+  CAS1_MANAGER(ServiceName.approvedPremises),
+  CAS1_WORKFLOW_MANAGER(ServiceName.approvedPremises),
+  CAS1_APPLICANT(ServiceName.approvedPremises),
+  CAS1_ADMIN(ServiceName.approvedPremises),
+  CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(ServiceName.approvedPremises),
+  CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises),
+  CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises),
+  CAS3_ASSESSOR(ServiceName.temporaryAccommodation),
+  CAS3_REFERRER(ServiceName.temporaryAccommodation),
+  ;
+
+  companion object {
+    fun getAllRolesForService(service: ServiceName) = UserRole.values().filter { it.service == service }
+  }
 }
 
 @Repository
