@@ -136,6 +136,18 @@ class ApplicationsTransformerTest {
   }
 
   @Test
+  fun `transformJpaToApi transforms a withdrawn Approved Premises application correctly`() {
+    val application = approvedPremisesApplicationFactory.withIsWithdrawn(true).produce()
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.createdByUserId).isEqualTo(user.id)
+    assertThat(result.status).isEqualTo(ApplicationStatus.withdrawn)
+    assertThat(result.assessmentDecision).isNull()
+  }
+
+  @Test
   fun `transformJpaToApi transforms an in progress CAS-2 application correctly`() {
     val application = cas2ApplicationFactory
       .withSubmittedAt(null)

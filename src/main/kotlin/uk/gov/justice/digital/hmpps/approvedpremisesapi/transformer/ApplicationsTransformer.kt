@@ -185,6 +185,7 @@ class ApplicationsTransformer(
     if (entity is ApprovedPremisesApplicationEntity) {
       return when {
         entity.isInapplicable == true -> ApplicationStatus.inapplicable
+        entity.isWithdrawn == true -> ApplicationStatus.withdrawn
         latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.REJECTED -> ApplicationStatus.rejected
         latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestPlacementRequest() == null -> ApplicationStatus.pending
         latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestBooking() == null -> ApplicationStatus.awaitingPlacement

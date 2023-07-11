@@ -90,6 +90,7 @@ class ApplicationTest : IntegrationTestBase() {
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationTeamCodeRepository)
+    clearMocks(realApplicationRepository)
   }
 
   @Test
@@ -1872,6 +1873,35 @@ class ApplicationTest : IntegrationTestBase() {
       assessment.schemaUpToDate = true
 
       return Pair(application, assessment)
+    }
+  }
+
+  @Nested
+  inner class WithdrawApplication {
+    @Test
+    fun `Withdraw Application without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/applications/${UUID.randomUUID()}/withdrawal")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Withdraw Application returns 200`() {
+      `Given a User` { user, jwt ->
+        val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
+
+        webTestClient.post()
+          .uri("/applications/${application.id}/withdrawal")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
+        assertThat(updatedApplication.isWithdrawn).isTrue
+      }
     }
   }
 

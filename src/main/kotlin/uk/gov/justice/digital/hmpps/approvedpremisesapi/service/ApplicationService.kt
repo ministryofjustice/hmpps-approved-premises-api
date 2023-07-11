@@ -88,7 +88,7 @@ class ApplicationService(
   }
 
   private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) =
-    applicationRepository.findApprovedPremisesSummariesForUser(user.id)
+    applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
 
   private fun getAllCas2ApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
     return applicationRepository.findAllCas2ApplicationSummaries()
@@ -219,6 +219,7 @@ class ApplicationService(
         releaseType = null,
         arrivalDate = null,
         isInapplicable = null,
+        isWithdrawn = false,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )
@@ -419,6 +420,42 @@ class ApplicationService(
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  fun withdrawApprovedPremisesApplication(
+    applicationId: UUID,
+    user: UserEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    return AuthorisableActionResult.Success(
+      validated {
+        if (application !is ApprovedPremisesApplicationEntity) {
+          return@validated generalError("onlyCas1Supported")
+        }
+
+        if (application.submittedAt != null) {
+          return@validated generalError("applicationAlreadySubmitted")
+        }
+
+        if (application.isWithdrawn) {
+          return@validated generalError("applicationAlreadyWithdrawn")
+        }
+
+        applicationRepository.save(
+          application.apply {
+            isWithdrawn = true
+          },
+        )
+
+        return@validated success(Unit)
+      },
     )
   }
 
