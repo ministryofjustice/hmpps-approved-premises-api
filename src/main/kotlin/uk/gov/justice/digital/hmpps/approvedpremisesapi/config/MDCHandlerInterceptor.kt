@@ -22,11 +22,12 @@ class MDCHandlerInterceptor(
   }
 
   private fun appendRequestDiagnosticsToMDC(request: HttpServletRequest) {
+    MDC.clear()
     MDC.put("request.id", UUID.randomUUID().toString())
     MDC.put("request.uri", request.requestURI)
     MDC.put("request.method", request.method)
     MDC.put("request.pathPattern", request.getPathPattern())
-    request.getPathParams().entries.forEach {
+    request.getPathParams()?.entries?.forEach {
       MDC.put("request.params.${it.key}", it.value.toString())
     }
     request.parameterMap.entries.forEach {
@@ -37,9 +38,9 @@ class MDCHandlerInterceptor(
   }
 
   private fun HttpServletRequest.getPathPattern() =
-    this.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE) as String
+    this.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE) as? String
   private fun HttpServletRequest.getPathParams() =
-    this.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as Map<*, *>
+    this.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as? Map<*, *>
 }
 
 @Component
