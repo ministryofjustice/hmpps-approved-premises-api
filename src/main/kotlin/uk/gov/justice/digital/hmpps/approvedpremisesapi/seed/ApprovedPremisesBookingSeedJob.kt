@@ -147,7 +147,7 @@ class ApprovedPremisesBookingSeedJob(
       result = bookingService.createApprovedPremisesAdHocBooking(
         user = null,
         crn = row.crn,
-        nomsNumber = offender.otherIds.nomsNumber!!,
+        nomsNumber = offender.otherIds.nomsNumber ?: "Unknown NOMS Number",
         arrivalDate = row.plannedArrivalDate,
         departureDate = row.plannedDepartureDate,
         bedId = bed.id,

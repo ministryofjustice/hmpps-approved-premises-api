@@ -693,7 +693,7 @@ class ApplicationService(
               .replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = application.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
+              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = application.eventNumber,
             mappa = mappaLevel,

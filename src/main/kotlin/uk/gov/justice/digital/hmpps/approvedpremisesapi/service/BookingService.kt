@@ -666,7 +666,7 @@ class BookingService(
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!,
+                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
               deliusEventNumber = application.eventNumber,
               premises = Premises(
@@ -803,7 +803,7 @@ class BookingService(
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!,
+                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
               deliusEventNumber = application.eventNumber,
               premises = Premises(
@@ -1009,7 +1009,7 @@ class BookingService(
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!,
+                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
               deliusEventNumber = application.eventNumber,
               premises = Premises(
