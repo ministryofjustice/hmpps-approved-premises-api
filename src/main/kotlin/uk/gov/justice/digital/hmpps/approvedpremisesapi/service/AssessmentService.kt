@@ -269,7 +269,7 @@ class AssessmentService(
                 .replace("#id", application.id.toString()),
               personReference = PersonReference(
                 crn = offenderDetails.otherIds.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!,
+                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
               deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
               assessedAt = acceptedAt.toInstant(),
@@ -394,7 +394,7 @@ class AssessmentService(
                 .replace("#id", application.id.toString()),
               personReference = PersonReference(
                 crn = offenderDetails.otherIds.crn,
-                noms = offenderDetails.otherIds.nomsNumber!!,
+                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
               deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
               assessedAt = rejectedAt.toInstant(),
