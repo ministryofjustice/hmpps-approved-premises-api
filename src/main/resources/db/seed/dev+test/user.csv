@@ -2,3 +2,4 @@ deliusUsername,roles,qualifications
 temporary-accommodation-training-1,"CAS3_REFERRER",""
 temporary-accommodation-training-2,"CAS3_ASSESSOR",""
 temporary-accommodation-e2e-tester,"CAS3_ASSESSOR,CAS3_REFERRER",""
+temporary-accommodation-e2e-referrer,"CAS3_REFERRER",""
