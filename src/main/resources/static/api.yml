@@ -4099,6 +4099,59 @@ components:
         - dateOfBirth
         - sex
         - status
+    PersonInfo:
+      type: object
+      properties:
+        crn:
+          type: string
+        type:
+          $ref: '#/components/schemas/PersonInfoType'
+      discriminator:
+        propertyName: type
+        mapping:
+          FullPersonInfo: '#/components/schemas/FullPersonInfo'
+          RestrictedPersonInfo: '#/components/schemas/RestrictedPersonInfo'
+      required:
+        - crn
+        - type
+    RestrictedPersonInfo:
+      allOf:
+        - $ref: '#/components/schemas/PersonInfo'
+    FullPersonInfo:
+      allOf:
+        - $ref: '#/components/schemas/PersonInfo'
+        - type: object
+          properties:
+            name:
+              type: string
+            dateOfBirth:
+              type: string
+              format: date
+            nomsNumber:
+              type: string
+            ethnicity:
+              type: string
+            nationality:
+              type: string
+            religionOrBelief:
+              type: string
+            sex:
+              type: string
+            genderIdentity:
+              type: string
+            status:
+              type: string
+              enum:
+                - InCustody
+                - InCommunity
+                - Unknown
+            prisonName:
+              type: string
+          required:
+            - name
+            - dateOfBirth
+            - sex
+            - status
     NewArrival:
       type: object
       properties:
@@ -6913,6 +6966,11 @@ components:
     BedOccupancyOpenEntry:
       allOf:
         - $ref: '#/components/schemas/BedOccupancyEntry'
+    PersonInfoType:
+      type: string
+      enum:
+        - FullPersonInfo
+        - RestrictedPersonInfo
     WithdrawalReason:
       type: string
       enum:
