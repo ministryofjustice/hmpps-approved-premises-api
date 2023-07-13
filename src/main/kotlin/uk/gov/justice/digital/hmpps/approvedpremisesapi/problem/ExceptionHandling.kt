@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.sentry.Sentry
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -30,6 +31,8 @@ class ExceptionHandling(
   private val objectMapper: ObjectMapper,
   private val deserializationValidationService: DeserializationValidationService,
 ) : ProblemHandling, MessageNotReadableAdviceTrait {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   override fun toProblem(throwable: Throwable, status: StatusType): ThrowableProblem? {
     Sentry.captureException(throwable)
 
@@ -109,6 +112,8 @@ class ExceptionHandling(
           )
         }
 
+        logBadRequestProblem(badRequestProblem)
+
         return ResponseEntity(badRequestProblem, HttpStatus.BAD_REQUEST)
       }
       else ->
@@ -129,6 +134,19 @@ class ExceptionHandling(
 
     return true
   }
+
+  override fun log(throwable: Throwable, problem: Problem, request: NativeWebRequest, status: HttpStatus) {
+    when (problem) {
+      is BadRequestProblem -> logBadRequestProblem(problem)
+      is InternalServerErrorProblem -> logInternalServerErrorProblem(problem)
+      else -> {
+        super<ProblemHandling>.log(throwable, problem, request, status)
+      }
+    }
+  }
+
+  private fun logBadRequestProblem(problem: BadRequestProblem) = log.error("Bad Request. Error Detail: ${problem.errorDetail ?: "None"}, Invalid Params: [${problem.invalidParams?.entries?.joinToString(",") { "${it.key}=${it.value}" } ?: "None"}]")
+  private fun logInternalServerErrorProblem(problem: InternalServerErrorProblem) = log.error("Internal Server Error. Error Detail: ${problem.detail ?: "None"}")
 
   private fun expectedArrayButGotObject(jsonNode: JsonNode, mismatchedInputException: MismatchedInputException) = jsonNode is ObjectNode && isInputTypeArray(mismatchedInputException)
   private fun expectedObjectButGotArray(jsonNode: JsonNode, mismatchedInputException: MismatchedInputException) = jsonNode is ArrayNode && !isInputTypeArray(mismatchedInputException)
