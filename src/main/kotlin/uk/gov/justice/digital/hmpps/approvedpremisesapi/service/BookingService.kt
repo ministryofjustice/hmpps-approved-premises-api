@@ -38,6 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
@@ -88,6 +90,7 @@ class BookingService(
   private val cancellationRepository: CancellationRepository,
   private val confirmationRepository: ConfirmationRepository,
   private val extensionRepository: ExtensionRepository,
+  private val dateChangeRepository: DateChangeRepository,
   private val departureRepository: DepartureRepository,
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
@@ -168,6 +171,7 @@ class BookingService(
           cancellations = mutableListOf(),
           confirmation = null,
           extensions = mutableListOf(),
+          dateChanges = mutableListOf(),
           premises = bed!!.room.premises,
           bed = bed,
           service = ServiceName.approvedPremises.value,
@@ -347,6 +351,7 @@ class BookingService(
           application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
           offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null,
           turnarounds = mutableListOf(),
+          dateChanges = mutableListOf(),
           nomsNumber = nomsNumber,
           placementRequest = null,
         ),
@@ -511,6 +516,7 @@ class BookingService(
           cancellations = mutableListOf(),
           confirmation = null,
           extensions = mutableListOf(),
+          dateChanges = mutableListOf(),
           premises = premises,
           bed = bed,
           service = ServiceName.temporaryAccommodation.value,
@@ -1094,6 +1100,71 @@ class BookingService(
     updateBooking(booking)
 
     return success(extensionEntity)
+  }
+
+  @Transactional
+  fun createDateChange(
+    booking: BookingEntity,
+    user: UserEntity,
+    newArrivalDate: LocalDate?,
+    newDepartureDate: LocalDate?,
+  ) = validated {
+    val effectiveNewArrivalDate = newArrivalDate ?: booking.arrivalDate
+    val effectiveNewDepartureDate = newDepartureDate ?: booking.departureDate
+
+    val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(effectiveNewDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+
+    val bedId = booking.bed?.id
+      ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
+
+    if (booking.service != ServiceName.approvedPremises.value) {
+      getBookingWithConflictingDates(effectiveNewArrivalDate, expectedLastUnavailableDate, booking.id, bedId)?.let {
+        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+      }
+
+      getLostBedWithConflictingDates(effectiveNewArrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+      }
+    }
+
+    if (effectiveNewArrivalDate.isAfter(effectiveNewDepartureDate)) {
+      return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+    }
+
+    if (booking.arrival != null) {
+      if (effectiveNewArrivalDate != booking.arrivalDate) {
+        return "$.newArrivalDate" hasSingleValidationError "arrivalDateCannotBeChangedOnArrivedBooking"
+      }
+
+      if (effectiveNewDepartureDate.isAfter(booking.departureDate)) {
+        return "$.newDepartureDate" hasSingleValidationError "departureDateCannotBeExtendedOnArrivedBooking"
+      }
+    }
+
+    val dateChangeEntity = dateChangeRepository.save(
+      DateChangeEntity(
+        id = UUID.randomUUID(),
+        previousDepartureDate = booking.departureDate,
+        previousArrivalDate = booking.arrivalDate,
+        newArrivalDate = effectiveNewArrivalDate,
+        newDepartureDate = effectiveNewDepartureDate,
+        changedAt = OffsetDateTime.now(),
+        booking = booking,
+        changedByUser = user,
+      ),
+    )
+
+    updateBooking(
+      booking.apply {
+        arrivalDate = dateChangeEntity.newArrivalDate
+        departureDate = dateChangeEntity.newDepartureDate
+        dateChanges.add(dateChangeEntity)
+      },
+    )
+
+    // TODO: Emit booking changed domain event once format is agreed
+
+    return success(dateChangeEntity)
   }
 
   fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {

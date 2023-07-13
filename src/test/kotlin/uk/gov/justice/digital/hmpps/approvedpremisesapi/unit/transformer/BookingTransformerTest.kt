@@ -145,6 +145,7 @@ class BookingTransformerTest {
     cancellations = mutableListOf(),
     confirmation = null,
     extensions = mutableListOf(),
+    dateChanges = mutableListOf(),
     premises = premisesEntity,
     bed = null,
     service = ServiceName.approvedPremises.value,

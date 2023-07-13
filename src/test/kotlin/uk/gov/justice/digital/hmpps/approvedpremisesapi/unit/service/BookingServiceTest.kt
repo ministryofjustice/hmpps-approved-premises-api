@@ -74,6 +74,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
@@ -127,6 +129,7 @@ class BookingServiceTest {
   private val mockCancellationRepository = mockk<CancellationRepository>()
   private val mockConfirmationRepository = mockk<ConfirmationRepository>()
   private val mockExtensionRepository = mockk<ExtensionRepository>()
+  private val mockDateChangeRepository = mockk<DateChangeRepository>()
   private val mockDepartureRepository = mockk<DepartureRepository>()
   private val mockNonArrivalRepository = mockk<NonArrivalRepository>()
   private val mockDepartureReasonRepository = mockk<DepartureReasonRepository>()
@@ -156,6 +159,7 @@ class BookingServiceTest {
     cancellationRepository = mockCancellationRepository,
     confirmationRepository = mockConfirmationRepository,
     extensionRepository = mockExtensionRepository,
+    dateChangeRepository = mockDateChangeRepository,
     departureRepository = mockDepartureRepository,
     nonArrivalRepository = mockNonArrivalRepository,
     departureReasonRepository = mockDepartureReasonRepository,
@@ -935,7 +939,8 @@ class BookingServiceTest {
 
   @Nested
   inner class CreateCas1Arrival {
-    @Test fun `createCas1Arrival return GeneralValidationError when the premises is not a CAS1 premises`() {
+    @Test
+    fun `createCas1Arrival return GeneralValidationError when the premises is not a CAS1 premises`() {
       val keyWorker = ContextStaffMemberFactory().produce()
 
       val bookingEntity = BookingEntityFactory()
@@ -3594,6 +3599,283 @@ class BookingServiceTest {
               it.previousBed.id == bed.id &&
               it.newBed.id == newBed.id &&
               it.notes == "Some Notes"
+          },
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateDateChange {
+    private val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    private val approvedPremises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    private val approvedPremisesRoom = RoomEntityFactory()
+      .withPremises(approvedPremises)
+      .produce()
+
+    private val approvedPremisesBed = BedEntityFactory()
+      .withRoom(approvedPremisesRoom)
+      .produce()
+
+    private val temporaryAccommodationPremises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    private val temporaryAccommodationRoom = RoomEntityFactory()
+      .withPremises(temporaryAccommodationPremises)
+      .produce()
+
+    private val temporaryAccommodationBed = BedEntityFactory()
+      .withRoom(temporaryAccommodationRoom)
+      .produce()
+
+    @Test
+    fun `for non-AP Bookings, returns conflict error for conflicting Booking`() {
+      val booking = BookingEntityFactory()
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
+
+      val conflictingBooking = BookingEntityFactory()
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .withArrivalDate(LocalDate.parse("2023-07-10"))
+        .withDepartureDate(LocalDate.parse("2023-07-12"))
+        .produce()
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns listOf(conflictingBooking)
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = LocalDate.parse("2023-07-12"),
+        newDepartureDate = LocalDate.parse("2023-07-14"),
+      )
+
+      assertThat(result is ValidatableActionResult.ConflictError).isTrue
+      result as ValidatableActionResult.ConflictError
+      assertThat(result.message).contains("A Booking already exists")
+    }
+
+    @Test
+    fun `for non-AP Bookings, returns conflict error for conflicting Lost Bed`() {
+      val booking = BookingEntityFactory()
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
+
+      val conflictingLostBed = LostBedsEntityFactory()
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withStartDate(LocalDate.parse("2023-07-10"))
+        .withEndDate(LocalDate.parse("2023-07-12"))
+        .withYieldedReason { LostBedReasonEntityFactory().produce() }
+        .produce()
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
+      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-12"), LocalDate.parse("2023-07-14"), null) } returns listOf(conflictingLostBed)
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = LocalDate.parse("2023-07-12"),
+        newDepartureDate = LocalDate.parse("2023-07-14"),
+      )
+
+      assertThat(result is ValidatableActionResult.ConflictError).isTrue
+      result as ValidatableActionResult.ConflictError
+      assertThat(result.message).contains("A Lost Bed already exists")
+    }
+
+    @Test
+    fun `returns validation error if new arrival date is after the new departure date`() {
+      val booking = BookingEntityFactory()
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
+      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-16"), LocalDate.parse("2023-07-14"), null) } returns emptyList()
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = LocalDate.parse("2023-07-16"),
+        newDepartureDate = LocalDate.parse("2023-07-14"),
+      )
+
+      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+      result as ValidatableActionResult.FieldValidationError
+      assertThat(result.validationMessages).containsEntry("$.newDepartureDate", "beforeBookingArrivalDate")
+    }
+
+    @Test
+    fun `returns validation error if booking already has an arrival and attempting to change arrival date`() {
+      val booking = BookingEntityFactory()
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.approvedPremises)
+        .withArrivalDate(LocalDate.parse("2023-07-14"))
+        .withDepartureDate(LocalDate.parse("2023-07-16"))
+        .produce()
+        .apply {
+          arrival = ArrivalEntityFactory()
+            .withBooking(this)
+            .produce()
+        }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = LocalDate.parse("2023-07-15"),
+        newDepartureDate = LocalDate.parse("2023-07-16"),
+      )
+
+      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+      result as ValidatableActionResult.FieldValidationError
+      assertThat(result.validationMessages).containsEntry("$.newArrivalDate", "arrivalDateCannotBeChangedOnArrivedBooking")
+    }
+
+    @Test
+    fun `returns validation error if booking already has an arrival and attempting to extend departure date`() {
+      val booking = BookingEntityFactory()
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withServiceName(ServiceName.approvedPremises)
+        .withArrivalDate(LocalDate.parse("2023-07-14"))
+        .withDepartureDate(LocalDate.parse("2023-07-16"))
+        .produce()
+        .apply {
+          arrival = ArrivalEntityFactory()
+            .withBooking(this)
+            .produce()
+        }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = null,
+        newDepartureDate = LocalDate.parse("2023-07-17"),
+      )
+
+      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+      result as ValidatableActionResult.FieldValidationError
+      assertThat(result.validationMessages).containsEntry("$.newDepartureDate", "departureDateCannotBeExtendedOnArrivedBooking")
+    }
+
+    @Test
+    fun `returns success when changing arrived booking by reducing departure date`() {
+      val booking = BookingEntityFactory()
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withServiceName(ServiceName.approvedPremises)
+        .withArrivalDate(LocalDate.parse("2023-07-14"))
+        .withDepartureDate(LocalDate.parse("2023-07-16"))
+        .produce()
+        .apply {
+          arrival = ArrivalEntityFactory()
+            .withBooking(this)
+            .produce()
+        }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = null,
+        newDepartureDate = LocalDate.parse("2023-07-15"),
+      )
+
+      assertThat(result is ValidatableActionResult.Success).isTrue
+      result as ValidatableActionResult.Success
+
+      verify {
+        mockDateChangeRepository.save(
+          match {
+            it.booking.id == booking.id &&
+              it.changedByUser == user &&
+              it.newArrivalDate == LocalDate.parse("2023-07-14") &&
+              it.newDepartureDate == LocalDate.parse("2023-07-15") &&
+              it.previousArrivalDate == LocalDate.parse("2023-07-14") &&
+              it.previousDepartureDate == LocalDate.parse("2023-07-16")
+          },
+        )
+      }
+
+      verify {
+        mockBookingRepository.save(
+          match {
+            it.id == booking.id &&
+              it.arrivalDate == LocalDate.parse("2023-07-14") &&
+              it.departureDate == LocalDate.parse("2023-07-15")
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `returns success when changing non-arrived booking`() {
+      val booking = BookingEntityFactory()
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withServiceName(ServiceName.approvedPremises)
+        .withArrivalDate(LocalDate.parse("2023-07-14"))
+        .withDepartureDate(LocalDate.parse("2023-07-16"))
+        .produce()
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = LocalDate.parse("2023-07-18"),
+        newDepartureDate = LocalDate.parse("2023-07-22"),
+      )
+
+      assertThat(result is ValidatableActionResult.Success).isTrue
+      result as ValidatableActionResult.Success
+
+      verify {
+        mockDateChangeRepository.save(
+          match {
+            it.booking.id == booking.id &&
+              it.changedByUser == user &&
+              it.newArrivalDate == LocalDate.parse("2023-07-18") &&
+              it.newDepartureDate == LocalDate.parse("2023-07-22") &&
+              it.previousArrivalDate == LocalDate.parse("2023-07-14") &&
+              it.previousDepartureDate == LocalDate.parse("2023-07-16")
+          },
+        )
+      }
+
+      verify {
+        mockBookingRepository.save(
+          match {
+            it.id == booking.id &&
+              it.arrivalDate == LocalDate.parse("2023-07-18") &&
+              it.departureDate == LocalDate.parse("2023-07-22")
           },
         )
       }

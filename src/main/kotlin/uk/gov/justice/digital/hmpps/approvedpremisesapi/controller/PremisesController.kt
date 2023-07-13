@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
@@ -74,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CalendarTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConfirmationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedCancellationTransformer
@@ -122,6 +125,7 @@ class PremisesController(
   private val bedSummaryTransformer: BedSummaryTransformer,
   private val bedDetailTransformer: BedDetailTransformer,
   private val calendarTransformer: CalendarTransformer,
+  private val dateChangeTransformer: DateChangeTransformer,
 ) : PremisesApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -583,6 +587,31 @@ class PremisesController(
     val extension = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(extensionTransformer.transformJpaToApi(extension))
+  }
+
+  @Transactional
+  override fun premisesPremisesIdBookingsBookingIdDateChangesPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewDateChange,
+  ): ResponseEntity<DateChange> {
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+    val user = usersService.getUserForRequest()
+
+    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = bookingService.createDateChange(
+      booking = booking,
+      user = user,
+      newArrivalDate = body.newArrivalDate,
+      newDepartureDate = body.newDepartureDate,
+    )
+
+    val dateChange = extractResultEntityOrThrow(result)
+
+    return ResponseEntity.ok(dateChangeTransformer.transformJpaToApi(dateChange))
   }
 
   override fun premisesPremisesIdLostBedsPost(premisesId: UUID, body: NewLostBed): ResponseEntity<LostBed> {
