@@ -4809,11 +4809,21 @@ components:
           example: "M1502750438"
       required:
         - crn
+    UpdateApplicationType:
+      type: string
+      enum:
+        - CAS1
+        - CAS2
+        - CAS3
+      x-enum-varnames:
+        - CAS1
+        - CAS2
+        - CAS3
     UpdateApplication:
       type: object
       properties:
         type:
-          type: string
+          $ref: '#/components/schemas/UpdateApplicationType'
         data:
           type: object
           additionalProperties:
