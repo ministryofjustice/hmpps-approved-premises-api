@@ -16,10 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfoType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
@@ -47,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
@@ -193,12 +195,13 @@ class BookingTransformerTest {
       name = "first last",
     )
 
-    every { mockPersonTransformer.transformModelToApi(offenderDetails, inmateDetail) } returns Person(
+    every { mockPersonTransformer.transformModelToPersonInfoApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPersonInfo(
+      type = PersonInfoType.fullPersonInfo,
       crn = "crn",
       name = "first last",
       dateOfBirth = LocalDate.parse("2022-09-08"),
       sex = "Male",
-      status = Person.Status.inCommunity,
+      status = FullPersonInfo.Status.inCommunity,
       nomsNumber = "NOMS321",
       nationality = "English",
       religionOrBelief = null,
@@ -216,17 +219,22 @@ class BookingTransformerTest {
   fun `Approved Premises Awaiting Arrival entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"))
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      awaitingArrivalBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -289,17 +297,22 @@ class BookingTransformerTest {
 
     val awaitingArrivalBooking = baseBookingEntity.copy(id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"), application = application)
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      awaitingArrivalBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -331,17 +344,22 @@ class BookingTransformerTest {
       service = ServiceName.temporaryAccommodation.value,
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      awaitingArrivalBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -386,17 +404,22 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(nonArrivalBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      nonArrivalBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -451,17 +474,22 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(arrivalBooking, offenderDetails, inmateDetail, staffMember)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      arrivalBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      staffMember,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -521,17 +549,22 @@ class BookingTransformerTest {
       premisesName = premisesEntity.name,
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      cancellationBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -620,17 +653,22 @@ class BookingTransformerTest {
       }
     }
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(cancellationBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      cancellationBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -756,17 +794,22 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      departedBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      staffMember,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -942,17 +985,22 @@ class BookingTransformerTest {
       bookingId = bookingId,
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      departedBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      staffMember,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1154,17 +1202,22 @@ class BookingTransformerTest {
     every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
     every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      departedBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      staffMember,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1367,17 +1420,22 @@ class BookingTransformerTest {
     every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
     every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      departedBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      staffMember,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1612,17 +1670,22 @@ class BookingTransformerTest {
       }
     }
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(departedBooking, offenderDetails, inmateDetail, staffMember)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      departedBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      staffMember,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1754,17 +1817,22 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(confirmationBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      confirmationBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1849,17 +1917,22 @@ class BookingTransformerTest {
     every { mockWorkingDayCountService.addWorkingDays(LocalDate.parse("2022-08-30"), 1) } returns LocalDate.parse("2022-08-31")
     every { mockWorkingDayCountService.addWorkingDays(LocalDate.parse("2022-08-30"), 4) } returns LocalDate.parse("2022-09-05")
 
-    val transformedBooking = bookingTransformer.transformJpaToApi(awaitingArrivalBooking, offenderDetails, inmateDetail, null)
+    val transformedBooking = bookingTransformer.transformJpaToApi(
+      awaitingArrivalBooking,
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      null,
+    )
 
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = Person(
+        person = FullPersonInfo(
+          type = PersonInfoType.fullPersonInfo,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = Person.Status.inCommunity,
+          status = FullPersonInfo.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,

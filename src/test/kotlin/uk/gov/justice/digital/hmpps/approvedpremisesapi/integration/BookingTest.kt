@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -83,7 +84,11 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, keyWorker),
+              bookingTransformer.transformJpaToApi(
+                booking,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                keyWorker,
+              ),
             ),
           )
       }
@@ -123,7 +128,11 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, null, keyWorker),
+              bookingTransformer.transformJpaToApi(
+                booking,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                keyWorker,
+              ),
             ),
           )
       }
@@ -165,7 +174,11 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, null),
+              bookingTransformer.transformJpaToApi(
+                booking,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                null,
+              ),
             ),
           )
       }
@@ -304,7 +317,11 @@ class BookingTest : IntegrationTestBase() {
 
         val expectedJson = objectMapper.writeValueAsString(
           bookings.map {
-            bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetails, keyWorker)
+            bookingTransformer.transformJpaToApi(
+              it,
+              PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              keyWorker,
+            )
           },
         )
 

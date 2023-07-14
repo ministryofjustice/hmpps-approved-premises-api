@@ -3851,7 +3851,7 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/Person'
+          $ref: '#/components/schemas/PersonInfo'
         arrivalDate:
           type: string
           format: date
