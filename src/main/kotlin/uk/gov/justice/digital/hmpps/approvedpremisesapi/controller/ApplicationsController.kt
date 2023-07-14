@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.net.URI
@@ -78,11 +79,11 @@ class ApplicationsController(
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
 
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = deliusPrincipal.name
-    val applications = applicationService.getAllApplicationsForUsername(username, serviceName)
+    val user = userService.getUserForRequest()
 
-    return ResponseEntity.ok(applications.map(::getPersonDetailAndTransformToSummary))
+    val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
+
+    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
@@ -312,10 +313,10 @@ class ApplicationsController(
     return applicationsTransformer.transformJpaToApi(application, personInfo)
   }
 
-  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary): ApplicationSummary {
-    val (offender, inmate) = getPersonDetail(application.getCrn())
+  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary, user: UserEntity): ApplicationSummary {
+    val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn(), user)
 
-    return applicationsTransformer.transformDomainToApiSummary(application, offender, inmate)
+    return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity, user: UserEntity): Application {

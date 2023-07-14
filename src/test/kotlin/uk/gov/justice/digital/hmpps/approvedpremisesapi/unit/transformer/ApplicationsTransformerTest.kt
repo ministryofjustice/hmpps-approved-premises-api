@@ -499,7 +499,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -527,7 +527,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -555,7 +555,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -583,7 +583,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = true
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -611,7 +611,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -639,7 +639,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -667,7 +667,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -689,7 +689,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as TemporaryAccommodationApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as TemporaryAccommodationApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -712,7 +712,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as TemporaryAccommodationApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as TemporaryAccommodationApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -735,7 +735,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as Cas2ApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as Cas2ApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())

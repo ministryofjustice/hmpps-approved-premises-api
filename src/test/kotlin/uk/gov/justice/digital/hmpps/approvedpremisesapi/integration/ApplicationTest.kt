@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -499,11 +498,13 @@ class ApplicationTest : IntegrationTestBase() {
           objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
         assertThat(responseBody).matches {
+          val person = it[0].person as FullPersonInfo
+
           application.id == it[0].id &&
-            application.crn == it[0].person.crn &&
-            it[0].person.nomsNumber == null &&
-            it[0].person.status == Person.Status.unknown &&
-            it[0].person.prisonName == null
+            application.crn == person.crn &&
+            person.nomsNumber == null &&
+            person.status == FullPersonInfo.Status.unknown &&
+            person.prisonName == null
         }
       }
     }
@@ -546,11 +547,13 @@ class ApplicationTest : IntegrationTestBase() {
         objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
       assertThat(responseBody).matches {
+        val person = it[0].person as FullPersonInfo
+
         application.id == it[0].id &&
-          application.crn == it[0].person.crn &&
-          it[0].person.nomsNumber == null &&
-          it[0].person.status == Person.Status.unknown &&
-          it[0].person.prisonName == null
+          application.crn == person.crn &&
+          person.nomsNumber == null &&
+          person.status == FullPersonInfo.Status.unknown &&
+          person.prisonName == null
       }
     }
   }

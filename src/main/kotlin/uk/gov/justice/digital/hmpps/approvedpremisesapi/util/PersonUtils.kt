@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.into
@@ -67,6 +68,13 @@ fun getInmateDetail(offenderDetails: OffenderDetailSummary, offenderService: Off
 fun OffenderService.getInfoForPersonOrThrow(crn: String, user: UserEntity): PersonInfoResult.Success {
   val personInfo = this.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
   if (personInfo is PersonInfoResult.NotFound) throw NotFoundProblem(crn, "Offender")
+
+  return personInfo as PersonInfoResult.Success
+}
+
+fun OffenderService.getInfoForPersonOrThrowInternalServerError(crn: String, user: UserEntity): PersonInfoResult.Success {
+  val personInfo = this.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+  if (personInfo is PersonInfoResult.NotFound) throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
 
   return personInfo as PersonInfoResult.Success
 }

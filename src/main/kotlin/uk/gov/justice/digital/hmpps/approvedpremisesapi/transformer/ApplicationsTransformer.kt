@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -17,8 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ApiCas2ApplicationSummary
@@ -114,14 +111,14 @@ class ApplicationsTransformer(
     }
   }
 
-  fun transformDomainToApiSummary(domain: DomainApplicationSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): ApiApplicationSummary = when (domain) {
+  fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonInfoResult.Success): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
       val riskRatings =
         if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
       ApiApprovedPremisesApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        person = personTransformer.transformModelToPersonInfoApi(personInfo),
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
@@ -140,7 +137,7 @@ class ApplicationsTransformer(
 
       ApiTemporaryAccommodationApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        person = personTransformer.transformModelToPersonInfoApi(personInfo),
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
@@ -156,7 +153,7 @@ class ApplicationsTransformer(
 
       ApiCas2ApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        person = personTransformer.transformModelToPersonInfoApi(personInfo),
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
@@ -172,13 +169,6 @@ class ApplicationsTransformer(
   fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult.Success) = OfflineApplication(
     id = jpa.id,
     person = personTransformer.transformModelToPersonInfoApi(personInfo),
-    createdAt = jpa.createdAt.toInstant(),
-    type = "Offline",
-  )
-
-  fun transformJpaToApiSummary(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?) = OfflineApplicationSummary(
-    id = jpa.id,
-    person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
     createdAt = jpa.createdAt.toInstant(),
     type = "Offline",
   )
