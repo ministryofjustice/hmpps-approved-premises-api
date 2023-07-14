@@ -63,6 +63,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.notes = { notes }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     expectedArrival = this.expectedArrival(),
