@@ -34,7 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessmentSummaries
 import java.util.UUID
 import javax.transaction.Transactional
@@ -101,12 +102,10 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val applicationCrn = assessment.application.crn
-
-    val (offenderDetails, inmateDetails) = getPersonDetailsForCrn(log, applicationCrn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO)) ?: throw InternalServerErrorProblem("Unable to get Person via crn: $applicationCrn")
+    val personInfo = offenderService.getFullInfoForPersonOrThrow(assessment.application.crn, user)
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+      assessmentTransformer.transformJpaToApi(assessment, personInfo),
     )
   }
 
@@ -130,12 +129,10 @@ class AssessmentController(
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
-    val applicationCrn = assessment.application.crn
-
-    val (offenderDetails, inmateDetails) = getPersonDetailsForCrn(log, applicationCrn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO)) ?: throw InternalServerErrorProblem("Unable to get Person via crn: $applicationCrn")
+    val personInfo = offenderService.getInfoForPersonOrThrow(assessment.application.crn, user)
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+      assessmentTransformer.transformJpaToApi(assessment, personInfo),
     )
   }
 

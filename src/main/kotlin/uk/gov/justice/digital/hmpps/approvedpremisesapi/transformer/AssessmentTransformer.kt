@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -37,10 +38,10 @@ class AssessmentTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?) = when (jpa.application) {
+  fun transformJpaToApi(jpa: AssessmentEntity, personInfo: PersonInfoResult.Success) = when (jpa.application) {
     is ApprovedPremisesApplicationEntity -> ApprovedPremisesAssessment(
       id = jpa.id,
-      application = applicationsTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail) as ApprovedPremisesApplication,
+      application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as ApprovedPremisesApplication,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
@@ -58,7 +59,7 @@ class AssessmentTransformer(
 
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationAssessment(
       id = jpa.id,
-      application = applicationsTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail) as TemporaryAccommodationApplication,
+      application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as TemporaryAccommodationApplication,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),

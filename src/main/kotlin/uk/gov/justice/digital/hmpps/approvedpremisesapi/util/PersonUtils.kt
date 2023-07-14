@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import org.slf4j.Logger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.into
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -58,4 +62,19 @@ fun getInmateDetail(offenderDetails: OffenderDetailSummary, offenderService: Off
     is AuthorisableActionResult.NotFound -> null
     is AuthorisableActionResult.Unauthorised -> null
   }
+}
+
+fun OffenderService.getInfoForPersonOrThrow(crn: String, user: UserEntity): PersonInfoResult.Success {
+  val personInfo = this.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+  if (personInfo is PersonInfoResult.NotFound) throw NotFoundProblem(crn, "Offender")
+
+  return personInfo as PersonInfoResult.Success
+}
+
+fun OffenderService.getFullInfoForPersonOrThrow(crn: String, user: UserEntity): PersonInfoResult.Success.Full {
+  val personInfo = this.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+  if (personInfo is PersonInfoResult.NotFound) throw NotFoundProblem(crn, "Offender")
+  if (personInfo is PersonInfoResult.Success.Restricted) throw ForbiddenProblem()
+
+  return personInfo as PersonInfoResult.Success.Full
 }

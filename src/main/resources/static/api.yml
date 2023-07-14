@@ -4923,7 +4923,7 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/Person'
+          $ref: '#/components/schemas/PersonInfo'
         createdAt:
           type: string
           format: date-time

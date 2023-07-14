@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -35,13 +36,13 @@ class ApplicationsTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: ApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): Application {
+  fun transformJpaToApi(jpa: ApplicationEntity, personInfo: PersonInfoResult.Success): Application {
     val latestAssessment = jpa.getLatestAssessment()
 
     return when (jpa) {
       is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
         id = jpa.id,
-        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        person = personTransformer.transformModelToPersonInfoApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
         schemaVersion = jpa.schemaVersion.id,
         outdatedSchema = !jpa.schemaUpToDate,
@@ -67,7 +68,7 @@ class ApplicationsTransformer(
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
         id = jpa.id,
-        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        person = personTransformer.transformModelToPersonInfoApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
         schemaVersion = jpa.schemaVersion.id,
         outdatedSchema = !jpa.schemaUpToDate,
@@ -89,7 +90,7 @@ class ApplicationsTransformer(
 
       is DomainCas2ApplicationEntity -> Cas2Application(
         id = jpa.id,
-        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+        person = personTransformer.transformModelToPersonInfoApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
         schemaVersion = jpa.schemaVersion.id,
         outdatedSchema = !jpa.schemaUpToDate,
@@ -168,9 +169,9 @@ class ApplicationsTransformer(
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
   }
 
-  fun transformJpaToApi(jpa: OfflineApplicationEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?) = OfflineApplication(
+  fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult.Success) = OfflineApplication(
     id = jpa.id,
-    person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+    person = personTransformer.transformModelToPersonInfoApi(personInfo),
     createdAt = jpa.createdAt.toInstant(),
     type = "Offline",
   )
