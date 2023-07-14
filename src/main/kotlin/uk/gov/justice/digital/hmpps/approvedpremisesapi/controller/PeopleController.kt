@@ -11,10 +11,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -30,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 
 @Service
 class PeopleController(
@@ -48,17 +49,17 @@ class PeopleController(
 ) : PeopleApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
+  override fun peopleSearchGet(crn: String): ResponseEntity<PersonInfo> {
     val user = userService.getUserForRequest()
 
-    val personDetails = getPersonDetailsForCrn(log, crn, user.deliusUsername, offenderService, true)
-      ?: throw NotFoundProblem(crn, "Person")
+    val personInfo = offenderService.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
-    val (offenderDetails, inmateDetail) = personDetails
-
-    return ResponseEntity.ok(
-      personTransformer.transformModelToApi(offenderDetails, inmateDetail),
-    )
+    when (personInfo) {
+      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
+      is PersonInfoResult.Success -> return ResponseEntity.ok(
+        personTransformer.transformModelToPersonInfoApi(personInfo),
+      )
+    }
   }
 
   override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {

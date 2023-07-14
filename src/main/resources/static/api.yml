@@ -1161,7 +1161,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/PersonInfo'
         400:
           description: invalid params
           content:
