@@ -4832,10 +4832,14 @@ components:
         propertyName: type
         mapping:
           CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
+          CAS2: '#/components/schemas/UpdateCas2Application'
           CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
       required:
         - type
         - data
+    UpdateCas2Application:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
     UpdateApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
