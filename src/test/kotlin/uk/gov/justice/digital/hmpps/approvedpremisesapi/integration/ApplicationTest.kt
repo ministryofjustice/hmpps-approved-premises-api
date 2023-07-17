@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -1438,6 +1439,65 @@ class ApplicationTest : IntegrationTestBase() {
 
           assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
         }
+      }
+    }
+  }
+
+  @Test
+  fun `Update existing CAS2 application returns 200 with correct body`() {
+    `Given a User` { submittingUser, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+        val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+          withSchema(
+            """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {
+                  "thingId": {
+                    "description": "The unique identifier for a thing",
+                    "type": "integer"
+                  }
+                },
+                "required": [ "thingId" ]
+              }
+            """,
+          )
+        }
+
+        cas2ApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withId(applicationId)
+          withApplicationSchema(applicationSchema)
+          withCreatedByUser(submittingUser)
+        }
+
+        val resultBody = webTestClient.put()
+          .uri("/applications/$applicationId")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateCas2Application(
+              data = mapOf("thingId" to 123),
+              type = UpdateApplicationType.CAS2,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult(String::class.java)
+          .responseBody
+          .blockFirst()
+
+        val result = objectMapper.readValue(resultBody, Application::class.java)
+
+        assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
       }
     }
   }
