@@ -4,8 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 
 @Component
 class PlacementRequestDetailTransformer(
@@ -14,8 +13,8 @@ class PlacementRequestDetailTransformer(
   private val bookingSummaryTransformer: BookingSummaryTransformer,
   private val applicationTransformer: ApplicationsTransformer,
 ) {
-  fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?, cancellations: List<CancellationEntity>): PlacementRequestDetail {
-    val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, offenderDetailSummary, inmateDetail)
+  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult.Success, cancellations: List<CancellationEntity>): PlacementRequestDetail {
+    val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, personInfo)
 
     return PlacementRequestDetail(
       id = placementRequest.id,
@@ -41,7 +40,7 @@ class PlacementRequestDetailTransformer(
       cancellations = cancellations.mapNotNull { cancellationTransformer.transformJpaToApi(it) },
       booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
       isParole = jpa.isParole,
-      application = applicationTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail),
+      application = applicationTransformer.transformJpaToApi(jpa.application, personInfo),
     )
   }
 }
