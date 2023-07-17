@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
@@ -266,7 +266,7 @@ class AssessmentTransformerTest {
       .withoutAllocatedToUser()
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -279,7 +279,7 @@ class AssessmentTransformerTest {
       .withDecision(null)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -292,7 +292,7 @@ class AssessmentTransformerTest {
       .withDecision(JpaAssessmentDecision.ACCEPTED)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -306,7 +306,7 @@ class AssessmentTransformerTest {
       .withCompletedAt(OffsetDateTime.now())
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -319,7 +319,7 @@ class AssessmentTransformerTest {
       .withDecision(JpaAssessmentDecision.REJECTED)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -343,8 +343,8 @@ class AssessmentTransformerTest {
       isAllocated = true,
     )
 
-    every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
-    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk(), mockk())
+    every { mockPersonTransformer.transformModelToPersonInfoApi(any()) } returns mockk<PersonInfo>()
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
 
     assertThat(apiSummary).isInstanceOf(TemporaryAccommodationAssessmentSummary::class.java)
     apiSummary as TemporaryAccommodationAssessmentSummary
@@ -375,8 +375,8 @@ class AssessmentTransformerTest {
       isAllocated = true,
     )
 
-    every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
-    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk(), mockk())
+    every { mockPersonTransformer.transformModelToPersonInfoApi(any()) } returns mockk<PersonInfo>()
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
 
     assertThat(apiSummary).isInstanceOf(ApprovedPremisesAssessmentSummary::class.java)
     apiSummary as ApprovedPremisesAssessmentSummary

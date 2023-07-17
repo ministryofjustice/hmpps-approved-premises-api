@@ -5477,7 +5477,7 @@ components:
         risks:
           $ref: '#/components/schemas/PersonRisks'
         person:
-          $ref: '#/components/schemas/Person'
+          $ref: '#/components/schemas/PersonInfo'
       required:
         - type
         - id

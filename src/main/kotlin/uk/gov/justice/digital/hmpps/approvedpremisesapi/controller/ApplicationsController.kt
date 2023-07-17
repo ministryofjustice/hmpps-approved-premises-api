@@ -163,7 +163,7 @@ class ApplicationsController(
         data = serializedData,
         username = user.deliusUsername,
       )
-      is UpdateCas2Application -> applicationService.updateCas2Application(applicationId = applicationId, data = serializedData, username = username)
+      is UpdateCas2Application -> applicationService.updateCas2Application(applicationId = applicationId, data = serializedData, username = user.deliusUsername)
       else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
     }
 

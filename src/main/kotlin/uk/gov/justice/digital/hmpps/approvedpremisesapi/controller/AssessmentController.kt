@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -34,9 +33,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.filterByStatuses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessmentSummaries
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sort
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -78,17 +78,15 @@ class AssessmentController(
     }
 
     return ResponseEntity.ok(
-      mapAndTransformAssessmentSummaries(
-        log,
-        summaries,
-        user.deliusUsername,
-        offenderService,
-        assessmentTransformer::transformDomainToApiSummary,
-        user.hasQualification(UserQualification.LAO),
-        sortOrder,
-        sortField,
-        statuses,
-      ),
+      summaries.map {
+        val personInfo = offenderService.getInfoForPersonOrThrow(it.crn, user)
+
+        assessmentTransformer.transformDomainToApiSummary(
+          it,
+          personInfo,
+        )
+      }.sort(sortOrder, sortField)
+        .filterByStatuses(statuses),
     )
   }
 
