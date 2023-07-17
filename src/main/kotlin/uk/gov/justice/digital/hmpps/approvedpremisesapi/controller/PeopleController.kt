@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -49,7 +49,7 @@ class PeopleController(
 ) : PeopleApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun peopleSearchGet(crn: String): ResponseEntity<PersonInfo> {
+  override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
 
     val personInfo = offenderService.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
@@ -57,7 +57,7 @@ class PeopleController(
     when (personInfo) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Success -> return ResponseEntity.ok(
-        personTransformer.transformModelToPersonInfoApi(personInfo),
+        personTransformer.transformModelToPersonApi(personInfo),
       )
     }
   }

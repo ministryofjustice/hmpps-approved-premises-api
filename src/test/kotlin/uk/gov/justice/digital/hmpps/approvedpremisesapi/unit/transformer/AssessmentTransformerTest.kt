@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
@@ -343,7 +343,7 @@ class AssessmentTransformerTest {
       isAllocated = true,
     )
 
-    every { mockPersonTransformer.transformModelToPersonInfoApi(any()) } returns mockk<PersonInfo>()
+    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
     val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
 
     assertThat(apiSummary).isInstanceOf(TemporaryAccommodationAssessmentSummary::class.java)
@@ -375,7 +375,7 @@ class AssessmentTransformerTest {
       isAllocated = true,
     )
 
-    every { mockPersonTransformer.transformModelToPersonInfoApi(any()) } returns mockk<PersonInfo>()
+    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
     val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
 
     assertThat(apiSummary).isInstanceOf(ApprovedPremisesAssessmentSummary::class.java)

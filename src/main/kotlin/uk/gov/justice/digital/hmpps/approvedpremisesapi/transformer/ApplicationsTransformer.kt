@@ -39,7 +39,7 @@ class ApplicationsTransformer(
     return when (jpa) {
       is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
         id = jpa.id,
-        person = personTransformer.transformModelToPersonInfoApi(personInfo),
+        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
         schemaVersion = jpa.schemaVersion.id,
         outdatedSchema = !jpa.schemaUpToDate,
@@ -65,7 +65,7 @@ class ApplicationsTransformer(
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
         id = jpa.id,
-        person = personTransformer.transformModelToPersonInfoApi(personInfo),
+        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
         schemaVersion = jpa.schemaVersion.id,
         outdatedSchema = !jpa.schemaUpToDate,
@@ -87,7 +87,7 @@ class ApplicationsTransformer(
 
       is DomainCas2ApplicationEntity -> Cas2Application(
         id = jpa.id,
-        person = personTransformer.transformModelToPersonInfoApi(personInfo),
+        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
         schemaVersion = jpa.schemaVersion.id,
         outdatedSchema = !jpa.schemaUpToDate,
@@ -118,7 +118,7 @@ class ApplicationsTransformer(
 
       ApiApprovedPremisesApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToPersonInfoApi(personInfo),
+        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
@@ -137,7 +137,7 @@ class ApplicationsTransformer(
 
       ApiTemporaryAccommodationApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToPersonInfoApi(personInfo),
+        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
@@ -153,7 +153,7 @@ class ApplicationsTransformer(
 
       ApiCas2ApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToPersonInfoApi(personInfo),
+        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
@@ -168,7 +168,7 @@ class ApplicationsTransformer(
 
   fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult.Success) = OfflineApplication(
     id = jpa.id,
-    person = personTransformer.transformModelToPersonInfoApi(personInfo),
+    person = personTransformer.transformModelToPersonApi(personInfo),
     createdAt = jpa.createdAt.toInstant(),
     type = "Offline",
   )

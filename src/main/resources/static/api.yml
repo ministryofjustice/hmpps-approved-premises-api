@@ -1127,7 +1127,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/PersonInfo'
+                $ref: '#/components/schemas/Person'
         400:
           description: invalid params
           content:
@@ -3851,7 +3851,7 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/PersonInfo'
+          $ref: '#/components/schemas/Person'
         arrivalDate:
           type: string
           format: date
@@ -4029,27 +4029,27 @@ components:
         - arrivalDate
         - departureDate
         - createdAt
-    PersonInfo:
+    Person:
       type: object
       properties:
         crn:
           type: string
         type:
-          $ref: '#/components/schemas/PersonInfoType'
+          $ref: '#/components/schemas/PersonType'
       discriminator:
         propertyName: type
         mapping:
-          FullPersonInfo: '#/components/schemas/FullPersonInfo'
-          RestrictedPersonInfo: '#/components/schemas/RestrictedPersonInfo'
+          FullPerson: '#/components/schemas/FullPerson'
+          RestrictedPerson: '#/components/schemas/RestrictedPerson'
       required:
         - crn
         - type
-    RestrictedPersonInfo:
+    RestrictedPerson:
       allOf:
-        - $ref: '#/components/schemas/PersonInfo'
-    FullPersonInfo:
+        - $ref: '#/components/schemas/Person'
+    FullPerson:
       allOf:
-        - $ref: '#/components/schemas/PersonInfo'
+        - $ref: '#/components/schemas/Person'
         - type: object
           properties:
             name:
@@ -4887,7 +4887,7 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/PersonInfo'
+          $ref: '#/components/schemas/Person'
         createdAt:
           type: string
           format: date-time
@@ -5018,7 +5018,7 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/PersonInfo'
+          $ref: '#/components/schemas/Person'
         createdAt:
           type: string
           format: date-time
@@ -5441,7 +5441,7 @@ components:
         risks:
           $ref: '#/components/schemas/PersonRisks'
         person:
-          $ref: '#/components/schemas/PersonInfo'
+          $ref: '#/components/schemas/Person'
       required:
         - type
         - id
@@ -6321,7 +6321,7 @@ components:
               type: string
               format: uuid
             person:
-              $ref: '#/components/schemas/PersonInfo'
+              $ref: '#/components/schemas/Person'
             risks:
               $ref: '#/components/schemas/PersonRisks'
             applicationId:
@@ -6896,9 +6896,11 @@ components:
     BedOccupancyOpenEntry:
       allOf:
         - $ref: '#/components/schemas/BedOccupancyEntry'
-    PersonInfoType:
+    PersonType:
       type: string
       enum:
+        - FullPerson
+        - RestrictedPerson
         - FullPersonInfo
         - RestrictedPersonInfo
     WithdrawalReason:

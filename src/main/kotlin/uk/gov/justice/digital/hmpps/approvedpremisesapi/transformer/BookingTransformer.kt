@@ -32,7 +32,7 @@ class BookingTransformer(
 
     return Booking(
       id = jpa.id,
-      person = personTransformer.transformModelToPersonInfoApi(personInfo),
+      person = personTransformer.transformModelToPersonApi(personInfo),
       arrivalDate = jpa.arrivalDate,
       departureDate = jpa.departureDate,
       serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),

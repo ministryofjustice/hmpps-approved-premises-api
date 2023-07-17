@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
@@ -104,7 +104,7 @@ class PlacementRequestTransformerTest {
     .withAllocatedToUser(user)
 
   private val mockRisks = mockk<PersonRisks>()
-  private val mockPersonInfo = mockk<PersonInfo>()
+  private val mockPersonInfo = mockk<Person>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
   private val decision = ApiAssessmentDecision.accepted
@@ -112,7 +112,7 @@ class PlacementRequestTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns decision
-    every { mockPersonTransformer.transformModelToPersonInfoApi(personInfo) } returns mockPersonInfo
+    every { mockPersonTransformer.transformModelToPersonApi(personInfo) } returns mockPersonInfo
     every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
   }

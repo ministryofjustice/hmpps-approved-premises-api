@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -216,7 +216,7 @@ class PlacementRequestDetailTransformerTest {
     )
 
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecision.accepted
-    every { mockPersonTransformer.transformModelToPersonInfoApi(mockPersonInfoResult) } returns mockk<PersonInfo>()
+    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockk<Person>()
     every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockk<PersonRisks>()
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockk<ApprovedPremisesUser>()
 

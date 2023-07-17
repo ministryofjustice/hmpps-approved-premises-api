@@ -98,7 +98,7 @@ class AssessmentTransformer(
         status = getStatusForTemporaryAccommodationAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
-        person = personTransformer.transformModelToPersonInfoApi(personInfo),
+        person = personTransformer.transformModelToPersonApi(personInfo),
       )
       else -> throw RuntimeException("Unsupported type: ${ase.type}")
     }

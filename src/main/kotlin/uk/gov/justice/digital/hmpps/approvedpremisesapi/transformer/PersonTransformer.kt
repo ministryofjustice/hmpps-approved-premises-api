@@ -1,18 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfoType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 
 @Component
 class PersonTransformer {
-  fun transformModelToPersonInfoApi(personInfoResult: PersonInfoResult.Success) = when (personInfoResult) {
-    is PersonInfoResult.Success.Full -> FullPersonInfo(
-      type = PersonInfoType.fullPersonInfo,
+  fun transformModelToPersonApi(personInfoResult: PersonInfoResult.Success) = when (personInfoResult) {
+    is PersonInfoResult.Success.Full -> FullPerson(
+      type = PersonType.fullPerson,
       crn = personInfoResult.offenderDetailSummary.otherIds.crn,
       name = "${personInfoResult.offenderDetailSummary.firstName} ${personInfoResult.offenderDetailSummary.surname}",
       dateOfBirth = personInfoResult.offenderDetailSummary.dateOfBirth,
@@ -26,20 +25,20 @@ class PersonTransformer {
         "Prefer to self-describe" -> personInfoResult.offenderDetailSummary.offenderProfile.selfDescribedGender
         else -> personInfoResult.offenderDetailSummary.offenderProfile.genderIdentity
       },
-      prisonName = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus).takeIf { it == FullPersonInfo.Status.inCustody }?.let {
+      prisonName = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus).takeIf { it == FullPerson.Status.inCustody }?.let {
         personInfoResult.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfoResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
     )
-    is PersonInfoResult.Success.Restricted -> RestrictedPersonInfo(
-      type = PersonInfoType.restrictedPersonInfo,
+    is PersonInfoResult.Success.Restricted -> RestrictedPerson(
+      type = PersonType.restrictedPerson,
       crn = personInfoResult.crn,
     )
   }
 
   private fun inOutStatusToPersonInfoApiStatus(inOutStatus: InOutStatus?) = when (inOutStatus) {
-    InOutStatus.IN -> FullPersonInfo.Status.inCustody
-    InOutStatus.OUT -> FullPersonInfo.Status.inCommunity
-    InOutStatus.TRN -> FullPersonInfo.Status.inCustody
-    null -> FullPersonInfo.Status.unknown
+    InOutStatus.IN -> FullPerson.Status.inCustody
+    InOutStatus.OUT -> FullPerson.Status.inCommunity
+    InOutStatus.TRN -> FullPerson.Status.inCustody
+    null -> FullPerson.Status.unknown
   }
 }

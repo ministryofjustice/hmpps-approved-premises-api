@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
@@ -498,12 +498,12 @@ class ApplicationTest : IntegrationTestBase() {
           objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
         assertThat(responseBody).matches {
-          val person = it[0].person as FullPersonInfo
+          val person = it[0].person as FullPerson
 
           application.id == it[0].id &&
             application.crn == person.crn &&
             person.nomsNumber == null &&
-            person.status == FullPersonInfo.Status.unknown &&
+            person.status == FullPerson.Status.unknown &&
             person.prisonName == null
         }
       }
@@ -547,12 +547,12 @@ class ApplicationTest : IntegrationTestBase() {
         objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
       assertThat(responseBody).matches {
-        val person = it[0].person as FullPersonInfo
+        val person = it[0].person as FullPerson
 
         application.id == it[0].id &&
           application.crn == person.crn &&
           person.nomsNumber == null &&
-          person.status == FullPersonInfo.Status.unknown &&
+          person.status == FullPerson.Status.unknown &&
           person.prisonName == null
       }
     }
@@ -687,14 +687,14 @@ class ApplicationTest : IntegrationTestBase() {
 
         val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-        assertThat(responseBody.person is FullPersonInfo).isTrue
+        assertThat(responseBody.person is FullPerson).isTrue
         assertThat(responseBody).matches {
-          val person = it.person as FullPersonInfo
+          val person = it.person as FullPerson
 
           application.id == it.id &&
             application.crn == person.crn &&
             person.nomsNumber == null &&
-            person.status == FullPersonInfo.Status.unknown &&
+            person.status == FullPerson.Status.unknown &&
             person.prisonName == null
         }
       }
@@ -736,15 +736,15 @@ class ApplicationTest : IntegrationTestBase() {
 
       val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-      assertThat(responseBody.person is FullPersonInfo).isTrue
+      assertThat(responseBody.person is FullPerson).isTrue
 
       assertThat(responseBody).matches {
-        val person = it.person as FullPersonInfo
+        val person = it.person as FullPerson
 
         application.id == it.id &&
           application.crn == person.crn &&
           person.nomsNumber == null &&
-          person.status == FullPersonInfo.Status.unknown &&
+          person.status == FullPerson.Status.unknown &&
           person.prisonName == null
       }
     }

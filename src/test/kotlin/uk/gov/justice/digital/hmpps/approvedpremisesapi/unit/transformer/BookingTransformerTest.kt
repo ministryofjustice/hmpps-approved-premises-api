@@ -16,11 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfoType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
@@ -195,13 +195,13 @@ class BookingTransformerTest {
       name = "first last",
     )
 
-    every { mockPersonTransformer.transformModelToPersonInfoApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPersonInfo(
-      type = PersonInfoType.fullPersonInfo,
+    every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
+      type = PersonType.fullPerson,
       crn = "crn",
       name = "first last",
       dateOfBirth = LocalDate.parse("2022-09-08"),
       sex = "Male",
-      status = FullPersonInfo.Status.inCommunity,
+      status = FullPerson.Status.inCommunity,
       nomsNumber = "NOMS321",
       nationality = "English",
       religionOrBelief = null,
@@ -228,13 +228,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -306,13 +306,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -353,13 +353,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -413,13 +413,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -483,13 +483,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -558,13 +558,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -662,13 +662,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -803,13 +803,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -994,13 +994,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1211,13 +1211,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1429,13 +1429,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1679,13 +1679,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = bookingId,
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1826,13 +1826,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1926,13 +1926,13 @@ class BookingTransformerTest {
     assertThat(transformedBooking).isEqualTo(
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = FullPersonInfo(
-          type = PersonInfoType.fullPersonInfo,
+        person = FullPerson(
+          type = PersonType.fullPerson,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = FullPersonInfo.Status.inCommunity,
+          status = FullPerson.Status.inCommunity,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,

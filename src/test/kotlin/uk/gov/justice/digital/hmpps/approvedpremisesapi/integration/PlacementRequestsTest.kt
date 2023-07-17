@@ -509,7 +509,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .expectStatus()
                 .isOk
                 .expectBody()
-                .jsonPath("$.person.type").isEqualTo("RestrictedPersonInfo")
+                .jsonPath("$.person.type").isEqualTo("RestrictedPerson")
                 .jsonPath("$.person.crn").isEqualTo(placementRequest.application.crn)
             }
           }

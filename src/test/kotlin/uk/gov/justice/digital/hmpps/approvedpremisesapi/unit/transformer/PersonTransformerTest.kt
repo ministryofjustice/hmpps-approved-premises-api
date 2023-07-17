@@ -2,10 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonInfoType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -27,9 +26,9 @@ class PersonTransformerTest {
 
     val personInfoResult = PersonInfoResult.Success.Restricted(crn, null)
 
-    val result = personTransformer.transformModelToPersonInfoApi(personInfoResult)
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
-    assertThat(result is RestrictedPersonInfo).isTrue
+    assertThat(result is RestrictedPerson).isTrue
     assertThat(result.crn).isEqualTo(crn)
   }
 
@@ -91,18 +90,18 @@ class PersonTransformerTest {
       inmateDetail = null,
     )
 
-    val result = personTransformer.transformModelToPersonInfoApi(personInfoResult)
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
     assertThat(result.crn).isEqualTo(crn)
-    assertThat(result is FullPersonInfo).isTrue
+    assertThat(result is FullPerson).isTrue
     assertThat(result).isEqualTo(
-      FullPersonInfo(
-        type = PersonInfoType.fullPersonInfo,
+      FullPerson(
+        type = PersonType.fullPerson,
         crn = "CRN123",
         name = "Greggory Someone",
         dateOfBirth = LocalDate.parse("1980-09-12"),
         sex = "Male",
-        status = FullPersonInfo.Status.unknown,
+        status = FullPerson.Status.unknown,
         nomsNumber = null,
         ethnicity = "White and Asian",
         nationality = "Spanish",
@@ -182,18 +181,18 @@ class PersonTransformerTest {
       inmateDetail = inmateDetail,
     )
 
-    val result = personTransformer.transformModelToPersonInfoApi(personInfoResult)
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
     assertThat(result.crn).isEqualTo(crn)
-    assertThat(result is FullPersonInfo).isTrue
+    assertThat(result is FullPerson).isTrue
     assertThat(result).isEqualTo(
-      FullPersonInfo(
-        type = PersonInfoType.fullPersonInfo,
+      FullPerson(
+        type = PersonType.fullPerson,
         crn = "CRN123",
         name = "Greggory Someone",
         dateOfBirth = LocalDate.parse("1980-09-12"),
         sex = "Male",
-        status = FullPersonInfo.Status.inCustody,
+        status = FullPerson.Status.inCustody,
         nomsNumber = "NOMS321",
         ethnicity = "White and Asian",
         nationality = "Spanish",
@@ -219,11 +218,11 @@ class PersonTransformerTest {
       inmateDetail = null,
     )
 
-    val result = personTransformer.transformModelToPersonInfoApi(personInfoResult)
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
     assertThat(result.crn).isEqualTo(crn)
-    assertThat(result is FullPersonInfo).isTrue
-    result as FullPersonInfo
+    assertThat(result is FullPerson).isTrue
+    result as FullPerson
     assertThat(result.genderIdentity).isEqualTo(null)
   }
 
@@ -242,11 +241,11 @@ class PersonTransformerTest {
       inmateDetail = null,
     )
 
-    val result = personTransformer.transformModelToPersonInfoApi(personInfoResult)
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
     assertThat(result.crn).isEqualTo(crn)
-    assertThat(result is FullPersonInfo).isTrue
-    result as FullPersonInfo
+    assertThat(result is FullPerson).isTrue
+    result as FullPerson
     assertThat(result.genderIdentity).isEqualTo("Male")
   }
 
@@ -266,11 +265,11 @@ class PersonTransformerTest {
       inmateDetail = null,
     )
 
-    val result = personTransformer.transformModelToPersonInfoApi(personInfoResult)
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
     assertThat(result.crn).isEqualTo(crn)
-    assertThat(result is FullPersonInfo).isTrue
-    result as FullPersonInfo
+    assertThat(result is FullPerson).isTrue
+    result as FullPerson
     assertThat(result.genderIdentity).isEqualTo("Other")
   }
 }
