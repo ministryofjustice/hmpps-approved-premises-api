@@ -36,6 +36,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
@@ -1106,6 +1108,200 @@ class ApplicationServiceTest {
     val approvedPremisesApplication = validatableActionResult.entity as TemporaryAccommodationApplicationEntity
 
     assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
+  }
+
+  @Test
+  fun `updateCas2Application returns NotFound when application doesn't exist`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+    assertThat(
+      applicationService.updateCas2Application(
+        applicationId = applicationId,
+        data = "{}",
+        username = username,
+      ) is AuthorisableActionResult.NotFound,
+    ).isTrue
+  }
+
+  @Test
+  fun `updateCas2Application returns Unauthorised when application doesn't belong to request user`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withId(applicationId)
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .produce()
+
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    assertThat(
+      applicationService.updateCas2Application(
+        applicationId = applicationId,
+        data = "{}",
+        username = username,
+      ) is AuthorisableActionResult.Unauthorised,
+    ).isTrue
+  }
+
+  @Test
+  fun `updateCas2Application returns GeneralValidationError when application schema is outdated`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val application = Cas2ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(null)
+      .produce()
+      .apply {
+        schemaUpToDate = false
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.updateCas2Application(
+      applicationId = applicationId,
+      data = "{}",
+      username = username,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+  }
+
+  @Test
+  fun `updateCas2Application returns GeneralValidationError when application has already been submitted`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val application = Cas2ApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.updateCas2Application(
+      applicationId = applicationId,
+      data = "{}",
+      username = username,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+    assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+  }
+
+  @Test
+  fun `updateCas2Application returns Success with updated Application`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+    val updatedData = """
+      {
+        "aProperty": "value"
+      }
+    """
+
+    val application = Cas2ApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+    every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
+    every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val result = applicationService.updateCas2Application(
+      applicationId = applicationId,
+      data = updatedData,
+      username = username,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+
+    assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+    val cas2Application = validatableActionResult.entity as Cas2ApplicationEntity
+
+    assertThat(cas2Application.data).isEqualTo(updatedData)
   }
 
   @Nested
