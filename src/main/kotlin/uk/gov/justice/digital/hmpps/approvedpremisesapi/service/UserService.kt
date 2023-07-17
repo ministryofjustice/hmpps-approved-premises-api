@@ -73,7 +73,7 @@ class UserService(
     }
 
     while (true) {
-      val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
+      val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
         ?: throw RuntimeException("Could not find a suitable assessor for assessment with qualifications (${qualifications.joinToString(",")}): ${application.crn}")
 
       if ((qualifications.isEmpty() && potentialUser.qualifications.isNotEmpty()) || potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION)) {
@@ -94,7 +94,7 @@ class UserService(
     }
 
     while (true) {
-      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingPlacementRequests(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
+      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
         ?: throw RuntimeException("Could not find a suitable matcher for placement request with qualifications (${qualifications.joinToString(",")}): $crn")
 
       if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION)) {
@@ -115,7 +115,7 @@ class UserService(
     }
 
     while (true) {
-      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingPlacementApplications(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
+      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
         ?: throw RuntimeException("Could not find a suitable matcher for placement application with qualifications (${qualifications.joinToString(",")}): $crn")
 
       if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION)) {

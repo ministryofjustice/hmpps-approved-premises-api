@@ -22,54 +22,105 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   @Query(
     """
-    SELECT u.*, ura.*, uqa2.* 
+    SELECT u.*, ura.*, uqa2.*,
+     RANK() OVER (
+      ORDER BY
+        (
+          SELECT COUNT(1)
+            FROM assessments a
+            WHERE a.allocated_to_user_id = u.id
+            AND 
+              (
+                a.submitted_at IS NULL
+                OR (
+                  a.submitted_at IS NOT NULL
+                    AND a.created_at BETWEEN 
+                      (CURRENT_TIMESTAMP - interval '1 week') AND
+                  		CURRENT_TIMESTAMP
+                )
+            )
+        ) ASC
+     ) as score
     FROM "users"  u
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_ASSESSOR' AND 
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (:excludedUserIds)
-    ORDER BY 
-      (SELECT COUNT(1) FROM assessments a WHERE a.allocated_to_user_id = u.id AND a.submitted_at IS NULL) ASC 
+    ORDER BY score ASC
     LIMIT 1
     """,
     nativeQuery = true,
   )
-  fun findQualifiedAssessorWithLeastPendingAssessments(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
+  fun findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
 
   @Query(
     """
-    SELECT u.*, ura.*, uqa2.* 
+    SELECT u.*, ura.*, uqa2.*,
+    RANK() OVER (
+      ORDER BY
+        (
+          SELECT COUNT(1)
+            FROM placement_applications pa
+            WHERE pa.allocated_to_user_id = u.id
+            AND 
+              (
+                pa.submitted_at IS NULL
+                OR (
+                  pa.submitted_at IS NOT NULL
+                    AND pa.created_at BETWEEN 
+                      (CURRENT_TIMESTAMP - interval '1 week') AND
+                  		CURRENT_TIMESTAMP
+                )
+            )
+        ) ASC
+     ) as score
     FROM "users"  u
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_MATCHER' AND 
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (:excludedUserIds)
-    ORDER BY 
-      (SELECT COUNT(1) FROM placement_applications pa WHERE pa.allocated_to_user_id = u.id AND pa.decision IS NULL) ASC 
+    ORDER BY score ASC 
     LIMIT 1
     """,
     nativeQuery = true,
   )
-  fun findQualifiedMatcherWithLeastPendingPlacementApplications(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
+  fun findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
 
   @Query(
     """
-    SELECT u.*, ura.*, uqa2.* 
+    SELECT u.*, ura.*, uqa2.*,
+    RANK() OVER (
+      ORDER BY
+        (
+          SELECT COUNT(1)
+            FROM placement_requests pr
+            WHERE pr.allocated_to_user_id = u.id
+            AND 
+              (
+                pr.booking_id IS NULL
+                OR (
+                  pr.booking_id IS NOT NULL
+                    AND pr.created_at BETWEEN 
+                      (CURRENT_TIMESTAMP - interval '1 week') AND
+                  		CURRENT_TIMESTAMP
+                )
+            )
+        ) ASC
+     ) as score
     FROM "users"  u
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_MATCHER' AND 
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (:excludedUserIds)
-    ORDER BY 
-      (SELECT COUNT(1) FROM placement_requests pr WHERE pr.allocated_to_user_id = u.id AND pr.booking_id IS NULL) ASC 
+    ORDER BY score ASC 
     LIMIT 1
     """,
     nativeQuery = true,
   )
-  fun findQualifiedMatcherWithLeastPendingPlacementRequests(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
+  fun findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
 }
 
 @Entity

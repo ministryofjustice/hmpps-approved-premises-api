@@ -138,7 +138,7 @@ class UserServiceTest {
     every { mockOffenderService.isLao(application.crn) } returns true
 
     every {
-      mockUserRepository.findQualifiedAssessorWithLeastPendingAssessments(
+      mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
         requiredQualifications = listOf(UserQualification.LAO.toString()),
         totalRequiredQualifications = 1,
         excludedUserIds = any(),
@@ -170,7 +170,7 @@ class UserServiceTest {
     every { mockOffenderService.isLao(application.crn) } returns false
 
     every {
-      mockUserRepository.findQualifiedAssessorWithLeastPendingAssessments(
+      mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
         requiredQualifications = emptyList(),
         totalRequiredQualifications = 0,
         excludedUserIds = any(),
@@ -202,7 +202,7 @@ class UserServiceTest {
     every { mockOffenderService.isLao(application.crn) } returns false
 
     every {
-      mockUserRepository.findQualifiedAssessorWithLeastPendingAssessments(
+      mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
         requiredQualifications = emptyList(),
         totalRequiredQualifications = 0,
         excludedUserIds = any(),
@@ -224,7 +224,7 @@ class UserServiceTest {
     every { mockOffenderService.isLao(crn) } returns true
 
     every {
-      mockUserRepository.findQualifiedMatcherWithLeastPendingPlacementRequests(
+      mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(
         requiredQualifications = listOf(UserQualification.LAO.toString()),
         totalRequiredQualifications = 1,
         excludedUserIds = any(),
@@ -250,7 +250,7 @@ class UserServiceTest {
     every { mockOffenderService.isLao(crn) } returns false
 
     every {
-      mockUserRepository.findQualifiedMatcherWithLeastPendingPlacementRequests(
+      mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(
         requiredQualifications = emptyList(),
         totalRequiredQualifications = 0,
         excludedUserIds = any(),
@@ -272,7 +272,7 @@ class UserServiceTest {
     every { mockOffenderService.isLao(crn) } returns true
 
     every {
-      mockUserRepository.findQualifiedMatcherWithLeastPendingPlacementApplications(
+      mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(
         requiredQualifications = listOf(UserQualification.LAO.toString()),
         totalRequiredQualifications = 1,
         excludedUserIds = any(),
@@ -298,7 +298,7 @@ class UserServiceTest {
     every { mockOffenderService.isLao(crn) } returns false
 
     every {
-      mockUserRepository.findQualifiedMatcherWithLeastPendingPlacementApplications(
+      mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(
         requiredQualifications = emptyList(),
         totalRequiredQualifications = 0,
         excludedUserIds = any(),
