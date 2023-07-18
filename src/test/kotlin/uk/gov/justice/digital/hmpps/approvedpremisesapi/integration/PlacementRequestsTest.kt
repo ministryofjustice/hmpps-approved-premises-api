@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
@@ -13,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
@@ -118,6 +121,152 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 objectMapper.writeValueAsString(
                   listOf(
                     placementRequestTransformer.transformJpaToApi(placementRequest, offenderDetails1, inmateDetails1),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class Dashboard {
+    @Test
+    fun `Get dashboard without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/placement-requests/dashboard")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `Get dashboard without for non-manager returns 401`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/placement-requests/dashboard")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `It returns all the placement requests when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails1, inmateDetails1 ->
+          `Given an Offender` { offenderDetails2, inmateDetails2 ->
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val application1 = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails1.otherIds.crn)
+              withCreatedByUser(user)
+              withApplicationSchema(applicationSchema)
+              withReleaseType("licence")
+            }
+
+            val assessment1 = assessmentEntityFactory.produceAndPersist {
+              withAssessmentSchema(assessmentSchema)
+              withApplication(application1)
+              withSubmittedAt(OffsetDateTime.now())
+              withAllocatedToUser(user)
+              withDecision(AssessmentDecision.ACCEPTED)
+            }
+
+            val application2 = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails2.otherIds.crn)
+              withCreatedByUser(user)
+              withApplicationSchema(applicationSchema)
+              withReleaseType("licence")
+            }
+
+            val assessment2 = assessmentEntityFactory.produceAndPersist {
+              withAssessmentSchema(assessmentSchema)
+              withApplication(application2)
+              withSubmittedAt(OffsetDateTime.now())
+              withAllocatedToUser(user)
+              withDecision(AssessmentDecision.ACCEPTED)
+            }
+
+            val placementRequirements = placementRequirementsFactory.produceAndPersist {
+              withApplication(application1)
+              withAssessment(assessment1)
+              withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+              withDesirableCriteria(
+                characteristicEntityFactory.produceAndPersistMultiple(5),
+              )
+              withEssentialCriteria(
+                characteristicEntityFactory.produceAndPersistMultiple(3),
+              )
+            }
+
+            val placementRequest1 = placementRequestFactory.produceAndPersist {
+              withAllocatedToUser(
+                userEntityFactory.produceAndPersist {
+                  withProbationRegion(
+                    probationRegionEntityFactory.produceAndPersist {
+                      withApArea(apAreaEntityFactory.produceAndPersist())
+                    },
+                  )
+                },
+              )
+              withApplication(application1)
+              withAssessment(assessment1)
+              withPlacementRequirements(placementRequirements)
+            }
+
+            val placementRequest2 = placementRequestFactory.produceAndPersist {
+              withAllocatedToUser(
+                userEntityFactory.produceAndPersist {
+                  withProbationRegion(
+                    probationRegionEntityFactory.produceAndPersist {
+                      withApArea(apAreaEntityFactory.produceAndPersist())
+                    },
+                  )
+                },
+              )
+              withApplication(application2)
+              withAssessment(assessment2)
+              withPlacementRequirements(placementRequirements)
+            }
+
+            placementRequestFactory.produceAndPersistMultiple(3) {
+              withAllocatedToUser(
+                userEntityFactory.produceAndPersist {
+                  withProbationRegion(
+                    probationRegionEntityFactory.produceAndPersist {
+                      withApArea(apAreaEntityFactory.produceAndPersist())
+                    },
+                  )
+                },
+              )
+              withReallocatedAt(OffsetDateTime.now())
+              withApplication(application2)
+              withAssessment(assessment2)
+              withPlacementRequirements(placementRequirements)
+            }
+
+            webTestClient.get()
+              .uri("/placement-requests/dashboard")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(placementRequest1, offenderDetails1, inmateDetails1),
+                    placementRequestTransformer.transformJpaToApi(placementRequest2, offenderDetails2, inmateDetails2),
                   ),
                 ),
               )
