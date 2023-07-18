@@ -643,10 +643,9 @@ class BookingService(
     if (booking.application != null && user != null) {
       val domainEventId = UUID.randomUUID()
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
-        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
+        else -> null
       }
 
       val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(keyWorkerStaffCode!!)
@@ -674,7 +673,7 @@ class BookingService(
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+                noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
               ),
               deliusEventNumber = application.eventNumber,
               premises = Premises(

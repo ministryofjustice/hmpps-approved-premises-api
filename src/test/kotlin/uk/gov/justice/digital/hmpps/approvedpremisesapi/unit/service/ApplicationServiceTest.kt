@@ -1462,7 +1462,7 @@ class ApplicationServiceTest {
         .withCrn(application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 

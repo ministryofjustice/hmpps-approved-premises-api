@@ -1132,7 +1132,7 @@ class BookingServiceTest {
         .withCrn(bookingEntity.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
 
       val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
 
@@ -1988,53 +1988,6 @@ class BookingServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `createApprovedPremisesAdHocBooking throws if unable to get Offender Details`(role: UserRole) {
-    val arrivalDate = LocalDate.parse("2023-02-22")
-    val departureDate = LocalDate.parse("2023-02-23")
-
-    val crn = "CRN123"
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(role)
-
-    val premises = ApprovedPremisesEntityFactory()
-      .withUnitTestControlTestProbationAreaAndLocalAuthority()
-      .produce()
-
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-
-    val bed = BedEntityFactory()
-      .withRoom(room)
-      .produce()
-
-    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
-
-    val existingApplication = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-
-    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
-    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
-
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
-
-    val runtimeException = assertThrows<RuntimeException> {
-      bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
-    }
-
-    assertThat(runtimeException.message).isEqualTo("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `createApprovedPremisesAdHocBooking throws if unable to get Staff Details`(role: UserRole) {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-22")
@@ -2074,7 +2027,7 @@ class BookingServiceTest {
       .produce()
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/staff-details/${user.deliusUsername}", HttpStatus.NOT_FOUND, null)
 
     val runtimeException = assertThrows<RuntimeException> {
@@ -2136,7 +2089,7 @@ class BookingServiceTest {
       .produce()
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
     every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
     every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
@@ -2245,7 +2198,7 @@ class BookingServiceTest {
       .produce()
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
     every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
     every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
@@ -2353,7 +2306,7 @@ class BookingServiceTest {
       .produce()
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
     every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
     every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
@@ -2426,7 +2379,7 @@ class BookingServiceTest {
       .produce()
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
     every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
     every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
@@ -3241,7 +3194,7 @@ class BookingServiceTest {
 
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
     every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
     every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
