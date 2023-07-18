@@ -95,7 +95,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Match' events"
       summary: A 'booking-made' event
       responses:
         '200':
@@ -122,7 +122,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'booking-extended' event
       responses:
         '200':
@@ -149,7 +149,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'booking-cancelled' event
       responses:
         '200':
@@ -203,7 +203,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'person-arrived' event
       responses:
         '200':
@@ -230,7 +230,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'person-not-arrived' event
       responses:
         '200':
@@ -257,7 +257,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'person-departed' event
       responses:
         '200':
