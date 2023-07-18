@@ -117,7 +117,7 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
   @Query("SELECT DISTINCT(a.crn) FROM ApplicationEntity a")
   fun getDistinctCrns(): List<String>
 
-  @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a")
+  @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a WHERE a.nomsNumber IS NOT NULL")
   fun getDistinctNomsNumbers(): List<String>
 
   @Query(
