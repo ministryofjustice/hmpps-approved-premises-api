@@ -275,6 +275,13 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
 components:
+  responses:
+    500Response:
+      description: unexpected error
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
   schemas:
     EventId:
       description: The UUID of an event
