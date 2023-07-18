@@ -529,7 +529,7 @@ components:
         withdrawnBy:
           $ref: '#/components/schemas/StaffMember'
         withdrawalReason:
-          $ref: '#/components/schemas/CancellationReason'
+          type: string
       required:
         - applicationId
         - applicationUrl
@@ -751,7 +751,7 @@ components:
         cancelledBy:
           $ref: '#/components/schemas/StaffMember'
         cancellationReason:
-          $ref: '#/components/schemas/CancellationReason'
+          type: string
       required:
         - personReference
         - deliusEventNumber
@@ -1062,28 +1062,6 @@ components:
         - apCode
         - legacyApCode
         - probationArea
-    CancellationReason:
-      type: object
-      properties:
-        description:
-          type: string
-          enum:
-            - Custodial disposal - RIC
-            - Offer Withdrawn
-            - Other
-            - Parole Licence not granted
-            - Withdrawn by Referrer
-        legacyCancellationCode:
-          type: string
-          enum:
-            - 1H
-            - B
-            - D
-            - 4I
-            - C
-      required:
-        - description
-        - legacyCancellationCode
     MoveOnCategory:
       type: object
       properties:
