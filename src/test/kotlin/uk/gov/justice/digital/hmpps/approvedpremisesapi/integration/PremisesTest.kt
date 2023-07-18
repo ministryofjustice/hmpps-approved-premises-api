@@ -214,7 +214,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `When a Temporary Accommodation Premises is updated then all field data is persisted`() {
-    `Given a User` { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(user.probationRegion)
       }
@@ -273,7 +273,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `When a Temporary Accommodation Premises is updated with a legacy PDU name then all field data is persisted`() {
-    `Given a User` { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(user.probationRegion)
       }
@@ -523,7 +523,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to update a Temporary Accommodation Premises without a PDU returns 400`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -564,7 +564,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to update a Temporary Accommodation Premises with an invalid PDU name returns 400`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -605,7 +605,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to update a Temporary Accommodation Premises with an invalid probation delivery unit ID returns 400`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1387,7 +1387,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get Premises Staff for Temporary Accommodation Premises returns 501`() {
-    `Given a User` { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
@@ -1540,7 +1540,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Rooms for Premises returns OK with correct body`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1602,7 +1602,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `The total bedspaces on a Temporary Accommodation Premises is equal to the sum of the bedspaces in all Rooms attached to the Premises`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1631,7 +1631,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Create new Room for Premises returns 201 Created with correct body when given valid data`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1670,7 +1670,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `When a new room is created with no notes then it defaults to empty`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1727,7 +1727,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to create a room with an unknown characteristic returns 400`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1756,7 +1756,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to create a room with a characteristic of the wrong service scope returns 400`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1860,7 +1860,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Updating a Room returns OK with correct body when given valid data`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1903,7 +1903,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `When a room is updated with no notes then it defaults to empty`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1935,7 +1935,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to update a room that does not exist returns 404`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1966,7 +1966,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to update a room with an unknown characteristic returns 400`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1999,7 +1999,7 @@ class PremisesTest : IntegrationTestBase() {
 
   @Test
   fun `Trying to update a room with a characteristic of the wrong service scope returns 400`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {

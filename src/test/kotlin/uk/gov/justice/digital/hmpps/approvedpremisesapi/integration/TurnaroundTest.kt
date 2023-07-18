@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 import java.util.UUID
 
@@ -56,7 +57,7 @@ class TurnaroundTest : IntegrationTestBase() {
 
   @Test
   fun `Create Turnaround returns 400 Bad Request if the number of working days is not a positive integer`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -98,7 +99,7 @@ class TurnaroundTest : IntegrationTestBase() {
 
   @Test
   fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing booking`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -150,7 +151,7 @@ class TurnaroundTest : IntegrationTestBase() {
 
   @Test
   fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing lost bed`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -205,7 +206,7 @@ class TurnaroundTest : IntegrationTestBase() {
 
   @Test
   fun `Create Turnaround returns 200 OK with the created turnaround`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {

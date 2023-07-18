@@ -8,14 +8,13 @@ import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
@@ -45,7 +44,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bookings report for all regions returns 403 Forbidden if user does not have all regions access`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/bookings?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -58,7 +57,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bookings report for a region returns 403 Forbidden if user cannot access the specified region`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/bookings?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
         .header("Authorization", "Bearer $jwt")
@@ -70,8 +69,21 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get bookings report returns 400 if month is provided and not within 1-12`() {
+  fun `Get bookings report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`() {
     `Given a User` { user, jwt ->
+      webTestClient.get()
+        .uri("/reports/bookings?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns 400 if month is provided and not within 1-12`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       webTestClient.get()
         .uri("/reports/bookings?probationRegionId=${user.probationRegion.id}&year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
@@ -86,22 +98,16 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bookings report returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withProbationRegion(userEntity.probationRegion)
         }
-
-        val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.of(2023, 4, 5))
           withDepartureDate(LocalDate.of(2023, 4, 7))
@@ -132,12 +138,12 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
-          .uri("/reports/bookings?year=2023&month=4")
+          .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -154,17 +160,12 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bookings report returns OK with only Bookings with at least one day in month when year and month are specified`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withProbationRegion(userEntity.probationRegion)
         }
-
-        val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val shouldNotBeIncludedBookings = mutableListOf<BookingEntity>()
         val shouldBeIncludedBookings = mutableListOf<BookingEntity>()
@@ -172,8 +173,7 @@ class ReportsTest : IntegrationTestBase() {
         // Straddling start of month
         shouldBeIncludedBookings += bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.of(2023, 3, 29))
           withDepartureDate(LocalDate.of(2023, 4, 1))
@@ -182,8 +182,7 @@ class ReportsTest : IntegrationTestBase() {
         // Straddling end of month
         shouldBeIncludedBookings += bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.of(2023, 4, 2))
           withDepartureDate(LocalDate.of(2023, 4, 3))
@@ -192,8 +191,7 @@ class ReportsTest : IntegrationTestBase() {
         // Entirely within month
         shouldBeIncludedBookings += bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.of(2023, 4, 30))
           withDepartureDate(LocalDate.of(2023, 5, 15))
@@ -202,8 +200,7 @@ class ReportsTest : IntegrationTestBase() {
         // Encompassing month
         shouldBeIncludedBookings += bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.of(2023, 3, 28))
           withDepartureDate(LocalDate.of(2023, 5, 28))
@@ -212,8 +209,7 @@ class ReportsTest : IntegrationTestBase() {
         // Before month
         shouldNotBeIncludedBookings += bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.of(2023, 3, 28))
           withDepartureDate(LocalDate.of(2023, 3, 30))
@@ -222,20 +218,19 @@ class ReportsTest : IntegrationTestBase() {
         // After month
         shouldNotBeIncludedBookings += bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.of(2023, 5, 1))
           withDepartureDate(LocalDate.of(2023, 5, 3))
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(shouldBeIncludedBookings, BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+          .createReport(shouldBeIncludedBookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
-          .uri("/reports/bookings?year=2023&month=4")
+          .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -252,7 +247,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bed usage report for all regions returns 403 Forbidden if user does not have all regions access`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/bed-usage?year=2023&month=4&")
         .header("Authorization", "Bearer $jwt")
@@ -265,7 +260,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bed usage report for a region returns 403 Forbidden if user cannot access the specified region`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/bed-usage?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
         .header("Authorization", "Bearer $jwt")
@@ -277,8 +272,21 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get bed usage report returns 400 if month is not within 1-12`() {
+  fun `Get bed usage report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`() {
     `Given a User` { user, jwt ->
+      webTestClient.get()
+        .uri("/reports/bed-usage?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get bed usage report returns 400 if month is not within 1-12`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       webTestClient.get()
         .uri("/reports/bed-usage?probationRegionId=${user.probationRegion.id}&year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
@@ -293,13 +301,11 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bed usage report returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withProbationRegion(userEntity.probationRegion)
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -310,16 +316,12 @@ class ReportsTest : IntegrationTestBase() {
           withRoom(room)
         }
 
-        val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
         GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         bookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBed(bed)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-04-05"))
           withDepartureDate(LocalDate.parse("2023-04-15"))
@@ -331,12 +333,12 @@ class ReportsTest : IntegrationTestBase() {
           realLostBedsRepository,
           realWorkingDayCountService,
         )
-          .createReport(listOf(bed), BedUsageReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+          .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
-          .uri("/reports/bed-usage?year=2023&month=4")
+          .uri("/reports/bed-usage?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -353,7 +355,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bed utilisation report for all regions returns 403 Forbidden if user does not have all regions access`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/bed-utilisation?year=2023&month=4&")
         .header("Authorization", "Bearer $jwt")
@@ -366,7 +368,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bed utilisation report for a region returns 403 Forbidden if user cannot access the specified region`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
         .header("Authorization", "Bearer $jwt")
@@ -378,8 +380,21 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get bed utilisation report returns 400 if month is not within 1-12`() {
+  fun `Get bed utilisation report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`() {
     `Given a User` { user, jwt ->
+      webTestClient.get()
+        .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get bed utilisation report returns 400 if month is not within 1-12`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       webTestClient.get()
         .uri("/reports/bed-utilisation?probationRegionId=${user.probationRegion.id}&year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
@@ -394,13 +409,11 @@ class ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get bed utilisation report returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withProbationRegion(userEntity.probationRegion)
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -411,16 +424,12 @@ class ReportsTest : IntegrationTestBase() {
           withRoom(room)
         }
 
-        val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
         GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         bookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBed(bed)
-          withServiceName(ServiceName.approvedPremises)
-          withStaffKeyWorkerCode(keyWorker.code)
+          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-04-05"))
           withDepartureDate(LocalDate.parse("2023-04-15"))
@@ -431,12 +440,12 @@ class ReportsTest : IntegrationTestBase() {
           realLostBedsRepository,
           realWorkingDayCountService,
         )
-          .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+          .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
-          .uri("/reports/bed-utilisation?year=2023&month=4")
+          .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk

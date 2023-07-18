@@ -104,7 +104,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `List Lost Beds on Temporary Accommodation premises returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -286,7 +286,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Get Lost Bed on Temporary Accommodation premises returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -400,7 +400,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds on Temporary Accommodation premises returns 400 Bad Request if the bed ID does not reference a bed on the premises`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -494,7 +494,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Beds on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -804,7 +804,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1048,7 +1048,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Cancel Lost Bed on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1149,7 +1149,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Bed on a Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1207,7 +1207,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Bed on a Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1276,7 +1276,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Bed on a Temporary Accommodation premises returns 409 Conflict when a lost bed for the same bed overlaps`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1331,7 +1331,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Bed on a Temporary Accommodation premises returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1400,7 +1400,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Update Lost Beds on Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -1467,7 +1467,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1547,7 +1547,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Update Lost Beds on Temporary Accommodation premises returns 409 Conflict when a lost bed for the same bed overlaps`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1609,7 +1609,7 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

@@ -132,7 +132,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -540,7 +540,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -600,7 +600,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when NOMS number is null`() {
-    `Given a User` { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
@@ -664,7 +664,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 400 when bed does not exist on the premises`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -699,7 +699,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking returns 400 when the departure date is before the arrival date`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -744,7 +744,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed overlaps`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -799,7 +799,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed has a turnaround that overlaps with the desired dates`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -862,7 +862,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -937,7 +937,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when a lost bed for the same bed overlaps`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -991,7 +991,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when a lost bed for the same bed overlaps with the turnaround time`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1047,7 +1047,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1184,7 +1184,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Arrival returns 409 Conflict when another booking for the same bed overlaps with the arrival and expected departure dates`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1248,7 +1248,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Arrival returns 409 Conflict when a lost bed for the same bed overlaps with the arrival and expected departure dates`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1493,7 +1493,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival updates arrival and departure date for a Temporary Accommodation booking`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1800,7 +1800,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure updates the departure date for a Temporary Accommodation booking`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
@@ -1861,7 +1861,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure on Temporary Accommodation Booking when a departure already exists returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
@@ -2112,7 +2112,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2174,7 +2174,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2235,7 +2235,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2304,7 +2304,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when a lost bed for the same bed overlaps with the new departure date`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2364,7 +2364,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when a lost bed for the same bed overlaps with the updated booking's turnaround time`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2760,14 +2760,14 @@ class BookingTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
-          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
               probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
             }
           }
         }
-        withServiceName(ServiceName.temporaryAccommodation)
+        withServiceName(ServiceName.approvedPremises)
       }
 
       webTestClient.post()
@@ -2791,7 +2791,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {

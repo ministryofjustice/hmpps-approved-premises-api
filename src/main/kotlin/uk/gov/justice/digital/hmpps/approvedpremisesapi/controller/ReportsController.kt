@@ -23,14 +23,11 @@ class ReportsController(
 ) : ReportsApiDelegate {
 
   override fun reportsBookingsGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<Resource> {
-    when {
-      probationRegionId == null && !userAccessService.currentUserHasAllRegionsAccess() -> throw ForbiddenProblem()
-      probationRegionId != null && !userAccessService.currentUserCanAccessRegion(probationRegionId) -> throw ForbiddenProblem()
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
     }
 
-    if (month < 1 || month > 12) {
-      throw BadRequestProblem(errorDetail = "month must be between 1 and 12")
-    }
+    validateParameters(probationRegionId, month)
 
     val properties = BookingsReportProperties(xServiceName, probationRegionId, year, month)
     val outputStream = ByteArrayOutputStream()
@@ -41,6 +38,10 @@ class ReportsController(
   }
 
   override fun reportsBedUsageGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<Resource> {
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
+    }
+
     validateParameters(probationRegionId, month)
 
     val properties = BedUsageReportProperties(xServiceName, probationRegionId, year, month)
@@ -52,6 +53,10 @@ class ReportsController(
   }
 
   override fun reportsBedUtilisationGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<Resource> {
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
+    }
+
     validateParameters(probationRegionId, month)
 
     val properties = BedUtilisationReportProperties(xServiceName, probationRegionId, year, month)

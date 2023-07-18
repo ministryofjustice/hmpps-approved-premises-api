@@ -224,16 +224,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewPremises returns true if the given premises is a Temporary Accommodation premises and the user can access the premises's probation region`() {
+  fun `userCanViewPremises returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `userCanViewPremises returns false if the given premises is a Temporary Accommodation premises and the user cannot access the premises's probation region`() {
+  fun `userCanViewPremises returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `userCanViewPremises returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -245,17 +257,29 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanViewPremises returns true if the given premises is a Temporary Accommodation premises and the current user can access the premises's probation region`() {
+  fun `currentUserCanViewPremises returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-    assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesInUserRegion)).isTrue
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewPremises(temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `currentUserCanViewPremises returns false if the given premises is a Temporary Accommodation premises and the current user cannot access the premises's probation region`() {
+  fun `currentUserCanViewPremises returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-    assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewPremises(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewPremises returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanViewPremises(temporaryAccommodationPremisesInUserRegion)).isFalse
+    assertThat(userAccessService.currentUserCanViewPremises(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
   @Test
@@ -266,16 +290,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanManagePremises returns true if the given premises is a Temporary Accommodation premises and the user can access the premises's probation region`() {
+  fun `userCanManagePremises returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `userCanManagePremises returns false if the given premises is a Temporary Accommodation premises and the user cannot access the premises's probation region`() {
+  fun `userCanManagePremises returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `userCanManagePremises returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -287,16 +323,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanManagePremises returns true if the given premises is a Temporary Accommodation premises and the current user can access the premises's probation region`() {
+  fun `currentUserCanManagePremises returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.currentUserCanManagePremises(temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `currentUserCanManagePremises returns false if the given premises is a Temporary Accommodation premises and the current user cannot access the premises's probation region`() {
+  fun `currentUserCanManagePremises returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanManagePremises(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanManagePremises returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanManagePremises(temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.currentUserCanManagePremises(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -318,16 +366,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanManagePremisesBookings returns true if the given premises is a Temporary Accommodation premises and the user can access the premises's probation region`() {
+  fun `userCanManagePremisesBookings returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.userCanManagePremisesBookings(user, temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `userCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the user cannot access the premises's probation region`() {
+  fun `userCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanManagePremisesBookings(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `userCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanManagePremisesBookings(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanManagePremisesBookings(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -349,16 +409,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanManagePremisesBookings returns true if the given premises is a Temporary Accommodation premises and the current user can access the premises's probation region`() {
+  fun `currentUserCanManagePremisesBookings returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.currentUserCanManagePremisesBookings(temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `currentUserCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the current user cannot access the premises's probation region`() {
+  fun `currentUserCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanManagePremisesBookings(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanManagePremisesBookings(temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.currentUserCanManagePremisesBookings(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -380,16 +452,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanManagePremisesLostBeds returns true if the given premises is a Temporary Accommodation premises and the user can access the premises's probation region`() {
+  fun `userCanManagePremisesLostBeds returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `userCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the user cannot access the premises's probation region`() {
+  fun `userCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `userCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -411,16 +495,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanManagePremisesLostBeds returns true if the given premises is a Temporary Accommodation premises and the current user can access the premises's probation region`() {
+  fun `currentUserCanManagePremisesLostBeds returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `currentUserCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the current user cannot access the premises's probation region`() {
+  fun `currentUserCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -442,16 +538,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewPremisesCapacity returns true if the given premises is a Temporary Accommodation premises and the user can access the premises's probation region`() {
+  fun `userCanViewPremisesCapacity returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.userCanViewPremisesCapacity(user, temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `userCanViewPremisesCapacity returns false if the given premises is a Temporary Accommodation premises and the user cannot access the premises's probation region`() {
+  fun `userCanViewPremisesCapacity returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanViewPremisesCapacity(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `userCanViewPremisesCapacity returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanViewPremisesCapacity(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanViewPremisesCapacity(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -473,16 +581,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanViewPremisesCapacity returns true if the given premises is a Temporary Accommodation premises and the current user can access the premises's probation region`() {
+  fun `currentUserCanViewPremisesCapacity returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.currentUserCanViewPremisesCapacity(temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `currentUserCanViewPremisesCapacity returns false if the given premises is a Temporary Accommodation premises and the current user cannot access the premises's probation region`() {
+  fun `currentUserCanViewPremisesCapacity returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewPremisesCapacity(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewPremisesCapacity returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanViewPremisesCapacity(temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.currentUserCanViewPremisesCapacity(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -504,16 +624,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewPremisesStaff returns true if the given premises is a Temporary Accommodation premises and the user can access the premises's probation region`() {
+  fun `userCanViewPremisesStaff returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.userCanViewPremisesStaff(user, temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `userCanViewPremisesStaff returns false if the given premises is a Temporary Accommodation premises and the user cannot access the premises's probation region`() {
+  fun `userCanViewPremisesStaff returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanViewPremisesStaff(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `userCanViewPremisesStaff returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanViewPremisesStaff(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanViewPremisesStaff(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -535,16 +667,28 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanViewPremisesStaff returns true if the given premises is a Temporary Accommodation premises and the current user can access the premises's probation region`() {
+  fun `currentUserCanViewPremisesStaff returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
     assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
-  fun `currentUserCanViewPremisesStaff returns false if the given premises is a Temporary Accommodation premises and the current user cannot access the premises's probation region`() {
+  fun `currentUserCanViewPremisesStaff returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewPremisesStaff returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
@@ -800,5 +944,51 @@ class UserAccessServiceTest {
       .produce()
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanViewReport(user)).isTrue
+  }
+
+  @Test
+  fun `userCanViewReport returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanViewReport(user)).isFalse
+  }
+
+  @Test
+  fun `userCanViewReport returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.userCanViewReport(user)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isTrue
+  }
+
+  @Test
+  fun `currentUserCanViewReport returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewReport returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.currentUserCanViewReport()).isFalse
   }
 }
