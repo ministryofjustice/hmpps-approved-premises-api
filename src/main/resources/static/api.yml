@@ -3760,6 +3760,33 @@ components:
             - extensions
             - departures
             - cancellations
+    BookingSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        premisesId:
+          type: string
+          format: uuid
+        premisesName:
+          type: string
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - premisesId
+        - premisesName
+        - arrivalDate
+        - departureDate
+        - createdAt
     Person:
       type: object
       properties:
@@ -5953,6 +5980,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cancellation'
+            booking:
+              $ref: '#/components/schemas/BookingSummary'
           required:
             - cancellations
     PlacementRequestStatus:
