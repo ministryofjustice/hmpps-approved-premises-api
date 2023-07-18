@@ -66,7 +66,7 @@ class DomainEventServiceTest {
   )
 
   @Test
-  fun `getApplicationSubmittedDomainEvent returns null when no event does not exist`() {
+  fun `getApplicationSubmittedDomainEvent returns null when event does not exist`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
@@ -221,7 +221,7 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getApplicationAssessedDomainEvent returns null when no event does not exist`() {
+  fun `getApplicationAssessedDomainEvent returns null when event does not exist`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
@@ -376,7 +376,7 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingMadeDomainEvent returns null when no event does not exist`() {
+  fun `getBookingMadeDomainEvent returns null when event does not exist`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
@@ -531,7 +531,7 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingCancelledDomainEvent returns null when no event does not exist`() {
+  fun `getBookingCancelledDomainEvent returns null when event does not exist`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
