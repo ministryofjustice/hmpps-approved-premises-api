@@ -46,6 +46,10 @@ class DeleteBookingTest : IntegrationTestBase() {
       withBooking(booking)
     }
 
+    val turnarounds = turnaroundFactory.produceAndPersistMultiple(2) {
+      withBooking(booking)
+    }
+
     webTestClient.delete()
       .uri("/internal/booking/${booking.id}")
       .exchange()
@@ -59,6 +63,7 @@ class DeleteBookingTest : IntegrationTestBase() {
     val cancellationFromDatabase = cancellationRepository.findByIdOrNull(cancellation.id)
     val confirmationFromDatabase = confirmationRepository.findByIdOrNull(confirmation.id)
     val extensionsFromDatabase = extensions.map { extensionRepository.findByIdOrNull(it.id) }
+    val turnaroundsFromDatabase = turnarounds.map { turnaroundRepository.findByIdOrNull(it.id) }
 
     assertThat(bookingFromDatabase).isNull()
     assertThat(arrivalFromDatabase).isNull()
@@ -67,6 +72,7 @@ class DeleteBookingTest : IntegrationTestBase() {
     assertThat(cancellationFromDatabase).isNull()
     assertThat(confirmationFromDatabase).isNull()
     extensionsFromDatabase.forEach { assertThat(it).isNull() }
+    turnaroundsFromDatabase.forEach { assertThat(it).isNull() }
   }
 
   @Test
@@ -104,6 +110,10 @@ class DeleteBookingTest : IntegrationTestBase() {
       withBooking(booking)
     }
 
+    val turnarounds = turnaroundFactory.produceAndPersistMultiple(2) {
+      withBooking(booking)
+    }
+
     every { realExtensionRepository.delete(match { it.id == extensions.last().id }) } throws RuntimeException("Database Exception")
 
     webTestClient.delete()
@@ -119,6 +129,7 @@ class DeleteBookingTest : IntegrationTestBase() {
     val cancellationFromDatabase = cancellationRepository.findByIdOrNull(cancellation.id)
     val confirmationFromDatabase = confirmationRepository.findByIdOrNull(confirmation.id)
     val extensionsFromDatabase = extensions.map { extensionRepository.findByIdOrNull(it.id) }
+    val turnaroundsFromDatabase = turnarounds.map { turnaroundRepository.findByIdOrNull(it.id) }
 
     assertThat(bookingFromDatabase).isNotNull
     assertThat(arrivalFromDatabase).isNotNull
@@ -127,6 +138,7 @@ class DeleteBookingTest : IntegrationTestBase() {
     assertThat(cancellationFromDatabase).isNotNull
     assertThat(confirmationFromDatabase).isNotNull
     assertThat(extensionsFromDatabase).isNotNull
+    assertThat(turnaroundsFromDatabase).isNotNull
   }
 
   private fun createPremises() = approvedPremisesEntityFactory.produceAndPersist {
