@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelled
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -69,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.OffsetTime
 import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
@@ -840,8 +843,9 @@ class BookingService(
 
   @Transactional
   fun createCancellation(
+    user: UserEntity?,
     booking: BookingEntity,
-    date: LocalDate,
+    cancelledAt: LocalDate,
     reasonId: UUID,
     notes: String?,
   ) = validated<CancellationEntity> {
@@ -863,7 +867,7 @@ class BookingService(
     val cancellationEntity = cancellationRepository.save(
       CancellationEntity(
         id = UUID.randomUUID(),
-        date = date,
+        date = cancelledAt,
         reason = reason!!,
         notes = notes,
         booking = booking,
@@ -880,6 +884,67 @@ class BookingService(
           duration = placementRequest.duration,
         ),
         notes = placementRequest.notes,
+      )
+    }
+
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+      val dateTime = OffsetDateTime.now()
+
+      val domainEventId = UUID.randomUUID()
+
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
+      }
+
+      val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(booking.keyWorkerStaffCode!!)
+      val keyWorkerStaffDetails = when (keyWorkerStaffDetailsResult) {
+        is ClientResult.Success -> keyWorkerStaffDetailsResult.body
+        is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
+      }
+
+      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+      domainEventService.saveBookingCancelledEvent(
+        DomainEvent(
+          id = domainEventId,
+          applicationId = application.id,
+          crn = booking.crn,
+          occurredAt = dateTime.toInstant(),
+          data = BookingCancelledEnvelope(
+            id = domainEventId,
+            timestamp = dateTime.toInstant(),
+            eventType = "approved-premises.booking.cancelled",
+            eventDetails = BookingCancelled(
+              applicationId = application.id,
+              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              bookingId = booking.id,
+              personReference = PersonReference(
+                crn = booking.crn,
+                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+              ),
+              deliusEventNumber = application.eventNumber,
+              premises = Premises(
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ),
+              cancelledBy = StaffMember(
+                staffCode = user.deliusStaffCode!!,
+                staffIdentifier = user.deliusStaffIdentifier,
+                forenames = user.name.split(" ").dropLast(1).joinToString(" "),
+                surname = keyWorkerStaffDetails.staff.surname.split(" ").last(),
+                username = null,
+              ),
+              cancelledAt = cancelledAt.atTime(OffsetTime.MIN).toInstant(),
+              cancellationReason = reason.name,
+            ),
+          ),
+        ),
       )
     }
 

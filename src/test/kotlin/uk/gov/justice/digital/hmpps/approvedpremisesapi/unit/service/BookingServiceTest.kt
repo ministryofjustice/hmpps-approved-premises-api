@@ -177,6 +177,10 @@ class BookingServiceTest {
     bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
   )
 
+  private val user = UserEntityFactory()
+    .withUnitTestControlProbationRegion()
+    .produce()
+
   @Test
   fun `getBookingForPremises returns PremisesNotFound when premises with provided ID does not exist`() {
     val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
@@ -1431,9 +1435,10 @@ class BookingServiceTest {
 
     val result = bookingService.createCancellation(
       booking = bookingEntity,
-      date = LocalDate.parse("2022-08-25"),
+      cancelledAt = LocalDate.parse("2022-08-25"),
       reasonId = UUID.randomUUID(),
       notes = "notes",
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -1462,9 +1467,10 @@ class BookingServiceTest {
 
     val result = bookingService.createCancellation(
       booking = bookingEntity,
-      date = LocalDate.parse("2022-08-25"),
+      cancelledAt = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
       notes = "notes",
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -1500,9 +1506,10 @@ class BookingServiceTest {
 
     val result = bookingService.createCancellation(
       booking = bookingEntity,
-      date = LocalDate.parse("2022-08-25"),
+      cancelledAt = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
       notes = "notes",
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -1535,9 +1542,10 @@ class BookingServiceTest {
 
     val result = bookingService.createCancellation(
       booking = bookingEntity,
-      date = LocalDate.parse("2022-08-25"),
+      cancelledAt = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
       notes = "notes",
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1618,9 +1626,10 @@ class BookingServiceTest {
 
     val result = bookingService.createCancellation(
       booking = bookingEntity,
-      date = LocalDate.parse("2022-08-25"),
+      cancelledAt = LocalDate.parse("2022-08-25"),
       reasonId = reasonId,
       notes = "notes",
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
