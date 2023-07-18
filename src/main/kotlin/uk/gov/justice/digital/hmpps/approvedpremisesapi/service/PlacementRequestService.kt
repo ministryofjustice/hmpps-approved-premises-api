@@ -56,6 +56,10 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNull()
   }
 
+  fun getAllActive(): List<PlacementRequestEntity> {
+    return placementRequestRepository.findAllByReallocatedAtNull()
+  }
+
   fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()

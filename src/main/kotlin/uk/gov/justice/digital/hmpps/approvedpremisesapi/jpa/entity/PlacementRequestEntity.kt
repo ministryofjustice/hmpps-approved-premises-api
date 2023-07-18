@@ -21,6 +21,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementRequestEntity>
 
   fun findAllByReallocatedAtNullAndBooking_IdNull(): List<PlacementRequestEntity>
+
+  fun findAllByReallocatedAtNull(): List<PlacementRequestEntity>
 }
 
 @Entity

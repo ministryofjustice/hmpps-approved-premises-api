@@ -11,7 +11,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -48,15 +51,21 @@ class PlacementRequestsController(
     val requests = placementRequestService.getVisiblePlacementRequestsForUser(user)
 
     return ResponseEntity.ok(
-      requests.mapNotNull {
-        val personDetail = getPersonDetailsForCrn(log, it.application.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
+      mapPersonDetailOntoPlacementRequests(requests, user),
+    )
+  }
 
-        if (personDetail === null) {
-          return@mapNotNull null
-        }
+  override fun placementRequestsDashboardGet(): ResponseEntity<List<PlacementRequest>> {
+    val user = userService.getUserForRequest()
 
-        placementRequestTransformer.transformJpaToApi(it, personDetail.first, personDetail.second)
-      },
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+      throw ForbiddenProblem()
+    }
+
+    val requests = placementRequestService.getAllActive()
+
+    return ResponseEntity.ok(
+      mapPersonDetailOntoPlacementRequests(requests, user),
     )
   }
 
@@ -122,5 +131,17 @@ class PlacementRequestsController(
     }
 
     return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
+  }
+
+  private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
+    return placementRequests.mapNotNull {
+      val personDetail = getPersonDetailsForCrn(log, it.application.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
+
+      if (personDetail === null) {
+        return@mapNotNull null
+      }
+
+      placementRequestTransformer.transformJpaToApi(it, personDetail.first, personDetail.second)
+    }
   }
 }
