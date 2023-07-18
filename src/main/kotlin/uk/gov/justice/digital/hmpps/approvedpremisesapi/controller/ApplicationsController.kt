@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -159,6 +160,7 @@ class ApplicationsController(
         data = serializedData,
         username = username,
       )
+      is UpdateCas2Application -> applicationService.updateCas2Application(applicationId = applicationId, data = serializedData, username = username)
       else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
     }
 

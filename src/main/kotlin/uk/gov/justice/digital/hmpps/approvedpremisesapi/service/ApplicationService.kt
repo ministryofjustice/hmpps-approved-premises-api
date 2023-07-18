@@ -502,6 +502,45 @@ class ApplicationService(
     )
   }
 
+  fun updateCas2Application(applicationId: UUID, data: String?, username: String?): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application !is Cas2ApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
+      )
+    }
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    application.apply {
+      this.data = data
+    }
+
+    val savedApplication = applicationRepository.save(application)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
   @Transactional
   fun submitApprovedPremisesApplication(applicationId: UUID, submitApplication: SubmitApprovedPremisesApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
