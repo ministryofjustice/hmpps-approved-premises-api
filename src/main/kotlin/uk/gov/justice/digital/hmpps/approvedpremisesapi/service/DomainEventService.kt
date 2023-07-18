@@ -9,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
@@ -58,6 +59,7 @@ class DomainEventService(
   fun getPersonNotArrivedEvent(id: UUID) = get<PersonNotArrivedEnvelope>(id)
   fun getPersonDepartedEvent(id: UUID) = get<PersonDepartedEnvelope>(id)
   fun getBookingNotMadeEvent(id: UUID) = get<BookingNotMadeEnvelope>(id)
+  fun getBookingCancelledEvent(id: UUID) = get<BookingCancelledEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -76,6 +78,8 @@ class DomainEventService(
       T::class == PersonDepartedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       T::class == BookingNotMadeEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
+      T::class == BookingCancelledEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
@@ -166,6 +170,17 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
+  @Transactional
+  fun saveBookingCancelledEvent(domainEvent: DomainEvent<BookingCancelledEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.booking.cancelled",
+      typeDescription = "An Approved Premises Booking has been cancelled",
+      detailUrl = bookingCancelledDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
   private fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     typeName: String,
@@ -223,6 +238,7 @@ class DomainEventService(
     PersonNotArrivedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED
     PersonDepartedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED
     BookingNotMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE
+    BookingCancelledEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }
