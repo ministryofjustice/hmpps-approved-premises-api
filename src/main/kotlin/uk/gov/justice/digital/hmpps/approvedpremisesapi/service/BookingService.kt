@@ -1270,6 +1270,10 @@ class BookingService(
       extensionRepository.delete(it)
     }
 
+    booking.turnarounds.forEach {
+      turnaroundRepository.delete(it)
+    }
+
     bookingRepository.delete(booking)
   }
 
