@@ -1300,7 +1300,14 @@ class BookingService(
       },
     )
 
-    // TODO: Emit booking changed domain event once format is agreed
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+      saveBookingChangedDomainEvent(
+        booking = booking,
+        application = booking.application!! as ApprovedPremisesApplicationEntity,
+        user = user,
+        bookingChangedAt = OffsetDateTime.now(),
+      )
+    }
 
     return success(dateChangeEntity)
   }

@@ -3944,5 +3944,104 @@ class BookingServiceTest {
         )
       }
     }
+
+    @Test
+    fun `emits domain event when booking has associated application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val booking = BookingEntityFactory()
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withServiceName(ServiceName.approvedPremises)
+        .withArrivalDate(LocalDate.parse("2023-07-14"))
+        .withDepartureDate(LocalDate.parse("2023-07-16"))
+        .withApplication(application)
+        .withCrn(application.crn)
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .withForenames("John Jacob")
+        .withSurname("Johnson")
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
+
+      val newArrivalDate = LocalDate.parse("2023-07-18")
+      val newDepartureDate = LocalDate.parse("2023-07-22")
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = newArrivalDate,
+        newDepartureDate = newDepartureDate,
+      )
+
+      assertThat(result is ValidatableActionResult.Success).isTrue
+      result as ValidatableActionResult.Success
+
+      verify {
+        mockDateChangeRepository.save(
+          match {
+            it.booking.id == booking.id &&
+              it.changedByUser == user &&
+              it.newArrivalDate == LocalDate.parse("2023-07-18") &&
+              it.newDepartureDate == LocalDate.parse("2023-07-22") &&
+              it.previousArrivalDate == LocalDate.parse("2023-07-14") &&
+              it.previousDepartureDate == LocalDate.parse("2023-07-16")
+          },
+        )
+      }
+
+      verify {
+        mockBookingRepository.save(
+          match {
+            it.id == booking.id &&
+              it.arrivalDate == LocalDate.parse("2023-07-18") &&
+              it.departureDate == LocalDate.parse("2023-07-22")
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveBookingChangedEvent(
+          match {
+            val data = (it.data as BookingChangedEnvelope).eventDetails
+
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.premises == Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ) &&
+              data.arrivalOn == newArrivalDate &&
+              data.departureOn == newDepartureDate
+          },
+        )
+      }
+    }
   }
 }
