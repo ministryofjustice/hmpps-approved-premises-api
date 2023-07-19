@@ -220,6 +220,7 @@ class ApplicationService(
         arrivalDate = null,
         isInapplicable = null,
         isWithdrawn = false,
+        withdrawalReason = null,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )
@@ -422,6 +423,7 @@ class ApplicationService(
   fun withdrawApprovedPremisesApplication(
     applicationId: UUID,
     user: UserEntity,
+    withdrawalReason: String?,
   ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
@@ -446,7 +448,8 @@ class ApplicationService(
 
         applicationRepository.save(
           application.apply {
-            isWithdrawn = true
+            this.isWithdrawn = true
+            this.withdrawalReason = withdrawalReason
           },
         )
 

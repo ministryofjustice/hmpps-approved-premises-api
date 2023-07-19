@@ -1901,7 +1901,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    val result = applicationService.withdrawApprovedPremisesApplication(applicationId, user)
+    val result = applicationService.withdrawApprovedPremisesApplication(applicationId, user, "alternative_identified_placement_no_longer_required")
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
@@ -1922,7 +1922,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
 
-    val result = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+    val result = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -1940,7 +1940,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
@@ -1966,7 +1966,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
@@ -1992,7 +1992,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
@@ -2018,7 +2018,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user)
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
@@ -2031,7 +2031,8 @@ class ApplicationServiceTest {
         match {
           it.id == application.id &&
             it is ApprovedPremisesApplicationEntity &&
-            it.isWithdrawn
+            it.isWithdrawn &&
+            it.withdrawalReason == "alternative_identified_placement_no_longer_required"
         },
       )
     }

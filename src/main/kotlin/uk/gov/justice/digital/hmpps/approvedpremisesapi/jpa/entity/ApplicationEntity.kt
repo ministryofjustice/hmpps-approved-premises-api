@@ -196,6 +196,7 @@ class ApprovedPremisesApplicationEntity(
   var isEsapApplication: Boolean?,
   var isInapplicable: Boolean?,
   var isWithdrawn: Boolean,
+  var withdrawalReason: String?,
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
