@@ -5116,7 +5116,6 @@ components:
         - schemaVersion
         - outdatedSchema
         - createdAt
-        - allocatedAt
         - clarificationNotes
     AssessmentStatus:
       type: string

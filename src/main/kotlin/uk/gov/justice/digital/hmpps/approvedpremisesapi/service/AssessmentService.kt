@@ -498,10 +498,10 @@ class AssessmentService(
       )
 
       emailNotificationService.sendEmail(
-        user = currentAssessment.allocatedToUser,
+        user = currentAssessment.allocatedToUser!!,
         templateId = notifyConfig.templates.assessmentDeallocated,
         personalisation = mapOf(
-          "name" to currentAssessment.allocatedToUser.name,
+          "name" to currentAssessment.allocatedToUser!!.name,
           "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
           "crn" to application.crn,
         ),

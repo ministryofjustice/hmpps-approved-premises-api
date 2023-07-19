@@ -100,9 +100,9 @@ data class AssessmentEntity(
 
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
-  val allocatedToUser: UserEntity,
+  val allocatedToUser: UserEntity?,
 
-  val allocatedAt: OffsetDateTime,
+  val allocatedAt: OffsetDateTime?,
   var reallocatedAt: OffsetDateTime?,
 
   val createdAt: OffsetDateTime,

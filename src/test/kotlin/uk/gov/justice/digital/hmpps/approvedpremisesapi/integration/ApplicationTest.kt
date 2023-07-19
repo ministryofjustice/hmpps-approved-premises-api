@@ -1654,7 +1654,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedApplication.isPipeApplication).isTrue
 
           val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
-          assertThat(createdAssessment.allocatedToUser.id).isEqualTo(assessorUser.id)
+          assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
 
           val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
 

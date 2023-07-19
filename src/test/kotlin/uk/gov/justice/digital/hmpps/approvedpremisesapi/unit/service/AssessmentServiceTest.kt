@@ -1367,10 +1367,10 @@ class AssessmentServiceTest {
     }
     verify(exactly = 1) {
       emailNotificationServiceMock.sendEmail(
-        match { it.id == previousAssessment.allocatedToUser.id },
+        match { it.id == previousAssessment.allocatedToUser!!.id },
         "331ce452-ea83-4f0c-aec0-5eafe85094f2",
         match {
-          it["name"] == previousAssessment.allocatedToUser.name &&
+          it["name"] == previousAssessment.allocatedToUser!!.name &&
             (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
         },
       )

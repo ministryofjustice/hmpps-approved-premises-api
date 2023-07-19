@@ -77,7 +77,7 @@ class TaskService(
 
     return Reallocation(
       taskType = taskType,
-      user = userTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+      user = userTransformer.transformJpaToApi(allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
     )
   }
 }

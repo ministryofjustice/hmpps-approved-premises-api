@@ -27,7 +27,7 @@ class TaskTransformer(
     personName = personName,
     crn = assessment.application.crn,
     dueDate = assessment.createdAt.plusDays(10).toLocalDate(),
-    allocatedToStaffMember = userTransformer.transformJpaToApi(assessment.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+    allocatedToStaffMember = userTransformer.transformJpaToApi(assessment.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getAssessmentStatus(assessment),
     taskType = TaskType.assessment,
   )
