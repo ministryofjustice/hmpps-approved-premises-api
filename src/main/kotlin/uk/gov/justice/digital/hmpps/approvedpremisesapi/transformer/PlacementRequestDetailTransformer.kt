@@ -34,6 +34,7 @@ class PlacementRequestDetailTransformer(
       status = placementRequest.status,
       assessmentDecision = placementRequest.assessmentDecision,
       assessmentDate = placementRequest.assessmentDate,
+      applicationDate = placementRequest.applicationDate,
       assessor = placementRequest.assessor,
       notes = placementRequest.notes,
       cancellations = cancellations.mapNotNull { cancellationTransformer.transformJpaToApi(it) },

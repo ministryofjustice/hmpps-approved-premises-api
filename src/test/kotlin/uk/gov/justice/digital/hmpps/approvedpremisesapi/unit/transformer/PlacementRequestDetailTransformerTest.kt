@@ -88,6 +88,7 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.status).isEqualTo(transformedPlacementRequest.status)
     assertThat(result.assessmentDecision).isEqualTo(transformedPlacementRequest.assessmentDecision)
     assertThat(result.assessmentDate).isEqualTo(transformedPlacementRequest.assessmentDate)
+    assertThat(result.applicationDate).isEqualTo(transformedPlacementRequest.applicationDate)
     assertThat(result.assessor).isEqualTo(transformedPlacementRequest.assessor)
     assertThat(result.notes).isEqualTo(transformedPlacementRequest.notes)
     assertThat(result.cancellations).isEqualTo(listOf(mockCancellation, mockCancellation))
@@ -145,6 +146,7 @@ class PlacementRequestDetailTransformerTest {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withReleaseType("licence")
       .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now().minusDays(3))
       .produce()
 
     val submittedAt = OffsetDateTime.now()

@@ -5956,6 +5956,9 @@ components:
             assessmentDate:
               type: string
               format: date-time
+            applicationDate:
+              type: string
+              format: date-time
             assessor:
               $ref: '#/components/schemas/ApprovedPremisesUser'
             notes:
@@ -5970,6 +5973,7 @@ components:
             - status
             - assessmentDecision
             - assessmentDate
+            - applicationDate
             - assessor
     PlacementRequestDetail:
       allOf:
