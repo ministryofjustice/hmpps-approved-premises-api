@@ -897,10 +897,10 @@ class BookingService(
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
       }
 
-      val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(booking.keyWorkerStaffCode!!)
-      val keyWorkerStaffDetails = when (keyWorkerStaffDetailsResult) {
-        is ClientResult.Success -> keyWorkerStaffDetailsResult.body
-        is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
+      val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+      val staffDetails = when (staffDetailsResult) {
+        is ClientResult.Success -> staffDetailsResult.body
+        is ClientResult.Failure -> staffDetailsResult.throwException()
       }
 
       val application = booking.application!! as ApprovedPremisesApplicationEntity
@@ -933,11 +933,11 @@ class BookingService(
                 localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
               ),
               cancelledBy = StaffMember(
-                staffCode = user.deliusStaffCode!!,
-                staffIdentifier = user.deliusStaffIdentifier,
-                forenames = user.name.split(" ").dropLast(1).joinToString(" "),
-                surname = keyWorkerStaffDetails.staff.surname.split(" ").last(),
-                username = null,
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username,
               ),
               cancelledAt = cancelledAt.atTime(OffsetTime.MIN).toInstant(),
               cancellationReason = reason.name,
@@ -1089,10 +1089,10 @@ class BookingService(
                 localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
               ),
               keyWorker = StaffMember(
-                staffCode = user.deliusStaffCode!!,
-                staffIdentifier = user.deliusStaffIdentifier,
-                forenames = user.name.split(" ").dropLast(1).joinToString(" "),
-                surname = keyWorkerStaffDetails.staff.surname.split(" ").last(),
+                staffCode = keyWorkerStaffDetails.staffCode,
+                staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
+                forenames = keyWorkerStaffDetails.staff.forenames,
+                surname = keyWorkerStaffDetails.staff.surname,
                 username = null,
               ),
               departedAt = dateTime.toInstant(),
