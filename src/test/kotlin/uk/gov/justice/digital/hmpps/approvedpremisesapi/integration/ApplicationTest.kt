@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -35,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -1956,6 +1958,11 @@ class ApplicationTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/applications/${application.id}/withdrawal")
           .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewWithdrawal(
+              reason = WithdrawalReason.alternativeIdentifiedPlacementNoLongerRequired,
+            ),
+          )
           .exchange()
           .expectStatus()
           .isOk

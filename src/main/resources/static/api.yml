@@ -1783,6 +1783,13 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: details of the withdrawal
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewWithdrawal'
+        required: false
       responses:
         200:
           description: successful operation
@@ -3958,6 +3965,13 @@ components:
       required:
         - bookingId
         - date
+        - reason
+    NewWithdrawal:
+      type: object
+      properties:
+        reason:
+          $ref: '#/components/schemas/WithdrawalReason'
+      required:
         - reason
     Cancellation:
       type: object
@@ -6483,3 +6497,14 @@ components:
     BedOccupancyOpenEntry:
       allOf:
         - $ref: '#/components/schemas/BedOccupancyEntry'
+    WithdrawalReason:
+      type: string
+      enum:
+        - alternative_identified_placement_no_longer_required
+        - change_in_circumstances_placement_no_longer_required
+        - change_in_circumstances_new_application_to_be_submitted
+        - change_in_release_date_placement_no_longer_required
+        - change_in_release_decision_placement_no_longer_required
+        - error_in_application
+        - duplicate_application
+        - other

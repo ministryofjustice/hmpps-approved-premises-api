@@ -42,6 +42,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
+  private var withdrawalReason: Yielded<String?> = { null }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
@@ -136,6 +137,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.isWithdrawn = { isWithdrawn }
   }
 
+  fun withWithdrawalReason(withdrawalReason: String) = apply {
+    this.withdrawalReason = { withdrawalReason }
+  }
+
   fun withNomsNumber(nomsNumber: String) = apply {
     this.nomsNumber = { nomsNumber }
   }
@@ -173,6 +178,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     arrivalDate = this.arrivalDate(),
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),
+    withdrawalReason = this.withdrawalReason(),
     nomsNumber = this.nomsNumber(),
   )
 }
