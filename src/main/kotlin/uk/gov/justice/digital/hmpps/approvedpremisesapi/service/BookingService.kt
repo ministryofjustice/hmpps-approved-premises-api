@@ -5,6 +5,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelled
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChanged
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -449,6 +451,69 @@ class BookingService(
               cru = Cru(
                 name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
               ),
+            ),
+            premises = Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ),
+            arrivalOn = booking.arrivalDate,
+            departureOn = booking.departureDate,
+          ),
+        ),
+      ),
+    )
+  }
+
+  private fun saveBookingChangedDomainEvent(
+    booking: BookingEntity,
+    application: ApprovedPremisesApplicationEntity,
+    user: UserEntity,
+    bookingChangedAt: OffsetDateTime,
+  ) {
+    val domainEventId = UUID.randomUUID()
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      else -> null
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+    domainEventService.saveBookingChangedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = booking.crn,
+        occurredAt = bookingChangedAt.toInstant(),
+        data = BookingChangedEnvelope(
+          id = domainEventId,
+          timestamp = bookingChangedAt.toInstant(),
+          eventType = "approved-premises.booking.changed",
+          eventDetails = BookingChanged(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            bookingId = booking.id,
+            personReference = PersonReference(
+              crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
+              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = application.eventNumber,
+            changedAt = bookingChangedAt.toInstant(),
+            changedBy = StaffMember(
+              staffCode = staffDetails.staffCode,
+              staffIdentifier = staffDetails.staffIdentifier,
+              forenames = staffDetails.staff.forenames,
+              surname = staffDetails.staff.surname,
+              username = staffDetails.username,
             ),
             premises = Premises(
               id = approvedPremises.id,
@@ -1121,6 +1186,7 @@ class BookingService(
 
   @Transactional
   fun createExtension(
+    user: UserEntity?,
     booking: BookingEntity,
     newDepartureDate: LocalDate,
     notes: String?,
@@ -1161,6 +1227,15 @@ class BookingService(
     booking.departureDate = extensionEntity.newDepartureDate
     booking.extensions.add(extension)
     updateBooking(booking)
+
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+      saveBookingChangedDomainEvent(
+        booking = booking,
+        application = booking.application!! as ApprovedPremisesApplicationEntity,
+        user = user,
+        bookingChangedAt = OffsetDateTime.now(),
+      )
+    }
 
     return success(extensionEntity)
   }
