@@ -582,6 +582,7 @@ class PremisesController(
     }
 
     val result = bookingService.createExtension(
+      user = usersService.getUserForRequest(),
       booking = booking,
       newDepartureDate = body.newDepartureDate,
       notes = body.notes,
