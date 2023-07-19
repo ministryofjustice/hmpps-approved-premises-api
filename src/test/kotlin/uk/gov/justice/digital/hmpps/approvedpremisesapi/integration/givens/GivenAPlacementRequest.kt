@@ -23,6 +23,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withCrn(crn)
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
+    withSubmittedAt(OffsetDateTime.now())
     withReleaseType("licence")
   }
 

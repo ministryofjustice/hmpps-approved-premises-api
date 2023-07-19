@@ -35,7 +35,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.allocatedToUser = { user }
   }
 
-  fun withBooking(booking: BookingEntity) = apply {
+  fun withBooking(booking: BookingEntity?) = apply {
     this.booking = { booking }
   }
 

@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 class PlacementRequestDetailTransformer(
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val cancellationTransformer: CancellationTransformer,
+  private val bookingSummaryTransformer: BookingSummaryTransformer,
 ) {
   fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?, cancellations: List<CancellationEntity>): PlacementRequestDetail {
     val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, offenderDetailSummary, inmateDetail)
@@ -33,9 +34,11 @@ class PlacementRequestDetailTransformer(
       status = placementRequest.status,
       assessmentDecision = placementRequest.assessmentDecision,
       assessmentDate = placementRequest.assessmentDate,
+      applicationDate = placementRequest.applicationDate,
       assessor = placementRequest.assessor,
       notes = placementRequest.notes,
       cancellations = cancellations.mapNotNull { cancellationTransformer.transformJpaToApi(it) },
+      booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
     )
   }
 }

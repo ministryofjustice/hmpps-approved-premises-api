@@ -55,17 +55,19 @@ class PlacementRequestTransformerTest {
     .withUnitTestControlProbationRegion()
     .produce()
 
+  private val applicationSubmittedAt = OffsetDateTime.now().minusDays(12)
+  private val assessmentSubmittedAt = OffsetDateTime.now().minusDays(3)
+
   private val application = ApprovedPremisesApplicationEntityFactory()
     .withReleaseType("licence")
     .withCreatedByUser(user)
+    .withSubmittedAt(applicationSubmittedAt)
     .produce()
-
-  private val submittedAt = OffsetDateTime.now()
 
   private val assessment = AssessmentEntityFactory()
     .withAllocatedToUser(user)
     .withApplication(application)
-    .withSubmittedAt(submittedAt)
+    .withSubmittedAt(assessmentSubmittedAt)
     .produce()
 
   private val placementRequirementsFactory = PlacementRequirementsEntityFactory()
@@ -151,7 +153,8 @@ class PlacementRequestTransformerTest {
         releaseType = ReleaseTypeOption.licence,
         status = PlacementRequestStatus.notMatched,
         assessmentDecision = decision,
-        assessmentDate = submittedAt.toInstant(),
+        assessmentDate = assessmentSubmittedAt.toInstant(),
+        applicationDate = applicationSubmittedAt.toInstant(),
         assessor = mockUser,
         notes = placementRequestEntity.notes,
       ),

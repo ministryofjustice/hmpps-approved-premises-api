@@ -55,6 +55,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withCrn(offenderDetails1.otherIds.crn)
               withCreatedByUser(user)
               withApplicationSchema(applicationSchema)
+              withSubmittedAt(OffsetDateTime.now())
               withReleaseType("licence")
             }
 
@@ -69,6 +70,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             val application2 = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails2.otherIds.crn)
               withCreatedByUser(user)
+              withSubmittedAt(OffsetDateTime.now())
               withApplicationSchema(applicationSchema)
               withReleaseType("licence")
             }
@@ -170,6 +172,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             val application1 = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails1.otherIds.crn)
               withCreatedByUser(user)
+              withSubmittedAt(OffsetDateTime.now())
               withApplicationSchema(applicationSchema)
               withReleaseType("licence")
             }
@@ -185,6 +188,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             val application2 = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails2.otherIds.crn)
               withCreatedByUser(user)
+              withSubmittedAt(OffsetDateTime.now())
               withApplicationSchema(applicationSchema)
               withReleaseType("licence")
             }
@@ -321,31 +325,29 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = otherUser) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.get()
-                  .uri("/placement-requests/${placementRequest.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      placementRequestDetailTransformer.transformJpaToApi(
-                        placementRequest,
-                        offenderDetails,
-                        inmateDetails,
-                        listOf(),
-                      ),
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              webTestClient.get()
+                .uri("/placement-requests/${placementRequest.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    placementRequestDetailTransformer.transformJpaToApi(
+                      placementRequest,
+                      offenderDetails,
+                      inmateDetails,
+                      listOf(),
                     ),
-                  )
-              }
+                  ),
+                )
             }
           }
         }
@@ -361,27 +363,25 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withCurrentExclusion(true)
             },
           ) { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = otherUser) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              CommunityAPI_mockOffenderUserAccessCall(
+                username = user.deliusUsername,
                 crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                CommunityAPI_mockOffenderUserAccessCall(
-                  username = user.deliusUsername,
-                  crn = offenderDetails.otherIds.crn,
-                  inclusion = false,
-                  exclusion = true,
-                )
+                inclusion = false,
+                exclusion = true,
+              )
 
-                webTestClient.get()
-                  .uri("/placement-requests/${placementRequest.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isForbidden
-              }
+              webTestClient.get()
+                .uri("/placement-requests/${placementRequest.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isForbidden
             }
           }
         }
@@ -397,38 +397,36 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withCurrentExclusion(true)
             },
           ) { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = otherUser) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              CommunityAPI_mockOffenderUserAccessCall(
+                username = user.deliusUsername,
                 crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                CommunityAPI_mockOffenderUserAccessCall(
-                  username = user.deliusUsername,
-                  crn = offenderDetails.otherIds.crn,
-                  inclusion = false,
-                  exclusion = false,
-                )
+                inclusion = false,
+                exclusion = false,
+              )
 
-                webTestClient.get()
-                  .uri("/placement-requests/${placementRequest.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      placementRequestDetailTransformer.transformJpaToApi(
-                        placementRequest,
-                        offenderDetails,
-                        inmateDetails,
-                        listOf(),
-                      ),
+              webTestClient.get()
+                .uri("/placement-requests/${placementRequest.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    placementRequestDetailTransformer.transformJpaToApi(
+                      placementRequest,
+                      offenderDetails,
+                      inmateDetails,
+                      listOf(),
                     ),
-                  )
-              }
+                  ),
+                )
             }
           }
         }
@@ -444,38 +442,36 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withCurrentExclusion(true)
             },
           ) { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = otherUser) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              CommunityAPI_mockOffenderUserAccessCall(
+                username = user.deliusUsername,
                 crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                CommunityAPI_mockOffenderUserAccessCall(
-                  username = user.deliusUsername,
-                  crn = offenderDetails.otherIds.crn,
-                  inclusion = false,
-                  exclusion = true,
-                )
+                inclusion = false,
+                exclusion = true,
+              )
 
-                webTestClient.get()
-                  .uri("/placement-requests/${placementRequest.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      placementRequestDetailTransformer.transformJpaToApi(
-                        placementRequest,
-                        offenderDetails,
-                        inmateDetails,
-                        listOf(),
-                      ),
+              webTestClient.get()
+                .uri("/placement-requests/${placementRequest.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    placementRequestDetailTransformer.transformJpaToApi(
+                      placementRequest,
+                      offenderDetails,
+                      inmateDetails,
+                      listOf(),
                     ),
-                  )
-              }
+                  ),
+                )
             }
           }
         }
@@ -487,63 +483,61 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = otherUser) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withProbationRegion(
-                    probationRegionEntityFactory.produceAndPersist {
-                      withApArea(apAreaEntityFactory.produceAndPersist())
-                    },
-                  )
-                  withLocalAuthorityArea(
-                    localAuthorityEntityFactory.produceAndPersist(),
-                  )
-                }
-
-                val room = roomEntityFactory.produceAndPersist {
-                  withPremises(premises)
-                }
-
-                val bed = bedEntityFactory.produceAndPersist {
-                  withRoom(room)
-                }
-
-                val booking = bookingEntityFactory.produceAndPersist {
-                  withPremises(premises)
-                  withCrn(offenderDetails.otherIds.crn)
-                  withBed(bed)
-                  withServiceName(ServiceName.approvedPremises)
-                  withApplication(placementRequest.application)
-                }
-
-                val cancellations = cancellationEntityFactory.produceAndPersistMultiple(2) {
-                  withBooking(booking)
-                  withReason(cancellationReasonEntityFactory.produceAndPersist())
-                }
-
-                webTestClient.get()
-                  .uri("/placement-requests/${placementRequest.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      placementRequestDetailTransformer.transformJpaToApi(
-                        placementRequest,
-                        offenderDetails,
-                        inmateDetails,
-                        cancellations,
-                      ),
-                    ),
-                  )
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              val premises = approvedPremisesEntityFactory.produceAndPersist {
+                withProbationRegion(
+                  probationRegionEntityFactory.produceAndPersist {
+                    withApArea(apAreaEntityFactory.produceAndPersist())
+                  },
+                )
+                withLocalAuthorityArea(
+                  localAuthorityEntityFactory.produceAndPersist(),
+                )
               }
+
+              val room = roomEntityFactory.produceAndPersist {
+                withPremises(premises)
+              }
+
+              val bed = bedEntityFactory.produceAndPersist {
+                withRoom(room)
+              }
+
+              val booking = bookingEntityFactory.produceAndPersist {
+                withPremises(premises)
+                withCrn(offenderDetails.otherIds.crn)
+                withBed(bed)
+                withServiceName(ServiceName.approvedPremises)
+                withApplication(placementRequest.application)
+              }
+
+              val cancellations = cancellationEntityFactory.produceAndPersistMultiple(2) {
+                withBooking(booking)
+                withReason(cancellationReasonEntityFactory.produceAndPersist())
+              }
+
+              webTestClient.get()
+                .uri("/placement-requests/${placementRequest.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    placementRequestDetailTransformer.transformJpaToApi(
+                      placementRequest,
+                      offenderDetails,
+                      inmateDetails,
+                      cancellations,
+                    ),
+                  ),
+                )
             }
           }
         }
