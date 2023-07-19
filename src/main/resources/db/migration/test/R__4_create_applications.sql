@@ -25,9 +25,9 @@ BEGIN
   )
   values
     (
-      '970a6675-0bc7-4bd1-a279-1ba03e399241',
-      CURRENT_DATE + 11,
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'c5fb07fe-b40b-4c58-b567-ff5beda19aa0',
+      CURRENT_DATE + 8,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       '315VWWC',
       applicationData,
       applicationDocument,
@@ -41,7 +41,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 2,
+      CURRENT_DATE + 1,
       'M59CS58'
     );
   
@@ -60,7 +60,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '970a6675-0bc7-4bd1-a279-1ba03e399241',
+      'c5fb07fe-b40b-4c58-b567-ff5beda19aa0',
       false,
       false,
       'M2500295343',
@@ -75,13 +75,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      'd1ee7cdb-f50d-46d0-8cdc-be767e021669',
-      '970a6675-0bc7-4bd1-a279-1ba03e399241',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '587875e3-c921-4c22-a332-7d580e8aee42',
+      'c5fb07fe-b40b-4c58-b567-ff5beda19aa0',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -110,8 +111,8 @@ BEGIN
   )
   values
     (
-      'b1e38d0c-026c-40cc-987d-6bb3b6f23855',
-      CURRENT_DATE + 6,
+      '0168327e-0ce2-417d-80ab-5a60081dc9aa',
+      CURRENT_DATE + 20,
       'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       '4Y29R9P',
       applicationData,
@@ -126,7 +127,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 22,
+      CURRENT_DATE + 17,
       'XWU5JWQ'
     );
   
@@ -145,7 +146,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'b1e38d0c-026c-40cc-987d-6bb3b6f23855',
+      '0168327e-0ce2-417d-80ab-5a60081dc9aa',
       false,
       false,
       'M2500295343',
@@ -160,12 +161,13 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '5403568d-4fc1-45b9-8e5b-afbb8e6c13e7',
-      'b1e38d0c-026c-40cc-987d-6bb3b6f23855',
+      '1a17d9de-2cca-4177-a82b-ac46d9b5c940',
+      '0168327e-0ce2-417d-80ab-5a60081dc9aa',
       '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -195,9 +197,9 @@ BEGIN
   )
   values
     (
-      'a8911538-b822-44d4-8c1e-c9349bb7812f',
-      CURRENT_DATE + 8,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      '86a0b2de-5f9b-418e-9011-364e40ebc683',
+      CURRENT_DATE + 28,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       '4ZUIHFX',
       applicationData,
       applicationDocument,
@@ -211,7 +213,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 17,
+      CURRENT_DATE + 10,
       '5A5C8WL'
     );
   
@@ -230,7 +232,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'a8911538-b822-44d4-8c1e-c9349bb7812f',
+      '86a0b2de-5f9b-418e-9011-364e40ebc683',
       false,
       false,
       'M2500295343',
@@ -245,13 +247,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '7cc5218b-2dfd-4092-8703-8b34153f10c5',
-      'a8911538-b822-44d4-8c1e-c9349bb7812f',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      'f420853b-d7f7-46ee-aab0-92607e1d2b08',
+      '86a0b2de-5f9b-418e-9011-364e40ebc683',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -280,9 +283,9 @@ BEGIN
   )
   values
     (
-      'f6ecc7cb-d860-4382-86d5-1a25b344f6e5',
-      CURRENT_DATE + 5,
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      'bf02e5da-82ae-4595-972f-a0c1c3a9f266',
+      CURRENT_DATE + 7,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       '52W7TQG',
       applicationData,
       applicationDocument,
@@ -296,7 +299,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 15,
+      CURRENT_DATE + 26,
       '5HBWEG1'
     );
   
@@ -315,7 +318,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'f6ecc7cb-d860-4382-86d5-1a25b344f6e5',
+      'bf02e5da-82ae-4595-972f-a0c1c3a9f266',
       false,
       false,
       'M2500295343',
@@ -330,13 +333,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '6db5c3af-a674-40a2-b881-4af2bef892f2',
-      'f6ecc7cb-d860-4382-86d5-1a25b344f6e5',
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      '4022a886-a39a-40d6-8f2f-c6f87f705127',
+      'bf02e5da-82ae-4595-972f-a0c1c3a9f266',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -365,9 +369,9 @@ BEGIN
   )
   values
     (
-      '7cfbfd0f-7446-4733-8297-96928a9f6c0a',
-      CURRENT_DATE + 23,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      'f7f66473-ca22-41f5-b650-0df2681cba30',
+      CURRENT_DATE + 11,
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       '5EC66UT',
       applicationData,
       applicationDocument,
@@ -381,7 +385,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 13,
+      CURRENT_DATE + 26,
       '530X5EC'
     );
   
@@ -400,7 +404,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '7cfbfd0f-7446-4733-8297-96928a9f6c0a',
+      'f7f66473-ca22-41f5-b650-0df2681cba30',
       false,
       false,
       'M2500295343',
@@ -415,12 +419,13 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '1c095116-1f67-4d88-939e-68c4a271a06d',
-      '7cfbfd0f-7446-4733-8297-96928a9f6c0a',
+      '1a841444-fbb4-48ac-a5b7-dd93eb0346ba',
+      'f7f66473-ca22-41f5-b650-0df2681cba30',
       '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -450,9 +455,9 @@ BEGIN
   )
   values
     (
-      'a999fa4d-1db8-4cd5-af39-99d6ca9d6c1d',
-      CURRENT_DATE + 6,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '03aa2a40-178d-4226-bb0d-b0746cc95fe4',
+      CURRENT_DATE + 14,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       '8LO3HSH',
       applicationData,
       applicationDocument,
@@ -466,7 +471,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 28,
+      CURRENT_DATE + 21,
       'JD5CLIA'
     );
   
@@ -485,7 +490,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'a999fa4d-1db8-4cd5-af39-99d6ca9d6c1d',
+      '03aa2a40-178d-4226-bb0d-b0746cc95fe4',
       false,
       false,
       'M2500295343',
@@ -500,13 +505,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      'f976becc-0bf2-46fe-97ec-f3eab7aedff0',
-      'a999fa4d-1db8-4cd5-af39-99d6ca9d6c1d',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '15c2c37f-3ab8-4b99-a5a7-cb80dc36e810',
+      '03aa2a40-178d-4226-bb0d-b0746cc95fe4',
+      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -535,9 +541,9 @@ BEGIN
   )
   values
     (
-      '54430b83-a1b2-4c3b-88d7-3dced8df89a0',
-      CURRENT_DATE + 14,
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      '0cf1fff2-1af2-4687-9279-5bc6e1198a41',
+      CURRENT_DATE + 23,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       'BWEFOI7',
       applicationData,
       applicationDocument,
@@ -551,7 +557,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 15,
+      CURRENT_DATE + 24,
       'SX9UI94'
     );
   
@@ -570,7 +576,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '54430b83-a1b2-4c3b-88d7-3dced8df89a0',
+      '0cf1fff2-1af2-4687-9279-5bc6e1198a41',
       false,
       false,
       'M2500295343',
@@ -585,13 +591,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      'f287cc27-b4a7-4333-9db8-f07b1d939268',
-      '54430b83-a1b2-4c3b-88d7-3dced8df89a0',
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '82b4ba8a-ef5d-4aa2-9051-4f4599099c8d',
+      '0cf1fff2-1af2-4687-9279-5bc6e1198a41',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -620,9 +627,9 @@ BEGIN
   )
   values
     (
-      '516100fb-acd9-4001-b54b-43cbe7f20d6a',
-      CURRENT_DATE + 5,
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '3ee2198b-faa6-4327-af65-e94214df9fef',
+      CURRENT_DATE + 26,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       'GSR1T2F',
       applicationData,
       applicationDocument,
@@ -636,7 +643,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 29,
+      CURRENT_DATE + 10,
       'KXTJQEF'
     );
   
@@ -655,7 +662,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '516100fb-acd9-4001-b54b-43cbe7f20d6a',
+      '3ee2198b-faa6-4327-af65-e94214df9fef',
       false,
       false,
       'M2500295343',
@@ -670,13 +677,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '735bc450-a14c-463b-9e10-0e5f93279e31',
-      '516100fb-acd9-4001-b54b-43cbe7f20d6a',
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '33496f03-ed27-4637-95fa-7e359536bbd2',
+      '3ee2198b-faa6-4327-af65-e94214df9fef',
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -705,9 +713,9 @@ BEGIN
   )
   values
     (
-      '2a246c11-c98f-4fa7-9979-b9c4b4e9968b',
-      CURRENT_DATE + 5,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      '97b6b3cf-7eb5-4b4d-8637-07da4dc7f39c',
+      CURRENT_DATE + 10,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       'HRV83TE',
       applicationData,
       applicationDocument,
@@ -721,7 +729,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 23,
+      CURRENT_DATE + 5,
       'N1RRJZU'
     );
   
@@ -740,7 +748,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '2a246c11-c98f-4fa7-9979-b9c4b4e9968b',
+      '97b6b3cf-7eb5-4b4d-8637-07da4dc7f39c',
       false,
       false,
       'M2500295343',
@@ -755,13 +763,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '0288eba9-81c2-4274-9379-8ca8f60a5246',
-      '2a246c11-c98f-4fa7-9979-b9c4b4e9968b',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      'de4fc959-b08a-4308-98f7-1a302803cbee',
+      '97b6b3cf-7eb5-4b4d-8637-07da4dc7f39c',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -790,8 +799,8 @@ BEGIN
   )
   values
     (
-      '3e884906-e5cd-46d8-b2d9-da5cc681f08f',
-      CURRENT_DATE + 8,
+      'c638c684-e1b6-42f6-95a9-535b9e83d446',
+      CURRENT_DATE + 28,
       '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       'HTVI42B',
       applicationData,
@@ -806,7 +815,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 15,
+      CURRENT_DATE + 16,
       '6X1DNW1'
     );
   
@@ -825,7 +834,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '3e884906-e5cd-46d8-b2d9-da5cc681f08f',
+      'c638c684-e1b6-42f6-95a9-535b9e83d446',
       false,
       false,
       'M2500295343',
@@ -840,13 +849,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '5d6c029a-258a-4611-b229-1936ee1dfdb5',
-      '3e884906-e5cd-46d8-b2d9-da5cc681f08f',
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      'bb110962-1f41-49a4-bd5d-9a04fdafa027',
+      'c638c684-e1b6-42f6-95a9-535b9e83d446',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -875,9 +885,9 @@ BEGIN
   )
   values
     (
-      'a6774caf-53ca-497f-996c-ad4ac1219a90',
-      CURRENT_DATE + 28,
-      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      'f28cacc1-3438-4670-afc8-6c00158375af',
+      CURRENT_DATE + 29,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       'HUN3BN0',
       applicationData,
       applicationDocument,
@@ -891,7 +901,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 27,
+      CURRENT_DATE + 0,
       'YCSW8BD'
     );
   
@@ -910,7 +920,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'a6774caf-53ca-497f-996c-ad4ac1219a90',
+      'f28cacc1-3438-4670-afc8-6c00158375af',
       false,
       false,
       'M2500295343',
@@ -925,13 +935,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '1b8ff903-14f4-4f4b-ae77-daecf886be49',
-      'a6774caf-53ca-497f-996c-ad4ac1219a90',
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '68da38ac-2a8c-40c5-8d22-ef51ff44bed2',
+      'f28cacc1-3438-4670-afc8-6c00158375af',
+      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -960,9 +971,9 @@ BEGIN
   )
   values
     (
-      '57158b92-b8c2-41e3-bab5-456462032ccc',
-      CURRENT_DATE + 11,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      'a5c95ac2-9cfe-4c13-a10d-c1c5e633c5de',
+      CURRENT_DATE + 3,
+      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       'IHGHXYM',
       applicationData,
       applicationDocument,
@@ -976,7 +987,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 15,
+      CURRENT_DATE + 29,
       'KWAPTC7'
     );
   
@@ -995,7 +1006,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '57158b92-b8c2-41e3-bab5-456462032ccc',
+      'a5c95ac2-9cfe-4c13-a10d-c1c5e633c5de',
       false,
       false,
       'M2500295343',
@@ -1010,12 +1021,13 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '9a6e3663-bab4-46dc-884f-ce9bd84d7584',
-      '57158b92-b8c2-41e3-bab5-456462032ccc',
+      '25f853af-9e75-40fa-8502-11dc2a4860f1',
+      'a5c95ac2-9cfe-4c13-a10d-c1c5e633c5de',
       '8a39870c-3a1f-4e05-ad45-a450e15b242d',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -1045,9 +1057,9 @@ BEGIN
   )
   values
     (
-      'c3f7ee7f-fbf5-4040-a363-a18631c34b3e',
-      CURRENT_DATE + 21,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      '5566cca0-b572-42a3-89e8-68b0eab148ab',
+      CURRENT_DATE + 26,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       'JCRH9V5',
       applicationData,
       applicationDocument,
@@ -1061,7 +1073,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 9,
+      CURRENT_DATE + 18,
       'VTDINBA'
     );
   
@@ -1080,7 +1092,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'c3f7ee7f-fbf5-4040-a363-a18631c34b3e',
+      '5566cca0-b572-42a3-89e8-68b0eab148ab',
       false,
       false,
       'M2500295343',
@@ -1095,13 +1107,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      'e988fd99-e834-45e9-9729-8bddc43d7948',
-      'c3f7ee7f-fbf5-4040-a363-a18631c34b3e',
-      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
+      'c491e21d-6e4b-4cea-9d93-09d4aacce002',
+      '5566cca0-b572-42a3-89e8-68b0eab148ab',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1130,9 +1143,9 @@ BEGIN
   )
   values
     (
-      'f74b1ab2-f194-4b34-9205-e34e75f69a53',
-      CURRENT_DATE + 28,
-      '68715a03-06af-49ee-bae5-039c824ab9af',
+      'd164a579-c12a-4a33-a98c-82c401c25cff',
+      CURRENT_DATE + 23,
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       'N6OUTAY',
       applicationData,
       applicationDocument,
@@ -1146,7 +1159,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 13,
+      CURRENT_DATE + 12,
       'HIR0PIN'
     );
   
@@ -1165,7 +1178,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      'f74b1ab2-f194-4b34-9205-e34e75f69a53',
+      'd164a579-c12a-4a33-a98c-82c401c25cff',
       false,
       false,
       'M2500295343',
@@ -1180,12 +1193,99 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      'f0a40b46-7079-4ecd-8544-6b7bcc7515e3',
-      'f74b1ab2-f194-4b34-9205-e34e75f69a53',
+      'd77fa940-ddf9-4a9f-9cd1-0909898c2044',
+      'd164a579-c12a-4a33-a98c-82c401c25cff',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
+      CURRENT_DATE,
+      CURRENT_DATE,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_ASSESSMENT'
+        LIMIT 1
+      )
+    );
+  
+
+  insert into applications (
+    "id",
+    "created_at",
+    "created_by_user_id",
+    "crn",
+    "data",
+    "document",
+    "schema_version",
+    "service",
+    "submitted_at",
+    "noms_number"
+  )
+  values
+    (
+      '04add014-359e-4bc6-8b0c-75e1488407ec',
+      CURRENT_DATE + 3,
+      '68715a03-06af-49ee-bae5-039c824ab9af',
+      'PI251LM',
+      applicationData,
+      applicationDocument,
+      (
+        SELECT
+          id
+        FROM
+          json_schemas
+        WHERE
+          type = 'APPROVED_PREMISES_APPLICATION'
+        LIMIT 1
+      ),
+      'approved-premises',
+      CURRENT_DATE + 10,
+      'QGH3OL6'
+    );
+  
+
+  insert into approved_premises_applications (
+      "conviction_id",
+      "event_number",
+      "id",
+      "is_pipe_application",
+      "is_womens_application",
+      "offence_id",
+      "is_withdrawn",
+      "risk_ratings"
+    )
+  values
+    (
+      '2500295345',
+      '2',
+      '04add014-359e-4bc6-8b0c-75e1488407ec',
+      false,
+      false,
+      'M2500295343',
+      false,
+      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
+    );
+  
+
+  INSERT into
+  assessments (
+    "id",
+    "application_id",
+    "allocated_to_user_id",
+    "created_at",
+    "allocated_at",
+    "schema_version"
+  )
+  VALUES
+    (
+      '9fd086e2-d647-4ee4-9d34-6c8f416b6e5c',
+      '04add014-359e-4bc6-8b0c-75e1488407ec',
       '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -1215,94 +1315,9 @@ BEGIN
   )
   values
     (
-      '77063f49-e078-416a-a952-7693c4a6cd88',
-      CURRENT_DATE + 17,
+      '6d2fea60-caca-440d-814a-8993ca9d9c76',
+      CURRENT_DATE + 14,
       'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
-      'PI251LM',
-      applicationData,
-      applicationDocument,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_APPLICATION'
-        LIMIT 1
-      ),
-      'approved-premises',
-      CURRENT_DATE + 28,
-      'QGH3OL6'
-    );
-  
-
-  insert into approved_premises_applications (
-      "conviction_id",
-      "event_number",
-      "id",
-      "is_pipe_application",
-      "is_womens_application",
-      "offence_id",
-      "is_withdrawn",
-      "risk_ratings"
-    )
-  values
-    (
-      '2500295345',
-      '2',
-      '77063f49-e078-416a-a952-7693c4a6cd88',
-      false,
-      false,
-      'M2500295343',
-      false,
-      '{"roshRisks":{"status":"Error","value":null},"mappa":{"status":"Retrieved","value":{"level":"CAT M2/LEVEL M2","lastUpdated":[2021,2,1]}},"tier":{"status":"Retrieved","value":{"level":"D2","lastUpdated":[2022,9,5]}},"flags":{"status":"Retrieved","value":["Risk to Known Adult"]}}'
-    );
-  
-
-  INSERT into
-  assessments (
-    "id",
-    "application_id",
-    "allocated_to_user_id",
-    "created_at",
-    "schema_version"
-  )
-  VALUES
-    (
-      'dea03574-9320-4239-bfb7-6d4268a06aa6',
-      '77063f49-e078-416a-a952-7693c4a6cd88',
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
-      CURRENT_DATE,
-      CURRENT_DATE,
-      (
-        SELECT
-          id
-        FROM
-          json_schemas
-        WHERE
-          type = 'APPROVED_PREMISES_ASSESSMENT'
-        LIMIT 1
-      )
-    );
-  
-
-  insert into applications (
-    "id",
-    "created_at",
-    "created_by_user_id",
-    "crn",
-    "data",
-    "document",
-    "schema_version",
-    "service",
-    "submitted_at",
-    "noms_number"
-  )
-  values
-    (
-      '215da410-44ab-4234-9730-f5c2b49a3384',
-      CURRENT_DATE + 11,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
       'PR5E5Y2',
       applicationData,
       applicationDocument,
@@ -1316,7 +1331,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 9,
+      CURRENT_DATE + 6,
       'M9XWJ1S'
     );
   
@@ -1335,7 +1350,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '215da410-44ab-4234-9730-f5c2b49a3384',
+      '6d2fea60-caca-440d-814a-8993ca9d9c76',
       false,
       false,
       'M2500295343',
@@ -1350,13 +1365,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '2b21ebe8-c39d-4f30-b356-d44f44113da8',
-      '215da410-44ab-4234-9730-f5c2b49a3384',
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      'c17700dd-badb-41bd-bc6a-f1820a5a75fd',
+      '6d2fea60-caca-440d-814a-8993ca9d9c76',
+      '68715a03-06af-49ee-bae5-039c824ab9af',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1385,9 +1401,9 @@ BEGIN
   )
   values
     (
-      '6f19ef0e-bef1-4b11-a5ed-a51725bef15c',
-      CURRENT_DATE + 8,
-      '8a39870c-3a1f-4e05-ad45-a450e15b242d',
+      '0b8951d2-5aa7-4f8f-9828-e6bb559c5b5d',
+      CURRENT_DATE + 19,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       'QA93YYK',
       applicationData,
       applicationDocument,
@@ -1401,7 +1417,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 9,
+      CURRENT_DATE + 8,
       'YX2YNT2'
     );
   
@@ -1420,7 +1436,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '6f19ef0e-bef1-4b11-a5ed-a51725bef15c',
+      '0b8951d2-5aa7-4f8f-9828-e6bb559c5b5d',
       false,
       false,
       'M2500295343',
@@ -1435,13 +1451,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '40c27500-6b52-4a0c-b95b-e6d7acab5ff8',
-      '6f19ef0e-bef1-4b11-a5ed-a51725bef15c',
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      '1d6eb916-6c71-419e-b0eb-6804eb2fc364',
+      '0b8951d2-5aa7-4f8f-9828-e6bb559c5b5d',
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1470,9 +1487,9 @@ BEGIN
   )
   values
     (
-      '5a138e27-f4eb-4b52-958a-d3284987f1db',
-      CURRENT_DATE + 13,
-      '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
+      '48ca2d1a-69d4-45fa-b83d-3d748ccdacd2',
+      CURRENT_DATE + 28,
+      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       'XCMSG3I',
       applicationData,
       applicationDocument,
@@ -1505,7 +1522,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '5a138e27-f4eb-4b52-958a-d3284987f1db',
+      '48ca2d1a-69d4-45fa-b83d-3d748ccdacd2',
       false,
       false,
       'M2500295343',
@@ -1520,12 +1537,13 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '41ba2c85-1374-4126-bc10-bb28da8ab933',
-      '5a138e27-f4eb-4b52-958a-d3284987f1db',
+      'd5eb3bc5-ad08-4824-a67a-3e05e96a9715',
+      '48ca2d1a-69d4-45fa-b83d-3d748ccdacd2',
       '7e8d1738-a07d-4ba4-a8a7-9b7d9c9d27b2',
       CURRENT_DATE,
       CURRENT_DATE,
@@ -1555,9 +1573,9 @@ BEGIN
   )
   values
     (
-      '2a6be6b7-eafa-4f57-82c8-f92263d583e2',
-      CURRENT_DATE + 1,
-      '7a424213-3a0c-45b0-9a51-4977243c2b21',
+      'c912e6e3-aa22-4cc3-98ad-259ef1254477',
+      CURRENT_DATE + 6,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       'YRPARSH',
       applicationData,
       applicationDocument,
@@ -1571,7 +1589,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 19,
+      CURRENT_DATE + 0,
       'HBVE0LJ'
     );
   
@@ -1590,7 +1608,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '2a6be6b7-eafa-4f57-82c8-f92263d583e2',
+      'c912e6e3-aa22-4cc3-98ad-259ef1254477',
       false,
       false,
       'M2500295343',
@@ -1605,13 +1623,14 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '0573f229-b245-4e01-b6fd-c2b91eafc975',
-      '2a6be6b7-eafa-4f57-82c8-f92263d583e2',
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '14cf7cc7-ae37-4f4a-a1de-94c4a4fe95e2',
+      'c912e6e3-aa22-4cc3-98ad-259ef1254477',
+      '531455f4-c76f-4943-b4eb-3c02d8fefa69',
       CURRENT_DATE,
       CURRENT_DATE,
       (
@@ -1640,9 +1659,9 @@ BEGIN
   )
   values
     (
-      '4741af48-aac8-41f1-9b53-56d1e1afe92a',
-      CURRENT_DATE + 27,
-      'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
+      '831f4ff0-ba18-45dc-87ee-882b17472d31',
+      CURRENT_DATE + 10,
+      '6dcd2559-2d14-4feb-8faf-89ad30dfa765',
       'Z33A1BU',
       applicationData,
       applicationDocument,
@@ -1656,7 +1675,7 @@ BEGIN
         LIMIT 1
       ),
       'approved-premises',
-      CURRENT_DATE + 8,
+      CURRENT_DATE + 13,
       '6DO89QY'
     );
   
@@ -1675,7 +1694,7 @@ BEGIN
     (
       '2500295345',
       '2',
-      '4741af48-aac8-41f1-9b53-56d1e1afe92a',
+      '831f4ff0-ba18-45dc-87ee-882b17472d31',
       false,
       false,
       'M2500295343',
@@ -1690,12 +1709,13 @@ BEGIN
     "application_id",
     "allocated_to_user_id",
     "created_at",
+    "allocated_at",
     "schema_version"
   )
   VALUES
     (
-      '148e0532-aecd-480b-a68e-ecb293d5c828',
-      '4741af48-aac8-41f1-9b53-56d1e1afe92a',
+      '5a699086-0efd-4c05-870e-8bd26cfff753',
+      '831f4ff0-ba18-45dc-87ee-882b17472d31',
       'f9ff1c6e-6876-4ba8-8ca9-d7d2c6f673dc',
       CURRENT_DATE,
       CURRENT_DATE,
