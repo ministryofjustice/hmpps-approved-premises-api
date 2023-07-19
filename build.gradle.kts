@@ -13,7 +13,7 @@ configurations {
 }
 
 val springDocVersion = "1.7.0"
-val sentryVersion = "6.25.2"
+val sentryVersion = "6.26.0"
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
