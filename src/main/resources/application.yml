@@ -181,6 +181,7 @@ url-templates:
     person-not-arrived-event-detail: http://localhost:3000/events/person-not-arrived/#eventId
     person-departed-event-detail: http://localhost:3000/events/person-departed/#eventId
     booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
+    booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id

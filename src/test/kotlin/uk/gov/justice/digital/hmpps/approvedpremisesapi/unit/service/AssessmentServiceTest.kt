@@ -1060,10 +1060,11 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(assessment.application.crn)
+      .produce()
 
-    val offenderDetails = OffenderDetailsSummaryFactory().produce()
-
-    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
 
     val staffUserDetails = StaffUserDetailsFactory()
       .withProbationAreaCode("N26")

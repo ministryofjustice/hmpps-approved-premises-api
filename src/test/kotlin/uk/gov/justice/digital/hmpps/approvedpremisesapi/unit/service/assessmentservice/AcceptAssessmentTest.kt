@@ -301,7 +301,7 @@ class AcceptAssessmentTest {
 
     val offenderDetails = OffenderDetailsSummaryFactory().produce()
 
-    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
 
     val staffUserDetails = StaffUserDetailsFactory()
       .withProbationAreaCode("N26")
@@ -387,7 +387,7 @@ class AcceptAssessmentTest {
 
     val offenderDetails = OffenderDetailsSummaryFactory().produce()
 
-    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
 
     val staffUserDetails = StaffUserDetailsFactory()
       .withProbationAreaCode("N26")

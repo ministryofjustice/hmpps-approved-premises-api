@@ -227,8 +227,9 @@ class ApprovedPremisesBookingSeedJob(
 
       val createdCancellation = extractEntityFromValidatableActionResult(
         bookingService.createCancellation(
+          user = null,
           booking = createdBooking,
-          date = row.cancellationDate,
+          cancelledAt = row.cancellationDate,
           reasonId = cancellationReason.id,
           notes = row.cancellationNotes,
         ),

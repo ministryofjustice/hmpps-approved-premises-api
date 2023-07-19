@@ -690,7 +690,7 @@ class ApplicationService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, username)) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, username, true)) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
       is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Unauthorised")
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Not Found")

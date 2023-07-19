@@ -240,7 +240,7 @@ class AssessmentService(
 
     val application = savedAssessment.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
       is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
@@ -365,10 +365,9 @@ class AssessmentService(
 
     val application = savedAssessment.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
-      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
+      else -> null
     }
 
     val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
@@ -393,8 +392,8 @@ class AssessmentService(
               applicationUrl = applicationUrlTemplate
                 .replace("#id", application.id.toString()),
               personReference = PersonReference(
-                crn = offenderDetails.otherIds.crn,
-                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+                crn = assessment.application.crn,
+                noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
               ),
               deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
               assessedAt = rejectedAt.toInstant(),

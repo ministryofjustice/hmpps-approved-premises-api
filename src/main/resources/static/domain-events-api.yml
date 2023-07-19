@@ -95,7 +95,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Match' events"
       summary: A 'booking-made' event
       responses:
         '200':
@@ -122,7 +122,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'booking-extended' event
       responses:
         '200':
@@ -149,7 +149,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'booking-cancelled' event
       responses:
         '200':
@@ -203,7 +203,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'person-arrived' event
       responses:
         '200':
@@ -230,7 +230,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'person-not-arrived' event
       responses:
         '200':
@@ -257,7 +257,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "'Mini-manage' events"
+        - "'Manage' events"
       summary: A 'person-departed' event
       responses:
         '200':
@@ -275,6 +275,13 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
 components:
+  responses:
+    500Response:
+      description: unexpected error
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
   schemas:
     EventId:
       description: The UUID of an event
@@ -522,7 +529,7 @@ components:
         withdrawnBy:
           $ref: '#/components/schemas/StaffMember'
         withdrawalReason:
-          $ref: '#/components/schemas/CancellationReason'
+          type: string
       required:
         - applicationId
         - applicationUrl
@@ -744,7 +751,7 @@ components:
         cancelledBy:
           $ref: '#/components/schemas/StaffMember'
         cancellationReason:
-          $ref: '#/components/schemas/CancellationReason'
+          type: string
       required:
         - personReference
         - deliusEventNumber
@@ -1055,28 +1062,6 @@ components:
         - apCode
         - legacyApCode
         - probationArea
-    CancellationReason:
-      type: object
-      properties:
-        description:
-          type: string
-          enum:
-            - Custodial disposal - RIC
-            - Offer Withdrawn
-            - Other
-            - Parole Licence not granted
-            - Withdrawn by Referrer
-        legacyCancellationCode:
-          type: string
-          enum:
-            - 1H
-            - B
-            - D
-            - 4I
-            - C
-      required:
-        - description
-        - legacyCancellationCode
     MoveOnCategory:
       type: object
       properties:

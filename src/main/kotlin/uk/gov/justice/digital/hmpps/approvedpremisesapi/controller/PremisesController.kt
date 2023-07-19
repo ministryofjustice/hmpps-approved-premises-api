@@ -499,6 +499,8 @@ class PremisesController(
     bookingId: UUID,
     body: NewCancellation,
   ): ResponseEntity<Cancellation> {
+    val user = usersService.getUserForRequest()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
@@ -506,8 +508,9 @@ class PremisesController(
     }
 
     val result = bookingService.createCancellation(
+      user = user,
       booking = booking,
-      date = body.date,
+      cancelledAt = body.date,
       reasonId = body.reason,
       notes = body.notes,
     )

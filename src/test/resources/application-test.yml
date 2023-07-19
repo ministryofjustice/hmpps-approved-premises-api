@@ -114,6 +114,7 @@ url-templates:
     person-not-arrived-event-detail: http://api/events/person-not-arrived/#eventId
     person-departed-event-detail: http://api/events/person-departed/#eventId
     booking-not-made-event-detail: http://api/events/booking-not-made/#eventId
+    booking-cancelled-event-detail: http://api/events/booking-cancelled/#eventId
   frontend:
     application: http://frontend/applications/#id
     assessment: http://frontend/assessments/#id
