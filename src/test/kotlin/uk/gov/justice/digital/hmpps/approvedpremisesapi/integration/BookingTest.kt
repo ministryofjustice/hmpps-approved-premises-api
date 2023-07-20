@@ -1426,6 +1426,56 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Arrival on Approved Premises Booking returns 200 with correct body when a bed is not present`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(LocalDate.of(2023, 5, 20))
+        withDepartureDate(LocalDate.of(2023, 5, 30))
+      }
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewCas1Arrival(
+            type = "CAS1",
+            arrivalDateTime = Instant.parse("2023-05-20T15:00:00Z"),
+            expectedDepartureDate = LocalDate.parse("2023-06-05"),
+            notes = "Hello",
+            keyWorkerStaffCode = keyWorker.code,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+        .jsonPath("$.arrivalDate").isEqualTo("2023-05-20")
+        .jsonPath("$.expectedDepartureDate").isEqualTo("2023-06-05")
+        .jsonPath("$.notes").isEqualTo("Hello")
+        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+    }
+  }
+
+  @Test
   fun `Create Arrival updates arrival and departure date for an Approved Premises booking`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
