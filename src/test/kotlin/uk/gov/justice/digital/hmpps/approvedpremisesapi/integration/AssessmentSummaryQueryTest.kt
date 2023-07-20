@@ -33,7 +33,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
             val expectedTaAssessmentNote = earliestUnansweredClarificationNote(taAssessment, user1)
             `Given a User` { user2, _ ->
 
-              val u2Assessment = assessmentEntityFactory.produceAndPersist {
+              val u2Assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
                 val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
                   withApplicationSchema(apAssessment.application.schemaVersion)
                   withCreatedByUser(user2)

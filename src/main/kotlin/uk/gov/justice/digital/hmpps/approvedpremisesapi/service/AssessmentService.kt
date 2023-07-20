@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
@@ -112,7 +113,7 @@ class AssessmentService(
     val dateTimeNow = OffsetDateTime.now()
 
     val assessment = assessmentRepository.save(
-      AssessmentEntity(
+      ApprovedPremisesAssessmentEntity(
         id = UUID.randomUUID(), application = application,
         data = null, document = null, schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
         allocatedToUser = allocatedUser,
@@ -468,7 +469,7 @@ class AssessmentService(
     val dateTimeNow = OffsetDateTime.now().withNano(0)
 
     val newAssessment = assessmentRepository.save(
-      AssessmentEntity(
+      ApprovedPremisesAssessmentEntity(
         id = UUID.randomUUID(),
         application = application,
         data = null,

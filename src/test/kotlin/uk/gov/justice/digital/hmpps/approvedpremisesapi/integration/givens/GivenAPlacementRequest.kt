@@ -31,7 +31,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withPermissiveSchema()
   }
 
-  val assessment = assessmentEntityFactory.produceAndPersist {
+  val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
     withAssessmentSchema(assessmentSchema)
     withApplication(application)
     withSubmittedAt(OffsetDateTime.now())

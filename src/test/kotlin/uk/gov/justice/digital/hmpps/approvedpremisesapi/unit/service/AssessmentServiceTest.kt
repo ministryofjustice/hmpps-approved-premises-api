@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
@@ -32,11 +32,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -126,7 +126,7 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withAllocatedToUser(
         UserEntityFactory()
           .withYieldedProbationRegion {
@@ -178,7 +178,7 @@ class AssessmentServiceTest {
       .produce()
 
     val assessment =
-      AssessmentEntityFactory()
+      ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
         .withAllocatedToUser(
           UserEntityFactory()
@@ -264,7 +264,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns ApprovedPremisesAssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -314,7 +314,7 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -368,7 +368,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -416,7 +416,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns ApprovedPremisesAssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -459,7 +459,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -511,7 +511,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -564,7 +564,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -618,7 +618,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -640,7 +640,7 @@ class AssessmentServiceTest {
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
-    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
 
@@ -665,7 +665,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -687,7 +687,7 @@ class AssessmentServiceTest {
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
-    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -714,7 +714,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns AssessmentEntityFactory()
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns ApprovedPremisesAssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -757,7 +757,7 @@ class AssessmentServiceTest {
       }
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -809,7 +809,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -862,7 +862,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -916,7 +916,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -941,7 +941,7 @@ class AssessmentServiceTest {
 
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns false
 
-    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -976,7 +976,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -1002,7 +1002,7 @@ class AssessmentServiceTest {
 
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
-    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
@@ -1031,7 +1031,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -1057,7 +1057,7 @@ class AssessmentServiceTest {
 
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
-    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
     val offenderDetails = OffenderDetailsSummaryFactory()
@@ -1157,7 +1157,7 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    val previousAssessment = AssessmentEntityFactory()
+    val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(
         UserEntityFactory()
@@ -1205,7 +1205,7 @@ class AssessmentServiceTest {
       )
       .produce()
 
-    val previousAssessment = AssessmentEntityFactory()
+    val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(
         UserEntityFactory()
@@ -1259,7 +1259,7 @@ class AssessmentServiceTest {
       .withIsPipeApplication(true)
       .produce()
 
-    val previousAssessment = AssessmentEntityFactory()
+    val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(
         UserEntityFactory()
@@ -1318,7 +1318,7 @@ class AssessmentServiceTest {
       .withIsPipeApplication(true)
       .produce()
 
-    val previousAssessment = AssessmentEntityFactory()
+    val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(
         UserEntityFactory()
@@ -1339,8 +1339,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    every { assessmentRepositoryMock.save(previousAssessment) } answers { it.invocation.args[0] as AssessmentEntity }
-    every { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as AssessmentEntity }
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
@@ -1422,7 +1421,7 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    private val assessment = AssessmentEntityFactory()
+    private val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -1617,7 +1616,7 @@ class AssessmentServiceTest {
         .withIsPipeApplication(true)
         .produce()
 
-      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userServiceMock.getUserForAssessmentAllocation(application) } returns userWithLeastAllocatedAssessments
 

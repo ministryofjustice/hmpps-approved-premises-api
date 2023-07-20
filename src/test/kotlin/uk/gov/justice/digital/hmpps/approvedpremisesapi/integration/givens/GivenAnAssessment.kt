@@ -35,7 +35,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withReleaseType("licence")
   }
 
-  val assessment = assessmentEntityFactory.produceAndPersist {
+  val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
@@ -99,7 +99,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
     withProbationRegion(createdByUser.probationRegion)
   }
 
-  val assessment = assessmentEntityFactory.produceAndPersist {
+  val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
     withAssessmentSchema(assessmentSchema)

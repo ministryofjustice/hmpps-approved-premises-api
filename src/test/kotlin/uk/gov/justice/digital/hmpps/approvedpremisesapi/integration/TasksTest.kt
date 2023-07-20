@@ -471,7 +471,7 @@ class TasksTest : IntegrationTestBase() {
                     ),
                   )
 
-                val assessments = assessmentRepository.findAll()
+                val assessments = approvedPremisesAssessmentRepository.findAll()
 
                 Assertions.assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
                 Assertions.assertThat(assessments)

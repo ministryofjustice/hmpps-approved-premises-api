@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -261,7 +261,7 @@ class BookingTransformerTest {
       )
       .produce()
 
-    val oldAssessment = AssessmentEntityFactory()
+    val oldAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withCreatedAt(OffsetDateTime.now().minusDays(5))
       .withAllocatedToUser(
@@ -273,7 +273,7 @@ class BookingTransformerTest {
       )
       .produce()
 
-    val latestAssessment = AssessmentEntityFactory()
+    val latestAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withCreatedAt(OffsetDateTime.now().minusDays(2))
       .withAllocatedToUser(

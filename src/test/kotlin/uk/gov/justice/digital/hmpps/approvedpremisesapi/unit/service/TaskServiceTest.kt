@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -90,7 +90,7 @@ class TaskServiceTest {
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -125,7 +125,7 @@ class TaskServiceTest {
   fun `reallocateTask reallocates a placementRequest`() {
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(assigneeUser)
       .produce()

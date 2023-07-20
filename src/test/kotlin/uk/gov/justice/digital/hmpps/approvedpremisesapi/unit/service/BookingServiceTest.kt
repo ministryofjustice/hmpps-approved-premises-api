@@ -33,9 +33,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
@@ -2037,7 +2037,7 @@ class BookingServiceTest {
       .withCreatedByUser(user)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(user)
       .produce()
@@ -3514,7 +3514,7 @@ class BookingServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(otherUser)
       .produce()

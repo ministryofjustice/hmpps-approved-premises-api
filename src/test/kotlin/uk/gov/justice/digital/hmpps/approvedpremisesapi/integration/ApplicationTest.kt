@@ -1653,7 +1653,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedApplication.isWomensApplication).isTrue
           assertThat(persistedApplication.isPipeApplication).isTrue
 
-          val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
+          val createdAssessment = approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
           assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
 
           val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
@@ -1967,7 +1967,7 @@ class ApplicationTest : IntegrationTestBase() {
         withApplicationSchema(applicationSchema)
       }
 
-      val assessment = assessmentEntityFactory.produceAndPersist {
+      val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
         withAllocatedToUser(assignee)
         withApplication(application)
         withAssessmentSchema(assessmentSchema)

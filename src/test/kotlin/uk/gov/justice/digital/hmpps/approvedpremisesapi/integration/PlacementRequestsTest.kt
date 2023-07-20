@@ -60,7 +60,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withReleaseType("licence")
             }
 
-            val assessment1 = assessmentEntityFactory.produceAndPersist {
+            val assessment1 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAssessmentSchema(assessmentSchema)
               withApplication(application1)
               withSubmittedAt(OffsetDateTime.now())
@@ -76,7 +76,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withReleaseType("licence")
             }
 
-            val assessment2 = assessmentEntityFactory.produceAndPersist {
+            val assessment2 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAssessmentSchema(assessmentSchema)
               withApplication(application2)
               withSubmittedAt(OffsetDateTime.now())
@@ -179,7 +179,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withReleaseType("licence")
             }
 
-            val assessment1 = assessmentEntityFactory.produceAndPersist {
+            val assessment1 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAssessmentSchema(assessmentSchema)
               withApplication(application1)
               withSubmittedAt(OffsetDateTime.now())
@@ -195,7 +195,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withReleaseType("licence")
             }
 
-            val assessment2 = assessmentEntityFactory.produceAndPersist {
+            val assessment2 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAssessmentSchema(assessmentSchema)
               withApplication(application2)
               withSubmittedAt(OffsetDateTime.now())

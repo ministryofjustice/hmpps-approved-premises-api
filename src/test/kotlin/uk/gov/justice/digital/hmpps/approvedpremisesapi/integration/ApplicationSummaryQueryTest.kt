@@ -94,7 +94,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.parse("2023-04-19T09:34:00+01:00"))
           }
 
-          val assessmentForSubmittedApplication = assessmentEntityFactory.produceAndPersist {
+          val assessmentForSubmittedApplication = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withApplication(submittedApplication)
             withAllocatedToUser(user)
             withAssessmentSchema(assessmentSchema)
@@ -217,7 +217,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withProbationRegion(probationRegion)
           }
 
-          val assessmentForSubmittedApplication = assessmentEntityFactory.produceAndPersist {
+          val assessmentForSubmittedApplication = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withApplication(submittedApplication)
             withAllocatedToUser(user)
             withAssessmentSchema(assessmentSchema)

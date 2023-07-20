@@ -75,7 +75,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(user)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -84,7 +84,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         assessment.schemaUpToDate = true
 
-        val reallocatedAssessment = assessmentEntityFactory.produceAndPersist {
+        val reallocatedAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(user)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -173,7 +173,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -227,7 +227,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -275,7 +275,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -329,7 +329,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -400,7 +400,7 @@ class AssessmentTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
             }
 
-            val assessment = assessmentEntityFactory.produceAndPersist {
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAllocatedToUser(userEntity)
               withApplication(application)
               withAssessmentSchema(assessmentSchema)
@@ -435,7 +435,7 @@ class AssessmentTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            val persistedAssessment = assessmentRepository.findByIdOrNull(assessment.id)!!
+            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
             assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
@@ -497,7 +497,7 @@ class AssessmentTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
             }
 
-            val assessment = assessmentEntityFactory.produceAndPersist {
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAllocatedToUser(userEntity)
               withApplication(application)
               withAssessmentSchema(assessmentSchema)
@@ -527,7 +527,7 @@ class AssessmentTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            val persistedAssessment = assessmentRepository.findByIdOrNull(assessment.id)!!
+            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
             assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
@@ -583,7 +583,7 @@ class AssessmentTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
             }
 
-            val assessment = assessmentEntityFactory.produceAndPersist {
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAllocatedToUser(userEntity)
               withApplication(application)
               withAssessmentSchema(assessmentSchema)
@@ -656,7 +656,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -672,7 +672,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
 
-        val persistedAssessment = assessmentRepository.findByIdOrNull(assessment.id)!!
+        val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
@@ -709,7 +709,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -750,7 +750,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)

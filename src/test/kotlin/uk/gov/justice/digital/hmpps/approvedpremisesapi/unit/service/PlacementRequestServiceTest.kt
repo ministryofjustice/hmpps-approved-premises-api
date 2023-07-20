@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -116,7 +116,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(assigneeUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -152,7 +152,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(assigneeUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -201,7 +201,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(assigneeUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -274,7 +274,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(requestingUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(requestingUser)
       .produce()
@@ -308,7 +308,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(assigneeUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -356,7 +356,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(assigneeUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(assigneeUser)
       .produce()
@@ -416,7 +416,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(otherUser)
       .produce()
@@ -453,7 +453,7 @@ class PlacementRequestServiceTest {
       .withCreatedByUser(otherUser)
       .produce()
 
-    val assessment = AssessmentEntityFactory()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withAllocatedToUser(otherUser)
       .produce()
