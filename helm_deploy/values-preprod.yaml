@@ -36,6 +36,7 @@ generic-service:
     URL-TEMPLATES_API_BOOKING-NOT-MADE-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/booking-not-made/#eventId
     URL-TEMPLATES_API_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/booking-cancelled/#eventId
     URL-TEMPLATES_API_BOOKING-CHANGED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/booking-changed/#eventId
+    URL-TEMPLATES_API_APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/application-withdrawn/#eventId
 
   namespace_secrets:
     hmpps-domain-events-topic:

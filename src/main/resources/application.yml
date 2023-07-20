@@ -183,6 +183,7 @@ url-templates:
     booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
     booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
     booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
+    application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id
