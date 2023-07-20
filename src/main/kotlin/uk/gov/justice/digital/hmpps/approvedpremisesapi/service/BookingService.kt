@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
@@ -57,6 +58,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
@@ -108,6 +111,7 @@ class BookingService(
   private val lostBedsRepository: LostBedsRepository,
   private val turnaroundRepository: TurnaroundRepository,
   private val bedMoveRepository: BedMoveRepository,
+  private val premisesRepository: PremisesRepository,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
@@ -121,7 +125,8 @@ class BookingService(
   fun createApprovedPremisesBookingFromPlacementRequest(
     user: UserEntity,
     placementRequestId: UUID,
-    bedId: UUID,
+    bedId: UUID?,
+    premisesId: UUID?,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
@@ -132,6 +137,9 @@ class BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
+    var bed: BedEntity?
+    var premises: PremisesEntity?
+
     val validationResult = validated {
       if (placementRequest.booking != null) {
         return@validated placementRequest.booking!!.id hasConflictError "A Booking has already been made for this Placement Request"
@@ -141,20 +149,35 @@ class BookingService(
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
 
-      getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-      }
+      if (bedId != null) {
+        getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+          return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
+        }
 
-      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-      }
+        getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+          return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+        }
 
-      val bed = bedRepository.findByIdOrNull(bedId)
+        bed = bedRepository.findByIdOrNull(bedId)
 
-      if (bed == null) {
-        "$.bedId" hasValidationError "doesNotExist"
-      } else if (bed.room.premises !is ApprovedPremisesEntity) {
-        "$.bedId" hasValidationError "mustBelongToApprovedPremises"
+        if (bed == null) {
+          "$.bedId" hasValidationError "doesNotExist"
+        } else if (bed!!.room.premises !is ApprovedPremisesEntity) {
+          "$.bedId" hasValidationError "mustBelongToApprovedPremises"
+        }
+
+        premises = bed!!.room.premises
+      } else if (premisesId != null) {
+        premises = premisesRepository.findByIdOrNull(premisesId)
+        bed = null
+
+        if (premises == null) {
+          "$.premisesId" hasValidationError "doesNotExist"
+        } else if (premises !is ApprovedPremisesEntity) {
+          "$.premisesId" hasValidationError "mustBeAnApprovedPremises"
+        }
+      } else {
+        return@validated generalError("You must specify either a bedId or a premisesId")
       }
 
       if (validationErrors.any()) {
@@ -177,7 +200,7 @@ class BookingService(
           confirmation = null,
           extensions = mutableListOf(),
           dateChanges = mutableListOf(),
-          premises = bed!!.room.premises,
+          premises = premises!!,
           bed = bed,
           service = ServiceName.approvedPremises.value,
           originalArrivalDate = arrivalDate,
@@ -211,7 +234,7 @@ class BookingService(
         templateId = notifyConfig.templates.bookingMade,
         personalisation = mapOf(
           "name" to applicationSubmittedByUser.name,
-          "apName" to bed.room.premises.name,
+          "apName" to premises!!.name,
           "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
           "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
             .replace("#bookingId", booking.id.toString()),
@@ -1193,10 +1216,10 @@ class BookingService(
   ) = validated<ExtensionEntity> {
     val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
-    val bedId = booking.bed?.id
-      ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
-
     if (booking.service != ServiceName.approvedPremises.value) {
+      val bedId = booking.bed?.id
+        ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
+
       getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, bedId)?.let {
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }

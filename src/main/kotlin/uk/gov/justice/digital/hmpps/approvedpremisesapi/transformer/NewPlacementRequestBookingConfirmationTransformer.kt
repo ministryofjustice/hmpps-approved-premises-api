@@ -9,6 +9,6 @@ class NewPlacementRequestBookingConfirmationTransformer {
   fun transformJpaToApi(jpa: BookingEntity) = NewPlacementRequestBookingConfirmation(
     arrivalDate = jpa.arrivalDate,
     departureDate = jpa.departureDate,
-    premisesName = jpa.bed!!.room.premises.name,
+    premisesName = jpa.premises.name,
   )
 }

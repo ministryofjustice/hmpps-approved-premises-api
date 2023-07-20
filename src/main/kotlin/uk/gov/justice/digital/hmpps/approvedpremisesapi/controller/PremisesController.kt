@@ -399,14 +399,14 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val bedId = booking.bed?.id
-      ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
-
     val result = when (body) {
       is NewCas1Arrival -> {
+        val bedId = booking.bed?.id
         val arrivalDate = LocalDate.from(body.arrivalDateTime.atZone(ZoneOffset.UTC))
 
-        throwIfLostBedDatesConflict(arrivalDate, body.expectedDepartureDate, null, bedId)
+        if (bedId != null) {
+          throwIfLostBedDatesConflict(arrivalDate, body.expectedDepartureDate, null, bedId)
+        }
 
         bookingService.createCas1Arrival(
           booking = booking,
@@ -418,6 +418,9 @@ class PremisesController(
         )
       }
       is NewCas2Arrival -> {
+        val bedId = booking.bed?.id
+          ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
+
         throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
         throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
@@ -431,6 +434,9 @@ class PremisesController(
         )
       }
       is NewCas3Arrival -> {
+        val bedId = booking.bed?.id
+          ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
+
         throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
         throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 

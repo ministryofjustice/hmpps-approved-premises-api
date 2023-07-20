@@ -95,6 +95,7 @@ class PlacementRequestsController(
       user = user,
       placementRequestId = id,
       bedId = newPlacementRequestBooking.bedId,
+      premisesId = newPlacementRequestBooking.premisesId,
       arrivalDate = newPlacementRequestBooking.arrivalDate,
       departureDate = newPlacementRequestBooking.departureDate,
     )

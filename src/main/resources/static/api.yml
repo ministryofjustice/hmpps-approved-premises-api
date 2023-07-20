@@ -3686,10 +3686,12 @@ components:
         bedId:
           type: string
           format: uuid
+        premisesId:
+          type: string
+          format: uuid
       required:
         - arrivalDate
         - departureDate
-        - bedId
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'

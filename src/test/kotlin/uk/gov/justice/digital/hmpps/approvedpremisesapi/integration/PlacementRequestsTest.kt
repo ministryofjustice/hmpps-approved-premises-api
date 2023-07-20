@@ -641,6 +641,46 @@ class PlacementRequestsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Creating a Booking from a Placement Request that is allocated to the User and a premisesId is specified returns a 200`() {
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                val premises = approvedPremisesEntityFactory.produceAndPersist {
+                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                  withYieldedProbationRegion {
+                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                  }
+                }
+
+                webTestClient.post()
+                  .uri("/placement-requests/${placementRequest.id}/booking")
+                  .header("Authorization", "Bearer $jwt")
+                  .bodyValue(
+                    NewPlacementRequestBooking(
+                      arrivalDate = LocalDate.parse("2023-03-29"),
+                      departureDate = LocalDate.parse("2023-04-01"),
+                      bedId = null,
+                      premisesId = premises.id,
+                    ),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   @Nested
