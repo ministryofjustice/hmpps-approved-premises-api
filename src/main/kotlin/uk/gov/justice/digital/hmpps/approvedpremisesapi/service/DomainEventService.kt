@@ -9,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -64,6 +65,7 @@ class DomainEventService(
   fun getBookingNotMadeEvent(id: UUID) = get<BookingNotMadeEnvelope>(id)
   fun getBookingCancelledEvent(id: UUID) = get<BookingCancelledEnvelope>(id)
   fun getBookingChangedEvent(id: UUID) = get<BookingChangedEnvelope>(id)
+  fun getApplicationWithdrawnEvent(id: UUID) = get<ApplicationWithdrawnEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -86,6 +88,8 @@ class DomainEventService(
       T::class == BookingCancelledEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       T::class == BookingChangedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED ->
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
+      T::class == ApplicationWithdrawnEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
@@ -198,6 +202,17 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
+  @Transactional
+  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.application.withdrawn",
+      typeDescription = "An Approved Premises Application has been withdrawn",
+      detailUrl = applicationWithdrawnDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
   private fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     typeName: String,
@@ -257,6 +272,7 @@ class DomainEventService(
     BookingNotMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE
     BookingCancelledEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED
     BookingChangedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED
+    ApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }

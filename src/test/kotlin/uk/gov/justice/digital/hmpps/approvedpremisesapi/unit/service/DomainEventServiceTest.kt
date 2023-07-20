@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
@@ -1452,6 +1454,161 @@ class DomainEventServiceTest {
         match {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
+    }
+  }
+
+  @Test
+  fun `getApplicationWithdrawnEvent returns null when event does not exist`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+
+    assertThat(domainEventService.getApplicationWithdrawnEvent(id)).isNull()
+  }
+
+  @Test
+  fun `getApplicationWithdrawnEvent returns event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = ApplicationWithdrawnEnvelope(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = "approved-premises.application.withdrawn",
+      eventDetails = ApplicationWithdrawnFactory().produce(),
+    )
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getApplicationWithdrawnEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
+  fun `saveApplicationWithdrawnEvent persists event, emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = ApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.application.withdrawn",
+        eventDetails = ApplicationWithdrawnFactory().produce(),
+      ),
+    )
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockHmppsTopic.snsClient.publish(
+        match {
+          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+
+          deserializedMessage.eventType == "approved-premises.application.withdrawn" &&
+            deserializedMessage.version == 1 &&
+            deserializedMessage.description == "An Approved Premises Application has been withdrawn" &&
+            deserializedMessage.detailUrl == "http://api/events/application-withdrawn/$id" &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            deserializedMessage.additionalInformation.applicationId == applicationId &&
+            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `saveApplicationWithdrawnEvent does not emit event to SNS if event fails to persist to database`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = ApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.application.withdrawn",
+        eventDetails = ApplicationWithdrawnFactory().produce(),
+      ),
+    )
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    try {
+      domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
+    } catch (_: Exception) { }
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)
