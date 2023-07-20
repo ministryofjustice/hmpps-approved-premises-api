@@ -46,6 +46,7 @@ class DomainEventService(
   @Value("\${url-templates.api.booking-not-made-event-detail}") private val bookingNotMadeDetailUrlTemplate: String,
   @Value("\${url-templates.api.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
   @Value("\${url-templates.api.booking-changed-event-detail}") private val bookingChangedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

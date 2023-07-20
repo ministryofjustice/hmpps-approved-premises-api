@@ -66,6 +66,7 @@ class DomainEventServiceTest {
     bookingNotMadeDetailUrlTemplate = "http://frontend/events/booking-not-made/#eventId",
     bookingCancelledDetailUrlTemplate = "http://frontend/events/booking-cancelled/#eventId",
     bookingChangedDetailUrlTemplate = "http://frontend/events/booking-changed/#eventId",
+    applicationWithdrawnDetailUrlTemplate = "http://frontend/events/application-withdrawn/#eventId",
   )
 
   @Test
