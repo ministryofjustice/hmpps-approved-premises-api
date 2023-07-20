@@ -57,16 +57,16 @@ class DomainEventServiceTest {
     domainEventRepository = domainEventRespositoryMock,
     hmppsQueueService = hmppsQueueServieMock,
     emitDomainEventsEnabled = true,
-    applicationSubmittedDetailUrlTemplate = "http://frontend/events/application-submitted/#eventId",
-    applicationAssessedDetailUrlTemplate = "http://frontend/events/application-assessed/#eventId",
-    bookingMadeDetailUrlTemplate = "http://frontend/events/booking-made/#eventId",
-    personArrivedDetailUrlTemplate = "http://frontend/events/person-arrived/#eventId",
-    personNotArrivedDetailUrlTemplate = "http://frontend/events/person-not-arrived/#eventId",
-    personDepartedDetailUrlTemplate = "http://frontend/events/person-departed/#eventId",
-    bookingNotMadeDetailUrlTemplate = "http://frontend/events/booking-not-made/#eventId",
-    bookingCancelledDetailUrlTemplate = "http://frontend/events/booking-cancelled/#eventId",
-    bookingChangedDetailUrlTemplate = "http://frontend/events/booking-changed/#eventId",
-    applicationWithdrawnDetailUrlTemplate = "http://frontend/events/application-withdrawn/#eventId",
+    applicationSubmittedDetailUrlTemplate = "http://api/events/application-submitted/#eventId",
+    applicationAssessedDetailUrlTemplate = "http://api/events/application-assessed/#eventId",
+    bookingMadeDetailUrlTemplate = "http://api/events/booking-made/#eventId",
+    personArrivedDetailUrlTemplate = "http://api/events/person-arrived/#eventId",
+    personNotArrivedDetailUrlTemplate = "http://api/events/person-not-arrived/#eventId",
+    personDepartedDetailUrlTemplate = "http://api/events/person-departed/#eventId",
+    bookingNotMadeDetailUrlTemplate = "http://api/events/booking-not-made/#eventId",
+    bookingCancelledDetailUrlTemplate = "http://api/events/booking-cancelled/#eventId",
+    bookingChangedDetailUrlTemplate = "http://api/events/booking-changed/#eventId",
+    applicationWithdrawnDetailUrlTemplate = "http://api/events/application-withdrawn/#eventId",
   )
 
   @Test
@@ -164,7 +164,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.application.submitted" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An application has been submitted for an Approved Premises placement" &&
-            deserializedMessage.detailUrl == "http://frontend/events/application-submitted/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/application-submitted/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -319,7 +319,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.application.assessed" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An application has been assessed for an Approved Premises placement" &&
-            deserializedMessage.detailUrl == "http://frontend/events/application-assessed/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/application-assessed/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -474,7 +474,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.booking.made" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An Approved Premises booking has been made" &&
-            deserializedMessage.detailUrl == "http://frontend/events/booking-made/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/booking-made/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -629,7 +629,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.booking.changed" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An Approved Premises Booking has been changed" &&
-            deserializedMessage.detailUrl == "http://frontend/events/booking-changed/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/booking-changed/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -784,7 +784,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.booking.cancelled" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "An Approved Premises Booking has been cancelled" &&
-            deserializedMessage.detailUrl == "http://frontend/events/booking-cancelled/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/booking-cancelled/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -939,7 +939,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.person.arrived" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has arrived at an Approved Premises for their Booking" &&
-            deserializedMessage.detailUrl == "http://frontend/events/person-arrived/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/person-arrived/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -1094,7 +1094,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.person.not-arrived" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has failed to arrive at an Approved Premises for their Booking" &&
-            deserializedMessage.detailUrl == "http://frontend/events/person-not-arrived/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/person-not-arrived/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -1249,7 +1249,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.person.departed" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has left an Approved Premises" &&
-            deserializedMessage.detailUrl == "http://frontend/events/person-departed/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/person-departed/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
@@ -1404,7 +1404,7 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "approved-premises.booking.not-made" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "It was not possible to create a Booking on this attempt" &&
-            deserializedMessage.detailUrl == "http://frontend/events/booking-not-made/$id" &&
+            deserializedMessage.detailUrl == "http://api/events/booking-not-made/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
