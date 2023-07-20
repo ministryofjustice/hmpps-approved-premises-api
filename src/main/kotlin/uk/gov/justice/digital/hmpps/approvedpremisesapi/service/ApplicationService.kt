@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
@@ -424,6 +426,7 @@ class ApplicationService(
     )
   }
 
+  @Transactional
   fun withdrawApprovedPremisesApplication(
     applicationId: UUID,
     user: UserEntity,
@@ -456,6 +459,49 @@ class ApplicationService(
             this.withdrawalReason = withdrawalReason
           },
         )
+
+        if (withdrawalReason != null) {
+          val domainEventId = UUID.randomUUID()
+          val eventOccurredAt = Instant.now()
+
+          val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+          val staffDetails = when (staffDetailsResult) {
+            is ClientResult.Success -> staffDetailsResult.body
+            is ClientResult.Failure -> staffDetailsResult.throwException()
+          }
+
+          domainEventService.saveApplicationWithdrawnEvent(
+            DomainEvent(
+              id = domainEventId,
+              applicationId = application.id,
+              crn = application.crn,
+              occurredAt = eventOccurredAt,
+              data = ApplicationWithdrawnEnvelope(
+                id = domainEventId,
+                timestamp = eventOccurredAt,
+                eventType = "approved-premises.application.withdrawn",
+                eventDetails = ApplicationWithdrawn(
+                  applicationId = applicationId,
+                  applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+                  personReference = PersonReference(
+                    crn = application.crn,
+                    noms = application.nomsNumber ?: "Unknown NOMS Number",
+                  ),
+                  deliusEventNumber = application.eventNumber,
+                  withdrawnAt = eventOccurredAt,
+                  withdrawnBy = StaffMember(
+                    staffCode = staffDetails.staffCode,
+                    staffIdentifier = staffDetails.staffIdentifier,
+                    forenames = staffDetails.staff.forenames,
+                    surname = staffDetails.staff.surname,
+                    username = staffDetails.username,
+                  ),
+                  withdrawalReason = withdrawalReason,
+                ),
+              ),
+            ),
+          )
+        }
 
         return@validated success(Unit)
       },
