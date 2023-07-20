@@ -239,8 +239,10 @@ class UserService(
 
   fun clearRolesForService(user: UserEntity, service: ServiceName) {
     val rolesToClear = UserRole.getAllRolesForService(service)
-    val userRoleAssignmentsToDelete = user.roles.filter { rolesToClear.contains(it.role) }.map(UserRoleAssignmentEntity::id)
-    userRoleAssignmentRepository.deleteAllById(userRoleAssignmentsToDelete)
+    user.roles.filter { rolesToClear.contains(it.role) }.forEach {
+      userRoleAssignmentRepository.delete(it)
+      user.roles.remove(it)
+    }
   }
 
   fun clearQualifications(user: UserEntity) {
