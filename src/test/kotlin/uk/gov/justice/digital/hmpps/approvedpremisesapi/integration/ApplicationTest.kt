@@ -1346,6 +1346,46 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create new application for Temporary Accommodation returns successfully when a person has no NOMS number`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = { withoutNomsNumber() },
+      ) { offenderDetails, _ ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(TemporaryAccommodationApplication::class.java)
+
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
+
+        assertThat(result.responseBody.blockFirst()).matches {
+          it.person.crn == offenderDetails.otherIds.crn &&
+            it.schemaVersion == applicationSchema.id
+        }
+      }
+    }
+  }
+
+  @Test
   fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
