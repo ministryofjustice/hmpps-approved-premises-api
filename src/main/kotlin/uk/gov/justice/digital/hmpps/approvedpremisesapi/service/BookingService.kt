@@ -1216,10 +1216,10 @@ class BookingService(
   ) = validated<ExtensionEntity> {
     val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
-    val bedId = booking.bed?.id
-      ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
-
     if (booking.service != ServiceName.approvedPremises.value) {
+      val bedId = booking.bed?.id
+        ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
+
       getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, bedId)?.let {
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }

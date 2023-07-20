@@ -2466,6 +2466,31 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Extension on Approved Premises Booking returns OK when a booking has no bed`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withArrivalDate(LocalDate.parse("2022-08-18"))
+        withDepartureDate(LocalDate.parse("2022-08-20"))
+        withStaffKeyWorkerCode(keyWorker.code)
+        withPremises(premises)
+      }
+
+      creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-22")
+    }
+  }
+
+  @Test
   fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
