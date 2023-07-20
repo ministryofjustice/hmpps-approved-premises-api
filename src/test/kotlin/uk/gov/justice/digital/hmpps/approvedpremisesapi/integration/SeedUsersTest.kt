@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
@@ -284,6 +285,168 @@ class SeedUsersTest : SeedTestBase() {
     )
   }
 
+  @Test
+  fun `Seeding same users multiple times works every time for base user seed job`() {
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
+    val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
+    val seedInfos = listOf(
+      SeedInfo(
+        staffUserDetails = StaffUserDetailsFactory()
+          .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
+          .produce(),
+        expectedRoles = listOf(UserRole.CAS1_ADMIN, UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER),
+        expectedQualifications = listOf(UserQualification.EMERGENCY, UserQualification.LAO),
+      ),
+      SeedInfo(
+        staffUserDetails = StaffUserDetailsFactory()
+          .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
+          .produce(),
+        expectedRoles = listOf(UserRole.CAS1_MANAGER),
+        expectedQualifications = listOf(),
+      ),
+      SeedInfo(
+        staffUserDetails = StaffUserDetailsFactory()
+          .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
+          .produce(),
+        expectedRoles = listOf(),
+        expectedQualifications = listOf(UserQualification.LAO),
+      ),
+    )
+
+    seedInfos.forEach {
+      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+        it.staffUserDetails,
+      )
+    }
+
+    withCsv(
+      "users-many-times-base-job",
+      userRoleAssignmentSeedCsvRowsToCsv(
+        seedInfos.map {
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername(it.staffUserDetails.username)
+            .withTypedRoles(it.expectedRoles)
+            .withTypedQualifications(it.expectedQualifications)
+            .produce()
+        },
+      ),
+    )
+
+    var iteration = 1
+    repeat(20) {
+      seedService.seedData(SeedFileType.user, "users-many-times-base-job")
+
+      seedInfos.forEach {
+        val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username.uppercase())!!
+
+        it.iterationValidations += IterationValidation(
+          rolesCorrect = persistedUser.roles.map(UserRoleAssignmentEntity::role).containsAll(it.expectedRoles),
+          qualificationsCorrect = persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification).containsAll(it.expectedQualifications),
+        )
+      }
+
+      iteration += 1
+    }
+
+    seedInfos.forEach {
+      println("${it.staffUserDetails.username}\n" + it.iterationValidations.mapIndexed { index, validation -> "   Run $index: roles correct = ${validation.rolesCorrect}, qalifications correct = ${validation.qualificationsCorrect}" }.joinToString("\n"))
+    }
+
+    seedInfos.forEach {
+      it.iterationValidations.forEach {
+        assertThat(it.rolesCorrect).isTrue
+        assertThat(it.qualificationsCorrect).isTrue
+      }
+    }
+  }
+
+  @Test
+  fun `Seeding same users multiple times works every time for AP user seed job`() {
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
+    val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
+    val seedInfos = listOf(
+      SeedInfo(
+        staffUserDetails = StaffUserDetailsFactory()
+          .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
+          .produce(),
+        expectedRoles = listOf(UserRole.CAS1_ADMIN, UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR),
+        expectedQualifications = listOf(UserQualification.EMERGENCY, UserQualification.LAO),
+      ),
+      SeedInfo(
+        staffUserDetails = StaffUserDetailsFactory()
+          .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
+          .produce(),
+        expectedRoles = listOf(UserRole.CAS1_MANAGER),
+        expectedQualifications = listOf(),
+      ),
+      SeedInfo(
+        staffUserDetails = StaffUserDetailsFactory()
+          .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
+          .produce(),
+        expectedRoles = listOf(),
+        expectedQualifications = listOf(UserQualification.LAO),
+      ),
+    )
+
+    seedInfos.forEach {
+      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+        it.staffUserDetails,
+      )
+    }
+
+    withCsv(
+      "users-many-times-ap-job",
+      userRoleAssignmentSeedCsvRowsToCsv(
+        seedInfos.map {
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername(it.staffUserDetails.username)
+            .withTypedRoles(it.expectedRoles)
+            .withTypedQualifications(it.expectedQualifications)
+            .produce()
+        },
+      ),
+    )
+
+    var iteration = 1
+    repeat(20) {
+      seedService.seedData(SeedFileType.approvedPremisesUsers, "users-many-times-ap-job")
+
+      seedInfos.forEach {
+        val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username.uppercase())!!
+
+        it.iterationValidations += IterationValidation(
+          rolesCorrect = persistedUser.roles.map(UserRoleAssignmentEntity::role).containsAll(it.expectedRoles),
+          qualificationsCorrect = persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification).containsAll(it.expectedQualifications),
+        )
+      }
+
+      iteration += 1
+    }
+
+    seedInfos.forEach {
+      println("${it.staffUserDetails.username}\n" + it.iterationValidations.mapIndexed { index, validation -> "   Run $index: roles correct = ${validation.rolesCorrect}, qalifications correct = ${validation.qualificationsCorrect}" }.joinToString("\n"))
+    }
+
+    seedInfos.forEach {
+      it.iterationValidations.forEach {
+        assertThat(it.rolesCorrect).isTrue
+        assertThat(it.qualificationsCorrect).isTrue
+      }
+    }
+  }
+
   private fun userRoleAssignmentSeedCsvRowsToCsv(rows: List<UsersSeedUntypedEnumsCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
@@ -341,4 +504,16 @@ data class UsersSeedUntypedEnumsCsvRow(
   val deliusUsername: String,
   val roles: List<String>,
   val qualifications: List<String>,
+)
+
+data class SeedInfo(
+  val staffUserDetails: StaffUserDetails,
+  val expectedRoles: List<UserRole>,
+  val expectedQualifications: List<UserQualification>,
+  val iterationValidations: MutableList<IterationValidation> = mutableListOf(),
+)
+
+data class IterationValidation(
+  val rolesCorrect: Boolean,
+  val qualificationsCorrect: Boolean,
 )
