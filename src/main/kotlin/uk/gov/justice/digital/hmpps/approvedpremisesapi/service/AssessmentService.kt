@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -53,8 +54,11 @@ class AssessmentService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
-  fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
-    assessmentRepository.findAllAssessmentSummariesNotReallocated(user.id.toString())
+  fun getVisibleAssessmentSummariesForUser(user: UserEntity, serviceName: ServiceName): List<DomainAssessmentSummary> = when (serviceName) {
+    ServiceName.approvedPremises -> assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString())
+    ServiceName.temporaryAccommodation -> assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
+    else -> listOf()
+  }
 
   fun getAllReallocatable(): List<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)

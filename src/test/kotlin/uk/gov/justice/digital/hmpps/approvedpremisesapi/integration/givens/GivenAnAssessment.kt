@@ -80,6 +80,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
+  data: String? = "{ \"some\": \"data\"}",
   block: (assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit,
 ) {
   val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -103,6 +104,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
+    withData(data)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }

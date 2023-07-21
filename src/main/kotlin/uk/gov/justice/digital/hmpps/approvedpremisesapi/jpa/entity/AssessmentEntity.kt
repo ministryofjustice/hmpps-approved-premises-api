@@ -28,14 +28,17 @@ import javax.persistence.Table
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   @Query(nativeQuery = true)
-  fun findAllAssessmentSummariesNotReallocated(userIdString: String? = null): List<DomainAssessmentSummary>
+  fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null): List<DomainAssessmentSummary>
+
+  @Query(nativeQuery = true)
+  fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
 
   fun findAllByReallocatedAtNullAndSubmittedAtNull(): List<AssessmentEntity>
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 }
 
 @NamedNativeQuery(
-  name = "AssessmentEntity.findAllAssessmentSummariesNotReallocated",
+  name = "AssessmentEntity.findAllApprovedPremisesAssessmentSummariesNotReallocated",
   query =
   """
     select a.service as type,
@@ -54,12 +57,37 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            a.decision as decision,
            a.data is not null as isStarted,
            ap.crn as crn
-      from assessments a
+      from approved_premises_assessments aa
+           join assessments a on aa.assessment_id = a.id
            join applications ap on a.application_id = ap.id
            left outer join approved_premises_applications apa on ap.id = apa.id
      where a.reallocated_at is null
            and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
     """,
+  resultSetMapping = "DomainAssessmentSummaryMapping",
+)
+@NamedNativeQuery(
+  name = "AssessmentEntity.findAllTemporaryAccommodationAssessmentSummariesForRegion",
+  query =
+  """
+    select a.service as type,
+           cast(a.id as text) as id,
+           cast(a.application_id as text) as applicationId,
+           a.created_at as createdAt,
+           CAST(taa.risk_ratings AS TEXT) as riskRatings,
+           null as arrivalDate,
+           null as dateOfInfoRequest,
+           a.decision is not null as completed,
+           a.decision as decision,
+           a.data is not null as isStarted,
+           ap.crn as crn
+      from temporary_accommodation_assessments aa
+           join assessments a on aa.assessment_id = a.id
+           join applications ap on a.application_id = ap.id
+           left outer join temporary_accommodation_applications taa on ap.id = taa.id
+     where taa.probation_region_id = ?1
+           and a.reallocated_at is null
+  """,
   resultSetMapping = "DomainAssessmentSummaryMapping",
 )
 @SqlResultSetMapping(

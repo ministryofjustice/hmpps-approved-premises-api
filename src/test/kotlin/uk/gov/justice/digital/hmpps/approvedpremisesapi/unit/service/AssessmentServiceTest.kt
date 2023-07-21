@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -86,7 +87,7 @@ class AssessmentServiceTest {
   )
 
   @Test
-  fun `getVisibleAssessmentSummariesForUser only fetches assessments allocated to the user that have not been reallocated`() {
+  fun `getVisibleAssessmentSummariesForUser only fetches Approved Premises assessments allocated to the user that have not been reallocated`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -102,11 +103,35 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    every { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(any()) } returns emptyList()
+    every { assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(any()) } returns emptyList()
 
-    assessmentService.getVisibleAssessmentSummariesForUser(user)
+    assessmentService.getVisibleAssessmentSummariesForUser(user, ServiceName.approvedPremises)
 
-    verify(exactly = 1) { assessmentRepositoryMock.findAllAssessmentSummariesNotReallocated(user.id.toString()) }
+    verify(exactly = 1) { assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString()) }
+  }
+
+  @Test
+  fun `getVisibleAssessmentSummariesForUser only fetches Temporary Accommodation assessments within the user's probation region`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    user.roles.add(
+      UserRoleAssignmentEntityFactory()
+        .withRole(UserRole.CAS3_ASSESSOR)
+        .withUser(user)
+        .produce(),
+    )
+
+    every { assessmentRepositoryMock.findAllTemporaryAccommodationAssessmentSummariesForRegion(any()) } returns emptyList()
+
+    assessmentService.getVisibleAssessmentSummariesForUser(user, ServiceName.temporaryAccommodation)
+
+    verify(exactly = 1) { assessmentRepositoryMock.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id) }
   }
 
   @Test

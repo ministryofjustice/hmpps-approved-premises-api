@@ -23,14 +23,13 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
   lateinit var realAssessmentRepository: AssessmentRepository
 
   @Test
-  fun `assessment summary query works as described when not restricted to user`() {
+  fun `Approved Premises assessment summary query works as described when not restricted to user`() {
     `Given a User` { user1, _ ->
       `Given an Assessment for Approved Premises`(user1, user1, reallocated = true) { _, _ -> }
       `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
         `Given an Assessment for Approved Premises`(user1, user1, data = null) { notStartedApAssessment, _ ->
           val expectedApAssessmentNote = earliestUnansweredClarificationNote(apAssessment, user1)
           `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
-            val expectedTaAssessmentNote = earliestUnansweredClarificationNote(taAssessment, user1)
             `Given a User` { user2, _ ->
 
               val u2Assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -46,15 +45,15 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
               }
 
               val results: List<DomainAssessmentSummary> =
-                realAssessmentRepository.findAllAssessmentSummariesNotReallocated()
+                realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated()
 
-              assertThat(results.size).isEqualTo(4)
+              assertThat(results.size).isEqualTo(3)
 
               results.forEach {
                 when (it.id) {
                   u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment, null)
                   apAssessment.id -> assertForAssessmentSummary(it, apAssessment, expectedApAssessmentNote.createdAt)
-                  taAssessment.id -> assertForAssessmentSummary(it, taAssessment, expectedTaAssessmentNote.createdAt)
+                  taAssessment.id -> fail("Did not expect a Temporary Accommodation Assessment when fetching Approved Premises Assessment summaries")
                   notStartedApAssessment.id -> assertForAssessmentSummary(it, notStartedApAssessment, null)
                   else -> fail()
                 }
@@ -67,7 +66,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `assessment summary query works as described when restricted to one user`() {
+  fun `Approved Premises assessment summary query works as described when restricted to one user`() {
     `Given a User` { user1, _ ->
       `Given a User` { user2, _ ->
         `Given an Assessment for Approved Premises`(user2, user2) { _, _ -> }
@@ -78,10 +77,52 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
           `Given an Assessment for Temporary Accommodation`(user2, user2) { taAssessment, _ ->
             earliestUnansweredClarificationNote(taAssessment, user2)
 
-            val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllAssessmentSummariesNotReallocated(user1.id.toString())
+            val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user1.id.toString())
 
             assertThat(results.size).isEqualTo(1)
             assertForAssessmentSummary(results[0], apAssessment, expectedApAssessmentNote.createdAt)
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Temporary Accommodation assessment summary query returns assessments in the region`() {
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Temporary Accommodation`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+        `Given an Assessment for Temporary Accommodation`(user1, user1, data = null) { notStartedTaAssessment, _ ->
+          `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+            `Given a User`(probationRegion = user1.probationRegion) { user2, _ ->
+
+              val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+                val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(taAssessment.application.schemaVersion)
+                  withCreatedByUser(user2)
+                  withProbationRegion(user2.probationRegion)
+                }
+                withAllocatedToUser(user2)
+                withAssessmentSchema(taAssessment.schemaVersion)
+                withApplication(application)
+                withDecision(AssessmentDecision.ACCEPTED)
+              }
+
+              val results: List<DomainAssessmentSummary> =
+                realAssessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user1.probationRegion.id)
+
+              assertThat(results.size).isEqualTo(3)
+
+              results.forEach {
+                when (it.id) {
+                  u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment, null)
+                  taAssessment.id -> assertForAssessmentSummary(it, taAssessment, null)
+                  apAssessment.id -> fail("Did not expect an Approved Premises Assessment when fetching Temporary Accommodation Assessment summaries")
+                  notStartedTaAssessment.id -> assertForAssessmentSummary(it, notStartedTaAssessment, null)
+                  else -> fail()
+                }
+              }
+            }
           }
         }
       }
@@ -107,7 +148,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
       is TemporaryAccommodationApplicationEntity -> {
         assertThat(summary.type).isEqualTo("temporary-accommodation")
-        assertThat(summary.riskRatings).isNull()
+        assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
       }
     }
   }

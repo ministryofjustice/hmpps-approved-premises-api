@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -43,10 +44,10 @@ class AssessmentController(
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun assessmentsGet(): ResponseEntity<List<AssessmentSummary>> {
+  override fun assessmentsGet(xServiceName: ServiceName): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
 
-    val summaries = assessmentService.getVisibleAssessmentSummariesForUser(user)
+    val summaries = assessmentService.getVisibleAssessmentSummariesForUser(user, xServiceName)
 
     return ResponseEntity.ok(
       mapAndTransformAssessmentSummaries(

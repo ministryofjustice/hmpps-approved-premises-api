@@ -2786,6 +2786,13 @@ paths:
       tags:
         - Assessment data
       summary: Gets assessments the user is authorised to view
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only assessments for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successfully retrieved assessments
