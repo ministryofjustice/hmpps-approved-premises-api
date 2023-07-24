@@ -1569,6 +1569,73 @@ class BookingServiceTest {
   }
 
   @Test
+  fun `createNonArrival does not emit domain event when associated with Application but arrivedAndDepartedDomainEventsDisabled is true`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withCrn(application.crn)
+      .withArrivalDate(LocalDate.parse("2022-08-24"))
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(application)
+      .produce()
+
+    val reasonEntity = NonArrivalReasonEntityFactory().produce()
+
+    every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockNonArrivalRepository.save(any()) } answers { it.invocation.args[0] as NonArrivalEntity }
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails,
+    )
+
+    every { mockDomainEventService.savePersonNotArrivedEvent(any()) } just Runs
+
+    val result = bookingServiceWithArrivedAndDepartedDomainEventsDisabled.createNonArrival(
+      user = user,
+      booking = bookingEntity,
+      date = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes",
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 0) {
+      mockDomainEventService.savePersonNotArrivedEvent(any())
+    }
+  }
+
+  @Test
   fun `createCancellation returns GeneralValidationError with correct message when Booking already has a Cancellation`() {
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
