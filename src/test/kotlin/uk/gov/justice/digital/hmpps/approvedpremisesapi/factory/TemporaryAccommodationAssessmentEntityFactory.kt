@@ -96,7 +96,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     decision = this.decision(),
     schemaUpToDate = false,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
-    allocatedToUser = this.allocatedToUser?.invoke() ?: throw RuntimeException("Must provide an allocatedToUser"),
+    allocatedToUser = this.allocatedToUser?.invoke(),
     allocatedAt = this.allocatedAt(),
     reallocatedAt = this.reallocatedAt(),
     rejectionRationale = this.rejectionRationale(),

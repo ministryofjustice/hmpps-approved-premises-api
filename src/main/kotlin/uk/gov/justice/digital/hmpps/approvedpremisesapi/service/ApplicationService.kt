@@ -731,6 +731,8 @@ class ApplicationService(
       document = serializedTranslatedDocument
     }
 
+    assessmentService.createAssessment(application)
+
     application = applicationRepository.save(application)
 
     return AuthorisableActionResult.Success(

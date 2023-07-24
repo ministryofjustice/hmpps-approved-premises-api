@@ -26,6 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -107,19 +110,24 @@ class AssessmentService(
     return AuthorisableActionResult.Success(assessment)
   }
 
-  fun createAssessment(application: ApplicationEntity): AssessmentEntity {
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw RuntimeException("Only CAS1 Applications are currently supported")
-    }
+  fun createAssessment(application: ApplicationEntity): AssessmentEntity = when (application) {
+    is ApprovedPremisesApplicationEntity -> createApprovedPremisesAssessment(application)
+    is TemporaryAccommodationApplicationEntity -> createTemporaryAccommodationAssessment(application)
+    else -> throw RuntimeException("Application type '${application::class.qualifiedName}' is not supported")
+  }
 
+  private fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val allocatedUser = userService.getUserForAssessmentAllocation(application)
 
     val dateTimeNow = OffsetDateTime.now()
 
     val assessment = assessmentRepository.save(
       ApprovedPremisesAssessmentEntity(
-        id = UUID.randomUUID(), application = application,
-        data = null, document = null, schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
+        id = UUID.randomUUID(),
+        application = application,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
         allocatedToUser = allocatedUser,
         allocatedAt = dateTimeNow,
         reallocatedAt = null,
@@ -132,17 +140,40 @@ class AssessmentService(
       ),
     )
 
-    if (application is ApprovedPremisesApplicationEntity) {
-      emailNotificationService.sendEmail(
-        user = allocatedUser,
-        templateId = notifyConfig.templates.assessmentAllocated,
-        personalisation = mapOf(
-          "name" to allocatedUser.name,
-          "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
-    }
+    emailNotificationService.sendEmail(
+      user = allocatedUser,
+      templateId = notifyConfig.templates.assessmentAllocated,
+      personalisation = mapOf(
+        "name" to allocatedUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
+        "crn" to application.crn,
+      ),
+    )
+
+    return assessment
+  }
+
+  private fun createTemporaryAccommodationAssessment(application: TemporaryAccommodationApplicationEntity): TemporaryAccommodationAssessmentEntity {
+    val dateTimeNow = OffsetDateTime.now()
+
+    val assessment = assessmentRepository.save(
+      TemporaryAccommodationAssessmentEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java),
+        allocatedToUser = null,
+        allocatedAt = dateTimeNow,
+        reallocatedAt = null,
+        createdAt = dateTimeNow,
+        submittedAt = null,
+        decision = null,
+        schemaUpToDate = true,
+        rejectionRationale = null,
+        clarificationNotes = mutableListOf(),
+      ),
+    )
 
     return assessment
   }

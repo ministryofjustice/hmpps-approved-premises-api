@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -1677,7 +1678,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitTemporaryAccommodationApplication returns Success`() {
+    fun `submitTemporaryAccommodationApplication returns Success and creates assessment`() {
       val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
       val application = TemporaryAccommodationApplicationEntityFactory()
@@ -1696,6 +1697,9 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockAssessmentService.createAssessment(application) } returns TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
 
       val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplication)
 
@@ -1705,7 +1709,7 @@ class ApplicationServiceTest {
       assertThat(result.entity is ValidatableActionResult.Success).isTrue
 
       verify { mockApplicationRepository.save(any()) }
-      verify { mockAssessmentService wasNot called }
+      verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
       verify { mockDomainEventService wasNot called }
     }
   }
