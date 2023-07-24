@@ -115,6 +115,8 @@ class BookingService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
+  @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
+  @Value("\${manual-bookings-domain-events-disabled}") private val manualBookingsDomainEventsDisabled: Boolean,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
 
@@ -386,11 +388,13 @@ class BookingService(
       )
 
       if (associateWithOnlineApplication && user != null) {
-        saveBookingMadeDomainEvent(
-          booking = booking,
-          user = user,
-          bookingCreatedAt = bookingCreatedAt,
-        )
+        if (!manualBookingsDomainEventsDisabled) {
+          saveBookingMadeDomainEvent(
+            booking = booking,
+            user = user,
+            bookingCreatedAt = bookingCreatedAt,
+          )
+        }
 
         val applicationSubmittedByUser = newestSubmittedOnlineApplication!!.createdByUser
 

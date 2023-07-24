@@ -124,5 +124,5 @@ url-templates:
 preemptive-cache-delay-ms: 250
 preemptive-cache-lock-duration-ms: 10000
 
-arrived-departed-domain-events-disabled: true
-manual-bookings-domain-events-disabled: true
+arrived-departed-domain-events-disabled: false
+manual-bookings-domain-events-disabled: false

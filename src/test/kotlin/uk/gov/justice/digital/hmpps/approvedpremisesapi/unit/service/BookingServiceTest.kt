@@ -180,6 +180,45 @@ class BookingServiceTest {
     notifyConfig = NotifyConfig(),
     applicationUrlTemplate = "http://frontend/applications/#id",
     bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
+    arrivedAndDepartedDomainEventsDisabled = false,
+    manualBookingsDomainEventsDisabled = false,
+  )
+
+  private val bookingServiceWithManualBookingsDomainEventsDisabled = BookingService(
+    premisesService = mockPremisesService,
+    staffMemberService = mockStaffMemberService,
+    offenderService = mockOffenderService,
+    domainEventService = mockDomainEventService,
+    cruService = mockCruService,
+    applicationService = mockApplicationService,
+    workingDayCountService = mockWorkingDayCountService,
+    emailNotificationService = mockEmailNotificationService,
+    placementRequestService = mockPlacementRequestService,
+    communityApiClient = mockCommunityApiClient,
+    bookingRepository = mockBookingRepository,
+    arrivalRepository = mockArrivalRepository,
+    cancellationRepository = mockCancellationRepository,
+    confirmationRepository = mockConfirmationRepository,
+    extensionRepository = mockExtensionRepository,
+    dateChangeRepository = mockDateChangeRepository,
+    departureRepository = mockDepartureRepository,
+    nonArrivalRepository = mockNonArrivalRepository,
+    departureReasonRepository = mockDepartureReasonRepository,
+    moveOnCategoryRepository = mockMoveOnCategoryRepository,
+    destinationProviderRepository = mockDestinationProviderRepository,
+    nonArrivalReasonRepository = mockNonArrivalReasonRepository,
+    cancellationReasonRepository = mockCancellationReasonRepository,
+    bedRepository = mockBedRepository,
+    placementRequestRepository = mockPlacementRequestRepository,
+    lostBedsRepository = mockLostBedsRepository,
+    turnaroundRepository = mockTurnaroundRepository,
+    bedMoveRepository = mockBedMoveRepository,
+    premisesRepository = mockPremisesRepository,
+    notifyConfig = NotifyConfig(),
+    applicationUrlTemplate = "http://frontend/applications/#id",
+    bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
+    arrivedAndDepartedDomainEventsDisabled = false,
+    manualBookingsDomainEventsDisabled = true,
   )
 
   private val user = UserEntityFactory()
@@ -2351,6 +2390,93 @@ class BookingServiceTest {
             data.arrivalOn == arrivalDate
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockEmailNotificationService.sendEmail(
+        any(),
+        "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+        match {
+          it["name"] == user.name &&
+            (it["apName"] as String) == premises.name &&
+            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
+            (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        },
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `createApprovedPremisesAdHocBooking saves Booking and does not create Domain Event when associated Application is an Online Application and manualBookingsDomainEventsDisabled is true`(role: UserRole) {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-22")
+    val departureDate = LocalDate.parse("2023-02-23")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCrn(crn)
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withUsername(user.deliusUsername)
+      .produce()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockOffenderService.getOffenderByCrn(crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+    every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
+    every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+
+    every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+
+    val authorisableResult = bookingServiceWithManualBookingsDomainEventsDisabled.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    assertThat(authorisableResult is AuthorisableActionResult.Success)
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.Success)
+
+    verify(exactly = 1) {
+      mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockDomainEventService.saveBookingMadeDomainEvent(any())
     }
 
     verify(exactly = 1) {
