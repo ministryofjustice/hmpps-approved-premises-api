@@ -61,7 +61,7 @@ class UserAccessService(
     userCanManagePremisesBookings(userService.getUserForRequest(), premises)
 
   fun userCanManagePremisesBookings(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER, UserRole.CAS1_WORKFLOW_MANAGER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }

@@ -349,7 +349,7 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER" ])
   fun `userCanManagePremisesBookings returns true if the given premises is an Approved Premises and the user has either the MANAGER or MATCHER user role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 
