@@ -1255,17 +1255,20 @@ class BookingService(
     booking.extensions.add(extension)
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       saveBookingChangedDomainEvent(
         booking = booking,
         application = booking.application!! as ApprovedPremisesApplicationEntity,
-        user = user,
+        user = user!!,
         bookingChangedAt = OffsetDateTime.now(),
       )
     }
 
     return success(extensionEntity)
   }
+
+  private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?) =
+    booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && (!manualBookingsDomainEventsDisabled || booking.placementRequest != null)
 
   @Transactional
   fun createDateChange(
@@ -1327,7 +1330,7 @@ class BookingService(
       },
     )
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       saveBookingChangedDomainEvent(
         booking = booking,
         application = booking.application!! as ApprovedPremisesApplicationEntity,
