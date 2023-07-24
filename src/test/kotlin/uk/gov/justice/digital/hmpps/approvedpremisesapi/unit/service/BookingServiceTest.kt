@@ -909,6 +909,101 @@ class BookingServiceTest {
     }
   }
 
+  @Test
+  fun `createDeparture does not emit domain event when associated with Application but arrivedAndDepartedDomainEventsDisabled is true`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-22"))
+      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withUnitTestControlProbationRegion()
+              .produce(),
+          )
+          .produce(),
+      )
+      .produce()
+
+    val reasonEntity = DepartureReasonEntityFactory()
+      .withServiceScope("approved-premises")
+      .produce()
+    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
+      .withServiceScope("approved-premises")
+      .produce()
+    val destinationProviderEntity = DestinationProviderEntityFactory().produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
+    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns destinationProviderEntity
+
+    every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+
+    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+
+    every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+      HttpStatus.OK,
+      keyWorkerStaffUserDetails,
+    )
+
+    every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
+
+    val result = bookingServiceWithArrivedAndDepartedDomainEventsDisabled.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = destinationProviderId,
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.booking).isEqualTo(bookingEntity)
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+    assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 0) {
+      mockDomainEventService.savePersonDepartedEvent(any())
+    }
+  }
+
   @Nested
   inner class CreateArrival {
     @Test

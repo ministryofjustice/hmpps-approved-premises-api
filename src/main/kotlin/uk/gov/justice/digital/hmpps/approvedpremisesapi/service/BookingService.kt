@@ -1136,7 +1136,7 @@ class BookingService(
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
