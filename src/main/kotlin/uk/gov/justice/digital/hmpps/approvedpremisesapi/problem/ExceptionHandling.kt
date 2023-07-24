@@ -62,6 +62,8 @@ class ExceptionHandling(
       )
     }
 
+    log.error("Unhandled exception type, returning generic 500 response", throwable)
+
     return InternalServerErrorProblem(
       detail = "There was an unexpected problem",
     )
