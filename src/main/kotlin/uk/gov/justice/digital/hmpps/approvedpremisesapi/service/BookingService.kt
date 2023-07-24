@@ -978,12 +978,12 @@ class BookingService(
       )
     }
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       val dateTime = OffsetDateTime.now()
 
       val domainEventId = UUID.randomUUID()
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user!!.deliusUsername, user.hasQualification(UserQualification.LAO))) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")

@@ -114,6 +114,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnit
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.OffsetTime
 import java.util.UUID
 
 class BookingServiceTest {
@@ -1597,6 +1598,157 @@ class BookingServiceTest {
     assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
     assertThat(result.entity.reason).isEqualTo(reasonEntity)
     assertThat(result.entity.notes).isEqualTo("notes")
+  }
+
+  @Test
+  fun `createCancellation emits domain event when linked to Application`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withApplication(application)
+      .withCrn(application.crn)
+      .produce()
+
+    val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+    every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+    every { mockDomainEventService.saveBookingCancelledEvent(any()) } just Runs
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails,
+    )
+
+    val cancelledAt = LocalDate.parse("2022-08-25")
+    val notes = "notes"
+
+    val result = bookingService.createCancellation(
+      booking = bookingEntity,
+      cancelledAt = cancelledAt,
+      reasonId = reasonId,
+      notes = notes,
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 1) {
+      mockDomainEventService.saveBookingCancelledEvent(
+        match {
+          val data = it.data.eventDetails
+
+          it.applicationId == application.id &&
+            it.crn == application.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber!!,
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.premises == Premises(
+            id = premises.id,
+            name = premises.name,
+            apCode = premises.apCode,
+            legacyApCode = premises.qCode,
+            localAuthorityAreaName = premises.localAuthorityArea!!.name,
+          ) &&
+            data.cancelledAt == cancelledAt.atTime(OffsetTime.MIN).toInstant() &&
+            data.cancellationReason == reasonEntity.name
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `createCancellation does not emit domain event when linked to Application but not to a placement request and manualBookingsDomainEventsDisabled is true`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withApplication(application)
+      .withCrn(application.crn)
+      .produce()
+
+    val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+    every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+    every { mockDomainEventService.saveBookingCancelledEvent(any()) } just Runs
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails,
+    )
+
+    val cancelledAt = LocalDate.parse("2022-08-25")
+    val notes = "notes"
+
+    val result = bookingServiceWithManualBookingsDomainEventsDisabled.createCancellation(
+      booking = bookingEntity,
+      cancelledAt = cancelledAt,
+      reasonId = reasonId,
+      notes = notes,
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 0) {
+      mockDomainEventService.saveBookingCancelledEvent(any())
+    }
   }
 
   @Test
