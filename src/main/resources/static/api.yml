@@ -2793,6 +2793,18 @@ paths:
           description: Only assessments for this service will be returned
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: sortOrder
+          in: query
+          description: If provided, return results in the given order
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortOrder"
+        - name: sortField
+          in: query
+          description: If provided, return results ordered by the given field name
+          required: false
+          schema:
+            $ref: "#/components/schemas/AssessmentSortField"
       responses:
         200:
           description: successfully retrieved assessments
@@ -5199,7 +5211,20 @@ components:
         - createdAt
         - status
         - person
-
+    AssessmentSortField:
+      type: string
+      enum:
+        - name
+        - crn
+        - arrivalDate
+        - status
+        - createdAt
+      x-enum-varnames:
+        - personName
+        - personCrn
+        - assessmentArrivalDate
+        - assessmentStatus
+        - assessmentCreatedAt
     AssessmentDecision:
       type: string
       enum:

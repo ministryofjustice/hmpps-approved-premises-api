@@ -9,10 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.AssessmentsApiDelega
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -44,7 +46,11 @@ class AssessmentController(
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun assessmentsGet(xServiceName: ServiceName): ResponseEntity<List<AssessmentSummary>> {
+  override fun assessmentsGet(
+    xServiceName: ServiceName,
+    sortOrder: SortOrder?,
+    sortField: AssessmentSortField?,
+  ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
 
     val summaries = assessmentService.getVisibleAssessmentSummariesForUser(user, xServiceName)
@@ -57,6 +63,8 @@ class AssessmentController(
         offenderService,
         assessmentTransformer::transformDomainToApiSummary,
         user.hasQualification(UserQualification.LAO),
+        sortOrder,
+        sortField,
       ),
     )
   }
