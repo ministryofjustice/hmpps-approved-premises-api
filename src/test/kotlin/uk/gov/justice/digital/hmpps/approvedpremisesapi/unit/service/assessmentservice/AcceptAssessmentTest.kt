@@ -332,7 +332,7 @@ class AcceptAssessmentTest {
     verifyDomainEventSent(offenderDetails, staffUserDetails, assessment)
 
     verify(exactly = 0) {
-      placementRequestServiceMock.createPlacementRequest(any(), any(), any())
+      placementRequestServiceMock.createPlacementRequest(any(), any(), any(), false)
     }
 
     verify(exactly = 1) {
@@ -373,7 +373,7 @@ class AcceptAssessmentTest {
 
     every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.Success(placementRequirementEntity)
 
-    every { placementRequestServiceMock.createPlacementRequest(placementRequirementEntity, placementDates, notes) } returns PlacementRequestEntityFactory()
+    every { placementRequestServiceMock.createPlacementRequest(placementRequirementEntity, placementDates, notes, false) } returns PlacementRequestEntityFactory()
       .withPlacementRequirements(
         PlacementRequirementsEntityFactory()
           .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
@@ -416,7 +416,7 @@ class AcceptAssessmentTest {
     verifyDomainEventSent(offenderDetails, staffUserDetails, assessment)
 
     verify(exactly = 1) {
-      placementRequestServiceMock.createPlacementRequest(placementRequirementEntity, placementDates, notes)
+      placementRequestServiceMock.createPlacementRequest(placementRequirementEntity, placementDates, notes, false)
     }
 
     verify(exactly = 1) {

@@ -26,6 +26,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var notes: Yielded<String?> = { null }
+  private var isParole: Yielded<Boolean> = { false }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -67,6 +68,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.createdAt = { createdAt }
   }
 
+  fun withIsParole(isParole: Boolean) = apply {
+    this.isParole = { isParole }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     expectedArrival = this.expectedArrival(),
@@ -80,5 +85,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     bookingNotMades = this.bookingNotMades(),
     reallocatedAt = this.reallocatedAt(),
     notes = this.notes(),
+    isParole = this.isParole(),
   )
 }

@@ -5963,6 +5963,8 @@ components:
               format: date-time
             assessor:
               $ref: '#/components/schemas/ApprovedPremisesUser'
+            isParole:
+              type: boolean
             notes:
               type: string
           required:
@@ -5977,6 +5979,7 @@ components:
             - assessmentDate
             - applicationDate
             - assessor
+            - isParole
     PlacementRequestDetail:
       allOf:
         - $ref: '#/components/schemas/PlacementRequest'

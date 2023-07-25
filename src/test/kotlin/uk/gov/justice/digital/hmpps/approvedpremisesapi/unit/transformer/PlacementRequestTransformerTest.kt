@@ -157,6 +157,7 @@ class PlacementRequestTransformerTest {
         applicationDate = applicationSubmittedAt.toInstant(),
         assessor = mockUser,
         notes = placementRequestEntity.notes,
+        isParole = placementRequestEntity.isParole,
       ),
     )
   }

@@ -975,6 +975,7 @@ class BookingService(
           duration = placementRequest.duration,
         ),
         notes = placementRequest.notes,
+        isParole = false,
       )
     }
 

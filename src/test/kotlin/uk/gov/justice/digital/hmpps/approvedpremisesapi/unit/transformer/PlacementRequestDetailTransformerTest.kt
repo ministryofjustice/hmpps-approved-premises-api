@@ -65,6 +65,7 @@ class PlacementRequestDetailTransformerTest {
     val transformedPlacementRequest = getTransformedPlacementRequest()
 
     every { mockPlacementRequestEntity.booking } returns null
+    every { mockPlacementRequestEntity.isParole } returns false
 
     every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail) } returns transformedPlacementRequest
@@ -93,6 +94,7 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.notes).isEqualTo(transformedPlacementRequest.notes)
     assertThat(result.cancellations).isEqualTo(listOf(mockCancellation, mockCancellation))
     assertThat(result.booking).isNull()
+    assertThat(result.isParole).isEqualTo(false)
 
     verify(exactly = 1) {
       mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail)
@@ -124,6 +126,7 @@ class PlacementRequestDetailTransformerTest {
     val transformedPlacementRequest = getTransformedPlacementRequest()
 
     every { mockPlacementRequestEntity.booking } returns booking
+    every { mockPlacementRequestEntity.isParole } returns false
 
     every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail) } returns transformedPlacementRequest
