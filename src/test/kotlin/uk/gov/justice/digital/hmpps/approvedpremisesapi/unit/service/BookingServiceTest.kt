@@ -61,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffWithoutUsernameUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -3461,6 +3462,133 @@ class BookingServiceTest {
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
+        placementRequestId = placementRequest.id,
+        bedId = null,
+        premisesId = premises.id,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+      )
+
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
+
+      val createdBooking = (validatableResult as ValidatableActionResult.Success).entity
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(
+          match {
+            it.crn == application.crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveBookingMadeDomainEvent(
+          match {
+            val data = (it.data as BookingMadeEnvelope).eventDetails
+
+            it.applicationId == placementRequest.application.id &&
+              it.crn == application.crn &&
+              data.applicationId == placementRequest.application.id &&
+              data.applicationUrl == "http://frontend/applications/${placementRequest.application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == placementRequest.application.eventNumber &&
+              data.premises == Premises(
+              id = premises.id,
+              name = premises.name,
+              apCode = premises.apCode,
+              legacyApCode = premises.qCode,
+              localAuthorityAreaName = premises.localAuthorityArea!!.name,
+            ) &&
+              data.arrivalOn == arrivalDate
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockPlacementRequestRepository.save(
+          match {
+            it.booking == createdBooking
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockEmailNotificationService.sendEmail(
+          any(),
+          "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+          match {
+            it["name"] == otherUser.name &&
+              (it["apName"] as String) == premises.name &&
+              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
+              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `createApprovedPremisesBookingFromPlacementRequest saves successfully when the user is not assigned to the placement request and is a Workflow Manager`() {
+      val arrivalDate = LocalDate.parse("2023-02-22")
+      val departureDate = LocalDate.parse("2023-02-23")
+
+      val workflowManager = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce().apply {
+          this.roles.add(
+            UserRoleAssignmentEntityFactory()
+              .withUser(this)
+              .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+              .produce(),
+          )
+        }
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .produce()
+
+      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      every { mockPremisesRepository.findByIdOrNull(premises.id) } returns premises
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .produce()
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every { mockOffenderService.getOffenderByCrn(application.crn, workflowManager.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(workflowManager.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
+      every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+
+      val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
+        user = workflowManager,
         placementRequestId = placementRequest.id,
         bedId = null,
         premisesId = premises.id,
