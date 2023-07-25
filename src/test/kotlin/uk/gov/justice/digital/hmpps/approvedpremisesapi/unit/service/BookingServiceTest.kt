@@ -2083,6 +2083,7 @@ class BookingServiceTest {
           duration = originalPlacementRequest.duration,
         ),
         notes = originalPlacementRequest.notes,
+        isParole = false,
       )
     } answers {
       val placementRequirementsArgument = it.invocation.args[0] as PlacementRequirementsEntity
@@ -2116,6 +2117,7 @@ class BookingServiceTest {
           duration = originalPlacementRequest.duration,
         ),
         notes = originalPlacementRequest.notes,
+        isParole = false,
       )
     }
   }

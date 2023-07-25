@@ -235,7 +235,7 @@ class AssessmentService(
     }
 
     if (placementDates != null) {
-      placementRequestService.createPlacementRequest(placementRequirementsValidationResult.entity, placementDates, notes)
+      placementRequestService.createPlacementRequest(placementRequirementsValidationResult.entity, placementDates, notes, false)
     }
 
     val application = savedAssessment.application

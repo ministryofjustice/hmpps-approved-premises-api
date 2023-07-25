@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -128,13 +129,14 @@ class PlacementRequestService(
         expectedArrival = it.expectedArrival,
         duration = it.duration,
       )
-      this.createPlacementRequest(placementRequirements, placementDates, notes)
+      val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
+      this.createPlacementRequest(placementRequirements, placementDates, notes, isParole)
     }
 
     return AuthorisableActionResult.Success(placementRequests)
   }
 
-  fun createPlacementRequest(placementRequirements: PlacementRequirementsEntity, placementDates: PlacementDates, notes: String?): PlacementRequestEntity {
+  fun createPlacementRequest(placementRequirements: PlacementRequirementsEntity, placementDates: PlacementDates, notes: String?, isParole: Boolean): PlacementRequestEntity {
     val user = userService
 
     return placementRequestRepository.save(
@@ -151,6 +153,7 @@ class PlacementRequestService(
         bookingNotMades = mutableListOf(),
         reallocatedAt = null,
         notes = notes,
+        isParole = isParole ?: false,
       ),
     )
   }

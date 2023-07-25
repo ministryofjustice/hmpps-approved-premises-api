@@ -41,6 +41,7 @@ class PlacementRequestTransformer(
       applicationDate = jpa.application.submittedAt?.toInstant()!!,
       assessor = userTransformer.transformJpaToApi(jpa.assessment.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
       notes = jpa.notes,
+      isParole = jpa.isParole,
     )
   }
 

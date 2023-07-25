@@ -61,4 +61,6 @@ data class PlacementRequestEntity(
   @ManyToOne
   @JoinColumn(name = "placement_requirements_id")
   var placementRequirements: PlacementRequirementsEntity,
+
+  var isParole: Boolean,
 )

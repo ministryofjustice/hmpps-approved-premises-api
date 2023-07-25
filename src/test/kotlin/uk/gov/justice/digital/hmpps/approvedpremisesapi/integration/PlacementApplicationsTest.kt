@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.NullNode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
@@ -35,6 +37,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 class PlacementApplicationsTest : IntegrationTestBase() {
 
@@ -860,13 +863,14 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `accepting a placement request application decision records the decision and creates and assigns a placement request`() {
+    @ParameterizedTest
+    @CsvSource("ROTL,false", "ADDITIONAL_PLACEMENT,false", "RELEASE_FOLLOWING_DECISION,true")
+    fun `accepting a placement request application decision records the decision and creates and assigns a placement request`(placementType: JpaPlacementType, isParole: Boolean) {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
           `Given a User` { user, jwt ->
             `Given an Offender` { offenderDetails, _ ->
-              `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
+              `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
                 `Given placement requirements`(placementApplicationEntity = placementApplicationEntity) { placementRequirements ->
                   `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
                     webTestClient.post()
@@ -899,6 +903,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
                     assertThat(createdPlacementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
                     assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
+                    assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
                     assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
                   }
                 }
@@ -913,6 +918,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       allocatedToUser: UserEntity,
       offenderDetails: OffenderDetailSummary,
       decision: JpaPlacementApplicationDecision? = null,
+      placementType: JpaPlacementType? = JpaPlacementType.ADDITIONAL_PLACEMENT,
       block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
     ) {
       val placementApplication = `Given a Placement Application`(
@@ -930,6 +936,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         submittedAt = OffsetDateTime.now(),
         crn = offenderDetails.otherIds.crn,
         decision = decision,
+        reallocated = false,
+        placementType = placementType,
       )
 
       block(placementApplication)

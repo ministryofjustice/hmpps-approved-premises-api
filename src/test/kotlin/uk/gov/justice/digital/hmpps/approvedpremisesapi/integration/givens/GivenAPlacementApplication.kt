@@ -19,6 +19,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   submittedAt: OffsetDateTime? = null,
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
+  placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
 ): PlacementApplicationEntity {
   val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
@@ -47,7 +48,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
     withSchemaVersion(schema)
     withSubmittedAt(submittedAt)
     withDecision(decision)
-    withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+    withPlacementType(placementType!!)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
@@ -63,6 +64,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   submittedAt: OffsetDateTime? = null,
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
+  placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
 ) {
   block(
@@ -75,6 +77,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
       submittedAt,
       decision,
       reallocated,
+      placementType,
     ),
   )
 }
