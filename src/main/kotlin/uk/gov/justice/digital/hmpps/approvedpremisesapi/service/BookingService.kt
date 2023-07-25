@@ -115,6 +115,8 @@ class BookingService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
+  @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
+  @Value("\${manual-bookings-domain-events-disabled}") private val manualBookingsDomainEventsDisabled: Boolean,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
 
@@ -386,11 +388,13 @@ class BookingService(
       )
 
       if (associateWithOnlineApplication && user != null) {
-        saveBookingMadeDomainEvent(
-          booking = booking,
-          user = user,
-          bookingCreatedAt = bookingCreatedAt,
-        )
+        if (!manualBookingsDomainEventsDisabled) {
+          saveBookingMadeDomainEvent(
+            booking = booking,
+            user = user,
+            bookingCreatedAt = bookingCreatedAt,
+          )
+        }
 
         val applicationSubmittedByUser = newestSubmittedOnlineApplication!!.createdByUser
 
@@ -728,7 +732,7 @@ class BookingService(
     booking.departureDate = expectedDepartureDate
     updateBooking(booking)
 
-    if (booking.application != null && user != null) {
+    if (booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
@@ -864,7 +868,7 @@ class BookingService(
       ),
     )
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
@@ -974,12 +978,12 @@ class BookingService(
       )
     }
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       val dateTime = OffsetDateTime.now()
 
       val domainEventId = UUID.randomUUID()
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user!!.deliusUsername, user.hasQualification(UserQualification.LAO))) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
@@ -1132,7 +1136,7 @@ class BookingService(
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
@@ -1251,17 +1255,20 @@ class BookingService(
     booking.extensions.add(extension)
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       saveBookingChangedDomainEvent(
         booking = booking,
         application = booking.application!! as ApprovedPremisesApplicationEntity,
-        user = user,
+        user = user!!,
         bookingChangedAt = OffsetDateTime.now(),
       )
     }
 
     return success(extensionEntity)
   }
+
+  private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?) =
+    booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && (!manualBookingsDomainEventsDisabled || booking.placementRequest != null)
 
   @Transactional
   fun createDateChange(
@@ -1323,7 +1330,7 @@ class BookingService(
       },
     )
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       saveBookingChangedDomainEvent(
         booking = booking,
         application = booking.application!! as ApprovedPremisesApplicationEntity,
