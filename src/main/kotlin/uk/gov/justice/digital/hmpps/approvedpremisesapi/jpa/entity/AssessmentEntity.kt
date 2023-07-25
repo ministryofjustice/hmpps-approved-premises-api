@@ -75,7 +75,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            cast(a.application_id as text) as applicationId,
            a.created_at as createdAt,
            CAST(taa.risk_ratings AS TEXT) as riskRatings,
-           null as arrivalDate,
+           taa.arrival_date as arrivalDate,
            null as dateOfInfoRequest,
            a.decision is not null as completed,
            a.decision as decision,

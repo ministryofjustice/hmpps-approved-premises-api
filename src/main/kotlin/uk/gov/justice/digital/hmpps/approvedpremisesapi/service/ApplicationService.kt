@@ -358,6 +358,7 @@ class ApplicationService(
             assessments = mutableListOf(),
             probationRegion = user.probationRegion,
             nomsNumber = offenderDetails.otherIds.nomsNumber,
+            arrivalDate = null,
           ),
         )
 
@@ -729,6 +730,7 @@ class ApplicationService(
     application.apply {
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
+      arrivalDate = OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
     }
 
     assessmentService.createAssessment(application)

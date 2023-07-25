@@ -85,8 +85,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.Period
+import java.time.ZoneOffset
 import java.util.UUID
 
 class ApplicationServiceTest {
@@ -1333,6 +1335,7 @@ class ApplicationServiceTest {
     private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
       translatedDocument = {},
       type = "CAS3",
+      arrivalDate = LocalDate.now(),
     )
 
     @BeforeEach
@@ -1707,6 +1710,9 @@ class ApplicationServiceTest {
       result as AuthorisableActionResult.Success
 
       assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as TemporaryAccommodationApplicationEntity
+      assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(submitTemporaryAccommodationApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC))
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createAssessment(application) }

@@ -69,6 +69,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -1864,6 +1865,7 @@ class ApplicationTest : IntegrationTestBase() {
               SubmitTemporaryAccommodationApplication(
                 translatedDocument = {},
                 type = "CAS3",
+                arrivalDate = LocalDate.now(),
               ),
             )
             .exchange()

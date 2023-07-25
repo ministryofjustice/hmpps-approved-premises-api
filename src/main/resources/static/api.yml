@@ -5015,6 +5015,13 @@ components:
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
+        - type: object
+          properties:
+            arrivalDate:
+              type: string
+              format: date
+          required:
+            - arrivalDate
     ReleaseTypeOption:
       type: string
       enum:
