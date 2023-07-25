@@ -22,7 +22,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   fun findAllByReallocatedAtNullAndBooking_IdNull(): List<PlacementRequestEntity>
 
-  fun findAllByReallocatedAtNull(): List<PlacementRequestEntity>
+  fun findAllByIsParoleAndReallocatedAtNull(isParole: Boolean): List<PlacementRequestEntity>
 }
 
 @Entity

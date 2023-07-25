@@ -2471,6 +2471,12 @@ paths:
       tags:
         - Placement requests
       summary: Gets all placement requests
+      parameters:
+        - name: isParole
+          in: query
+          description: States whether or not to return parole cases
+          schema:
+            type: boolean
       responses:
         200:
           description: successfully retrieved placement requests
