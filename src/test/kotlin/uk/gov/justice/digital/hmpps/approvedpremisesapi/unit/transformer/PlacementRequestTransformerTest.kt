@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
@@ -207,5 +209,41 @@ class PlacementRequestTransformerTest {
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.unableToMatch)
+  }
+
+  @Test
+  fun `transformJpaToApi returns a status of notMatched when a placement request has a cancelled booking`() {
+    val premises = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withServiceName(ServiceName.approvedPremises)
+      .withPremises(premises)
+      .produce()
+
+    booking.let {
+      it.cancellations = mutableListOf(
+        CancellationEntityFactory().withBooking(it).withReason(
+          CancellationReasonEntityFactory().produce(),
+        ).produce(),
+      )
+    }
+
+    val placementRequirementsEntity = placementRequirementsFactory.produce()
+
+    val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsEntity)
+      .withBooking(booking)
+      .produce()
+
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
+
+    assertThat(result.status).isEqualTo(PlacementRequestStatus.notMatched)
   }
 }
