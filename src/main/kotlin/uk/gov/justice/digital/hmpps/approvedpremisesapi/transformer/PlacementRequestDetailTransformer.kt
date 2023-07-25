@@ -12,6 +12,7 @@ class PlacementRequestDetailTransformer(
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val cancellationTransformer: CancellationTransformer,
   private val bookingSummaryTransformer: BookingSummaryTransformer,
+  private val applicationTransformer: ApplicationsTransformer,
 ) {
   fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?, cancellations: List<CancellationEntity>): PlacementRequestDetail {
     val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, offenderDetailSummary, inmateDetail)
@@ -40,6 +41,7 @@ class PlacementRequestDetailTransformer(
       cancellations = cancellations.mapNotNull { cancellationTransformer.transformJpaToApi(it) },
       booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
       isParole = jpa.isParole,
+      application = applicationTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail),
     )
   }
 }

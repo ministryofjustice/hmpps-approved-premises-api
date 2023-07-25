@@ -5991,8 +5991,11 @@ components:
                 $ref: '#/components/schemas/Cancellation'
             booking:
               $ref: '#/components/schemas/BookingSummary'
+            application:
+              $ref: '#/components/schemas/Application'
           required:
             - cancellations
+            - application
     PlacementRequestStatus:
       type: string
       enum:
