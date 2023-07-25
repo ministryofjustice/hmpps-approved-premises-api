@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
@@ -156,8 +157,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `It returns all the placement requests when the user is a manager`() {
+    @ParameterizedTest
+    @CsvSource("/placement-requests/dashboard,nonParole", "/placement-requests/dashboard?isParole=1,parole", "/placement-requests/dashboard?isParole=0,nonParole")
+    fun `It returns all the placement requests when the user is a manager`(url: String, type: String) {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails1, inmateDetails1 ->
           `Given an Offender` { offenderDetails2, inmateDetails2 ->
@@ -213,7 +215,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               )
             }
 
-            val placementRequest1 = placementRequestFactory.produceAndPersist {
+            val nonParolePlacementRequest = placementRequestFactory.produceAndPersist {
               withAllocatedToUser(
                 userEntityFactory.produceAndPersist {
                   withProbationRegion(
@@ -226,9 +228,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withApplication(application1)
               withAssessment(assessment1)
               withPlacementRequirements(placementRequirements)
+              withIsParole(false)
             }
 
-            val placementRequest2 = placementRequestFactory.produceAndPersist {
+            val parolePlacementRequest = placementRequestFactory.produceAndPersist {
               withAllocatedToUser(
                 userEntityFactory.produceAndPersist {
                   withProbationRegion(
@@ -241,9 +244,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withApplication(application2)
               withAssessment(assessment2)
               withPlacementRequirements(placementRequirements)
+              withIsParole(true)
             }
 
-            placementRequestFactory.produceAndPersistMultiple(3) {
+            placementRequestFactory.produceAndPersistMultiple(2) {
               withAllocatedToUser(
                 userEntityFactory.produceAndPersist {
                   withProbationRegion(
@@ -257,22 +261,47 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withApplication(application2)
               withAssessment(assessment2)
               withPlacementRequirements(placementRequirements)
+              withIsParole(true)
+            }
+
+            placementRequestFactory.produceAndPersistMultiple(2) {
+              withAllocatedToUser(
+                userEntityFactory.produceAndPersist {
+                  withProbationRegion(
+                    probationRegionEntityFactory.produceAndPersist {
+                      withApArea(apAreaEntityFactory.produceAndPersist())
+                    },
+                  )
+                },
+              )
+              withReallocatedAt(OffsetDateTime.now())
+              withApplication(application2)
+              withAssessment(assessment2)
+              withPlacementRequirements(placementRequirements)
+              withIsParole(false)
             }
 
             webTestClient.get()
-              .uri("/placement-requests/dashboard")
+              .uri(url)
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
               .isOk
               .expectBody()
               .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    placementRequestTransformer.transformJpaToApi(placementRequest1, offenderDetails1, inmateDetails1),
-                    placementRequestTransformer.transformJpaToApi(placementRequest2, offenderDetails2, inmateDetails2),
-                  ),
-                ),
+                if (type == "nonParole") {
+                  objectMapper.writeValueAsString(
+                    listOf(
+                      placementRequestTransformer.transformJpaToApi(nonParolePlacementRequest, offenderDetails1, inmateDetails1),
+                    ),
+                  )
+                } else {
+                  objectMapper.writeValueAsString(
+                    listOf(
+                      placementRequestTransformer.transformJpaToApi(parolePlacementRequest, offenderDetails2, inmateDetails2),
+                    ),
+                  )
+                },
               )
           }
         }

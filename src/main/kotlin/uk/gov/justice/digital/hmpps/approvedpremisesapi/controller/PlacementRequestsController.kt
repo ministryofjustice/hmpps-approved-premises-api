@@ -55,14 +55,14 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsDashboardGet(): ResponseEntity<List<PlacementRequest>> {
+  override fun placementRequestsDashboardGet(isParole: Boolean?): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
-    val requests = placementRequestService.getAllActive()
+    val requests = placementRequestService.getAllActive(isParole ?: false)
 
     return ResponseEntity.ok(
       mapPersonDetailOntoPlacementRequests(requests, user),
