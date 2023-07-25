@@ -2,11 +2,19 @@
 # Per environment values which override defaults in approved-premises-api/values.yaml
 
 generic-service:
+  resources:
+    limits:
+      memory: 1.5Gi
+    requests:
+      memory: 1Gi
+
+
   ingress:
     host: approved-premises-api.hmpps.service.justice.gov.uk
     tlsSecretName: hmpps-approved-premises-api-prod-cert
 
   env:
+    JAVA_OPTS: "-Xmx1000m"
     SPRING_PROFILES_ACTIVE: prod
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     HMPPS_AUTH_URL: https://sign-in.hmpps.service.justice.gov.uk/auth
