@@ -179,21 +179,17 @@ abstract class BaseHMPPSClient(
   }
 
   private fun getCacheEntryMetadataIfExists(metaDataKey: String): PreemptiveCacheMetadata? {
-    if (redisTemplate.hasKey(metaDataKey)) {
-      return objectMapper.readValue<PreemptiveCacheMetadata>(
-        redisTemplate.boundValueOps(metaDataKey).get()!!,
-      )
-    }
+    val stringValue = redisTemplate.boundValueOps(metaDataKey).get()
+      ?: return null
 
-    return null
+    return objectMapper.readValue<PreemptiveCacheMetadata>(
+      stringValue,
+    )
   }
 
   private fun getCacheEntryBody(dataKey: String): String {
-    if (redisTemplate.hasKey(dataKey)) {
-      return redisTemplate.boundValueOps(dataKey).get()!!
-    }
-
-    throw RuntimeException("No Redis entry exists for $dataKey")
+    return redisTemplate.boundValueOps(dataKey).get()
+      ?: throw RuntimeException("No Redis entry exists for $dataKey")
   }
 
   private fun <ResponseType> resultFromCacheMetadata(cacheEntry: PreemptiveCacheMetadata, cacheKeySet: CacheKeySet, typeReference: TypeReference<ResponseType>?, clazz: Class<ResponseType>?): ClientResult<ResponseType> {
