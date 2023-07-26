@@ -308,10 +308,6 @@ class ApplicationService(
           is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         }
 
-        if (offenderDetails.otherIds.nomsNumber == null) {
-          throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-        }
-
         if (convictionId == null) {
           "$.convictionId" hasValidationError "empty"
         }
