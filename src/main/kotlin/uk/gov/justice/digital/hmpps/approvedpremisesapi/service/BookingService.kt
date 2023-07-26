@@ -1304,10 +1304,6 @@ class BookingService(
       if (effectiveNewArrivalDate != booking.arrivalDate) {
         return "$.newArrivalDate" hasSingleValidationError "arrivalDateCannotBeChangedOnArrivedBooking"
       }
-
-      if (effectiveNewDepartureDate.isAfter(booking.departureDate)) {
-        return "$.newDepartureDate" hasSingleValidationError "departureDateCannotBeExtendedOnArrivedBooking"
-      }
     }
 
     val dateChangeEntity = dateChangeRepository.save(
