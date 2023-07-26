@@ -94,7 +94,7 @@ class ApplicationService(
     applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
 
   private fun getAllCas2ApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
-    return applicationRepository.findAllCas2ApplicationSummaries()
+    return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
   }
 
   private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
