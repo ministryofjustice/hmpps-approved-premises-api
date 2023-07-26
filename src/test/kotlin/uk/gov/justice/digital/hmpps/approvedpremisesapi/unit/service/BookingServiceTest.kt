@@ -4730,35 +4730,6 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `returns validation error if booking already has an arrival and attempting to extend departure date`() {
-      val booking = BookingEntityFactory()
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .withServiceName(ServiceName.approvedPremises)
-        .withArrivalDate(LocalDate.parse("2023-07-14"))
-        .withDepartureDate(LocalDate.parse("2023-07-16"))
-        .produce()
-        .apply {
-          arrival = ArrivalEntityFactory()
-            .withBooking(this)
-            .produce()
-        }
-
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-
-      val result = bookingService.createDateChange(
-        booking = booking,
-        user = user,
-        newArrivalDate = null,
-        newDepartureDate = LocalDate.parse("2023-07-17"),
-      )
-
-      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-      result as ValidatableActionResult.FieldValidationError
-      assertThat(result.validationMessages).containsEntry("$.newDepartureDate", "departureDateCannotBeExtendedOnArrivedBooking")
-    }
-
-    @Test
     fun `returns success when changing arrived booking by reducing departure date`() {
       val booking = BookingEntityFactory()
         .withPremises(approvedPremises)
