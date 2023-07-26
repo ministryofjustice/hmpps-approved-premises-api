@@ -270,7 +270,7 @@ class BookingService(
     val validationResult = validated {
       if (newBed.room.premises !is ApprovedPremisesEntity) {
         "$.bedId" hasValidationError "mustBelongToApprovedPremises"
-      } else if (newBed.room.premises != booking.bed!!.room.premises) {
+      } else if (newBed.room.premises != booking.premises) {
         "$.bedId" hasValidationError "mustBelongToTheSamePremises"
       }
 
@@ -281,8 +281,8 @@ class BookingService(
       val bedMove = BedMoveEntity(
         id = UUID.randomUUID(),
         booking = booking,
-        previousBed = booking.bed!!,
-        newBed = newBed!!,
+        previousBed = booking.bed,
+        newBed = newBed,
         createdAt = OffsetDateTime.now(),
         notes = notes,
       )

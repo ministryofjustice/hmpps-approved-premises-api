@@ -141,7 +141,49 @@ class MoveBookingTest : IntegrationTestBase() {
       val createdBedMoveEntity = bedMoveRepository.findByBooking_IdOrNull(booking.id)!!
 
       assertThat(createdBedMoveEntity.booking.id).isEqualTo(booking.id)
-      assertThat(createdBedMoveEntity.previousBed.id).isEqualTo(previousBed.id)
+      assertThat(createdBedMoveEntity.previousBed!!.id).isEqualTo(previousBed.id)
+      assertThat(createdBedMoveEntity.newBed.id).isEqualTo(newBed.id)
+      assertThat(createdBedMoveEntity.notes).isEqualTo("Some Notes")
+    }
+  }
+
+  @Test
+  fun `Move Bookings moves a booking to a new bed when booking does not currently have bed`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      val existingBooking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withBed(null)
+      }
+
+      val newRoom = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+
+      val newBed = bedEntityFactory.produceAndPersist {
+        withRoom(newRoom)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/bookings/${existingBooking.id}/moves")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewBedMove(
+            bedId = newBed.id,
+            notes = "Some Notes",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful
+
+      val updatedBookingEntity = bookingRepository.findByIdOrNull(existingBooking.id)!!
+
+      assertThat(updatedBookingEntity.bed!!.id).isEqualTo(newBed.id)
+
+      val createdBedMoveEntity = bedMoveRepository.findByBooking_IdOrNull(existingBooking.id)!!
+
+      assertThat(createdBedMoveEntity.booking.id).isEqualTo(existingBooking.id)
+      assertThat(createdBedMoveEntity.previousBed).isNull()
       assertThat(createdBedMoveEntity.newBed.id).isEqualTo(newBed.id)
       assertThat(createdBedMoveEntity.notes).isEqualTo("Some Notes")
     }

@@ -29,7 +29,7 @@ data class BedMoveEntity(
 
   @OneToOne
   @JoinColumn(name = "previous_bed_id")
-  val previousBed: BedEntity,
+  val previousBed: BedEntity?,
 
   @OneToOne
   @JoinColumn(name = "new_bed_id")
