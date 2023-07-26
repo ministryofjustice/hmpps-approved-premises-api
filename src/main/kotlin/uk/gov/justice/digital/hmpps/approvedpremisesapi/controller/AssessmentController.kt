@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
@@ -51,6 +52,7 @@ class AssessmentController(
     xServiceName: ServiceName,
     sortOrder: SortOrder?,
     sortField: AssessmentSortField?,
+    statuses: List<AssessmentStatus>?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
 
@@ -76,6 +78,7 @@ class AssessmentController(
         user.hasQualification(UserQualification.LAO),
         sortOrder,
         sortField,
+        statuses,
       ),
     )
   }

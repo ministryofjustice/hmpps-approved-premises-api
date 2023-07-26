@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
@@ -113,6 +114,73 @@ class AssessmentTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
             ),
+          )
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource
+  @NullSource
+  fun `Get all assessments filters correctly when 'statuses' query parameter is provided`(assessmentDecision: AssessmentDecision?) {
+    `Given a User` { user, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withDecision(assessmentDecision)
+        }
+
+        assessment.schemaUpToDate = true
+
+        val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withDecision(
+            when (assessmentDecision) {
+              null -> AssessmentDecision.ACCEPTED
+              else -> null
+            },
+          )
+        }
+
+        otherAssessment.schemaUpToDate = true
+
+        val filterStatus = when (assessmentDecision) {
+          null -> AssessmentStatus.inProgress
+          else -> AssessmentStatus.completed
+        }
+
+        webTestClient.get()
+          .uri("/assessments?statuses=${filterStatus.value}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
+            ),
+            true,
           )
       }
     }

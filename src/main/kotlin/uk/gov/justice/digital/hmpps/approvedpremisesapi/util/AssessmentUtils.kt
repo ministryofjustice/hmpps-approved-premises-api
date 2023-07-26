@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -19,10 +20,13 @@ fun mapAndTransformAssessmentSummaries(
   ignoreLao: Boolean = false,
   sortOrder: SortOrder? = null,
   sortField: AssessmentSortField? = null,
+  statuses: List<AssessmentStatus>? = null,
 ): List<AssessmentSummary> {
   return assessments.map {
     transformAssessmentSummary(log, it, deliusUsername, offenderService, transformer, ignoreLao)
-  }.sort(sortOrder, sortField)
+  }
+    .sort(sortOrder, sortField)
+    .filterByStatuses(statuses)
 }
 
 fun <T> transformAssessmentSummary(
@@ -57,6 +61,15 @@ private fun List<AssessmentSummary>.sort(sortOrder: SortOrder?, sortField: Asses
     }
 
     return this.sortedWith(comparator)
+  }
+
+  return this
+}
+
+private fun List<AssessmentSummary>.filterByStatuses(statuses: List<AssessmentStatus>?): List<AssessmentSummary> {
+  if (statuses != null) {
+    val statusesSet = statuses.toSet()
+    return this.filter { statusesSet.contains(it.status) }
   }
 
   return this

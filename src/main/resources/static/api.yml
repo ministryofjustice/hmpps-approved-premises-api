@@ -2805,6 +2805,14 @@ paths:
           required: false
           schema:
             $ref: "#/components/schemas/AssessmentSortField"
+        - name: statuses
+          in: query
+          description: If provided, return only results with the given statuses
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/AssessmentStatus"
       responses:
         200:
           description: successfully retrieved assessments
