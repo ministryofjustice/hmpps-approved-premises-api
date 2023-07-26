@@ -15,7 +15,7 @@ import javax.persistence.Table
 @Repository
 interface PlacementDateRepository : JpaRepository<PlacementDateEntity, UUID> {
 
-  @Query("SELECT p FROM PlacementDateEntity p WHERE p.placementApplication = placementApplication")
+  @Query("SELECT p FROM PlacementDateEntity p WHERE p.placementApplication = :placementApplication")
   fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity): List<PlacementDateEntity>
 }
 
