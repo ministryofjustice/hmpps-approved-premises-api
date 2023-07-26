@@ -46,6 +46,7 @@ class AssessmentController(
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  @Suppress("NAME_SHADOWING")
   override fun assessmentsGet(
     xServiceName: ServiceName,
     sortOrder: SortOrder?,
@@ -54,6 +55,16 @@ class AssessmentController(
     val user = userService.getUserForRequest()
 
     val summaries = assessmentService.getVisibleAssessmentSummariesForUser(user, xServiceName)
+
+    val sortOrder = when {
+      xServiceName == ServiceName.temporaryAccommodation && sortOrder == null -> SortOrder.ascending
+      else -> sortOrder
+    }
+
+    val sortField = when {
+      xServiceName == ServiceName.temporaryAccommodation && sortField == null -> AssessmentSortField.assessmentArrivalDate
+      else -> sortField
+    }
 
     return ResponseEntity.ok(
       mapAndTransformAssessmentSummaries(

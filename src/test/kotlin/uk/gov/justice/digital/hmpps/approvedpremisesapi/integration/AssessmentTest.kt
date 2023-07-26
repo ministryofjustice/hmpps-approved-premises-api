@@ -189,6 +189,73 @@ class AssessmentTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Get all assessments for Temporary Accommodation sorts by closest arrival date first by default`() {
+    `Given a User` { user, jwt ->
+      `Given Some Offenders` { offenderSequence ->
+        val offenders = offenderSequence.take(5).toList()
+
+        data class AssessmentParams(
+          val assessment: TemporaryAccommodationAssessmentEntity,
+          val offenderDetails: OffenderDetailSummary,
+          val inmateDetails: InmateDetail,
+        )
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessments = offenders.map { (offenderDetails, inmateDetails) ->
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withApplicationSchema(applicationSchema)
+            withArrivalDate(LocalDate.now().randomDateAfter(14))
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          assessment.schemaUpToDate = true
+
+          AssessmentParams(assessment, offenderDetails, inmateDetails)
+        }
+
+        val expectedAssessments = assessments
+          .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
+          .map {
+            assessmentTransformer.transformDomainToApiSummary(
+              toAssessmentSummaryEntity(it.assessment),
+              it.offenderDetails,
+              it.inmateDetails,
+            )
+          }
+
+        webTestClient.get()
+          .uri("/assessments")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(expectedAssessments),
+            true,
+          )
+      }
+    }
+  }
+
   private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
     DomainAssessmentSummary(
       type = when (assessment.application) {
