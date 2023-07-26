@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.EventsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -78,6 +79,13 @@ class DomainEventsController(
 
   override fun eventsBookingNotMadeEventIdGet(eventId: UUID): ResponseEntity<BookingNotMadeEnvelope> {
     val event = domainEventService.getBookingNotMadeEvent(eventId)
+      ?: throw NotFoundProblem(eventId, "DomainEvent")
+
+    return ResponseEntity.ok(event.data)
+  }
+
+  override fun eventsApplicationWithdrawnEventIdGet(eventId: UUID): ResponseEntity<ApplicationWithdrawnEnvelope> {
+    val event = domainEventService.getApplicationWithdrawnEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)

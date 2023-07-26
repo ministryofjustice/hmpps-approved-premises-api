@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -180,13 +181,14 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
   }
 
-  override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID): ResponseEntity<Unit> {
+  override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID, body: NewWithdrawal?): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     extractEntityFromNestedAuthorisableValidatableActionResult(
       applicationService.withdrawApprovedPremisesApplication(
         applicationId = applicationId,
         user = user,
+        withdrawalReason = body?.reason?.value,
       ),
     )
 
