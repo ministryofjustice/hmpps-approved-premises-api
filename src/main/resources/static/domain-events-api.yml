@@ -554,7 +554,15 @@ components:
           example: '2022-11-30T14:51:30'
           format: date-time
         withdrawnBy:
-          $ref: '#/components/schemas/StaffMember'
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+            probationArea:
+              $ref: '#/components/schemas/ProbationArea'
+          required:
+            - staffMember
+            - probationArea
         withdrawalReason:
           type: string
       required:
