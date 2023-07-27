@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -825,6 +827,56 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .jsonPath("$.placementRequestId").isEqualTo(placementRequest.id.toString())
                   .jsonPath("$.notes").isEqualTo("some notes")
               }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class WithdrawPlacementRequest {
+    @Test
+    fun `Withdraw Placement Request without a JWT returns 401`() {
+      webTestClient.post()
+        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
+      `Given a User` { _, jwt ->
+        webTestClient.post()
+          .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = user) {
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              webTestClient.post()
+                .uri("/placement-requests/${placementRequest.id}/withdrawal")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+
+              val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
+              assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             }
           }
         }

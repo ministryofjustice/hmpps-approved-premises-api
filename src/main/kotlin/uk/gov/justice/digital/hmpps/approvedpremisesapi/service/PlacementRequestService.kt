@@ -50,15 +50,15 @@ class PlacementRequestService(
 ) {
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+    return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(user.id)
   }
 
   fun getAllReallocatable(): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNull()
+    return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
   fun getAllActive(isParole: Boolean): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByIsParoleAndReallocatedAtNull(isParole)
+    return placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole)
   }
 
   fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
@@ -154,6 +154,7 @@ class PlacementRequestService(
         reallocatedAt = null,
         notes = notes,
         isParole = isParole ?: false,
+        isWithdrawn = false,
       ),
     )
   }
@@ -185,6 +186,21 @@ class PlacementRequestService(
     return AuthorisableActionResult.Success(
       bookingNotMadeRepository.save(bookingNotMade),
     )
+  }
+
+  fun withdrawPlacementRequest(placementRequestId: UUID, user: UserEntity): AuthorisableActionResult<Unit> {
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
+      ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
+
+    placementRequest.isWithdrawn = true
+
+    placementRequestRepository.save(placementRequest)
+
+    return AuthorisableActionResult.Success(Unit)
   }
 
   private fun saveBookingNotMadeDomainEvent(

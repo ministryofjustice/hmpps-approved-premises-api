@@ -2554,6 +2554,35 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-requests/{id}/withdrawal:
+    post:
+      tags:
+        - Placement requests
+      summary: Withdraws a placement request
+      parameters:
+        - name: id
+          in: path
+          description: ID of the placement request
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid applicationId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /placement-requests/{id}/booking:
     post:
       tags:

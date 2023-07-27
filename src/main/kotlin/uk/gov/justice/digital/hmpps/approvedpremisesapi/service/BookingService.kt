@@ -143,6 +143,10 @@ class BookingService(
     var premises: PremisesEntity?
 
     val validationResult = validated {
+      if (placementRequest.isWithdrawn) {
+        return@validated generalError("placementRequestIsWithdrawn")
+      }
+
       if (placementRequest.booking != null) {
         return@validated placementRequest.booking!!.id hasConflictError "A Booking has already been made for this Placement Request"
       }
