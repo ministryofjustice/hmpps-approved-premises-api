@@ -18,7 +18,7 @@ import reactor.netty.http.client.HttpClient
 import java.time.Duration
 
 @Configuration
-class WebClientConfiguration {
+class WebClientConfiguration(@Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long) {
   @Bean
   fun authorizedClientManager(clients: ClientRegistrationRepository): OAuth2AuthorizedClientManager {
     val service: OAuth2AuthorizedClientService = InMemoryOAuth2AuthorizedClientService(clients)
@@ -48,8 +48,8 @@ class WebClientConfiguration {
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .build()
@@ -73,8 +73,8 @@ class WebClientConfiguration {
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .build()
@@ -96,8 +96,8 @@ class WebClientConfiguration {
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .filter(oauth2Client)
@@ -121,8 +121,8 @@ class WebClientConfiguration {
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .filter(oauth2Client)
@@ -145,8 +145,8 @@ class WebClientConfiguration {
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .filter(oauth2Client)
@@ -170,8 +170,8 @@ class WebClientConfiguration {
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .filter(oauth2Client)
@@ -188,8 +188,8 @@ class WebClientConfiguration {
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofSeconds(10))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofSeconds(10).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .build()
