@@ -18,11 +18,11 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   fun findAllByApplication(application: ApplicationEntity): List<PlacementRequestEntity>
 
-  fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementRequestEntity>
+  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
 
-  fun findAllByReallocatedAtNullAndBooking_IdNull(): List<PlacementRequestEntity>
+  fun findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse(): List<PlacementRequestEntity>
 
-  fun findAllByIsParoleAndReallocatedAtNull(isParole: Boolean): List<PlacementRequestEntity>
+  fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole: Boolean): List<PlacementRequestEntity>
 }
 
 @Entity

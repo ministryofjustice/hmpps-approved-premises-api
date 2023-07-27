@@ -50,15 +50,15 @@ class PlacementRequestService(
 ) {
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+    return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(user.id)
   }
 
   fun getAllReallocatable(): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNull()
+    return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
   fun getAllActive(isParole: Boolean): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByIsParoleAndReallocatedAtNull(isParole)
+    return placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole)
   }
 
   fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
