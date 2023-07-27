@@ -154,6 +154,7 @@ class PlacementRequestService(
         reallocatedAt = null,
         notes = notes,
         isParole = isParole ?: false,
+        isWithdrawn = false,
       ),
     )
   }

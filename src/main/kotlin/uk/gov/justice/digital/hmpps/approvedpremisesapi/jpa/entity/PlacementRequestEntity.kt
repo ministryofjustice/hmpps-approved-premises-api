@@ -63,4 +63,5 @@ data class PlacementRequestEntity(
   var placementRequirements: PlacementRequirementsEntity,
 
   var isParole: Boolean,
+  var isWithdrawn: Boolean,
 )

@@ -27,6 +27,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var notes: Yielded<String?> = { null }
   private var isParole: Yielded<Boolean> = { false }
+  private var isWithdrawn: Yielded<Boolean> = { false }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -72,6 +73,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.isParole = { isParole }
   }
 
+  fun withIsWithdrawn(isWithdrawn: Boolean) = apply {
+    this.isWithdrawn = { isWithdrawn }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     expectedArrival = this.expectedArrival(),
@@ -86,5 +91,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     reallocatedAt = this.reallocatedAt(),
     notes = this.notes(),
     isParole = this.isParole(),
+    isWithdrawn = this.isWithdrawn(),
   )
 }
