@@ -3799,6 +3799,65 @@ class BookingServiceTest {
     }
 
     @Test
+    fun `createApprovedPremisesBookingFromPlacementRequest returns GeneralError if the Placement Request has been withdrawn`() {
+      val arrivalDate = LocalDate.parse("2023-03-28")
+      val departureDate = LocalDate.parse("2023-03-30")
+
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withIsWithdrawn(true)
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .withBooking(
+          BookingEntityFactory()
+            .withBed(bed)
+            .withPremises(premises)
+            .produce(),
+        )
+        .produce()
+
+      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
+      val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
+        user = user,
+        placementRequestId = placementRequest.id,
+        bedId = bed.id,
+        premisesId = null,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validationError = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validationError.message).isEqualTo("placementRequestIsWithdrawn")
+    }
+
+    @Test
     fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if Bed has a conflicting Booking`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
