@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.util.UUID
 
 class PlacementRequestServiceTest {
@@ -515,6 +516,81 @@ class PlacementRequestServiceTest {
           ) &&
             data.deliusEventNumber == application.eventNumber &&
             data.failureDescription == "some notes"
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `withdrawPlacementRequest returns Unauthorised if User is not WORKFLOW_MANAGER`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val result = placementRequestService.withdrawPlacementRequest(UUID.randomUUID(), user)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `withdrawPlacementRequest returns Not Found if no Placement Request with ID exists`() {
+    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+
+    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
+
+    val result = placementRequestService.withdrawPlacementRequest(placementRequestId, user)
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true`() {
+    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withId(placementRequestId)
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+    every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+    val result = placementRequestService.withdrawPlacementRequest(placementRequestId, user)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+
+    verify {
+      placementRequestRepository.save(
+        match {
+          it.id == placementRequestId &&
+            it.isWithdrawn
         },
       )
     }

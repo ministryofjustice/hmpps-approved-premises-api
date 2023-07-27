@@ -188,6 +188,21 @@ class PlacementRequestService(
     )
   }
 
+  fun withdrawPlacementRequest(placementRequestId: UUID, user: UserEntity): AuthorisableActionResult<Unit> {
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
+      ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
+
+    placementRequest.isWithdrawn = true
+
+    placementRequestRepository.save(placementRequest)
+
+    return AuthorisableActionResult.Success(Unit)
+  }
+
   private fun saveBookingNotMadeDomainEvent(
     user: UserEntity,
     placementRequest: PlacementRequestEntity,
