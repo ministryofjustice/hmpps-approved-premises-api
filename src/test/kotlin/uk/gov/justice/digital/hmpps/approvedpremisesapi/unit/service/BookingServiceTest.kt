@@ -4574,7 +4574,7 @@ class BookingServiceTest {
         mockBedMoveRepository.save(
           match {
             it.booking.id == booking.id &&
-              it.previousBed.id == bed.id &&
+              it.previousBed!!.id == bed.id &&
               it.newBed.id == newBed.id &&
               it.notes == "Some Notes"
           },

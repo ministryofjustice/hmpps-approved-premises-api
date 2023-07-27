@@ -43,7 +43,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
-  private var bed: Yielded<BedEntity>? = null
+  private var bed: Yielded<BedEntity?> = { null }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
   private var application: Yielded<ApplicationEntity?> = { null }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
@@ -143,7 +143,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.serviceName = { serviceName }
   }
 
-  fun withBed(bed: BedEntity) = apply {
+  fun withBed(bed: BedEntity?) = apply {
     this.bed = { bed }
   }
 
@@ -193,7 +193,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     dateChanges = this.dateChanges?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
-    bed = this.bed?.invoke(),
+    bed = this.bed(),
     service = this.serviceName.invoke().value,
     originalArrivalDate = this.originalArrivalDate?.invoke() ?: this.arrivalDate(),
     originalDepartureDate = this.originalDepartureDate?.invoke() ?: this.departureDate(),
