@@ -330,7 +330,7 @@ class AllocationQueryTest : IntegrationTestBase() {
     )
 
     repeat(numberOfPendingAssessments) {
-      assessmentEntityFactory.produceAndPersist {
+      approvedPremisesAssessmentEntityFactory.produceAndPersist {
         withAllocatedToUser(user)
         withApplication(
           approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -344,7 +344,7 @@ class AllocationQueryTest : IntegrationTestBase() {
     }
 
     repeat(numberOfRecentCompletedAssessments) {
-      assessmentEntityFactory.produceAndPersist {
+      approvedPremisesAssessmentEntityFactory.produceAndPersist {
         withAllocatedToUser(user)
         withApplication(
           approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -359,7 +359,7 @@ class AllocationQueryTest : IntegrationTestBase() {
     }
 
     repeat(numberOfLessRecentCompletedAssessments) {
-      assessmentEntityFactory.produceAndPersist {
+      approvedPremisesAssessmentEntityFactory.produceAndPersist {
         withAllocatedToUser(user)
         withApplication(
           approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -417,7 +417,7 @@ class AllocationQueryTest : IntegrationTestBase() {
       withApplicationSchema(applicationSchema)
     }
 
-    val assessment = assessmentEntityFactory.produceAndPersist {
+    val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withAllocatedToUser(user)
       withApplication(
         application,

@@ -26,7 +26,7 @@ class ReallocationAtomicTest : IntegrationTestBase() {
             withApplicationSchema(applicationSchema)
           }
 
-          val existingAssessment = assessmentEntityFactory.produceAndPersist {
+          val existingAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withAllocatedToUser(otherUser)
             withAssessmentSchema(assessmentSchema)
@@ -46,7 +46,7 @@ class ReallocationAtomicTest : IntegrationTestBase() {
             .expectStatus()
             .is5xxServerError
 
-          val assessments = assessmentRepository.findAll()
+          val assessments = approvedPremisesAssessmentRepository.findAll()
 
           Assertions.assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNull()
         }

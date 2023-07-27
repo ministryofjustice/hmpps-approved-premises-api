@@ -3,17 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class AssessmentEntityFactory : Factory<AssessmentEntity> {
+class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessmentEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
@@ -86,7 +86,7 @@ class AssessmentEntityFactory : Factory<AssessmentEntity> {
     this.rejectionRationale = { rejectionRationale }
   }
 
-  override fun produce(): AssessmentEntity = AssessmentEntity(
+  override fun produce(): ApprovedPremisesAssessmentEntity = ApprovedPremisesAssessmentEntity(
     id = this.id(),
     data = this.data(),
     document = this.document(),

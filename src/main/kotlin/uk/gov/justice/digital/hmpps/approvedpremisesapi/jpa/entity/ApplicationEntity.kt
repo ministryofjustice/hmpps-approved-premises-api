@@ -325,6 +325,7 @@ class TemporaryAccommodationApplicationEntity(
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
+  var arrivalDate: OffsetDateTime?,
 ) : ApplicationEntity(
   id,
   crn,

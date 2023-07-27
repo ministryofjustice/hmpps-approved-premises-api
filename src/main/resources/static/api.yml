@@ -2786,6 +2786,33 @@ paths:
       tags:
         - Assessment data
       summary: Gets assessments the user is authorised to view
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only assessments for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - name: sortOrder
+          in: query
+          description: If provided, return results in the given order
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortOrder"
+        - name: sortField
+          in: query
+          description: If provided, return results ordered by the given field name
+          required: false
+          schema:
+            $ref: "#/components/schemas/AssessmentSortField"
+        - name: statuses
+          in: query
+          description: If provided, return only results with the given statuses
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/AssessmentStatus"
       responses:
         200:
           description: successfully retrieved assessments
@@ -5008,6 +5035,13 @@ components:
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
+        - type: object
+          properties:
+            arrivalDate:
+              type: string
+              format: date
+          required:
+            - arrivalDate
     ReleaseTypeOption:
       type: string
       enum:
@@ -5116,7 +5150,6 @@ components:
         - schemaVersion
         - outdatedSchema
         - createdAt
-        - allocatedAt
         - clarificationNotes
     AssessmentStatus:
       type: string
@@ -5186,7 +5219,20 @@ components:
         - createdAt
         - status
         - person
-
+    AssessmentSortField:
+      type: string
+      enum:
+        - name
+        - crn
+        - arrivalDate
+        - status
+        - createdAt
+      x-enum-varnames:
+        - personName
+        - personCrn
+        - assessmentArrivalDate
+        - assessmentStatus
+        - assessmentCreatedAt
     AssessmentDecision:
       type: string
       enum:

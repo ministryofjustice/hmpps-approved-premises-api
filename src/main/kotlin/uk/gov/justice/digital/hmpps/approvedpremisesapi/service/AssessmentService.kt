@@ -12,11 +12,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
@@ -24,6 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -52,8 +57,11 @@ class AssessmentService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
-  fun getVisibleAssessmentSummariesForUser(user: UserEntity): List<DomainAssessmentSummary> =
-    assessmentRepository.findAllAssessmentSummariesNotReallocated(user.id.toString())
+  fun getVisibleAssessmentSummariesForUser(user: UserEntity, serviceName: ServiceName): List<DomainAssessmentSummary> = when (serviceName) {
+    ServiceName.approvedPremises -> assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString())
+    ServiceName.temporaryAccommodation -> assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
+    else -> listOf()
+  }
 
   fun getAllReallocatable(): List<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
@@ -102,19 +110,24 @@ class AssessmentService(
     return AuthorisableActionResult.Success(assessment)
   }
 
-  fun createAssessment(application: ApplicationEntity): AssessmentEntity {
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw RuntimeException("Only CAS1 Applications are currently supported")
-    }
+  fun createAssessment(application: ApplicationEntity): AssessmentEntity = when (application) {
+    is ApprovedPremisesApplicationEntity -> createApprovedPremisesAssessment(application)
+    is TemporaryAccommodationApplicationEntity -> createTemporaryAccommodationAssessment(application)
+    else -> throw RuntimeException("Application type '${application::class.qualifiedName}' is not supported")
+  }
 
+  private fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val allocatedUser = userService.getUserForAssessmentAllocation(application)
 
     val dateTimeNow = OffsetDateTime.now()
 
     val assessment = assessmentRepository.save(
-      AssessmentEntity(
-        id = UUID.randomUUID(), application = application,
-        data = null, document = null, schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
+      ApprovedPremisesAssessmentEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
         allocatedToUser = allocatedUser,
         allocatedAt = dateTimeNow,
         reallocatedAt = null,
@@ -127,17 +140,40 @@ class AssessmentService(
       ),
     )
 
-    if (application is ApprovedPremisesApplicationEntity) {
-      emailNotificationService.sendEmail(
-        user = allocatedUser,
-        templateId = notifyConfig.templates.assessmentAllocated,
-        personalisation = mapOf(
-          "name" to allocatedUser.name,
-          "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
-    }
+    emailNotificationService.sendEmail(
+      user = allocatedUser,
+      templateId = notifyConfig.templates.assessmentAllocated,
+      personalisation = mapOf(
+        "name" to allocatedUser.name,
+        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
+        "crn" to application.crn,
+      ),
+    )
+
+    return assessment
+  }
+
+  private fun createTemporaryAccommodationAssessment(application: TemporaryAccommodationApplicationEntity): TemporaryAccommodationAssessmentEntity {
+    val dateTimeNow = OffsetDateTime.now()
+
+    val assessment = assessmentRepository.save(
+      TemporaryAccommodationAssessmentEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java),
+        allocatedToUser = null,
+        allocatedAt = dateTimeNow,
+        reallocatedAt = null,
+        createdAt = dateTimeNow,
+        submittedAt = null,
+        decision = null,
+        schemaUpToDate = true,
+        rejectionRationale = null,
+        clarificationNotes = mutableListOf(),
+      ),
+    )
 
     return assessment
   }
@@ -468,7 +504,7 @@ class AssessmentService(
     val dateTimeNow = OffsetDateTime.now().withNano(0)
 
     val newAssessment = assessmentRepository.save(
-      AssessmentEntity(
+      ApprovedPremisesAssessmentEntity(
         id = UUID.randomUUID(),
         application = application,
         data = null,
@@ -498,10 +534,10 @@ class AssessmentService(
       )
 
       emailNotificationService.sendEmail(
-        user = currentAssessment.allocatedToUser,
+        user = currentAssessment.allocatedToUser!!,
         templateId = notifyConfig.templates.assessmentDeallocated,
         personalisation = mapOf(
-          "name" to currentAssessment.allocatedToUser.name,
+          "name" to currentAssessment.allocatedToUser!!.name,
           "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
           "crn" to application.crn,
         ),

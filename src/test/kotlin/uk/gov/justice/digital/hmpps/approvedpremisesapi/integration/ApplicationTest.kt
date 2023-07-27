@@ -69,6 +69,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -1653,8 +1654,8 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedApplication.isWomensApplication).isTrue
           assertThat(persistedApplication.isPipeApplication).isTrue
 
-          val createdAssessment = assessmentRepository.findAll().first { it.application.id == applicationId }
-          assertThat(createdAssessment.allocatedToUser.id).isEqualTo(assessorUser.id)
+          val createdAssessment = approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+          assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
 
           val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
 
@@ -1864,6 +1865,7 @@ class ApplicationTest : IntegrationTestBase() {
               SubmitTemporaryAccommodationApplication(
                 translatedDocument = {},
                 type = "CAS3",
+                arrivalDate = LocalDate.now(),
               ),
             )
             .exchange()
@@ -1967,7 +1969,7 @@ class ApplicationTest : IntegrationTestBase() {
         withApplicationSchema(applicationSchema)
       }
 
-      val assessment = assessmentEntityFactory.produceAndPersist {
+      val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
         withAllocatedToUser(assignee)
         withApplication(application)
         withAssessmentSchema(assessmentSchema)

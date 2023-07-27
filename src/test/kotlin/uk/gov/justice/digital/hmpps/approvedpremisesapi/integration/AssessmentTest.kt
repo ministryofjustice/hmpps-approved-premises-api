@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -12,12 +13,16 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
@@ -26,10 +31,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -75,7 +84,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(user)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -84,7 +93,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         assessment.schemaUpToDate = true
 
-        val reallocatedAssessment = assessmentEntityFactory.produceAndPersist {
+        val reallocatedAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(user)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -96,6 +105,7 @@ class AssessmentTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/assessments")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -104,6 +114,211 @@ class AssessmentTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
             ),
+          )
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource
+  @NullSource
+  fun `Get all assessments filters correctly when 'statuses' query parameter is provided`(assessmentDecision: AssessmentDecision?) {
+    `Given a User` { user, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withDecision(assessmentDecision)
+        }
+
+        assessment.schemaUpToDate = true
+
+        val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withDecision(
+            when (assessmentDecision) {
+              null -> AssessmentDecision.ACCEPTED
+              else -> null
+            },
+          )
+        }
+
+        otherAssessment.schemaUpToDate = true
+
+        val filterStatus = when (assessmentDecision) {
+          null -> AssessmentStatus.inProgress
+          else -> AssessmentStatus.completed
+        }
+
+        webTestClient.get()
+          .uri("/assessments?statuses=${filterStatus.value}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
+            ),
+            true,
+          )
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource
+  fun `Get all assessments sorts correctly when 'sortOrder' and 'sortField' query parameters are provided`(sortField: AssessmentSortField) {
+    `Given a User` { user, jwt ->
+      `Given Some Offenders` { offenderSequence ->
+        val offenders = offenderSequence.take(5).toList()
+
+        data class AssessmentParams(
+          val assessment: TemporaryAccommodationAssessmentEntity,
+          val offenderDetails: OffenderDetailSummary,
+          val inmateDetails: InmateDetail,
+        )
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessments = offenders.map { (offenderDetails, inmateDetails) ->
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withApplicationSchema(applicationSchema)
+            withArrivalDate(LocalDate.now().randomDateAfter(14))
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          assessment.schemaUpToDate = true
+
+          AssessmentParams(assessment, offenderDetails, inmateDetails)
+        }
+
+        val expectedAssessments = when (sortField) {
+          AssessmentSortField.personName -> assessments.sortedByDescending { "${it.offenderDetails.firstName} ${it.offenderDetails.surname}" }
+          AssessmentSortField.personCrn -> assessments.sortedByDescending { it.assessment.application.crn }
+          AssessmentSortField.assessmentArrivalDate -> assessments.sortedByDescending { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
+          AssessmentSortField.assessmentStatus -> {
+            // Skip test for sorting by assessment status, as it would involve replicating the logic used to determine
+            // that status.
+            Assumptions.assumeThat(true).isFalse
+            assessments
+          }
+          AssessmentSortField.assessmentCreatedAt -> assessments.sortedByDescending { it.assessment.createdAt }
+        }.map { assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(it.assessment), it.offenderDetails, it.inmateDetails) }
+
+        webTestClient.get()
+          .uri("/assessments?sortOrder=descending&sortField=${sortField.value}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(expectedAssessments),
+            true,
+          )
+      }
+    }
+  }
+
+  @Test
+  fun `Get all assessments for Temporary Accommodation sorts by closest arrival date first by default`() {
+    `Given a User` { user, jwt ->
+      `Given Some Offenders` { offenderSequence ->
+        val offenders = offenderSequence.take(5).toList()
+
+        data class AssessmentParams(
+          val assessment: TemporaryAccommodationAssessmentEntity,
+          val offenderDetails: OffenderDetailSummary,
+          val inmateDetails: InmateDetail,
+        )
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessments = offenders.map { (offenderDetails, inmateDetails) ->
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withApplicationSchema(applicationSchema)
+            withArrivalDate(LocalDate.now().randomDateAfter(14))
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          assessment.schemaUpToDate = true
+
+          AssessmentParams(assessment, offenderDetails, inmateDetails)
+        }
+
+        val expectedAssessments = assessments
+          .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
+          .map {
+            assessmentTransformer.transformDomainToApiSummary(
+              toAssessmentSummaryEntity(it.assessment),
+              it.offenderDetails,
+              it.inmateDetails,
+            )
+          }
+
+        webTestClient.get()
+          .uri("/assessments")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(expectedAssessments),
+            true,
           )
       }
     }
@@ -125,11 +340,13 @@ class AssessmentTest : IntegrationTestBase() {
 
       riskRatings = when (val reified = assessment.application) {
         is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+        is TemporaryAccommodationApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
         else -> null
       },
 
       arrivalDate = when (val application = assessment.application) {
         is ApprovedPremisesApplicationEntity -> application.arrivalDate
+        is TemporaryAccommodationApplicationEntity -> application.arrivalDate
         else -> null
       },
 
@@ -173,7 +390,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -227,7 +444,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -275,7 +492,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -329,7 +546,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -400,7 +617,7 @@ class AssessmentTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
             }
 
-            val assessment = assessmentEntityFactory.produceAndPersist {
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAllocatedToUser(userEntity)
               withApplication(application)
               withAssessmentSchema(assessmentSchema)
@@ -435,7 +652,7 @@ class AssessmentTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            val persistedAssessment = assessmentRepository.findByIdOrNull(assessment.id)!!
+            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
             assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
@@ -497,7 +714,7 @@ class AssessmentTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
             }
 
-            val assessment = assessmentEntityFactory.produceAndPersist {
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAllocatedToUser(userEntity)
               withApplication(application)
               withAssessmentSchema(assessmentSchema)
@@ -527,7 +744,7 @@ class AssessmentTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            val persistedAssessment = assessmentRepository.findByIdOrNull(assessment.id)!!
+            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
             assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
@@ -583,7 +800,7 @@ class AssessmentTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
             }
 
-            val assessment = assessmentEntityFactory.produceAndPersist {
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAllocatedToUser(userEntity)
               withApplication(application)
               withAssessmentSchema(assessmentSchema)
@@ -656,7 +873,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -672,7 +889,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
 
-        val persistedAssessment = assessmentRepository.findByIdOrNull(assessment.id)!!
+        val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
@@ -709,7 +926,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
@@ -750,7 +967,7 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
         }
 
-        val assessment = assessmentEntityFactory.produceAndPersist {
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)

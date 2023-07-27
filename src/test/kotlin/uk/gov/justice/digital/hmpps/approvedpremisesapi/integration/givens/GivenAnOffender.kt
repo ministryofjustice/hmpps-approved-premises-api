@@ -36,3 +36,36 @@ fun IntegrationTestBase.`Given an Offender`(
 
   block(offenderDetails, inmateDetails)
 }
+
+fun IntegrationTestBase.`Given Some Offenders`(
+  offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
+  inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
+  block: (offenderSequence: Sequence<Pair<OffenderDetailSummary, InmateDetail>>) -> Unit,
+) {
+  val offenderSequence = generateSequence {
+    val inmateDetailsFactory = InmateDetailFactory()
+    if (inmateDetailsConfigBlock != null) {
+      inmateDetailsConfigBlock(inmateDetailsFactory)
+    }
+
+    val inmateDetails = inmateDetailsFactory.produce()
+
+    val offenderDetailsFactory = OffenderDetailsSummaryFactory()
+      .withNomsNumber(inmateDetails.offenderNo)
+
+    if (offenderDetailsConfigBlock != null) {
+      offenderDetailsConfigBlock(offenderDetailsFactory)
+    }
+
+    val offenderDetails = offenderDetailsFactory.produce()
+
+    CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+    loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
+    PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
+    loadPreemptiveCacheForInmateDetails(inmateDetails.offenderNo)
+
+    Pair(offenderDetails, inmateDetails)
+  }
+
+  block(offenderSequence)
+}

@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -84,8 +85,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.Period
+import java.time.ZoneOffset
 import java.util.UUID
 
 class ApplicationServiceTest {
@@ -1332,6 +1335,7 @@ class ApplicationServiceTest {
     private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
       translatedDocument = {},
       type = "CAS3",
+      arrivalDate = LocalDate.now(),
     )
 
     @BeforeEach
@@ -1453,7 +1457,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockAssessmentService.createAssessment(application) } returns AssessmentEntityFactory()
+      every { mockAssessmentService.createAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(user)
         .produce()
@@ -1677,7 +1681,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `submitTemporaryAccommodationApplication returns Success`() {
+    fun `submitTemporaryAccommodationApplication returns Success and creates assessment`() {
       val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
       val application = TemporaryAccommodationApplicationEntityFactory()
@@ -1696,6 +1700,9 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockAssessmentService.createAssessment(application) } returns TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
 
       val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplication)
 
@@ -1703,9 +1710,12 @@ class ApplicationServiceTest {
       result as AuthorisableActionResult.Success
 
       assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as TemporaryAccommodationApplicationEntity
+      assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(submitTemporaryAccommodationApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC))
 
       verify { mockApplicationRepository.save(any()) }
-      verify { mockAssessmentService wasNot called }
+      verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
       verify { mockDomainEventService wasNot called }
     }
   }

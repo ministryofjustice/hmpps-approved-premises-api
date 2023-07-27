@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -90,7 +90,7 @@ class AcceptAssessmentTest {
   lateinit var user: UserEntity
   lateinit var assessmentId: UUID
 
-  private lateinit var assessmentFactory: AssessmentEntityFactory
+  private lateinit var assessmentFactory: ApprovedPremisesAssessmentEntityFactory
   private lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
   private lateinit var placementRequirements: PlacementRequirements
 
@@ -108,7 +108,7 @@ class AcceptAssessmentTest {
       schema = "{}",
     )
 
-    assessmentFactory = AssessmentEntityFactory()
+    assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
       .withId(assessmentId)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()

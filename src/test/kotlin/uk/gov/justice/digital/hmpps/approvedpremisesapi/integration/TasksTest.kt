@@ -471,11 +471,11 @@ class TasksTest : IntegrationTestBase() {
                     ),
                   )
 
-                val assessments = assessmentRepository.findAll()
+                val assessments = approvedPremisesAssessmentRepository.findAll()
 
                 Assertions.assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
                 Assertions.assertThat(assessments)
-                  .anyMatch { it.application.id == application.id && it.allocatedToUser.id == assigneeUser.id }
+                  .anyMatch { it.application.id == application.id && it.allocatedToUser!!.id == assigneeUser.id }
               }
             }
           }

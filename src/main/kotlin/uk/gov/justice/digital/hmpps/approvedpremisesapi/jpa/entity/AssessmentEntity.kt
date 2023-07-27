@@ -9,31 +9,39 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.ColumnResult
 import javax.persistence.ConstructorResult
+import javax.persistence.DiscriminatorColumn
+import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
+import javax.persistence.Inheritance
+import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.NamedNativeQuery
 import javax.persistence.OneToMany
+import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.SqlResultSetMapping
 import javax.persistence.Table
 
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   @Query(nativeQuery = true)
-  fun findAllAssessmentSummariesNotReallocated(userIdString: String? = null): List<DomainAssessmentSummary>
+  fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null): List<DomainAssessmentSummary>
+
+  @Query(nativeQuery = true)
+  fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
 
   fun findAllByReallocatedAtNullAndSubmittedAtNull(): List<AssessmentEntity>
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 }
 
 @NamedNativeQuery(
-  name = "AssessmentEntity.findAllAssessmentSummariesNotReallocated",
+  name = "AssessmentEntity.findAllApprovedPremisesAssessmentSummariesNotReallocated",
   query =
   """
-    select service as type,
+    select a.service as type,
            cast(a.id as text) as id,
            cast(a.application_id as text) as applicationId,
            a.created_at as createdAt,
@@ -49,12 +57,37 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            a.decision as decision,
            a.data is not null as isStarted,
            ap.crn as crn
-      from assessments a
+      from approved_premises_assessments aa
+           join assessments a on aa.assessment_id = a.id
            join applications ap on a.application_id = ap.id
            left outer join approved_premises_applications apa on ap.id = apa.id
      where a.reallocated_at is null
            and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
     """,
+  resultSetMapping = "DomainAssessmentSummaryMapping",
+)
+@NamedNativeQuery(
+  name = "AssessmentEntity.findAllTemporaryAccommodationAssessmentSummariesForRegion",
+  query =
+  """
+    select a.service as type,
+           cast(a.id as text) as id,
+           cast(a.application_id as text) as applicationId,
+           a.created_at as createdAt,
+           CAST(taa.risk_ratings AS TEXT) as riskRatings,
+           taa.arrival_date as arrivalDate,
+           null as dateOfInfoRequest,
+           a.decision is not null as completed,
+           a.decision as decision,
+           a.data is not null as isStarted,
+           ap.crn as crn
+      from temporary_accommodation_assessments aa
+           join assessments a on aa.assessment_id = a.id
+           join applications ap on a.application_id = ap.id
+           left outer join temporary_accommodation_applications taa on ap.id = taa.id
+     where taa.probation_region_id = ?1
+           and a.reallocated_at is null
+  """,
   resultSetMapping = "DomainAssessmentSummaryMapping",
 )
 @SqlResultSetMapping(
@@ -80,7 +113,9 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
 )
 @Entity
 @Table(name = "assessments")
-data class AssessmentEntity(
+@DiscriminatorColumn(name = "service")
+@Inheritance(strategy = InheritanceType.JOINED)
+abstract class AssessmentEntity(
   @Id
   val id: UUID,
 
@@ -100,9 +135,9 @@ data class AssessmentEntity(
 
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
-  val allocatedToUser: UserEntity,
+  val allocatedToUser: UserEntity?,
 
-  val allocatedAt: OffsetDateTime,
+  val allocatedAt: OffsetDateTime?,
   var reallocatedAt: OffsetDateTime?,
 
   val createdAt: OffsetDateTime,
@@ -117,6 +152,78 @@ data class AssessmentEntity(
 
   @Transient
   var schemaUpToDate: Boolean,
+)
+
+@Entity
+@DiscriminatorValue("approved-premises")
+@Table(name = "approved_premises_assessments")
+@PrimaryKeyJoinColumn(name = "assessment_id")
+class ApprovedPremisesAssessmentEntity(
+  id: UUID,
+  application: ApplicationEntity,
+  data: String?,
+  document: String?,
+  schemaVersion: JsonSchemaEntity,
+  allocatedToUser: UserEntity?,
+  allocatedAt: OffsetDateTime?,
+  reallocatedAt: OffsetDateTime?,
+  createdAt: OffsetDateTime,
+  submittedAt: OffsetDateTime?,
+  decision: AssessmentDecision?,
+  rejectionRationale: String?,
+  clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
+  schemaUpToDate: Boolean,
+) : AssessmentEntity(
+  id,
+  application,
+  data,
+  document,
+  schemaVersion,
+  allocatedToUser,
+  allocatedAt,
+  reallocatedAt,
+  createdAt,
+  submittedAt,
+  decision,
+  rejectionRationale,
+  clarificationNotes,
+  schemaUpToDate,
+)
+
+@Entity
+@DiscriminatorValue("temporary-accommodation")
+@Table(name = "temporary_accommodation_assessments")
+@PrimaryKeyJoinColumn(name = "assessment_id")
+class TemporaryAccommodationAssessmentEntity(
+  id: UUID,
+  application: ApplicationEntity,
+  data: String?,
+  document: String?,
+  schemaVersion: JsonSchemaEntity,
+  allocatedToUser: UserEntity?,
+  allocatedAt: OffsetDateTime?,
+  reallocatedAt: OffsetDateTime?,
+  createdAt: OffsetDateTime,
+  submittedAt: OffsetDateTime?,
+  decision: AssessmentDecision?,
+  rejectionRationale: String?,
+  clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
+  schemaUpToDate: Boolean,
+) : AssessmentEntity(
+  id,
+  application,
+  data,
+  document,
+  schemaVersion,
+  allocatedToUser,
+  allocatedAt,
+  reallocatedAt,
+  createdAt,
+  submittedAt,
+  decision,
+  rejectionRationale,
+  clarificationNotes,
+  schemaUpToDate,
 )
 
 /**

@@ -35,7 +35,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withReleaseType("licence")
   }
 
-  val assessment = assessmentEntityFactory.produceAndPersist {
+  val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
@@ -80,6 +80,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
+  data: String? = "{ \"some\": \"data\"}",
   block: (assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit,
 ) {
   val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -99,10 +100,11 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
     withProbationRegion(createdByUser.probationRegion)
   }
 
-  val assessment = assessmentEntityFactory.produceAndPersist {
+  val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
+    withData(data)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
