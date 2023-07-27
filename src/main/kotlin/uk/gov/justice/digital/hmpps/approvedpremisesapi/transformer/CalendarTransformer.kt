@@ -68,6 +68,6 @@ class CalendarTransformer {
         bedName = bedCalendarInfo.key.bedName,
         schedule = transformedSchedule,
       )
-    }
+    }.sortedBy { it.bedName }
   }
 }
