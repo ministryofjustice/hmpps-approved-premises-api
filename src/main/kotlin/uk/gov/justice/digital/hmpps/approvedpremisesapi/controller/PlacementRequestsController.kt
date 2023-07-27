@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.util.UUID
 
@@ -132,6 +133,16 @@ class PlacementRequestsController(
     }
 
     return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
+  }
+
+  override fun placementRequestsIdWithdrawalPost(id: UUID): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val result = extractEntityFromAuthorisableActionResult(
+      placementRequestService.withdrawPlacementRequest(id, user),
+    )
+
+    return ResponseEntity.ok(result)
   }
 
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
