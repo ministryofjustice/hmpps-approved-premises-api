@@ -127,3 +127,5 @@ preemptive-cache-lock-duration-ms: 10000
 
 arrived-departed-domain-events-disabled: false
 manual-bookings-domain-events-disabled: false
+
+upstream-timeout-ms: 2000

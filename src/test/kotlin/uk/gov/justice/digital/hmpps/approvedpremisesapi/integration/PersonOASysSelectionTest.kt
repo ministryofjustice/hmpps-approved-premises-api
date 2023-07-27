@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 
@@ -94,6 +95,29 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
               needsDetailsTransformer.transformToApi(needsDetails),
             ),
           )
+      }
+    }
+  }
+
+  @Test
+  fun `Getting oasys section selection when upstream times out returns 404`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val needsDetails = NeedsDetailsFactory().apply {
+          withAssessmentId(34853487)
+          withAccommodationIssuesDetails("Accommodation", true, false)
+          withAttitudeIssuesDetails("Attitude", false, true)
+          withFinanceIssuesDetails(null, null, null)
+        }.produce()
+
+        APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/oasys/selection")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
       }
     }
   }

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.io.OutputStream
 import java.time.LocalDate
@@ -50,6 +52,8 @@ class OffenderService(
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
   private val adjudicationsConfig: PrisonAdjudicationsConfig
@@ -286,7 +290,14 @@ class OffenderService(
       is ClientResult.Failure.StatusCode -> when (needsResult.status) {
         HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> needsResult.throwException()
+        else -> {
+          log.warn("Failed to fetch OASys needs details - got response status ${needsResult.status}, returning 404")
+          throw NotFoundProblem(crn, "OASys")
+        }
+      }
+      is ClientResult.Failure.Other -> {
+        log.warn("Failed to fetch OASys needs details, returning 404", needsResult.exception)
+        throw NotFoundProblem(crn, "OASys")
       }
       is ClientResult.Failure -> needsResult.throwException()
     }

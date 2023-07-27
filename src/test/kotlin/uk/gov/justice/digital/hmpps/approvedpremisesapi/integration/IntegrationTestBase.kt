@@ -731,6 +731,18 @@ abstract class IntegrationTestBase {
       )
     }
 
+  fun mockUnsuccessfulGetCallWithDelayedResponse(url: String, responseStatus: Int, delayMs: Int) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        WireMock.get(urlEqualTo(url))
+          .willReturn(
+            aResponse()
+              .withFixedDelay(delayMs)
+              .withStatus(responseStatus),
+          ),
+      )
+    }
+
   fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit) {
     if (!clientCredentialsCallMocked) {
       mockClientCredentialsJwtRequest()
