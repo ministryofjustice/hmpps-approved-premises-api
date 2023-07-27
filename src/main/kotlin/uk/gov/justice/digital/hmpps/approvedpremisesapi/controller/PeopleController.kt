@@ -147,10 +147,9 @@ class PeopleController(
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
     getOffenderDetailsIgnoringLaoQualification(crn)
 
+    val needs = getSuccessEntityOrThrow(crn, offenderService.getOASysNeeds(crn))
+
     return runBlocking(context = Dispatchers.IO) {
-      val needsResult = async {
-        offenderService.getOASysNeeds(crn)
-      }
       val offenceDetailsResult = async {
         offenderService.getOASysOffenceDetails(crn)
       }
@@ -164,7 +163,6 @@ class PeopleController(
         offenderService.getOASysRiskManagementPlan(crn)
       }
 
-      val needs = getSuccessEntityOrThrow(crn, needsResult.await())
       val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
       val roshSummary = getSuccessEntityOrThrow(crn, roshSummaryResult.await())
       val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
