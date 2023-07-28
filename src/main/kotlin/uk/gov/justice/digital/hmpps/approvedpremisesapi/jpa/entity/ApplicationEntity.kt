@@ -131,10 +131,11 @@ SELECT
     CAST(c2a.risk_ratings AS TEXT) as riskRatings
 FROM cas_2_applications c2a
 LEFT JOIN applications a ON a.id = c2a.id
+WHERE a.created_by_user_id = :userId
 """,
     nativeQuery = true,
   )
-  fun findAllCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
+  fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID): List<Cas2ApplicationSummary>
 }
 
 @Entity

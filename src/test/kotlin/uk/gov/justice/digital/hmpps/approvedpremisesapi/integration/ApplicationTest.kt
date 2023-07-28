@@ -108,45 +108,58 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all applications returns 200 with correct body - when the service is CAS-2`() {
+  fun `Get all applications returns 200 with correct body - when the service is CAS2`() {
     `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+      `Given a User` { otherUser, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          cas2ApplicationJsonSchemaRepository.deleteAll()
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
+          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
 
-        val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
-          withData("{}")
-        }
+          val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(userEntity)
+            withCrn(offenderDetails.otherIds.crn)
+            withData("{}")
+          }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(otherUser)
+            withCrn(offenderDetails.otherIds.crn)
+            withData("{}")
+          }
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.cas2.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-        val responseBody =
-          objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        assertThat(responseBody).anyMatch {
-          cas2ApplicationEntity.id == it.id &&
-            cas2ApplicationEntity.crn == it.person.crn &&
-            cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-            cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
-            cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+          val responseBody =
+            objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+          assertThat(responseBody).anyMatch {
+            cas2ApplicationEntity.id == it.id &&
+              cas2ApplicationEntity.crn == it.person.crn &&
+              cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
+              cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
+              cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+          }
+
+          assertThat(responseBody).noneMatch {
+            otherCas2ApplicationEntity.id == it.id
+          }
         }
       }
     }

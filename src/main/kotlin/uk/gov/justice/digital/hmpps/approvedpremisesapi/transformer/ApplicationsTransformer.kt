@@ -160,6 +160,7 @@ class ApplicationsTransformer(
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
+        status = getStatusFromSummary(domain),
         type = "CAS2",
       )
     }
@@ -214,6 +215,10 @@ class ApplicationsTransformer(
         entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
         else -> ApplicationStatus.inProgress
       }
+    }
+
+    if (entity is DomainCas2ApplicationSummary) {
+      return ApplicationStatus.inProgress
     }
 
     return when {
