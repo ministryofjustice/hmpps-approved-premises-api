@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
@@ -135,19 +136,20 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
     assertThat(summary.applicationId).isEqualTo(application.id)
     assertThat(summary.createdAt).isEqualTo(assessment.createdAt)
     assertThat(summary.dateOfInfoRequest).isEqualTo(dateOfInfoRequest)
-    assertThat(summary.completed).isEqualTo(assessment.decision != null)
     assertThat(summary.isStarted).isEqualTo(assessment.data != null)
     assertThat(summary?.decision).isEqualTo(assessment.decision?.name)
     assertThat(summary.crn).isEqualTo(application.crn)
     when (application) {
       is ApprovedPremisesApplicationEntity -> {
         assertThat(summary.type).isEqualTo("approved-premises")
+        assertThat(summary.completed).isEqualTo(assessment.decision != null)
         assertThat(summary.arrivalDate).isEqualTo(application.arrivalDate)
         assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
       }
 
       is TemporaryAccommodationApplicationEntity -> {
         assertThat(summary.type).isEqualTo("temporary-accommodation")
+        assertThat(summary.completed).isEqualTo((assessment as TemporaryAccommodationAssessmentEntity).completedAt != null)
         assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
       }
     }
