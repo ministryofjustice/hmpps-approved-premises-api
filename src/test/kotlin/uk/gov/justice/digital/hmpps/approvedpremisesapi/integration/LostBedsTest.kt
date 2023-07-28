@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
@@ -461,6 +462,66 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
       }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/lost-beds")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewLostBed(
+            startDate = LocalDate.parse("2022-08-17"),
+            endDate = LocalDate.parse("2022-08-18"),
+            bedId = bed.id,
+            reason = reason.id,
+            referenceNumber = "REF-123",
+            notes = "notes",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath(".startDate").isEqualTo("2022-08-17")
+        .jsonPath(".endDate").isEqualTo("2022-08-18")
+        .jsonPath(".bedId").isEqualTo(bed.id.toString())
+        .jsonPath(".reason.id").isEqualTo(reason.id.toString())
+        .jsonPath(".reason.name").isEqualTo(reason.name)
+        .jsonPath(".reason.isActive").isEqualTo(true)
+        .jsonPath(".referenceNumber").isEqualTo("REF-123")
+        .jsonPath(".notes").isEqualTo("notes")
+        .jsonPath(".status").isEqualTo("active")
+        .jsonPath(".cancellation").isEqualTo(null)
+    }
+  }
+
+  @Test
+  fun `Create Lost Bed on Approved Premises succeeds even if overlapping with Booking`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withTotalBeds(3)
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val reason = lostBedReasonEntityFactory.produceAndPersist {
+        withServiceScope(ServiceName.approvedPremises.value)
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      BookingEntityFactory()
+        .withBed(bed)
+        .withPremises(premises)
+        .withArrivalDate(LocalDate.parse("2022-08-15"))
+        .withDepartureDate(LocalDate.parse("2022-08-18"))
+        .produce()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds")
