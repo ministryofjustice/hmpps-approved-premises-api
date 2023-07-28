@@ -79,7 +79,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            CAST(taa.risk_ratings AS TEXT) as riskRatings,
            taa.arrival_date as arrivalDate,
            null as dateOfInfoRequest,
-           a.decision is not null as completed,
+           aa.completed_at is not null as completed,
            a.decision as decision,
            a.data is not null as isStarted,
            ap.crn as crn
@@ -211,6 +211,7 @@ class TemporaryAccommodationAssessmentEntity(
   rejectionRationale: String?,
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
   schemaUpToDate: Boolean,
+  val completedAt: OffsetDateTime?,
 ) : AssessmentEntity(
   id,
   application,
