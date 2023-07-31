@@ -81,7 +81,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
   data: String? = "{ \"some\": \"data\"}",
-  block: (assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit,
+  block: ((assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null,
 ) {
   val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -112,5 +112,5 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
 
   assessment.schemaUpToDate = true
 
-  block(assessment, application)
+  block?.invoke(assessment, application)
 }

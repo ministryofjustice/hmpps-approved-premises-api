@@ -65,7 +65,7 @@ class AssessmentService(
 
   fun getAllReallocatable(): List<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-    val assessments = assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNull()
+    val assessments = assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(ApprovedPremisesAssessmentEntity::class.java)
 
     assessments.forEach {
       it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
