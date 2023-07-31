@@ -181,21 +181,7 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
   }
 
-  override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
-
-    extractEntityFromNestedAuthorisableValidatableActionResult(
-      applicationService.withdrawApprovedPremisesApplication(
-        applicationId = applicationId,
-        user = user,
-        withdrawalReason = null,
-      ),
-    )
-
-    return ResponseEntity.ok(Unit)
-  }
-
-  override fun applicationsApplicationIdWithdrawalReasonPost(applicationId: UUID, body: NewWithdrawal): ResponseEntity<Unit> {
+  override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID, body: NewWithdrawal): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     extractEntityFromNestedAuthorisableValidatableActionResult(
@@ -203,6 +189,7 @@ class ApplicationsController(
         applicationId = applicationId,
         user = user,
         withdrawalReason = body.reason.value,
+        otherReason = body.otherReason,
       ),
     )
 

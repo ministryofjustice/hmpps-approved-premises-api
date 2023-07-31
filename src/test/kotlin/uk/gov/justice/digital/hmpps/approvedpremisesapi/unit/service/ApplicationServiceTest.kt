@@ -1912,7 +1912,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    val result = applicationService.withdrawApprovedPremisesApplication(applicationId, user, "alternative_identified_placement_no_longer_required")
+    val result = applicationService.withdrawApprovedPremisesApplication(applicationId, user, "alternative_identified_placement_no_longer_required", null)
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
@@ -1933,7 +1933,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
 
-    val result = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
+    val result = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required", null)
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -1951,7 +1951,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required", null)
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
@@ -1977,7 +1977,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required", null)
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
@@ -1991,33 +1991,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `withdrawApprovedPremisesApplication returns GeneralValidationError if Application has been withdrawn already`() {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withIsWithdrawn(true)
-      .produce()
-
-    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
-
-    assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
-
-    val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
-
-    assertThat(validatableActionResult is ValidatableActionResult.GeneralValidationError).isTrue
-
-    val generalValidationError = (validatableActionResult as ValidatableActionResult.GeneralValidationError).message
-
-    assertThat(generalValidationError).isEqualTo("applicationAlreadyWithdrawn")
-  }
-
-  @Test
-  fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, does not emit domain event without a reason`() {
+  fun `withdrawApprovedPremisesApplication returns FieldValidationError if the reason is null and the otherReason has not been set`() {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
@@ -2027,31 +2001,18 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-    every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, null)
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
     val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
 
-    assertThat(validatableActionResult is ValidatableActionResult.Success).isTrue
+    assertThat(validatableActionResult is ValidatableActionResult.FieldValidationError).isTrue
 
-    verify {
-      mockApplicationRepository.save(
-        match {
-          it.id == application.id &&
-            it is ApprovedPremisesApplicationEntity &&
-            it.isWithdrawn &&
-            it.withdrawalReason == null
-        },
-      )
-    }
+    val validationMessages = (validatableActionResult as ValidatableActionResult.FieldValidationError).validationMessages
 
-    verify(exactly = 0) {
-      mockDomainEventService.saveApplicationWithdrawnEvent(any())
-    }
+    assertThat(validationMessages).containsEntry("$.otherReason", "empty")
   }
 
   @Test
@@ -2075,7 +2036,7 @@ class ApplicationServiceTest {
 
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required")
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required", null)
 
     assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
 
@@ -2109,6 +2070,124 @@ class ApplicationServiceTest {
           ) &&
             data.deliusEventNumber == application.eventNumber &&
             data.withdrawalReason == "alternative_identified_placement_no_longer_required"
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, emits domain event when other reason is set`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withUsername(user.deliusUsername)
+      .produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
+
+    assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
+
+    assertThat(validatableActionResult is ValidatableActionResult.Success).isTrue
+
+    verify {
+      mockApplicationRepository.save(
+        match {
+          it.id == application.id &&
+            it is ApprovedPremisesApplicationEntity &&
+            it.isWithdrawn &&
+            it.withdrawalReason == "other" &&
+            it.otherWithdrawalReason == "Some other reason"
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventService.saveApplicationWithdrawnEvent(
+        match {
+          val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
+
+          it.applicationId == application.id &&
+            it.crn == application.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = application.crn,
+            noms = application.nomsNumber!!,
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.withdrawalReason == "other" &&
+            data.otherWithdrawalReason == "Some other reason"
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `withdrawApprovedPremisesApplication does not persist otherWithdrawalReason if withdrawlReason is not other`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withUsername(user.deliusUsername)
+      .produce()
+
+    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+    applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required", "Some other reason")
+
+    verify {
+      mockApplicationRepository.save(
+        match {
+          it.id == application.id &&
+            it is ApprovedPremisesApplicationEntity &&
+            it.isWithdrawn &&
+            it.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
+            it.otherWithdrawalReason == null
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventService.saveApplicationWithdrawnEvent(
+        match {
+          val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
+
+          it.applicationId == application.id &&
+            it.crn == application.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = application.crn,
+            noms = application.nomsNumber!!,
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
+            data.otherWithdrawalReason == null
         },
       )
     }

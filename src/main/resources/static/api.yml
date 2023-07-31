@@ -1774,35 +1774,6 @@ paths:
     post:
       tags:
         - Operations on applications
-      summary: Withdraws an application
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid applicationId
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
-      x-codegen-request-body-name: body
-  /applications/{applicationId}/withdrawal/reason:
-    post:
-      tags:
-        - Operations on applications
       summary: Withdraws an application with a reason
       parameters:
         - name: applicationId
@@ -4062,6 +4033,8 @@ components:
       properties:
         reason:
           $ref: '#/components/schemas/WithdrawalReason'
+        otherReason:
+          type: string
       required:
         - reason
     Cancellation:
