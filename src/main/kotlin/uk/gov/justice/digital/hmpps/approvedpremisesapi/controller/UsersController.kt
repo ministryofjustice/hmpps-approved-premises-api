@@ -54,6 +54,7 @@ class UsersController(
     ApprovedPremisesUserRole.manager -> JpaUserRole.CAS1_MANAGER
     ApprovedPremisesUserRole.matcher -> JpaUserRole.CAS1_MATCHER
     ApprovedPremisesUserRole.workflowManager -> JpaUserRole.CAS1_WORKFLOW_MANAGER
+    ApprovedPremisesUserRole.reportViewer -> JpaUserRole.CAS1_REPORT_VIEWER
     ApprovedPremisesUserRole.excludedFromAssessAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION
     ApprovedPremisesUserRole.excludedFromMatchAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION
     ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION
