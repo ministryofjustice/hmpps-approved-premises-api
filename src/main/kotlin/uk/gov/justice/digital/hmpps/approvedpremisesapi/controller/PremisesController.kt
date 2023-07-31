@@ -632,7 +632,10 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId)
+    if (premises !is ApprovedPremisesEntity) {
+      throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId)
+    }
+
     throwIfLostBedDatesConflict(body.startDate, body.endDate, null, body.bedId)
 
     val result = premisesService.createLostBeds(
