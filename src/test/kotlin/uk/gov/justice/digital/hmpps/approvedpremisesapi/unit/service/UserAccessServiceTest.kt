@@ -991,4 +991,20 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.currentUserCanViewReport()).isFalse
   }
+
+  @Test
+  fun `currentUserCanViewReport returns returns false if the current request has 'X-Service-Name' header with value 'approved-premises' and the user does not have the CAS1_REPORT_VIEWER role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS1_REPORT_VIEWER role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(UserRole.CAS1_REPORT_VIEWER)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isTrue
+  }
 }
