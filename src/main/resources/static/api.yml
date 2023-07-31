@@ -2453,6 +2453,39 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+    delete:
+      tags:
+        - Operations on applications
+      summary: Unallocates a task for an application
+      parameters:
+        - name: id
+          in: path
+          description: ID of the task
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-requests:
     get:
       tags:
@@ -3035,6 +3068,28 @@ paths:
       responses:
         200:
           description: successfully rejected the assessment
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/closure:
+    post:
+      tags:
+        - Assessment data
+      summary: Closes an Assessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully closed the assessment
         401:
           $ref: '#/components/responses/401Response'
         403:
