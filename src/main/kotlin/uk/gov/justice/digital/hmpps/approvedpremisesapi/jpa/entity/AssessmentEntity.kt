@@ -33,7 +33,9 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   @Query(nativeQuery = true)
   fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
 
-  fun findAllByReallocatedAtNullAndSubmittedAtNull(): List<AssessmentEntity>
+  @Query("SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL AND a.submittedAt IS NULL AND TYPE(a) = :type")
+  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(type: Class<T>): List<AssessmentEntity>
+
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 }
 

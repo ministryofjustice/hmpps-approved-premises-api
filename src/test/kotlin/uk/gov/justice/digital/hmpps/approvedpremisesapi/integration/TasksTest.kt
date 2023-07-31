@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -55,11 +56,18 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body`() {
+    fun `Get all reallocatable tasks returns 200 with correct body, only returns Assessments from CAS1`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              reallocated = true,
+            )
+
+            `Given an Assessment for Temporary Accommodation`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
