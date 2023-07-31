@@ -179,6 +179,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),
     withdrawalReason = this.withdrawalReason(),
+    otherWithdrawalReason = null,
     nomsNumber = this.nomsNumber(),
   )
 }

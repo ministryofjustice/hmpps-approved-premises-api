@@ -2006,35 +2006,18 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdraw Application with reason returns 200`() {
-      `Given a User` { user, jwt ->
-        val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
-
-        webTestClient.post()
-          .uri("/applications/${application.id}/withdrawal/reason")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewWithdrawal(
-              reason = WithdrawalReason.alternativeIdentifiedPlacementNoLongerRequired,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-
-        val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
-        assertThat(updatedApplication.isWithdrawn).isTrue
-      }
-    }
-
-    @Test
-    fun `Withdraw Application returns 200 when no reason provided`() {
+    fun `Withdraw Application 200`() {
       `Given a User` { user, jwt ->
         val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
 
         webTestClient.post()
           .uri("/applications/${application.id}/withdrawal")
           .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewWithdrawal(
+              reason = WithdrawalReason.alternativeIdentifiedPlacementNoLongerRequired,
+            ),
+          )
           .exchange()
           .expectStatus()
           .isOk

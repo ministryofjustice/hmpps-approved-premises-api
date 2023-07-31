@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -224,6 +225,7 @@ class ApplicationService(
         isInapplicable = null,
         isWithdrawn = false,
         withdrawalReason = null,
+        otherWithdrawalReason = null,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )
@@ -428,7 +430,8 @@ class ApplicationService(
   fun withdrawApprovedPremisesApplication(
     applicationId: UUID,
     user: UserEntity,
-    withdrawalReason: String?,
+    withdrawalReason: String,
+    otherReason: String?,
   ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
@@ -451,61 +454,65 @@ class ApplicationService(
           return@validated generalError("applicationAlreadyWithdrawn")
         }
 
+        if (withdrawalReason == WithdrawalReason.other.value && otherReason == null) {
+          return@validated "$.otherReason" hasSingleValidationError "empty"
+        }
+
         applicationRepository.save(
           application.apply {
             this.isWithdrawn = true
             this.withdrawalReason = withdrawalReason
+            this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) { otherReason } else { null }
           },
         )
 
-        if (withdrawalReason != null) {
-          val domainEventId = UUID.randomUUID()
-          val eventOccurredAt = Instant.now()
+        val domainEventId = UUID.randomUUID()
+        val eventOccurredAt = Instant.now()
 
-          val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-          val staffDetails = when (staffDetailsResult) {
-            is ClientResult.Success -> staffDetailsResult.body
-            is ClientResult.Failure -> staffDetailsResult.throwException()
-          }
+        val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+        val staffDetails = when (staffDetailsResult) {
+          is ClientResult.Success -> staffDetailsResult.body
+          is ClientResult.Failure -> staffDetailsResult.throwException()
+        }
 
-          domainEventService.saveApplicationWithdrawnEvent(
-            DomainEvent(
+        domainEventService.saveApplicationWithdrawnEvent(
+          DomainEvent(
+            id = domainEventId,
+            applicationId = application.id,
+            crn = application.crn,
+            occurredAt = eventOccurredAt,
+            data = ApplicationWithdrawnEnvelope(
               id = domainEventId,
-              applicationId = application.id,
-              crn = application.crn,
-              occurredAt = eventOccurredAt,
-              data = ApplicationWithdrawnEnvelope(
-                id = domainEventId,
-                timestamp = eventOccurredAt,
-                eventType = "approved-premises.application.withdrawn",
-                eventDetails = ApplicationWithdrawn(
-                  applicationId = applicationId,
-                  applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
-                  personReference = PersonReference(
-                    crn = application.crn,
-                    noms = application.nomsNumber ?: "Unknown NOMS Number",
-                  ),
-                  deliusEventNumber = application.eventNumber,
-                  withdrawnAt = eventOccurredAt,
-                  withdrawnBy = ApplicationWithdrawnWithdrawnBy(
-                    staffMember = StaffMember(
-                      staffCode = staffDetails.staffCode,
-                      staffIdentifier = staffDetails.staffIdentifier,
-                      forenames = staffDetails.staff.forenames,
-                      surname = staffDetails.staff.surname,
-                      username = staffDetails.username,
-                    ),
-                    probationArea = ProbationArea(
-                      code = staffDetails.probationArea.code,
-                      name = staffDetails.probationArea.description,
-                    ),
-                  ),
-                  withdrawalReason = withdrawalReason,
+              timestamp = eventOccurredAt,
+              eventType = "approved-premises.application.withdrawn",
+              eventDetails = ApplicationWithdrawn(
+                applicationId = applicationId,
+                applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+                personReference = PersonReference(
+                  crn = application.crn,
+                  noms = application.nomsNumber ?: "Unknown NOMS Number",
                 ),
+                deliusEventNumber = application.eventNumber,
+                withdrawnAt = eventOccurredAt,
+                withdrawnBy = ApplicationWithdrawnWithdrawnBy(
+                  staffMember = StaffMember(
+                    staffCode = staffDetails.staffCode,
+                    staffIdentifier = staffDetails.staffIdentifier,
+                    forenames = staffDetails.staff.forenames,
+                    surname = staffDetails.staff.surname,
+                    username = staffDetails.username,
+                  ),
+                  probationArea = ProbationArea(
+                    code = staffDetails.probationArea.code,
+                    name = staffDetails.probationArea.description,
+                  ),
+                ),
+                withdrawalReason = application.withdrawalReason!!,
+                otherWithdrawalReason = application.otherWithdrawalReason,
               ),
             ),
-          )
-        }
+          ),
+        )
 
         return@validated success(Unit)
       },

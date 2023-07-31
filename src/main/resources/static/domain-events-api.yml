@@ -565,6 +565,8 @@ components:
             - probationArea
         withdrawalReason:
           type: string
+        otherWithdrawalReason:
+          type: string
       required:
         - applicationId
         - applicationUrl
