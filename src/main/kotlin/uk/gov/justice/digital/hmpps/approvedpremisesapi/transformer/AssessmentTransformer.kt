@@ -5,17 +5,22 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -45,7 +50,7 @@ class AssessmentTransformer(
       submittedAt = jpa.submittedAt?.toInstant(),
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
-      status = getStatus(jpa),
+      status = getStatusForApprovedPremisesAssessment(jpa),
       service = "CAS1",
     )
 
@@ -62,7 +67,7 @@ class AssessmentTransformer(
       submittedAt = jpa.submittedAt?.toInstant(),
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
-      status = getStatus(jpa),
+      status = getStatusForTemporaryAccommodationAssessment(jpa),
       service = "CAS3",
     )
 
@@ -70,30 +75,31 @@ class AssessmentTransformer(
   }
 
   fun transformDomainToApiSummary(ase: DomainAssessmentSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): AssessmentSummary =
-    AssessmentSummary(
-      type = when (ase.type) {
-        "approved-premises" -> AssessmentSummary.Type.cAS1
-        "temporary-accommodation" -> AssessmentSummary.Type.cAS3
-        else -> throw RuntimeException("Unsupported type: ${ase.type}")
-      },
-      id = ase.id,
-      applicationId = ase.applicationId,
-      createdAt = ase.createdAt.toInstant(),
-      arrivalDate = ase.arrivalDate?.toInstant(),
-      status = when {
-        ase.completed -> AssessmentStatus.completed
-        ase.dateOfInfoRequest != null -> AssessmentStatus.awaitingResponse
-        ase.isStarted -> AssessmentStatus.inProgress
-        else -> AssessmentStatus.notStarted
-      },
-      decision = when (ase.decision) {
-        "ACCEPTED" -> ApiAssessmentDecision.accepted
-        "REJECTED" -> ApiAssessmentDecision.rejected
-        else -> null
-      },
-      risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
-      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
-    )
+    when (ase.type) {
+      "approved-premises" -> ApprovedPremisesAssessmentSummary(
+        type = "CAS1",
+        id = ase.id,
+        applicationId = ase.applicationId,
+        createdAt = ase.createdAt.toInstant(),
+        arrivalDate = ase.arrivalDate?.toInstant(),
+        status = getStatusForApprovedPremisesAssessment(ase),
+        decision = transformDomainSummaryDecisionToApi(ase.decision),
+        risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+      )
+      "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
+        type = "CAS3",
+        id = ase.id,
+        applicationId = ase.applicationId,
+        createdAt = ase.createdAt.toInstant(),
+        arrivalDate = ase.arrivalDate?.toInstant(),
+        status = getStatusForTemporaryAccommodationAssessment(ase),
+        decision = transformDomainSummaryDecisionToApi(ase.decision),
+        risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
+      )
+      else -> throw RuntimeException("Unsupported type: ${ase.type}")
+    }
 
   fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
     JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
@@ -101,11 +107,41 @@ class AssessmentTransformer(
     null -> null
   }
 
-  private fun getStatus(entity: AssessmentEntity) = when {
-    entity.decision !== null -> AssessmentStatus.completed
-    entity.clarificationNotes.any { it.response == null } -> AssessmentStatus.awaitingResponse
-    entity.reallocatedAt != null -> AssessmentStatus.reallocated
-    entity.data != null -> AssessmentStatus.inProgress
-    else -> AssessmentStatus.notStarted
+  private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {
+    "ACCEPTED" -> ApiAssessmentDecision.accepted
+    "REJECTED" -> ApiAssessmentDecision.rejected
+    else -> null
+  }
+
+  private fun getStatusForApprovedPremisesAssessment(entity: AssessmentEntity) = when {
+    entity.decision !== null -> ApprovedPremisesAssessmentStatus.completed
+    entity.clarificationNotes.any { it.response == null } -> ApprovedPremisesAssessmentStatus.awaitingResponse
+    entity.reallocatedAt != null -> ApprovedPremisesAssessmentStatus.reallocated
+    entity.data != null -> ApprovedPremisesAssessmentStatus.inProgress
+    else -> ApprovedPremisesAssessmentStatus.notStarted
+  }
+
+  private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary) = when {
+    ase.completed -> ApprovedPremisesAssessmentStatus.completed
+    ase.dateOfInfoRequest != null -> ApprovedPremisesAssessmentStatus.awaitingResponse
+    ase.isStarted -> ApprovedPremisesAssessmentStatus.inProgress
+    else -> ApprovedPremisesAssessmentStatus.notStarted
+  }
+
+  private fun getStatusForTemporaryAccommodationAssessment(entity: AssessmentEntity) = when {
+    entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
+    entity.decision == AssessmentDecision.ACCEPTED && (entity as TemporaryAccommodationAssessmentEntity).completedAt != null ->
+      TemporaryAccommodationAssessmentStatus.closed
+    entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
+    entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
+    else -> TemporaryAccommodationAssessmentStatus.unallocated
+  }
+
+  private fun getStatusForTemporaryAccommodationAssessment(ase: DomainAssessmentSummary) = when {
+    ase.decision == "REJECTED" -> TemporaryAccommodationAssessmentStatus.rejected
+    ase.decision == "ACCEPTED" && ase.completed -> TemporaryAccommodationAssessmentStatus.closed
+    ase.decision == "ACCEPTED" -> TemporaryAccommodationAssessmentStatus.readyToPlace
+    ase.isAllocated -> TemporaryAccommodationAssessmentStatus.inReview
+    else -> TemporaryAccommodationAssessmentStatus.unallocated
   }
 }

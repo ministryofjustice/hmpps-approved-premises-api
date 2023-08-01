@@ -58,6 +58,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            a.decision is not null as completed,
            a.decision as decision,
            a.data is not null as isStarted,
+           a.allocated_to_user_id is not null as isAllocated,
            ap.crn as crn
       from approved_premises_assessments aa
            join assessments a on aa.assessment_id = a.id
@@ -79,9 +80,10 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            CAST(taa.risk_ratings AS TEXT) as riskRatings,
            taa.arrival_date as arrivalDate,
            null as dateOfInfoRequest,
-           a.decision is not null as completed,
+           aa.completed_at is not null as completed,
            a.decision as decision,
            a.data is not null as isStarted,
+           a.allocated_to_user_id is not null as isAllocated,
            ap.crn as crn
       from temporary_accommodation_assessments aa
            join assessments a on aa.assessment_id = a.id
@@ -107,6 +109,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
         ColumnResult(name = "dateOfInfoRequest", type = OffsetDateTime::class),
         ColumnResult(name = "completed"),
         ColumnResult(name = "isStarted"),
+        ColumnResult(name = "isAllocated"),
         ColumnResult(name = "decision"),
         ColumnResult(name = "crn"),
       ],
@@ -211,6 +214,7 @@ class TemporaryAccommodationAssessmentEntity(
   rejectionRationale: String?,
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
   schemaUpToDate: Boolean,
+  val completedAt: OffsetDateTime?,
 ) : AssessmentEntity(
   id,
   application,
@@ -242,6 +246,7 @@ open class DomainAssessmentSummary(
   val dateOfInfoRequest: OffsetDateTime?,
   val completed: Boolean,
   val isStarted: Boolean,
+  val isAllocated: Boolean,
   val decision: String?,
   val crn: String,
 )

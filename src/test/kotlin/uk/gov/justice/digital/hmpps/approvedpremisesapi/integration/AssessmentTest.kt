@@ -164,8 +164,8 @@ class AssessmentTest : IntegrationTestBase() {
         otherAssessment.schemaUpToDate = true
 
         val filterStatus = when (assessmentDecision) {
-          null -> AssessmentStatus.inProgress
-          else -> AssessmentStatus.completed
+          null -> AssessmentStatus.cas1InProgress
+          else -> AssessmentStatus.cas1Completed
         }
 
         webTestClient.get()
@@ -356,10 +356,14 @@ class AssessmentTest : IntegrationTestBase() {
         .minByOrNull { it.createdAt }
         ?.createdAt,
 
-      completed = assessment.decision != null,
+      completed = when (assessment) {
+        is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
+        else -> assessment.decision != null
+      },
       decision = assessment.decision?.name,
       crn = assessment.application.crn,
       isStarted = assessment.data != null,
+      isAllocated = assessment.allocatedToUser != null,
     )
 
   @Test

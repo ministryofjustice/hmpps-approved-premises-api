@@ -30,9 +30,10 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<AssessmentDecision?> = { AssessmentDecision.ACCEPTED }
-  private var allocatedToUser: Yielded<UserEntity>? = null
+  private var allocatedToUser: Yielded<UserEntity?> = { null }
   private var rejectionRationale: Yielded<String?> = { null }
   private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
+  private var completedAt: Yielded<OffsetDateTime?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -78,12 +79,20 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.allocatedToUser = { allocatedToUser }
   }
 
+  fun withoutAllocatedToUser() = apply {
+    this.allocatedToUser = { null }
+  }
+
   fun withClarificationNotes(clarificationNotes: MutableList<AssessmentClarificationNoteEntity>) = apply {
     this.clarificationNotes = { clarificationNotes }
   }
 
   fun withRejectionRationale(rejectionRationale: String?) = apply {
     this.rejectionRationale = { rejectionRationale }
+  }
+
+  fun withCompletedAt(completedAt: OffsetDateTime) = apply {
+    this.completedAt = { completedAt }
   }
 
   override fun produce(): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntity(
@@ -96,10 +105,11 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     decision = this.decision(),
     schemaUpToDate = false,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
-    allocatedToUser = this.allocatedToUser?.invoke(),
+    allocatedToUser = this.allocatedToUser(),
     allocatedAt = this.allocatedAt(),
     reallocatedAt = this.reallocatedAt(),
     rejectionRationale = this.rejectionRationale(),
     clarificationNotes = this.clarificationNotes(),
+    completedAt = this.completedAt(),
   )
 }

@@ -5141,8 +5141,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
-        status:
-          $ref: '#/components/schemas/AssessmentStatus'
       discriminator:
         propertyName: service
         mapping:
@@ -5164,6 +5162,38 @@ components:
         - reallocated
         - in_progress
         - not_started
+        - unallocated
+        - in_review
+        - ready_to_place
+        - closed
+        - rejected
+      x-enum-varnames:
+        - cas1AwaitingResponse
+        - cas1Completed
+        - cas1Reallocated
+        - cas1InProgress
+        - cas1NotStarted
+        - cas3Unallocated
+        - cas3InReview
+        - cas3ReadyToPlace
+        - cas3Closed
+        - cas3Rejected
+    ApprovedPremisesAssessmentStatus:
+      type: string
+      enum:
+        - awaiting_response
+        - completed
+        - reallocated
+        - in_progress
+        - not_started
+    TemporaryAccommodationAssessmentStatus:
+      type: string
+      enum:
+        - unallocated
+        - in_review
+        - ready_to_place
+        - closed
+        - rejected
     ApprovedPremisesAssessment:
       allOf:
         - $ref: '#/components/schemas/Assessment'
@@ -5173,6 +5203,8 @@ components:
               $ref: '#/components/schemas/ApprovedPremisesApplication'
             allocatedToStaffMember:
               $ref: '#/components/schemas/ApprovedPremisesUser'
+            status:
+              $ref: '#/components/schemas/ApprovedPremisesAssessmentStatus'
           required:
             - application
     TemporaryAccommodationAssessment:
@@ -5184,6 +5216,8 @@ components:
               $ref: '#/components/schemas/TemporaryAccommodationApplication'
             allocatedToStaffMember:
               $ref: '#/components/schemas/TemporaryAccommodationUser'
+            status:
+              $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
           required:
             - application
     AssessmentSummary:
@@ -5191,9 +5225,6 @@ components:
       properties:
         type:
           type: string
-          enum:
-            - CAS1
-            - CAS3
         id:
           type: string
           format: uuid
@@ -5209,8 +5240,6 @@ components:
         dateOfInfoRequest:
           type: string
           format: date-time
-        status:
-          $ref: '#/components/schemas/AssessmentStatus'
         decision:
           $ref: '#/components/schemas/AssessmentDecision'
         risks:
@@ -5222,8 +5251,30 @@ components:
         - id
         - applicationId
         - createdAt
-        - status
         - person
+      discriminator:
+        propertyName: type
+        mapping:
+          CAS1: '#/components/schemas/ApprovedPremisesAssessmentSummary'
+          CAS3: '#/components/schemas/TemporaryAccommodationAssessmentSummary'
+    ApprovedPremisesAssessmentSummary:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSummary'
+        - type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/ApprovedPremisesAssessmentStatus'
+          required:
+            - status
+    TemporaryAccommodationAssessmentSummary:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSummary'
+        - type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
+          required:
+            - status
     AssessmentSortField:
       type: string
       enum:
