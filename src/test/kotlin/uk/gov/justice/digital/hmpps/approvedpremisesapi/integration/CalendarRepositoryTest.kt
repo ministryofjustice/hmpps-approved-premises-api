@@ -271,6 +271,74 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Results are correct for a Premises with a Booking and Lost Bed that finishes on the start date`() {
+    `Given an Offender` { offenderDetailsOne, _ ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea {
+              apAreaEntityFactory.produceAndPersist()
+            }
+          }
+        }
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withName("test-bed")
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withName("test-room")
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      val lostBed = lostBedsEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withBed(bed)
+        withStartDate(LocalDate.of(2023, 6, 9))
+        withEndDate(LocalDate.of(2023, 6, 10))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withBed(bed)
+        withServiceName(ServiceName.approvedPremises)
+        withCrn(offenderDetailsOne.otherIds.crn)
+        withArrivalDate(LocalDate.of(2023, 6, 9))
+        withDepartureDate(LocalDate.of(2023, 6, 10))
+      }
+
+      val result = calendarRepository.getCalendarInfo(premises.id, LocalDate.of(2023, 6, 10), LocalDate.of(2023, 7, 10))
+
+      val expectedBedKey = CalendarBedInfo(
+        bedId = bed.id,
+        bedName = bed.name,
+      )
+
+      assertThat(result).containsKey(expectedBedKey)
+
+      assertThat(result[expectedBedKey]).containsExactlyInAnyOrder(
+        CalendarLostBedInfo(
+          startDate = lostBed.startDate,
+          endDate = lostBed.endDate,
+          lostBedId = lostBed.id,
+        ),
+        CalendarBookingInfo(
+          startDate = booking.arrivalDate,
+          endDate = booking.departureDate,
+          bookingId = booking.id,
+          crn = offenderDetailsOne.otherIds.crn,
+          personName = null,
+        ),
+      )
+    }
+  }
+
+  @Test
   fun `Results are correct for a Premises with double-booked Bookings & Lost Bed`() {
     `Given an Offender` { offenderDetailsOne, _ ->
       `Given an Offender` { offenderDetailsTwo, _ ->
