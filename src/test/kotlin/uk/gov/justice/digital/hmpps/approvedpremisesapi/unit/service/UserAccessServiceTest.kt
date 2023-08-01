@@ -1007,4 +1007,82 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.currentUserCanViewReport()).isTrue
   }
+
+  @Test
+  fun `userCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanReallocateTask(user)).isTrue
+  }
+
+  @Test
+  fun `userCanReallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanReallocateTask(user)).isFalse
+  }
+
+  @Test
+  fun `userCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS1_WORKFLOW_MANAGER role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+
+    assertThat(userAccessService.userCanReallocateTask(user)).isTrue
+  }
+
+  @Test
+  fun `userCanReallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'approved-premises'`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    assertThat(userAccessService.userCanReallocateTask(user)).isFalse
+  }
+
+  @Test
+  fun `userCanReallocateTask returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.userCanReallocateTask(user)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanReallocateTask()).isTrue
+  }
+
+  @Test
+  fun `currentUserCanReallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanReallocateTask()).isFalse
+  }
+
+  @Test
+  fun `currentUserCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS1_WORKFLOW_MANAGER role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+
+    assertThat(userAccessService.currentUserCanReallocateTask()).isTrue
+  }
+
+  @Test
+  fun `currentUserCanReallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'approved-premises'`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    assertThat(userAccessService.currentUserCanReallocateTask()).isFalse
+  }
+
+  @Test
+  fun `currentUserCanReallocateTask returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.currentUserCanReallocateTask()).isFalse
+  }
 }

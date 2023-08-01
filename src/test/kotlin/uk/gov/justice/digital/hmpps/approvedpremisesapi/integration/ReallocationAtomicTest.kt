@@ -5,6 +5,7 @@ import io.mockk.every
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -37,6 +38,7 @@ class ReallocationAtomicTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("/tasks/assessment/${existingAssessment.id}/allocations")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
             .bodyValue(
               NewReallocation(
                 userId = assigneeUser.id,

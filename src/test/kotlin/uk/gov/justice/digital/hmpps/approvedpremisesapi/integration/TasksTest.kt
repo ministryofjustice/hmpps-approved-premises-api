@@ -461,6 +461,7 @@ class TasksTest : IntegrationTestBase() {
                 webTestClient.post()
                   .uri("/tasks/assessment/${existingAssessment.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .bodyValue(
                     NewReallocation(
                       userId = assigneeUser.id,
@@ -507,6 +508,7 @@ class TasksTest : IntegrationTestBase() {
               webTestClient.post()
                 .uri("/tasks/placement-request/${existingPlacementRequest.id}/allocations")
                 .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .bodyValue(
                   NewReallocation(
                     userId = assigneeUser.id,
@@ -565,6 +567,7 @@ class TasksTest : IntegrationTestBase() {
                 webTestClient.post()
                   .uri("/tasks/placement-application/${placementApplication.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .bodyValue(
                     NewReallocation(
                       userId = assigneeUser.id,
@@ -609,6 +612,7 @@ class TasksTest : IntegrationTestBase() {
             webTestClient.post()
               .uri("/tasks/booking-appeal/${application.id}/allocations")
               .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .bodyValue(
                 NewReallocation(
                   userId = userToReallocate.id,

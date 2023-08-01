@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
@@ -33,6 +34,7 @@ import java.util.UUID
 class TaskServiceTest {
   private val assessmentServiceMock = mockk<AssessmentService>()
   private val userServiceMock = mockk<UserService>()
+  private val userAccessServiceMock = mockk<UserAccessService>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val userTransformerMock = mockk<UserTransformer>()
   private val placementApplicationServiceMock = mockk<PlacementApplicationService>()
@@ -40,6 +42,7 @@ class TaskServiceTest {
   private val taskService = TaskService(
     assessmentServiceMock,
     userServiceMock,
+    userAccessServiceMock,
     placementRequestServiceMock,
     userTransformerMock,
     placementApplicationServiceMock,
@@ -60,7 +63,7 @@ class TaskServiceTest {
     }
 
   @Test
-  fun `reallocateTask returns Unauthorised when requestUser does not have WORKFLOW_MANAGER role`() {
+  fun `reallocateTask returns Unauthorised when requestUser does not have permissions to reallocate the task`() {
     val requestUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -69,6 +72,8 @@ class TaskServiceTest {
       }
       .produce()
 
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns false
+
     val result = taskService.reallocateTask(requestUser, TaskType.assessment, UUID.randomUUID(), UUID.randomUUID())
 
     Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -76,8 +81,9 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask returns Not Found when assignee user does not exist`() {
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
 
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
     every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.NotFound()
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
@@ -87,6 +93,8 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask reallocates an assessment`() {
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
+
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
 
@@ -123,6 +131,8 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask reallocates a placementRequest`() {
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
+
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
     val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -170,6 +180,8 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask reallocates a placementApplication`() {
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
+
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
 

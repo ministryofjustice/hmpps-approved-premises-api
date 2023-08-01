@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -20,12 +19,13 @@ import java.util.UUID
 class TaskService(
   private val assessmentService: AssessmentService,
   private val userService: UserService,
+  private val userAccessService: UserAccessService,
   private val placementRequestService: PlacementRequestService,
   private val userTransformer: UserTransformer,
   private val placementApplicationService: PlacementApplicationService,
 ) {
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
-    if (!requestUser.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (!userAccessService.userCanReallocateTask(requestUser)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
