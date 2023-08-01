@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import java.io.ByteArrayOutputStream
@@ -63,6 +64,21 @@ class ReportsController(
     val outputStream = ByteArrayOutputStream()
 
     reportService.createBedUtilisationReport(properties, outputStream)
+
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
+
+  override fun reportsLostBedsGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<Resource> {
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
+    }
+
+    validateParameters(probationRegionId, month)
+
+    val properties = LostBedReportProperties(xServiceName, probationRegionId, year, month)
+    val outputStream = ByteArrayOutputStream()
+
+    reportService.createLostBedReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
