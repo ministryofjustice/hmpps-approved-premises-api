@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
@@ -10,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
@@ -27,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -57,8 +61,20 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(isParole: Boolean): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole)
+  fun getAllActive(isParole: Boolean, page: Int?, sortBy: PlacementRequestSortField): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+    if (page != null) {
+      val pageable = PageRequest.of(page - 1, 10, Sort.by(sortBy.value))
+      val response = placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, pageable)
+      return Pair(
+        response.content,
+        PaginationMetadata(page, response.totalPages, response.totalElements, 10),
+      )
+    } else {
+      return Pair(
+        placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, null).content,
+        null,
+      )
+    }
   }
 
   fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {

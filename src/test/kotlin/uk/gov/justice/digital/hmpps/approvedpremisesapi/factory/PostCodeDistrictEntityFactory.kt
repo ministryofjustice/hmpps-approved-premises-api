@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import org.locationtech.jts.geom.Coordinate
@@ -13,7 +15,7 @@ import java.util.UUID
 
 class PostCodeDistrictEntityFactory : Factory<PostCodeDistrictEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var outcode: Yielded<String> = { randomOf(listOf("SW10", "SW11", "SW12", "SW13", "SW14", "SW15", "SW16", "SW17", "SW18", "SY11", "YO51", "AB24")) }
+  private var outcode: Yielded<String> = { this.getRandomPostcode() }
   private var latitude: Yielded<Double> = { randomDouble(49.0, 59.0) }
   private var longitude: Yielded<Double> = { randomDouble(2.0, 8.0) }
   private var point: Yielded<Point>? = null
@@ -46,4 +48,12 @@ class PostCodeDistrictEntityFactory : Factory<PostCodeDistrictEntity> {
     point = this.point?.invoke() ?: GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
       .createPoint(Coordinate(this.latitude(), this.longitude())),
   )
+
+  private fun getRandomPostcode(): String {
+    val mapper = jacksonObjectMapper()
+    val json = this::class.java.classLoader.getResourceAsStream("postcodeAreas.json")
+    val postcodeAreas = mapper.readValue(json, object : TypeReference<List<String>>() {})
+
+    return randomOf(postcodeAreas)
+  }
 }

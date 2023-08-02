@@ -53,7 +53,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.placementRequirements = { placementRequirements }
   }
 
-  fun withReallocatedAt(reallocatedAt: OffsetDateTime) = apply {
+  fun withReallocatedAt(reallocatedAt: OffsetDateTime?) = apply {
     this.reallocatedAt = { reallocatedAt }
   }
 

@@ -2484,6 +2484,16 @@ paths:
           description: States whether or not to return parole cases
           schema:
             type: boolean
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '#/components/schemas/PlacementRequestSortField'
       responses:
         200:
           description: successfully retrieved placement requests
@@ -2493,6 +2503,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PlacementRequest'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -3345,6 +3364,23 @@ components:
         'application/json':
           schema:
             $ref: '#/components/schemas/Problem'
+  headers:
+    X-Pagination-CurrentPage:
+      schema:
+        type: integer
+      description: The current page number
+    X-Pagination-TotalPages:
+      schema:
+        type: integer
+      description: The total number of pages
+    X-Pagination-TotalResults:
+      schema:
+        type: integer
+      description: The total number of results
+    X-Pagination-PageSize:
+      schema:
+        type: integer
+      description: The size of each page
   schemas:
     Premises:
       type: object
@@ -6691,3 +6727,9 @@ components:
         - error_in_application
         - duplicate_application
         - other
+    PlacementRequestSortField:
+      type: string
+      enum:
+        - duration
+        - expectedArrival
+        - createdAt
