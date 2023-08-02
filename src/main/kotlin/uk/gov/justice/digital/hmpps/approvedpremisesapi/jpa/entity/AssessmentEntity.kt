@@ -140,9 +140,9 @@ abstract class AssessmentEntity(
 
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
-  val allocatedToUser: UserEntity?,
+  var allocatedToUser: UserEntity?,
 
-  val allocatedAt: OffsetDateTime?,
+  var allocatedAt: OffsetDateTime?,
   var reallocatedAt: OffsetDateTime?,
 
   val createdAt: OffsetDateTime,

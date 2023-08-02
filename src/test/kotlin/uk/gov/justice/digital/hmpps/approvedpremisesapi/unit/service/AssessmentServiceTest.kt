@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -1164,7 +1165,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns General Validation Error when application already has a submitted assessment`() {
+  fun `reallocateAssessment for Approved Premises returns General Validation Error when application already has a submitted assessment`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1212,7 +1213,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Field Validation Error when user to assign to is not an ASSESSOR`() {
+  fun `reallocateAssessment for Approved Premises returns Field Validation Error when user to assign to is not an ASSESSOR`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1259,7 +1260,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Field Validation Error when user to assign to does not have relevant qualifications`() {
+  fun `reallocateAssessment for Approved Premises returns Field Validation Error when user to assign to does not have relevant qualifications`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1313,7 +1314,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`() {
+  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1402,6 +1403,103 @@ class AssessmentServiceTest {
         },
       )
     }
+  }
+
+  @Test
+  fun `reallocateAssessment for Temporary Accommodation returns Field Validation Error when user to assign to is not an ASSESSOR`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val assigneeUser = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val previousAssessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
+    validationResult as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingAssessorRole")
+  }
+
+  @Test
+  fun `reallocateAssessment for Temporary Accommodation returns Success and updates the assigned user in place`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val assigneeUser = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_ASSESSOR)
+          .produce()
+      }
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val previousAssessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    validationResult as ValidatableActionResult.Success
+
+    assertThat(validationResult.entity).isEqualTo(previousAssessment)
+
+    verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
   }
 
   @Nested

@@ -477,6 +477,17 @@ class AssessmentService(
     val currentAssessment = assessmentRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
+    return when (currentAssessment) {
+      is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(assigneeUser, currentAssessment)
+      is TemporaryAccommodationAssessmentEntity -> reallocateTemporaryAccommodationAssessment(assigneeUser, currentAssessment)
+      else -> throw RuntimeException("Reallocating an assessment of type '${currentAssessment::class.qualifiedName}' has not been implemented.")
+    }
+  }
+
+  private fun reallocateApprovedPremisesAssessment(
+    assigneeUser: UserEntity,
+    currentAssessment: ApprovedPremisesAssessmentEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     if (currentAssessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
@@ -548,6 +559,28 @@ class AssessmentService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
         newAssessment,
+      ),
+    )
+  }
+
+  private fun reallocateTemporaryAccommodationAssessment(
+    assigneeUser: UserEntity,
+    currentAssessment: TemporaryAccommodationAssessmentEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    if (!assigneeUser.hasRole(UserRole.CAS3_ASSESSOR)) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
+      )
+    }
+
+    currentAssessment.allocatedToUser = assigneeUser
+    currentAssessment.allocatedAt = OffsetDateTime.now()
+
+    assessmentRepository.save(currentAssessment)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        currentAssessment,
       ),
     )
   }
