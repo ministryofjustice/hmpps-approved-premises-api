@@ -3,8 +3,9 @@
 TRUNCATE TABLE rooms CASCADE;
 TRUNCATE TABLE beds CASCADE;
 
--- temporary_accommodation_premises
---      Premises 1 (2x rooms, 1x bed each)
+-- CAS3 beds for Kent, Surrey & Sussex
+
+-- Premises 1 (2x rooms, 1x bed each)
   insert into
     rooms ("id", "name", "notes", "premises_id")
   values
@@ -42,7 +43,7 @@ TRUNCATE TABLE beds CASCADE;
       'fe86a602-6873-49d3-ac3a-3dfef743ae03'
     );
 
---      Premises 2 (1x room, 1x bed)
+-- Premises 2 (1x room, 1x bed)
   insert into
     rooms ("id", "name", "notes", "premises_id")
   values
@@ -56,12 +57,12 @@ TRUNCATE TABLE beds CASCADE;
     beds ("id", "name", "room_id")
   values
     (
-      'd97bdcb9-f7b3-477b-a073-71939fac297a',
+      '6d6d4c56-9989-4fb5-a486-d32f525748e6',
       'BED1',
       '2d87a9a2-1f94-45ec-9790-eb8732a4ba6f'
     );
 
---      Premises 3 (1x room, 1x bed)
+-- Premises 3 (1x room, 1x bed)
   insert into
     rooms ("id", "name", "notes", "premises_id")
   values
@@ -78,4 +79,83 @@ TRUNCATE TABLE beds CASCADE;
       '8be1ed0e-dae7-42d2-97e0-95c95fdb4c50',
       'BED1',
       '135812b4-e6c0-4ccf-9502-4bfea66f3bd3'
+    );
+
+-- CAS3 beds for East of England
+
+-- Premises 1 (2x rooms, 1x bed each)
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      '4d27144d-1c3d-4785-9fbd-879d8b0b5b41',
+      'EOFE-1',
+      NULL,
+      '70a6046c-23fc-4a30-b151-582ffd509e6a'
+    );
+
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      '38e6b775-88c5-4571-8b6e-da3711aeaca6',
+      'BED1',
+      '4d27144d-1c3d-4785-9fbd-879d8b0b5b41'
+    );
+
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      '94c58e72-d31a-49c3-8569-fc341e46ba6a',
+      'EOFE-2',
+      NULL,
+      '70a6046c-23fc-4a30-b151-582ffd509e6a'
+    );
+
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      'fd1c7078-43c8-41f5-8e57-a4d59f3c831a',
+      'BED1',
+      '94c58e72-d31a-49c3-8569-fc341e46ba6a'
+    );
+
+-- Premises 2 (1x room, 1x bed)
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      '82ff4d7f-13c2-4827-8957-c38ad4750c53',
+      'A1',
+      NULL,
+      '6aa177cb-617f-4abb-be46-056ea7e4a59d'
+    );
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      '64fd8f3d-1fb6-4346-a190-65588b998301',
+      'BED1',
+      '82ff4d7f-13c2-4827-8957-c38ad4750c53'
+    );
+
+-- Premises 2 (1x room, 1x bed)
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      '02e1c7a3-47e7-4845-95f5-98aeed0ef81b',
+      'A1',
+      NULL,
+      '773431cd-f560-4be8-9e6f-b582a4ebf204'
+    );
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      '8ecef9a5-268c-4595-9fd0-042fed3d4882',
+      'BED1',
+      '02e1c7a3-47e7-4845-95f5-98aeed0ef81b'
     );
