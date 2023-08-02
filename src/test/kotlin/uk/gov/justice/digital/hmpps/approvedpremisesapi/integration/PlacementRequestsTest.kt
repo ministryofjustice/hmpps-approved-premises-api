@@ -160,7 +160,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @CsvSource("/placement-requests/dashboard,nonParole", "/placement-requests/dashboard?isParole=1,parole", "/placement-requests/dashboard?isParole=0,nonParole")
+    @CsvSource(
+      "/placement-requests/dashboard,nonParole",
+      "/placement-requests/dashboard?isParole=1,parole",
+      "/placement-requests/dashboard?isParole=0,nonParole",
+    )
     fun `It returns all the placement requests when the user is a manager`(url: String, type: String) {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails1, inmateDetails1 ->
@@ -306,6 +310,84 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 },
               )
           }
+        }
+      }
+    }
+
+    @Test
+    fun `It returns paginated placement requests when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now())
+            withApplicationSchema(applicationSchema)
+            withReleaseType("licence")
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAssessmentSchema(assessmentSchema)
+            withApplication(application)
+            withSubmittedAt(OffsetDateTime.now())
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.ACCEPTED)
+          }
+
+          val placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withApplication(application)
+            withAssessment(assessment)
+            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+            withDesirableCriteria(
+              characteristicEntityFactory.produceAndPersistMultiple(5),
+            )
+            withEssentialCriteria(
+              characteristicEntityFactory.produceAndPersistMultiple(3),
+            )
+          }
+
+          val placementRequest = placementRequestFactory.produceAndPersist {
+            withAllocatedToUser(
+              userEntityFactory.produceAndPersist {
+                withProbationRegion(
+                  probationRegionEntityFactory.produceAndPersist {
+                    withApArea(apAreaEntityFactory.produceAndPersist())
+                  },
+                )
+              },
+            )
+            withApplication(application)
+            withAssessment(assessment)
+            withPlacementRequirements(placementRequirements)
+            withIsParole(false)
+          }
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 1)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(placementRequest, offenderDetails, inmateDetails),
+                ),
+              ),
+            )
         }
       }
     }
