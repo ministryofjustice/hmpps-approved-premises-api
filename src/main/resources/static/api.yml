@@ -2489,6 +2489,11 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '#/components/schemas/PlacementRequestSortField'
       responses:
         200:
           description: successfully retrieved placement requests
@@ -6722,3 +6727,9 @@ components:
         - error_in_application
         - duplicate_application
         - other
+    PlacementRequestSortField:
+      type: string
+      enum:
+        - duration
+        - expectedArrival
+        - createdAt

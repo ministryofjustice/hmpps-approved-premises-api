@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
@@ -59,9 +61,9 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(isParole: Boolean, page: Int?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(isParole: Boolean, page: Int?, sortBy: PlacementRequestSortField): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     if (page != null) {
-      val pageable = PageRequest.of(page - 1, 10)
+      val pageable = PageRequest.of(page - 1, 10, Sort.by(sortBy.value))
       val response = placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, pageable)
       return Pair(
         response.content,

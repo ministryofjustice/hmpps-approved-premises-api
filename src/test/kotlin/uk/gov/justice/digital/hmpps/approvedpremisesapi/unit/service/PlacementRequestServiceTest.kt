@@ -10,9 +10,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -608,7 +610,7 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, null) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, null)
+    val (requests, metadata) = placementRequestService.getAllActive(false, null, PlacementRequestSortField.createdAt)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata).isNull()
@@ -622,14 +624,38 @@ class PlacementRequestServiceTest {
 
     mockkStatic(PageRequest::class)
 
-    every { PageRequest.of(0, 10) } returns pageRequest
+    every { PageRequest.of(0, 10, Sort.by("createdAt")) } returns pageRequest
     every { page.content } returns placementRequests
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
     every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, 1)
+    val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.createdAt)
+
+    assertThat(requests).isEqualTo(placementRequests)
+    assertThat(metadata?.currentPage).isEqualTo(1)
+    assertThat(metadata?.pageSize).isEqualTo(10)
+    assertThat(metadata?.totalPages).isEqualTo(10)
+    assertThat(metadata?.totalResults).isEqualTo(100)
+  }
+
+  @Test
+  fun `getAllActive returns a page and metadata when a page number and sort field is provided`() {
+    val placementRequests = createPlacementRequests(2)
+    val page = mockk<Page<PlacementRequestEntity>>()
+    val pageRequest = mockk<PageRequest>()
+
+    mockkStatic(PageRequest::class)
+
+    every { PageRequest.of(0, 10, Sort.by("expectedArrival")) } returns pageRequest
+    every { page.content } returns placementRequests
+    every { page.totalPages } returns 10
+    every { page.totalElements } returns 100
+
+    every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageRequest) } returns page
+
+    val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.expectedArrival)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
