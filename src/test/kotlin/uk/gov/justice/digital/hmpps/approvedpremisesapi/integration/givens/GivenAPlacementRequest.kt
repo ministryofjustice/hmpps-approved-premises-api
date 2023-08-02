@@ -14,6 +14,8 @@ fun IntegrationTestBase.`Given a Placement Request`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
+  isWithdrawn: Boolean = false,
+  isParole: Boolean = false,
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -60,6 +62,8 @@ fun IntegrationTestBase.`Given a Placement Request`(
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
+    withIsWithdrawn(isWithdrawn)
+    withIsParole(isParole)
     withPlacementRequirements(placementRequirements)
   }
 
