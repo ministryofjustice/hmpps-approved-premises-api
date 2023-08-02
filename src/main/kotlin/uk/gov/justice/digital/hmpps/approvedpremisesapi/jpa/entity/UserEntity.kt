@@ -175,6 +175,7 @@ enum class UserRole(val service: ServiceName) {
   CAS1_WORKFLOW_MANAGER(ServiceName.approvedPremises),
   CAS1_APPLICANT(ServiceName.approvedPremises),
   CAS1_ADMIN(ServiceName.approvedPremises),
+  CAS1_REPORT_VIEWER(ServiceName.approvedPremises),
   CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(ServiceName.approvedPremises),
   CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises),
   CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises),
