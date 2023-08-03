@@ -2494,6 +2494,11 @@ paths:
           description: Which field to sort the results by. If blank, will sort by createdAt
           schema:
             $ref: '#/components/schemas/PlacementRequestSortField'
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '#/components/schemas/SortDirection'
       responses:
         200:
           description: successfully retrieved placement requests
@@ -6733,3 +6738,8 @@ components:
         - duration
         - expectedArrival
         - createdAt
+    SortDirection:
+      type: string
+      enum:
+        - asc
+        - desc
