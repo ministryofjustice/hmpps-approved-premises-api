@@ -61,7 +61,7 @@ VALUES
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
     'temporary-accommodation',
-    CURRENT_DATE,
+    CURRENT_DATE + 80,
     NULL
   )
 ON CONFLICT(id) DO NOTHING;
