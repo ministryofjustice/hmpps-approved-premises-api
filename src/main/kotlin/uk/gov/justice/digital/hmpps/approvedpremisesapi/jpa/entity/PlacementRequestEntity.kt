@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -24,7 +25,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   fun findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse(): List<PlacementRequestEntity>
 
-  fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole: Boolean, pageable: Pageable?): Page<PlacementRequestEntity>
+  @Query("SELECT pr FROM PlacementRequestEntity pr WHERE pr.isWithdrawn = FALSE AND pr.reallocatedAt IS NULL AND pr.isParole = :isParole AND (:crn IS NULL OR pr.application.crn = UPPER(:crn))")
+  fun findNonWithdrawnNonReallocatedPlacementRequests(isParole: Boolean, crn: String?, pageable: Pageable?): Page<PlacementRequestEntity>
 }
 
 @Entity

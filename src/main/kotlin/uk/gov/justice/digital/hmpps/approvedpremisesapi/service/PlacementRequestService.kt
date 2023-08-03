@@ -66,14 +66,14 @@ class PlacementRequestService(
     if (page != null) {
       val sort = if (sortDirection == SortDirection.desc) { Sort.by(sortBy.value).descending() } else { Sort.by(sortBy.value).ascending() }
       val pageable = PageRequest.of(page - 1, 10, sort)
-      val response = placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, pageable)
+      val response = placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(isParole, null, pageable)
       return Pair(
         response.content,
         PaginationMetadata(page, response.totalPages, response.totalElements, 10),
       )
     } else {
       return Pair(
-        placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, null).content,
+        placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(isParole, null, null).content,
         null,
       )
     }

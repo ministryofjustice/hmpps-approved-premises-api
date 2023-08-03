@@ -609,7 +609,7 @@ class PlacementRequestServiceTest {
 
     every { page.content } returns placementRequests
 
-    every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, null) } returns page
+    every { placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(false, null, null) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(false, null, PlacementRequestSortField.createdAt, null)
 
@@ -630,7 +630,7 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageRequest) } returns page
+    every { placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(false, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.createdAt, null)
 
@@ -654,7 +654,7 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageRequest) } returns page
+    every { placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(false, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
