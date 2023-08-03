@@ -1085,4 +1085,50 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.currentUserCanReallocateTask()).isFalse
   }
+
+  @Test
+  fun `userCanDeallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanDeallocateTask(user)).isTrue
+  }
+
+  @Test
+  fun `userCanDeallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.userCanDeallocateTask(user)).isFalse
+  }
+
+  @Test
+  fun `userCanDeallocateTask returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.userCanDeallocateTask(user)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanDeallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanDeallocateTask()).isTrue
+  }
+
+  @Test
+  fun `currentUserCanDeallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    assertThat(userAccessService.currentUserCanDeallocateTask()).isFalse
+  }
+
+  @Test
+  fun `currentUserCanDeallocateTask returns false by default`() {
+    currentRequestIsForArbitraryService()
+
+    assertThat(userAccessService.currentUserCanDeallocateTask()).isFalse
+  }
 }

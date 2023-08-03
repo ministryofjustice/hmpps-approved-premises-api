@@ -153,6 +153,13 @@ class UserAccessService(
     ServiceName.approvedPremises.value -> user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
     else -> false
   }
+
+  fun currentUserCanDeallocateTask() = userCanDeallocateTask(userService.getUserForRequest())
+
+  fun userCanDeallocateTask(user: UserEntity): Boolean = when (currentRequest.getHeader("X-Service-Name")) {
+    ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
+    else -> false
+  }
 }
 
 enum class ApprovedPremisesApplicationAccessLevel {

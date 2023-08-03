@@ -67,6 +67,38 @@ class TaskService(
     }
   }
 
+  fun deallocateTask(
+    requestUser: UserEntity,
+    taskType: TaskType,
+    id: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
+    if (!userAccessService.userCanDeallocateTask(requestUser)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val result = when (taskType) {
+      TaskType.assessment -> assessmentService.deallocateAssessment(id)
+      else -> throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
+    }
+
+    val validationResult = when (result) {
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.Success -> result.entity
+    }
+
+    return when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError(validationResult.message))
+      is ValidatableActionResult.FieldValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.FieldValidationError(validationResult.validationMessages))
+      is ValidatableActionResult.ConflictError -> AuthorisableActionResult.Success(ValidatableActionResult.ConflictError(validationResult.conflictingEntityId, validationResult.message))
+      is ValidatableActionResult.Success -> AuthorisableActionResult.Success(
+        ValidatableActionResult.Success(
+          Unit,
+        ),
+      )
+    }
+  }
+
   private fun entityToReallocation(entity: Any, taskType: TaskType): Reallocation {
     val allocatedToUser = when (entity) {
       is PlacementRequestEntity -> entity.allocatedToUser

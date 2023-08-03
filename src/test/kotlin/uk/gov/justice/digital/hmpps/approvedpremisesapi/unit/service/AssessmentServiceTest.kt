@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -1500,6 +1501,98 @@ class AssessmentServiceTest {
     assertThat(validationResult.entity).isEqualTo(previousAssessment)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+  }
+
+  @Test
+  fun `deallocateAssessment throws an exception when the assessment is not a Temporary Accommodation assessment`() {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .produce()
+
+    val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    assertThatThrownBy { assessmentService.deallocateAssessment(previousAssessment.id) }
+      .isInstanceOf(RuntimeException::class.java)
+      .hasMessage("Only CAS3 Assessments are currently supported")
+  }
+
+  @Test
+  fun `deallocateAssessment returns a NotFound error if the assessment could not be found`() {
+    every { assessmentRepositoryMock.findByIdOrNull(any()) } returns null
+
+    val result = assessmentService.deallocateAssessment(UUID.randomUUID())
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `deallocateAssessment returns Success, removes the assigned user in place, and unsets any decision made`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val previousAssessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withDecision(AssessmentDecision.REJECTED)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val result = assessmentService.deallocateAssessment(previousAssessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    validationResult as ValidatableActionResult.Success
+
+    assertThat(validationResult.entity).isEqualTo(previousAssessment)
+
+    verify { assessmentRepositoryMock.save(match { it.allocatedToUser == null && it.decision == null }) }
   }
 
   @Nested

@@ -585,6 +585,25 @@ class AssessmentService(
     )
   }
 
+  fun deallocateAssessment(id: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val currentAssessment = assessmentRepository.findByIdOrNull(id)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (currentAssessment !is TemporaryAccommodationAssessmentEntity) {
+      throw RuntimeException("Only CAS3 Assessments are currently supported")
+    }
+
+    currentAssessment.allocatedToUser = null
+    currentAssessment.allocatedAt = null
+    currentAssessment.decision = null
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        assessmentRepository.save(currentAssessment),
+      ),
+    )
+  }
+
   fun addAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, text: String): AuthorisableActionResult<AssessmentClarificationNoteEntity> {
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {

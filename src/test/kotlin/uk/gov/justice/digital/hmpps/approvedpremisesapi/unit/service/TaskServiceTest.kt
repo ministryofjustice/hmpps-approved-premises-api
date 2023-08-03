@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -223,6 +224,49 @@ class TaskServiceTest {
     validationResult as ValidatableActionResult.Success
 
     Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
+  }
+
+  @Test
+  fun `deallocateTask returns Unauthorised when requestUser does not have permissions to deallocate the task`() {
+    val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    every { userAccessServiceMock.userCanDeallocateTask(any()) } returns false
+
+    val result = taskService.deallocateTask(requestUser, TaskType.assessment, UUID.randomUUID())
+
+    Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `deallocateTask deallocates an assessment`() {
+    every { userAccessServiceMock.userCanDeallocateTask(any()) } returns true
+
+    val assigneeUser = generateAndStubAssigneeUser()
+    val application = generateApplication()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    every { assessmentServiceMock.deallocateAssessment(assessment.id) } returns AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        assessment,
+      ),
+    )
+
+    val result = taskService.deallocateTask(requestUserWithPermission, TaskType.assessment, assessment.id)
+
+    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
   }
 
   private fun generateAndStubAssigneeUser(): UserEntity {

@@ -165,6 +165,30 @@ class TasksController(
     return ResponseEntity(reallocatedTask, HttpStatus.CREATED)
   }
 
+  @Transactional
+  override fun tasksTaskTypeIdAllocationsDelete(id: UUID, taskType: String): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+      taskType.kebabCaseToPascalCase(),
+    ) ?: throw NotFoundProblem(taskType, "TaskType")
+
+    val validationResult = when (val authorisationResult = taskService.deallocateTask(user, taskType, id)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> authorisationResult.entity
+    }
+
+    when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
+  }
+
   private fun getAssessmentTask(assessment: AssessmentEntity, user: UserEntity): AssessmentTask {
     val offenderDetailsResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
