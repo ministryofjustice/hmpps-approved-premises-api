@@ -34,6 +34,57 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+--- Add a confirmed booking ---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '1de846dd-9617-4488-9b05-d54c9f955e2b',
+    CURRENT_DATE + 84 ,
+    CURRENT_DATE + 168,
+    'X698320',
+    CURRENT_DATE + 84,
+    CURRENT_DATE + 168,
+    'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
+    'e8887df9-b31b-4e9c-931a-e063d778ab0d',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+
+INSERT INTO
+  confirmations (
+    "id",
+    "booking_id",
+    "date_time",
+    "notes",
+    "created_at"
+  )
+VALUES
+  (
+    '67f339b7-dca4-476b-ad9c-7db1f857465f',
+    '1de846dd-9617-4488-9b05-d54c9f955e2b',
+    CURRENT_DATE,
+    NULL,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
 --- Add a Booking departing today ---
 
 INSERT INTO
@@ -190,6 +241,63 @@ VALUES
     CURRENT_DATE + 51,
     'aa67b195-ee25-4944-8e97-56af5a3e1c2f',
     'Multiple offences'
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add a departure ---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
+    CURRENT_DATE - 168,
+    CURRENT_DATE - 1,
+    'X371199',
+    CURRENT_DATE - 168,
+    CURRENT_DATE - 1,
+    'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
+    'e8887df9-b31b-4e9c-931a-e063d778ab0d',
+    'temporary-accommodation',
+    CURRENT_DATE - 200,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '5a1380a3-ab28-47a4-aab9-60414701f804',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
+    CURRENT_DATE
   )
 ON CONFLICT(id) DO NOTHING;
 
