@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
@@ -61,9 +62,10 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(isParole: Boolean, page: Int?, sortBy: PlacementRequestSortField): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(isParole: Boolean, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     if (page != null) {
-      val pageable = PageRequest.of(page - 1, 10, Sort.by(sortBy.value))
+      val sort = if (sortDirection == SortDirection.desc) { Sort.by(sortBy.value).descending() } else { Sort.by(sortBy.value).ascending() }
+      val pageable = PageRequest.of(page - 1, 10, sort)
       val response = placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, pageable)
       return Pair(
         response.content,

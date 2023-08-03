@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -57,14 +58,14 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsDashboardGet(isParole: Boolean?, page: Int?, sortBy: PlacementRequestSortField?): ResponseEntity<List<PlacementRequest>> {
+  override fun placementRequestsDashboardGet(isParole: Boolean?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
-    val (requests, metadata) = placementRequestService.getAllActive(isParole ?: false, page, sortBy ?: PlacementRequestSortField.createdAt)
+    val (requests, metadata) = placementRequestService.getAllActive(isParole ?: false, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
