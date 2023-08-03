@@ -34,6 +34,57 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+--- Add a confirmed booking ---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '1de846dd-9617-4488-9b05-d54c9f955e2b',
+    CURRENT_DATE + 84 ,
+    CURRENT_DATE + 168,
+    'X698320',
+    CURRENT_DATE + 84,
+    CURRENT_DATE + 168,
+    '70a6046c-23fc-4a30-b151-582ffd509e6a',
+    '38e6b775-88c5-4571-8b6e-da3711aeaca6',
+    'temporary-accommodation',
+    CURRENT_DATE + 80,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+
+INSERT INTO
+  confirmations (
+    "id",
+    "booking_id",
+    "date_time",
+    "notes",
+    "created_at"
+  )
+VALUES
+  (
+    '67f339b7-dca4-476b-ad9c-7db1f857465f',
+    '1de846dd-9617-4488-9b05-d54c9f955e2b',
+    CURRENT_DATE,
+    NULL,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
 --- Add a Booking departing today ---
 
 INSERT INTO
@@ -87,6 +138,31 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+--- Add a void ---
+
+INSERT INTO
+  lost_beds (
+    "id",
+    "premises_id",
+    "start_date",
+    "end_date",
+    "reference_number",
+    "notes",
+    "lost_bed_reason_id",
+    "bed_id"
+  )
+VALUES
+  (
+    'c0417398-b3a2-4144-ad36-01e206b8caa9',
+    '70a6046c-23fc-4a30-b151-582ffd509e6a',
+    CURRENT_DATE + 200,
+    CURRENT_DATE + 205,
+    '132',
+    'Some notes for a void',
+    (SELECT id FROM lost_bed_reasons WHERE name='Deep clean'),
+    '38e6b775-88c5-4571-8b6e-da3711aeaca6'
+  )
+ON CONFLICT(id) DO NOTHING;
 --- Add a Booking departing soon ---
 
 INSERT INTO
@@ -112,7 +188,7 @@ VALUES
     CURRENT_DATE - 84,
     CURRENT_DATE + 3,
     '70a6046c-23fc-4a30-b151-582ffd509e6a',
-    '38e6b775-88c5-4571-8b6e-da3711aeaca6',
+    'fd1c7078-43c8-41f5-8e57-a4d59f3c831a',
     'temporary-accommodation',
     CURRENT_DATE,
     NULL
@@ -164,8 +240,8 @@ VALUES
     'X698320', -- Multiple offences
     CURRENT_DATE - 7,
     CURRENT_DATE + 51,
-    '70a6046c-23fc-4a30-b151-582ffd509e6a',
-    '38e6b775-88c5-4571-8b6e-da3711aeaca6',
+    '6aa177cb-617f-4abb-be46-056ea7e4a59d',
+    '64fd8f3d-1fb6-4346-a190-65588b998301',
     'temporary-accommodation',
     CURRENT_DATE,
     NULL
@@ -192,3 +268,62 @@ VALUES
     'Multiple offences'
   )
 ON CONFLICT(id) DO NOTHING;
+
+--- Add a departure ---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
+    CURRENT_DATE - 168,
+    CURRENT_DATE - 1,
+    'X371199',
+    CURRENT_DATE - 168,
+    CURRENT_DATE - 1,
+    '70a6046c-23fc-4a30-b151-582ffd509e6a',
+    '38e6b775-88c5-4571-8b6e-da3711aeaca6',
+    'temporary-accommodation',
+    CURRENT_DATE - 200,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '5a1380a3-ab28-47a4-aab9-60414701f804',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+UPDATE arrivals SET arrival_date_time = cast(arrival_date as timestamp) at time zone 'utc';
