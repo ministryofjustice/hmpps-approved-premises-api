@@ -112,7 +112,7 @@ VALUES
     CURRENT_DATE - 84,
     CURRENT_DATE + 3,
     '70a6046c-23fc-4a30-b151-582ffd509e6a',
-    '38e6b775-88c5-4571-8b6e-da3711aeaca6',
+    'fd1c7078-43c8-41f5-8e57-a4d59f3c831a',
     'temporary-accommodation',
     CURRENT_DATE,
     NULL
@@ -164,8 +164,8 @@ VALUES
     'X698320', -- Multiple offences
     CURRENT_DATE - 7,
     CURRENT_DATE + 51,
-    '70a6046c-23fc-4a30-b151-582ffd509e6a',
-    '38e6b775-88c5-4571-8b6e-da3711aeaca6',
+    '6aa177cb-617f-4abb-be46-056ea7e4a59d',
+    '64fd8f3d-1fb6-4346-a190-65588b998301',
     'temporary-accommodation',
     CURRENT_DATE,
     NULL
