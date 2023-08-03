@@ -2499,6 +2499,11 @@ paths:
           description: The direction to sort the results by. If blank, will sort in descending order
           schema:
             $ref: '#/components/schemas/SortDirection'
+        - name: crn
+          in: query
+          description: CRN to restrict results to
+          schema:
+            type: string
       responses:
         200:
           description: successfully retrieved placement requests
