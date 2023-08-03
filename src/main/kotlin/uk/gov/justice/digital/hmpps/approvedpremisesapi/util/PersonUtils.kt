@@ -28,6 +28,27 @@ fun getPersonDetailsForCrn(
   return Pair(offenderDetails, inmateDetails)
 }
 
+fun getPersonDetailsForCrnOrNull(
+  log: Logger,
+  crn: String,
+  deliusUsername: String,
+  offenderService: OffenderService,
+  ignoreLao: Boolean = false,
+): Pair<OffenderDetailSummary, InmateDetail?>? {
+  val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLao)) {
+    is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    is AuthorisableActionResult.NotFound -> {
+      log.error("Could not get Offender Details for CRN: $crn")
+      return null
+    }
+    is AuthorisableActionResult.Unauthorised -> return null
+  }
+
+  val inmateDetails = getInmateDetail(offenderDetails, offenderService)
+
+  return Pair(offenderDetails, inmateDetails)
+}
+
 fun getInmateDetail(offenderDetails: OffenderDetailSummary, offenderService: OffenderService): InmateDetail? {
   val nomsNumber = offenderDetails.otherIds.nomsNumber
 

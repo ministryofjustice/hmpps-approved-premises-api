@@ -90,6 +90,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrnOrNull
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -267,7 +268,7 @@ class PremisesController(
 
     return ResponseEntity.ok(
       premises.bookings.mapNotNull {
-        val personDetails = getPersonDetailsForCrn(log, it.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
+        val personDetails = getPersonDetailsForCrnOrNull(log, it.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
 
         if (personDetails == null) {
           log.warn("Unable to get Person via crn: ${it.crn}")
