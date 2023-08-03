@@ -192,3 +192,5 @@ VALUES
     'Multiple offences'
   )
 ON CONFLICT(id) DO NOTHING;
+
+UPDATE arrivals SET arrival_date_time = cast(arrival_date as timestamp) at time zone 'utc';
