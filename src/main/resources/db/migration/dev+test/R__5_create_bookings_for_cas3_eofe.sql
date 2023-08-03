@@ -138,6 +138,31 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+--- Add a void ---
+
+INSERT INTO
+  lost_beds (
+    "id",
+    "premises_id",
+    "start_date",
+    "end_date",
+    "reference_number",
+    "notes",
+    "lost_bed_reason_id",
+    "bed_id"
+  )
+VALUES
+  (
+    'c0417398-b3a2-4144-ad36-01e206b8caa9',
+    '70a6046c-23fc-4a30-b151-582ffd509e6a',
+    CURRENT_DATE + 200,
+    CURRENT_DATE + 205,
+    '132',
+    'Some notes for a void',
+    (SELECT id FROM lost_bed_reasons WHERE name='Deep clean'),
+    '38e6b775-88c5-4571-8b6e-da3711aeaca6'
+  )
+ON CONFLICT(id) DO NOTHING;
 --- Add a Booking departing soon ---
 
 INSERT INTO
