@@ -611,7 +611,7 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(false, null, null) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, null, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(false, null, null, PlacementRequestSortField.createdAt, null)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata).isNull()
@@ -632,7 +632,7 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(false, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(false, null, 1, PlacementRequestSortField.createdAt, null)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -656,7 +656,7 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(false, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(false, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -665,7 +665,32 @@ class PlacementRequestServiceTest {
     assertThat(metadata?.totalResults).isEqualTo(100)
   }
 
-  private fun createPlacementRequests(num: Int): List<PlacementRequestEntity> {
+  @Test
+  fun `getAllActive returns only results for CRN when provided`() {
+    val crn = "CRN456"
+    val placementRequests = createPlacementRequests(2, crn)
+    val page = mockk<Page<PlacementRequestEntity>>()
+    val pageRequest = mockk<PageRequest>()
+
+    mockkStatic(PageRequest::class)
+
+    every { PageRequest.of(0, 10, Sort.by("expectedArrival").descending()) } returns pageRequest
+    every { page.content } returns placementRequests
+    every { page.totalPages } returns 10
+    every { page.totalElements } returns 100
+
+    every { placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(false, crn, pageRequest) } returns page
+
+    val (requests, metadata) = placementRequestService.getAllActive(false, crn, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+
+    assertThat(requests).isEqualTo(placementRequests)
+    assertThat(metadata?.currentPage).isEqualTo(1)
+    assertThat(metadata?.pageSize).isEqualTo(10)
+    assertThat(metadata?.totalPages).isEqualTo(10)
+    assertThat(metadata?.totalResults).isEqualTo(100)
+  }
+
+  private fun createPlacementRequests(num: Int, crn: String? = null): List<PlacementRequestEntity> {
     return List(num) {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -673,6 +698,9 @@ class PlacementRequestServiceTest {
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
+        .apply {
+          if (crn != null) this.withCrn(crn)
+        }
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()

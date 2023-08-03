@@ -62,11 +62,11 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(isParole: Boolean, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(isParole: Boolean, crn: String?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     if (page != null) {
       val sort = if (sortDirection == SortDirection.desc) { Sort.by(sortBy.value).descending() } else { Sort.by(sortBy.value).ascending() }
       val pageable = PageRequest.of(page - 1, 10, sort)
-      val response = placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(isParole, null, pageable)
+      val response = placementRequestRepository.findNonWithdrawnNonReallocatedPlacementRequests(isParole, crn, pageable)
       return Pair(
         response.content,
         PaginationMetadata(page, response.totalPages, response.totalElements, 10),
