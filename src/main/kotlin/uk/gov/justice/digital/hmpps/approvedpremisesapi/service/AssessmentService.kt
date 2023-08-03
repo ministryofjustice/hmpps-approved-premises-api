@@ -75,10 +75,14 @@ class AssessmentService(
   }
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()
+
+    val latestSchema = when (assessment) {
+      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
+      is TemporaryAccommodationAssessmentEntity -> jsonSchemaService.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java)
+      else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
+    }
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
       return AuthorisableActionResult.Unauthorised()
@@ -467,6 +471,41 @@ class AssessmentService(
         ),
       )
     }
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedAssessment),
+    )
+  }
+
+  fun closeAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    if (assessment !is TemporaryAccommodationAssessmentEntity) {
+      throw RuntimeException("Only CAS3 is currently supported")
+    }
+
+    if (!assessment.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    if (assessment.completedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This assessment has already been closed"),
+      )
+    }
+
+    assessment.completedAt = OffsetDateTime.now()
+
+    val savedAssessment = assessmentRepository.save(assessment)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),

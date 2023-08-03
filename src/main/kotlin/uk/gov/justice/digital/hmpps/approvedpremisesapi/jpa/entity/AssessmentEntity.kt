@@ -214,7 +214,7 @@ class TemporaryAccommodationAssessmentEntity(
   rejectionRationale: String?,
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
   schemaUpToDate: Boolean,
-  val completedAt: OffsetDateTime?,
+  var completedAt: OffsetDateTime?,
 ) : AssessmentEntity(
   id,
   application,
