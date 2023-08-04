@@ -1167,6 +1167,76 @@ class AssessmentServiceTest {
   }
 
   @Test
+  fun `rejectAssessment sets completed at timestamp to null for Temporary Accommodation`() {
+    val assessmentId = UUID.randomUUID()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val schema = TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(assessment.application.crn)
+      .produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withProbationAreaCode("N26")
+      .produce()
+
+    every { cruServiceMock.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
+
+    every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.Success)
+    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity as TemporaryAccommodationAssessmentEntity
+    assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+    assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
+    assertThat(updatedAssessment.submittedAt).isNotNull()
+    assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+    assertThat(updatedAssessment.completedAt).isNull()
+  }
+
+  @Test
   fun `closeAssessment returns unauthorised for Assessment not allocated to user`() {
     val assessmentId = UUID.randomUUID()
 
@@ -1786,7 +1856,15 @@ class AssessmentServiceTest {
 
     assertThat(validationResult.entity).isEqualTo(previousAssessment)
 
-    verify { assessmentRepositoryMock.save(match { it.allocatedToUser == null && it.decision == null }) }
+    verify {
+      assessmentRepositoryMock.save(
+        match {
+          it.allocatedToUser == null &&
+            it.decision == null &&
+            it.submittedAt == null
+        },
+      )
+    }
   }
 
   @Nested

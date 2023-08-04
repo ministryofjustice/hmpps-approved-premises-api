@@ -235,7 +235,7 @@ class AssessmentService(
       )
     }
 
-    if (assessment.submittedAt != null) {
+    if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
@@ -271,6 +271,10 @@ class AssessmentService(
     assessment.document = document
     assessment.submittedAt = acceptedAt
     assessment.decision = AssessmentDecision.ACCEPTED
+
+    if (assessment is TemporaryAccommodationAssessmentEntity) {
+      assessment.completedAt = null
+    }
 
     val savedAssessment = assessmentRepository.save(assessment)
 
@@ -385,7 +389,7 @@ class AssessmentService(
       )
     }
 
-    if (assessment.submittedAt != null) {
+    if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
@@ -418,6 +422,10 @@ class AssessmentService(
     assessment.submittedAt = rejectedAt
     assessment.decision = AssessmentDecision.REJECTED
     assessment.rejectionRationale = rejectionRationale
+
+    if (assessment is TemporaryAccommodationAssessmentEntity) {
+      assessment.completedAt = null
+    }
 
     val savedAssessment = assessmentRepository.save(assessment)
 
@@ -652,6 +660,7 @@ class AssessmentService(
     currentAssessment.allocatedToUser = null
     currentAssessment.allocatedAt = null
     currentAssessment.decision = null
+    currentAssessment.submittedAt = null
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
