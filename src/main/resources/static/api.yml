@@ -2427,12 +2427,18 @@ paths:
           description: Task type
           schema:
             type: string
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only assessments for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       requestBody:
         content:
           'application/json':
             schema:
               $ref: '#/components/schemas/NewReallocation'
-        required: true
+        required: false
       responses:
         201:
           description: successful operation
@@ -5549,8 +5555,6 @@ components:
         userId:
           type: string
           format: uuid
-      required:
-        - userId
     Reallocation:
       type: object
       properties:

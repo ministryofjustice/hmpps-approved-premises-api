@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -141,7 +142,8 @@ class TasksController(
   override fun tasksTaskTypeIdAllocationsPost(
     id: UUID,
     taskType: String,
-    body: NewReallocation,
+    xServiceName: ServiceName,
+    body: NewReallocation?,
   ): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
 
@@ -149,7 +151,13 @@ class TasksController(
       taskType.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
-    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, taskType, body.userId, id)) {
+    val userId = when {
+      xServiceName == ServiceName.temporaryAccommodation -> user.id
+      body?.userId == null -> throw BadRequestProblem(invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")))
+      else -> body.userId
+    }
+
+    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, taskType, userId, id)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> authorisationResult.entity
