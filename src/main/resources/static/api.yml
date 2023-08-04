@@ -5490,7 +5490,6 @@ components:
           type: string
       required:
         - document
-        - requirements
     AssessmentRejection:
       type: object
       properties:

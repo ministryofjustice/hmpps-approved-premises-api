@@ -218,7 +218,7 @@ class AssessmentService(
     )
   }
 
-  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements, placementDates: PlacementDates?, notes: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements?, placementDates: PlacementDates?, notes: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
     val acceptedAt = OffsetDateTime.now()
 
@@ -256,6 +256,10 @@ class AssessmentService(
       validationErrors["$.data"] = "invalid"
     }
 
+    if (placementRequirements == null && assessment is ApprovedPremisesAssessmentEntity) {
+      validationErrors["$.requirements"] = "empty"
+    }
+
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors),
@@ -267,16 +271,25 @@ class AssessmentService(
     assessment.decision = AssessmentDecision.ACCEPTED
 
     val savedAssessment = assessmentRepository.save(assessment)
-    val placementRequirementsValidationResult = placementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
 
-    if (placementRequirementsValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(
-        placementRequirementsValidationResult.translateError(),
-      )
-    }
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val placementRequirementsValidationResult =
+        placementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
 
-    if (placementDates != null) {
-      placementRequestService.createPlacementRequest(placementRequirementsValidationResult.entity, placementDates, notes, false)
+      if (placementRequirementsValidationResult !is ValidatableActionResult.Success) {
+        return AuthorisableActionResult.Success(
+          placementRequirementsValidationResult.translateError(),
+        )
+      }
+
+      if (placementDates != null) {
+        placementRequestService.createPlacementRequest(
+          placementRequirementsValidationResult.entity,
+          placementDates,
+          notes,
+          false,
+        )
+      }
     }
 
     val application = savedAssessment.application
