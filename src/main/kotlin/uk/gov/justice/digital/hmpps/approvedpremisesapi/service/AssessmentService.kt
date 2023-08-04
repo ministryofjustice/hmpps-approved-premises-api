@@ -250,14 +250,16 @@ class AssessmentService(
     val validationErrors = ValidationErrors()
     val assessmentData = assessment.data
 
-    if (assessmentData == null) {
-      validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
-      validationErrors["$.data"] = "invalid"
-    }
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      if (assessmentData == null) {
+        validationErrors["$.data"] = "empty"
+      } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
+        validationErrors["$.data"] = "invalid"
+      }
 
-    if (placementRequirements == null && assessment is ApprovedPremisesAssessmentEntity) {
-      validationErrors["$.requirements"] = "empty"
+      if (placementRequirements == null) {
+        validationErrors["$.requirements"] = "empty"
+      }
     }
 
     if (validationErrors.any()) {
@@ -398,10 +400,12 @@ class AssessmentService(
     val validationErrors = ValidationErrors()
     val assessmentData = assessment.data
 
-    if (assessmentData == null) {
-      validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
-      validationErrors["$.data"] = "invalid"
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      if (assessmentData == null) {
+        validationErrors["$.data"] = "empty"
+      } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
+        validationErrors["$.data"] = "invalid"
+      }
     }
 
     if (validationErrors.any()) {
