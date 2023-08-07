@@ -6736,8 +6736,8 @@ components:
       type: string
       enum:
         - duration
-        - expectedArrival
-        - createdAt
+        - expected_arrival
+        - created_at
     SortDirection:
       type: string
       enum:

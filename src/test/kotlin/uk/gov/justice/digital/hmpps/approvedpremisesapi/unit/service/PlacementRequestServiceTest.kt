@@ -626,7 +626,7 @@ class PlacementRequestServiceTest {
 
     mockkStatic(PageRequest::class)
 
-    every { PageRequest.of(0, 10, Sort.by("createdAt").ascending()) } returns pageRequest
+    every { PageRequest.of(0, 10, Sort.by("created_at").ascending()) } returns pageRequest
     every { page.content } returns placementRequests
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
@@ -650,7 +650,7 @@ class PlacementRequestServiceTest {
 
     mockkStatic(PageRequest::class)
 
-    every { PageRequest.of(0, 10, Sort.by("expectedArrival").descending()) } returns pageRequest
+    every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
     every { page.content } returns placementRequests
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
