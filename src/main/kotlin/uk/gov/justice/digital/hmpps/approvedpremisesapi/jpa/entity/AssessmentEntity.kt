@@ -155,6 +155,9 @@ abstract class AssessmentEntity(
   @OneToMany(mappedBy = "assessment")
   var clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
 
+  @OneToMany(mappedBy = "assessment")
+  var referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
+
   @Transient
   var schemaUpToDate: Boolean,
 )
@@ -177,6 +180,7 @@ class ApprovedPremisesAssessmentEntity(
   decision: AssessmentDecision?,
   rejectionRationale: String?,
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
+  referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
 ) : AssessmentEntity(
   id,
@@ -192,6 +196,7 @@ class ApprovedPremisesAssessmentEntity(
   decision,
   rejectionRationale,
   clarificationNotes,
+  referralHistoryNotes,
   schemaUpToDate,
 )
 
@@ -213,6 +218,7 @@ class TemporaryAccommodationAssessmentEntity(
   decision: AssessmentDecision?,
   rejectionRationale: String?,
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
+  referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
   var completedAt: OffsetDateTime?,
 ) : AssessmentEntity(
@@ -229,6 +235,7 @@ class TemporaryAccommodationAssessmentEntity(
   decision,
   rejectionRationale,
   clarificationNotes,
+  referralHistoryNotes,
   schemaUpToDate,
 )
 
@@ -281,4 +288,45 @@ data class AssessmentClarificationNoteEntity(
   var response: String?,
 
   var responseReceivedOn: LocalDate?,
+)
+
+@Repository
+interface AssessmentReferralHistoryNoteRepository: JpaRepository<AssessmentReferralHistoryNoteEntity, UUID>
+
+@Entity
+@Table(name = "assessment_referral_history_notes")
+@DiscriminatorColumn(name = "type")
+@Inheritance(strategy = InheritanceType.JOINED)
+abstract class AssessmentReferralHistoryNoteEntity(
+  @Id
+  val id: UUID,
+
+  @ManyToOne
+  @JoinColumn(name = "assessment_id")
+  val assessment: AssessmentEntity,
+
+  val createdAt: OffsetDateTime,
+
+  val message: String,
+)
+
+@Entity
+@DiscriminatorValue("user-note")
+@Table(name = "assessment_referral_history_user_notes")
+@PrimaryKeyJoinColumn(name = "assessment_id")
+class AssessmentReferralHistoryUserNoteEntity(
+  id: UUID,
+  assessment: AssessmentEntity,
+  createdAt: OffsetDateTime,
+  message: String,
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_user_id")
+  val createdByUser: UserEntity,
+
+) : AssessmentReferralHistoryNoteEntity(
+  id,
+  assessment,
+  createdAt,
+  message,
 )

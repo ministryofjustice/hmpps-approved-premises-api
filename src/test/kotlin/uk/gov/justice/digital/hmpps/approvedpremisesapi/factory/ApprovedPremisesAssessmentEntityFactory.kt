@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 
 class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessmentEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
@@ -33,6 +34,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var allocatedToUser: Yielded<UserEntity>? = null
   private var rejectionRationale: Yielded<String?> = { null }
   private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
+  private var referralHistoryNotes: Yielded<MutableList<AssessmentReferralHistoryNoteEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -82,6 +84,10 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.clarificationNotes = { clarificationNotes }
   }
 
+  fun withReferralHistoryNotes(referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>) = apply {
+    this.referralHistoryNotes = { referralHistoryNotes }
+  }
+
   fun withRejectionRationale(rejectionRationale: String?) = apply {
     this.rejectionRationale = { rejectionRationale }
   }
@@ -101,5 +107,6 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     reallocatedAt = this.reallocatedAt(),
     rejectionRationale = this.rejectionRationale(),
     clarificationNotes = this.clarificationNotes(),
+    referralHistoryNotes = this.referralHistoryNotes(),
   )
 }
