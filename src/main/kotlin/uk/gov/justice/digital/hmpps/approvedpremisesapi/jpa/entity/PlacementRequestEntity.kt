@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -25,6 +27,43 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   fun findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse(): List<PlacementRequestEntity>
 
   fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole: Boolean, pageable: Pageable?): Page<PlacementRequestEntity>
+
+  @Query(
+    """
+    SELECT
+      pq.*
+    from
+      placement_requests pq
+    where
+      pq.reallocated_at IS NULL
+      AND pq.is_withdrawn IS FALSE
+      AND (
+        CASE
+          WHEN (
+            SELECT
+              COUNT(booking)
+            from
+              bookings booking
+              left join cancellations c on c.booking_id = booking.id
+            WHERE
+              booking.id = pq.booking_id
+              AND c.id IS NULL
+          ) > 0 THEN 'matched'
+          WHEN (
+            SELECT
+              COUNT(bnm)
+            from
+              booking_not_mades bnm
+            WHERE
+              bnm.placement_request_id = pq.id
+          ) > 0 THEN 'unableToMatch'
+          ELSE 'notMatched'
+        END
+      ) = :#{#status.toString()}
+  """,
+    nativeQuery = true,
+  )
+  fun allForDashboard(status: PlacementRequestStatus, pageable: Pageable?): Page<PlacementRequestEntity>
 }
 
 @Entity
