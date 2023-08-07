@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -17,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
@@ -29,6 +29,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var placementRequestTransformer: PlacementRequestTransformer
+
+  @Autowired
+  lateinit var realPlacementRequestRepository: PlacementRequestRepository
 
   @Nested
   inner class AllPlacementRequests {
@@ -159,155 +162,164 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @CsvSource(
-      "/placement-requests/dashboard,nonParole",
-      "/placement-requests/dashboard?isParole=1,parole",
-      "/placement-requests/dashboard?isParole=0,nonParole",
-    )
-    fun `It returns all the placement requests when the user is a manager`(url: String, type: String) {
+    @Test
+    fun `It returns the unmatched placement requests by default when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails1, inmateDetails1 ->
-          `Given an Offender` { offenderDetails2, inmateDetails2 ->
-            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            }
-
-            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            }
-
-            val application1 = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails1.otherIds.crn)
-              withCreatedByUser(user)
-              withSubmittedAt(OffsetDateTime.now())
-              withApplicationSchema(applicationSchema)
-              withReleaseType("licence")
-            }
-
-            val assessment1 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAssessmentSchema(assessmentSchema)
-              withApplication(application1)
-              withSubmittedAt(OffsetDateTime.now())
-              withAllocatedToUser(user)
-              withDecision(AssessmentDecision.ACCEPTED)
-            }
-
-            val application2 = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails2.otherIds.crn)
-              withCreatedByUser(user)
-              withSubmittedAt(OffsetDateTime.now())
-              withApplicationSchema(applicationSchema)
-              withReleaseType("licence")
-            }
-
-            val assessment2 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAssessmentSchema(assessmentSchema)
-              withApplication(application2)
-              withSubmittedAt(OffsetDateTime.now())
-              withAllocatedToUser(user)
-              withDecision(AssessmentDecision.ACCEPTED)
-            }
-
-            val placementRequirements = placementRequirementsFactory.produceAndPersist {
-              withApplication(application1)
-              withAssessment(assessment1)
-              withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-              withDesirableCriteria(
-                characteristicEntityFactory.produceAndPersistMultiple(5),
-              )
-              withEssentialCriteria(
-                characteristicEntityFactory.produceAndPersistMultiple(3),
-              )
-            }
-
-            val nonParolePlacementRequest = placementRequestFactory.produceAndPersist {
-              withAllocatedToUser(
-                userEntityFactory.produceAndPersist {
-                  withProbationRegion(
-                    probationRegionEntityFactory.produceAndPersist {
-                      withApArea(apAreaEntityFactory.produceAndPersist())
-                    },
-                  )
-                },
-              )
-              withApplication(application1)
-              withAssessment(assessment1)
-              withPlacementRequirements(placementRequirements)
-              withIsParole(false)
-            }
-
-            val parolePlacementRequest = placementRequestFactory.produceAndPersist {
-              withAllocatedToUser(
-                userEntityFactory.produceAndPersist {
-                  withProbationRegion(
-                    probationRegionEntityFactory.produceAndPersist {
-                      withApArea(apAreaEntityFactory.produceAndPersist())
-                    },
-                  )
-                },
-              )
-              withApplication(application2)
-              withAssessment(assessment2)
-              withPlacementRequirements(placementRequirements)
-              withIsParole(true)
-            }
-
-            placementRequestFactory.produceAndPersistMultiple(2) {
-              withAllocatedToUser(
-                userEntityFactory.produceAndPersist {
-                  withProbationRegion(
-                    probationRegionEntityFactory.produceAndPersist {
-                      withApArea(apAreaEntityFactory.produceAndPersist())
-                    },
-                  )
-                },
-              )
-              withReallocatedAt(OffsetDateTime.now())
-              withApplication(application2)
-              withAssessment(assessment2)
-              withPlacementRequirements(placementRequirements)
-              withIsParole(true)
-            }
-
-            placementRequestFactory.produceAndPersistMultiple(2) {
-              withAllocatedToUser(
-                userEntityFactory.produceAndPersist {
-                  withProbationRegion(
-                    probationRegionEntityFactory.produceAndPersist {
-                      withApArea(apAreaEntityFactory.produceAndPersist())
-                    },
-                  )
-                },
-              )
-              withReallocatedAt(OffsetDateTime.now())
-              withApplication(application2)
-              withAssessment(assessment2)
-              withPlacementRequirements(placementRequirements)
-              withIsParole(false)
-            }
-
+        `Given an Offender` { unmatchedOffender, unmatchedInmate ->
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { unmatchedPlacementRequest, _ ->
             webTestClient.get()
-              .uri(url)
+              .uri("/placement-requests/dashboard")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
               .isOk
               .expectBody()
               .json(
-                if (type == "nonParole") {
-                  objectMapper.writeValueAsString(
-                    listOf(
-                      placementRequestTransformer.transformJpaToApi(nonParolePlacementRequest, offenderDetails1, inmateDetails1),
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      unmatchedPlacementRequest,
+                      unmatchedOffender,
+                      unmatchedInmate,
                     ),
-                  )
-                } else {
-                  objectMapper.writeValueAsString(
-                    listOf(
-                      placementRequestTransformer.transformJpaToApi(parolePlacementRequest, offenderDetails2, inmateDetails2),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It returns the unmatched placement requests when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { unmatchedOffender, unmatchedInmate ->
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { unmatchedPlacementRequest, _ ->
+            webTestClient.get()
+              .uri("/placement-requests/dashboard?status=notMatched")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      unmatchedPlacementRequest,
+                      unmatchedOffender,
+                      unmatchedInmate,
                     ),
-                  )
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It returns the matched placement requests when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { matchedOffender, matchedInmate ->
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { matchedPlacementRequest, _ ->
+            val premises = approvedPremisesEntityFactory.produceAndPersist {
+              withProbationRegion(
+                probationRegionEntityFactory.produceAndPersist {
+                  withApArea(apAreaEntityFactory.produceAndPersist())
                 },
+              )
+              withLocalAuthorityArea(
+                localAuthorityEntityFactory.produceAndPersist(),
+              )
+            }
+
+            val room = roomEntityFactory.produceAndPersist {
+              withPremises(premises)
+            }
+
+            val bed = bedEntityFactory.produceAndPersist {
+              withRoom(room)
+            }
+
+            matchedPlacementRequest.booking = bookingEntityFactory.produceAndPersist {
+              withPremises(premises)
+              withBed(bed)
+            }
+
+            realPlacementRequestRepository.save(matchedPlacementRequest)
+
+            webTestClient.get()
+              .uri("/placement-requests/dashboard?status=matched")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      matchedPlacementRequest,
+                      matchedOffender,
+                      matchedInmate,
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It returns the unable to match placement requests when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { unableToMatchOffender, unableToMatchInmate ->
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { unableToMatchPlacementRequest, _ ->
+            unableToMatchPlacementRequest.bookingNotMades = mutableListOf(
+              bookingNotMadeFactory.produceAndPersist {
+                withPlacementRequest(unableToMatchPlacementRequest)
+              },
+            )
+
+            webTestClient.get()
+              .uri("/placement-requests/dashboard?status=unableToMatch")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      unableToMatchPlacementRequest,
+                      unableToMatchOffender,
+                      unableToMatchInmate,
+                    ),
+                  ),
+                ),
               )
           }
         }
@@ -367,7 +379,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
             withApplication(application)
             withAssessment(assessment)
             withPlacementRequirements(placementRequirements)
-            withIsParole(false)
           }
 
           webTestClient.get()

@@ -2479,11 +2479,11 @@ paths:
         - Placement requests
       summary: Gets all placement requests
       parameters:
-        - name: isParole
+        - name: status
           in: query
-          description: States whether or not to return parole cases
+          description: filter by status of an application
           schema:
-            type: boolean
+            $ref: '#/components/schemas/PlacementRequestStatus'
         - name: page
           in: query
           description: Page number of results to return. If blank, returns all results

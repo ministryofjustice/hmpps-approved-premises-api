@@ -15,6 +15,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -609,9 +610,9 @@ class PlacementRequestServiceTest {
 
     every { page.content } returns placementRequests
 
-    every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, null) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, null, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, PlacementRequestSortField.createdAt, null)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata).isNull()
@@ -630,9 +631,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, 1, PlacementRequestSortField.createdAt, null)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -654,9 +655,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(false, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
