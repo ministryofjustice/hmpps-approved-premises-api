@@ -50,12 +50,16 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.stream.Stream
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
 class AssessmentTransformerTest {
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
+  private val mockAssessmentReferralHistoryNoteTransformer = mockk<AssessmentReferralHistoryNoteTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val risksTransformer = RisksTransformer()
@@ -78,6 +82,7 @@ class AssessmentTransformerTest {
     objectMapper,
     mockApplicationsTransformer,
     mockAssessmentClarificationNoteTransformer,
+    mockAssessmentReferralHistoryNoteTransformer,
     mockUserTransformer,
     mockPersonTransformer,
     risksTransformer,
@@ -138,6 +143,7 @@ class AssessmentTransformerTest {
       }
     }
     every { mockAssessmentClarificationNoteTransformer.transformJpaToApi(any()) } returns mockk()
+    every { mockAssessmentReferralHistoryNoteTransformer.transformJpaToApi(any()) } returns mockk()
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.approvedPremises) } returns approvedPremisesUser
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.temporaryAccommodation) } returns temporaryAccommodationUser
   }

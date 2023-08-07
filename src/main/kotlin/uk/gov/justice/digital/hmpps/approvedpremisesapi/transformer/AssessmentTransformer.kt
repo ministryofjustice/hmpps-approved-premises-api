@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -32,6 +34,7 @@ class AssessmentTransformer(
   private val objectMapper: ObjectMapper,
   private val applicationsTransformer: ApplicationsTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
+  private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val userTransformer: UserTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
@@ -46,6 +49,7 @@ class AssessmentTransformer(
       allocatedAt = jpa.allocatedAt!!.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
+      referralHistoryNotes = jpa.referralHistoryNotes.map(assessmentReferralHistoryNoteTransformer::transformJpaToApi),
       allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
       submittedAt = jpa.submittedAt?.toInstant(),
       decision = transformJpaDecisionToApi(jpa.decision),
@@ -63,6 +67,7 @@ class AssessmentTransformer(
       allocatedAt = jpa.allocatedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
+      referralHistoryNotes = jpa.referralHistoryNotes.map(assessmentReferralHistoryNoteTransformer::transformJpaToApi),
       allocatedToStaffMember = jpa.allocatedToUser?.let { userTransformer.transformJpaToApi(it, ServiceName.temporaryAccommodation) as TemporaryAccommodationUser },
       submittedAt = jpa.submittedAt?.toInstant(),
       decision = transformJpaDecisionToApi(jpa.decision),
