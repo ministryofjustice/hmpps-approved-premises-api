@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -62,21 +63,28 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(isParole: Boolean, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(status: PlacementRequestStatus, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+    var pageable: PageRequest?
+    var metadata: PaginationMetadata? = null
+
     if (page != null) {
-      val sort = if (sortDirection == SortDirection.desc) { Sort.by(sortBy.value).descending() } else { Sort.by(sortBy.value).ascending() }
-      val pageable = PageRequest.of(page - 1, 10, sort)
-      val response = placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, pageable)
-      return Pair(
-        response.content,
-        PaginationMetadata(page, response.totalPages, response.totalElements, 10),
-      )
+      val sort = if (sortDirection == SortDirection.desc) {
+        Sort.by(sortBy.value).descending()
+      } else {
+        Sort.by(sortBy.value).ascending()
+      }
+      pageable = PageRequest.of(page - 1, 10, sort)
     } else {
-      return Pair(
-        placementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole, null).content,
-        null,
-      )
+      pageable = null
     }
+
+    val response = placementRequestRepository.allForDashboard(status, pageable)
+
+    if (page != null) {
+      metadata = PaginationMetadata(page, response.totalPages, response.totalElements, 10)
+    }
+
+    return Pair(response.content, metadata)
   }
 
   fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
