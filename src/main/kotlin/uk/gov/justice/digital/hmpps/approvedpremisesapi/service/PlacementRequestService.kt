@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -63,7 +64,7 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(status: PlacementRequestStatus?, crn: String?, tier: String?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(status: PlacementRequestStatus?, crn: String?, tier: String?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     var pageable: PageRequest?
     var metadata: PaginationMetadata? = null
 
@@ -78,7 +79,7 @@ class PlacementRequestService(
       pageable = null
     }
 
-    val response = placementRequestRepository.allForDashboard(status, crn, tier, null, null, pageable)
+    val response = placementRequestRepository.allForDashboard(status, crn, tier, arrivalDateStart, arrivalDateEnd, pageable)
 
     if (page != null) {
       metadata = PaginationMetadata(page, response.totalPages, response.totalElements, 10)

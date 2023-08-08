@@ -187,7 +187,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, tier = tier)
 
       val pageable = PageRequest.of(0, 2, Sort.by("created_at"))
-      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, tier, pageable)
+      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, tier, null, null, pageable)
 
       assertThat(results.content.map { it.id }).isEqualTo(requestsForCrn.map { it.id })
     }

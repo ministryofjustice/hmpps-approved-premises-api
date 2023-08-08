@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementReq
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
@@ -60,14 +61,14 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsDashboardGet(status: PlacementRequestStatus?, crn: String?, tier: RiskTierLevel?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
+  override fun placementRequestsDashboardGet(status: PlacementRequestStatus?, crn: String?, tier: RiskTierLevel?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
-    val (requests, metadata) = placementRequestService.getAllActive(status, crn, tier?.value, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
+    val (requests, metadata) = placementRequestService.getAllActive(status, crn, tier?.value, arrivalDateStart, arrivalDateEnd, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
