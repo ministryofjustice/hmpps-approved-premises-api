@@ -75,10 +75,14 @@ class AssessmentService(
   }
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()
+
+    val latestSchema = when (assessment) {
+      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
+      is TemporaryAccommodationAssessmentEntity -> jsonSchemaService.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java)
+      else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
+    }
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
       return AuthorisableActionResult.Unauthorised()
@@ -214,7 +218,7 @@ class AssessmentService(
     )
   }
 
-  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements, placementDates: PlacementDates?, notes: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements?, placementDates: PlacementDates?, notes: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
     val acceptedAt = OffsetDateTime.now()
 
@@ -231,7 +235,7 @@ class AssessmentService(
       )
     }
 
-    if (assessment.submittedAt != null) {
+    if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
@@ -246,10 +250,16 @@ class AssessmentService(
     val validationErrors = ValidationErrors()
     val assessmentData = assessment.data
 
-    if (assessmentData == null) {
-      validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
-      validationErrors["$.data"] = "invalid"
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      if (assessmentData == null) {
+        validationErrors["$.data"] = "empty"
+      } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
+        validationErrors["$.data"] = "invalid"
+      }
+
+      if (placementRequirements == null) {
+        validationErrors["$.requirements"] = "empty"
+      }
     }
 
     if (validationErrors.any()) {
@@ -262,17 +272,30 @@ class AssessmentService(
     assessment.submittedAt = acceptedAt
     assessment.decision = AssessmentDecision.ACCEPTED
 
-    val savedAssessment = assessmentRepository.save(assessment)
-    val placementRequirementsValidationResult = placementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
-
-    if (placementRequirementsValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(
-        placementRequirementsValidationResult.translateError(),
-      )
+    if (assessment is TemporaryAccommodationAssessmentEntity) {
+      assessment.completedAt = null
     }
 
-    if (placementDates != null) {
-      placementRequestService.createPlacementRequest(placementRequirementsValidationResult.entity, placementDates, notes, false)
+    val savedAssessment = assessmentRepository.save(assessment)
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val placementRequirementsValidationResult =
+        placementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
+
+      if (placementRequirementsValidationResult !is ValidatableActionResult.Success) {
+        return AuthorisableActionResult.Success(
+          placementRequirementsValidationResult.translateError(),
+        )
+      }
+
+      if (placementDates != null) {
+        placementRequestService.createPlacementRequest(
+          placementRequirementsValidationResult.entity,
+          placementDates,
+          notes,
+          false,
+        )
+      }
     }
 
     val application = savedAssessment.application
@@ -366,7 +389,7 @@ class AssessmentService(
       )
     }
 
-    if (assessment.submittedAt != null) {
+    if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
       )
@@ -381,10 +404,12 @@ class AssessmentService(
     val validationErrors = ValidationErrors()
     val assessmentData = assessment.data
 
-    if (assessmentData == null) {
-      validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
-      validationErrors["$.data"] = "invalid"
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      if (assessmentData == null) {
+        validationErrors["$.data"] = "empty"
+      } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
+        validationErrors["$.data"] = "invalid"
+      }
     }
 
     if (validationErrors.any()) {
@@ -397,6 +422,10 @@ class AssessmentService(
     assessment.submittedAt = rejectedAt
     assessment.decision = AssessmentDecision.REJECTED
     assessment.rejectionRationale = rejectionRationale
+
+    if (assessment is TemporaryAccommodationAssessmentEntity) {
+      assessment.completedAt = null
+    }
 
     val savedAssessment = assessmentRepository.save(assessment)
 
@@ -473,10 +502,56 @@ class AssessmentService(
     )
   }
 
+  fun closeAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    if (assessment !is TemporaryAccommodationAssessmentEntity) {
+      throw RuntimeException("Only CAS3 is currently supported")
+    }
+
+    if (!assessment.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    if (assessment.completedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This assessment has already been closed"),
+      )
+    }
+
+    assessment.completedAt = OffsetDateTime.now()
+
+    val savedAssessment = assessmentRepository.save(assessment)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedAssessment),
+    )
+  }
+
   fun reallocateAssessment(assigneeUser: UserEntity, id: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val currentAssessment = assessmentRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
+    return when (currentAssessment) {
+      is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(assigneeUser, currentAssessment)
+      is TemporaryAccommodationAssessmentEntity -> reallocateTemporaryAccommodationAssessment(assigneeUser, currentAssessment)
+      else -> throw RuntimeException("Reallocating an assessment of type '${currentAssessment::class.qualifiedName}' has not been implemented.")
+    }
+  }
+
+  private fun reallocateApprovedPremisesAssessment(
+    assigneeUser: UserEntity,
+    currentAssessment: ApprovedPremisesAssessmentEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     if (currentAssessment.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
@@ -548,6 +623,48 @@ class AssessmentService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
         newAssessment,
+      ),
+    )
+  }
+
+  private fun reallocateTemporaryAccommodationAssessment(
+    assigneeUser: UserEntity,
+    currentAssessment: TemporaryAccommodationAssessmentEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    if (!assigneeUser.hasRole(UserRole.CAS3_ASSESSOR)) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
+      )
+    }
+
+    currentAssessment.allocatedToUser = assigneeUser
+    currentAssessment.allocatedAt = OffsetDateTime.now()
+
+    assessmentRepository.save(currentAssessment)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        currentAssessment,
+      ),
+    )
+  }
+
+  fun deallocateAssessment(id: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    val currentAssessment = assessmentRepository.findByIdOrNull(id)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (currentAssessment !is TemporaryAccommodationAssessmentEntity) {
+      throw RuntimeException("Only CAS3 Assessments are currently supported")
+    }
+
+    currentAssessment.allocatedToUser = null
+    currentAssessment.allocatedAt = null
+    currentAssessment.decision = null
+    currentAssessment.submittedAt = null
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        assessmentRepository.save(currentAssessment),
       ),
     )
   }

@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -20,12 +19,13 @@ import java.util.UUID
 class TaskService(
   private val assessmentService: AssessmentService,
   private val userService: UserService,
+  private val userAccessService: UserAccessService,
   private val placementRequestService: PlacementRequestService,
   private val userTransformer: UserTransformer,
   private val placementApplicationService: PlacementApplicationService,
 ) {
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
-    if (!requestUser.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (!userAccessService.userCanReallocateTask(requestUser)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -62,6 +62,38 @@ class TaskService(
       is ValidatableActionResult.Success -> AuthorisableActionResult.Success(
         ValidatableActionResult.Success(
           entityToReallocation(validationResult.entity, taskType),
+        ),
+      )
+    }
+  }
+
+  fun deallocateTask(
+    requestUser: UserEntity,
+    taskType: TaskType,
+    id: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
+    if (!userAccessService.userCanDeallocateTask(requestUser)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val result = when (taskType) {
+      TaskType.assessment -> assessmentService.deallocateAssessment(id)
+      else -> throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
+    }
+
+    val validationResult = when (result) {
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.Success -> result.entity
+    }
+
+    return when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError(validationResult.message))
+      is ValidatableActionResult.FieldValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.FieldValidationError(validationResult.validationMessages))
+      is ValidatableActionResult.ConflictError -> AuthorisableActionResult.Success(ValidatableActionResult.ConflictError(validationResult.conflictingEntityId, validationResult.message))
+      is ValidatableActionResult.Success -> AuthorisableActionResult.Success(
+        ValidatableActionResult.Success(
+          Unit,
         ),
       )
     }

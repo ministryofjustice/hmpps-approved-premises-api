@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
@@ -33,6 +35,7 @@ import java.util.UUID
 class TaskServiceTest {
   private val assessmentServiceMock = mockk<AssessmentService>()
   private val userServiceMock = mockk<UserService>()
+  private val userAccessServiceMock = mockk<UserAccessService>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val userTransformerMock = mockk<UserTransformer>()
   private val placementApplicationServiceMock = mockk<PlacementApplicationService>()
@@ -40,6 +43,7 @@ class TaskServiceTest {
   private val taskService = TaskService(
     assessmentServiceMock,
     userServiceMock,
+    userAccessServiceMock,
     placementRequestServiceMock,
     userTransformerMock,
     placementApplicationServiceMock,
@@ -60,7 +64,7 @@ class TaskServiceTest {
     }
 
   @Test
-  fun `reallocateTask returns Unauthorised when requestUser does not have WORKFLOW_MANAGER role`() {
+  fun `reallocateTask returns Unauthorised when requestUser does not have permissions to reallocate the task`() {
     val requestUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -69,6 +73,8 @@ class TaskServiceTest {
       }
       .produce()
 
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns false
+
     val result = taskService.reallocateTask(requestUser, TaskType.assessment, UUID.randomUUID(), UUID.randomUUID())
 
     Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -76,8 +82,9 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask returns Not Found when assignee user does not exist`() {
-    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
 
+    val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
     every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.NotFound()
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
@@ -87,6 +94,8 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask reallocates an assessment`() {
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
+
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
 
@@ -123,6 +132,8 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask reallocates a placementRequest`() {
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
+
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
     val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -170,6 +181,8 @@ class TaskServiceTest {
 
   @Test
   fun `reallocateTask reallocates a placementApplication`() {
+    every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
+
     val assigneeUser = generateAndStubAssigneeUser()
     val application = generateApplication()
 
@@ -211,6 +224,49 @@ class TaskServiceTest {
     validationResult as ValidatableActionResult.Success
 
     Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
+  }
+
+  @Test
+  fun `deallocateTask returns Unauthorised when requestUser does not have permissions to deallocate the task`() {
+    val requestUser = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    every { userAccessServiceMock.userCanDeallocateTask(any()) } returns false
+
+    val result = taskService.deallocateTask(requestUser, TaskType.assessment, UUID.randomUUID())
+
+    Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `deallocateTask deallocates an assessment`() {
+    every { userAccessServiceMock.userCanDeallocateTask(any()) } returns true
+
+    val assigneeUser = generateAndStubAssigneeUser()
+    val application = generateApplication()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    every { assessmentServiceMock.deallocateAssessment(assessment.id) } returns AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        assessment,
+      ),
+    )
+
+    val result = taskService.deallocateTask(requestUserWithPermission, TaskType.assessment, assessment.id)
+
+    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
   }
 
   private fun generateAndStubAssigneeUser(): UserEntity {

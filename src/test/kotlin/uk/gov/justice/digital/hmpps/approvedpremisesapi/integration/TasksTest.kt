@@ -433,6 +433,7 @@ class TasksTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .bodyValue(
             NewReallocation(
               userId = UUID.randomUUID(),
@@ -461,6 +462,7 @@ class TasksTest : IntegrationTestBase() {
                 webTestClient.post()
                   .uri("/tasks/assessment/${existingAssessment.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .bodyValue(
                     NewReallocation(
                       userId = assigneeUser.id,
@@ -507,6 +509,7 @@ class TasksTest : IntegrationTestBase() {
               webTestClient.post()
                 .uri("/tasks/placement-request/${existingPlacementRequest.id}/allocations")
                 .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .bodyValue(
                   NewReallocation(
                     userId = assigneeUser.id,
@@ -565,6 +568,7 @@ class TasksTest : IntegrationTestBase() {
                 webTestClient.post()
                   .uri("/tasks/placement-application/${placementApplication.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .bodyValue(
                     NewReallocation(
                       userId = assigneeUser.id,
@@ -609,6 +613,7 @@ class TasksTest : IntegrationTestBase() {
             webTestClient.post()
               .uri("/tasks/booking-appeal/${application.id}/allocations")
               .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .bodyValue(
                 NewReallocation(
                   userId = userToReallocate.id,
@@ -617,6 +622,110 @@ class TasksTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Reallocating a Temporary Accommodation assessment does not require a request body`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { originalUser, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { expectedUser, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given an Assessment for Temporary Accommodation`(
+              allocatedToUser = originalUser,
+              createdByUser = originalUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { assessment, _ ->
+              webTestClient.post()
+                .uri("/tasks/assessment/${assessment.id}/allocations")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+                .bodyValue(Unit)
+                .exchange()
+                .expectStatus()
+                .isCreated
+
+              val result = temporaryAccommodationAssessmentRepository.findAll().first { it.id == assessment.id }
+              Assertions.assertThat(result.allocatedToUser).isNotNull()
+              Assertions.assertThat(result.allocatedToUser!!.id).isEqualTo(expectedUser.id)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class DeallocateTaskTest {
+    @Test
+    fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
+      webTestClient.delete()
+        .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Deallocate Temporary Accommodation assessment without CAS3_ASSESSOR role returns 403 Forbidden`() {
+      `Given a User` { _, jwt ->
+        webTestClient.delete()
+          .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Deallocate Approved Premises assessment returns 403 Forbidden`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a User` { _, _ ->
+            `Given an Assessment for Approved Premises`(
+              allocatedToUser = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            ) { assessment, _ ->
+              webTestClient.delete()
+                .uri("/tasks/assessment/${assessment.id}/allocations")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Deallocate Temporary Accommodation assessment returns 200 and unassigns the allocated user`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Assessment for Temporary Accommodation`(
+            allocatedToUser = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn,
+          ) { existingAssessment, _ ->
+
+            webTestClient.delete()
+              .uri("/tasks/assessment/${existingAssessment.id}/allocations")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isNoContent
+
+            val assessment = temporaryAccommodationAssessmentRepository.findAll().first { it.id == existingAssessment.id }
+
+            Assertions.assertThat(assessment.allocatedToUser).isNull()
+            Assertions.assertThat(assessment.allocatedAt).isNull()
           }
         }
       }

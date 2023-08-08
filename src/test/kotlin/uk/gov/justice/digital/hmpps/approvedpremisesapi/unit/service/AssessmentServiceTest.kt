@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -30,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -1164,7 +1167,270 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns General Validation Error when application already has a submitted assessment`() {
+  fun `rejectAssessment sets completed at timestamp to null for Temporary Accommodation`() {
+    val assessmentId = UUID.randomUUID()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val schema = TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(assessment.application.crn)
+      .produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withProbationAreaCode("N26")
+      .produce()
+
+    every { cruServiceMock.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
+
+    every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.Success)
+    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity as TemporaryAccommodationAssessmentEntity
+    assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+    assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
+    assertThat(updatedAssessment.submittedAt).isNotNull()
+    assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+    assertThat(updatedAssessment.completedAt).isNull()
+  }
+
+  @Test
+  fun `closeAssessment returns unauthorised for Assessment not allocated to user`() {
+    val assessmentId = UUID.randomUUID()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns TemporaryAccommodationAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .produce()
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.closeAssessment(user, assessmentId)
+
+    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `closeAssessment returns general validation error for Assessment where schema is outdated`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withAllocatedToUser(user)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.closeAssessment(user, assessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("The schema version is outdated")
+  }
+
+  @Test
+  fun `closeAssessment returns general validation error for Assessment where it has already been closed`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val schema = TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withCompletedAt(OffsetDateTime.now())
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.closeAssessment(user, assessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("This assessment has already been closed")
+  }
+
+  @Test
+  fun `closeAssessment returns updated assessment`() {
+    val assessmentId = UUID.randomUUID()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val schema = TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(assessment.application.crn)
+      .produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val result = assessmentService.closeAssessment(user, assessmentId)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.Success)
+    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
+    assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+    assertThat(updatedAssessment is TemporaryAccommodationAssessmentEntity)
+    updatedAssessment as TemporaryAccommodationAssessmentEntity
+    assertThat(updatedAssessment.completedAt).isNotNull()
+  }
+
+  @Test
+  fun `reallocateAssessment for Approved Premises returns General Validation Error when application already has a submitted assessment`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1212,7 +1478,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Field Validation Error when user to assign to is not an ASSESSOR`() {
+  fun `reallocateAssessment for Approved Premises returns Field Validation Error when user to assign to is not an ASSESSOR`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1259,7 +1525,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Field Validation Error when user to assign to does not have relevant qualifications`() {
+  fun `reallocateAssessment for Approved Premises returns Field Validation Error when user to assign to does not have relevant qualifications`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1313,7 +1579,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `reallocateAssessment returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`() {
+  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`() {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1399,6 +1665,203 @@ class AssessmentServiceTest {
         match {
           it["name"] == previousAssessment.allocatedToUser!!.name &&
             (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `reallocateAssessment for Temporary Accommodation returns Field Validation Error when user to assign to is not an ASSESSOR`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val assigneeUser = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val previousAssessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
+    validationResult as ValidatableActionResult.FieldValidationError
+    assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingAssessorRole")
+  }
+
+  @Test
+  fun `reallocateAssessment for Temporary Accommodation returns Success and updates the assigned user in place`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val assigneeUser = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_ASSESSOR)
+          .produce()
+      }
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val previousAssessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    validationResult as ValidatableActionResult.Success
+
+    assertThat(validationResult.entity).isEqualTo(previousAssessment)
+
+    verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+  }
+
+  @Test
+  fun `deallocateAssessment throws an exception when the assessment is not a Temporary Accommodation assessment`() {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .produce()
+
+    val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    assertThatThrownBy { assessmentService.deallocateAssessment(previousAssessment.id) }
+      .isInstanceOf(RuntimeException::class.java)
+      .hasMessage("Only CAS3 Assessments are currently supported")
+  }
+
+  @Test
+  fun `deallocateAssessment returns a NotFound error if the assessment could not be found`() {
+    every { assessmentRepositoryMock.findByIdOrNull(any()) } returns null
+
+    val result = assessmentService.deallocateAssessment(UUID.randomUUID())
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+  }
+
+  @Test
+  fun `deallocateAssessment returns Success, removes the assigned user in place, and unsets any decision made`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val previousAssessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withDecision(AssessmentDecision.REJECTED)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val result = assessmentService.deallocateAssessment(previousAssessment.id)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+
+    assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    validationResult as ValidatableActionResult.Success
+
+    assertThat(validationResult.entity).isEqualTo(previousAssessment)
+
+    verify {
+      assessmentRepositoryMock.save(
+        match {
+          it.allocatedToUser == null &&
+            it.decision == null &&
+            it.submittedAt == null
         },
       )
     }

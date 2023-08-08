@@ -32,6 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -39,6 +42,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
@@ -462,6 +467,71 @@ class AcceptAssessmentTest {
     verify(exactly = 1) {
       placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements)
     }
+  }
+
+  @Test
+  fun `acceptAssessment sets completed at timestamp to null for Temporary Accommodation`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val schema = TemporaryAccommodationAssessmentJsonSchemaEntityFactory()
+      .withPermissiveSchema()
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withCompletedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.REJECTED)
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .withAssessmentSchema(schema)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns schema
+
+    every { jsonSchemaServiceMock.validate(assessmentSchema, "{\"test\": \"data\"}") } returns true
+
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    val offenderDetails = OffenderDetailsSummaryFactory().produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withProbationAreaCode("N26")
+      .produce()
+
+    every { cruServiceMock.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
+
+    every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+    every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
+
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", null, null, null)
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.Success)
+
+    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity as TemporaryAccommodationAssessmentEntity
+    assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+    assertThat(updatedAssessment.submittedAt).isNotNull()
+    assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+    assertThat(updatedAssessment.completedAt).isNull()
   }
 
   private fun verifyDomainEventSent(offenderDetails: OffenderDetailSummary, staffUserDetails: StaffUserDetails, assessment: AssessmentEntity) {
