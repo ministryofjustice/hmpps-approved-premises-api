@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
@@ -1879,6 +1880,69 @@ class ApplicationTest : IntegrationTestBase() {
                 translatedDocument = {},
                 type = "CAS3",
                 arrivalDate = LocalDate.now(),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Submit Cas2 application returns 200`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().produce(),
+          ),
+        )
+      },
+    ) { submittingUser, jwt ->
+      `Given a User` { userEntity, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(
+              """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            """,
+            )
+          }
+
+          cas2ApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
+              {}
+            """,
+            )
+          }
+
+          webTestClient.post()
+            .uri("/applications/$applicationId/submission")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .bodyValue(
+              SubmitCas2Application(
+                translatedDocument = {},
+                type = "CAS2",
               ),
             )
             .exchange()
