@@ -2523,6 +2523,11 @@ paths:
           description: filter by status of an application
           schema:
             $ref: '#/components/schemas/PlacementRequestStatus'
+        - name: crn
+          in: query
+          description: filter by CRN
+          schema:
+            type: string
         - name: page
           in: query
           description: Page number of results to return. If blank, returns all results

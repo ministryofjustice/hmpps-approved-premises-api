@@ -59,14 +59,14 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsDashboardGet(status: PlacementRequestStatus?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
+  override fun placementRequestsDashboardGet(status: PlacementRequestStatus?, crn: String?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
-    val (requests, metadata) = placementRequestService.getAllActive(status, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
+    val (requests, metadata) = placementRequestService.getAllActive(status, crn, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
