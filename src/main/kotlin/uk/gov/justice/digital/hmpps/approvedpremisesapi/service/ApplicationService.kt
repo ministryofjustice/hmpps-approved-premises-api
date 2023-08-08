@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -677,6 +678,70 @@ class ApplicationService(
         "crn" to application.crn,
       ),
     )
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(application),
+    )
+  }
+
+  @Transactional
+  fun submitCas2Application(
+    applicationId: UUID,
+    submitApplication: SubmitCas2Application,
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (application !is Cas2ApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
+      )
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    val validationErrors = ValidationErrors()
+    val applicationData = application.data
+
+    if (applicationData == null) {
+      validationErrors["$.data"] = "empty"
+    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
+      validationErrors["$.data"] = "invalid"
+    }
+
+    if (validationErrors.any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(validationErrors),
+      )
+    }
+
+    val schema = application.schemaVersion as? Cas2ApplicationJsonSchemaEntity
+      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Application")
+
+    application.apply {
+      submittedAt = OffsetDateTime.now()
+      document = serializedTranslatedDocument
+    }
+
+    application = applicationRepository.save(application)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
