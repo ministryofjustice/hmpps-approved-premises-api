@@ -20,6 +20,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   reallocated: Boolean = false,
   isWithdrawn: Boolean = false,
   isParole: Boolean = false,
+  expectedArrival: LocalDate? = null,
   tier: String? = null,
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -37,10 +38,10 @@ fun IntegrationTestBase.`Given a Placement Request`(
         PersonRisksFactory()
           .withTier(
             RiskWithStatus(
-              RiskTier(tier, LocalDate.now())
-            )
+              RiskTier(tier, LocalDate.now()),
+            ),
           )
-          .produce()
+          .produce(),
       )
     }
   }
@@ -81,6 +82,10 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withIsWithdrawn(isWithdrawn)
     withIsParole(isParole)
     withPlacementRequirements(placementRequirements)
+
+    if (expectedArrival != null) {
+      withExpectedArrival(expectedArrival)
+    }
   }
 
   return Pair(placementRequest, application)
@@ -92,6 +97,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
+  expectedArrival: LocalDate? = null,
   tier: String? = null,
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
@@ -101,7 +107,8 @@ fun IntegrationTestBase.`Given a Placement Request`(
     createdByUser,
     crn,
     reallocated,
-    tier = tier
+    expectedArrival = expectedArrival,
+    tier = tier,
   )
 
   block(result.first, result.second)

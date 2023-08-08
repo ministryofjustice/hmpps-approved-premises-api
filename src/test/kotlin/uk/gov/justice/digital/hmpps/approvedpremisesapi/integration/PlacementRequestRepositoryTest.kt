@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import java.time.LocalDate
 
 class PlacementRequestRepositoryTest : IntegrationTestBase() {
   @Autowired
@@ -126,9 +127,9 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `allForDashboard returns all results when no page is provided`() {
-      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null)
-      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null, null)
-      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null, null, null)
+      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null)
+      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null, null, null, null)
+      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null, null, null, null, null)
 
       assertThat(matchedPlacementRequests.content.map { it.id }).isEqualTo(placementRequestsWithBooking.map { it.id })
       assertThat(notMatchedPlacementRequests.content.map { it.id }).isEqualTo(expectedNotMatchedPlacementRequests.map { it.id })
@@ -138,9 +139,9 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     @Test
     fun `allForDashboard returns paginated results when a page is provided`() {
       val pageable = PageRequest.of(1, 2, Sort.by("created_at"))
-      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, pageable)
-      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null, pageable)
-      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null, null, pageable)
+      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, pageable)
+      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null, null, null, pageable)
+      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null, null, null, null, pageable)
 
       assertThat(matchedPlacementRequests.content.map { it.id }).isEqualTo(listOf(placementRequestsWithBooking[2], placementRequestsWithBooking[3]).map { it.id })
       assertThat(notMatchedPlacementRequests.content.map { it.id }).isEqualTo(listOf(expectedNotMatchedPlacementRequests[2], expectedNotMatchedPlacementRequests[3]).map { it.id })
@@ -150,7 +151,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     @Test
     fun `allForDashboard returns all results when no status is provided`() {
       val pageable = PageRequest.of(0, 20, Sort.by("created_at"))
-      val allPlacementRequests = realPlacementRequestRepository.allForDashboard(null, null, null, pageable)
+      val allPlacementRequests = realPlacementRequestRepository.allForDashboard(null, null, null, null, null, pageable)
 
       val allPlacementRequestsToExpect = (placementRequestsWithBooking + placementRequestsWithNoBooking + placementRequestsWithACancelledBooking + placementRequestsWithABookingNotMade)
         .sortedBy { it.createdAt }
@@ -164,7 +165,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, crn = crn)
 
       val pageable = PageRequest.of(0, 2, Sort.by("created_at"))
-      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, crn, null, pageable)
+      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, crn, null, null, null, pageable)
 
       assertThat(results.content.map { it.id }).isEqualTo(requestsForCrn.map { it.id })
     }
@@ -175,7 +176,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, crn = crn)
 
       val pageable = PageRequest.of(0, 2, Sort.by("created_at"))
-      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, "crN456", null, pageable)
+      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, "crN456", null, null, null, pageable)
 
       assertThat(results.content.map { it.id }).isEqualTo(requestsForCrn.map { it.id })
     }
@@ -192,7 +193,32 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
   }
 
-  private fun createPlacementRequests(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean, crn: String? = null, tier: String? = null): List<PlacementRequestEntity> {
+  @Nested
+  inner class AllForDashboardArrivalDate {
+    @Test
+    fun `allForDashboard returns only Placement Requests where start date is after arrivalDateFrom when specified`() {
+      val expectedArrival = LocalDate.parse("2023-08-08")
+      val requestsForDate = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, expectedArrival = expectedArrival)
+
+      val pageable = PageRequest.of(0, 2, Sort.by("created_at"))
+      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null, expectedArrival.minusDays(1), null, pageable)
+
+      assertThat(results.content.map { it.id }).isEqualTo(requestsForDate.map { it.id })
+    }
+
+    @Test
+    fun `allForDashboard returns only Placement Requests where start date is before arrivalDateTo when specified`() {
+      val expectedArrival = LocalDate.parse("2023-08-08")
+      val requestsForDate = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, expectedArrival = expectedArrival)
+
+      val pageable = PageRequest.of(0, 2, Sort.by("created_at"))
+      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null, null, expectedArrival.plusDays(1), pageable)
+
+      assertThat(results.content.map { it.id }).isEqualTo(requestsForDate.map { it.id })
+    }
+  }
+
+  private fun createPlacementRequests(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean, crn: String? = null, expectedArrival: LocalDate? = null, tier: String? = null): List<PlacementRequestEntity> {
     val user = userEntityFactory.produceAndPersist {
       withProbationRegion(
         probationRegionEntityFactory.produceAndPersist {
@@ -203,9 +229,9 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
     return List(count) {
       if (crn == null) {
-        `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, tier = tier).first
+        `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, expectedArrival = expectedArrival, tier = tier).first
       } else {
-        `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn, tier = tier).first
+        `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn, expectedArrival = expectedArrival, tier = tier).first
       }
     }
   }
