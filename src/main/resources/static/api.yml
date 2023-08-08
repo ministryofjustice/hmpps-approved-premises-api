@@ -5212,6 +5212,7 @@ components:
         mapping:
           CAS1: '#/components/schemas/SubmitApprovedPremisesApplication'
           CAS3: '#/components/schemas/SubmitTemporaryAccommodationApplication'
+          CAS2: '#/components/schemas/SubmitCas2Application'
       required:
         - type
         - translatedDocument
@@ -5242,6 +5243,9 @@ components:
             - isEsapApplication
             - targetLocation
             - releaseType
+    SubmitCas2Application:
+      allOf:
+        - $ref: '#/components/schemas/SubmitApplication'
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
