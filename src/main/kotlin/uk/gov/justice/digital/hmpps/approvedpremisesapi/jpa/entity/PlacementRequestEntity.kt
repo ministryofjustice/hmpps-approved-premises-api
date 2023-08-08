@@ -61,10 +61,11 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         END
       ) = :#{#status?.toString()})
       AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
+      AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1)
   """,
     nativeQuery = true,
   )
-  fun allForDashboard(status: PlacementRequestStatus?, crn: String?, pageable: Pageable?): Page<PlacementRequestEntity>
+  fun allForDashboard(status: PlacementRequestStatus?, crn: String?, tier: String?, pageable: Pageable?): Page<PlacementRequestEntity>
 }
 
 @Entity

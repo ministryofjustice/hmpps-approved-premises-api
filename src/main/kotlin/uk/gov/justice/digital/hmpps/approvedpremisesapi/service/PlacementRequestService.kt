@@ -78,7 +78,7 @@ class PlacementRequestService(
       pageable = null
     }
 
-    val response = placementRequestRepository.allForDashboard(status, crn, pageable)
+    val response = placementRequestRepository.allForDashboard(status, crn, null, pageable)
 
     if (page != null) {
       metadata = PaginationMetadata(page, response.totalPages, response.totalElements, 10)
