@@ -63,7 +63,7 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(status: PlacementRequestStatus, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(status: PlacementRequestStatus?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     var pageable: PageRequest?
     var metadata: PaginationMetadata? = null
 

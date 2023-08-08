@@ -66,7 +66,7 @@ class PlacementRequestsController(
       throw ForbiddenProblem()
     }
 
-    val (requests, metadata) = placementRequestService.getAllActive(status ?: PlacementRequestStatus.notMatched, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
+    val (requests, metadata) = placementRequestService.getAllActive(status, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
