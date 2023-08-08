@@ -148,6 +148,17 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `allForDashboard returns all results when no status is provided`() {
+      val pageable = PageRequest.of(0, 20, Sort.by("created_at"))
+      val allPlacementRequests = realPlacementRequestRepository.allForDashboard(null, null, pageable)
+
+      val allPlacementRequestsToExpect = (placementRequestsWithBooking + placementRequestsWithNoBooking + placementRequestsWithACancelledBooking + placementRequestsWithABookingNotMade)
+        .sortedBy { it.createdAt }
+
+      assertThat(allPlacementRequests.content.map { it.id }).isEqualTo(allPlacementRequestsToExpect.map { it.id })
+    }
+
+    @Test
     fun `allForDashboard returns only Placement Requests for CRN when specified`() {
       val crn = "CRN456"
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, crn = crn)
