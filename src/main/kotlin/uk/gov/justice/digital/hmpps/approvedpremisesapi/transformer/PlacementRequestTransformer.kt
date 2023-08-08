@@ -18,6 +18,7 @@ class PlacementRequestTransformer(
   private val risksTransformer: RisksTransformer,
   private val assessmentTransformer: AssessmentTransformer,
   private val userTransformer: UserTransformer,
+  private val bookingSummaryTransformer: BookingSummaryTransformer,
 ) {
   fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): PlacementRequest {
     return PlacementRequest(
@@ -42,6 +43,7 @@ class PlacementRequestTransformer(
       assessor = userTransformer.transformJpaToApi(jpa.assessment.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
       notes = jpa.notes,
       isParole = jpa.isParole,
+      booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
     )
   }
 

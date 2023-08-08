@@ -6199,6 +6199,8 @@ components:
               type: boolean
             notes:
               type: string
+            booking:
+              $ref: '#/components/schemas/BookingSummary'
           required:
             - person
             - risks
@@ -6221,8 +6223,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cancellation'
-            booking:
-              $ref: '#/components/schemas/BookingSummary'
             application:
               $ref: '#/components/schemas/Application'
           required:

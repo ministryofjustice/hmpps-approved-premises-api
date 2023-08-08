@@ -198,12 +198,14 @@ class PlacementRequestDetailTransformerTest {
     val mockPersonTransformer = mockk<PersonTransformer>()
     val mockRisksTransformer = mockk<RisksTransformer>()
     val mockUserTransformer = mockk<UserTransformer>()
+    val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
 
     val realPlacementRequestTransformer = PlacementRequestTransformer(
       mockPersonTransformer,
       mockRisksTransformer,
       mockAssessmentTransformer,
       mockUserTransformer,
+      mockBookingSummaryTransformer,
     )
 
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecision.accepted

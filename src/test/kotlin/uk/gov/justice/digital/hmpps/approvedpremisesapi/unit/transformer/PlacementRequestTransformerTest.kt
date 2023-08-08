@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -42,16 +44,19 @@ class PlacementRequestTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
+  private val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
 
   private val placementRequestTransformer = PlacementRequestTransformer(
     mockPersonTransformer,
     mockRisksTransformer,
     mockAssessmentTransformer,
     mockUserTransformer,
+    mockBookingSummaryTransformer,
   )
 
   private val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
   private val inmateDetail = InmateDetailFactory().produce()
+  private val mockBookingSummary = mockk<BookingSummary>()
 
   private val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()
@@ -160,6 +165,7 @@ class PlacementRequestTransformerTest {
         assessor = mockUser,
         notes = placementRequestEntity.notes,
         isParole = placementRequestEntity.isParole,
+        booking = null,
       ),
     )
   }
@@ -187,9 +193,12 @@ class PlacementRequestTransformerTest {
       .withBooking(booking)
       .produce()
 
+    every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
+
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.matched)
+    assertThat(result.booking).isEqualTo(mockBookingSummary)
   }
 
   @Test
@@ -242,8 +251,11 @@ class PlacementRequestTransformerTest {
       .withBooking(booking)
       .produce()
 
+    every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
+
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.notMatched)
+    assertThat(result.booking).isEqualTo(mockBookingSummary)
   }
 }
