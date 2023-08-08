@@ -125,7 +125,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `findAllByStatusAndReallocatedAtNullAndIsWithdrawnFalse returns all results when no page is provided`() {
+    fun `allForDashboard returns all results when no page is provided`() {
       val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null)
       val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null)
       val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null, null)
@@ -136,7 +136,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `findAllByStatusAndReallocatedAtNullAndIsWithdrawnFalse returns paginated results when a page is provided`() {
+    fun `allForDashboard returns paginated results when a page is provided`() {
       val pageable = PageRequest.of(1, 2, Sort.by("created_at"))
       val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, pageable)
       val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, pageable)
