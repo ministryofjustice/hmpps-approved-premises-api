@@ -37,7 +37,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     where
       pq.reallocated_at IS NULL
       AND pq.is_withdrawn IS FALSE
-      AND (
+      AND (:status IS NULL OR (
         CASE
           WHEN (
             SELECT
@@ -59,11 +59,15 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
           ) > 0 THEN 'unableToMatch'
           ELSE 'notMatched'
         END
-      ) = :#{#status.toString()}
+      ) = :#{#status?.toString()})
+      AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
+      AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1) 
+      AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
+      AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
   """,
     nativeQuery = true,
   )
-  fun allForDashboard(status: PlacementRequestStatus, pageable: Pageable?): Page<PlacementRequestEntity>
+  fun allForDashboard(status: PlacementRequestStatus?, crn: String?, tier: String?, arrivalDateFrom: LocalDate?, arrivalDateTo: LocalDate?, pageable: Pageable?): Page<PlacementRequestEntity>
 }
 
 @Entity

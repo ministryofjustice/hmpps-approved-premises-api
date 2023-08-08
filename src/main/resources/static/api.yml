@@ -2523,6 +2523,28 @@ paths:
           description: filter by status of an application
           schema:
             $ref: '#/components/schemas/PlacementRequestStatus'
+        - name: crn
+          in: query
+          description: filter by CRN
+          schema:
+            type: string
+        - name: tier
+          in: query
+          description: filter by tier of Offender at time Application was created
+          schema:
+            $ref: '#/components/schemas/RiskTierLevel'
+        - name: arrivalDateStart
+          in: query
+          description: filter by minimum expected arrival date
+          schema:
+            type: string
+            format: date
+        - name: arrivalDateEnd
+          in: query
+          description: filter by maximum expected arrival date
+          schema:
+            type: string
+            format: date
         - name: page
           in: query
           description: Page number of results to return. If blank, returns all results
@@ -6801,3 +6823,22 @@ components:
       enum:
         - asc
         - desc
+    RiskTierLevel:
+      type: string
+      enum:
+        - D0
+        - D1
+        - D2
+        - D3
+        - C0
+        - C1
+        - C2
+        - C3
+        - B0
+        - B1
+        - B2
+        - B3
+        - A0
+        - A1
+        - A2
+        - A3

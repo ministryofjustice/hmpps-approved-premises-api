@@ -33,6 +33,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.id = { id }
   }
 
+  fun withExpectedArrival(expectedArrival: LocalDate) = apply {
+    this.expectedArrival = { expectedArrival }
+  }
+
   fun withAllocatedToUser(user: UserEntity) = apply {
     this.allocatedToUser = { user }
   }
