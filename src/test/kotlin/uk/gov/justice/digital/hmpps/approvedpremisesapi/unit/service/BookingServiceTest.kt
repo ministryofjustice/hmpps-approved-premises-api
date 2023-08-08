@@ -59,6 +59,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffWithoutUsernameUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -66,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
@@ -147,6 +150,7 @@ class BookingServiceTest {
   private val mockTurnaroundRepository = mockk<TurnaroundRepository>()
   private val mockBedMoveRepository = mockk<BedMoveRepository>()
   private val mockPremisesRepository = mockk<PremisesRepository>()
+  private val mockAssessmentRepository = mockk<AssessmentRepository>()
 
   private val bookingService = BookingService(
     premisesService = mockPremisesService,
@@ -178,6 +182,7 @@ class BookingServiceTest {
     turnaroundRepository = mockTurnaroundRepository,
     bedMoveRepository = mockBedMoveRepository,
     premisesRepository = mockPremisesRepository,
+    assessmentRepository = mockAssessmentRepository,
     notifyConfig = NotifyConfig(),
     applicationUrlTemplate = "http://frontend/applications/#id",
     bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
@@ -215,6 +220,7 @@ class BookingServiceTest {
     turnaroundRepository = mockTurnaroundRepository,
     bedMoveRepository = mockBedMoveRepository,
     premisesRepository = mockPremisesRepository,
+    assessmentRepository = mockAssessmentRepository,
     notifyConfig = NotifyConfig(),
     applicationUrlTemplate = "http://frontend/applications/#id",
     bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
@@ -252,6 +258,7 @@ class BookingServiceTest {
     turnaroundRepository = mockTurnaroundRepository,
     bedMoveRepository = mockBedMoveRepository,
     premisesRepository = mockPremisesRepository,
+    assessmentRepository = mockAssessmentRepository,
     notifyConfig = NotifyConfig(),
     applicationUrlTemplate = "http://frontend/applications/#id",
     bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
@@ -3269,11 +3276,13 @@ class BookingServiceTest {
     val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
     val arrivalDate = LocalDate.parse("2023-02-23")
     val departureDate = LocalDate.parse("2023-02-22")
+    val assessmentId = UUID.randomUUID()
 
     every { mockBedRepository.findByIdOrNull(bedId) } returns null
 
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedId, departureDate, null) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
+    every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -3285,7 +3294,7 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
-    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"), bedId, false)
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", LocalDate.parse("2023-02-23"), LocalDate.parse("2023-02-22"), bedId, assessmentId, false)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -3302,10 +3311,12 @@ class BookingServiceTest {
     val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
     val arrivalDate = LocalDate.parse("2023-02-23")
     val departureDate = LocalDate.parse("2023-02-22")
+    val assessmentId = UUID.randomUUID()
 
     every { mockBedRepository.findByIdOrNull(bedId) } returns null
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedId, departureDate, null) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
+    every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -3317,7 +3328,7 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
-    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bedId, false)
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bedId, assessmentId, false)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -3329,7 +3340,114 @@ class BookingServiceTest {
   }
 
   @Test
+  fun `createTemporaryAccommodationBooking returns FieldValidationError if Application is provided and does not exist`() {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-23")
+    val departureDate = LocalDate.parse("2023-02-24")
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
+    every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, assessmentId, false)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.assessmentId", "doesNotExist"),
+    )
+  }
+
+  @Test
   fun `createTemporaryAccommodationBooking saves Booking`() {
+    val crn = "CRN123"
+    val arrivalDate = LocalDate.parse("2023-02-23")
+    val departureDate = LocalDate.parse("2023-02-24")
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(user.probationRegion)
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
+    every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, application.id, false)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.Success)
+
+    verify(exactly = 1) {
+      mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate &&
+            it.application == application
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `createTemporaryAccommodationBooking does not attach the application if no ID is provided`() {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-23")
     val departureDate = LocalDate.parse("2023-02-24")
@@ -3356,11 +3474,12 @@ class BookingServiceTest {
 
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, false)
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, null, false)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -3372,9 +3491,14 @@ class BookingServiceTest {
           it.crn == crn &&
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
-            it.departureDate == departureDate
+            it.departureDate == departureDate &&
+            it.application == null
         },
       )
+    }
+
+    verify(exactly = 0) {
+      mockAssessmentRepository.findByIdOrNull(any())
     }
   }
 
@@ -3401,6 +3525,15 @@ class BookingServiceTest {
       .withRoom(room)
       .produce()
 
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(user.probationRegion)
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
     val bookingSlot = slot<BookingEntity>()
@@ -3408,11 +3541,13 @@ class BookingServiceTest {
 
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, false)
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, application.id, false)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -3424,7 +3559,8 @@ class BookingServiceTest {
           it.crn == crn &&
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
-            it.departureDate == departureDate
+            it.departureDate == departureDate &&
+            it.application == application
         },
       )
     }
@@ -3462,6 +3598,15 @@ class BookingServiceTest {
       .withRoom(room)
       .produce()
 
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(user.probationRegion)
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
     every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
     val bookingSlot = slot<BookingEntity>()
@@ -3469,11 +3614,13 @@ class BookingServiceTest {
 
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+    every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, true)
+    val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, application.id, true)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -3485,7 +3632,8 @@ class BookingServiceTest {
           it.crn == crn &&
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
-            it.departureDate == departureDate
+            it.departureDate == departureDate &&
+            it.application == application
         },
       )
     }

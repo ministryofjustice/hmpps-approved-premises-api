@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
@@ -112,6 +113,7 @@ class BookingService(
   private val turnaroundRepository: TurnaroundRepository,
   private val bedMoveRepository: BedMoveRepository,
   private val premisesRepository: PremisesRepository,
+  private val assessmentRepository: AssessmentRepository,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
@@ -570,6 +572,7 @@ class BookingService(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,
+    assessmentId: UUID?,
     enableTurnarounds: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val validationResult = validated {
@@ -592,6 +595,17 @@ class BookingService(
 
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+      }
+
+      val application = when (assessmentId) {
+        null -> null
+        else -> {
+          val result = assessmentRepository.findByIdOrNull(assessmentId)
+          if (result == null) {
+            "$.assessmentId" hasValidationError "doesNotExist"
+          }
+          result?.application
+        }
       }
 
       if (validationErrors.any()) {
@@ -621,7 +635,7 @@ class BookingService(
           originalArrivalDate = arrivalDate,
           originalDepartureDate = departureDate,
           createdAt = bookingCreatedAt,
-          application = null,
+          application = application,
           offlineApplication = null,
           turnarounds = mutableListOf(),
           placementRequest = null,

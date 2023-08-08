@@ -363,6 +363,7 @@ class PremisesController(
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId,
+          assessmentId = body.assessmentId,
           enableTurnarounds = body.enableTurnarounds ?: false,
         )
       }
