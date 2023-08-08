@@ -126,9 +126,9 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `findAllByStatusAndReallocatedAtNullAndIsWithdrawnFalse returns all results when no page is provided`() {
-      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null)
-      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null)
-      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null)
+      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null)
+      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, null)
+      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null, null)
 
       assertThat(matchedPlacementRequests.content.map { it.id }).isEqualTo(placementRequestsWithBooking.map { it.id })
       assertThat(notMatchedPlacementRequests.content.map { it.id }).isEqualTo(expectedNotMatchedPlacementRequests.map { it.id })
@@ -138,17 +138,39 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     @Test
     fun `findAllByStatusAndReallocatedAtNullAndIsWithdrawnFalse returns paginated results when a page is provided`() {
       val pageable = PageRequest.of(1, 2, Sort.by("created_at"))
-      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, pageable)
-      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, pageable)
-      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, pageable)
+      val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, pageable)
+      val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, null, pageable)
+      val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch, null, pageable)
 
       assertThat(matchedPlacementRequests.content.map { it.id }).isEqualTo(listOf(placementRequestsWithBooking[2], placementRequestsWithBooking[3]).map { it.id })
       assertThat(notMatchedPlacementRequests.content.map { it.id }).isEqualTo(listOf(expectedNotMatchedPlacementRequests[2], expectedNotMatchedPlacementRequests[3]).map { it.id })
       assertThat(unableToMatchPlacementRequests.content.map { it.id }).isEqualTo(listOf(placementRequestsWithABookingNotMade[2]).map { it.id })
     }
+
+    @Test
+    fun `allForDashboard returns only Placement Requests for CRN when specified`() {
+      val crn = "CRN456"
+      val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, crn = crn)
+
+      val pageable = PageRequest.of(0, 2, Sort.by("created_at"))
+      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, crn, pageable)
+
+      assertThat(results.content.map { it.id }).isEqualTo(requestsForCrn.map { it.id })
+    }
+
+    @Test
+    fun `allForDashboard is case insensitive when searching for CRN`() {
+      val crn = "CRN456"
+      val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, crn = crn)
+
+      val pageable = PageRequest.of(0, 2, Sort.by("created_at"))
+      val results = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched, "crN456", pageable)
+
+      assertThat(results.content.map { it.id }).isEqualTo(requestsForCrn.map { it.id })
+    }
   }
 
-  private fun createPlacementRequests(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean): List<PlacementRequestEntity> {
+  private fun createPlacementRequests(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean, crn: String? = null): List<PlacementRequestEntity> {
     val user = userEntityFactory.produceAndPersist {
       withProbationRegion(
         probationRegionEntityFactory.produceAndPersist {
@@ -158,7 +180,11 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     return List(count) {
-      `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole).first
+      if (crn == null) {
+        `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole).first
+      } else {
+        `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn).first
+      }
     }
   }
 }

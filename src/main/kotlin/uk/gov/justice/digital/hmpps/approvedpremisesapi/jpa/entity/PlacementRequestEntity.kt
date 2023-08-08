@@ -59,11 +59,12 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
           ) > 0 THEN 'unableToMatch'
           ELSE 'notMatched'
         END
-      ) = :#{#status.toString()}
+      ) = :#{#status.toString()} 
+      AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
   """,
     nativeQuery = true,
   )
-  fun allForDashboard(status: PlacementRequestStatus, pageable: Pageable?): Page<PlacementRequestEntity>
+  fun allForDashboard(status: PlacementRequestStatus, crn: String?, pageable: Pageable?): Page<PlacementRequestEntity>
 }
 
 @Entity

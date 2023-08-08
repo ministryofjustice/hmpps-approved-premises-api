@@ -610,7 +610,7 @@ class PlacementRequestServiceTest {
 
     every { page.content } returns placementRequests
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, PlacementRequestSortField.createdAt, null)
 
@@ -631,7 +631,7 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, 1, PlacementRequestSortField.createdAt, null)
 
@@ -655,7 +655,7 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
