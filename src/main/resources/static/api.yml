@@ -3898,6 +3898,9 @@ components:
           $ref: '#/components/schemas/ServiceName'
         enableTurnarounds:
           type: boolean
+        assessmentId:
+          type: string
+          format: uuid
       required:
         - crn
         - arrivalDate
