@@ -28,6 +28,9 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
 
+  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type")
+  fun <T : ApplicationEntity> findAllForService(type: Class<T>): List<ApplicationEntity>
+
   @Query(
     "SELECT a FROM ApplicationEntity a " +
       "LEFT JOIN ApplicationTeamCodeEntity atc ON a = atc.application " +

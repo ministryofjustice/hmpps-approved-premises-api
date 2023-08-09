@@ -5,7 +5,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.FetchOffenderNamesForApplicationsFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
@@ -27,6 +29,10 @@ class MigrationJobService(
         MigrationJobType.updateAllUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
+        )
+        MigrationJobType.fetchOffenderNamesForApplications -> FetchOffenderNamesForApplicationsFromCommunityApiJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(OffenderService::class.java),
         )
       }
 

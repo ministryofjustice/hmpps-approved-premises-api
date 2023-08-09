@@ -154,7 +154,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.isEsapApplication = { isEsapApplication }
   }
 
-  fun withName(name: String) = apply {
+  fun withName(name: String?) = apply {
     this.name = { name }
   }
 
