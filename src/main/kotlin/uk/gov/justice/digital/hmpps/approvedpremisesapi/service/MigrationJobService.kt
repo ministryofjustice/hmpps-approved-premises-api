@@ -30,7 +30,11 @@ class MigrationJobService(
         )
       }
 
-      transactionTemplate.executeWithoutResult { job.process() }
+      if (job.shouldRunInTransaction) {
+        transactionTemplate.executeWithoutResult { job.process() }
+      } else {
+        job.process()
+      }
 
       migrationLogger.info("Finished migration job: $migrationJobType")
     } catch (exception: Exception) {
