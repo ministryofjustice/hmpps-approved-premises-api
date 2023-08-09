@@ -84,7 +84,11 @@ class AssessmentService(
       else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
     }
 
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
+    // TODO: This should be delegated to a method in UserAccessService so that the check can be done in a service-aware way
+    //   to prevent (for example) a user with the `CAS1_WORKFLOW_MANAGER` role from being able to access other users'
+    //   assessments in CAS3.
+    //   See: https://trello.com/c/WKfi06nk
+    if (!user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS3_ASSESSOR) && assessment.allocatedToUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }
 
