@@ -191,6 +191,17 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
       assertThat(results.content.map { it.id }).isEqualTo(requestsForCrn.map { it.id })
     }
+
+    @Test
+    fun `allForDashboard allows sorting by an application's created_at date`() {
+      val pageable = PageRequest.of(0, 20, Sort.by("application_date"))
+      val allPlacementRequests = realPlacementRequestRepository.allForDashboard(null, null, null, null, null, pageable)
+
+      val allPlacementRequestsToExpect = (placementRequestsWithNoBooking + placementRequestsWithABookingNotMade + placementRequestsWithBooking + placementRequestsWithACancelledBooking)
+        .sortedBy { it.application.createdAt }
+
+      assertThat(allPlacementRequests.content.map { it.id }).isEqualTo(allPlacementRequestsToExpect.map { it.id })
+    }
   }
 
   @Nested

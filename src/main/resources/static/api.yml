@@ -6818,6 +6818,7 @@ components:
         - duration
         - expected_arrival
         - created_at
+        - application_date
     SortDirection:
       type: string
       enum:
