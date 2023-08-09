@@ -212,6 +212,7 @@ class ApprovedPremisesApplicationEntity(
   var placementRequests: MutableList<PlacementRequestEntity>,
   var releaseType: String?,
   var arrivalDate: OffsetDateTime?,
+  var name: String?,
 ) : ApplicationEntity(
   id,
   crn,
