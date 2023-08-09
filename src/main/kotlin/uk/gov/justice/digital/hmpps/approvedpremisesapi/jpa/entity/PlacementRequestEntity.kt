@@ -31,9 +31,11 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   @Query(
     """
     SELECT
-      pq.*
+      pq.*,
+      application.created_at as application_date
     from
       placement_requests pq
+      left join applications application on application.id = pq.application_id
     where
       pq.reallocated_at IS NULL
       AND pq.is_withdrawn IS FALSE
