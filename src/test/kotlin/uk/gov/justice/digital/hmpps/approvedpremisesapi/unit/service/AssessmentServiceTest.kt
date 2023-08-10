@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -66,6 +67,7 @@ class AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
+  private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
   private val domainEventServiceMock = mockk<DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
@@ -79,6 +81,7 @@ class AssessmentServiceTest {
     userServiceMock,
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
+    assessmentReferralHistoryNoteRepositoryMock,
     jsonSchemaServiceMock,
     domainEventServiceMock,
     offenderServiceMock,
@@ -433,6 +436,27 @@ class AssessmentServiceTest {
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
     verify(exactly = 1) { assessmentClarificationNoteRepositoryMock.save(any()) }
+  }
+
+
+  @Test
+  fun `addReferralHistoryUserNote returns not found for non-existent Assessment`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, "referral history note")
+
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue()
   }
 
   @Test
@@ -1872,6 +1896,7 @@ class AssessmentServiceTest {
     private val userServiceMock = mockk<UserService>()
     private val assessmentRepositoryMock = mockk<AssessmentRepository>()
     private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
+    private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
     private val domainEventServiceMock = mockk<DomainEventService>()
     private val offenderServiceMock = mockk<OffenderService>()
@@ -1885,6 +1910,7 @@ class AssessmentServiceTest {
       userServiceMock,
       assessmentRepositoryMock,
       assessmentClarificationNoteRepositoryMock,
+      assessmentReferralHistoryNoteRepositoryMock,
       jsonSchemaServiceMock,
       domainEventServiceMock,
       offenderServiceMock,
