@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -39,8 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 
 @Service
 class AssessmentService(
@@ -736,7 +736,7 @@ class AssessmentService(
   }
 
   fun addAssessmentReferralHistoryUserNote(user: UserEntity, assessmentId: UUID, text: String): AuthorisableActionResult<AssessmentReferralHistoryUserNoteEntity> {
-    val assessment = when(val assessmentResult = getAssessmentForUser(user, assessmentId)) {
+    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
@@ -749,10 +749,9 @@ class AssessmentService(
         createdAt = OffsetDateTime.now(),
         message = text,
         createdByUser = user,
-      )
+      ),
     )
 
     return AuthorisableActionResult.Success(referralHistoryNoteEntity)
   }
-
 }

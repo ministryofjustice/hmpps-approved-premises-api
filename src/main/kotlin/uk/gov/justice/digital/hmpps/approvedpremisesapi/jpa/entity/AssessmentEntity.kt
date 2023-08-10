@@ -291,11 +291,10 @@ data class AssessmentClarificationNoteEntity(
 )
 
 @Repository
-interface AssessmentReferralHistoryNoteRepository: JpaRepository<AssessmentReferralHistoryNoteEntity, UUID>
+interface AssessmentReferralHistoryNoteRepository : JpaRepository<AssessmentReferralHistoryNoteEntity, UUID>
 
 @Entity
 @Table(name = "assessment_referral_history_notes")
-@DiscriminatorColumn(name = "type")
 @Inheritance(strategy = InheritanceType.JOINED)
 abstract class AssessmentReferralHistoryNoteEntity(
   @Id
@@ -311,9 +310,7 @@ abstract class AssessmentReferralHistoryNoteEntity(
 )
 
 @Entity
-@DiscriminatorValue("user-note")
 @Table(name = "assessment_referral_history_user_notes")
-@PrimaryKeyJoinColumn(name = "assessment_id")
 class AssessmentReferralHistoryUserNoteEntity(
   id: UUID,
   assessment: AssessmentEntity,

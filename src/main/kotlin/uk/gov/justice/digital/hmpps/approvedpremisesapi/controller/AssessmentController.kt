@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
@@ -30,15 +32,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessmentSummaries
 import java.util.UUID
 import javax.transaction.Transactional
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 
 @Service
 class AssessmentController(
@@ -258,20 +257,20 @@ class AssessmentController(
     )
   }
 
-  override fun assessmentsAssessmentIdReferralHistoryUserNotePost(
+  override fun assessmentsAssessmentIdReferralHistoryNotesPost(
     assessmentId: UUID,
-    newReferralHistoryUserNote: NewReferralHistoryUserNote
+    newReferralHistoryUserNote: NewReferralHistoryUserNote,
   ): ResponseEntity<ReferralHistoryNote> {
-    val user= userService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
-    val referralHistoryUserNote = when(val referralHistoryUserNoteResult = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)) {
+    val referralHistoryUserNote = when (val referralHistoryUserNoteResult = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)) {
       is AuthorisableActionResult.Success -> referralHistoryUserNoteResult.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
     return ResponseEntity.ok(
-      assessmentReferralHistoryNoteTransformer.transformJpaToApi(referralHistoryUserNote)
+      assessmentReferralHistoryNoteTransformer.transformJpaToApi(referralHistoryUserNote),
     )
   }
 }

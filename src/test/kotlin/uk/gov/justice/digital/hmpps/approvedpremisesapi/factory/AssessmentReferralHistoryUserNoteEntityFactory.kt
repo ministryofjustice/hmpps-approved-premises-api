@@ -1,17 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
-
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import java.time.OffsetDateTime
-import java.util.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.OffsetDateTime
+import java.util.UUID
 
-class AssessmentReferralHistoryUserNoteEntityFactory: Factory<AssessmentReferralHistoryUserNoteEntity> {
+class AssessmentReferralHistoryUserNoteEntityFactory : Factory<AssessmentReferralHistoryUserNoteEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var assessment: Yielded<AssessmentEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }

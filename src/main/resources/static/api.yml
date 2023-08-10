@@ -3044,7 +3044,7 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /assessments/{assessmentId}/referralHistory/userNote:
+  /assessments/{assessmentId}/referral-history-notes:
     post:
       tags:
         - Assessment data

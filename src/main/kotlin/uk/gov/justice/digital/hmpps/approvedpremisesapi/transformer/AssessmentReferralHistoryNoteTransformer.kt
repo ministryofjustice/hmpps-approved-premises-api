@@ -8,14 +8,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRef
 
 @Component
 class AssessmentReferralHistoryNoteTransformer {
-  fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryNote = when(jpa) {
+  fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryNote = when (jpa) {
     is AssessmentReferralHistoryUserNoteEntity -> ReferralHistoryUserNote(
       id = jpa.id,
       createdAt = jpa.createdAt.toInstant(),
       message = jpa.message,
-      createdByStaffMemberId = jpa.createdByUser.id
+      createdByStaffMemberId = jpa.createdByUser.id,
     )
-    else -> throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}" )
+    else -> throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")
   }
-
 }

@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -41,7 +42,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 
 class AssessmentTest : IntegrationTestBase() {
   @Autowired
@@ -1081,11 +1081,11 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         webTestClient.post()
-          .uri("/assessments/${assessment.id}/referralHistory/userNote")
+          .uri("/assessments/${assessment.id}/referral-history-notes")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewReferralHistoryUserNote(
-              message = "Some text"
+              message = "Some text",
             ),
           )
           .exchange()
