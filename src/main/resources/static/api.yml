@@ -2898,6 +2898,12 @@ paths:
             type: array
             items:
               $ref: "#/components/schemas/AssessmentStatus"
+        - name: crn
+          in: query
+          description: If provided, return only results for the given CRN
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: successfully retrieved assessments
