@@ -5,7 +5,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.FetchOffenderNamesForApplicationsFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
@@ -28,9 +30,17 @@ class MigrationJobService(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
         )
+        MigrationJobType.fetchOffenderNamesForApplications -> FetchOffenderNamesForApplicationsFromCommunityApiJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(OffenderService::class.java),
+        )
       }
 
-      transactionTemplate.executeWithoutResult { job.process() }
+      if (job.shouldRunInTransaction) {
+        transactionTemplate.executeWithoutResult { job.process() }
+      } else {
+        job.process()
+      }
 
       migrationLogger.info("Finished migration job: $migrationJobType")
     } catch (exception: Exception) {

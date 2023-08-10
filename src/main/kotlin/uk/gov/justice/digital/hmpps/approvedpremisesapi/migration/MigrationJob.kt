@@ -5,5 +5,6 @@ import java.util.UUID
 abstract class MigrationJob(
   val id: UUID = UUID.randomUUID(),
 ) {
+  abstract val shouldRunInTransaction: Boolean
   abstract fun process()
 }

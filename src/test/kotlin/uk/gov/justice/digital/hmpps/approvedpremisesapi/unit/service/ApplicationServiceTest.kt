@@ -305,7 +305,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `createApprovedPremisesApplication returns Success with created Application + persisted Risk data`() {
+  fun `createApprovedPremisesApplication returns Success with created Application, persists Risk data and Offender name`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
 
@@ -374,6 +374,7 @@ class ApplicationServiceTest {
     assertThat(result.entity.createdByUser).isEqualTo(user)
     val approvedPremisesApplication = result.entity as ApprovedPremisesApplicationEntity
     assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
+    assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
   }
 
   @Test

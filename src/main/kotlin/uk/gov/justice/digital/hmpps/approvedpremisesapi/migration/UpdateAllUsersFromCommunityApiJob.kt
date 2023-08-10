@@ -9,6 +9,7 @@ class UpdateAllUsersFromCommunityApiJob(
   private val userService: UserService,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
+  override val shouldRunInTransaction = false
 
   override fun process() {
     userRepository.findAll().forEach {

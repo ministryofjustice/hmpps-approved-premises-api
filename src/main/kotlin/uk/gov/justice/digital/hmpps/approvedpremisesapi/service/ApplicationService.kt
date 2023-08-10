@@ -227,6 +227,7 @@ class ApplicationService(
         withdrawalReason = null,
         otherWithdrawalReason = null,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
+        name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
       ),
     )
 
