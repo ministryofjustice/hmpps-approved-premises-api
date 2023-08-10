@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -33,6 +34,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var allocatedToUser: Yielded<UserEntity?> = { null }
   private var rejectionRationale: Yielded<String?> = { null }
   private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
+  private var referralHistoryNotes: Yielded<MutableList<AssessmentReferralHistoryNoteEntity>> = { mutableListOf() }
   private var completedAt: Yielded<OffsetDateTime?> = { null }
 
   fun withId(id: UUID) = apply {
@@ -87,6 +89,10 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.clarificationNotes = { clarificationNotes }
   }
 
+  fun withReferralHistoryNotes(referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>) = apply {
+    this.referralHistoryNotes = { referralHistoryNotes }
+  }
+
   fun withRejectionRationale(rejectionRationale: String?) = apply {
     this.rejectionRationale = { rejectionRationale }
   }
@@ -110,6 +116,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     reallocatedAt = this.reallocatedAt(),
     rejectionRationale = this.rejectionRationale(),
     clarificationNotes = this.clarificationNotes(),
+    referralHistoryNotes = this.referralHistoryNotes(),
     completedAt = this.completedAt(),
   )
 }

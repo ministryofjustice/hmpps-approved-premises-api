@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 class AssessmentTransformerTest {
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
+  private val mockAssessmentReferralHistoryNoteTransformer = mockk<AssessmentReferralHistoryNoteTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val risksTransformer = RisksTransformer()
@@ -78,6 +80,7 @@ class AssessmentTransformerTest {
     objectMapper,
     mockApplicationsTransformer,
     mockAssessmentClarificationNoteTransformer,
+    mockAssessmentReferralHistoryNoteTransformer,
     mockUserTransformer,
     mockPersonTransformer,
     risksTransformer,
@@ -138,6 +141,7 @@ class AssessmentTransformerTest {
       }
     }
     every { mockAssessmentClarificationNoteTransformer.transformJpaToApi(any()) } returns mockk()
+    every { mockAssessmentReferralHistoryNoteTransformer.transformJpaToApi(any()) } returns mockk()
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.approvedPremises) } returns approvedPremisesUser
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.temporaryAccommodation) } returns temporaryAccommodationUser
   }

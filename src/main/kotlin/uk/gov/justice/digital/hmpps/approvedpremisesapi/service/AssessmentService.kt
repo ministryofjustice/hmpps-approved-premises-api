@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -45,6 +47,7 @@ class AssessmentService(
   private val userService: UserService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
+  private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
@@ -145,6 +148,7 @@ class AssessmentService(
         schemaUpToDate = true,
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
+        referralHistoryNotes = mutableListOf(),
       ),
     )
 
@@ -180,6 +184,7 @@ class AssessmentService(
         schemaUpToDate = true,
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
+        referralHistoryNotes = mutableListOf(),
         completedAt = null,
       ),
     )
@@ -599,6 +604,7 @@ class AssessmentService(
         schemaUpToDate = true,
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
+        referralHistoryNotes = mutableListOf(),
       ),
     )
 
@@ -727,5 +733,25 @@ class AssessmentService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedNote),
     )
+  }
+
+  fun addAssessmentReferralHistoryUserNote(user: UserEntity, assessmentId: UUID, text: String): AuthorisableActionResult<AssessmentReferralHistoryUserNoteEntity> {
+    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    val referralHistoryNoteEntity = assessmentReferralHistoryNoteRepository.save(
+      AssessmentReferralHistoryUserNoteEntity(
+        id = UUID.randomUUID(),
+        assessment = assessment,
+        createdAt = OffsetDateTime.now(),
+        message = text,
+        createdByUser = user,
+      ),
+    )
+
+    return AuthorisableActionResult.Success(referralHistoryNoteEntity)
   }
 }

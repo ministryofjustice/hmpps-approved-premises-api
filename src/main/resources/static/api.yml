@@ -3044,6 +3044,39 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/referral-history-notes:
+    post:
+      tags:
+        - Assessment data
+      summary: Adds a user-written note to an assessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: User note
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewReferralHistoryUserNote'
+        required: true
+      responses:
+        201:
+          description: successfully created a user-written note
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ReferralHistoryNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments/{assessmentId}/acceptance:
     post:
       tags:
@@ -5307,6 +5340,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
+        referralHistoryNotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferralHistoryNote'
       discriminator:
         propertyName: service
         mapping:
@@ -5574,6 +5611,42 @@ components:
           type: string
       required:
         - query
+    ReferralHistoryNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+      required:
+        - id
+        - createdAt
+        - message
+      discriminator:
+        propertyName: type
+        mapping:
+          user: '#/components/schemas/ReferralHistoryUserNote'
+    ReferralHistoryUserNote:
+      allOf:
+        - $ref: '#/components/schemas/ReferralHistoryNote'
+        - type: object
+          properties:
+            createdByStaffMemberId:
+              type: string
+              format: uuid
+          required:
+            - createdByStaffMemberId
+    NewReferralHistoryUserNote:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
     NewReallocation:
       type: object
       properties:
