@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 
 class AssessmentTest : IntegrationTestBase() {
   @Autowired
@@ -1050,6 +1051,46 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("$.response").isEqualTo("some text")
           .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
+      }
+    }
+  }
+
+  @Test
+  fun `Create referral history user note returns 200 with correct body`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        webTestClient.post()
+          .uri("/assessments/${assessment.id}/referralHistory/userNote")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewReferralHistoryUserNote(
+              message = "Some text"
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
       }
     }
   }

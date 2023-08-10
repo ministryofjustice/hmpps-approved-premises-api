@@ -35,6 +35,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsFor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessmentSummaries
 import java.util.UUID
 import javax.transaction.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 
 @Service
 class AssessmentController(
@@ -44,6 +48,7 @@ class AssessmentController(
   private val offenderService: OffenderService,
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
+  private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -250,6 +255,23 @@ class AssessmentController(
 
     return ResponseEntity.ok(
       assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNoteForResponse),
+    )
+  }
+
+  override fun assessmentsAssessmentIdReferralHistoryUserNotePost(
+    assessmentId: UUID,
+    newReferralHistoryUserNote: NewReferralHistoryUserNote
+  ): ResponseEntity<ReferralHistoryNote> {
+    val user= userService.getUserForRequest()
+
+    val referralHistoryUserNote = when(val referralHistoryUserNoteResult = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)) {
+      is AuthorisableActionResult.Success -> referralHistoryUserNoteResult.entity
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(
+      assessmentReferralHistoryNoteTransformer.transformJpaToApi(referralHistoryUserNote)
     )
   }
 }
