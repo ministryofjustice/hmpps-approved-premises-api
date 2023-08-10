@@ -57,10 +57,14 @@ class AssessmentController(
     sortOrder: SortOrder?,
     sortField: AssessmentSortField?,
     statuses: List<AssessmentStatus>?,
+    crn: String?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
 
-    val summaries = assessmentService.getVisibleAssessmentSummariesForUser(user, xServiceName)
+    val summaries = when {
+      xServiceName == ServiceName.temporaryAccommodation && crn != null -> assessmentService.getAssessmentSummariesByCrnForUser(user, crn, xServiceName)
+      else -> assessmentService.getVisibleAssessmentSummariesForUser(user, xServiceName)
+    }
 
     val sortOrder = when {
       xServiceName == ServiceName.temporaryAccommodation && sortOrder == null -> SortOrder.ascending
