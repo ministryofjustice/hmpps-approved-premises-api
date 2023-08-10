@@ -61,11 +61,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 
 class AcceptAssessmentTest {
   private val userServiceMock = mockk<UserService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
+  private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
   private val domainEventServiceMock = mockk<DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
@@ -79,6 +81,7 @@ class AcceptAssessmentTest {
     userServiceMock,
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
+    assessmentReferralHistoryNoteRepositoryMock,
     jsonSchemaServiceMock,
     domainEventServiceMock,
     offenderServiceMock,
