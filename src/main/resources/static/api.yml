@@ -2525,6 +2525,11 @@ paths:
           description: filter by CRN
           schema:
             type: string
+        - name: crnOrName
+          in: query
+          description: search by CRN or name
+          schema:
+            type: string
         - name: tier
           in: query
           description: filter by tier of Offender at time Application was created

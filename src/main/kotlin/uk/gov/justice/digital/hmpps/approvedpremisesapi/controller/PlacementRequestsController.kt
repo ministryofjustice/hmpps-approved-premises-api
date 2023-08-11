@@ -67,7 +67,7 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsDashboardGet(status: PlacementRequestStatus?, crn: String?, tier: RiskTierLevel?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
+  override fun placementRequestsDashboardGet(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: RiskTierLevel?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
