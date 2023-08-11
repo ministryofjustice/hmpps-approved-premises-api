@@ -16,7 +16,8 @@ fun IntegrationTestBase.`Given a Placement Request`(
   placementRequestAllocatedTo: UserEntity,
   assessmentAllocatedTo: UserEntity,
   createdByUser: UserEntity,
-  crn: String = randomStringMultiCaseWithNumbers(8),
+  crn: String? = null,
+  name: String? = null,
   reallocated: Boolean = false,
   isWithdrawn: Boolean = false,
   isParole: Boolean = false,
@@ -28,7 +29,8 @@ fun IntegrationTestBase.`Given a Placement Request`(
   }
 
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-    withCrn(crn)
+    crn?.let { withCrn(it) }
+    name?.let { withName(it) }
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
     withSubmittedAt(OffsetDateTime.now())
@@ -106,7 +108,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     assessmentAllocatedTo,
     createdByUser,
     crn,
-    reallocated,
+    reallocated = reallocated,
     expectedArrival = expectedArrival,
     tier = tier,
   )
