@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
 fun mapAndTransformAssessmentSummaries(
@@ -26,7 +27,7 @@ fun mapAndTransformAssessmentSummaries(
   sortField: AssessmentSortField? = null,
   statuses: List<AssessmentStatus>? = null,
 ): List<AssessmentSummary> {
-  return assessments.map {
+  return assessments.mapNotNull {
     transformAssessmentSummary(log, it, deliusUsername, offenderService, transformer, ignoreLao)
   }
     .sort(sortOrder, sortField)
@@ -40,9 +41,14 @@ fun <T> transformAssessmentSummary(
   offenderService: OffenderService,
   transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail?) -> T,
   ignoreLao: Boolean,
-): T {
-  val (offenderDetailSummary, inmateDetail) = getPersonDetailsForCrn(log, assessment.crn, deliusUsername, offenderService, ignoreLao)
-    ?: throw NotFoundProblem(assessment.crn, "Offender")
+): T? {
+  val (offenderDetailSummary, inmateDetail) = when (
+    val personDetailsResult = tryGetPersonDetailsForCrn(log, assessment.crn, deliusUsername, offenderService, ignoreLao)
+  ) {
+    is AuthorisableActionResult.Success -> personDetailsResult.entity
+    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessment.crn, "Offender")
+    is AuthorisableActionResult.Unauthorised -> return null
+  }
 
   return transformer(assessment, offenderDetailSummary, inmateDetail)
 }
