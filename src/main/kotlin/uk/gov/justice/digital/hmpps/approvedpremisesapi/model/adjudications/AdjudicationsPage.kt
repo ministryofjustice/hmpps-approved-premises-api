@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications
 
 import java.time.LocalDateTime
 

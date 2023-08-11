@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -48,6 +49,7 @@ class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
+  private val mockAdjudicationsApiClient = mockk<AdjudicationsApiClient>()
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
     lookbackDays = 30
     prisonApiPageSize = 2
@@ -72,6 +74,7 @@ class OffenderServiceTest {
     mockPrisonsApiClient,
     mockCaseNotesClient,
     mockApOASysContextApiClient,
+    mockAdjudicationsApiClient,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
   )
@@ -543,7 +546,7 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 0,
@@ -558,7 +561,7 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 0,
@@ -601,7 +604,7 @@ class OffenderServiceTest {
       .produce()
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 0,
@@ -612,7 +615,7 @@ class OffenderServiceTest {
     )
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 2,

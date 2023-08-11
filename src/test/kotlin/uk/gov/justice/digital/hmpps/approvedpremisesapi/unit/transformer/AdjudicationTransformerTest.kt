@@ -6,10 +6,10 @@ import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationChargeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationCharge
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationCharge
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import java.time.Instant
 import java.time.LocalDateTime
