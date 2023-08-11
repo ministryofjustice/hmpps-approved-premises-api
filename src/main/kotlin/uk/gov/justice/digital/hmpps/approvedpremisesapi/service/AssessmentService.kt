@@ -66,6 +66,11 @@ class AssessmentService(
     else -> listOf()
   }
 
+  fun getAssessmentSummariesByCrnForUser(user: UserEntity, crn: String, serviceName: ServiceName): List<DomainAssessmentSummary> = when (serviceName) {
+    ServiceName.temporaryAccommodation -> assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(user.probationRegion.id, crn)
+    else -> throw RuntimeException("Only CAS3 assessments are currently supported")
+  }
+
   fun getAllReallocatable(): List<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
     val assessments = assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(ApprovedPremisesAssessmentEntity::class.java)

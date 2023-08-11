@@ -33,6 +33,9 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   @Query(nativeQuery = true)
   fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
 
+  @Query(nativeQuery = true)
+  fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(probationRegionId: UUID, crn: String): List<DomainAssessmentSummary>
+
   @Query("SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL AND a.submittedAt IS NULL AND TYPE(a) = :type")
   fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(type: Class<T>): List<AssessmentEntity>
 
@@ -90,6 +93,32 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            join applications ap on a.application_id = ap.id
            left outer join temporary_accommodation_applications taa on ap.id = taa.id
      where taa.probation_region_id = ?1
+           and a.reallocated_at is null
+  """,
+  resultSetMapping = "DomainAssessmentSummaryMapping",
+)
+@NamedNativeQuery(
+  name = "AssessmentEntity.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn",
+  query =
+  """
+    select a.service as type,
+           cast(a.id as text) as id,
+           cast(a.application_id as text) as applicationId,
+           a.created_at as createdAt,
+           CAST(taa.risk_ratings AS TEXT) as riskRatings,
+           taa.arrival_date as arrivalDate,
+           null as dateOfInfoRequest,
+           aa.completed_at is not null as completed,
+           a.decision as decision,
+           a.data is not null as isStarted,
+           a.allocated_to_user_id is not null as isAllocated,
+           ap.crn as crn
+      from temporary_accommodation_assessments aa
+           join assessments a on aa.assessment_id = a.id
+           join applications ap on a.application_id = ap.id
+           left outer join temporary_accommodation_applications taa on ap.id = taa.id
+     where taa.probation_region_id = ?1
+           and ap.crn = ?2
            and a.reallocated_at is null
   """,
   resultSetMapping = "DomainAssessmentSummaryMapping",

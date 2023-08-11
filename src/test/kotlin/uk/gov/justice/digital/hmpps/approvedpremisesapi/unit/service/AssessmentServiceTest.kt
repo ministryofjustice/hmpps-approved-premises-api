@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
@@ -141,6 +142,52 @@ class AssessmentServiceTest {
     assessmentService.getVisibleAssessmentSummariesForUser(user, ServiceName.temporaryAccommodation)
 
     verify(exactly = 1) { assessmentRepositoryMock.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id) }
+  }
+
+  @Test
+  fun `getAssessmentSummariesByCrnForUser is not supported for Approved Premises`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    user.roles.add(
+      UserRoleAssignmentEntityFactory()
+        .withRole(UserRole.CAS1_ASSESSOR)
+        .withUser(user)
+        .produce(),
+    )
+
+    assertThatExceptionOfType(RuntimeException::class.java)
+      .isThrownBy { assessmentService.getAssessmentSummariesByCrnForUser(user, "SOMECRN", ServiceName.approvedPremises) }
+      .withMessage("Only CAS3 assessments are currently supported")
+  }
+
+  @Test
+  fun `getAssessmentSummariesByCrnForUser only fetches Temporary Accommodation assessments for the given CRN and within the user's probation region`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    user.roles.add(
+      UserRoleAssignmentEntityFactory()
+        .withRole(UserRole.CAS3_ASSESSOR)
+        .withUser(user)
+        .produce(),
+    )
+
+    every { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(any(), any()) } returns emptyList()
+
+    assessmentService.getAssessmentSummariesByCrnForUser(user, "SOMECRN", ServiceName.temporaryAccommodation)
+
+    verify(exactly = 1) { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(user.probationRegion.id, "SOMECRN") }
   }
 
   @Test
