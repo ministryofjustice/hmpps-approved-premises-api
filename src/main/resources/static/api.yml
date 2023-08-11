@@ -6358,7 +6358,6 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
-        - fetch_offender_names_for_applications
     PlacementDates:
       type: object
       properties:
