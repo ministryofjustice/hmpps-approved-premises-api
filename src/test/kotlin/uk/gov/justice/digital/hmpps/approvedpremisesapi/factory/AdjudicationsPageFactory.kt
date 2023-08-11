@@ -2,14 +2,19 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsApiResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
 
-class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
-  private var results: Yielded<List<Adjudication>> = {
-    listOf(
-      AdjudicationFactory().produce(),
+class AdjudicationsApiFactory : Factory<AdjudicationsApiResponse> {
+  private var results: Yielded<Page<Adjudication>> = {
+    PageImpl(
+      listOf(
+        AdjudicationFactory().produce(),
+      ),
     )
   }
 
@@ -19,7 +24,7 @@ class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
     )
   }
 
-  fun withResults(results: List<Adjudication>) = apply {
+  fun withResults(results: Page<Adjudication>) = apply {
     this.results = { results }
   }
 
@@ -27,7 +32,7 @@ class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
     this.agencies = { agencies }
   }
 
-  override fun produce(): AdjudicationsPage = AdjudicationsPage(
+  override fun produce(): AdjudicationsApiResponse = AdjudicationsApiResponse(
     results = this.results(),
     agencies = this.agencies(),
   )
