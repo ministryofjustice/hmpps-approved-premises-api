@@ -388,6 +388,78 @@ class AssessmentTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Get all assessments does not return assessments for LAO`() {
+    var offenderIndex = 0
+    `Given a User` { user, jwt ->
+      `Given Some Offenders`(
+        offenderDetailsConfigBlock = {
+          withCurrentExclusion(offenderIndex != 0)
+          withCurrentRestriction(offenderIndex != 0)
+          offenderIndex++
+        },
+      ) { offenderSequence ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val (offender, otherOffender) = offenderSequence.take(2).toList()
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offender.first.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(user.probationRegion)
+        }
+
+        val otherApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(otherOffender.first.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(user.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        assessment.schemaUpToDate = true
+
+        val otherAssessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(otherApplication)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        otherAssessment.schemaUpToDate = true
+
+        mockOffenderUserAccessCommunityApiCall(user.deliusUsername, otherOffender.first.otherIds.crn, true, true)
+
+        webTestClient.get()
+          .uri("/assessments")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offender.first, offender.second)),
+            ),
+            true,
+          )
+      }
+    }
+  }
+
   private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
     DomainAssessmentSummary(
       type = when (assessment.application) {
