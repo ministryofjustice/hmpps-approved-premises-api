@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTeamCodeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1130,5 +1132,209 @@ class UserAccessServiceTest {
     currentRequestIsForArbitraryService()
 
     assertThat(userAccessService.currentUserCanDeallocateTask()).isFalse
+  }
+
+  @Test
+  fun `userCanViewAssessment returns true for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role and the assessment is in the same region`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+  }
+
+  @Test
+  fun `userCanViewAssessment returns false for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role but the assessment is not in the same region`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserNotInRegion)
+      .withProbationRegion(anotherProbationRegion)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isFalse
+  }
+
+  @Test
+  fun `userCanViewAssessment returns false for a Temporary Accommodation assessment if the user does not have the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isFalse
+  }
+
+  @Test
+  fun `userCanViewAssessment returns true for an Approved Premises assessment if the user has the CAS1_WORKFLOW_MANAGER role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserNotInRegion)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(anotherUserNotInRegion)
+      .produce()
+
+    user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+
+    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+  }
+
+  @Test
+  fun `userCanViewAssessment returns true for an Approved Premises assessment if the assessment is assigned to the user`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
+
+    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+  }
+
+  @Test
+  fun `userCanViewAssessment returns false for an Approved Premises assessment if the user does not have the CAS1_WORKFLOW_MANAGER and the assessment is not assigned to the user`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(anotherUserInRegion)
+      .produce()
+
+    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewAssessment returns true for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role and the assessment is in the same region`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isTrue
+  }
+
+  @Test
+  fun `currentUserCanViewAssessment returns false for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role but the assessment is not in the same region`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserNotInRegion)
+      .withProbationRegion(anotherProbationRegion)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewAssessment returns false for a Temporary Accommodation assessment if the user does not have the CAS3_ASSESSOR role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanViewAssessment returns true for an Approved Premises assessment if the user has the CAS1_WORKFLOW_MANAGER role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserNotInRegion)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(anotherUserNotInRegion)
+      .produce()
+
+    user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+
+    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isTrue
+  }
+
+  @Test
+  fun `currentUserCanViewAssessment returns true for an Approved Premises assessment if the assessment is assigned to the user`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
+
+    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isTrue
+  }
+
+  @Test
+  fun `currentUserCanViewAssessment returns false for an Approved Premises assessment if the user does not have the CAS1_WORKFLOW_MANAGER and the assessment is not assigned to the user`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(anotherUserInRegion)
+      .produce()
+
+    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isFalse
   }
 }
