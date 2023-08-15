@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchResult as ApiApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResult as ApiTemporaryAccommodationBedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResultOverlap as ApiTemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesBedSearchResult as DomainApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchResult as DomainBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResult as DomainTemporaryAccommodationBedSearchResult
@@ -87,6 +88,14 @@ class BedSearchResultTransformer {
         name = result.bedName,
       ),
       serviceName = ServiceName.temporaryAccommodation,
+      overlaps = result.overlaps.map {
+        ApiTemporaryAccommodationBedSearchResultOverlap(
+          crn = it.crn,
+          days = it.days,
+          bookingId = it.bookingId,
+          roomId = it.roomId,
+        )
+      },
     )
   }
 }
