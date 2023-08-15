@@ -2130,11 +2130,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createExtension returns FieldValidationError with correct param to message map when an Approved Premises booking has a new departure date before the existing departure date`() {
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
-
+  fun `createExtension returns Success with correct result when an Approved Premises booking has a new departure date before the existing departure date`() {
     val premises = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -2153,10 +2149,18 @@ class BookingServiceTest {
       .produce()
 
     val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-10"))
       .withDepartureDate(LocalDate.parse("2022-08-26"))
       .withPremises(premises)
       .withBed(bed)
       .produce()
+
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
+
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
 
     val result = bookingService.createExtension(
       booking = bookingEntity,
@@ -2165,10 +2169,11 @@ class BookingServiceTest {
       user = user,
     )
 
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.newDepartureDate", "beforeExistingDepartureDate"),
-    )
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+    assertThat(result.entity.notes).isEqualTo("notes")
   }
 
   @Test
