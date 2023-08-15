@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AdjudicationsAPI_mockSuccessfulAdjudicationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAdjudicationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 
 class PersonAdjudicationsTest : IntegrationTestBase() {
@@ -109,7 +109,7 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
           )
           .produce()
 
-        PrisonAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        AdjudicationsAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")
