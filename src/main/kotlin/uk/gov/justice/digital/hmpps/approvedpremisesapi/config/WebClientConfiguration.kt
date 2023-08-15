@@ -178,31 +178,6 @@ class WebClientConfiguration(@Value("\${upstream-timeout-ms}") private val upstr
       .build()
   }
 
-  @Bean(name = ["adjudicationsApiWebClient"])
-  fun adjudicationsApiWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
-    authorizedClientManager: OAuth2AuthorizedClientManager,
-    @Value("\${services.manage-adjudications-api.base-url}") adjudicationsApiBaseUrl: String,
-  ): WebClient {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("manage-adjudications-api")
-
-    return WebClient.builder()
-      .baseUrl(adjudicationsApiBaseUrl)
-      .clientConnector(
-        ReactorClientHttpConnector(
-          HttpClient
-            .create()
-            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
-        ),
-      )
-      .filter(oauth2Client)
-      .build()
-  }
-
   @Bean(name = ["govUKBankHolidaysApiWebClient"])
   fun govUKBankHolidaysApiClient(
     @Value("\${services.gov-uk-bank-holidays-api.base-url}") govUKBankHolidaysApiBaseUrl: String,

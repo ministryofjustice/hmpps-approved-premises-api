@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 
 class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
   private var results: Yielded<List<Adjudication>> = {
