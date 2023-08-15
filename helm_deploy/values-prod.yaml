@@ -50,7 +50,6 @@ generic-service:
     URL-TEMPLATES_API_BOOKING-CHANGED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-changed/#eventId
     URL-TEMPLATES_API_APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-withdrawn/#eventId
     ARRIVED-DEPARTED-DOMAIN-EVENTS-DISABLED: true
-    MANUAL-BOOKINGS-DOMAIN-EVENTS-DISABLED: true
 
   namespace_secrets:
     hmpps-domain-events-topic:
