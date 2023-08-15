@@ -42,7 +42,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
     )
 
     val startTime = System.currentTimeMillis()
-    migrationJobService.runMigrationJob(MigrationJobType.updateAllUsersFromCommunityApi)
+    migrationJobService.runMigrationJob(MigrationJobType.updateAllUsersFromCommunityApi, 1)
     val endTime = System.currentTimeMillis()
 
     assertThat(endTime - startTime).isGreaterThan(500 * 2)
