@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService
@@ -533,13 +534,22 @@ class BedSearchServiceTest {
             name = "Room Characteristic Name",
           ),
         ),
+        overlaps = mutableListOf(
+          TemporaryAccommodationBedSearchResultOverlap(
+            crn = "crn0123456789",
+            days = 7,
+            premisesId = UUID.randomUUID(),
+            roomId = UUID.randomUUID(),
+            bookingId = UUID.randomUUID(),
+          ),
+        ),
       ),
     )
 
     every {
       mockBedSearchRepository.findTemporaryAccommodationBeds(
         startDate = LocalDate.parse("2023-03-22"),
-        durationInDays = 7,
+        endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnit = "PDU-1",
         probationRegionId = user.probationRegion.id,
       )
@@ -547,6 +557,7 @@ class BedSearchServiceTest {
 
     every { mockBookingRepository.findClosestBookingBeforeDateForBeds(any(), any()) } returns listOf()
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+    every { mockBookingRepository.findAllByPremisesIdsAndOverLappingDate(any(), any(), any()) } returns listOf()
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
@@ -594,6 +605,7 @@ class BedSearchServiceTest {
             name = "Room Characteristic Name",
           ),
         ),
+        overlaps = mutableListOf(),
       ),
     )
 
@@ -623,6 +635,7 @@ class BedSearchServiceTest {
             name = "Room Characteristic Name",
           ),
         ),
+        overlaps = mutableListOf(),
       ),
     )
 
@@ -631,7 +644,7 @@ class BedSearchServiceTest {
     every {
       mockBedSearchRepository.findTemporaryAccommodationBeds(
         startDate = LocalDate.parse("2023-03-22"),
-        durationInDays = 7,
+        endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnit = "PDU-1",
         probationRegionId = user.probationRegion.id,
       )
@@ -716,6 +729,8 @@ class BedSearchServiceTest {
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers {
       (it.invocation.args[0] as LocalDate).plusDays((it.invocation.args[1] as Int).toLong())
     }
+
+    every { mockBookingRepository.findAllByPremisesIdsAndOverLappingDate(any(), any(), any()) } returns listOf()
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,

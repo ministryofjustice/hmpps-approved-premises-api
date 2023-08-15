@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -11,8 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.countOverlappingDays
 import java.time.LocalDate
 import java.util.UUID
 
@@ -104,10 +107,12 @@ class BedSearchService(
           return@validated fieldValidationError
         }
 
+        val endDate = startDate.plusDays(durationInDays.toLong() - 1)
+
         val candidateResults = bedSearchRepository.findTemporaryAccommodationBeds(
           probationDeliveryUnit = probationDeliveryUnit,
           startDate = startDate,
-          durationInDays = durationInDays,
+          endDate = endDate,
           probationRegionId = user.probationRegion.id,
         )
 
@@ -118,10 +123,34 @@ class BedSearchService(
 
         val results = candidateResults.filter { !bedsWithABookingInTurnaround.contains(it.bedId) }
 
+        val distinctIds = candidateResults.map { it.premisesId }.distinct()
+        val overlappedBookings = bookingRepository.findAllByPremisesIdsAndOverLappingDate(distinctIds, startDate, endDate)
+        val groupedOverlappedBookings = overlappedBookings
+          .map { transformBookingToOverlap(it, startDate, endDate) }
+          .groupBy { it.premisesId }
+
+        results.forEach {
+          val overlappingBookings = groupedOverlappedBookings[it.premisesId]?.toList() ?: listOf()
+          it.overlaps.addAll(overlappingBookings)
+        }
+
         return@validated success(
           results,
         )
       },
+    )
+  }
+
+  fun transformBookingToOverlap(booking: BookingEntity, startDate: LocalDate, endDate: LocalDate): TemporaryAccommodationBedSearchResultOverlap {
+    val queryDuration = startDate..endDate
+    val bookingDuration = booking.arrivalDate..booking.departureDate
+
+    return TemporaryAccommodationBedSearchResultOverlap(
+      crn = booking.crn,
+      days = bookingDuration countOverlappingDays queryDuration,
+      premisesId = booking.premises.id,
+      roomId = booking.bed?.room!!.id,
+      bookingId = booking.id,
     )
   }
 }

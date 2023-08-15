@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -23,6 +24,7 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
   private var bedName: Yielded<String> = { randomStringUpperCase(6) }
   private var roomCharacteristics: Yielded<MutableList<CharacteristicNames>> = { mutableListOf() }
   private var premisesBedCount: Yielded<Int> = { randomInt(1, 10) }
+  private var overlaps: Yielded<MutableList<TemporaryAccommodationBedSearchResultOverlap>> = { mutableListOf() }
 
   fun withPremisesId(premisesId: UUID) = apply {
     this.premisesId = { premisesId }
@@ -76,6 +78,10 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
     this.premisesBedCount = { premisesBedCount }
   }
 
+  fun withOverlaps(overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>) = apply {
+    this.overlaps = { overlaps }
+  }
+
   override fun produce() = TemporaryAccommodationBedSearchResult(
     premisesId = this.premisesId(),
     premisesName = this.premisesName(),
@@ -90,5 +96,6 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
     bedName = this.bedName(),
     roomCharacteristics = this.roomCharacteristics(),
     premisesBedCount = this.premisesBedCount(),
+    overlaps = this.overlaps(),
   )
 }
