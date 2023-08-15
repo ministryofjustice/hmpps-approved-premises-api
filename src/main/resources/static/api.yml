@@ -6542,6 +6542,32 @@ components:
     TemporaryAccommodationBedSearchResult:
       allOf:
         - $ref: '#/components/schemas/BedSearchResult'
+        - type: object
+          properties:
+            overlaps:
+              type: array
+              items:
+                $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
+          required:
+            - overlaps
+    TemporaryAccommodationBedSearchResultOverlap:
+      type: object
+      properties:
+        crn:
+          type: string
+        days:
+          type: integer
+        bookingId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+      required:
+        - crn
+        - days
+        - bookingId
+        - roomId
     BedSearchResultPremisesSummary:
       type: object
       properties:

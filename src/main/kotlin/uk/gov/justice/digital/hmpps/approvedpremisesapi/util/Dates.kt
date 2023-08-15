@@ -5,6 +5,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 fun LocalDate.getDaysUntilInclusive(end: LocalDate): List<LocalDate> {
   val result = mutableListOf<LocalDate>()
@@ -57,6 +58,13 @@ infix fun ClosedRange<LocalDate>.overlaps(other: ClosedRange<LocalDate>): Boolea
   val thisFullyAfter = this.endInclusive > other.endInclusive && this.start > other.endInclusive
 
   return !(thisFullyBefore || thisFullyAfter)
+}
+
+infix fun ClosedRange<LocalDate>.countOverlappingDays(other: ClosedRange<LocalDate>): Int {
+  val latestStart = maxOf(this.start, other.start)
+  val earliestEnd = minOf(this.endInclusive, other.endInclusive)
+  val days = ChronoUnit.DAYS.between(latestStart, earliestEnd).toInt() + 1
+  return if (days > 0) days else 0
 }
 
 fun LocalDate.isWorkingDay(bankHolidays: List<LocalDate>) =
