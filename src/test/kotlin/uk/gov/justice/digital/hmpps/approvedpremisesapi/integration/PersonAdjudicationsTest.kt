@@ -109,7 +109,7 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
           )
           .produce()
 
-        AdjudicationsAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        AdjudicationsAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, 0, 30, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")

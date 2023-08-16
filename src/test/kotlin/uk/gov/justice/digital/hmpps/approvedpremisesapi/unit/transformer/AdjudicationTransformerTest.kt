@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adju
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationCharge
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Results
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import java.time.Instant
 import java.time.LocalDateTime
@@ -37,21 +38,23 @@ class AdjudicationTransformerTest {
   }
 
   @Test
-  fun `transformToApi transforms chage with held hearing correctly`() {
+  fun `transformToApi transforms charge with held hearing correctly`() {
     val adjudicationsPage = AdjudicationsPage(
-      results = listOf(
-        Adjudication(
-          adjudicationNumber = 12345,
-          reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
-          agencyIncidentId = 78910,
-          agencyId = "PLACE",
-          partySeq = 1,
-          adjudicationCharges = listOf(
-            AdjudicationCharge(
-              oicChargeId = "CHARGE",
-              offenceCode = "OFFENCE",
-              offenceDescription = "Something, something",
-              findingCode = "QUASHED",
+      Results(
+        content = listOf(
+          Adjudication(
+            adjudicationNumber = 12345,
+            reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
+            agencyIncidentId = 78910,
+            agencyId = "PLACE",
+            partySeq = 1,
+            adjudicationCharges = listOf(
+              AdjudicationCharge(
+                oicChargeId = "CHARGE",
+                offenceCode = "OFFENCE",
+                offenceDescription = "Something, something",
+                findingCode = "QUASHED",
+              ),
             ),
           ),
         ),
@@ -81,21 +84,23 @@ class AdjudicationTransformerTest {
   }
 
   @Test
-  fun `transformToApi transforms chage without held hearing correctly`() {
+  fun `transformToApi transforms charge without held hearing correctly`() {
     val adjudicationsPage = AdjudicationsPage(
-      results = listOf(
-        Adjudication(
-          adjudicationNumber = 12345,
-          reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
-          agencyIncidentId = 78910,
-          agencyId = "PLACE",
-          partySeq = 1,
-          adjudicationCharges = listOf(
-            AdjudicationCharge(
-              oicChargeId = "CHARGE",
-              offenceCode = "OFFENCE",
-              offenceDescription = "Something, something",
-              findingCode = null,
+      Results(
+        content = listOf(
+          Adjudication(
+            adjudicationNumber = 12345,
+            reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
+            agencyIncidentId = 78910,
+            agencyId = "PLACE",
+            partySeq = 1,
+            adjudicationCharges = listOf(
+              AdjudicationCharge(
+                oicChargeId = "CHARGE",
+                offenceCode = "OFFENCE",
+                offenceDescription = "Something, something",
+                findingCode = null,
+              ),
             ),
           ),
         ),

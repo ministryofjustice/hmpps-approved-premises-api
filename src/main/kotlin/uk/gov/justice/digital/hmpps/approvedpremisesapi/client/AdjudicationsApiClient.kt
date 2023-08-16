@@ -16,13 +16,7 @@ class AdjudicationsApiClient(
   @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
 ) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
 
-  fun getAdjudicationsPage(nomsNumber: String, offset: Int?, pageSize: Int) = getRequest<AdjudicationsPage> {
-    withHeader("Page-Limit", pageSize.toString())
-
-    if (offset != null) {
-      withHeader("Page-Offset", offset.toString())
-    }
-
-    path = "/adjudications/$nomsNumber/adjudications"
+  fun getAdjudicationsPage(nomsNumber: String, page: Int, pageSize: Int) = getRequest<AdjudicationsPage> {
+    path = "/adjudications/$nomsNumber/adjudications?page=$page&size=$pageSize"
   }
 }

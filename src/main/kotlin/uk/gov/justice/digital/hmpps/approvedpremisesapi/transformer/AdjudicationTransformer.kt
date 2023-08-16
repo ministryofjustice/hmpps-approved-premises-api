@@ -7,7 +7,7 @@ import java.time.ZoneOffset
 
 @Component
 class AdjudicationTransformer {
-  fun transformToApi(adjudicationsPage: AdjudicationsPage) = adjudicationsPage.results.flatMap { result ->
+  fun transformToApi(adjudicationsPage: AdjudicationsPage): List<Adjudication> = adjudicationsPage.results.content.flatMap { result ->
     result.adjudicationCharges.map { charge ->
       Adjudication(
         id = result.adjudicationNumber,

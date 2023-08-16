@@ -548,10 +548,15 @@ class OffenderServiceTest {
     every {
       mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
+        page = 0,
         pageSize = 2,
-        offset = 0,
       )
-    } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
+    } returns ClientResult.Failure.StatusCode(
+      HttpMethod.GET,
+      "/api/offenders/$nomsNumber/adjudications",
+      HttpStatus.NOT_FOUND,
+      null,
+    )
 
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
   }
@@ -563,10 +568,15 @@ class OffenderServiceTest {
     every {
       mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
+        page = 0,
         pageSize = 2,
-        offset = 0,
       )
-    } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
+    } returns ClientResult.Failure.StatusCode(
+      HttpMethod.GET,
+      "/api/offenders/$nomsNumber/adjudications",
+      HttpStatus.FORBIDDEN,
+      null,
+    )
 
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -606,8 +616,8 @@ class OffenderServiceTest {
     every {
       mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
+        page = 0,
         pageSize = 2,
-        offset = 0,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
@@ -617,8 +627,8 @@ class OffenderServiceTest {
     every {
       mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
+        page = 1,
         pageSize = 2,
-        offset = 2,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
@@ -629,8 +639,8 @@ class OffenderServiceTest {
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
-    assertThat(result.entity.results).containsAll(
-      adjudicationsPageOne.results.plus(adjudicationsPageTwo.results),
+    assertThat(result.entity.results.content).containsAll(
+      adjudicationsPageOne.results.content.plus(adjudicationsPageTwo.results.content),
     )
     assertThat(result.entity.agencies).containsExactlyInAnyOrder(
       *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray(),
