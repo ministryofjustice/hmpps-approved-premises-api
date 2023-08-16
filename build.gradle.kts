@@ -5,7 +5,7 @@ plugins {
   kotlin("plugin.spring") version "1.9.0"
   id("org.openapi.generator") version "5.4.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.0"
-  id("io.gatling.gradle") version "3.9.5.2"
+  id("io.gatling.gradle") version "3.9.5.5"
 }
 
 configurations {
@@ -55,7 +55,7 @@ dependencies {
   implementation("io.github.s-sathish:redlock-java:1.0.4")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
-  testImplementation("io.mockk:mockk:1.13.5")
+  testImplementation("io.mockk:mockk:1.13.7")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")

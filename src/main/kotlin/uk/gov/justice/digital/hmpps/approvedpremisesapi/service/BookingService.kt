@@ -1252,10 +1252,6 @@ class BookingService(
       }
     }
 
-    if (booking.premises is ApprovedPremisesEntity && booking.departureDate.isAfter(newDepartureDate)) {
-      return "$.newDepartureDate" hasSingleValidationError "beforeExistingDepartureDate"
-    }
-
     if (booking.arrivalDate.isAfter(newDepartureDate)) {
       return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
