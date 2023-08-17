@@ -708,6 +708,20 @@ class OffenderServiceTest {
     }
 
     @Test
+    fun `returns Unknown if Community API responds with a 500`() {
+      val crn = "ABC123"
+      val deliusUsername = "USER"
+
+      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
+
+      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
+
+      assertThat(result is PersonInfoResult.Unknown).isTrue
+      result as PersonInfoResult.Unknown
+      assertThat(result.throwable).isNotNull()
+    }
+
+    @Test
     fun `returns Restricted for LAO Offender where user does not pass check and ignoreLao is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
