@@ -19,9 +19,9 @@ class MigrationJobService(
   private val migrationLogger: MigrationLogger,
 ) {
   @Async
-  fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType)
+  fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType, 50)
 
-  fun runMigrationJob(migrationJobType: MigrationJobType) {
+  fun runMigrationJob(migrationJobType: MigrationJobType, pageSize: Int = 50) {
     migrationLogger.info("Starting migration job request: $migrationJobType")
 
     try {
@@ -33,6 +33,7 @@ class MigrationJobService(
         MigrationJobType.fetchOffenderNamesForApplications -> FetchOffenderNamesForApplicationsFromCommunityApiJob(
           applicationContext.getBean(ApplicationRepository::class.java),
           applicationContext.getBean(OffenderService::class.java),
+          pageSize,
         )
       }
 

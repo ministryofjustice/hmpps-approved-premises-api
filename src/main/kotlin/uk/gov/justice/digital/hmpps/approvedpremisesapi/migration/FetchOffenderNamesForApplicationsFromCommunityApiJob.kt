@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -9,34 +10,45 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 class FetchOffenderNamesForApplicationsFromCommunityApiJob(
   private val applicationRepository: ApplicationRepository,
   private val offenderService: OffenderService,
+  private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = false
 
   override fun process() {
-    applicationRepository.findAllForService(ApprovedPremisesApplicationEntity::class.java)
-      .map { it as ApprovedPremisesApplicationEntity }
-      .forEach { application ->
-        if (application.name != null) return@forEach
+    var offset = 0
+    val count = applicationRepository.findTotalCountForService(ApprovedPremisesApplicationEntity::class.java)
+    var pageable: PageRequest?
 
-        log.info("Fetching Offender name for Application: ${application.id}")
+    while (count > offset) {
+      pageable = PageRequest.of(offset, pageSize)
+      log.info("In while: $offset")
+      val response = applicationRepository.findAllForServiceByPage(pageable, ApprovedPremisesApplicationEntity::class.java)
+      response.content
+        .map { it as ApprovedPremisesApplicationEntity }
+        .forEach { application ->
+          if (application.name != null) return@forEach
 
-        try {
-          val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, "", true)
+          log.info("Fetching Offender name for Application: ${application.id}")
 
-          val offenderDetails = when (offenderDetailsResult) {
-            is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-            is AuthorisableActionResult.NotFound -> throw RuntimeException("Could not find Offender")
-            is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unauthorised when trying to find Offender")
+          try {
+            val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, "", true)
+
+            val offenderDetails = when (offenderDetailsResult) {
+              is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+              is AuthorisableActionResult.NotFound -> throw RuntimeException("Could not find Offender")
+              is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unauthorised when trying to find Offender")
+            }
+
+            application.name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}"
+            applicationRepository.save(application)
+          } catch (exception: Exception) {
+            log.error("Unable to update Offender name for Application: ${application.id}", exception)
           }
-
-          application.name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}"
-          applicationRepository.save(application)
-        } catch (exception: Exception) {
-          log.error("Unable to update Offender name for Application: ${application.id}", exception)
         }
-
-        Thread.sleep(500)
-      }
+      Thread.sleep(500)
+      log.info("offset is: $offset")
+      offset += pageSize
+    }
   }
 }

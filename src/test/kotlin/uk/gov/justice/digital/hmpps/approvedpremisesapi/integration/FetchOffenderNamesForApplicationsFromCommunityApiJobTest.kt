@@ -29,7 +29,7 @@ class FetchOffenderNamesForApplicationsFromCommunityApiJobTest : MigrationJobTes
           }
 
           val startTime = System.currentTimeMillis()
-          migrationJobService.runMigrationJob(MigrationJobType.fetchOffenderNamesForApplications)
+          migrationJobService.runMigrationJob(MigrationJobType.fetchOffenderNamesForApplications, 1)
           val endTime = System.currentTimeMillis()
 
           assertThat(endTime - startTime).isGreaterThan(500 * 2)
