@@ -198,4 +198,4 @@ arrived-departed-domain-events-disabled: true
 manual-bookings-domain-events-disabled: true
 
 upstream-timeout-ms: 10000
-max-response-in-memory-size-bytes: 51200
+max-response-in-memory-size-bytes: 512000
