@@ -34,7 +34,7 @@ class PersonTransformer {
       type = PersonType.restrictedPerson,
       crn = personInfoResult.crn,
     )
-    is PersonInfoResult.NotFound -> UnknownPerson(
+    is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> UnknownPerson(
       type = PersonType.unknownPerson,
       crn = personInfoResult.crn,
     )

@@ -12,4 +12,5 @@ sealed interface PersonInfoResult {
   }
 
   data class NotFound(override val crn: String) : PersonInfoResult
+  data class Unknown(override val crn: String, val throwable: Throwable? = null) : PersonInfoResult
 }

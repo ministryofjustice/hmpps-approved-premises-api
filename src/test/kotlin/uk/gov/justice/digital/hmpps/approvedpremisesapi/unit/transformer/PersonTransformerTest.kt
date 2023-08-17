@@ -34,10 +34,22 @@ class PersonTransformerTest {
   }
 
   @Test
-  fun `transformModelToPersonInfoApi transforms correctly for an unknown person info`() {
+  fun `transformModelToPersonInfoApi transforms correctly for a not found person info`() {
     val crn = "CRN123"
 
     val personInfoResult = PersonInfoResult.NotFound(crn)
+
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
+
+    assertThat(result is UnknownPerson).isTrue
+    assertThat(result.crn).isEqualTo(crn)
+  }
+
+  @Test
+  fun `transformModelToPersonInfoApi transforms correctly for an unknown person info`() {
+    val crn = "CRN123"
+
+    val personInfoResult = PersonInfoResult.Unknown(crn)
 
     val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
