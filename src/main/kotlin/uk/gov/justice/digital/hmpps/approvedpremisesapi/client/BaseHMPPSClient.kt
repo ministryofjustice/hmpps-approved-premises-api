@@ -153,7 +153,11 @@ abstract class BaseHMPPSClient(
         writeToRedis(qualifiedKey, cacheEntry, body, cacheConfig.hardTtlSeconds.toLong())
       }
 
-      return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+      if (!exception.statusCode.is2xxSuccessful) {
+        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+      } else {
+        throw exception
+      }
     } catch (exception: Exception) {
       return ClientResult.Failure.Other(method, requestBuilder.path ?: "", exception)
     }
