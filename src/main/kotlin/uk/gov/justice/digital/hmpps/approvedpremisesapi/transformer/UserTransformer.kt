@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualificat
 class UserTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
 ) {
+
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
     ServiceName.approvedPremises, ServiceName.cas2 -> ApprovedPremisesUser(
       id = jpa.id,

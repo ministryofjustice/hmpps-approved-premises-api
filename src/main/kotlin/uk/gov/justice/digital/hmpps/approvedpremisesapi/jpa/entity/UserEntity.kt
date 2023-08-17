@@ -18,6 +18,9 @@ import javax.persistence.Table
 
 @Repository
 interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
+
+  fun findByNameContainingIgnoreCase(str: String): List<UserEntity>
+
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
 
   @Query(
@@ -137,7 +140,7 @@ data class UserEntity(
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<ApplicationEntity>,
   @OneToMany(mappedBy = "user")
-  val roles: MutableList<UserRoleAssignmentEntity>,
+  var roles: MutableList<UserRoleAssignmentEntity>,
   @OneToMany(mappedBy = "user")
   val qualifications: MutableList<UserQualificationAssignmentEntity>,
   @ManyToOne
