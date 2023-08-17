@@ -77,7 +77,7 @@ class OffenderService(
     )
 
     adjudicationsConfig = PrisonAdjudicationsConfig(
-      adjudicationsApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided"),
+      adjudicationsApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.adjudications-api-page-size configuration provided"),
     )
   }
 

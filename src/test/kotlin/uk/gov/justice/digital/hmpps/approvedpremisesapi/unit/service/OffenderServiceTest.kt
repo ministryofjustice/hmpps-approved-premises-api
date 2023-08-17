@@ -553,7 +553,7 @@ class OffenderServiceTest {
       )
     } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,
-      "/api/offenders/$nomsNumber/adjudications",
+      "/adjudications/$nomsNumber/adjudications",
       HttpStatus.NOT_FOUND,
       null,
     )
@@ -573,7 +573,7 @@ class OffenderServiceTest {
       )
     } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,
-      "/api/offenders/$nomsNumber/adjudications",
+      "/adjudications/$nomsNumber/adjudications",
       HttpStatus.FORBIDDEN,
       null,
     )
