@@ -269,8 +269,6 @@ class PremisesController(
       premises.bookings.map {
         val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
-        if (personInfo !is PersonInfoResult.Success) throw RuntimeException("Could not retrieve person info for CRN ${it.crn}")
-
         val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
           if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${it.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
 
@@ -298,8 +296,6 @@ class PremisesController(
     }
 
     val personInfo = offenderService.getInfoForPerson(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-
-    if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${booking.crn}")
 
     val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
       val premises = booking.premises
