@@ -4041,9 +4041,13 @@ components:
         mapping:
           FullPerson: '#/components/schemas/FullPerson'
           RestrictedPerson: '#/components/schemas/RestrictedPerson'
+          UnknownPerson: '#/components/schemas/FullPerson'
       required:
         - crn
         - type
+    UnknownPerson:
+      allOf:
+        - $ref: '#/components/schemas/Person'
     RestrictedPerson:
       allOf:
         - $ref: '#/components/schemas/Person'
@@ -6901,6 +6905,7 @@ components:
       enum:
         - FullPerson
         - RestrictedPerson
+        - UnknownPerson
         - FullPersonInfo
         - RestrictedPersonInfo
     WithdrawalReason:
