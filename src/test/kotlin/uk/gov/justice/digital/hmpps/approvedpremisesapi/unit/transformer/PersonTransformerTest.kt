@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -29,6 +30,18 @@ class PersonTransformerTest {
     val result = personTransformer.transformModelToPersonApi(personInfoResult)
 
     assertThat(result is RestrictedPerson).isTrue
+    assertThat(result.crn).isEqualTo(crn)
+  }
+
+  @Test
+  fun `transformModelToPersonInfoApi transforms correctly for an unknown person info`() {
+    val crn = "CRN123"
+
+    val personInfoResult = PersonInfoResult.NotFound(crn)
+
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
+
+    assertThat(result is UnknownPerson).isTrue
     assertThat(result.crn).isEqualTo(crn)
   }
 
