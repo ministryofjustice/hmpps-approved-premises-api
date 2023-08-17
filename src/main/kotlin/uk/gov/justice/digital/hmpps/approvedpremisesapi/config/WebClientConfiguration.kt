@@ -56,6 +56,11 @@ class WebClientConfiguration(
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
       )
+      .exchangeStrategies(
+        ExchangeStrategies.builder().codecs {
+          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
+        }.build(),
+      )
       .build()
   }
 
@@ -80,11 +85,6 @@ class WebClientConfiguration(
             .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
-      )
-      .exchangeStrategies(
-        ExchangeStrategies.builder().codecs {
-          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
-        }.build(),
       )
       .build()
   }
