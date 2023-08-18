@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -30,11 +30,13 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
 
-  @Query("SELECT COUNT(*) FROM ApplicationEntity a WHERE TYPE(a) = :type")
-  fun <T : ApplicationEntity> findTotalCountForService(type: Class<T>): Int
-
-  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type")
-  fun <T : ApplicationEntity> findAllForServiceByPage(pageable: Pageable?, type: Class<T>): Page<ApplicationEntity>
+  @Query(
+    "SELECT * FROM approved_premises_applications apa " +
+      "LEFT JOIN applications a ON a.id = apa.id " +
+      "WHERE apa.name IS NULL",
+    nativeQuery = true,
+  )
+  fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
 
   @Query(
     "SELECT a FROM ApplicationEntity a " +
