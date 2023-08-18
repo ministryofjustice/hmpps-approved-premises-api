@@ -364,6 +364,10 @@ class PlacementRequestServiceTest {
           .produce()
       }
 
+    val otherUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(assigneeUser)
       .produce()
@@ -382,7 +386,7 @@ class PlacementRequestServiceTest {
       )
       .withApplication(application)
       .withAssessment(assessment)
-      .withAllocatedToUser(assigneeUser)
+      .withAllocatedToUser(otherUser)
       .produce()
 
     val mockCancellations = mockk<List<CancellationEntity>>()
@@ -412,43 +416,6 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.createBookingNotMade(requestingUser, placementRequestId, null)
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
-  fun `createBookingNotMade returns Unauthorised when Placement Request isn't allocated to User`() {
-    val requestingUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val otherUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(otherUser)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(otherUser)
-      .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withAllocatedToUser(otherUser)
-      .withApplication(application)
-      .withAssessment(assessment)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-
-    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, null)
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test

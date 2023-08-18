@@ -197,10 +197,6 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (placementRequest.allocatedToUser.id != user.id) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
     val bookingNotMade = BookingNotMadeEntity(
       id = UUID.randomUUID(),
       placementRequest = placementRequest,

@@ -864,43 +864,13 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create a Booking Not Made from a Placement Request that is not allocated to the user returns 403`() {
-      `Given a User` { user, jwt ->
+    fun `Create a Booking Not Made from a Placement Request returns 200`() {
+      `Given a User` { _, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             `Given an Application`(createdByUser = otherUser) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/booking-not-made")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    NewBookingNotMade(
-                      notes = "some notes",
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isForbidden
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create a Booking Not Made from a Placement Request returns 200`() {
-      `Given a User` { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = otherUser) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
