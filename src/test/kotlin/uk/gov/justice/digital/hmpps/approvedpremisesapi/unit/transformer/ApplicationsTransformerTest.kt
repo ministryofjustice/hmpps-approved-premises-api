@@ -105,6 +105,9 @@ class ApplicationsTransformerTest {
   private val submittedTemporaryAccommodationApplicationFactory = temporaryAccommodationApplicationEntityFactory
     .withSubmittedAt(OffsetDateTime.now())
 
+  private val submittedCas2ApplicationFactory = cas2ApplicationFactory
+    .withSubmittedAt(OffsetDateTime.now())
+
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToApi(any<OffenderDetailSummary>(), any()) } returns mockk<Person>()
@@ -159,6 +162,16 @@ class ApplicationsTransformerTest {
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
     assertThat(result.risks).isNotNull
+  }
+
+  @Test
+  fun `transformJpaToApi transforms a submitted CAS2 application correctly`() {
+    val application = submittedCas2ApplicationFactory.produce()
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk(), mockk()) as Cas2Application
+
+    assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
   }
 
   @Test
@@ -706,7 +719,7 @@ class ApplicationsTransformerTest {
   }
 
   @Test
-  fun `transformDomainToApiSummary transforms a CAS2 application correctly`() {
+  fun `transformDomainToApiSummary transforms an in progress CAS2 application correctly`() {
     val application = object : DomainCas2ApplicationSummary {
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
@@ -725,5 +738,26 @@ class ApplicationsTransformerTest {
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
     assertThat(result.risks).isNotNull
+  }
+
+  @Test
+  fun `transformDomainToApiSummary transforms a submitted CAS2 application correctly`() {
+    val application = object : DomainCas2ApplicationSummary {
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+      override fun getLatestAssessmentSubmittedAt() = null
+      override fun getLatestAssessmentDecision() = null
+      override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
+      override fun getHasBooking() = false
+    }
+
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk(), mockk()) as Cas2ApplicationSummary
+
+    assertThat(result.id).isEqualTo(application.getId())
+    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
   }
 }

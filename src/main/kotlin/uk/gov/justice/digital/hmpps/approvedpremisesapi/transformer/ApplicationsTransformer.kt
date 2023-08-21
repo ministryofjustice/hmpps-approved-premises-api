@@ -218,7 +218,10 @@ class ApplicationsTransformer(
     }
 
     if (entity is DomainCas2ApplicationSummary) {
-      return ApplicationStatus.inProgress
+      return when {
+        entity.getSubmittedAt() != null -> ApplicationStatus.submitted
+        else -> ApplicationStatus.inProgress
+      }
     }
 
     return when {
