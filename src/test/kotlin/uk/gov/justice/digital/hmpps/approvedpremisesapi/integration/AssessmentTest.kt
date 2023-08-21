@@ -1060,7 +1060,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Close assessment returns 200 OK, persists closure timestamp`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -1192,7 +1192,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Create referral history user note returns 200 with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
