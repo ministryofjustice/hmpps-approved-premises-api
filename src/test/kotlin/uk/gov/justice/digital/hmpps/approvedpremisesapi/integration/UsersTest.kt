@@ -215,6 +215,10 @@ class UsersTest : IntegrationTestBase() {
           TemporaryAccommodationUser(
             id = id,
             region = ProbationRegion(region.id, region.name),
+            deliusUsername = deliusUsername,
+            name = name,
+            email = email,
+            telephoneNumber = telephoneNumber,
             roles = emptyList(),
             service = ServiceName.temporaryAccommodation.value,
           ),
