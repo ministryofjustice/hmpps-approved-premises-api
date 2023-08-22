@@ -146,8 +146,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bookingEntityFactory.produceAndPersist {
       withPremises(premisesOneMatchingEverything)
       withBed(bedTwoInRoomOneInPremisesOneMatchingEverything)
-      withArrivalDate(LocalDate.parse("2023-03-10"))
-      withDepartureDate(LocalDate.parse("2023-03-12"))
+      withArrivalDate(LocalDate.parse("2023-03-14"))
+      withDepartureDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedTwoInRoomOneInPremisesOneMatchingEverything
@@ -160,8 +160,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bookingEntityFactory.produceAndPersist {
       withPremises(premisesOneMatchingEverything)
       withBed(bedThreeInRoomOneInPremisesOneMatchingEverything)
-      withArrivalDate(LocalDate.parse("2023-03-15"))
-      withDepartureDate(LocalDate.parse("2023-03-17"))
+      withArrivalDate(LocalDate.parse("2023-03-10"))
+      withDepartureDate(LocalDate.parse("2023-03-12"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedThreeInRoomOneInPremisesOneMatchingEverything
@@ -175,7 +175,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withPremises(premisesOneMatchingEverything)
       withBed(bedFourInRoomOneInPremisesOneMatchingEverything)
       withArrivalDate(LocalDate.parse("2023-03-08"))
-      withDepartureDate(LocalDate.parse("2023-03-17"))
+      withDepartureDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedFourInRoomOneInPremisesOneMatchingEverything
@@ -204,8 +204,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withPremises(premisesOneMatchingEverything)
       withBed(bedSixInRoomOneInPremisesOneMatchingEverything)
       withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-      withStartDate(LocalDate.parse("2023-03-10"))
-      withEndDate(LocalDate.parse("2023-03-12"))
+      withStartDate(LocalDate.parse("2023-03-14"))
+      withEndDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedSixInRoomOneInPremisesOneMatchingEverything
@@ -219,8 +219,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withPremises(premisesOneMatchingEverything)
       withBed(bedSevenInRoomOneInPremisesOneMatchingEverything)
       withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-      withStartDate(LocalDate.parse("2023-03-15"))
-      withEndDate(LocalDate.parse("2023-03-17"))
+      withStartDate(LocalDate.parse("2023-03-10"))
+      withEndDate(LocalDate.parse("2023-03-12"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedSevenInRoomOneInPremisesOneMatchingEverything
@@ -235,7 +235,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withBed(bedEightInRoomOneInPremisesOneMatchingEverything)
       withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
-      withEndDate(LocalDate.parse("2023-03-17"))
+      withEndDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedEightInRoomOneInPremisesOneMatchingEverything
@@ -524,8 +524,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bookingEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedTwoInRoomInPremisesOneInPdu)
-      withArrivalDate(LocalDate.parse("2023-03-10"))
-      withDepartureDate(LocalDate.parse("2023-03-12"))
+      withArrivalDate(LocalDate.parse("2023-03-14"))
+      withDepartureDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedTwoInRoomInPremisesOneInPdu
@@ -538,8 +538,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bookingEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedThreeInRoomInPremisesOneInPdu)
-      withArrivalDate(LocalDate.parse("2023-03-15"))
-      withDepartureDate(LocalDate.parse("2023-03-17"))
+      withArrivalDate(LocalDate.parse("2023-03-08"))
+      withDepartureDate(LocalDate.parse("2023-03-10"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedThreeInRoomInPremisesOneInPdu
@@ -553,7 +553,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withPremises(premisesOneInPdu)
       withBed(bedFourInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2023-03-08"))
-      withDepartureDate(LocalDate.parse("2023-03-17"))
+      withDepartureDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedFourInRoomInPremisesOneInPdu
@@ -582,8 +582,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withPremises(premisesOneInPdu)
       withBed(bedSixInRoomInPremisesOneInPdu)
       withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-      withStartDate(LocalDate.parse("2023-03-10"))
-      withEndDate(LocalDate.parse("2023-03-12"))
+      withStartDate(LocalDate.parse("2023-03-14"))
+      withEndDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedSixInRoomInPremisesOneInPdu
@@ -597,8 +597,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withPremises(premisesOneInPdu)
       withBed(bedSevenInRoomInPremisesOneInPdu)
       withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-      withStartDate(LocalDate.parse("2023-03-15"))
-      withEndDate(LocalDate.parse("2023-03-17"))
+      withStartDate(LocalDate.parse("2023-03-10"))
+      withEndDate(LocalDate.parse("2023-03-12"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedSevenInRoomInPremisesOneInPdu
@@ -613,7 +613,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withBed(bedEightInRoomInPremisesOneInPdu)
       withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
-      withEndDate(LocalDate.parse("2023-03-17"))
+      withEndDate(LocalDate.parse("2023-03-16"))
     }
 
     bedsThatShouldNotAppearInSearchResults += bedEightInRoomInPremisesOneInPdu
@@ -735,7 +735,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val results = bedSearchRepository.findTemporaryAccommodationBeds(
       probationDeliveryUnit = searchPdu.name,
       startDate = LocalDate.parse("2023-03-09"),
-      durationInDays = 7,
+      endDate = LocalDate.parse("2023-03-15"),
       probationRegionId = probationRegion.id,
     )
 
