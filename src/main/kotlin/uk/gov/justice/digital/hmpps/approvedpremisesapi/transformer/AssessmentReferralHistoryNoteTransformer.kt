@@ -13,7 +13,7 @@ class AssessmentReferralHistoryNoteTransformer {
       id = jpa.id,
       createdAt = jpa.createdAt.toInstant(),
       message = jpa.message,
-      createdByStaffMemberId = jpa.createdByUser.id,
+      createdByUserName = jpa.createdByUser.name,
     )
     else -> throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")
   }

@@ -5645,11 +5645,10 @@ components:
         - $ref: '#/components/schemas/ReferralHistoryNote'
         - type: object
           properties:
-            createdByStaffMemberId:
+            createdByUserName:
               type: string
-              format: uuid
           required:
-            - createdByStaffMemberId
+            - createdByUserName
     NewReferralHistoryUserNote:
       type: object
       properties:
@@ -5681,6 +5680,14 @@ components:
         id:
           type: string
           format: uuid
+        name:
+          type: string
+        deliusUsername:
+          type: string
+        email:
+          type: string
+        telephoneNumber:
+          type: string
         region:
           $ref: '#/components/schemas/ProbationRegion'
       discriminator:
@@ -5691,20 +5698,14 @@ components:
       required:
         - service
         - id
+        - name
+        - deliusUsername
         - region
     ApprovedPremisesUser:
       allOf:
         - $ref: '#/components/schemas/User'
         - type: object
           properties:
-            name:
-              type: string
-            deliusUsername:
-              type: string
-            email:
-              type: string
-            telephoneNumber:
-              type: string
             qualifications:
               type: array
               items:
@@ -5714,8 +5715,6 @@ components:
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
           required:
-            - name
-            - deliusUsername
             - qualifications
             - roles
     TemporaryAccommodationUser:

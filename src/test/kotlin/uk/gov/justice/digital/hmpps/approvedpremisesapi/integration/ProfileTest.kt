@@ -148,6 +148,10 @@ class ProfileTest : IntegrationTestBase() {
           TemporaryAccommodationUser(
             id = id,
             region = ProbationRegion(region.id, region.name),
+            deliusUsername = deliusUsername,
+            email = email,
+            name = userEntity.name,
+            telephoneNumber = telephoneNumber,
             roles = listOf(TemporaryAccommodationUserRole.assessor),
             service = ServiceName.temporaryAccommodation.value,
           ),

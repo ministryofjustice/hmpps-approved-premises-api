@@ -31,6 +31,10 @@ class UserTransformer(
     )
     ServiceName.temporaryAccommodation -> TemporaryAccommodationUser(
       id = jpa.id,
+      deliusUsername = jpa.deliusUsername,
+      email = jpa.email,
+      name = jpa.name,
+      telephoneNumber = jpa.telephoneNumber,
       roles = jpa.roles.mapNotNull(::transformTemporaryAccommodationRoleToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = ServiceName.temporaryAccommodation.value,
