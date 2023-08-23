@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -54,7 +53,6 @@ class TaskTransformerTest {
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
 
-  private val mockPerson = mockk<Person>()
   private val mockUser = mockk<ApprovedPremisesUser>()
   private val mockOffenderDetailSummary = mockk<OffenderDetailSummary>()
   private val mockInmateDetail = mockk<InmateDetail>()
@@ -112,7 +110,6 @@ class TaskTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.transformModelToApi(mockOffenderDetailSummary, mockInmateDetail) } returns mockPerson
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
   }
 
