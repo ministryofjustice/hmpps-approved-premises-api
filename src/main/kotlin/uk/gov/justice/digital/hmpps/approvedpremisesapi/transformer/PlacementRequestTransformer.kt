@@ -9,7 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 
 @Component
 class PlacementRequestTransformer(
@@ -19,7 +20,7 @@ class PlacementRequestTransformer(
   private val userTransformer: UserTransformer,
   private val bookingSummaryTransformer: BookingSummaryTransformer,
 ) {
-  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult.Success): PlacementRequest {
+  fun transformJpaToApi(jpa: PlacementRequestEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): PlacementRequest {
     return PlacementRequest(
       id = jpa.id,
       gender = jpa.placementRequirements.gender,
@@ -30,7 +31,7 @@ class PlacementRequestTransformer(
       radius = jpa.placementRequirements.radius,
       essentialCriteria = jpa.placementRequirements.essentialCriteria.mapNotNull { characteristicToCriteria(it) },
       desirableCriteria = jpa.placementRequirements.desirableCriteria.mapNotNull { characteristicToCriteria(it) },
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
       risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
       applicationId = jpa.application.id,
       assessmentId = jpa.assessment.id,

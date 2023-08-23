@@ -133,7 +133,7 @@ class AssessmentTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockApplicationsTransformer.transformJpaToApi(any<ApplicationEntity>(), any()) } answers {
+    every { mockApplicationsTransformer.transformJpaToApi(any<ApplicationEntity>(), any(), any()) } answers {
       when (it.invocation.args[0]) {
         is ApprovedPremisesApplicationEntity -> mockk<ApprovedPremisesApplication>()
         is TemporaryAccommodationApplicationEntity -> mockk<TemporaryAccommodationApplication>()
@@ -150,7 +150,7 @@ class AssessmentTransformerTest {
   fun `transformJpaToApi transforms correctly`() {
     val assessment = approvedPremisesAssessmentFactory.produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk()) as ApprovedPremisesAssessment
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk()) as ApprovedPremisesAssessment
 
     assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
     assertThat(result.schemaVersion).isEqualTo(UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"))
@@ -197,7 +197,7 @@ class AssessmentTransformerTest {
 
     assessment.clarificationNotes = clarificationNotes
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
     result as ApprovedPremisesAssessment
@@ -210,7 +210,7 @@ class AssessmentTransformerTest {
       .withDecision(JpaAssessmentDecision.ACCEPTED)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
     result as ApprovedPremisesAssessment
@@ -224,7 +224,7 @@ class AssessmentTransformerTest {
       .withReallocatedAt(OffsetDateTime.now())
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
     result as ApprovedPremisesAssessment
@@ -238,7 +238,7 @@ class AssessmentTransformerTest {
       .withDecision(null)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
     result as ApprovedPremisesAssessment
@@ -252,7 +252,7 @@ class AssessmentTransformerTest {
       .withDecision(null)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
     result as ApprovedPremisesAssessment
@@ -266,7 +266,7 @@ class AssessmentTransformerTest {
       .withoutAllocatedToUser()
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -279,7 +279,7 @@ class AssessmentTransformerTest {
       .withDecision(null)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -292,7 +292,7 @@ class AssessmentTransformerTest {
       .withDecision(JpaAssessmentDecision.ACCEPTED)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -306,7 +306,7 @@ class AssessmentTransformerTest {
       .withCompletedAt(OffsetDateTime.now())
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -319,7 +319,7 @@ class AssessmentTransformerTest {
       .withDecision(JpaAssessmentDecision.REJECTED)
       .produce()
 
-    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk(), mockk())
 
     assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
     result as TemporaryAccommodationAssessment
@@ -343,8 +343,8 @@ class AssessmentTransformerTest {
       isAllocated = true,
     )
 
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
+    every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk(), mockk())
 
     assertThat(apiSummary).isInstanceOf(TemporaryAccommodationAssessmentSummary::class.java)
     apiSummary as TemporaryAccommodationAssessmentSummary
@@ -375,8 +375,8 @@ class AssessmentTransformerTest {
       isAllocated = true,
     )
 
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
+    every { mockPersonTransformer.transformModelToApi(any(), any()) } returns mockk<Person>()
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk(), mockk())
 
     assertThat(apiSummary).isInstanceOf(ApprovedPremisesAssessmentSummary::class.java)
     apiSummary as ApprovedPremisesAssessmentSummary

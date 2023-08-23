@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -403,59 +402,6 @@ class OffenderService(
   }
 
   fun getDocument(crn: String, documentId: String, outputStream: OutputStream) = communityApiClient.getDocument(crn, documentId, outputStream)
-
-  fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLao: Boolean): PersonInfoResult {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
-
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return PersonInfoResult.NotFound(crn) else offenderResponse.throwException()
-      is ClientResult.Failure -> offenderResponse.throwException()
-    }
-
-    if (!ignoreLao) {
-      if (offender.currentExclusion || offender.currentRestriction) {
-        val access =
-          when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)) {
-            is ClientResult.Success -> accessResponse.body
-            is ClientResult.Failure.StatusCode -> {
-              if (accessResponse.status == HttpStatus.FORBIDDEN) {
-                try {
-                  accessResponse.deserializeTo<UserOffenderAccess>()
-                  return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
-                } catch (exception: Exception) {
-                  accessResponse.throwException()
-                }
-              }
-
-              accessResponse.throwException()
-            }
-            is ClientResult.Failure -> accessResponse.throwException()
-          }
-
-        if (access.userExcluded || access.userRestricted) {
-          return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
-        }
-      }
-    }
-
-    val inmateDetails = offender.otherIds.nomsNumber?.let { nomsNumber ->
-      when (val inmateDetailsResult = getInmateDetailByNomsNumber(offender.otherIds.crn, nomsNumber)) {
-        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-        else -> null
-      }
-    }
-
-    return PersonInfoResult.Success.Full(
-      crn = crn,
-      offenderDetailSummary = offender,
-      inmateDetail = inmateDetails,
-    )
-  }
 
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
     when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {

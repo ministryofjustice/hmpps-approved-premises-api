@@ -19,11 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -36,7 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.time.LocalDate
 import java.util.UUID
 
@@ -59,11 +57,7 @@ class PlacementRequestsController(
     val requests = placementRequestService.getVisiblePlacementRequestsForUser(user)
 
     return ResponseEntity.ok(
-      requests.map {
-        val personInfo = offenderService.getInfoForPersonOrThrow(it.application.crn, user)
-
-        placementRequestTransformer.transformJpaToApi(it, personInfo)
-      },
+      mapPersonDetailOntoPlacementRequests(requests, user),
     )
   }
 
@@ -94,10 +88,11 @@ class PlacementRequestsController(
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPersonOrThrow(placementRequest.application.crn, user)
+    val (offenderDetail, inmateDetail) = getPersonDetailsForCrn(log, placementRequest.application.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
+      ?: throw NotFoundProblem(placementRequest.application.crn, "Offender")
 
     return ResponseEntity.ok(
-      placementRequestDetailTransformer.transformJpaToApi(placementRequest, personInfo, cancellations),
+      placementRequestDetailTransformer.transformJpaToApi(placementRequest, offenderDetail, inmateDetail, cancellations),
     )
   }
 
@@ -159,11 +154,13 @@ class PlacementRequestsController(
 
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
     return placementRequests.mapNotNull {
-      val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      val personDetail = getPersonDetailsForCrn(log, it.application.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
 
-      if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${it.application.crn}")
+      if (personDetail === null) {
+        return@mapNotNull null
+      }
 
-      placementRequestTransformer.transformJpaToApi(it, personInfo)
+      placementRequestTransformer.transformJpaToApi(it, personDetail.first, personDetail.second)
     }
   }
 }

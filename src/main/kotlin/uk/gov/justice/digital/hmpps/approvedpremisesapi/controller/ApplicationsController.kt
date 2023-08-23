@@ -52,9 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.net.URI
@@ -79,33 +76,34 @@ class ApplicationsController(
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
 
-    val user = userService.getUserForRequest()
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = deliusPrincipal.name
+    val applications = applicationService.getAllApplicationsForUsername(username, serviceName)
 
-    val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
-
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+    return ResponseEntity.ok(applications.map(::getPersonDetailAndTransformToSummary))
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = deliusPrincipal.name
 
-    val application = when (val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)) {
+    val application = when (val applicationResult = applicationService.getApplicationForUsername(applicationId, username)) {
       is AuthorisableActionResult.NotFound -> null
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
     if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
+      return ResponseEntity.ok(getPersonDetailAndTransform(application))
     }
 
-    val offlineApplication = when (val offlineApplicationResult = applicationService.getOfflineApplicationForUsername(applicationId, user.deliusUsername)) {
+    val offlineApplication = when (val offlineApplicationResult = applicationService.getOfflineApplicationForUsername(applicationId, username)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Success -> offlineApplicationResult.entity
     }
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(offlineApplication, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(offlineApplication))
   }
 
   @Transactional
@@ -113,10 +111,10 @@ class ApplicationsController(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn, user)
+    val (offender, inmate) = getPersonDetail(body.crn, true)
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
-      ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(personInfo.offenderDetailSummary, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
+      ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(offender, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
       ServiceName.cas2 -> applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
       ServiceName.temporaryAccommodation -> {
         when (val actionResult = applicationService.createTemporaryAccommodationApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
@@ -136,12 +134,13 @@ class ApplicationsController(
 
     return ResponseEntity
       .created(URI.create("/applications/${application.id}"))
-      .body(applicationsTransformer.transformJpaToApi(application, personInfo))
+      .body(applicationsTransformer.transformJpaToApi(application, offender, inmate))
   }
 
   @Transactional
   override fun applicationsApplicationIdPut(applicationId: UUID, body: UpdateApplication): ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = deliusPrincipal.name
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
@@ -156,14 +155,14 @@ class ApplicationsController(
         releaseType = body.releaseType?.name,
         arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,
-        username = user.deliusUsername,
+        username = username,
       )
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = serializedData,
-        username = user.deliusUsername,
+        username = username,
       )
-      is UpdateCas2Application -> applicationService.updateCas2Application(applicationId = applicationId, data = serializedData, username = user.deliusUsername)
+      is UpdateCas2Application -> applicationService.updateCas2Application(applicationId = applicationId, data = serializedData, username = username)
       else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
     }
 
@@ -180,7 +179,7 @@ class ApplicationsController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
   }
 
   override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID, body: NewWithdrawal): ResponseEntity<Unit> {
@@ -262,9 +261,8 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(assessment.application.crn, user)
-
-    return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
+    val (offender, inmate) = getPersonDetail(assessment.application.crn)
+    return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, offender, inmate))
   }
 
   private fun getPersonDetail(crn: String, forceFullLaoCheck: Boolean = false): Pair<OffenderDetailSummary, InmateDetail?> {
@@ -276,7 +274,7 @@ class ApplicationsController(
       user.hasQualification(UserQualification.LAO)
     }
 
-    return getPersonDetailsForCrn(log, crn, user.deliusUsername, offenderService, ignoreLao)
+    return getPersonDetailsForCrn(log, crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
       ?: throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
   }
 
@@ -307,21 +305,21 @@ class ApplicationsController(
     )
   }
 
-  private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn, user)
+  private fun getPersonDetailAndTransform(application: ApplicationEntity): Application {
+    val (offender, inmate) = getPersonDetail(application.crn)
 
-    return applicationsTransformer.transformJpaToApi(application, personInfo)
+    return applicationsTransformer.transformJpaToApi(application, offender, inmate)
   }
 
-  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary, user: UserEntity): ApplicationSummary {
-    val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn(), user)
+  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary): ApplicationSummary {
+    val (offender, inmate) = getPersonDetail(application.getCrn())
 
-    return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
+    return applicationsTransformer.transformDomainToApiSummary(application, offender, inmate)
   }
 
-  private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getInfoForPersonOrThrow(offlineApplication.crn, user)
+  private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity): Application {
+    val (offender, inmate) = getPersonDetail(offlineApplication.crn)
 
-    return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
+    return applicationsTransformer.transformJpaToApi(offlineApplication, offender, inmate)
   }
 }

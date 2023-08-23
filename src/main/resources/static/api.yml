@@ -208,6 +208,40 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /premises/{premisesId}/residents:
+    get:
+      tags:
+        - Operations on premises
+      summary: Returns all the residents in an approved premises with the given ID
+      parameters:
+      - name: premisesId
+        in: path
+        description: ID of the premises to get residents for
+        required: true
+        schema:
+          type: integer
+          format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/bookings:
     get:
       tags:
@@ -4034,54 +4068,37 @@ components:
       properties:
         crn:
           type: string
-        type:
-          $ref: '#/components/schemas/PersonType'
-      discriminator:
-        propertyName: type
-        mapping:
-          FullPerson: '#/components/schemas/FullPerson'
-          RestrictedPerson: '#/components/schemas/RestrictedPerson'
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        nomsNumber:
+          type: string
+        ethnicity:
+          type: string
+        nationality:
+          type: string
+        religionOrBelief:
+          type: string
+        sex:
+          type: string
+        genderIdentity:
+          type: string
+        status:
+          type: string
+          enum:
+            - InCustody
+            - InCommunity
+            - Unknown
+        prisonName:
+          type: string
       required:
         - crn
-        - type
-    RestrictedPerson:
-      allOf:
-        - $ref: '#/components/schemas/Person'
-    FullPerson:
-      allOf:
-        - $ref: '#/components/schemas/Person'
-        - type: object
-          properties:
-            name:
-              type: string
-            dateOfBirth:
-              type: string
-              format: date
-            nomsNumber:
-              type: string
-            ethnicity:
-              type: string
-            nationality:
-              type: string
-            religionOrBelief:
-              type: string
-            sex:
-              type: string
-            genderIdentity:
-              type: string
-            status:
-              type: string
-              enum:
-                - InCustody
-                - InCommunity
-                - Unknown
-            prisonName:
-              type: string
-          required:
-            - name
-            - dateOfBirth
-            - sex
-            - status
+        - name
+        - dateOfBirth
+        - sex
+        - status
     NewArrival:
       type: object
       properties:
@@ -6896,13 +6913,6 @@ components:
     BedOccupancyOpenEntry:
       allOf:
         - $ref: '#/components/schemas/BedOccupancyEntry'
-    PersonType:
-      type: string
-      enum:
-        - FullPerson
-        - RestrictedPerson
-        - FullPersonInfo
-        - RestrictedPersonInfo
     WithdrawalReason:
       type: string
       enum:

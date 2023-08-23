@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -57,7 +56,6 @@ class PlacementRequestTransformerTest {
 
   private val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
   private val inmateDetail = InmateDetailFactory().produce()
-  private val personInfo = PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail)
   private val mockBookingSummary = mockk<BookingSummary>()
 
   private val user = UserEntityFactory()
@@ -104,7 +102,7 @@ class PlacementRequestTransformerTest {
     .withAllocatedToUser(user)
 
   private val mockRisks = mockk<PersonRisks>()
-  private val mockPersonInfo = mockk<Person>()
+  private val mockPerson = mockk<Person>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
   private val decision = ApiAssessmentDecision.accepted
@@ -112,7 +110,7 @@ class PlacementRequestTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns decision
-    every { mockPersonTransformer.transformModelToPersonApi(personInfo) } returns mockPersonInfo
+    every { mockPersonTransformer.transformModelToApi(offenderDetailSummary, inmateDetail) } returns mockPerson
     every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
   }
@@ -142,10 +140,7 @@ class PlacementRequestTransformerTest {
       .withNotes("Some notes")
       .produce()
 
-    val result = placementRequestTransformer.transformJpaToApi(
-      placementRequestEntity,
-      PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail),
-    )
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
     assertThat(result).isEqualTo(
       PlacementRequest(
@@ -158,7 +153,7 @@ class PlacementRequestTransformerTest {
         radius = placementRequirementsEntity.radius,
         essentialCriteria = listOf(PlacementCriteria.isSemiSpecialistMentalHealth, PlacementCriteria.isRecoveryFocussed),
         desirableCriteria = listOf(PlacementCriteria.isWheelchairDesignated, PlacementCriteria.isSingle, PlacementCriteria.hasEnSuite),
-        person = mockPersonInfo,
+        person = mockPerson,
         risks = mockRisks,
         applicationId = application.id,
         assessmentId = assessment.id,
@@ -200,7 +195,7 @@ class PlacementRequestTransformerTest {
 
     every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
 
-    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.matched)
     assertThat(result.booking).isEqualTo(mockBookingSummary)
@@ -220,7 +215,7 @@ class PlacementRequestTransformerTest {
 
     placementRequestEntity.bookingNotMades = mutableListOf(bookingNotMade)
 
-    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.unableToMatch)
   }
@@ -258,7 +253,7 @@ class PlacementRequestTransformerTest {
 
     every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
 
-    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail))
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, offenderDetailSummary, inmateDetail)
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.notMatched)
     assertThat(result.booking).isEqualTo(mockBookingSummary)
