@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
@@ -128,7 +129,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    placementRequestTransformer.transformJpaToApi(placementRequest, offenderDetails1, inmateDetails1),
+                    placementRequestTransformer.transformJpaToApi(
+                      placementRequest,
+                      PersonInfoResult.Success.Full(offenderDetails1.otherIds.crn, offenderDetails1, inmateDetails1),
+                    ),
                   ),
                 ),
               )
@@ -150,7 +154,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Get dashboard without for non-manager returns 401`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -184,8 +188,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       unmatchedPlacementRequest,
-                      unmatchedOffender,
-                      unmatchedInmate,
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
                   ),
                 ),
@@ -217,8 +220,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       unmatchedPlacementRequest,
-                      unmatchedOffender,
-                      unmatchedInmate,
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
                   ),
                 ),
@@ -276,8 +278,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       matchedPlacementRequest,
-                      matchedOffender,
-                      matchedInmate,
+                      PersonInfoResult.Success.Full(matchedOffender.otherIds.crn, matchedOffender, matchedInmate),
                     ),
                   ),
                 ),
@@ -315,8 +316,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       unableToMatchPlacementRequest,
-                      unableToMatchOffender,
-                      unableToMatchInmate,
+                      PersonInfoResult.Success.Full(unableToMatchOffender.otherIds.crn, unableToMatchOffender, unableToMatchInmate),
                     ),
                   ),
                 ),
@@ -395,7 +395,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(placementRequest, offenderDetails, inmateDetails),
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequest,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
                 ),
               ),
             )
@@ -466,8 +469,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      offenderDetails,
-                      inmateDetails,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                       listOf(),
                     ),
                   ),
@@ -479,7 +481,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single Placement Request that is allocated to calling User where Offender is LAO but user does not pass LAO check, does not have LAO qualification returns 403`() {
+    fun `Get single Placement Request that is allocated to calling User where Offender is LAO but user does not pass LAO check, does not have LAO qualification returns 200 with restricted person info`() {
       `Given a User` { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender`(
@@ -505,7 +507,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
-                .isForbidden
+                .isOk
+                .expectBody()
+                .jsonPath("$.person.type").isEqualTo("RestrictedPerson")
+                .jsonPath("$.person.crn").isEqualTo(placementRequest.application.crn)
             }
           }
         }
@@ -545,8 +550,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      offenderDetails,
-                      inmateDetails,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                       listOf(),
                     ),
                   ),
@@ -590,8 +594,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      offenderDetails,
-                      inmateDetails,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                       listOf(),
                     ),
                   ),
@@ -656,8 +659,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      offenderDetails,
-                      inmateDetails,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                       cancellations,
                     ),
                   ),
@@ -895,51 +897,51 @@ class PlacementRequestsTest : IntegrationTestBase() {
         }
       }
     }
-  }
 
-  @Nested
-  inner class WithdrawPlacementRequest {
-    @Test
-    fun `Withdraw Placement Request without a JWT returns 401`() {
-      webTestClient.post()
-        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
-      `Given a User` { _, jwt ->
+    @Nested
+    inner class WithdrawPlacementRequest {
+      @Test
+      fun `Withdraw Placement Request without a JWT returns 401`() {
         webTestClient.post()
           .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
-          .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .isForbidden
+          .isUnauthorized
       }
-    }
 
-    @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          `Given an Application`(createdByUser = user) {
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = user,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              webTestClient.post()
-                .uri("/placement-requests/${placementRequest.id}/withdrawal")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
+      @Test
+      fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
+        `Given a User` { _, jwt ->
+          webTestClient.post()
+            .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
 
-              val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-              assertThat(persistedPlacementRequest.isWithdrawn).isTrue
+      @Test
+      fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = user) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = user,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                webTestClient.post()
+                  .uri("/placement-requests/${placementRequest.id}/withdrawal")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+
+                val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
+                assertThat(persistedPlacementRequest.isWithdrawn).isTrue
+              }
             }
           }
         }

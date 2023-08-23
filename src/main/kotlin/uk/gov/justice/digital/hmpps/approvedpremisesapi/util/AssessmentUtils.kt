@@ -1,63 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
-import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
-fun mapAndTransformAssessmentSummaries(
-  log: Logger,
-  assessments: List<DomainAssessmentSummary>,
-  deliusUsername: String,
-  offenderService: OffenderService,
-  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail?) -> AssessmentSummary,
-  ignoreLao: Boolean = false,
-  sortOrder: SortOrder? = null,
-  sortField: AssessmentSortField? = null,
-  statuses: List<AssessmentStatus>? = null,
-): List<AssessmentSummary> {
-  return assessments.mapNotNull {
-    transformAssessmentSummary(log, it, deliusUsername, offenderService, transformer, ignoreLao)
-  }
-    .sort(sortOrder, sortField)
-    .filterByStatuses(statuses)
-}
-
-fun <T> transformAssessmentSummary(
-  log: Logger,
-  assessment: DomainAssessmentSummary,
-  deliusUsername: String,
-  offenderService: OffenderService,
-  transformer: (DomainAssessmentSummary, OffenderDetailSummary, InmateDetail?) -> T,
-  ignoreLao: Boolean,
-): T? {
-  val (offenderDetailSummary, inmateDetail) = when (
-    val personDetailsResult = tryGetPersonDetailsForCrn(log, assessment.crn, deliusUsername, offenderService, ignoreLao)
-  ) {
-    is AuthorisableActionResult.Success -> personDetailsResult.entity
-    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessment.crn, "Offender")
-    is AuthorisableActionResult.Unauthorised -> return null
-  }
-
-  return transformer(assessment, offenderDetailSummary, inmateDetail)
-}
-
-private fun List<AssessmentSummary>.sort(sortOrder: SortOrder?, sortField: AssessmentSortField?): List<AssessmentSummary> {
+fun List<AssessmentSummary>.sort(sortOrder: SortOrder?, sortField: AssessmentSortField?): List<AssessmentSummary> {
   if (sortField != null) {
     val comparator = Comparator<AssessmentSummary> { a, b ->
       val ascendingCompare = when (sortField) {
-        AssessmentSortField.personName -> compareValues(a.person.name, b.person.name)
+        AssessmentSortField.personName -> compareValues((a.person as? FullPerson)?.name, (b.person as? FullPerson)?.name)
         AssessmentSortField.personCrn -> compareValues(a.person.crn, b.person.crn)
         AssessmentSortField.assessmentArrivalDate -> compareValues(a.arrivalDate, b.arrivalDate)
         AssessmentSortField.assessmentStatus -> when {
@@ -80,7 +37,7 @@ private fun List<AssessmentSummary>.sort(sortOrder: SortOrder?, sortField: Asses
   return this
 }
 
-private fun List<AssessmentSummary>.filterByStatuses(statuses: List<AssessmentStatus>?): List<AssessmentSummary> {
+fun List<AssessmentSummary>.filterByStatuses(statuses: List<AssessmentStatus>?): List<AssessmentSummary> {
   if (statuses == null) {
     return this
   }
