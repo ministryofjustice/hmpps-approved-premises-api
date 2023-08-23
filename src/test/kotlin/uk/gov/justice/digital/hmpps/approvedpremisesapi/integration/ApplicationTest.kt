@@ -23,10 +23,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -62,7 +62,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
@@ -498,13 +497,11 @@ class ApplicationTest : IntegrationTestBase() {
           objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
         assertThat(responseBody).matches {
-          val person = it[0].person as FullPerson
-
           application.id == it[0].id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == FullPerson.Status.unknown &&
-            person.prisonName == null
+            application.crn == it[0].person.crn &&
+            it[0].person.nomsNumber == null &&
+            it[0].person.status == Person.Status.unknown &&
+            it[0].person.prisonName == null
         }
       }
     }
@@ -547,13 +544,11 @@ class ApplicationTest : IntegrationTestBase() {
         objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
       assertThat(responseBody).matches {
-        val person = it[0].person as FullPerson
-
         application.id == it[0].id &&
-          application.crn == person.crn &&
-          person.nomsNumber == null &&
-          person.status == FullPerson.Status.unknown &&
-          person.prisonName == null
+          application.crn == it[0].person.crn &&
+          it[0].person.nomsNumber == null &&
+          it[0].person.status == Person.Status.unknown &&
+          it[0].person.prisonName == null
       }
     }
   }
@@ -687,15 +682,12 @@ class ApplicationTest : IntegrationTestBase() {
 
         val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-        assertThat(responseBody.person is FullPerson).isTrue
         assertThat(responseBody).matches {
-          val person = it.person as FullPerson
-
           application.id == it.id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == FullPerson.Status.unknown &&
-            person.prisonName == null
+            application.crn == it.person.crn &&
+            it.person.nomsNumber == null &&
+            it.person.status == Person.Status.unknown &&
+            it.person.prisonName == null
         }
       }
     }
@@ -736,16 +728,12 @@ class ApplicationTest : IntegrationTestBase() {
 
       val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-      assertThat(responseBody.person is FullPerson).isTrue
-
       assertThat(responseBody).matches {
-        val person = it.person as FullPerson
-
         application.id == it.id &&
-          application.crn == person.crn &&
-          person.nomsNumber == null &&
-          person.status == FullPerson.Status.unknown &&
-          person.prisonName == null
+          application.crn == it.person.crn &&
+          it.person.nomsNumber == null &&
+          it.person.status == Person.Status.unknown &&
+          it.person.prisonName == null
       }
     }
   }
@@ -1060,7 +1048,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new application returns 404 when a person cannot be found`() {
+  fun `Create new application returns 500 when a person cannot be found`() {
     `Given a User` { userEntity, jwt ->
       val crn = "X1234"
 
@@ -1082,9 +1070,9 @@ class ApplicationTest : IntegrationTestBase() {
         )
         .exchange()
         .expectStatus()
-        .isNotFound
+        .is5xxServerError
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+        .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
     }
   }
 
@@ -1983,10 +1971,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectBody()
               .json(
                 objectMapper.writeValueAsString(
-                  assessmentTransformer.transformJpaToApi(
-                    assessment,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
+                  assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
                 ),
               )
           }
@@ -2015,10 +2000,7 @@ class ApplicationTest : IntegrationTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    assessmentTransformer.transformJpaToApi(
-                      assessment,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                    ),
+                    assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
                   ),
                 )
             }

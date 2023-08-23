@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -114,12 +113,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(assessment),
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                ),
-              ),
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
             ),
           )
       }
@@ -185,7 +179,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails))),
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
             ),
             true,
           )
@@ -246,7 +240,7 @@ class AssessmentTest : IntegrationTestBase() {
             assessments
           }
           AssessmentSortField.assessmentCreatedAt -> assessments.sortedByDescending { it.assessment.createdAt }
-        }.map { assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(it.assessment), PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails)) }
+        }.map { assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(it.assessment), it.offenderDetails, it.inmateDetails) }
 
         webTestClient.get()
           .uri("/assessments?sortOrder=descending&sortField=${sortField.value}")
@@ -310,7 +304,8 @@ class AssessmentTest : IntegrationTestBase() {
           .map {
             assessmentTransformer.transformDomainToApiSummary(
               toAssessmentSummaryEntity(it.assessment),
-              PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails),
+              it.offenderDetails,
+              it.inmateDetails,
             )
           }
 
@@ -385,12 +380,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(assessment),
-                  PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
-                ),
-              ),
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offender.first, offender.second)),
             ),
             true,
           )
@@ -399,7 +389,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all assessments returns restricted person information for LAO`() {
+  fun `Get all assessments does not return assessments for LAO`() {
     var offenderIndex = 0
     `Given a User` { user, jwt ->
       `Given Some Offenders`(
@@ -462,16 +452,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(assessment),
-                  PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
-                ),
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(otherAssessment),
-                  PersonInfoResult.Success.Restricted(otherOffender.first.otherIds.crn, otherOffender.first.otherIds.nomsNumber),
-                ),
-              ),
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offender.first, offender.second)),
             ),
             true,
           )
@@ -566,10 +547,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(
-                assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              ),
+              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
             ),
           )
       }
@@ -671,10 +649,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(
-                assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              ),
+              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
             ),
           )
       }
@@ -728,10 +703,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(
-                assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              ),
+              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
             ),
           )
       }

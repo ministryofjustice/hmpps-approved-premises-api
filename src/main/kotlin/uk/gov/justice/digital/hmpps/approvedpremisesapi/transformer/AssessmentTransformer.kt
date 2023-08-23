@@ -21,8 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
@@ -36,10 +37,10 @@ class AssessmentTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: AssessmentEntity, personInfo: PersonInfoResult.Success) = when (jpa.application) {
+  fun transformJpaToApi(jpa: AssessmentEntity, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?) = when (jpa.application) {
     is ApprovedPremisesApplicationEntity -> ApprovedPremisesAssessment(
       id = jpa.id,
-      application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as ApprovedPremisesApplication,
+      application = applicationsTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail) as ApprovedPremisesApplication,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
@@ -57,7 +58,7 @@ class AssessmentTransformer(
 
     is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationAssessment(
       id = jpa.id,
-      application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as TemporaryAccommodationApplication,
+      application = applicationsTransformer.transformJpaToApi(jpa.application, offenderDetailSummary, inmateDetail) as TemporaryAccommodationApplication,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
@@ -76,7 +77,7 @@ class AssessmentTransformer(
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
 
-  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult.Success): AssessmentSummary =
+  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, offenderDetailSummary: OffenderDetailSummary, inmateDetail: InmateDetail?): AssessmentSummary =
     when (ase.type) {
       "approved-premises" -> ApprovedPremisesAssessmentSummary(
         type = "CAS1",
@@ -87,7 +88,7 @@ class AssessmentTransformer(
         status = getStatusForApprovedPremisesAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
       )
       "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
         type = "CAS3",
@@ -98,7 +99,7 @@ class AssessmentTransformer(
         status = getStatusForTemporaryAccommodationAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = personTransformer.transformModelToApi(offenderDetailSummary, inmateDetail),
       )
       else -> throw RuntimeException("Unsupported type: ${ase.type}")
     }

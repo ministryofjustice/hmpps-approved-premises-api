@@ -4,7 +4,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -29,7 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
@@ -57,22 +57,15 @@ class PlacementRequestDetailTransformerTest {
   private val mockCancellation = mockk<Cancellation>()
 
   private val mockPlacementRequestEntity = mockk<PlacementRequestEntity>()
-  private val mockPersonInfoResult = mockk<PersonInfoResult.Success>()
+  private val mockOffenderDetailSummary = mockk<OffenderDetailSummary>()
+  private val mockInmateDetail = mockk<InmateDetail>()
   private val mockBookingSummary = mockk<BookingSummary>()
   private val mockCancellationEntities = listOf(
     mockk<CancellationEntity>(),
     mockk<CancellationEntity>(),
   )
-
-  private val transformedPlacementRequest = getTransformedPlacementRequest()
   private val mockApplicationEntity = mockk<ApprovedPremisesApplicationEntity>()
   private val mockApplication = mockk<Application>()
-
-  @BeforeEach
-  fun setup() {
-    every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
-    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
-  }
 
   @Test
   fun `it returns a PlacementRequestDetail object`() {
@@ -83,10 +76,10 @@ class PlacementRequestDetailTransformerTest {
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
 
     every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
-    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
-    every { mockApplicationsTransformer.transformJpaToApi(mockApplicationEntity, mockPersonInfoResult) } returns mockApplication
+    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail) } returns transformedPlacementRequest
+    every { mockApplicationsTransformer.transformJpaToApi(mockApplicationEntity, mockOffenderDetailSummary, mockInmateDetail) } returns mockApplication
 
-    val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult, mockCancellationEntities)
+    val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail, mockCancellationEntities)
 
     assertThat(result.id).isEqualTo(transformedPlacementRequest.id)
     assertThat(result.gender).isEqualTo(transformedPlacementRequest.gender)
@@ -114,7 +107,7 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.application).isEqualTo(mockApplication)
 
     verify(exactly = 1) {
-      mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult)
+      mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail)
     }
 
     mockCancellationEntities.forEach {
@@ -147,11 +140,11 @@ class PlacementRequestDetailTransformerTest {
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
 
     every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
-    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
+    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail) } returns transformedPlacementRequest
     every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
-    every { mockApplicationsTransformer.transformJpaToApi(mockApplicationEntity, mockPersonInfoResult) } returns mockApplication
+    every { mockApplicationsTransformer.transformJpaToApi(mockApplicationEntity, mockOffenderDetailSummary, mockInmateDetail) } returns mockApplication
 
-    val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult, mockCancellationEntities)
+    val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockOffenderDetailSummary, mockInmateDetail, mockCancellationEntities)
 
     assertThat(result.booking).isEqualTo(mockBookingSummary)
 
@@ -216,10 +209,10 @@ class PlacementRequestDetailTransformerTest {
     )
 
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecision.accepted
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockk<Person>()
+    every { mockPersonTransformer.transformModelToApi(mockOffenderDetailSummary, mockInmateDetail) } returns mockk<Person>()
     every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockk<PersonRisks>()
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockk<ApprovedPremisesUser>()
 
-    return realPlacementRequestTransformer.transformJpaToApi(placementRequestEntity, mockPersonInfoResult)
+    return realPlacementRequestTransformer.transformJpaToApi(placementRequestEntity, mockOffenderDetailSummary, mockInmateDetail)
   }
 }

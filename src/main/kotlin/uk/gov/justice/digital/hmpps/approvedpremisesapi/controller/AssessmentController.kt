@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -33,10 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.filterByStatuses
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sort
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapAndTransformAssessmentSummaries
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -78,15 +77,17 @@ class AssessmentController(
     }
 
     return ResponseEntity.ok(
-      summaries.map {
-        val personInfo = offenderService.getInfoForPersonOrThrow(it.crn, user)
-
-        assessmentTransformer.transformDomainToApiSummary(
-          it,
-          personInfo,
-        )
-      }.sort(sortOrder, sortField)
-        .filterByStatuses(statuses),
+      mapAndTransformAssessmentSummaries(
+        log,
+        summaries,
+        user.deliusUsername,
+        offenderService,
+        assessmentTransformer::transformDomainToApiSummary,
+        user.hasQualification(UserQualification.LAO),
+        sortOrder,
+        sortField,
+        statuses,
+      ),
     )
   }
 
@@ -100,10 +101,12 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(assessment.application.crn, user)
+    val applicationCrn = assessment.application.crn
+
+    val (offenderDetails, inmateDetails) = getPersonDetailsForCrn(log, applicationCrn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO)) ?: throw InternalServerErrorProblem("Unable to get Person via crn: $applicationCrn")
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, personInfo),
+      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
     )
   }
 
@@ -127,10 +130,12 @@ class AssessmentController(
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPersonOrThrow(assessment.application.crn, user)
+    val applicationCrn = assessment.application.crn
+
+    val (offenderDetails, inmateDetails) = getPersonDetailsForCrn(log, applicationCrn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO)) ?: throw InternalServerErrorProblem("Unable to get Person via crn: $applicationCrn")
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, personInfo),
+      assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
     )
   }
 
