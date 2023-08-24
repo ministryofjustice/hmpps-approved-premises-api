@@ -6692,7 +6692,6 @@ components:
         crn:
           type: string
       required:
-        - name
         - crn
     BookingSearchResultBookingSummary:
       type: object
