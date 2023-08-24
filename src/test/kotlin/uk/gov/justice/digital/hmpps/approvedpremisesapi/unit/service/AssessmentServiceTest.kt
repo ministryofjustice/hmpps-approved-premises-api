@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -61,6 +62,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -1327,6 +1329,9 @@ class AssessmentServiceTest {
 
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
+    every { userServiceMock.getUserForRequest() } returns user
+    every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1338,6 +1343,7 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
     assertThat(updatedAssessment.completedAt).isNull()
+    assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.REJECTED)
   }
 
   @Test
@@ -1529,6 +1535,9 @@ class AssessmentServiceTest {
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
 
+    every { userServiceMock.getUserForRequest() } returns user
+    every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
     val result = assessmentService.closeAssessment(user, assessmentId)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1539,6 +1548,7 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment is TemporaryAccommodationAssessmentEntity)
     updatedAssessment as TemporaryAccommodationAssessmentEntity
     assertThat(updatedAssessment.completedAt).isNotNull()
+    assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.COMPLETED)
   }
 
   @Test
@@ -1866,6 +1876,9 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
 
+    every { userServiceMock.getUserForRequest() } returns assigneeUser
+    every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
     val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1875,6 +1888,7 @@ class AssessmentServiceTest {
     validationResult as ValidatableActionResult.Success
 
     assertThat(validationResult.entity).isEqualTo(previousAssessment)
+    assertAssessmentHasSystemNote(validationResult.entity, assigneeUser, ReferralHistorySystemNoteType.IN_REVIEW)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
   }
@@ -1929,12 +1943,12 @@ class AssessmentServiceTest {
       .withYieldedApArea { ApAreaEntityFactory().produce() }
       .produce()
 
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
     val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(
-        UserEntityFactory()
-          .withProbationRegion(probationRegion)
-          .produce(),
-      )
+      .withCreatedByUser(user)
       .withProbationRegion(probationRegion)
       .produce()
 
@@ -1958,6 +1972,9 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
 
+    every { userServiceMock.getUserForRequest() } returns user
+    every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
     val result = assessmentService.deallocateAssessment(previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1967,6 +1984,7 @@ class AssessmentServiceTest {
     validationResult as ValidatableActionResult.Success
 
     assertThat(validationResult.entity).isEqualTo(previousAssessment)
+    assertAssessmentHasSystemNote(validationResult.entity, user, ReferralHistorySystemNoteType.UNALLOCATED)
 
     verify {
       assessmentRepositoryMock.save(
@@ -2272,7 +2290,12 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
 
-      assessmentService.createAssessment(application)
+      every { userServiceMock.getUserForRequest() } returns user
+      every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
+      val result = assessmentService.createAssessment(application)
+
+      assertAssessmentHasSystemNote(result, user, ReferralHistorySystemNoteType.SUBMITTED)
 
       verify { assessmentRepositoryMock.save(match { it.application == application }) }
     }
