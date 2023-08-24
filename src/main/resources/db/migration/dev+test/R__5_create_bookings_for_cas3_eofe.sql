@@ -184,7 +184,7 @@ VALUES
     '13145d61-6ea7-4e77-9c89-cbbd2f7d85c4',
     CURRENT_DATE - 84,
     CURRENT_DATE + 3,
-    'X698234', -- Multiple Offences
+    'X698334', -- LAO
     CURRENT_DATE - 84,
     CURRENT_DATE + 3,
     '70a6046c-23fc-4a30-b151-582ffd509e6a',
