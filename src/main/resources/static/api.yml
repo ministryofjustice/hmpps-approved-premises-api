@@ -5008,6 +5008,9 @@ components:
             submittedAt:
               type: string
               format: date-time
+            arrivalDate:
+              type: string
+              format: date-time
           required:
             - createdByUserId
             - schemaVersion

@@ -102,6 +102,7 @@ class ApplicationsTransformerTest {
     .withSubmittedAt(OffsetDateTime.now())
 
   private val submittedTemporaryAccommodationApplicationFactory = temporaryAccommodationApplicationEntityFactory
+    .withArrivalDate(OffsetDateTime.now().toLocalDate().plusDays(7))
     .withSubmittedAt(OffsetDateTime.now())
 
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
@@ -177,6 +178,7 @@ class ApplicationsTransformerTest {
   fun `transformJpaToApi transforms an in progress Temporary Accommodation application correctly`() {
     val application = temporaryAccommodationApplicationEntityFactory
       .withSubmittedAt(null)
+      .withArrivalDate(null)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withApArea(
@@ -193,6 +195,7 @@ class ApplicationsTransformerTest {
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
     assertThat(result.risks).isNotNull
+    assertThat(result.arrivalDate).isNull()
   }
 
   @Test
@@ -221,6 +224,7 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.arrivalDate).isEqualTo(application.arrivalDate!!.toInstant())
   }
 
   @Test

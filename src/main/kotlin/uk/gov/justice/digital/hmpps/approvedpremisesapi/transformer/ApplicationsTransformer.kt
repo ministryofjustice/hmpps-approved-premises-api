@@ -71,6 +71,7 @@ class ApplicationsTransformer(
         outdatedSchema = !jpa.schemaUpToDate,
         createdAt = jpa.createdAt.toInstant(),
         submittedAt = jpa.submittedAt?.toInstant(),
+        arrivalDate = jpa.arrivalDate?.toInstant(),
         data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
         document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
         risks = if (jpa.riskRatings != null) {
