@@ -47,7 +47,7 @@ class BookingSearchTransformerTest {
     result.results.forEachIndexed { index, it ->
       val domainResult = domainResults[index]
 
-      assertThat(it.person.name).isEqualTo(domainResult.personName ?: "")
+      assertThat(it.person.name).isEqualTo(domainResult.personName)
       assertThat(it.person.crn).isEqualTo(domainResult.personCrn)
       assertThat(it.booking.id).isEqualTo(domainResult.bookingId)
       assertThat(it.booking.status.value).isEqualTo(domainResult.bookingStatus)

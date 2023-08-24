@@ -20,7 +20,7 @@ class BookingSearchResultTransformer {
 
   private fun transformResult(result: DomainBookingSearchResult) = ApiBookingSearchResult(
     person = BookingSearchResultPersonSummary(
-      name = result.personName ?: "",
+      name = result.personName,
       crn = result.personCrn,
     ),
     booking = BookingSearchResultBookingSummary(
