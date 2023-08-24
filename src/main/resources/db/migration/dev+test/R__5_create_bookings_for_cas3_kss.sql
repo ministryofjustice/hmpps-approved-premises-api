@@ -34,6 +34,22 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'cc3b1ef5-b492-4771-9cb9-975cf36c7f19',
+    '80d5337f-4af4-4df9-a1ae-bb909444715f',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
 --- Add a confirmed booking ---
 
 INSERT INTO
@@ -66,6 +82,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'ec0580b0-9c93-4114-b5c5-5e9da19af5d3',
+    '1de846dd-9617-4488-9b05-d54c9f955e2b',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   confirmations (
@@ -117,6 +148,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'f1f6801f-a900-4acf-9908-7b4568e23ec1',
+    '713943e2-1ae4-4101-aa6c-9a40e7930168',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   arrivals (
@@ -196,6 +242,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'c9c40961-5fe8-46e7-bf9c-38d2daf4074a',
+    '13145d61-6ea7-4e77-9c89-cbbd2f7d85c4',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   arrivals (
@@ -249,6 +310,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '9c209338-9a57-43da-a35e-0dd22db4240f',
+    'a6fc549a-915d-4884-97f0-bc1cee84208c',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   arrivals (
@@ -302,6 +378,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '49d5cdc3-bd54-4954-8dcb-ee4fd45ba573',
+    'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   departures (
