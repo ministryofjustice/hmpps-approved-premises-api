@@ -4,12 +4,13 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 
 @Component
 class PersonTransformer {
-  fun transformModelToPersonApi(personInfoResult: PersonInfoResult.Success) = when (personInfoResult) {
+  fun transformModelToPersonApi(personInfoResult: PersonInfoResult) = when (personInfoResult) {
     is PersonInfoResult.Success.Full -> FullPerson(
       type = PersonType.fullPerson,
       crn = personInfoResult.offenderDetailSummary.otherIds.crn,
@@ -31,6 +32,10 @@ class PersonTransformer {
     )
     is PersonInfoResult.Success.Restricted -> RestrictedPerson(
       type = PersonType.restrictedPerson,
+      crn = personInfoResult.crn,
+    )
+    is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> UnknownPerson(
+      type = PersonType.unknownPerson,
       crn = personInfoResult.crn,
     )
   }

@@ -413,8 +413,14 @@ class OffenderService(
 
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return PersonInfoResult.NotFound(crn) else offenderResponse.throwException()
-      is ClientResult.Failure -> offenderResponse.throwException()
+
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) {
+        return PersonInfoResult.NotFound(crn)
+      } else {
+        return PersonInfoResult.Unknown(crn, offenderResponse.toException())
+      }
+
+      is ClientResult.Failure -> return PersonInfoResult.Unknown(crn, offenderResponse.toException())
     }
 
     if (!ignoreLao) {
