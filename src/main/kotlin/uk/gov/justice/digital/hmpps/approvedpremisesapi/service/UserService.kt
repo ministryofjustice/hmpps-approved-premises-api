@@ -24,10 +24,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
+import javax.servlet.http.HttpServletRequest
 
 @Service
 class UserService(
   @Value("\${assign-default-region-to-users-with-unknown-region}") private val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
+  private val currentRequest: HttpServletRequest,
   private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
@@ -43,7 +45,21 @@ class UserService(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
-    return getUserForUsername(username)
+    val user = getUserForUsername(username)
+
+    if (currentRequest.getHeader("X-Service-Name") == ServiceName.temporaryAccommodation.value) {
+      if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
+        user.roles += userRoleAssignmentRepository.save(
+          UserRoleAssignmentEntity(
+            id = UUID.randomUUID(),
+            user = user,
+            role = UserRole.CAS3_REFERRER,
+          ),
+        )
+      }
+    }
+
+    return user
   }
 
   fun getUserForRequestOrNull(): UserEntity? {
