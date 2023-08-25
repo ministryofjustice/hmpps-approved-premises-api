@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -179,6 +180,27 @@ class PeopleController(
           needs,
           selectedSections ?: emptyList(),
         ),
+      )
+    }
+  }
+
+  override fun peopleCrnOasysRiskToSelfGet(crn: String): ResponseEntity<OASysRiskToSelf> {
+    getOffenderDetailsIgnoringLaoQualification(crn)
+
+    return runBlocking(context = Dispatchers.IO) {
+      val offenceDetailsResult = async {
+        offenderService.getOASysOffenceDetails(crn)
+      }
+
+      val riskToTheIndividualResult = async {
+        offenderService.getOASysRiskToTheIndividual(crn)
+      }
+
+      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
+      val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
+
+      ResponseEntity.ok(
+        oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
       )
     }
   }
