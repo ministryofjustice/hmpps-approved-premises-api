@@ -5622,23 +5622,40 @@ components:
           format: date-time
         message:
           type: string
+        createdByUserName:
+          type: string
+        type:
+          type: string
       required:
         - id
         - createdAt
         - message
+        - createdByUserName
+        - type
       discriminator:
         propertyName: type
         mapping:
           user: '#/components/schemas/ReferralHistoryUserNote'
+          system: '#/components/schemas/ReferralHistorySystemNote'
     ReferralHistoryUserNote:
+      allOf:
+        - $ref: '#/components/schemas/ReferralHistoryNote'
+    ReferralHistorySystemNote:
       allOf:
         - $ref: '#/components/schemas/ReferralHistoryNote'
         - type: object
           properties:
-            createdByUserName:
+            category:
               type: string
+              enum:
+                - submitted
+                - unallocated
+                - in_review
+                - ready_to_place
+                - rejected
+                - completed
           required:
-            - createdByUserName
+            - category
     NewReferralHistoryUserNote:
       type: object
       properties:

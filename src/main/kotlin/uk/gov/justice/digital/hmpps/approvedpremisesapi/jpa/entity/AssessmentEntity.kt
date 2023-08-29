@@ -336,6 +336,10 @@ abstract class AssessmentReferralHistoryNoteEntity(
   val createdAt: OffsetDateTime,
 
   val message: String,
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_user_id")
+  val createdByUser: UserEntity,
 )
 
 @Entity
@@ -345,14 +349,38 @@ class AssessmentReferralHistoryUserNoteEntity(
   assessment: AssessmentEntity,
   createdAt: OffsetDateTime,
   message: String,
-
-  @ManyToOne
-  @JoinColumn(name = "created_by_user_id")
-  val createdByUser: UserEntity,
-
+  createdByUser: UserEntity,
 ) : AssessmentReferralHistoryNoteEntity(
   id,
   assessment,
   createdAt,
   message,
+  createdByUser,
 )
+
+@Entity
+@Table(name = "assessment_referral_history_system_notes")
+class AssessmentReferralHistorySystemNoteEntity(
+  id: UUID,
+  assessment: AssessmentEntity,
+  createdAt: OffsetDateTime,
+  message: String,
+  createdByUser: UserEntity,
+  @Enumerated(EnumType.STRING)
+  val type: ReferralHistorySystemNoteType,
+) : AssessmentReferralHistoryNoteEntity(
+  id,
+  assessment,
+  createdAt,
+  message,
+  createdByUser,
+)
+
+enum class ReferralHistorySystemNoteType {
+  SUBMITTED,
+  UNALLOCATED,
+  IN_REVIEW,
+  READY_TO_PLACE,
+  REJECTED,
+  COMPLETED,
+}
