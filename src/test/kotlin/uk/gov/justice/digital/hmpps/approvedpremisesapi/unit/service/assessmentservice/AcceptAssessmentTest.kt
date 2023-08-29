@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -60,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -499,12 +501,12 @@ class AcceptAssessmentTest {
       .withYieldedApArea { ApAreaEntityFactory().produce() }
       .produce()
 
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
     val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(
-        UserEntityFactory()
-          .withProbationRegion(probationRegion)
-          .produce(),
-      )
+      .withCreatedByUser(user)
       .withProbationRegion(probationRegion)
       .produce()
 
@@ -546,6 +548,9 @@ class AcceptAssessmentTest {
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
+    every { userServiceMock.getUserForRequest() } returns user
+    every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -558,6 +563,7 @@ class AcceptAssessmentTest {
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
     assertThat(updatedAssessment.completedAt).isNull()
+    assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.READY_TO_PLACE)
   }
 
   private fun verifyDomainEventSent(offenderDetails: OffenderDetailSummary, staffUserDetails: StaffUserDetails, assessment: AssessmentEntity) {

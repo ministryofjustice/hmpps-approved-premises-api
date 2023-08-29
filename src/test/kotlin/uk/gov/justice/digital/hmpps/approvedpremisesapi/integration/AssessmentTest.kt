@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.core.type.TypeReference
+import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.Assertions.fail
@@ -21,6 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistorySystemNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
@@ -31,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -734,6 +740,103 @@ class AssessmentTest : IntegrationTestBase() {
               ),
             ),
           )
+      }
+    }
+  }
+
+  @Test
+  fun `Get Temporary Accommodation assessment by ID returns 200 with notes transformed correctly`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }.apply {
+          this.referralHistoryNotes += assessmentReferralHistoryUserNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withMessage("Some user note")
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.SUBMITTED)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.UNALLOCATED)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.IN_REVIEW)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.READY_TO_PLACE)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.REJECTED)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.COMPLETED)
+            withAssessment(this@apply)
+          }
+        }
+
+        assessment.schemaUpToDate = true
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.referralHistoryNotes")
+          .value<JSONArray> { json ->
+            val notes = json.toList().map {
+              objectMapper.readValue(objectMapper.writeValueAsString(it), object : TypeReference<ReferralHistoryNote>() {})
+            }
+
+            assertThat(notes).hasSize(7)
+            assertThat(notes).allMatch { it.createdByUserName == userEntity.name }
+            assertThat(notes).anyMatch { it is ReferralHistoryUserNote && it.message == "Some user note" }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.submitted }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.unallocated }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.inReview }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.readyToPlace }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.rejected }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
+          }
       }
     }
   }
