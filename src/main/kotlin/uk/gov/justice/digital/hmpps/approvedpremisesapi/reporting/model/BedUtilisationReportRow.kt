@@ -14,4 +14,6 @@ data class BedUtilisationReportRow(
   val totalBookedDays: Int,
   val totalDaysInTheMonth: Int,
   val occupancyRate: Double,
+  val uniquePropertyRef: String,
+  val uniqueBedspaceRef: String,
 )

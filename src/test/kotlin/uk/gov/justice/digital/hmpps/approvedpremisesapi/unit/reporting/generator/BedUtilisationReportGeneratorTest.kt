@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -96,6 +97,7 @@ class BedUtilisationReportGeneratorTest {
 
     assertThat(result.count()).isEqualTo(1)
     assertThat(result[0][BedUtilisationReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremises.name)
+    assertThat(result[0][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
   }
 
   @Test
@@ -169,6 +171,7 @@ class BedUtilisationReportGeneratorTest {
 
     assertThat(result.count()).isEqualTo(1)
     assertThat(result[0][BedUtilisationReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[0][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.id.toShortBase58())
   }
 
   @Test
@@ -242,7 +245,9 @@ class BedUtilisationReportGeneratorTest {
 
     assertThat(result.count()).isEqualTo(2)
     assertThat(result[0][BedUtilisationReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[0][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.id.toShortBase58())
     assertThat(result[1][BedUtilisationReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.name)
+    assertThat(result[1][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.id.toShortBase58())
   }
 
   @Test
