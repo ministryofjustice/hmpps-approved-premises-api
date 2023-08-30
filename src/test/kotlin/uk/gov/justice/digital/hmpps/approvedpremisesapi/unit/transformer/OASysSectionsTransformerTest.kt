@@ -286,4 +286,69 @@ class OASysSectionsTransformerTest {
       ),
     )
   }
+
+  @Test
+  fun `transformRiskToIndividual transforms correctly`() {
+    val offenceDetailsApiResponse = OffenceDetailsFactory().apply {
+      withAssessmentId(34853487)
+      withDateCompleted(null)
+      withOffenceAnalysis("Offence Analysis")
+      withOthersInvolved("Others Involved")
+      withIssueContributingToRisk("Issue Contributing to Risk")
+      withOffenceMotivation("Offence Motivation")
+      withVictimImpact("Impact on the victim")
+      withVictimPerpetratorRel("Other victim information")
+      withVictimInfo("Victim Info")
+      withPatternOffending("Pattern Reoffending")
+      withAcceptsResponsibility("Accepts Responsibility")
+    }.produce()
+
+    val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+      withAssessmentId(34853487)
+      withDateCompleted(null)
+      withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicide")
+      withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicide")
+      withCurrentCustodyHostelCoping("currentCustodyHostelCoping")
+      withPreviousCustodyHostelCoping("previousCustodyHostelCoping")
+      withCurrentVulnerability("currentVulnerability")
+      withPreviousVulnerability("previousVulnerability")
+      withRiskOfSeriousHarm("riskOfSeriousHarm")
+      withCurrentConcernsBreachOfTrustText("currentConcernsBreachOfTrustText")
+    }.produce()
+
+    val result = oaSysSectionsTransformer.transformRiskToIndividual(
+      offenceDetailsApiResponse,
+      risksToTheIndividualApiResponse,
+    )
+
+    assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+    assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
+    assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
+    assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+
+    assertThat(result.riskToSelf).containsAll(
+      listOf(
+        OASysQuestion(
+          label = "Current concerns about self-harm or suicide",
+          questionNumber = "R8.1.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Coping in Custody or Hostel",
+          questionNumber = "R8.2.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
+        ),
+        OASysQuestion(
+          label = "Previous concerns about self-harm or suicide",
+          questionNumber = "R8.1.4",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.previousConcernsSelfHarmSuicide,
+        ),
+      ),
+    )
+  }
 }
