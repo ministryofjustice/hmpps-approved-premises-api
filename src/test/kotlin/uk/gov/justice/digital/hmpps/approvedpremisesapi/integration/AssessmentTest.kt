@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
@@ -840,6 +841,48 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.rejected }
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
           }
+      }
+    }
+  }
+
+  @Test
+  fun `Get Temporary Accommodation assessment by ID returns 200 with summary data transformed correctly`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
+        }
+
+        assessment.schemaUpToDate = true
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.summaryData.num").isEqualTo(50)
+          .jsonPath("$.summaryData.text").isEqualTo("Hello world!")
       }
     }
   }
