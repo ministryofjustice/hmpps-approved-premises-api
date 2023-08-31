@@ -5417,6 +5417,8 @@ components:
             arrivalDate:
               type: string
               format: date
+            summaryData:
+              $ref: '#/components/schemas/AnyValue'
           required:
             - arrivalDate
     ReleaseTypeOption:
@@ -5595,8 +5597,11 @@ components:
               $ref: '#/components/schemas/TemporaryAccommodationUser'
             status:
               $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
+            summaryData:
+              $ref: '#/components/schemas/AnyValue'
           required:
             - application
+            - summaryData
     AssessmentSummary:
       type: object
       properties:
