@@ -190,6 +190,7 @@ class AssessmentService(
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
         completedAt = null,
+        summaryData = "{}",
       ),
     )
 

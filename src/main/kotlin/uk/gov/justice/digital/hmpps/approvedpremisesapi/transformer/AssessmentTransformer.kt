@@ -70,6 +70,7 @@ class AssessmentTransformer(
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
       status = getStatusForTemporaryAccommodationAssessment(jpa),
+      summaryData = "{}",
       service = "CAS3",
     )
 

@@ -1338,6 +1338,7 @@ class ApplicationServiceTest {
       translatedDocument = {},
       type = "CAS3",
       arrivalDate = LocalDate.now(),
+      summaryData = {},
     )
 
     private val submitCas2Application = SubmitCas2Application(

@@ -1892,6 +1892,7 @@ class ApplicationTest : IntegrationTestBase() {
                 translatedDocument = {},
                 type = "CAS3",
                 arrivalDate = LocalDate.now(),
+                summaryData = {},
               ),
             )
             .exchange()

@@ -118,5 +118,6 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     clarificationNotes = this.clarificationNotes(),
     referralHistoryNotes = this.referralHistoryNotes(),
     completedAt = this.completedAt(),
+    summaryData = "{}",
   )
 }
