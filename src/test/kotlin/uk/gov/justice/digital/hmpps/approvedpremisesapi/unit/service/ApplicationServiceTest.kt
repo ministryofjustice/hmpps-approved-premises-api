@@ -1338,7 +1338,10 @@ class ApplicationServiceTest {
       translatedDocument = {},
       type = "CAS3",
       arrivalDate = LocalDate.now(),
-      summaryData = {},
+      summaryData = {
+        val num = 50
+        val text = "Hello world!"
+      },
     )
 
     private val submitCas2Application = SubmitCas2Application(
@@ -1466,7 +1469,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockAssessmentService.createAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
+      every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(user)
         .produce()
@@ -1528,7 +1531,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
 
       verify { mockApplicationRepository.save(any()) }
-      verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
+      verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
 
       verify(exactly = 1) {
         mockDomainEventService.saveApplicationSubmittedDomainEvent(
@@ -1709,8 +1712,11 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockAssessmentService.createAssessment(application) } returns TemporaryAccommodationAssessmentEntityFactory()
+      every {
+        mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplication.summaryData!!)
+      } returns TemporaryAccommodationAssessmentEntityFactory()
         .withApplication(application)
+        .withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
         .produce()
 
       val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplication)
@@ -1724,7 +1730,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(submitTemporaryAccommodationApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC))
 
       verify { mockApplicationRepository.save(any()) }
-      verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
+      verify(exactly = 1) { mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplication.summaryData!!) }
       verify { mockDomainEventService wasNot called }
     }
 
