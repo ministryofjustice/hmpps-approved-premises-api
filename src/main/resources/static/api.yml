@@ -2525,6 +2525,11 @@ paths:
           description: filter by CRN
           schema:
             type: string
+        - name: crnOrName
+          in: query
+          description: search by CRN or name
+          schema:
+            type: string
         - name: tier
           in: query
           description: filter by tier of Offender at time Application was created
@@ -6358,7 +6363,6 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
-        - fetch_offender_names_for_applications
     PlacementDates:
       type: object
       properties:

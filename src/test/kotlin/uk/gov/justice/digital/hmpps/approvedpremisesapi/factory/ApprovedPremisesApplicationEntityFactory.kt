@@ -44,7 +44,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var withdrawalReason: Yielded<String?> = { null }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
-  private var name: Yielded<String?> = { "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}" }
+  private var name: Yielded<String> = { "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}" }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -154,7 +154,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.isEsapApplication = { isEsapApplication }
   }
 
-  fun withName(name: String?) = apply {
+  fun withName(name: String) = apply {
     this.name = { name }
   }
 

@@ -581,9 +581,9 @@ class PlacementRequestServiceTest {
 
     every { page.content } returns placementRequests
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, null) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, null, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, null, null, PlacementRequestSortField.createdAt, null)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata).isNull()
@@ -602,9 +602,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, 1, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, null, 1, PlacementRequestSortField.createdAt, null)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -626,9 +626,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -651,9 +651,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, crn, null, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(null, crn, null, null, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, crn, null, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(null, crn, null, null, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -677,9 +677,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, null, tier, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(null, null, null, tier, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, null, tier, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, tier, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -703,9 +703,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, null, null, startDate, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(null, null, null, null, startDate, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, startDate, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, null, startDate, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -729,9 +729,9 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, null, null, null, endDate, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(null, null, null, null, endDate, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, null, endDate, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, null, endDate, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
