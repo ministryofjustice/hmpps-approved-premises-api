@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -45,6 +46,44 @@ class UsersController(
       userService.getUsersWithQualificationsAndRoles(qualifications, roles)
         .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
     )
+  }
+
+  override fun usersIdPut(xServiceName: ServiceName, id: java.util.UUID, userRolesAndQualifications: UserRolesAndQualifications): ResponseEntity<User> {
+    val user = userService.getUserForRequest()
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+      throw ForbiddenProblem()
+    }
+
+    val userEntity = when (val result = userService.updateUserRolesAndQualifications(id, userRolesAndQualifications)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> result.entity
+    }
+
+    return ResponseEntity(userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises), HttpStatus.OK)
+  }
+
+  override fun usersSearchGet(name: String, xServiceName: ServiceName): ResponseEntity<List<User>> {
+    val user = userService.getUserForRequest()
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+      throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(
+      userService.getUsersByPartialName(name)
+        .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+    )
+  }
+
+  override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
+    val user = userService.getUserForRequest()
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+      throw ForbiddenProblem()
+    }
+
+    val userEntity = userService.getUserForUsername(name)
+    val userTransformed = userTransformer.transformJpaToApi(userEntity, xServiceName)
+    return ResponseEntity.ok(userTransformed)
   }
 
   private fun transformApiRole(apiRole: ApprovedPremisesUserRole): JpaUserRole = when (apiRole) {

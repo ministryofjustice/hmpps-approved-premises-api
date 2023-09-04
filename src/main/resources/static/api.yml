@@ -3242,12 +3242,111 @@ paths:
         - name: X-Service-Name
           in: header
           required: true
-          description: Filters the user details to those relevant to the specified service.
+          description: If given, only users for this service will be returned
           schema:
             $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successfully retrieved information on user
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      summary: Update information about a specific user's roles and qualifications
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: If given, only users for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - in: path
+          name: id
+          required: true
+          description: Id of the user
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserRolesAndQualifications'
+        required: true
+      responses:
+        200:
+          description: Successfully added information about user roles and qualifications
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /users/search:
+    get:
+      tags:
+        - Auth
+      summary: Returns a list of users with partial match on name
+      parameters:
+        - in: query
+          name: name
+          required: true
+          description: Name or partial name of the user
+          schema:
+            type: string
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successfully retrieved users
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /users/delius:
+    get:
+      tags:
+        - Auth
+      summary: Returns a user with match on name
+      parameters:
+        - in: query
+          name: name
+          required: true
+          description: Name of the user
+          schema:
+            type: string
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successfully retrieved user
           content:
             'application/json':
               schema:
@@ -5755,6 +5854,20 @@ components:
           required:
             - qualifications
             - roles
+    UserRolesAndQualifications:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovedPremisesUserRole'
+        qualifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserQualification'
+      required:
+        - roles
+        - qualifications
     TemporaryAccommodationUser:
       allOf:
         - $ref: '#/components/schemas/User'
