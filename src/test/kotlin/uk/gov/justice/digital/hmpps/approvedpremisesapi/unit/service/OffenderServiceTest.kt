@@ -639,7 +639,7 @@ class OffenderServiceTest {
     )
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         page = 1,
         pageSize = 2,
