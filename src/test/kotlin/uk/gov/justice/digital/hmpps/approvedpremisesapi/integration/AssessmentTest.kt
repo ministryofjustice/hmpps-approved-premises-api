@@ -536,50 +536,55 @@ class AssessmentTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
-  @Test
-  fun `Get assessment by ID returns 200 with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_MANAGER"])
+  fun `Get assessment by ID returns 200 with correct body for CAS1_WORKFLOW_MANAGER and CAS1_MANAGER`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User` { userEntity, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
 
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-          withApplicationSchema(applicationSchema)
-        }
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
 
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-        }
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
 
-        assessment.schemaUpToDate = true
+          assessment.schemaUpToDate = true
 
-        webTestClient.get()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(
-                assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+          webTestClient.get()
+            .uri("/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                assessmentTransformer.transformJpaToApi(
+                  assessment,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
               ),
-            ),
-          )
+            )
+        }
       }
     }
+
+
   }
 
   @Test

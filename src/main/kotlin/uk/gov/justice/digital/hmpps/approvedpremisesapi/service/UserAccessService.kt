@@ -169,7 +169,7 @@ class UserAccessService(
 
   fun userCanViewAssessment(user: UserEntity, assessment: AssessmentEntity): Boolean = when (assessment) {
     is ApprovedPremisesAssessmentEntity ->
-      user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) || assessment.allocatedToUser == user
+      user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_MANAGER) || assessment.allocatedToUser == user
 
     is TemporaryAccommodationAssessmentEntity ->
       user.hasRole(UserRole.CAS3_ASSESSOR) &&
