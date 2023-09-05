@@ -405,6 +405,159 @@ class PlacementRequestsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `It searches by name when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now())
+            withApplicationSchema(applicationSchema)
+            withReleaseType("licence")
+            withName("JOHN SMITH")
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAssessmentSchema(assessmentSchema)
+            withApplication(application)
+            withSubmittedAt(OffsetDateTime.now())
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.ACCEPTED)
+          }
+
+          val placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withApplication(application)
+            withAssessment(assessment)
+            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+            withDesirableCriteria(
+              characteristicEntityFactory.produceAndPersistMultiple(5),
+            )
+            withEssentialCriteria(
+              characteristicEntityFactory.produceAndPersistMultiple(3),
+            )
+          }
+
+          val placementRequest = placementRequestFactory.produceAndPersist {
+            withAllocatedToUser(
+              userEntityFactory.produceAndPersist {
+                withProbationRegion(
+                  probationRegionEntityFactory.produceAndPersist {
+                    withApArea(apAreaEntityFactory.produceAndPersist())
+                  },
+                )
+              },
+            )
+            withApplication(application)
+            withAssessment(assessment)
+            withPlacementRequirements(placementRequirements)
+          }
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?crnOrName=john")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequest,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by crnOrName by CRN when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now())
+            withApplicationSchema(applicationSchema)
+            withReleaseType("licence")
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAssessmentSchema(assessmentSchema)
+            withApplication(application)
+            withSubmittedAt(OffsetDateTime.now())
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.ACCEPTED)
+          }
+
+          val placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withApplication(application)
+            withAssessment(assessment)
+            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+            withDesirableCriteria(
+              characteristicEntityFactory.produceAndPersistMultiple(5),
+            )
+            withEssentialCriteria(
+              characteristicEntityFactory.produceAndPersistMultiple(3),
+            )
+          }
+
+          val placementRequest = placementRequestFactory.produceAndPersist {
+            withAllocatedToUser(
+              userEntityFactory.produceAndPersist {
+                withProbationRegion(
+                  probationRegionEntityFactory.produceAndPersist {
+                    withApArea(apAreaEntityFactory.produceAndPersist())
+                  },
+                )
+              },
+            )
+            withApplication(application)
+            withAssessment(assessment)
+            withPlacementRequirements(placementRequirements)
+          }
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?crnOrName=${offenderDetails.otherIds.crn}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequest,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
   }
 
   @Nested
