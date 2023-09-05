@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
@@ -96,6 +97,7 @@ class BedUsageReportGeneratorTest {
 
     assertThat(result.count()).isEqualTo(1)
     assertThat(result[0][BedUsageReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremises.name)
+    assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
   }
 
   @Test
@@ -169,6 +171,7 @@ class BedUsageReportGeneratorTest {
 
     assertThat(result.count()).isEqualTo(1)
     assertThat(result[0][BedUsageReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.id.toShortBase58())
   }
 
   @Test
@@ -242,7 +245,9 @@ class BedUsageReportGeneratorTest {
 
     assertThat(result.count()).isEqualTo(2)
     assertThat(result[0][BedUsageReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.id.toShortBase58())
     assertThat(result[1][BedUsageReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.name)
+    assertThat(result[1][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.id.toShortBase58())
   }
 
   @Test
@@ -303,6 +308,8 @@ class BedUsageReportGeneratorTest {
     assertThat(result[0][BedUsageReportRow::bookingStatus]).isEqualTo(BookingStatus.closed)
     assertThat(result[0][BedUsageReportRow::voidCategory]).isEqualTo(null)
     assertThat(result[0][BedUsageReportRow::voidNotes]).isEqualTo(null)
+    assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
+    assertThat(result[0][BedUsageReportRow::uniqueBedspaceRef]).isEqualTo(temporaryAccommodationRoom.id.toShortBase58())
   }
 
   @Test
@@ -372,6 +379,8 @@ class BedUsageReportGeneratorTest {
     assertThat(result[1][BedUsageReportRow::bookingStatus]).isEqualTo(null)
     assertThat(result[1][BedUsageReportRow::voidCategory]).isEqualTo(null)
     assertThat(result[1][BedUsageReportRow::voidNotes]).isEqualTo(null)
+    assertThat(result[1][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
+    assertThat(result[1][BedUsageReportRow::uniqueBedspaceRef]).isEqualTo(temporaryAccommodationRoom.id.toShortBase58())
   }
 
   @Test
@@ -430,5 +439,7 @@ class BedUsageReportGeneratorTest {
     assertThat(result[0][BedUsageReportRow::bookingStatus]).isEqualTo(null)
     assertThat(result[0][BedUsageReportRow::voidCategory]).isEqualTo(temporaryAccommodationLostBed.reason.name)
     assertThat(result[0][BedUsageReportRow::voidNotes]).isEqualTo(temporaryAccommodationLostBed.notes)
+    assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
+    assertThat(result[0][BedUsageReportRow::uniqueBedspaceRef]).isEqualTo(temporaryAccommodationRoom.id.toShortBase58())
   }
 }

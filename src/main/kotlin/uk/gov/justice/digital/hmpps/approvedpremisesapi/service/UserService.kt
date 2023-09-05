@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -23,11 +25,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQua
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformUserRoles
 import java.util.UUID
+import javax.servlet.http.HttpServletRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 @Service
 class UserService(
   @Value("\${assign-default-region-to-users-with-unknown-region}") private val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
+  private val currentRequest: HttpServletRequest,
   private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
@@ -36,14 +44,33 @@ class UserService(
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
+  private val userTransformer: UserTransformer,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun getUsersByPartialName(name: String): List<UserEntity> {
+    return userRepository.findByNameContainingIgnoreCase(name)
+  }
 
   fun getUserForRequest(): UserEntity {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
-    return getUserForUsername(username)
+    val user = getUserForUsername(username)
+
+    if (currentRequest.getHeader("X-Service-Name") == ServiceName.temporaryAccommodation.value) {
+      if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
+        user.roles += userRoleAssignmentRepository.save(
+          UserRoleAssignmentEntity(
+            id = UUID.randomUUID(),
+            user = user,
+            role = UserRole.CAS3_REFERRER,
+          ),
+        )
+      }
+    }
+
+    return user
   }
 
   fun getUserForRequestOrNull(): UserEntity? {
@@ -125,6 +152,28 @@ class UserService(
 
       return potentialUser
     }
+  }
+
+  fun updateUserRolesAndQualifications(id: UUID, userRolesAndQualifications: UserRolesAndQualifications): AuthorisableActionResult<UserEntity> {
+    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    val roles = userRolesAndQualifications.roles
+    val qualifications = userRolesAndQualifications.qualifications
+    return updateUserRolesAndQualificationsForUser(user, roles, qualifications)
+  }
+
+  fun updateUserRolesAndQualificationsForUser(user: UserEntity, roles: List<ApprovedPremisesUserRole>, qualifications: List<APIUserQualification>): AuthorisableActionResult<UserEntity> {
+    clearQualifications(user)
+    clearRolesForService(user, ServiceName.approvedPremises)
+
+    roles.forEach {
+      this.addRoleToUser(user, transformUserRoles(it))
+    }
+
+    qualifications.forEach {
+      this.addQualificationToUser(user, transformQualifications(it))
+    }
+
+    return AuthorisableActionResult.Success(user)
   }
 
   fun updateUserFromCommunityApiById(id: UUID): AuthorisableActionResult<UserEntity> {

@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
@@ -93,6 +94,8 @@ class BedUtilisationReportGenerator(
         totalBookedDays = totalBookedDays,
         totalDaysInTheMonth = daysInMonth,
         occupancyRate = totalBookedDays.toDouble() / daysInMonth,
+        uniquePropertyRef = premises.id.toShortBase58(),
+        uniqueBedspaceRef = this.room.id.toShortBase58(),
       ),
     )
   }

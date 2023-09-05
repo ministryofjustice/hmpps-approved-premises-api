@@ -5,9 +5,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -158,6 +161,20 @@ class UserAccessService(
 
   fun userCanDeallocateTask(user: UserEntity): Boolean = when (currentRequest.getHeader("X-Service-Name")) {
     ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
+    else -> false
+  }
+
+  fun currentUserCanViewAssessment(assessment: AssessmentEntity): Boolean =
+    userCanViewAssessment(userService.getUserForRequest(), assessment)
+
+  fun userCanViewAssessment(user: UserEntity, assessment: AssessmentEntity): Boolean = when (assessment) {
+    is ApprovedPremisesAssessmentEntity ->
+      user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) || assessment.allocatedToUser == user
+
+    is TemporaryAccommodationAssessmentEntity ->
+      user.hasRole(UserRole.CAS3_ASSESSOR) &&
+        userCanAccessRegion(user, (assessment.application as TemporaryAccommodationApplicationEntity).probationRegion.id)
+
     else -> false
   }
 }

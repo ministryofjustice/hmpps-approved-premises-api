@@ -6,15 +6,18 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 class UsersTest : IntegrationTestBase() {
   @Autowired
@@ -215,6 +218,10 @@ class UsersTest : IntegrationTestBase() {
           TemporaryAccommodationUser(
             id = id,
             region = ProbationRegion(region.id, region.name),
+            deliusUsername = deliusUsername,
+            name = name,
+            email = email,
+            telephoneNumber = telephoneNumber,
             roles = emptyList(),
             service = ServiceName.temporaryAccommodation.value,
           ),
@@ -376,6 +383,256 @@ class UsersTest : IntegrationTestBase() {
             }
           }
         }
+      }
+    }
+  }
+
+  @Nested
+  inner class SearchByUserName {
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to user search with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users/search?name=som")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `GET to user search with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users/search?name=some")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `GET to user search with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+      `Given a User`() { _, jwt ->
+        webTestClient.get()
+          .uri("/users/search?name=some")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to search users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns a user`(role: UserRole) {
+      `Given a User`(staffUserDetailsConfigBlock = {
+        withForenames("SomeUserName")
+      },) { user, _ ->
+        `Given a User`(staffUserDetailsConfigBlock = {
+          withForenames("fail")
+        },) { _, _ ->
+          `Given a User`(roles = listOf(role)) { _, jwt ->
+            webTestClient.get()
+              .uri("/users/search?name=some")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(user).map {
+                    userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
+                  },
+                ),
+              )
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class SearchByDeliusUserName {
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to user search delius username with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users/delius?name=som")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `GET to user search delius username with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users/delius?name=some")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `GET to user search delius username with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+      `Given a User`() { _, jwt ->
+        webTestClient.get()
+          .uri("/users/delius?name=some")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to search users delius username with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns a user`(role: UserRole) {
+      `Given a User`(staffUserDetailsConfigBlock = {
+        withUsername("SOME")
+      },) { user, _ ->
+        `Given a User`(staffUserDetailsConfigBlock = {
+          withForenames("fail")
+        },) { _, _ ->
+          `Given a User`(roles = listOf(role)) { _, jwt ->
+            webTestClient.get()
+              .uri("/users/delius?name=some")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  userTransformer.transformJpaToApi(user, ServiceName.approvedPremises),
+                ),
+              )
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdateUser {
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `Updating a user update with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.put()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .header("Content-Type", "application/json")
+          .bodyValue(
+            UserRolesAndQualifications(
+              listOf<ApprovedPremisesUserRole>(),
+              listOf<APIUserQualification>(),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `Updating a user update with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.put()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .header("Content-Type", "application/json")
+          .bodyValue(
+            UserRolesAndQualifications(
+              listOf<ApprovedPremisesUserRole>(),
+              listOf<APIUserQualification>(),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Updating a users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+      `Given a User`() { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.put()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .bodyValue(
+            UserRolesAndQualifications(
+              listOf<ApprovedPremisesUserRole>(),
+              listOf<APIUserQualification>(),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `Updating a user returns OK with correct body when user has one of roles CAS1_ADMIN, CAS1_WORKFLOW_MANAGER`(role: UserRole) {
+      val id = UUID.randomUUID()
+      val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
+      val roles = listOf(ApprovedPremisesUserRole.assessor, ApprovedPremisesUserRole.reportViewer)
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      userEntityFactory.produceAndPersist {
+        withId(id)
+        withYieldedProbationRegion { region }
+      }
+
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.put()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .bodyValue(
+            UserRolesAndQualifications(
+              roles = roles,
+              qualifications = qualifications,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".qualifications").isArray
+          .jsonPath(".qualifications[0]").isEqualTo("emergency")
+          .jsonPath(".roles").isArray
+          .jsonPath(".roles[0]").isEqualTo("assessor")
       }
     }
   }

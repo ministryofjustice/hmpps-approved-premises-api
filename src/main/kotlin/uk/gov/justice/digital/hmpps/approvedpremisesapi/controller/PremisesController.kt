@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -89,7 +90,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -266,18 +266,10 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(
-      premises.bookings.mapNotNull {
-        val personDetails = getPersonDetailsForCrn(log, it.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
-
-        if (personDetails == null) {
-          log.warn("Unable to get Person via crn: ${it.crn}")
-          return@mapNotNull null
-        }
-
-        val (offenderDetails, inmateDetails) = personDetails
+      premises.bookings.map {
+        val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
         val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
-          // TODO: Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
           if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${it.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
 
           val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
@@ -289,7 +281,7 @@ class PremisesController(
           staffMemberResult.entity
         }
 
-        bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetails, staffMember)
+        bookingTransformer.transformJpaToApi(it, personInfo, staffMember)
       },
     )
   }
@@ -303,10 +295,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val personDetails = getPersonDetailsForCrn(log, booking.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
-      ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${booking.crn}")
-
-    val (offenderDetails, inmateDetails) = personDetails
+    val personInfo = offenderService.getInfoForPerson(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
       val premises = booking.premises
@@ -323,7 +312,7 @@ class PremisesController(
       staffMemberResult.entity
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, staffMember))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, personInfo, staffMember))
   }
 
   @Transactional
@@ -337,17 +326,19 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val personDetails = getPersonDetailsForCrn(log, body.crn, user.deliusUsername, offenderService, user.hasQualification(UserQualification.LAO))
-      ?: throw InternalServerErrorProblem("Unable to get Person via crn: ${body.crn}")
+    val personInfo = offenderService.getInfoForPerson(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
-    val (offenderDetails, inmateDetails) = personDetails
+    if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${body.crn}")
 
     val authorisableResult = when (premises) {
       is ApprovedPremisesEntity -> {
         bookingService.createApprovedPremisesAdHocBooking(
           user = user,
           crn = body.crn,
-          nomsNumber = inmateDetails?.offenderNo,
+          nomsNumber = when (personInfo) {
+            is PersonInfoResult.Success.Restricted -> personInfo.nomsNumber
+            is PersonInfoResult.Success.Full -> personInfo.inmateDetail?.offenderNo
+          },
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId,
@@ -359,7 +350,10 @@ class PremisesController(
           user = user,
           premises = premises,
           crn = body.crn,
-          nomsNumber = inmateDetails?.offenderNo,
+          nomsNumber = when (personInfo) {
+            is PersonInfoResult.Success.Restricted -> personInfo.nomsNumber
+            is PersonInfoResult.Success.Full -> personInfo.inmateDetail?.offenderNo
+          },
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId,
@@ -384,7 +378,7 @@ class PremisesController(
       is ValidatableActionResult.Success -> validatableResult.entity
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, offenderDetails, inmateDetails, null))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, personInfo, null))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(

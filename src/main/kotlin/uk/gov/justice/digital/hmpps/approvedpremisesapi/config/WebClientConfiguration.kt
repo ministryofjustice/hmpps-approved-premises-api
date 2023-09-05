@@ -13,12 +13,16 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction
+import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import java.time.Duration
 
 @Configuration
-class WebClientConfiguration(@Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long) {
+class WebClientConfiguration(
+  @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
+  @Value("\${max-response-in-memory-size-bytes}") private val maxResponseInMemorySizeBytes: Int,
+) {
   @Bean
   fun authorizedClientManager(clients: ClientRegistrationRepository): OAuth2AuthorizedClientManager {
     val service: OAuth2AuthorizedClientService = InMemoryOAuth2AuthorizedClientService(clients)
@@ -51,6 +55,11 @@ class WebClientConfiguration(@Value("\${upstream-timeout-ms}") private val upstr
             .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
         ),
+      )
+      .exchangeStrategies(
+        ExchangeStrategies.builder().codecs {
+          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
+        }.build(),
       )
       .build()
   }

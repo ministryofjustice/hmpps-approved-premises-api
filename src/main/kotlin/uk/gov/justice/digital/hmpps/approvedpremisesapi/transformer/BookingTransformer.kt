@@ -6,9 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
@@ -28,12 +27,12 @@ class BookingTransformer(
   private val enumConverterFactory: EnumConverterFactory,
   private val workingDayCountService: WorkingDayCountService,
 ) {
-  fun transformJpaToApi(jpa: BookingEntity, offender: OffenderDetailSummary, inmateDetail: InmateDetail?, staffMember: StaffMember?): Booking {
+  fun transformJpaToApi(jpa: BookingEntity, personInfo: PersonInfoResult, staffMember: StaffMember?): Booking {
     val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
 
     return Booking(
       id = jpa.id,
-      person = personTransformer.transformModelToApi(offender, inmateDetail),
+      person = personTransformer.transformModelToPersonApi(personInfo),
       arrivalDate = jpa.arrivalDate,
       departureDate = jpa.departureDate,
       serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),

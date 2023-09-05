@@ -1,10 +1,10 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.10.0"
-  kotlin("plugin.spring") version "1.9.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.11.0"
+  kotlin("plugin.spring") version "1.9.10"
   id("org.openapi.generator") version "5.4.0"
-  id("org.jetbrains.kotlin.plugin.jpa") version "1.9.0"
+  id("org.jetbrains.kotlin.plugin.jpa") version "1.9.10"
   id("io.gatling.gradle") version "3.9.5.5"
 }
 
@@ -57,7 +57,7 @@ dependencies {
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.7")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
-  testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
+  testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 

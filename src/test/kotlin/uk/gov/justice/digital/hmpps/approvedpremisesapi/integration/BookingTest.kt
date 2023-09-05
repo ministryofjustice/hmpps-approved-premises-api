@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -83,10 +84,51 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, keyWorker),
+              bookingTransformer.transformJpaToApi(
+                booking,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                keyWorker,
+              ),
             ),
           )
       }
+    }
+  }
+
+  @Test
+  fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+      }
+
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStaffKeyWorkerCode(keyWorker.code)
+        withCrn("SOME-CRN")
+        withServiceName(ServiceName.approvedPremises)
+      }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/bookings/${booking.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            bookingTransformer.transformJpaToApi(
+              booking,
+              PersonInfoResult.NotFound("SOME-CRN"),
+              keyWorker,
+            ),
+          ),
+        )
     }
   }
 
@@ -123,7 +165,11 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, null, keyWorker),
+              bookingTransformer.transformJpaToApi(
+                booking,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                keyWorker,
+              ),
             ),
           )
       }
@@ -165,7 +211,11 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(booking, offenderDetails, inmateDetails, null),
+              bookingTransformer.transformJpaToApi(
+                booking,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                null,
+              ),
             ),
           )
       }
@@ -304,7 +354,11 @@ class BookingTest : IntegrationTestBase() {
 
         val expectedJson = objectMapper.writeValueAsString(
           bookings.map {
-            bookingTransformer.transformJpaToApi(it, offenderDetails, inmateDetails, keyWorker)
+            bookingTransformer.transformJpaToApi(
+              it,
+              PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              keyWorker,
+            )
           },
         )
 
@@ -317,6 +371,47 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .json(expectedJson)
       }
+    }
+  }
+
+  @Test
+  fun `Get all Bookings returns OK with correct body when person details for a booking could not be found`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStaffKeyWorkerCode(keyWorker.code)
+        withCrn("SOME-CRN")
+        withServiceName(ServiceName.approvedPremises)
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(
+        listOf(
+          bookingTransformer.transformJpaToApi(
+            booking,
+            PersonInfoResult.NotFound("SOME-CRN"),
+            keyWorker,
+          ),
+        ),
+      )
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/bookings")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
   }
 

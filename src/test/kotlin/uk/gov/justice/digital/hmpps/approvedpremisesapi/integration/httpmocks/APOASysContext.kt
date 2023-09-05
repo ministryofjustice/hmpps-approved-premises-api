@@ -51,6 +51,13 @@ fun IntegrationTestBase.APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay
     delayMs = delayMs,
   )
 
+fun IntegrationTestBase.APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(crn: String, response: RisksToTheIndividual, delayMs: Int) =
+  mockUnsuccessfulGetCallWithDelayedResponse(
+    url = "/risk-to-the-individual/$crn",
+    responseStatus = 404,
+    delayMs = delayMs,
+  )
+
 fun IntegrationTestBase.APOASysContext_mockSuccessfulRoshRatingsCall(crn: String, response: RoshRatings) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/rosh/$crn",

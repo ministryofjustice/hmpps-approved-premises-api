@@ -16,6 +16,8 @@ data class BedUsageReportRow(
   val bookingStatus: BookingStatus?,
   val voidCategory: String?,
   val voidNotes: String?,
+  val uniquePropertyRef: String,
+  val uniqueBedspaceRef: String,
 )
 
 enum class BedUsageType {

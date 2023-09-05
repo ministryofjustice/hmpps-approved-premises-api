@@ -208,40 +208,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /premises/{premisesId}/residents:
-    get:
-      tags:
-        - Operations on premises
-      summary: Returns all the residents in an approved premises with the given ID
-      parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to get residents for
-        required: true
-        schema:
-          type: integer
-          format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Person'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid premises ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/bookings:
     get:
       tags:
@@ -1368,6 +1334,37 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/OASysSections'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risk-to-self:
+    get:
+      tags:
+        - OASys
+      summary: Returns the Risk To Individual (known as Risk to Self on frontend) section of an OASys.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskToSelf'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -2528,6 +2525,11 @@ paths:
           description: filter by CRN
           schema:
             type: string
+        - name: crnOrName
+          in: query
+          description: search by CRN or name
+          schema:
+            type: string
         - name: tier
           in: query
           description: filter by tier of Offender at time Application was created
@@ -3245,12 +3247,111 @@ paths:
         - name: X-Service-Name
           in: header
           required: true
-          description: Filters the user details to those relevant to the specified service.
+          description: If given, only users for this service will be returned
           schema:
             $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successfully retrieved information on user
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      summary: Update information about a specific user's roles and qualifications
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: If given, only users for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - in: path
+          name: id
+          required: true
+          description: Id of the user
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserRolesAndQualifications'
+        required: true
+      responses:
+        200:
+          description: Successfully added information about user roles and qualifications
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /users/search:
+    get:
+      tags:
+        - Auth
+      summary: Returns a list of users with partial match on name
+      parameters:
+        - in: query
+          name: name
+          required: true
+          description: Name or partial name of the user
+          schema:
+            type: string
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successfully retrieved users
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /users/delius:
+    get:
+      tags:
+        - Auth
+      summary: Returns a user with match on name
+      parameters:
+        - in: query
+          name: name
+          required: true
+          description: Name of the user
+          schema:
+            type: string
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successfully retrieved user
           content:
             'application/json':
               schema:
@@ -3461,6 +3562,38 @@ paths:
           in: query
           required: true
           description: Only lost beds for this month will be returned - must be provided with year
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
+  /reports/applications:
+    get:
+      tags:
+        - Reports
+      summary: Returns a spreadsheet listing all of the submitted applications for the month
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only applications for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - name: year
+          in: query
+          required: true
+          description: Only applications for this year will be returned
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          description: Only applications for this month will be returned - must be provided with year
           schema:
             type: integer
       responses:
@@ -4068,37 +4201,58 @@ components:
       properties:
         crn:
           type: string
-        name:
-          type: string
-        dateOfBirth:
-          type: string
-          format: date
-        nomsNumber:
-          type: string
-        ethnicity:
-          type: string
-        nationality:
-          type: string
-        religionOrBelief:
-          type: string
-        sex:
-          type: string
-        genderIdentity:
-          type: string
-        status:
-          type: string
-          enum:
-            - InCustody
-            - InCommunity
-            - Unknown
-        prisonName:
-          type: string
+        type:
+          $ref: '#/components/schemas/PersonType'
+      discriminator:
+        propertyName: type
+        mapping:
+          FullPerson: '#/components/schemas/FullPerson'
+          RestrictedPerson: '#/components/schemas/RestrictedPerson'
+          UnknownPerson: '#/components/schemas/FullPerson'
       required:
         - crn
-        - name
-        - dateOfBirth
-        - sex
-        - status
+        - type
+    UnknownPerson:
+      allOf:
+        - $ref: '#/components/schemas/Person'
+    RestrictedPerson:
+      allOf:
+        - $ref: '#/components/schemas/Person'
+    FullPerson:
+      allOf:
+        - $ref: '#/components/schemas/Person'
+        - type: object
+          properties:
+            name:
+              type: string
+            dateOfBirth:
+              type: string
+              format: date
+            nomsNumber:
+              type: string
+            ethnicity:
+              type: string
+            nationality:
+              type: string
+            religionOrBelief:
+              type: string
+            sex:
+              type: string
+            genderIdentity:
+              type: string
+            status:
+              type: string
+              enum:
+                - InCustody
+                - InCommunity
+                - Unknown
+            prisonName:
+              type: string
+          required:
+            - name
+            - dateOfBirth
+            - sex
+            - status
     NewArrival:
       type: object
       properties:
@@ -5021,6 +5175,9 @@ components:
             submittedAt:
               type: string
               format: date-time
+            arrivalDate:
+              type: string
+              format: date-time
           required:
             - createdByUserId
             - schemaVersion
@@ -5212,6 +5369,7 @@ components:
         mapping:
           CAS1: '#/components/schemas/SubmitApprovedPremisesApplication'
           CAS3: '#/components/schemas/SubmitTemporaryAccommodationApplication'
+          CAS2: '#/components/schemas/SubmitCas2Application'
       required:
         - type
         - translatedDocument
@@ -5242,6 +5400,9 @@ components:
             - isEsapApplication
             - targetLocation
             - releaseType
+    SubmitCas2Application:
+      allOf:
+        - $ref: '#/components/schemas/SubmitApplication'
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
@@ -5628,24 +5789,40 @@ components:
           format: date-time
         message:
           type: string
+        createdByUserName:
+          type: string
+        type:
+          type: string
       required:
         - id
         - createdAt
         - message
+        - createdByUserName
+        - type
       discriminator:
         propertyName: type
         mapping:
           user: '#/components/schemas/ReferralHistoryUserNote'
+          system: '#/components/schemas/ReferralHistorySystemNote'
     ReferralHistoryUserNote:
+      allOf:
+        - $ref: '#/components/schemas/ReferralHistoryNote'
+    ReferralHistorySystemNote:
       allOf:
         - $ref: '#/components/schemas/ReferralHistoryNote'
         - type: object
           properties:
-            createdByStaffMemberId:
+            category:
               type: string
-              format: uuid
+              enum:
+                - submitted
+                - unallocated
+                - in_review
+                - ready_to_place
+                - rejected
+                - completed
           required:
-            - createdByStaffMemberId
+            - category
     NewReferralHistoryUserNote:
       type: object
       properties:
@@ -5677,6 +5854,14 @@ components:
         id:
           type: string
           format: uuid
+        name:
+          type: string
+        deliusUsername:
+          type: string
+        email:
+          type: string
+        telephoneNumber:
+          type: string
         region:
           $ref: '#/components/schemas/ProbationRegion'
       discriminator:
@@ -5687,20 +5872,14 @@ components:
       required:
         - service
         - id
+        - name
+        - deliusUsername
         - region
     ApprovedPremisesUser:
       allOf:
         - $ref: '#/components/schemas/User'
         - type: object
           properties:
-            name:
-              type: string
-            deliusUsername:
-              type: string
-            email:
-              type: string
-            telephoneNumber:
-              type: string
             qualifications:
               type: array
               items:
@@ -5710,10 +5889,22 @@ components:
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
           required:
-            - name
-            - deliusUsername
             - qualifications
             - roles
+    UserRolesAndQualifications:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovedPremisesUserRole'
+        qualifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserQualification'
+      required:
+        - roles
+        - qualifications
     TemporaryAccommodationUser:
       allOf:
         - $ref: '#/components/schemas/User'
@@ -6073,6 +6264,26 @@ components:
         - supportingInformation
         - riskToSelf
         - riskManagementPlan
+    OASysRiskToSelf:
+      type: object
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
+        riskToSelf:
+          $ref: '#/components/schemas/ArrayOfOASysRiskToSelfQuestions'
+      required:
+        - assessmentId
+        - assessmentState
+        - dateStarted
+        - riskToSelf
     OASysSection:
       type: object
       properties:
@@ -6184,7 +6395,6 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
-        - fetch_offender_names_for_applications
     PlacementDates:
       type: object
       properties:
@@ -6538,6 +6748,32 @@ components:
     TemporaryAccommodationBedSearchResult:
       allOf:
         - $ref: '#/components/schemas/BedSearchResult'
+        - type: object
+          properties:
+            overlaps:
+              type: array
+              items:
+                $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
+          required:
+            - overlaps
+    TemporaryAccommodationBedSearchResultOverlap:
+      type: object
+      properties:
+        crn:
+          type: string
+        days:
+          type: integer
+        bookingId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+      required:
+        - crn
+        - days
+        - bookingId
+        - roomId
     BedSearchResultPremisesSummary:
       type: object
       properties:
@@ -6673,7 +6909,6 @@ components:
         crn:
           type: string
       required:
-        - name
         - crn
     BookingSearchResultBookingSummary:
       type: object
@@ -6884,6 +7119,14 @@ components:
     BedOccupancyOpenEntry:
       allOf:
         - $ref: '#/components/schemas/BedOccupancyEntry'
+    PersonType:
+      type: string
+      enum:
+        - FullPerson
+        - RestrictedPerson
+        - UnknownPerson
+        - FullPersonInfo
+        - RestrictedPersonInfo
     WithdrawalReason:
       type: string
       enum:

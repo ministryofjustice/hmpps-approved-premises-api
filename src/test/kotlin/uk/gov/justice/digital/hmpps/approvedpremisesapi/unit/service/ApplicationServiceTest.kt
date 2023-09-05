@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -1339,10 +1340,16 @@ class ApplicationServiceTest {
       arrivalDate = LocalDate.now(),
     )
 
+    private val submitCas2Application = SubmitCas2Application(
+      translatedDocument = {},
+      type = "CAS2",
+    )
+
     @BeforeEach
     fun setup() {
       every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
       every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
     }
 
     @Test
@@ -1717,6 +1724,144 @@ class ApplicationServiceTest {
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createAssessment(application) }
+      verify { mockDomainEventService wasNot called }
+    }
+
+    @Test
+    fun `submitCas2Application returns NotFound when application doesn't exist`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
+
+      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `submitCas2Application returns Unauthorised when application doesn't belong to request user`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .produce()
+
+      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+        .withDeliusUsername(username)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `submitCas2Application returns GeneralValidationError when application schema is outdated`() {
+      val application = Cas2ApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = false
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+    }
+
+    @Test
+    fun `submitCas2Application returns GeneralValidationError when application has already been submitted`() {
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `submitCas2Application returns Success and stores event`() {
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withGender("male")
+        .withCrn(application.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
+        offenderDetails,
+      )
+
+      val schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
+
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as Cas2ApplicationEntity
+      assertThat(persistedApplication.crn).isEqualTo(application.crn)
+
+      verify { mockApplicationRepository.save(any()) }
       verify { mockDomainEventService wasNot called }
     }
   }

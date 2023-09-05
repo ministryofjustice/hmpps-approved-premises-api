@@ -20,7 +20,7 @@ INSERT INTO
   )
 VALUES
   (
-    '80d5337f-4af4-4df9-a1ae-bb909444715f',
+    '1d0f6bcb-b742-4a53-8988-aeb192350824',
     CURRENT_DATE + 4,
     CURRENT_DATE + 84,
     'X371199',
@@ -31,6 +31,22 @@ VALUES
     'temporary-accommodation',
     CURRENT_DATE,
     NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'c30a8ddb-fd44-40ac-b2ba-5ce5c15e110a',
+    '1d0f6bcb-b742-4a53-8988-aeb192350824',
+    2,
+    CURRENT_DATE
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -66,6 +82,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'ec8d595a-25db-48cd-b9a0-2576998825a5',
+    '1de846dd-9617-4488-9b05-d54c9f955e2b',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   confirmations (
@@ -117,6 +148,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '96ef4637-a768-457f-b803-aa22343d4934',
+    '713943e2-1ae4-4101-aa6c-9a40e7930168',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   arrivals (
@@ -184,7 +230,7 @@ VALUES
     '13145d61-6ea7-4e77-9c89-cbbd2f7d85c4',
     CURRENT_DATE - 84,
     CURRENT_DATE + 3,
-    'X698234', -- Multiple Offences
+    'X698334', -- LAO
     CURRENT_DATE - 84,
     CURRENT_DATE + 3,
     '70a6046c-23fc-4a30-b151-582ffd509e6a',
@@ -195,6 +241,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '312f3b79-c3b3-4792-8e63-c86f6f9c3f78',
+    '13145d61-6ea7-4e77-9c89-cbbd2f7d85c4',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   arrivals (
@@ -248,6 +309,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '60f56560-7499-4c60-bae8-63ea7cbe685e',
+    'a6fc549a-915d-4884-97f0-bc1cee84208c',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   arrivals (
@@ -290,7 +366,7 @@ VALUES
     'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
     CURRENT_DATE - 168,
     CURRENT_DATE - 1,
-    'X371199',
+    'X320741',
     CURRENT_DATE - 168,
     CURRENT_DATE - 1,
     '70a6046c-23fc-4a30-b151-582ffd509e6a',
@@ -301,6 +377,21 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '84807d77-1ccb-408a-b307-df79980791cd',
+    'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
   departures (

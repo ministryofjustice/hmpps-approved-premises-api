@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmentState
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSupportingInformationQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
@@ -56,6 +57,24 @@ class OASysSectionsTransformer : OASysTransformer() {
         oASysQuestionWithSingleAnswer("Monitoring and control", "RM31", riskManagementPlan.riskManagementPlan?.monitoringAndControl),
         oASysQuestionWithSingleAnswer("Supervision", "RM30", riskManagementPlan.riskManagementPlan?.supervision),
         oASysQuestionWithSingleAnswer("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
+      ),
+    )
+  }
+
+  fun transformRiskToIndividual(
+    offenceDetails: OffenceDetails,
+    risksToTheIndividual: RisksToTheIndividual,
+  ): OASysRiskToSelf {
+    return OASysRiskToSelf(
+      assessmentId = offenceDetails.assessmentId,
+      assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
+      dateStarted = offenceDetails.initiationDate.toInstant(),
+      dateCompleted = offenceDetails.dateCompleted?.toInstant(),
+      riskToSelf = listOf(
+        oASysQuestionWithSingleAnswer("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
+        oASysQuestionWithSingleAnswer("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
+        oASysQuestionWithSingleAnswer("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
+        oASysQuestionWithSingleAnswer("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
       ),
     )
   }

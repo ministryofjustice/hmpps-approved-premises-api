@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -16,34 +18,52 @@ fun IntegrationTestBase.`Given a Placement Request`(
   placementRequestAllocatedTo: UserEntity,
   assessmentAllocatedTo: UserEntity,
   createdByUser: UserEntity,
-  crn: String = randomStringMultiCaseWithNumbers(8),
+  crn: String? = null,
+  name: String? = null,
   reallocated: Boolean = false,
   isWithdrawn: Boolean = false,
   isParole: Boolean = false,
   expectedArrival: LocalDate? = null,
   tier: String? = null,
+  mappa: String? = null,
+  applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
   }
 
+  var risksFactory = PersonRisksFactory()
+
+  if (tier != null) {
+    risksFactory = risksFactory.withTier(
+      RiskWithStatus(
+        RiskTier(tier, LocalDate.now()),
+      ),
+    )
+  }
+
+  if (mappa != null) {
+    risksFactory = risksFactory.withMappa(
+      RiskWithStatus(
+        status = RiskStatus.Retrieved,
+        value = Mappa(
+          level = "CAT M2/LEVEL M2",
+          lastUpdated = java.time.LocalDate.now(),
+        ),
+      ),
+    )
+  }
+
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-    withCrn(crn)
+    crn?.let { withCrn(it) }
+    name?.let { withName(it) }
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
-    withSubmittedAt(OffsetDateTime.now())
+    withSubmittedAt(applicationSubmittedAt)
     withReleaseType("licence")
-    if (tier != null) {
-      withRiskRatings(
-        PersonRisksFactory()
-          .withTier(
-            RiskWithStatus(
-              RiskTier(tier, LocalDate.now()),
-            ),
-          )
-          .produce(),
-      )
-    }
+    withRiskRatings(
+      risksFactory.produce(),
+    )
   }
 
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -106,7 +126,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     assessmentAllocatedTo,
     createdByUser,
     crn,
-    reallocated,
+    reallocated = reallocated,
     expectedArrival = expectedArrival,
     tier = tier,
   )

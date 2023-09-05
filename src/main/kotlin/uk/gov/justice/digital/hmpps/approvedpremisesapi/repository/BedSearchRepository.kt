@@ -215,14 +215,14 @@ WHERE
   fun findTemporaryAccommodationBeds(
     probationDeliveryUnit: String,
     startDate: LocalDate,
-    durationInDays: Int,
+    endDate: LocalDate,
     probationRegionId: UUID,
   ): List<TemporaryAccommodationBedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
       addValue("probation_delivery_unit", probationDeliveryUnit)
       addValue("start_date", startDate)
-      addValue("end_date", startDate.plusDays(durationInDays.toLong()))
+      addValue("end_date", endDate)
     }
 
     val result = namedParameterJdbcTemplate.query(
@@ -265,6 +265,7 @@ WHERE
               roomId = roomId!!,
               roomName = roomName,
               roomCharacteristics = mutableListOf(),
+              overlaps = mutableListOf(),
             )
           }
 
@@ -364,6 +365,7 @@ class TemporaryAccommodationBedSearchResult(
   bedId: UUID,
   bedName: String,
   roomCharacteristics: MutableList<CharacteristicNames>,
+  val overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>,
 ) : BedSearchResult(
   premisesId,
   premisesName,
@@ -383,4 +385,12 @@ class TemporaryAccommodationBedSearchResult(
 data class CharacteristicNames(
   val propertyName: String?,
   val name: String,
+)
+
+data class TemporaryAccommodationBedSearchResultOverlap(
+  val crn: String,
+  val days: Int,
+  val premisesId: UUID,
+  val roomId: UUID,
+  val bookingId: UUID,
 )

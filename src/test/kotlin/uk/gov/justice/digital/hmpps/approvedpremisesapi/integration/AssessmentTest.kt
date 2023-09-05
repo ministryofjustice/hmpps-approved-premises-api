@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.core.type.TypeReference
+import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.Assertions.fail
@@ -21,6 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistorySystemNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
@@ -31,10 +36,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -113,7 +120,12 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
+              listOf(
+                assessmentTransformer.transformDomainToApiSummary(
+                  toAssessmentSummaryEntity(assessment),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
+              ),
             ),
           )
       }
@@ -179,7 +191,7 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offenderDetails, inmateDetails)),
+              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails))),
             ),
             true,
           )
@@ -240,7 +252,7 @@ class AssessmentTest : IntegrationTestBase() {
             assessments
           }
           AssessmentSortField.assessmentCreatedAt -> assessments.sortedByDescending { it.assessment.createdAt }
-        }.map { assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(it.assessment), it.offenderDetails, it.inmateDetails) }
+        }.map { assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(it.assessment), PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails)) }
 
         webTestClient.get()
           .uri("/assessments?sortOrder=descending&sortField=${sortField.value}")
@@ -304,8 +316,7 @@ class AssessmentTest : IntegrationTestBase() {
           .map {
             assessmentTransformer.transformDomainToApiSummary(
               toAssessmentSummaryEntity(it.assessment),
-              it.offenderDetails,
-              it.inmateDetails,
+              PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails),
             )
           }
 
@@ -380,7 +391,12 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offender.first, offender.second)),
+              listOf(
+                assessmentTransformer.transformDomainToApiSummary(
+                  toAssessmentSummaryEntity(assessment),
+                  PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
+                ),
+              ),
             ),
             true,
           )
@@ -389,7 +405,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all assessments does not return assessments for LAO`() {
+  fun `Get all assessments returns restricted person information for LAO`() {
     var offenderIndex = 0
     `Given a User` { user, jwt ->
       `Given Some Offenders`(
@@ -452,7 +468,16 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), offender.first, offender.second)),
+              listOf(
+                assessmentTransformer.transformDomainToApiSummary(
+                  toAssessmentSummaryEntity(assessment),
+                  PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
+                ),
+                assessmentTransformer.transformDomainToApiSummary(
+                  toAssessmentSummaryEntity(otherAssessment),
+                  PersonInfoResult.Success.Restricted(otherOffender.first.otherIds.crn, otherOffender.first.otherIds.nomsNumber),
+                ),
+              ),
             ),
             true,
           )
@@ -547,7 +572,10 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+              assessmentTransformer.transformJpaToApi(
+                assessment,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              ),
             ),
           )
       }
@@ -649,7 +677,10 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+              assessmentTransformer.transformJpaToApi(
+                assessment,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              ),
             ),
           )
       }
@@ -703,9 +734,109 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(assessment, offenderDetails, inmateDetails),
+              assessmentTransformer.transformJpaToApi(
+                assessment,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              ),
             ),
           )
+      }
+    }
+  }
+
+  @Test
+  fun `Get Temporary Accommodation assessment by ID returns 200 with notes transformed correctly`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }.apply {
+          this.referralHistoryNotes += assessmentReferralHistoryUserNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withMessage("Some user note")
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.SUBMITTED)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.UNALLOCATED)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.IN_REVIEW)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.READY_TO_PLACE)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.REJECTED)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.COMPLETED)
+            withAssessment(this@apply)
+          }
+        }
+
+        assessment.schemaUpToDate = true
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.referralHistoryNotes")
+          .value<JSONArray> { json ->
+            val notes = json.toList().map {
+              objectMapper.readValue(objectMapper.writeValueAsString(it), object : TypeReference<ReferralHistoryNote>() {})
+            }
+
+            assertThat(notes).hasSize(7)
+            assertThat(notes).allMatch { it.createdByUserName == userEntity.name }
+            assertThat(notes).anyMatch { it is ReferralHistoryUserNote && it.message == "Some user note" }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.submitted }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.unallocated }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.inReview }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.readyToPlace }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.rejected }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
+          }
       }
     }
   }
@@ -1060,7 +1191,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Close assessment returns 200 OK, persists closure timestamp`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -1192,7 +1323,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Create referral history user note returns 200 with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()

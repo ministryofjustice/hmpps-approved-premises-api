@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -58,13 +59,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class AcceptAssessmentTest {
   private val userServiceMock = mockk<UserService>()
+  private val userAccessServiceMock = mockk<UserAccessService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
@@ -79,6 +83,7 @@ class AcceptAssessmentTest {
 
   private val assessmentService = AssessmentService(
     userServiceMock,
+    userAccessServiceMock,
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
     assessmentReferralHistoryNoteRepositoryMock,
@@ -146,7 +151,7 @@ class AcceptAssessmentTest {
   }
 
   @Test
-  fun `acceptAssessment returns unauthorised for Assessment not allocated to user`() {
+  fun `acceptAssessment returns unauthorised when the user does not have permissions to access the assessment`() {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessmentFactory
       .withAllocatedToUser(
         UserEntityFactory()
@@ -159,6 +164,8 @@ class AcceptAssessmentTest {
       )
       .produce()
 
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null)
@@ -169,6 +176,8 @@ class AcceptAssessmentTest {
   @Test
   fun `acceptAssessment returns general validation error for Assessment where schema is outdated`() {
     val assessment = assessmentFactory.produce()
+
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -196,6 +205,8 @@ class AcceptAssessmentTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns assessmentSchema
@@ -221,6 +232,8 @@ class AcceptAssessmentTest {
       .withReallocatedAt(OffsetDateTime.now())
       .produce()
 
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns assessmentSchema
@@ -245,6 +258,8 @@ class AcceptAssessmentTest {
     val assessment = assessmentFactory
       .withData("{\"test\": \"data\"}")
       .produce()
+
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -275,6 +290,8 @@ class AcceptAssessmentTest {
   fun `acceptAssessment returns unauthorised when user not allowed to view Offender (LAO)`() {
     val assessment = assessmentFactory.produce()
 
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns assessmentSchema
@@ -298,6 +315,8 @@ class AcceptAssessmentTest {
       .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
       .withAssessment(assessment)
       .produce()
+
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -371,6 +390,8 @@ class AcceptAssessmentTest {
 
     val notes = "Some Notes"
 
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns assessmentSchema
@@ -443,6 +464,8 @@ class AcceptAssessmentTest {
   fun `acceptAssessment does not emit Domain Event when failing to create Placement Requirements`() {
     val assessment = assessmentFactory.produce()
 
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns assessmentSchema
@@ -478,12 +501,12 @@ class AcceptAssessmentTest {
       .withYieldedApArea { ApAreaEntityFactory().produce() }
       .produce()
 
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
     val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(
-        UserEntityFactory()
-          .withProbationRegion(probationRegion)
-          .produce(),
-      )
+      .withCreatedByUser(user)
       .withProbationRegion(probationRegion)
       .produce()
 
@@ -498,6 +521,8 @@ class AcceptAssessmentTest {
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
       .produce()
+
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -523,6 +548,9 @@ class AcceptAssessmentTest {
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
+    every { userServiceMock.getUserForRequest() } returns user
+    every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -535,6 +563,7 @@ class AcceptAssessmentTest {
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
     assertThat(updatedAssessment.completedAt).isNull()
+    assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.READY_TO_PLACE)
   }
 
   private fun verifyDomainEventSent(offenderDetails: OffenderDetailSummary, staffUserDetails: StaffUserDetails, assessment: AssessmentEntity) {

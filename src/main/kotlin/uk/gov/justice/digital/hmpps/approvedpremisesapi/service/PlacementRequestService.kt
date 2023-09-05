@@ -64,7 +64,7 @@ class PlacementRequestService(
     return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
   }
 
-  fun getAllActive(status: PlacementRequestStatus?, crn: String?, tier: String?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: String?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     var pageable: PageRequest?
     var metadata: PaginationMetadata? = null
 
@@ -79,7 +79,7 @@ class PlacementRequestService(
       pageable = null
     }
 
-    val response = placementRequestRepository.allForDashboard(status, crn, tier, arrivalDateStart, arrivalDateEnd, pageable)
+    val response = placementRequestRepository.allForDashboard(status, crn, crnOrName, tier, arrivalDateStart, arrivalDateEnd, pageable)
 
     if (page != null) {
       metadata = PaginationMetadata(page, response.totalPages, response.totalElements, 10)
@@ -196,10 +196,6 @@ class PlacementRequestService(
 
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound()
-
-    if (placementRequest.allocatedToUser.id != user.id) {
-      return AuthorisableActionResult.Unauthorised()
-    }
 
     val bookingNotMade = BookingNotMadeEntity(
       id = UUID.randomUUID(),

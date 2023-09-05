@@ -12,7 +12,7 @@ class MigrationJobController(private val migrationJobService: MigrationJobServic
   override fun migrationJobPost(migrationJobRequest: MigrationJobRequest): ResponseEntity<Unit> {
     throwIfNotLoopbackRequest()
 
-    migrationJobService.runMigrationJob(migrationJobRequest.jobType)
+    migrationJobService.runMigrationJobAsync(migrationJobRequest.jobType)
 
     return ResponseEntity(HttpStatus.ACCEPTED)
   }

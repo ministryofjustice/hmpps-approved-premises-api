@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
@@ -48,6 +49,8 @@ class BedUsageReportGenerator(
         bookingStatus = bookingTransformer.determineStatus(booking),
         voidCategory = null,
         voidNotes = null,
+        uniquePropertyRef = premises.id.toShortBase58(),
+        uniqueBedspaceRef = this.room.id.toShortBase58(),
       )
 
       val turnaround = booking.turnaround
@@ -68,6 +71,8 @@ class BedUsageReportGenerator(
           bookingStatus = null,
           voidCategory = null,
           voidNotes = null,
+          uniquePropertyRef = premises.id.toShortBase58(),
+          uniqueBedspaceRef = this.room.id.toShortBase58(),
         )
       }
     }
@@ -86,6 +91,8 @@ class BedUsageReportGenerator(
         bookingStatus = null,
         voidCategory = lostBed.reason.name,
         voidNotes = lostBed.notes,
+        uniquePropertyRef = premises.id.toShortBase58(),
+        uniqueBedspaceRef = this.room.id.toShortBase58(),
       )
     }
 

@@ -25,9 +25,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
@@ -45,6 +47,7 @@ import java.util.UUID
 @Service
 class AssessmentService(
   private val userService: UserService,
+  private val userAccessService: UserAccessService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
@@ -92,11 +95,7 @@ class AssessmentService(
       else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
     }
 
-    // TODO: This should be delegated to a method in UserAccessService so that the check can be done in a service-aware way
-    //   to prevent (for example) a user with the `CAS1_WORKFLOW_MANAGER` role from being able to access other users'
-    //   assessments in CAS3.
-    //   See: https://trello.com/c/WKfi06nk
-    if (!user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS3_ASSESSOR) && assessment.allocatedToUser != user) {
+    if (!userAccessService.userCanViewAssessment(user, assessment)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -193,6 +192,8 @@ class AssessmentService(
         completedAt = null,
       ),
     )
+
+    assessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.SUBMITTED)
 
     return assessment
   }
@@ -291,6 +292,10 @@ class AssessmentService(
     }
 
     val savedAssessment = assessmentRepository.save(assessment)
+
+    if (savedAssessment is TemporaryAccommodationAssessmentEntity) {
+      savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.READY_TO_PLACE)
+    }
 
     if (assessment is ApprovedPremisesAssessmentEntity) {
       val placementRequirementsValidationResult =
@@ -443,6 +448,10 @@ class AssessmentService(
 
     val savedAssessment = assessmentRepository.save(assessment)
 
+    if (savedAssessment is TemporaryAccommodationAssessmentEntity) {
+      savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.REJECTED)
+    }
+
     val application = savedAssessment.application
 
     val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
@@ -545,6 +554,7 @@ class AssessmentService(
     assessment.completedAt = OffsetDateTime.now()
 
     val savedAssessment = assessmentRepository.save(assessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.COMPLETED)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),
@@ -655,11 +665,12 @@ class AssessmentService(
     currentAssessment.allocatedToUser = assigneeUser
     currentAssessment.allocatedAt = OffsetDateTime.now()
 
-    assessmentRepository.save(currentAssessment)
+    val savedAssessment = assessmentRepository.save(currentAssessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.IN_REVIEW)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
-        currentAssessment,
+        savedAssessment,
       ),
     )
   }
@@ -677,9 +688,12 @@ class AssessmentService(
     currentAssessment.decision = null
     currentAssessment.submittedAt = null
 
+    val savedAssessment = assessmentRepository.save(currentAssessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.UNALLOCATED)
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
-        assessmentRepository.save(currentAssessment),
+        savedAssessment,
       ),
     )
   }
@@ -758,5 +772,18 @@ class AssessmentService(
     )
 
     return AuthorisableActionResult.Success(referralHistoryNoteEntity)
+  }
+
+  private fun AssessmentEntity.addSystemNote(user: UserEntity, type: ReferralHistorySystemNoteType) {
+    this.referralHistoryNotes += assessmentReferralHistoryNoteRepository.save(
+      AssessmentReferralHistorySystemNoteEntity(
+        id = UUID.randomUUID(),
+        assessment = this,
+        createdAt = OffsetDateTime.now(),
+        message = "",
+        createdByUser = user,
+        type = type,
+      ),
+    )
   }
 }

@@ -4,7 +4,8 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
@@ -111,12 +112,13 @@ class PersonSearchTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              Person(
+              FullPerson(
+                type = PersonType.fullPerson,
                 crn = "CRN",
                 name = "James Someone",
                 dateOfBirth = LocalDate.parse("1985-05-05"),
                 sex = "Male",
-                status = Person.Status.inCustody,
+                status = FullPerson.Status.inCustody,
                 nomsNumber = "NOMS321",
                 ethnicity = "White British",
                 nationality = "English",
@@ -157,12 +159,13 @@ class PersonSearchTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              Person(
+              FullPerson(
+                type = PersonType.fullPerson,
                 crn = "CRN",
                 name = "James Someone",
                 dateOfBirth = LocalDate.parse("1985-05-05"),
                 sex = "Male",
-                status = Person.Status.unknown,
+                status = FullPerson.Status.unknown,
                 nomsNumber = null,
                 ethnicity = "White British",
                 nationality = "English",

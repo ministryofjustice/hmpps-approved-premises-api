@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -28,8 +30,22 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
 
-  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type")
-  fun <T : ApplicationEntity> findAllForService(type: Class<T>): List<ApplicationEntity>
+  @Query(
+    "SELECT * FROM approved_premises_applications apa " +
+      "LEFT JOIN applications a ON a.id = apa.id " +
+      "WHERE apa.name IS NULL",
+    nativeQuery = true,
+  )
+  fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
+
+  @Query(
+    "SELECT * FROM approved_premises_applications apa " +
+      "LEFT JOIN applications a ON a.id = apa.id " +
+      "WHERE date_part('month', a.submitted_at) = :month " +
+      "AND date_part('year', a.submitted_at) = :year ",
+    nativeQuery = true,
+  )
+  fun findAllApprovedPremisesApplicationsByCalendarMonth(month: Int, year: Int): List<ApprovedPremisesApplicationEntity>
 
   @Query(
     "SELECT a FROM ApplicationEntity a " +
@@ -215,7 +231,7 @@ class ApprovedPremisesApplicationEntity(
   var placementRequests: MutableList<PlacementRequestEntity>,
   var releaseType: String?,
   var arrivalDate: OffsetDateTime?,
-  var name: String?,
+  var name: String,
 ) : ApplicationEntity(
   id,
   crn,

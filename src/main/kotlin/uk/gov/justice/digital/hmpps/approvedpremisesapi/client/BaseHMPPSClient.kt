@@ -153,7 +153,11 @@ abstract class BaseHMPPSClient(
         writeToRedis(qualifiedKey, cacheEntry, body, cacheConfig.hardTtlSeconds.toLong())
       }
 
-      return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+      if (!exception.statusCode.is2xxSuccessful) {
+        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+      } else {
+        throw exception
+      }
     } catch (exception: Exception) {
       return ClientResult.Failure.Other(method, requestBuilder.path ?: "", exception)
     }
@@ -253,26 +257,21 @@ abstract class BaseHMPPSClient(
 sealed interface ClientResult<ResponseType> {
   class Success<ResponseType>(val status: HttpStatus, val body: ResponseType, val isPreemptivelyCachedResponse: Boolean = false) : ClientResult<ResponseType>
   sealed interface Failure<ResponseType> : ClientResult<ResponseType> {
-    fun throwException(): Nothing
+    fun throwException(): Nothing = throw toException()
+    fun toException(): Throwable
 
     class StatusCode<ResponseType>(val method: HttpMethod, val path: String, val status: HttpStatus, val body: String?, val isPreemptivelyCachedResponse: Boolean = false) : Failure<ResponseType> {
-      override fun throwException(): Nothing {
-        throw RuntimeException("Unable to complete $method request to $path: $status")
-      }
+      override fun toException(): Throwable = RuntimeException("Unable to complete $method request to $path: $status")
 
       inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper().readValue(body, ResponseType::class.java)
     }
 
     class PreemptiveCacheTimeout<ResponseType>(val cacheName: String, val cacheKey: String, val timeoutMs: Int) : Failure<ResponseType> {
-      override fun throwException(): Nothing {
-        throw RuntimeException("Timed out after ${timeoutMs}ms waiting for $cacheKey on pre-emptive cache $cacheName")
-      }
+      override fun toException(): Throwable = RuntimeException("Timed out after ${timeoutMs}ms waiting for $cacheKey on pre-emptive cache $cacheName")
     }
 
     class Other<ResponseType>(val method: HttpMethod, val path: String, val exception: Exception) : Failure<ResponseType> {
-      override fun throwException(): Nothing {
-        throw RuntimeException("Unable to complete $method request to $path", exception)
-      }
+      override fun toException(): Throwable = RuntimeException("Unable to complete $method request to $path", exception)
     }
   }
 }

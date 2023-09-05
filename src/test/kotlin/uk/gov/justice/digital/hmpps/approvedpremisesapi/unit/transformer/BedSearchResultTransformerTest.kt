@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSearchResultTransformer
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchResult as ApiApprovedPremisesBedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResult as ApiTemporaryAccommodationBedSearchResult
 
 class BedSearchResultTransformerTest {
   private val bedSearchTransformer = BedSearchResultTransformer()
@@ -124,6 +125,7 @@ class BedSearchResultTransformerTest {
       assertThat(domainResult.bedId).isEqualTo(it.bed.id)
       assertThat(domainResult.bedName).isEqualTo(it.bed.name)
       assertThat(domainResult.roomCharacteristics).isEqualTo(it.room.characteristics.map { c -> CharacteristicNames(c.propertyName, c.name) })
+      assertThat(domainResult.overlaps).isEqualTo((it as ApiTemporaryAccommodationBedSearchResult).overlaps)
     }
   }
 }
