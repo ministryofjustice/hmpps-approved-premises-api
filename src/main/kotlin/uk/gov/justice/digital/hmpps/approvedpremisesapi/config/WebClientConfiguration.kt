@@ -21,6 +21,7 @@ import java.time.Duration
 @Configuration
 class WebClientConfiguration(
   @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
+  @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
   @Value("\${max-response-in-memory-size-bytes}") private val maxResponseInMemorySizeBytes: Int,
 ) {
   @Bean
@@ -154,8 +155,8 @@ class WebClientConfiguration(
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(caseNotesServiceUpstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(caseNotesServiceUpstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .filter(oauth2Client)
