@@ -583,8 +583,6 @@ class AssessmentTest : IntegrationTestBase() {
         }
       }
     }
-
-
   }
 
   @Test
