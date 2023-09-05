@@ -3572,6 +3572,38 @@ paths:
               schema:
                 type: string
                 format: binary
+  /reports/applications:
+    get:
+      tags:
+        - Reports
+      summary: Returns a spreadsheet listing all of the submitted applications for the month
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only applications for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - name: year
+          in: query
+          required: true
+          description: Only applications for this year will be returned
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          description: Only applications for this month will be returned - must be provided with year
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
 components:
   responses:
     401Response:

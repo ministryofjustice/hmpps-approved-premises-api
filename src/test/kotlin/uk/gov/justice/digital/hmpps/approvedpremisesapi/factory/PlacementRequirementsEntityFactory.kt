@@ -35,6 +35,10 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
     this.application = { application }
   }
 
+  fun withApType(apType: ApType) = apply {
+    this.apType = { apType }
+  }
+
   fun withAssessment(assessment: AssessmentEntity) = apply {
     this.assessment = { assessment }
   }
