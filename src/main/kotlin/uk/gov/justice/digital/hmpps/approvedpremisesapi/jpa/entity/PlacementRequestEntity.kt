@@ -63,14 +63,21 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         END
       ) = :#{#status?.toString()})
       AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
-      AND (:nameSearch IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER(:nameSearch)) = 1)
+      AND (
+        :crnOrName IS NULL OR 
+        (
+            ((SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName)) = 1)
+            OR
+            ((SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%')) = 1)
+        )
+      )
       AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1) 
       AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
   """,
     nativeQuery = true,
   )
-  fun allForDashboard(status: PlacementRequestStatus?, crn: String?, nameSearch: String?, tier: String?, arrivalDateFrom: LocalDate?, arrivalDateTo: LocalDate?, pageable: Pageable?): Page<PlacementRequestEntity>
+  fun allForDashboard(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: String?, arrivalDateFrom: LocalDate?, arrivalDateTo: LocalDate?, pageable: Pageable?): Page<PlacementRequestEntity>
 }
 
 @Entity
