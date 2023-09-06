@@ -81,7 +81,7 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    val userEntity = userService.getUserForUsername(name)
+    val userEntity = userService.getUserForUsername(name, true)
     val userTransformed = userTransformer.transformJpaToApi(userEntity, xServiceName)
     return ResponseEntity.ok(userTransformed)
   }

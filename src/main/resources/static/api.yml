@@ -3360,6 +3360,12 @@ paths:
           $ref: '#/components/responses/401Response'
         403:
           $ref: '#/components/responses/403Response'
+        404:
+          description: User not found
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
   /seed:
