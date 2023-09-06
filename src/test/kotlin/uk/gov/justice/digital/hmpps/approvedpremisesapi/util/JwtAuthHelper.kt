@@ -63,6 +63,13 @@ class JwtAuthHelper {
           .compact()
       }
 
+  internal fun createValidNomisAuthorisationCodeJwt(username: String = "username") =
+    createAuthorizationCodeJwt(
+      subject = username,
+      authSource = "nomis",
+      roles = listOf("ROLE_PRISON"),
+    )
+
   internal fun createValidAuthorizationCodeJwt(username: String = "username") = createAuthorizationCodeJwt(
     subject = username,
     authSource = "delius",

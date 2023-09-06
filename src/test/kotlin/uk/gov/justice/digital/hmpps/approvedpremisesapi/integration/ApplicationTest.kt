@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -111,7 +112,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get all applications returns 200 with correct body - when the service is CAS2`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a CAS2 User` { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
         `Given an Offender` { offenderDetails, _ ->
           cas2ApplicationJsonSchemaRepository.deleteAll()
@@ -1416,7 +1417,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())
@@ -1514,7 +1515,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Update existing CAS2 application returns 200 with correct body`() {
-    `Given a User` { submittingUser, jwt ->
+    `Given a CAS2 User` { submittingUser, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 

@@ -64,3 +64,45 @@ fun IntegrationTestBase.`Given a User`(
 
   block(user, jwt)
 }
+
+fun IntegrationTestBase.`Given a CAS2 User`(
+  id: UUID = UUID.randomUUID(),
+  staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
+  roles: List<UserRole> = emptyList(),
+  qualifications: List<UserQualification> = emptyList(),
+  probationRegion: ProbationRegionEntity? = null,
+  block: (userEntity: UserEntity, jwt: String) -> Unit,
+) {
+  val staffUserDetailsFactory = StaffUserDetailsFactory()
+
+  if (staffUserDetailsConfigBlock != null) {
+    staffUserDetailsConfigBlock(staffUserDetailsFactory)
+  }
+
+  val staffUserDetails = staffUserDetailsFactory.produce()
+
+  val user = userEntityFactory.produceAndPersist {
+    withId(id)
+    withDeliusUsername(staffUserDetails.username)
+    withEmail(staffUserDetails.email)
+    withTelephoneNumber(staffUserDetails.telephoneNumber)
+    withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
+    if (probationRegion == null) {
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    } else {
+      withProbationRegion(probationRegion)
+    }
+  }
+
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(staffUserDetails.username)
+
+  CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    staffUserDetails,
+  )
+
+  block(user, jwt)
+}

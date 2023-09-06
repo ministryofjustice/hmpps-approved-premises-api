@@ -10,7 +10,7 @@ class HttpAuthService {
   fun getDeliusPrincipalOrThrow(): AuthAwareAuthenticationToken {
     val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
 
-    if (principal.token.claims["auth_source"] != "delius") {
+    if (!isValidAuthSource(principal.token.claims["auth_source"])) {
       throw ForbiddenProblem()
     }
 
@@ -20,10 +20,14 @@ class HttpAuthService {
   fun getDeliusPrincipalOrNull(): AuthAwareAuthenticationToken? {
     val principal = SecurityContextHolder.getContext().authentication as? AuthAwareAuthenticationToken ?: return null
 
-    if (principal.token.claims["auth_source"] != "delius") {
+    if (!isValidAuthSource(principal.token.claims["auth_source"])) {
       return null
     }
 
     return principal
+  }
+
+  internal fun isValidAuthSource(authSource: Any?): Boolean {
+    return listOf("delius", "nomis").contains(authSource)
   }
 }
