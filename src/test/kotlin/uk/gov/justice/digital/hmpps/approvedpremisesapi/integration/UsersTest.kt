@@ -531,6 +531,25 @@ class UsersTest : IntegrationTestBase() {
         }
       }
     }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to search for a delius username that does not exist with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns 404`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users/delius?name=noone")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectHeader().contentType("application/problem+json")
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("title").isEqualTo("Not Found")
+          .jsonPath("status").isEqualTo(404)
+          .jsonPath("detail").isEqualTo("No user with username of noone could be found")
+      }
+    }
   }
 
   @Nested

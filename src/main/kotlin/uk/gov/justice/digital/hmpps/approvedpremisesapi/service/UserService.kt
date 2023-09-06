@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
@@ -197,7 +199,7 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun getUserForUsername(username: String): UserEntity {
+  fun getUserForUsername(username: String, throwProblemOn404: Boolean = false): UserEntity {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -207,6 +209,13 @@ class UserService(
 
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
+      is ClientResult.Failure.StatusCode -> {
+        if (throwProblemOn404 && staffUserDetailsResponse.status === HttpStatus.NOT_FOUND) {
+          throw NotFoundProblem(username, "user", "username")
+        } else {
+          staffUserDetailsResponse.throwException()
+        }
+      }
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
