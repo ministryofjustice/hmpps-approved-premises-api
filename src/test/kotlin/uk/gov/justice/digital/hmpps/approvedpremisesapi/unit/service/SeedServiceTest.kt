@@ -3,27 +3,29 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 import io.mockk.called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.ApplicationContext
-import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.support.TransactionTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
-import java.util.function.Consumer
 
 class SeedServiceTest {
   private val seedConfig = SeedConfig()
@@ -87,7 +89,7 @@ class SeedServiceTest {
   }
 
   @Test
-  fun `autoSeed runs the job for a CSV file with the name of the job type`() {
+  fun `autoSeed runs the jobs for a CSV file with the name of the job type in the correct order`() {
     seedConfig.auto.enabled = true
     seedConfig.auto.filePrefixes = listOf("classpath:db/seed/known-job-type")
 
@@ -95,30 +97,52 @@ class SeedServiceTest {
     val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     val mockLocalAuthorityAreaRepository = mockk<LocalAuthorityAreaRepository>()
     val mockCharacteristicRepository = mockk<CharacteristicRepository>()
+    val mockRoomRepository = mockk<RoomRepository>()
+    val mockBedRepository = mockk<BedRepository>()
 
     every { mockApplicationContext.getBean(PremisesRepository::class.java) } returns mockPremisesRepository
     every { mockApplicationContext.getBean(ProbationRegionRepository::class.java) } returns mockProbationRegionRepository
     every { mockApplicationContext.getBean(LocalAuthorityAreaRepository::class.java) } returns mockLocalAuthorityAreaRepository
     every { mockApplicationContext.getBean(CharacteristicRepository::class.java) } returns mockCharacteristicRepository
+    every { mockApplicationContext.getBean(RoomRepository::class.java) } returns mockRoomRepository
+    every { mockApplicationContext.getBean(BedRepository::class.java) } returns mockBedRepository
 
-    every { mockTransactionTemplate.executeWithoutResult(any()) } answers {
-      (it.invocation.args[0] as Consumer<TransactionStatus?>).accept(null)
+    val spy = spyk(seedService, recordPrivateCalls = true)
+
+    val approvedPremisesLambda = slot<SeedJob<*>.() -> String>()
+    val approvedPremisesRoomLambda = slot<SeedJob<*>.() -> String>()
+
+    every { spy["seedData"](SeedFileType.approvedPremises, "approved_premises", capture(approvedPremisesLambda)) } returns Unit
+    every { spy["seedData"](SeedFileType.approvedPremisesRooms, "approved_premises_rooms", capture(approvedPremisesRoomLambda)) } returns Unit
+
+    spy.autoSeed()
+
+    verifyOrder {
+      spy["seedData"](SeedFileType.approvedPremises, "approved_premises", any<SeedJob<*>.() -> String>())
+      spy["seedData"](SeedFileType.approvedPremisesRooms, "approved_premises_rooms", any<SeedJob<*>.() -> String>())
     }
 
-    every { mockPremisesRepository.findByApCode(any(), ApprovedPremisesEntity::class.java) } returns null
-    every { mockProbationRegionRepository.findByName(any()) } returns
-      ProbationRegionEntityFactory()
-        .withApArea(ApAreaEntityFactory().produce())
-        .produce()
-    every { mockLocalAuthorityAreaRepository.findByName(any()) } returns
-      LocalAuthorityEntityFactory()
-        .produce()
-    every { mockCharacteristicRepository.findByPropertyNameAndScopes(any(), any(), any()) } returns
-      CharacteristicEntityFactory()
-        .produce()
+    val approvedPremisesFilename = approvedPremisesLambda.captured.invoke(
+      ApprovedPremisesSeedJob(
+        "approved_premises",
+        mockApplicationContext.getBean(PremisesRepository::class.java),
+        mockApplicationContext.getBean(ProbationRegionRepository::class.java),
+        mockApplicationContext.getBean(LocalAuthorityAreaRepository::class.java),
+        mockApplicationContext.getBean(CharacteristicRepository::class.java),
+      ),
+    ).split("/").last()
 
-    seedService.autoSeed()
+    val approvedPremisesRoomsFilename = approvedPremisesRoomLambda.captured.invoke(
+      ApprovedPremisesRoomsSeedJob(
+        "approved_premises_rooms",
+        mockApplicationContext.getBean(PremisesRepository::class.java),
+        mockApplicationContext.getBean(RoomRepository::class.java),
+        mockApplicationContext.getBean(BedRepository::class.java),
+        mockApplicationContext.getBean(CharacteristicRepository::class.java),
+      ),
+    ).split("/").last()
 
-    verify { mockPremisesRepository.save(any()) }
+    assertThat(approvedPremisesFilename).isEqualTo("1__approved_premises.csv")
+    assertThat(approvedPremisesRoomsFilename).isEqualTo("2__approved_premises_rooms.csv")
   }
 }
