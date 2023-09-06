@@ -5421,6 +5421,7 @@ components:
         - hdc
         - pss
         - in_community
+        - not_applicable
     PrisonCaseNote:
       type: object
       properties:

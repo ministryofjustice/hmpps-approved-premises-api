@@ -72,6 +72,7 @@ class PlacementRequestTransformer(
     "hdc" -> ReleaseTypeOption.hdc
     "pss" -> ReleaseTypeOption.pss
     "inCommunity" -> ReleaseTypeOption.inCommunity
+    "notApplicable" -> ReleaseTypeOption.notApplicable
     else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 }
