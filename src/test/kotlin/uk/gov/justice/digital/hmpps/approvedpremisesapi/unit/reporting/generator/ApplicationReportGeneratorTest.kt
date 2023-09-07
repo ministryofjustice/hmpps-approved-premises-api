@@ -139,7 +139,7 @@ class ApplicationReportGeneratorTest {
     assertThat(result[0][ApplicationReportRow::sentenceLengthInMonths]).isNull()
     assertThat(result[0][ApplicationReportRow::applicationSubmissionDate]).isEqualTo(application.submittedAt)
     assertThat(result[0][ApplicationReportRow::referrerLdu]).isNull()
-    assertThat(result[0][ApplicationReportRow::referrerRegion]).isNull()
+    assertThat(result[0][ApplicationReportRow::referrerRegion]).isEqualTo(application.createdByUser.probationRegion.name)
     assertThat(result[0][ApplicationReportRow::referrerTeam]).isNull()
     assertThat(result[0][ApplicationReportRow::targetLocation]).isNull()
     assertThat(result[0][ApplicationReportRow::applicationWithdrawalReason]).isNull()

@@ -46,7 +46,7 @@ class ApplicationReportGenerator(
         sentenceLengthInMonths = null,
         applicationSubmissionDate = this.submittedAt?.toLocalDate(),
         referrerLdu = null,
-        referrerRegion = null,
+        referrerRegion = this.createdByUser.probationRegion.name,
         referrerTeam = null,
         targetLocation = placementRequest?.placementRequirements?.postcodeDistrict?.outcode,
         applicationWithdrawalReason = this.withdrawalReason,
