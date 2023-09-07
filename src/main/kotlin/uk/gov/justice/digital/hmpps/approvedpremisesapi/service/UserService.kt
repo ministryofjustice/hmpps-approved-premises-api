@@ -83,12 +83,12 @@ class UserService(
   }
 
   fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?) =
-    userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
+    userRepository.findAll(hasQualificationsAndRoles(qualifications, roles, true), Sort.by(Sort.Direction.ASC, "name"))
 
   fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
     val isLao = offenderService.isLao(crn)
 
-    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name")).filter {
+    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles, true), Sort.by(Sort.Direction.ASC, "name")).filter {
       !isLao || it.hasQualification(UserQualification.LAO) || offenderService.getOffenderByCrn(crn, it.deliusUsername) is AuthorisableActionResult.Success
     }
   }
@@ -154,6 +154,12 @@ class UserService(
 
       return potentialUser
     }
+  }
+
+  fun deleteUser(id: UUID) {
+    val user = userRepository.findByIdOrNull(id) ?: return
+    user.isActive = false
+    userRepository.save(user)
   }
 
   fun updateUserRolesAndQualifications(id: UUID, userRolesAndQualifications: UserRolesAndQualifications): AuthorisableActionResult<UserEntity> {
@@ -244,6 +250,7 @@ class UserService(
         roles = mutableListOf(),
         qualifications = mutableListOf(),
         probationRegion = staffProbationRegion,
+        isActive = true,
       ),
     )
   }

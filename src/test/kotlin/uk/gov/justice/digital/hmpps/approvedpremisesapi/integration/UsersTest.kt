@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
@@ -652,6 +654,115 @@ class UsersTest : IntegrationTestBase() {
           .jsonPath(".qualifications[0]").isEqualTo("emergency")
           .jsonPath(".roles").isArray
           .jsonPath(".roles[0]").isEqualTo("assessor")
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteUser {
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `Deleting a user with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.delete()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `Deleting a user with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.delete()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Deleting a user with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+      `Given a User`() { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.delete()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `Deleting a user with no X-Service-Name is forbidden`() {
+      `Given a User`() { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.delete()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("detail").isEqualTo("Missing required header X-Service-Name")
+      }
+    }
+
+    @Test
+    fun `Deleting a user with a non-Delius JWT returns 403`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+      )
+
+      webTestClient.delete()
+        .uri("/users/$id")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `Deleting a user deletes successfully`(role: UserRole) {
+      userEntityFactory.produceAndPersist {
+        withId(id)
+
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.delete()
+          .uri("/users/$id")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val userFromDatabase = userRepository.findByIdOrNull(id)
+        assertThat(userFromDatabase?.isActive).isEqualTo(false)
       }
     }
   }

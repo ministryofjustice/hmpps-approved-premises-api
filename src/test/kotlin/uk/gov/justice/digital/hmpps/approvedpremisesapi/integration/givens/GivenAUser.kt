@@ -15,6 +15,7 @@ fun IntegrationTestBase.`Given a User`(
   roles: List<UserRole> = emptyList(),
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
+  isActive: Boolean = true,
   block: (userEntity: UserEntity, jwt: String) -> Unit,
 ) {
   val staffUserDetailsFactory = StaffUserDetailsFactory()
@@ -31,6 +32,7 @@ fun IntegrationTestBase.`Given a User`(
     withEmail(staffUserDetails.email)
     withTelephoneNumber(staffUserDetails.telephoneNumber)
     withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
+    withIsActive(isActive)
     if (probationRegion == null) {
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {
