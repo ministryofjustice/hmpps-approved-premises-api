@@ -208,7 +208,7 @@ class ApplicationsController(
     val submitResult = when (submitApplication) {
       is SubmitApprovedPremisesApplication -> applicationService.submitApprovedPremisesApplication(applicationId, submitApplication, username, deliusPrincipal.token.tokenValue)
       is SubmitTemporaryAccommodationApplication -> applicationService.submitTemporaryAccommodationApplication(applicationId, submitApplication)
-      is SubmitCas2Application -> applicationService.submitCas2Application(applicationId, submitApplication)
+      is SubmitCas2Application -> applicationService.submitCas2Application(applicationId, submitApplication, username, deliusPrincipal.token.tokenValue)
       else -> throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")
     }
 

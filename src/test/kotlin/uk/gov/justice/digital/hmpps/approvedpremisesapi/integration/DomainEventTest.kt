@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas1ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas2ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
@@ -59,7 +62,7 @@ class DomainEventTest : IntegrationTestBase() {
 
     val eventId = UUID.randomUUID()
 
-    val envelopedData = ApplicationSubmittedEnvelope(
+    val envelopedData = Cas1ApplicationSubmittedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
       eventType = "approved-premises.application.submitted",
@@ -69,6 +72,40 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/application-submitted/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(ApplicationSubmittedEnvelope::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get Application Submitted Event returns 200 with correct body for CAS2`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = Cas2ApplicationSubmittedEnvelope(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = "cas2.application.submitted",
+      eventDetails = Cas2ApplicationSubmittedFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
       withData(objectMapper.writeValueAsString(envelopedData))
     }
 

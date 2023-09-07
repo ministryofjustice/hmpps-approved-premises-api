@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas1ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -91,6 +93,8 @@ class DomainEventService(
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       T::class == ApplicationWithdrawnEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
+      T::class == ApplicationSubmittedEnvelope::class && domainEventEntity.type == DomainEventType.CAS2_APPLICATION_SUBMITTED ->
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
 
@@ -104,11 +108,22 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<ApplicationSubmittedEnvelope>) =
+  fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas1ApplicationSubmittedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
       typeName = "approved-premises.application.submitted",
       typeDescription = "An application has been submitted for an Approved Premises placement",
+      detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
+  @Transactional
+  fun saveCas2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationSubmittedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.application.submitted",
+      typeDescription = "An application has been submitted for a CAS-2 placement",
       detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -263,7 +278,8 @@ class DomainEventService(
   }
 
   private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {
-    ApplicationSubmittedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
+    Cas1ApplicationSubmittedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
+    Cas2ApplicationSubmittedEnvelope::class.java -> DomainEventType.CAS2_APPLICATION_SUBMITTED
     ApplicationAssessedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
     BookingMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_MADE
     PersonArrivedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED

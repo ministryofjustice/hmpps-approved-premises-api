@@ -16,9 +16,8 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas1ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
@@ -1536,7 +1535,7 @@ class ApplicationServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveApplicationSubmittedDomainEvent(
           match {
-            val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
+            val data = (it.data as Cas1ApplicationSubmittedEnvelope).eventDetails
             val firstTeam = staffUserDetails.teams!!.first()
 
             it.applicationId == application.id &&
@@ -1740,7 +1739,7 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
-      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application, username, "jwt") is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
@@ -1769,7 +1768,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application, username, "jwt") is AuthorisableActionResult.Unauthorised).isTrue
     }
 
     @Test
@@ -1787,7 +1786,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application, username, "jwt")
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1816,7 +1815,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application, username, "jwt")
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1858,7 +1857,7 @@ class ApplicationServiceTest {
 
       val schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
 
-      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application, username, "jwt")
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -2211,7 +2210,7 @@ class ApplicationServiceTest {
     verify(exactly = 1) {
       mockDomainEventService.saveApplicationWithdrawnEvent(
         match {
-          val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
+          val data = (it.data).eventDetails
 
           it.applicationId == application.id &&
             it.crn == application.crn &&
@@ -2272,7 +2271,7 @@ class ApplicationServiceTest {
     verify(exactly = 1) {
       mockDomainEventService.saveApplicationWithdrawnEvent(
         match {
-          val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
+          val data = (it.data).eventDetails
 
           it.applicationId == application.id &&
             it.crn == application.crn &&
@@ -2328,7 +2327,7 @@ class ApplicationServiceTest {
     verify(exactly = 1) {
       mockDomainEventService.saveApplicationWithdrawnEvent(
         match {
-          val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
+          val data = (it.data).eventDetails
 
           it.applicationId == application.id &&
             it.crn == application.crn &&

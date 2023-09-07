@@ -12,12 +12,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas1ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -87,7 +87,7 @@ class DomainEventServiceTest {
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
 
-    val data = ApplicationSubmittedEnvelope(
+    val data = Cas1ApplicationSubmittedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.application.submitted",
@@ -133,7 +133,7 @@ class DomainEventServiceTest {
       applicationId = applicationId,
       crn = crn,
       occurredAt = Instant.now(),
-      data = ApplicationSubmittedEnvelope(
+      data = Cas1ApplicationSubmittedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.submitted",
@@ -194,7 +194,7 @@ class DomainEventServiceTest {
       applicationId = applicationId,
       crn = crn,
       occurredAt = Instant.now(),
-      data = ApplicationSubmittedEnvelope(
+      data = Cas1ApplicationSubmittedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.submitted",

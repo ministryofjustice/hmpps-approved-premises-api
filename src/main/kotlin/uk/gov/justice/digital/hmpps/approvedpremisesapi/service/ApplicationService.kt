@@ -5,11 +5,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnWithdrawnBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas1ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmitted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
@@ -688,6 +691,8 @@ class ApplicationService(
   fun submitCas2Application(
     applicationId: UUID,
     submitApplication: SubmitCas2Application,
+    username: String,
+    jwt: String,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -742,6 +747,8 @@ class ApplicationService(
     }
 
     application = applicationRepository.save(application)
+
+    createCas2ApplicationSubmittedEvent(application, submitApplication, username, jwt)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
@@ -815,6 +822,61 @@ class ApplicationService(
     )
   }
 
+  private fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity, submitApplication: SubmitCas2Application, username: String, jwt: String) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = OffsetDateTime.now()
+
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, username, true)) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Not Found")
+    }
+
+    val staffDetails = when (val staffDetailsResult = communityApiClient.getStaffUserDetails(username)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    domainEventService.saveCas2ApplicationSubmittedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt.toInstant(),
+        data = Cas2ApplicationSubmittedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt.toInstant(),
+          eventType = "cas2.application.submitted",
+          eventDetails = Cas2ApplicationSubmitted(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
+            gender = when (offenderDetails.gender.lowercase()) {
+              "male" -> Cas2ApplicationSubmitted.Gender.male
+              "female" -> Cas2ApplicationSubmitted.Gender.female
+              else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
+            },
+            submittedAt = Instant.now(),
+            personReference = PersonReference(
+              crn = application.crn,
+              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            submittedBy = Cas2ApplicationSubmittedSubmittedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username,
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+  }
+
   private fun createApplicationSubmittedEvent(application: ApprovedPremisesApplicationEntity, submitApplication: SubmitApprovedPremisesApplication, username: String, jwt: String) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
@@ -851,7 +913,7 @@ class ApplicationService(
         applicationId = application.id,
         crn = application.crn,
         occurredAt = eventOccurredAt.toInstant(),
-        data = ApplicationSubmittedEnvelope(
+        data = Cas1ApplicationSubmittedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
           eventType = "approved-premises.application.submitted",
