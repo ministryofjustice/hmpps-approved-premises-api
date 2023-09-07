@@ -137,6 +137,7 @@ data class UserEntity(
   var deliusStaffIdentifier: Long,
   var email: String?,
   var telephoneNumber: String?,
+  var isActive: Boolean,
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<ApplicationEntity>,
   @OneToMany(mappedBy = "user")

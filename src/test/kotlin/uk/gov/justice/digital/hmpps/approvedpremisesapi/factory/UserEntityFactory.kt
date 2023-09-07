@@ -23,6 +23,7 @@ class UserEntityFactory : Factory<UserEntity> {
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
+  private var isActive: Yielded<Boolean> = { true }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -72,6 +73,10 @@ class UserEntityFactory : Factory<UserEntity> {
     this.probationRegion = probationRegion
   }
 
+  fun withIsActive(isActive: Boolean) = apply {
+    this.isActive = { isActive }
+  }
+
   fun withUnitTestControlProbationRegion() = apply {
     this.withProbationRegion(
       ProbationRegionEntityFactory()
@@ -97,5 +102,6 @@ class UserEntityFactory : Factory<UserEntity> {
     roles = mutableListOf(),
     qualifications = this.qualifications(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
+    isActive = this.isActive(),
   )
 }
