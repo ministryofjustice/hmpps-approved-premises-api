@@ -156,6 +156,12 @@ class UserService(
     }
   }
 
+  fun deleteUser(id: UUID) {
+    val user = userRepository.findByIdOrNull(id) ?: return
+    user.isActive = false
+    userRepository.save(user)
+  }
+
   fun updateUserRolesAndQualifications(id: UUID, userRolesAndQualifications: UserRolesAndQualifications): AuthorisableActionResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val roles = userRolesAndQualifications.roles
