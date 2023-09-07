@@ -123,8 +123,8 @@ class BedSearchService(
 
         val results = candidateResults.filter { !bedsWithABookingInTurnaround.contains(it.bedId) }
 
-        val distinctIds = candidateResults.map { it.premisesId }.distinct()
-        val overlappedBookings = bookingRepository.findAllByPremisesIdsAndOverLappingDate(distinctIds, startDate, endDate)
+        val distinctIds = results.map { it.premisesId }.distinct()
+        val overlappedBookings = bookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(distinctIds, startDate, endDate)
         val groupedOverlappedBookings = overlappedBookings
           .map { transformBookingToOverlap(it, startDate, endDate) }
           .groupBy { it.premisesId }

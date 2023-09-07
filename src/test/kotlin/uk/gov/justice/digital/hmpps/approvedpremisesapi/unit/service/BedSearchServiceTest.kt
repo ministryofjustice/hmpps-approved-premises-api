@@ -557,7 +557,7 @@ class BedSearchServiceTest {
 
     every { mockBookingRepository.findClosestBookingBeforeDateForBeds(any(), any()) } returns listOf()
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findAllByPremisesIdsAndOverLappingDate(any(), any(), any()) } returns listOf()
+    every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
@@ -730,7 +730,7 @@ class BedSearchServiceTest {
       (it.invocation.args[0] as LocalDate).plusDays((it.invocation.args[1] as Int).toLong())
     }
 
-    every { mockBookingRepository.findAllByPremisesIdsAndOverLappingDate(any(), any(), any()) } returns listOf()
+    every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
