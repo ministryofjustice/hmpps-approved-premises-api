@@ -102,7 +102,7 @@ class UserAccessService(
   fun userCanViewReport(user: UserEntity) =
     when (currentRequest.getHeader("X-Service-Name")) {
       ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
-      ServiceName.approvedPremises.value -> user.hasAnyRole(UserRole.CAS1_REPORT_VIEWER, UserRole.CAS1_WORKFLOW_MANAGER)
+      ServiceName.approvedPremises.value -> user.hasAnyRole(UserRole.CAS1_REPORT_VIEWER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ADMIN)
       else -> false
     }
 
