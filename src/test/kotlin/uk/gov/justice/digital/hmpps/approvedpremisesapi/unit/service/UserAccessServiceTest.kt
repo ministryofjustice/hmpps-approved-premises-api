@@ -994,18 +994,22 @@ class UserAccessServiceTest {
     assertThat(userAccessService.currentUserCanViewReport()).isFalse
   }
 
-  @Test
-  fun `currentUserCanViewReport returns returns false if the current request has 'X-Service-Name' header with value 'approved-premises' and the user does not have the CAS1_REPORT_VIEWER role`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER"], mode = EnumSource.Mode.EXCLUDE)
+  fun `currentUserCanViewReport returns returns false if the current request has 'X-Service-Name' header with value 'approved-premises' and the user does not have the correct role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(role)
 
     assertThat(userAccessService.currentUserCanViewReport()).isFalse
   }
 
-  @Test
-  fun `currentUserCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS1_REPORT_VIEWER role`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER"])
+  fun `currentUserCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the correct role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 
-    user.addRoleForUnitTest(UserRole.CAS1_REPORT_VIEWER)
+    user.addRoleForUnitTest(role)
 
     assertThat(userAccessService.currentUserCanViewReport()).isTrue
   }
