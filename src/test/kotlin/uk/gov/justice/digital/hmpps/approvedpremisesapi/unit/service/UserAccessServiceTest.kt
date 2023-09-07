@@ -995,7 +995,7 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER"], mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER", "CAS1_ADMIN"], mode = EnumSource.Mode.EXCLUDE)
   fun `currentUserCanViewReport returns returns false if the current request has 'X-Service-Name' header with value 'approved-premises' and the user does not have the correct role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 
@@ -1005,7 +1005,7 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER"])
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER", "CAS1_ADMIN"])
   fun `currentUserCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the correct role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 
