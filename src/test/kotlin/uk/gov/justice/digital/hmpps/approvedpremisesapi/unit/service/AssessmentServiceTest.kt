@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
@@ -81,6 +83,7 @@ class AssessmentServiceTest {
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val emailNotificationServiceMock = mockk<EmailNotificationService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+  private val objectMapperMock = spyk<ObjectMapper>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -97,6 +100,7 @@ class AssessmentServiceTest {
     emailNotificationServiceMock,
     NotifyConfig(),
     placementRequirementsServiceMock,
+    objectMapperMock,
     "http://frontend/applications/#id",
     "http://frontend/assessments/#id",
   )
@@ -2012,6 +2016,7 @@ class AssessmentServiceTest {
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
     private val emailNotificationServiceMock = mockk<EmailNotificationService>()
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+    private val objectMapperMock = spyk<ObjectMapper>()
 
     private val assessmentService = AssessmentService(
       userServiceMock,
@@ -2028,6 +2033,7 @@ class AssessmentServiceTest {
       emailNotificationServiceMock,
       NotifyConfig(),
       placementRequirementsServiceMock,
+      objectMapperMock,
       "http://frontend/applications/#id",
       "http://frontend/assessments/#id",
     )
@@ -2219,7 +2225,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `createAssessment for Approved Premises creates an Assessment and sends allocation email`() {
+    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`() {
       val userWithLeastAllocatedAssessments = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -2258,7 +2264,7 @@ class AssessmentServiceTest {
 
       every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
-      assessmentService.createAssessment(application)
+      assessmentService.createApprovedPremisesAssessment(application)
 
       verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments }) }
       verify(exactly = 1) {
@@ -2274,7 +2280,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `createAssessment for Temporary Accommodation creates an Assessment`() {
+    fun `createTemporaryAccommodationAssessment creates an Assessment`() {
       val probationRegion = ProbationRegionEntityFactory()
         .withYieldedApArea { ApAreaEntityFactory().produce() }
         .produce()
@@ -2293,9 +2299,15 @@ class AssessmentServiceTest {
       every { userServiceMock.getUserForRequest() } returns user
       every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
 
-      val result = assessmentService.createAssessment(application)
+      val summaryData = object {
+        val num = 50
+        val text = "Hello world!"
+      }
+
+      val result = assessmentService.createTemporaryAccommodationAssessment(application, summaryData)
 
       assertAssessmentHasSystemNote(result, user, ReferralHistorySystemNoteType.SUBMITTED)
+      assertThat(result.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
 
       verify { assessmentRepositoryMock.save(match { it.application == application }) }
     }

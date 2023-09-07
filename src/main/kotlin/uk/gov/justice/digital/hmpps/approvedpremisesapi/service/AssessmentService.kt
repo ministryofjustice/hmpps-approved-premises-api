@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -16,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -60,6 +60,7 @@ class AssessmentService(
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val placementRequirementsService: PlacementRequirementsService,
+  private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
@@ -125,13 +126,7 @@ class AssessmentService(
     return AuthorisableActionResult.Success(assessment)
   }
 
-  fun createAssessment(application: ApplicationEntity): AssessmentEntity = when (application) {
-    is ApprovedPremisesApplicationEntity -> createApprovedPremisesAssessment(application)
-    is TemporaryAccommodationApplicationEntity -> createTemporaryAccommodationAssessment(application)
-    else -> throw RuntimeException("Application type '${application::class.qualifiedName}' is not supported")
-  }
-
-  private fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
+  fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val allocatedUser = userService.getUserForAssessmentAllocation(application)
 
     val dateTimeNow = OffsetDateTime.now()
@@ -169,7 +164,7 @@ class AssessmentService(
     return assessment
   }
 
-  private fun createTemporaryAccommodationAssessment(application: TemporaryAccommodationApplicationEntity): TemporaryAccommodationAssessmentEntity {
+  fun createTemporaryAccommodationAssessment(application: TemporaryAccommodationApplicationEntity, summaryData: Any): TemporaryAccommodationAssessmentEntity {
     val dateTimeNow = OffsetDateTime.now()
 
     val assessment = assessmentRepository.save(
@@ -190,6 +185,7 @@ class AssessmentService(
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
         completedAt = null,
+        summaryData = objectMapper.writeValueAsString(summaryData),
       ),
     )
 

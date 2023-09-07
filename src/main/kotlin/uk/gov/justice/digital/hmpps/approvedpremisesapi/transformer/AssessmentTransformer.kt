@@ -15,11 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -36,8 +35,8 @@ class AssessmentTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: AssessmentEntity, personInfo: PersonInfoResult.Success) = when (jpa.application) {
-    is ApprovedPremisesApplicationEntity -> ApprovedPremisesAssessment(
+  fun transformJpaToApi(jpa: AssessmentEntity, personInfo: PersonInfoResult.Success) = when (jpa) {
+    is ApprovedPremisesAssessmentEntity -> ApprovedPremisesAssessment(
       id = jpa.id,
       application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as ApprovedPremisesApplication,
       schemaVersion = jpa.schemaVersion.id,
@@ -55,7 +54,7 @@ class AssessmentTransformer(
       service = "CAS1",
     )
 
-    is TemporaryAccommodationApplicationEntity -> TemporaryAccommodationAssessment(
+    is TemporaryAccommodationAssessmentEntity -> TemporaryAccommodationAssessment(
       id = jpa.id,
       application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as TemporaryAccommodationApplication,
       schemaVersion = jpa.schemaVersion.id,
@@ -70,6 +69,7 @@ class AssessmentTransformer(
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
       status = getStatusForTemporaryAccommodationAssessment(jpa),
+      summaryData = objectMapper.readTree(jpa.summaryData),
       service = "CAS3",
     )
 
