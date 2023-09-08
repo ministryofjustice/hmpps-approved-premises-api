@@ -11,8 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 fun IntegrationTestBase.`Given an Offender`(
   offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
   inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
-  block: (offenderDetails: OffenderDetailSummary, inmateDetails: InmateDetail) -> Unit,
-) {
+): Pair<OffenderDetailSummary, InmateDetail> {
   val inmateDetailsFactory = InmateDetailFactory()
   if (inmateDetailsConfigBlock != null) {
     inmateDetailsConfigBlock(inmateDetailsFactory)
@@ -33,6 +32,19 @@ fun IntegrationTestBase.`Given an Offender`(
   loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
   PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
   loadPreemptiveCacheForInmateDetails(inmateDetails.offenderNo)
+
+  return Pair(offenderDetails, inmateDetails)
+}
+
+fun IntegrationTestBase.`Given an Offender`(
+  offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
+  inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
+  block: (offenderDetails: OffenderDetailSummary, inmateDetails: InmateDetail) -> Unit,
+) {
+  val (offenderDetails, inmateDetails) = `Given an Offender`(
+    offenderDetailsConfigBlock,
+    inmateDetailsConfigBlock,
+  )
 
   block(offenderDetails, inmateDetails)
 }

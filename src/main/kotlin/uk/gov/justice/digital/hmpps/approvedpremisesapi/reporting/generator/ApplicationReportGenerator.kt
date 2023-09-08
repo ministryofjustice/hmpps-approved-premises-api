@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import kotlinx.datetime.toLocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
@@ -11,25 +11,22 @@ import java.time.Period
 
 class ApplicationReportGenerator(
   private val offenderService: OffenderService,
-) : ReportGenerator<ApprovedPremisesApplicationEntity, ApplicationReportRow, ApplicationReportProperties>(ApplicationReportRow::class) {
-  override fun filter(properties: ApplicationReportProperties): (ApplicationEntity) -> Boolean = {
+) : ReportGenerator<ApplicationEntityReportRow, ApplicationReportRow, ApplicationReportProperties>(ApplicationReportRow::class) {
+  override fun filter(properties: ApplicationReportProperties): (ApplicationEntityReportRow) -> Boolean = {
     true
   }
 
-  override val convert: ApprovedPremisesApplicationEntity.(properties: ApplicationReportProperties) -> List<ApplicationReportRow> = { properties ->
-    val assessment = this.getLatestAssessment()
-    val placementRequest = this.getLatestPlacementRequest()
+  override val convert: ApplicationEntityReportRow.(properties: ApplicationReportProperties) -> List<ApplicationReportRow> = { properties ->
     val personInfoResult = getOffenderDetailForApplication(this, properties.deliusUsername)
-    val booking = this.getLatestBooking()
 
     listOf(
       ApplicationReportRow(
-        id = this.id.toString(),
-        crn = this.crn,
-        applicationAssessedDate = assessment?.submittedAt?.toLocalDate(),
-        assessorCru = assessment?.allocatedToUser?.probationRegion?.name,
-        assessmentDecision = assessment?.decision?.toString(),
-        assessmentDecisionRationale = assessment?.rejectionRationale,
+        id = this.getId(),
+        crn = this.getCrn(),
+        applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDateTime()?.toLocalDate(),
+        assessorCru = this.getAssessorCru(),
+        assessmentDecision = this.getAssessmentDecision(),
+        assessmentDecisionRationale = this.getAssessmentDecisionRationale(),
         ageInYears = when (personInfoResult) {
           is PersonInfoResult.Success.Full -> Period.between(personInfoResult.offenderDetailSummary.dateOfBirth, LocalDate.now()).years
           else -> null
@@ -38,36 +35,36 @@ class ApplicationReportGenerator(
           is PersonInfoResult.Success.Full -> personInfoResult.offenderDetailSummary.gender
           else -> null
         },
-        mappa = this.riskRatings?.mappa?.value?.level ?: "Not found",
-        offenceId = this.offenceId,
-        noms = this.nomsNumber,
-        premisesType = placementRequest?.placementRequirements?.apType?.toString(),
-        releaseType = this.releaseType,
+        mappa = this.getMappa() ?: "Not found",
+        offenceId = this.getOffenceId(),
+        noms = this.getNoms(),
+        premisesType = this.getPremisesType(),
+        releaseType = this.getReleaseType(),
         sentenceLengthInMonths = null,
-        applicationSubmissionDate = this.submittedAt?.toLocalDate(),
+        applicationSubmissionDate = this.getApplicationSubmissionDate()?.toLocalDateTime()?.toLocalDate(),
         referrerLdu = null,
-        referrerRegion = this.createdByUser.probationRegion.name,
+        referrerRegion = this.getReferrerRegion(),
         referrerTeam = null,
-        targetLocation = placementRequest?.placementRequirements?.postcodeDistrict?.outcode,
-        applicationWithdrawalReason = this.withdrawalReason,
+        targetLocation = this.getTargetLocation(),
+        applicationWithdrawalReason = this.getApplicationWithdrawalReason(),
         applicationWithdrawalDate = null,
-        bookingID = booking?.id?.toString(),
-        bookingCancellationReason = booking?.cancellation?.reason?.name,
-        bookingCancellationDate = booking?.cancellation?.date,
-        expectedArrivalDate = booking?.arrivalDate,
+        bookingID = this.getBookingID(),
+        bookingCancellationReason = this.getBookingCancellationReason(),
+        bookingCancellationDate = this.getBookingCancellationDate()?.toLocalDate(),
+        expectedArrivalDate = this.getExpectedArrivalDate()?.toLocalDate(),
         matcherCru = null,
-        expectedDepartureDate = booking?.departureDate,
-        premisesName = booking?.premises?.name,
-        actualArrivalDate = booking?.arrival?.arrivalDate,
-        actualDepartureDate = booking?.departure?.dateTime?.toLocalDate(),
-        departureMoveOnCategory = booking?.departure?.moveOnCategory?.name,
-        nonArrivalDate = booking?.nonArrival?.date,
+        expectedDepartureDate = this.getExpectedDepartureDate()?.toLocalDate(),
+        premisesName = this.getPremisesName(),
+        actualArrivalDate = this.getActualArrivalDate()?.toLocalDate(),
+        actualDepartureDate = this.getActualDepartureDate()?.toLocalDateTime()?.toLocalDate(),
+        departureMoveOnCategory = this.getDepartureMoveOnCategory(),
+        nonArrivalDate = this.getNonArrivalDate()?.toLocalDate(),
       ),
     )
   }
 
-  private fun getOffenderDetailForApplication(applicationEntity: ApplicationEntity, deliusUsername: String): PersonInfoResult? {
-    return when (val personInfo = offenderService.getInfoForPerson(applicationEntity.crn, deliusUsername, true)) {
+  private fun getOffenderDetailForApplication(applicationEntityReportRow: ApplicationEntityReportRow, deliusUsername: String): PersonInfoResult? {
+    return when (val personInfo = offenderService.getInfoForPerson(applicationEntityReportRow.getCrn(), deliusUsername, true)) {
       is PersonInfoResult.Success -> personInfo
       else -> null
     }
