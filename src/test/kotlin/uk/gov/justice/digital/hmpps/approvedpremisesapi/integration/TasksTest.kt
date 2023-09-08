@@ -288,27 +288,32 @@ class TasksTest : IntegrationTestBase() {
           `Given a User`(
             roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = user,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              ) { assessment, _ ->
-                webTestClient.get()
-                  .uri("/tasks/assessment/${assessment.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      TaskWrapper(
-                        task = taskTransformer.transformAssessmentToTask(assessment, "${offenderDetails.firstName} ${offenderDetails.surname}"),
-                        users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
+            `Given a User`(
+              roles = listOf(UserRole.CAS1_ASSESSOR),
+              isActive = false,
+            ) { _, _ ->
+              `Given an Offender` { offenderDetails, inmateDetails ->
+                `Given an Assessment for Approved Premises`(
+                  allocatedToUser = user,
+                  createdByUser = user,
+                  crn = offenderDetails.otherIds.crn,
+                ) { assessment, _ ->
+                  webTestClient.get()
+                    .uri("/tasks/assessment/${assessment.id}")
+                    .header("Authorization", "Bearer $jwt")
+                    .exchange()
+                    .expectStatus()
+                    .isOk
+                    .expectBody()
+                    .json(
+                      objectMapper.writeValueAsString(
+                        TaskWrapper(
+                          task = taskTransformer.transformAssessmentToTask(assessment, "${offenderDetails.firstName} ${offenderDetails.surname}"),
+                          users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
+                        ),
                       ),
-                    ),
-                  )
+                    )
+                }
               }
             }
           }

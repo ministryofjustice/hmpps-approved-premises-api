@@ -1,0 +1,2 @@
+apCode,bedCode,roomNumber,bedCount,isSingle,isGroundFloor,isFullyFm,hasCrib7Bedding,hasSmokeDetector,isTopFloorVulnerable,isGroundFloorNrOffice,hasNearbySprinkler,isArsonSuitable,isArsonDesignated,hasArsonInsuranceConditions,isSuitedForSexOffenders,hasEnSuite,isWheelchairAccessible,hasWideDoor,hasStepFreeAccess,hasFixedMobilityAids,hasTurningSpace,hasCallForAssistance,isWheelchairDesignated,isStepFreeDesignated,notes
+"TEST1","TEST101","1",1,"YES","NO","YES","YES","YES","NO","NO","YES","NO","NO","NO","YES","NO","NO","NO","NO","NO","NO","NO","NO","NO",""

@@ -13,7 +13,7 @@ configurations {
 }
 
 val springDocVersion = "1.7.0"
-val sentryVersion = "6.28.0"
+val sentryVersion = "6.29.0"
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -51,7 +51,7 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:dataframe:0.11.1")
 
-  implementation("io.arrow-kt:arrow-core:1.2.0")
+  implementation("io.arrow-kt:arrow-core:1.2.1")
   implementation("io.github.s-sathish:redlock-java:1.0.4")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")

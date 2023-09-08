@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.assessmentservice
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -80,6 +81,7 @@ class AcceptAssessmentTest {
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val emailNotificationServiceMock = mockk<EmailNotificationService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+  private val objectMapperMock = mockk<ObjectMapper>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -96,6 +98,7 @@ class AcceptAssessmentTest {
     emailNotificationServiceMock,
     NotifyConfig(),
     placementRequirementsServiceMock,
+    objectMapperMock,
     "http://frontend/applications/#id",
     "http://frontend/assessments/#id",
   )

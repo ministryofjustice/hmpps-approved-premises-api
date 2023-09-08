@@ -3298,6 +3298,37 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+    delete:
+      summary: Deletes the user
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only users for this service will be allowed to delete a user
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /users/search:
     get:
       tags:
@@ -3360,6 +3391,12 @@ paths:
           $ref: '#/components/responses/401Response'
         403:
           $ref: '#/components/responses/403Response'
+        404:
+          description: User not found
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
   /seed:
@@ -5411,6 +5448,8 @@ components:
             arrivalDate:
               type: string
               format: date
+            summaryData:
+              $ref: '#/components/schemas/AnyValue'
           required:
             - arrivalDate
     ReleaseTypeOption:
@@ -5421,6 +5460,7 @@ components:
         - hdc
         - pss
         - in_community
+        - not_applicable
     PrisonCaseNote:
       type: object
       properties:
@@ -5588,8 +5628,11 @@ components:
               $ref: '#/components/schemas/TemporaryAccommodationUser'
             status:
               $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
+            summaryData:
+              $ref: '#/components/schemas/AnyValue'
           required:
             - application
+            - summaryData
     AssessmentSummary:
       type: object
       properties:

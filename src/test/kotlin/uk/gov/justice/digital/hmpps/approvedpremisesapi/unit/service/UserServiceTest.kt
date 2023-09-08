@@ -769,4 +769,60 @@ class UserServiceTest {
       assertThat(entity.name).isEqualTo(user2.name)
     }
   }
+
+  @Nested
+  inner class DeleteUsersOnAPI {
+    private val mockCurrentRequest = mockk<HttpServletRequest>()
+    private val mockHttpAuthService = mockk<HttpAuthService>()
+    private val mockOffenderService = mockk<OffenderService>()
+    private val mockCommunityApiClient = mockk<CommunityApiClient>()
+    private val mockUserRepository = mockk<UserRepository>()
+    private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
+    private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
+    private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
+    private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
+    private val mockUserTransformer = mockk<UserTransformer>()
+
+    private val userService = UserService(
+      false,
+      mockCurrentRequest,
+      mockHttpAuthService,
+      mockOffenderService,
+      mockCommunityApiClient,
+      mockUserRepository,
+      mockUserRoleAssignmentRepository,
+      mockUserQualificationAssignmentRepository,
+      mockProbationRegionRepository,
+      mockProbationAreaProbationRegionMappingRepository,
+      mockUserTransformer,
+    )
+
+    private val userFactory = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+
+    @Test
+    fun `deleted user now has isActive set to false`() {
+      val id = UUID.randomUUID()
+
+      val user = userFactory
+        .withId(id)
+        .produce()
+
+      every { mockUserRepository.findByIdOrNull(id) } answers { user }
+      every { mockUserRepository.save(any()) } answers { user }
+      userService.deleteUser(id)
+
+      verify(exactly = 1) {
+        mockUserRepository.save(
+          match {
+            it.isActive == false && it.id == user.id
+          },
+        )
+      }
+    }
+  }
 }

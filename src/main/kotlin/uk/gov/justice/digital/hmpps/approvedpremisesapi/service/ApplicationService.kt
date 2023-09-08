@@ -663,7 +663,7 @@ class ApplicationService(
       arrivalDate = if (submitApplication.arrivalDate !== null) OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC) else null
     }
 
-    assessmentService.createAssessment(application)
+    assessmentService.createApprovedPremisesAssessment(application)
 
     application = applicationRepository.save(application)
 
@@ -806,7 +806,7 @@ class ApplicationService(
       arrivalDate = OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
     }
 
-    assessmentService.createAssessment(application)
+    assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData ?: {})
 
     application = applicationRepository.save(application)
 

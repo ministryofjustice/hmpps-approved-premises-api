@@ -11,7 +11,7 @@ import javax.persistence.criteria.CriteriaQuery
 import javax.persistence.criteria.Predicate
 import javax.persistence.criteria.Root
 
-fun hasQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?): Specification<UserEntity> {
+fun hasQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?, showOnlyActive: Boolean = false): Specification<UserEntity> {
   return Specification { root: Root<UserEntity>, _: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->
     val predicates = mutableListOf<Predicate>()
 
@@ -35,6 +35,14 @@ fun hasQualificationsAndRoles(qualifications: List<UserQualification>?, roles: L
       predicates.add(
         criteriaBuilder.and(
           userRoles.`in`(roles),
+        ),
+      )
+    }
+
+    if (showOnlyActive) {
+      predicates.add(
+        criteriaBuilder.and(
+          criteriaBuilder.isTrue(root.get("isActive")),
         ),
       )
     }

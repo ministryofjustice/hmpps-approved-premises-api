@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
@@ -81,12 +83,12 @@ class UserService(
   }
 
   fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?) =
-    userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name"))
+    userRepository.findAll(hasQualificationsAndRoles(qualifications, roles, true), Sort.by(Sort.Direction.ASC, "name"))
 
   fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
     val isLao = offenderService.isLao(crn)
 
-    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles), Sort.by(Sort.Direction.ASC, "name")).filter {
+    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles, true), Sort.by(Sort.Direction.ASC, "name")).filter {
       !isLao || it.hasQualification(UserQualification.LAO) || offenderService.getOffenderByCrn(crn, it.deliusUsername) is AuthorisableActionResult.Success
     }
   }
@@ -154,6 +156,12 @@ class UserService(
     }
   }
 
+  fun deleteUser(id: UUID) {
+    val user = userRepository.findByIdOrNull(id) ?: return
+    user.isActive = false
+    userRepository.save(user)
+  }
+
   fun updateUserRolesAndQualifications(id: UUID, userRolesAndQualifications: UserRolesAndQualifications): AuthorisableActionResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val roles = userRolesAndQualifications.roles
@@ -197,7 +205,7 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun getUserForUsername(username: String): UserEntity {
+  fun getUserForUsername(username: String, throwProblemOn404: Boolean = false): UserEntity {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -207,6 +215,13 @@ class UserService(
 
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
+      is ClientResult.Failure.StatusCode -> {
+        if (throwProblemOn404 && staffUserDetailsResponse.status === HttpStatus.NOT_FOUND) {
+          throw NotFoundProblem(username, "user", "username")
+        } else {
+          staffUserDetailsResponse.throwException()
+        }
+      }
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
@@ -235,6 +250,7 @@ class UserService(
         roles = mutableListOf(),
         qualifications = mutableListOf(),
         probationRegion = staffProbationRegion,
+        isActive = true,
       ),
     )
   }

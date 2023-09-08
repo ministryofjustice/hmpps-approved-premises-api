@@ -327,6 +327,26 @@ class AssessmentTransformerTest {
   }
 
   @Test
+  fun `transformJpaToApi for Temporary Accommodation serializes the summary data blob correctly`() {
+    val assessment = temporaryAccommodationAssessmentFactory
+      .withSummaryData("{\"num\": 50, \"text\": \"Hello world!\"}")
+      .produce()
+
+    val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
+
+    assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
+    result as TemporaryAccommodationAssessment
+    assertThat(result.summaryData).isEqualTo(
+      objectMapper.valueToTree(
+        object {
+          val num = 50
+          val text = "Hello world!"
+        },
+      ),
+    )
+  }
+
+  @Test
   fun `transform domain to api summary - temporary application`() {
     val domainSummary = DomainAssessmentSummary(
       type = "temporary-accommodation",

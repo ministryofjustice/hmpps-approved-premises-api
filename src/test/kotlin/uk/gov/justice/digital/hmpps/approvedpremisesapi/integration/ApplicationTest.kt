@@ -59,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1892,11 +1893,20 @@ class ApplicationTest : IntegrationTestBase() {
                 translatedDocument = {},
                 type = "CAS3",
                 arrivalDate = LocalDate.now(),
+                summaryData = object {
+                  val num = 50
+                  val text = "Hello world!"
+                },
               ),
             )
             .exchange()
             .expectStatus()
             .isOk
+
+          val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+          val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
         }
       }
     }

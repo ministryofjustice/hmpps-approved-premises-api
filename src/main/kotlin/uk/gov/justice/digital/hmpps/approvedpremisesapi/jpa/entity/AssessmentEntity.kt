@@ -250,6 +250,8 @@ class TemporaryAccommodationAssessmentEntity(
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
   var completedAt: OffsetDateTime?,
+  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  var summaryData: String,
 ) : AssessmentEntity(
   id,
   application,

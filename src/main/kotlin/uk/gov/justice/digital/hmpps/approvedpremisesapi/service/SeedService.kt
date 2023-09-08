@@ -64,8 +64,12 @@ class SeedService(
         continue
       }
 
+      csvFiles.sortBy { it.filename }
+
       for (csv in csvFiles) {
-        val csvName = csv.filename!!.replace("\\.csv$".toRegex(), "")
+        val csvName = csv.filename!!
+          .replace("\\.csv$".toRegex(), "")
+          .replace("^[0-9]+__".toRegex(), "")
         val seedFileType = SeedFileType.values().firstOrNull { it.value == csvName }
         if (seedFileType == null) {
           seedLogger.warn("Seed file ${csv.file.path} does not have a known job type; skipping.")

@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@7.3.3
+  hmpps: ministryofjustice/hmpps@7.3.4
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.1.0
   slack: circleci/slack@4.12.5
@@ -188,7 +188,7 @@ jobs:
             git clone https://github.com/ministryofjustice/hmpps-approved-premises-e2e.git .
       - run:
           name: Update npm
-          command: 'npm install -g npm@latest'
+          command: 'npm install -g npm@9.8.1'
       - node/install-packages
       - run:
           name: E2E Check
@@ -223,7 +223,7 @@ jobs:
           command: apt-get install xz-utils
       - run:
           name: Update npm
-          command: 'npm install -g npm@latest'
+          command: 'npm install -g npm@9.8.1'
       - node/install-packages
       - run:
           name: E2E Check - << parameters.environment >>

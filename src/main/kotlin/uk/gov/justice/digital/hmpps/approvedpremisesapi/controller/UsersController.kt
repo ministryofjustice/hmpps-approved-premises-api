@@ -63,6 +63,16 @@ class UsersController(
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises), HttpStatus.OK)
   }
 
+  override fun usersIdDelete(id: UUID, xServiceName: ServiceName): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+      throw ForbiddenProblem()
+    }
+    return ResponseEntity.ok(
+      userService.deleteUser(id),
+    )
+  }
+
   override fun usersSearchGet(name: String, xServiceName: ServiceName): ResponseEntity<List<User>> {
     val user = userService.getUserForRequest()
     if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
@@ -81,7 +91,7 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    val userEntity = userService.getUserForUsername(name)
+    val userEntity = userService.getUserForUsername(name, true)
     val userTransformed = userTransformer.transformJpaToApi(userEntity, xServiceName)
     return ResponseEntity.ok(userTransformed)
   }

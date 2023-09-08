@@ -102,7 +102,7 @@ class UserAccessService(
   fun userCanViewReport(user: UserEntity) =
     when (currentRequest.getHeader("X-Service-Name")) {
       ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
-      ServiceName.approvedPremises.value -> user.hasRole(UserRole.CAS1_REPORT_VIEWER)
+      ServiceName.approvedPremises.value -> user.hasAnyRole(UserRole.CAS1_REPORT_VIEWER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ADMIN)
       else -> false
     }
 
@@ -169,7 +169,7 @@ class UserAccessService(
 
   fun userCanViewAssessment(user: UserEntity, assessment: AssessmentEntity): Boolean = when (assessment) {
     is ApprovedPremisesAssessmentEntity ->
-      user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) || assessment.allocatedToUser == user
+      user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_MANAGER) || assessment.allocatedToUser == user
 
     is TemporaryAccommodationAssessmentEntity ->
       user.hasRole(UserRole.CAS3_ASSESSOR) &&

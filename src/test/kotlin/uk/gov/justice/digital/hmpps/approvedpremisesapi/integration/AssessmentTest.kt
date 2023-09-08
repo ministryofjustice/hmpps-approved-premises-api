@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
@@ -536,48 +537,51 @@ class AssessmentTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
-  @Test
-  fun `Get assessment by ID returns 200 with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_MANAGER"])
+  fun `Get assessment by ID returns 200 with correct body for CAS1_WORKFLOW_MANAGER and CAS1_MANAGER`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User` { userEntity, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
 
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-          withApplicationSchema(applicationSchema)
-        }
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
 
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-        }
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
 
-        assessment.schemaUpToDate = true
+          assessment.schemaUpToDate = true
 
-        webTestClient.get()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(
-                assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+          webTestClient.get()
+            .uri("/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                assessmentTransformer.transformJpaToApi(
+                  assessment,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
               ),
-            ),
-          )
+            )
+        }
       }
     }
   }
@@ -837,6 +841,48 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.rejected }
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
           }
+      }
+    }
+  }
+
+  @Test
+  fun `Get Temporary Accommodation assessment by ID returns 200 with summary data transformed correctly`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
+        }
+
+        assessment.schemaUpToDate = true
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.summaryData.num").isEqualTo(50)
+          .jsonPath("$.summaryData.text").isEqualTo("Hello world!")
       }
     }
   }
