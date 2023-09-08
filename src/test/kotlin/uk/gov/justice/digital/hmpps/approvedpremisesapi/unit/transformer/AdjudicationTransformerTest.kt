@@ -63,7 +63,6 @@ class AdjudicationTransformerTest {
         Agency(
           agencyId = "PLACE",
           description = "THE PLACE",
-          agencyType = "INST",
         ),
       ),
     )
@@ -109,7 +108,6 @@ class AdjudicationTransformerTest {
         Agency(
           agencyId = "PLACE",
           description = "THE PLACE",
-          agencyType = "INST",
         ),
       ),
     )
