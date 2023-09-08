@@ -30,5 +30,4 @@ data class AdjudicationCharge(
 data class Agency(
   val agencyId: String,
   val description: String,
-  val agencyType: String,
 )
