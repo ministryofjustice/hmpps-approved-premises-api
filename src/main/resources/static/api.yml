@@ -6262,6 +6262,8 @@ components:
           items:
             type: string
             format: uuid
+        name:
+          type: string
       required:
         - characteristicIds
     Room:
