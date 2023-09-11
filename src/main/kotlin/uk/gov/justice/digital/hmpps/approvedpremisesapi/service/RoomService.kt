@@ -139,6 +139,42 @@ class RoomService(
     )
   }
 
+  fun renameRoom(
+    premises: PremisesEntity,
+    roomId: UUID,
+    name: String,
+  ): AuthorisableActionResult<ValidatableActionResult<RoomEntity>> {
+    val room = roomRepository.findByIdOrNull(roomId) ?: return AuthorisableActionResult.NotFound()
+
+    if (room.premises.id != premises.id) {
+      return AuthorisableActionResult.NotFound()
+    }
+
+    return AuthorisableActionResult.Success(
+      validated {
+        if (!roomRepository.nameIsUniqueForPremises(name, premises.id)) {
+          "$.name" hasValidationError "notUnique"
+        }
+
+        if (validationErrors.any()) {
+          return@validated fieldValidationError
+        }
+
+        val updatedRoom = RoomEntity(
+          id = room.id,
+          name = name,
+          code = room.code,
+          notes = room.notes,
+          premises = room.premises,
+          beds = room.beds,
+          characteristics = room.characteristics,
+        )
+
+        return@validated success(roomRepository.save(updatedRoom))
+      },
+    )
+  }
+
   fun createBed(
     room: RoomEntity,
     bedName: String,
