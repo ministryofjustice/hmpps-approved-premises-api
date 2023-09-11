@@ -109,7 +109,7 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
         APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")
+          .uri("/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
