@@ -5982,6 +5982,8 @@ components:
           format: uuid
         turnaroundWorkingDayCount:
           type: integer
+        name:
+          type: string
       required:
         - addressLine1
         - postcode
