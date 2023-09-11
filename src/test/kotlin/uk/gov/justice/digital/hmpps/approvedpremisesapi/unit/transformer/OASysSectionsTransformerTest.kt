@@ -351,4 +351,71 @@ class OASysSectionsTransformerTest {
       ),
     )
   }
+
+  @Test
+  fun `transformRiskOfSeriousHarm transforms correctly`() {
+    val offenceDetailsApiResponse = OffenceDetailsFactory().apply {
+      withAssessmentId(34853487)
+      withDateCompleted(null)
+      withOffenceAnalysis("Offence Analysis")
+      withOthersInvolved("Others Involved")
+      withIssueContributingToRisk("Issue Contributing to Risk")
+      withOffenceMotivation("Offence Motivation")
+      withVictimImpact("Impact on the victim")
+      withVictimPerpetratorRel("Other victim information")
+      withVictimInfo("Victim Info")
+      withPatternOffending("Pattern Reoffending")
+      withAcceptsResponsibility("Accepts Responsibility")
+    }.produce()
+
+    val roshApiResponse = RoshSummaryFactory().apply {
+      withAssessmentId(34853487)
+      withDateCompleted(null)
+      withWhoAtRisk("whoIsAtRisk")
+      withNatureOfRisk("natureOfRisk")
+      withRiskGreatest("riskGreatest")
+      withRiskIncreaseLikelyTo("riskIncreaseLikelyTo")
+      withRiskReductionLikelyTo("riskReductionLikelyTo")
+    }.produce()
+
+    val result = oaSysSectionsTransformer.transformRiskOfSeriousHarm(
+      offenceDetailsApiResponse,
+      roshApiResponse,
+    )
+
+    assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+    assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
+    assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
+    assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+
+    assertThat(result.rosh).containsAll(
+      listOf(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = roshApiResponse.roshSummary?.whoIsAtRisk,
+        ),
+        OASysQuestion(
+          label = "What is the nature of the risk",
+          questionNumber = "R10.2",
+          answer = roshApiResponse.roshSummary?.natureOfRisk,
+        ),
+        OASysQuestion(
+          label = "When is the risk likely to be the greatest",
+          questionNumber = "R10.3",
+          answer = roshApiResponse.roshSummary?.riskGreatest,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to increase risk",
+          questionNumber = "R10.4",
+          answer = roshApiResponse.roshSummary?.riskIncreaseLikelyTo,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to reduce the risk",
+          questionNumber = "R10.5",
+          answer = roshApiResponse.roshSummary?.riskReductionLikelyTo,
+        ),
+      ),
+    )
+  }
 }
