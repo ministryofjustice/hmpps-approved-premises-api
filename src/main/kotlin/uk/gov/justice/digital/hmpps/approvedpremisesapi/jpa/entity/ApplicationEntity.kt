@@ -39,15 +39,6 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
 
   @Query(
-    "SELECT * FROM approved_premises_applications apa " +
-      "LEFT JOIN applications a ON a.id = apa.id " +
-      "WHERE date_part('month', a.submitted_at) = :month " +
-      "AND date_part('year', a.submitted_at) = :year ",
-    nativeQuery = true,
-  )
-  fun findAllApprovedPremisesApplicationsByCalendarMonth(month: Int, year: Int): List<ApprovedPremisesApplicationEntity>
-
-  @Query(
     "SELECT a FROM ApplicationEntity a " +
       "LEFT JOIN ApplicationTeamCodeEntity atc ON a = atc.application " +
       "WHERE TYPE(a) = :type AND atc.teamCode IN (:managingTeamCodes)",
