@@ -3249,6 +3249,21 @@ paths:
           description: Filters the user details to those relevant to the specified service.
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '#/components/schemas/UserSortField'
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '#/components/schemas/SortDirection'
       responses:
         200:
           description: successfully retrieved users
@@ -3258,6 +3273,23 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+          headers:
+            X-Pagination-CurrentPage:
+              schema:
+                type: integer
+              description: The current page number
+            X-Pagination-TotalPages:
+              schema:
+                type: integer
+              description: The total number of pages
+            X-Pagination-TotalResults:
+              schema:
+                type: integer
+              description: The total number of results
+            X-Pagination-PageSize:
+              schema:
+                type: integer
+              description: The size of each page
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -7239,6 +7271,12 @@ components:
         - expected_arrival
         - created_at
         - application_date
+    UserSortField:
+      type: string
+      enum:
+        - name
+      x-enum-varnames:
+        - personName
     SortDirection:
       type: string
       enum:
