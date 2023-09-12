@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.UsersApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -33,7 +35,7 @@ class UsersController(
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
   }
 
-  override fun usersGet(xServiceName: ServiceName, roles: List<ApprovedPremisesUserRole>?, qualifications: List<UserQualification>?): ResponseEntity<List<User>> {
+  override fun usersGet(xServiceName: ServiceName, roles: List<ApprovedPremisesUserRole>?, qualifications: List<UserQualification>?, page: Int?, sortBy: UserSortField?, sortDirection: SortDirection?): ResponseEntity<List<User>> {
     val user = userService.getUserForRequest()
     if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
@@ -42,9 +44,12 @@ class UsersController(
     var roles = roles?.map(::transformApiRole)
     var qualifications = qualifications?.map(::transformApiQualification)
 
-    return ResponseEntity.ok(
-      userService.getUsersWithQualificationsAndRoles(qualifications, roles)
-        .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+    val (users, metadata) = userService.getUsersWithQualificationsAndRoles(qualifications, roles, sortBy, sortDirection, page)
+
+    return ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(
+      users.map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
     )
   }
 
