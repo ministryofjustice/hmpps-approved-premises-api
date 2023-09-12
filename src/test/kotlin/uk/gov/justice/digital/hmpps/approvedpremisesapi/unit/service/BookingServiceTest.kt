@@ -3275,6 +3275,168 @@ class BookingServiceTest {
     }
   }
 
+  @Nested
+  inner class CreateApprovedPremiseAdHocsBookingFromPlacementRequest {
+    private val crn = "CRN123"
+    private val arrivalDate = LocalDate.parse("2023-02-22")
+    private val departureDate = LocalDate.parse("2023-02-23")
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    private val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    private val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    private var user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    private val staffUserDetails = StaffUserDetailsFactory()
+      .withUsername(user.deliusUsername)
+      .produce()
+
+    private val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(crn)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    private val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(application.crn)
+      .produce()
+
+    private val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
+
+    private val bookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withCrn(crn)
+      .withApplication(application)
+      .produce()
+
+    @BeforeEach
+    private fun getAdHocEverys() {
+      every { mockPlacementRequestRepository.save(any()) } answers { callOriginal() }
+      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+      every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(application)
+      every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+      every { mockBookingRepository.save(any()) } answers { bookingEntity }
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
+      every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `createApprovedPremisesAdHocBooking saves Booking with associated placement request when manual booking is made`(role: UserRole) {
+      user.addRoleForUnitTest(role)
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .produce()
+
+      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+      application.placementRequests = mutableListOf(placementRequest)
+
+      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
+
+      verify(exactly = 1) {
+        mockPlacementRequestRepository.save(
+          match {
+            it.booking == bookingEntity && it.id == placementRequest.id
+          },
+        )
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `createApprovedPremisesAdHocBooking does not save Booking with associated placement request when manual booking is made if placement request is withdrawn`(role: UserRole) {
+      user.addRoleForUnitTest(role)
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .withIsWithdrawn(true)
+        .produce()
+
+      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+      application.placementRequests = mutableListOf(placementRequest)
+
+      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
+
+      verify(exactly = 0) {
+        mockPlacementRequestRepository.save(placementRequest)
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `createApprovedPremisesAdHocBooking does not save Booking with associated placement request when manual booking is made if placement request already has a booking`(role: UserRole) {
+      user.addRoleForUnitTest(role)
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .withBooking(bookingEntity)
+        .produce()
+
+      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+      application.placementRequests = mutableListOf(placementRequest)
+
+      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
+
+      verify(exactly = 0) {
+        mockPlacementRequestRepository.save(placementRequest)
+      }
+    }
+  }
+
   @Test
   fun `createTemporaryAccommodationBooking returns FieldValidationError if Departure Date is before Arrival Date`() {
     val crn = "CRN123"
