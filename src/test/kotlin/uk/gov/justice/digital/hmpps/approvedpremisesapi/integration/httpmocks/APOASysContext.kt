@@ -63,3 +63,10 @@ fun IntegrationTestBase.APOASysContext_mockSuccessfulRoshRatingsCall(crn: String
     url = "/rosh/$crn",
     responseBody = response,
   )
+
+fun IntegrationTestBase.APOASysContext_mockUnsuccessfulRoshCallWithDelay(crn: String, response: RoshSummary, delayMs: Int) =
+  mockUnsuccessfulGetCallWithDelayedResponse(
+    url = "/rosh/$crn",
+    responseStatus = 404,
+    delayMs = delayMs,
+  )
