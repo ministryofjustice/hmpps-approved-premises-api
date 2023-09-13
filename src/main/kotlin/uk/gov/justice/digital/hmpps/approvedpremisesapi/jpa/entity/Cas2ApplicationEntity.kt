@@ -90,13 +90,9 @@ data class Cas2ApplicationEntity(
 interface AppSummary {
   fun getId(): UUID
   fun getCrn(): String
-  fun getCreatedByUserId(): UUID
+  fun getCreatedByNomisUserId(): UUID
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?
-  fun getLatestAssessmentSubmittedAt(): Timestamp?
-  fun getLatestAssessmentDecision(): AssessmentDecision?
-  fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean
-  fun getHasBooking(): Boolean
 }
 
 

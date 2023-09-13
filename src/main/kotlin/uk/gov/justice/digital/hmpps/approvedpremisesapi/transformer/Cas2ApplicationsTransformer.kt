@@ -54,7 +54,7 @@ class Cas2ApplicationsTransformer(
       .Cas2ApplicationSummary(
         id = jpaSummary.getId(),
         person = personTransformer.transformModelToPersonApi(personInfo),
-        createdByUserId = jpaSummary.getCreatedByUserId(),
+        createdByUserId = jpaSummary.getCreatedByNomisUserId(),
         createdAt = jpaSummary.getCreatedAt().toInstant(),
         submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi
