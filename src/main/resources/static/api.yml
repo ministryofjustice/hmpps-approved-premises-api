@@ -7271,6 +7271,11 @@ components:
         - expected_arrival
         - created_at
         - application_date
+      x-enum-varnames:
+        - duration
+        - expectedArrival
+        - createdAt
+        - applicationSubmittedAt
     UserSortField:
       type: string
       enum:

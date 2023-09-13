@@ -65,7 +65,12 @@ class PlacementRequestService(
   }
 
   fun getAllActive(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: String?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    val pageable = getPageable(sortBy.value, sortDirection, page)
+    val sortField = when (sortBy) {
+      PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
+      else -> sortBy.value
+    }
+
+    val pageable = getPageable(sortField, sortDirection, page)
     val response = placementRequestRepository.allForDashboard(status, crn, crnOrName, tier, arrivalDateStart, arrivalDateEnd, pageable)
 
     return Pair(response.content, getMetadata(response, page))
