@@ -55,6 +55,9 @@ class UserService(
   fun getUserForRequest(): UserEntity {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
+    // we can get the auth_source back from httpAuthService also
+    // and pass that to getUserForUsername(username, authSource) so that it knows
+    // whether to query Delius or NOMIS
 
     val user = getUserForUsername(username)
 

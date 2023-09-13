@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
@@ -20,20 +21,30 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import java.util.UUID
 
 class JsonSchemaServiceTest {
   private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
+//  private val mockCas2JsonSchemaRepository = mockk<Cas2JsonSchemaRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
+  private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
 
   private val jsonSchemaService = JsonSchemaService(
     objectMapper = jacksonObjectMapper(),
     jsonSchemaRepository = mockJsonSchemaRepository,
     applicationRepository = mockApplicationRepository,
+  )
+
+  private val cas2JsonSchemaService = Cas2JsonSchemaService(
+    objectMapper = jacksonObjectMapper(),
+    jsonSchemaRepository = mockJsonSchemaRepository,
+    applicationRepository = mockCas2ApplicationRepository,
   )
 
   @Test
@@ -163,18 +174,13 @@ class JsonSchemaServiceTest {
 
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
-    val userEntity = UserEntityFactory()
+    val nomisUserEntity = NomisUserEntityFactory()
       .withId(userId)
-      .withDeliusUsername(distinguishedName)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
+      .withNomisUsername(distinguishedName)
       .produce()
 
     val upToDateApplication = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(userEntity)
+      .withCreatedByNomisUser(nomisUserEntity)
       .withApplicationSchema(newestJsonSchema)
       .withData(
         """
@@ -186,7 +192,7 @@ class JsonSchemaServiceTest {
       .produce()
 
     val outdatedApplication = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(userEntity)
+      .withCreatedByNomisUser(nomisUserEntity)
       .withApplicationSchema(olderJsonSchema)
       .withData("{}")
       .produce()
@@ -194,16 +200,18 @@ class JsonSchemaServiceTest {
     val applicationEntities = listOf(upToDateApplication, outdatedApplication)
 
     every { mockJsonSchemaRepository.getSchemasForType(Cas2ApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, Cas2ApplicationEntity::class.java) } returns applicationEntities
-    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockCas2ApplicationRepository.findAllByCreatedByUser_Id(userId)} returns
+      applicationEntities
+    every { mockCas2ApplicationRepository.save(any()) } answers { it.invocation
+      .args[0] as Cas2ApplicationEntity }
 
-    assertThat(jsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {
+    assertThat(cas2JsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {
       it.id == upToDateApplication.id &&
         it.schemaVersion == newestJsonSchema &&
         it.schemaUpToDate
     }
 
-    assertThat(jsonSchemaService.checkSchemaOutdated(outdatedApplication)).matches {
+    assertThat(cas2JsonSchemaService.checkSchemaOutdated(outdatedApplication)).matches {
       it.id == outdatedApplication.id &&
         it.schemaVersion == olderJsonSchema &&
         !it.schemaUpToDate

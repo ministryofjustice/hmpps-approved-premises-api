@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -112,6 +113,8 @@ class ApplicationsTransformer(
     }
   }
 
+  // domain = jpa.entity
+  // api = api.model
   fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonInfoResult.Success): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
       val riskRatings =
@@ -165,6 +168,29 @@ class ApplicationsTransformer(
     }
 
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
+  }
+
+  // domain = jpa.entity
+  // api = api.model
+  fun transformDomainToCas2Summary(jpaSummary: Cas2ApplicationSummary, personInfo:
+  PersonInfoResult.Success): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary  {
+
+    val riskRatings =
+      if (jpaSummary.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(jpaSummary
+        .getRiskRatings()!!) else null
+
+    return uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+      .Cas2ApplicationSummary(
+      id = jpaSummary.getId(),
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      createdByUserId = jpaSummary.getCreatedByUserId(),
+      createdAt = jpaSummary.getCreatedAt().toInstant(),
+      submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
+      risks = if (riskRatings != null) risksTransformer.transformDomainToApi
+        (riskRatings, jpaSummary.getCrn()) else null,
+      status = getStatusFromCas2Summary(jpaSummary),
+      type = "CAS2",
+    )
   }
 
   fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult.Success) = OfflineApplication(
@@ -221,6 +247,14 @@ class ApplicationsTransformer(
       entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
       else -> ApplicationStatus.inProgress
     }
+  }
+
+  private fun getStatusFromCas2Summary(entity: Cas2ApplicationSummary):
+    ApplicationStatus {
+      return when {
+        entity.getSubmittedAt() != null -> ApplicationStatus.submitted
+        else -> ApplicationStatus.inProgress
+      }
   }
 
   fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {

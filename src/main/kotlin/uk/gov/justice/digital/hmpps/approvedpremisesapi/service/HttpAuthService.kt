@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 
 @Service
 class HttpAuthService {
+  // TODO: change name to getAuthenticatedPrincipalOrThrow, as we now have a 2nd
+  //  auth_source
   fun getDeliusPrincipalOrThrow(): AuthAwareAuthenticationToken {
     val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
 
@@ -17,6 +19,8 @@ class HttpAuthService {
     return principal
   }
 
+  // TODO: change name to getAuthenticatedPrincipalOrNull, as we now have a 2nd
+  //  auth_source
   fun getDeliusPrincipalOrNull(): AuthAwareAuthenticationToken? {
     val principal = SecurityContextHolder.getContext().authentication as? AuthAwareAuthenticationToken ?: return null
 

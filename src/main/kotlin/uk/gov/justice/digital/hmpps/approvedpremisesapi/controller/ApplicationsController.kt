@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -55,6 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNaiveInfoForPersonOrThrowInternalServerError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.net.URI
@@ -72,17 +74,23 @@ class ApplicationsController(
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
+  private val nomisUserService: NomisUserService,
   private val taskTransformer: TaskTransformer,
 ) : ApplicationsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
+    log.info("in applicationsGet")
     val serviceName = xServiceName ?: ServiceName.approvedPremises
 
+    if (serviceName == ServiceName.cas2) {
+      val user = nomisUserService.getUserForRequest()
+      val applications = applicationService.getAllCas2ApplicationsForUsername(user.nomisUsername)
+      return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToCas2Summary(it) })
+    }
+
     val user = userService.getUserForRequest()
-
     val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
-
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
   }
 
@@ -111,13 +119,18 @@ class ApplicationsController(
   @Transactional
   override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?): ResponseEntity<Application> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val user = userService.getUserForRequest()
 
+    if (xServiceName == ServiceName.cas2) {
+      val user = nomisUserService.getUserForRequest()
+      applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
+    }
+
+    val user = userService.getUserForRequest()
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn, user)
+
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
       ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(personInfo.offenderDetailSummary, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
-      ServiceName.cas2 -> applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
       ServiceName.temporaryAccommodation -> {
         when (val actionResult = applicationService.createTemporaryAccommodationApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
           is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
@@ -125,6 +138,8 @@ class ApplicationsController(
           is AuthorisableActionResult.Success -> actionResult.entity
         }
       }
+
+      else -> { throw RuntimeException("CAS2 applications now require NomisUser")}
     }
 
     val application = when (applicationResult) {
@@ -317,6 +332,14 @@ class ApplicationsController(
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn(), user)
 
     return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
+  }
+
+  private fun getPersonDetailAndTransformToCas2Summary(application: uk.gov.justice.digital
+    .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary):
+    ApplicationSummary {
+    val personInfo = offenderService.getNaiveInfoForPersonOrThrowInternalServerError(application.getCrn())
+
+    return applicationsTransformer.transformDomainToCas2Summary(application, personInfo)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity, user: UserEntity): Application {

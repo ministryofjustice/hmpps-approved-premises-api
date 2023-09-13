@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -61,6 +63,12 @@ class ApplicationsTransformerTest {
     mockRisksTransformer,
   )
 
+  private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
+    objectMapper,
+    mockPersonTransformer,
+    mockRisksTransformer,
+  )
+
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {
       ProbationRegionEntityFactory()
@@ -68,6 +76,9 @@ class ApplicationsTransformerTest {
         .produce()
     }
     .produce()
+
+  private val nomisUser = NomisUserEntityFactory().produce()
+
 
   private val allocatedToUser = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -80,7 +91,8 @@ class ApplicationsTransformerTest {
   private val approvedPremisesApplicationFactory = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(user)
 
-  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
+  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
+    .withCreatedByNomisUser(nomisUser)
 
   private val temporaryAccommodationApplicationEntityFactory = TemporaryAccommodationApplicationEntityFactory()
     .withCreatedByUser(user)
@@ -156,7 +168,8 @@ class ApplicationsTransformerTest {
       .withSubmittedAt(null)
       .produce()
 
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as Cas2Application
+    val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk()) as
+      Cas2Application
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
@@ -168,7 +181,8 @@ class ApplicationsTransformerTest {
   fun `transformJpaToApi transforms a submitted CAS2 application correctly`() {
     val application = submittedCas2ApplicationFactory.produce()
 
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as Cas2Application
+    val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk()) as
+      Cas2Application
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
@@ -736,7 +750,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as Cas2ApplicationSummary
+    val result = cas2ApplicationsTransformer.transformJpaSummaryToCas2Summary(application, mockk()) as Cas2ApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -758,7 +772,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as Cas2ApplicationSummary
+    val result = cas2ApplicationsTransformer.transformJpaSummaryToCas2Summary(application, mockk()) as Cas2ApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)

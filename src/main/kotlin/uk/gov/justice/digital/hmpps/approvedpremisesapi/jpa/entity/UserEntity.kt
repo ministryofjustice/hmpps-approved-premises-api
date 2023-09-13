@@ -7,10 +7,13 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.Objects
 import java.util.UUID
+import javax.persistence.DiscriminatorColumn
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
+import javax.persistence.Inheritance
+import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
@@ -125,6 +128,12 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
   )
   fun findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
 }
+//@Entity
+//@Table(name = "users")
+//@DiscriminatorColumn(name = "auth_service")
+//@Inheritance(strategy = InheritanceType.JOINED)
+//abstract class UserEntity(
+// )
 
 @Entity
 @Table(name = "users")

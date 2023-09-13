@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.jms.annotation.JmsListener
@@ -112,8 +113,8 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get all applications returns 200 with correct body - when the service is CAS2`() {
-    `Given a CAS2 User` { userEntity, jwt ->
-      `Given a User` { otherUser, _ ->
+    `Given a CAS2 User` { nomisUserEntity, jwt ->
+      `Given a CAS2 User` { otherNomisUser, _ ->
         `Given an Offender` { offenderDetails, _ ->
           cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -124,19 +125,20 @@ class ApplicationTest : IntegrationTestBase() {
 
           val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(applicationSchema)
-            withCreatedByUser(userEntity)
+            withCreatedByNomisUser(nomisUserEntity)
             withCrn(offenderDetails.otherIds.crn)
             withData("{}")
           }
 
           val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(applicationSchema)
-            withCreatedByUser(otherUser)
+            withCreatedByNomisUser(otherNomisUser)
             withCrn(offenderDetails.otherIds.crn)
             withData("{}")
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          CommunityAPI_mockOffenderUserAccessCall(nomisUserEntity.nomisUsername,
+            offenderDetails.otherIds.crn, false, false)
 
           val rawResponseBody = webTestClient.get()
             .uri("/applications")
@@ -156,7 +158,7 @@ class ApplicationTest : IntegrationTestBase() {
             cas2ApplicationEntity.id == it.id &&
               cas2ApplicationEntity.crn == it.person.crn &&
               cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-              cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
+              cas2ApplicationEntity.createdByNomisUser.id == it.createdByUserId &&
               cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
           }
 
@@ -1546,7 +1548,7 @@ class ApplicationTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
           withId(applicationId)
           withApplicationSchema(applicationSchema)
-          withCreatedByUser(submittingUser)
+          withCreatedByNomisUser(submittingUser)
         }
 
         val resultBody = webTestClient.put()
@@ -1905,16 +1907,10 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Submit Cas2 application returns 200`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().produce(),
-          ),
-        )
-      },
+    `Given a CAS2 User`(
+
     ) { submittingUser, jwt ->
-      `Given a User` { userEntity, _ ->
+      `Given a CAS2 User` { nomisUserEntity, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -1940,7 +1936,7 @@ class ApplicationTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withId(applicationId)
             withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
+            withCreatedByNomisUser(submittingUser)
             withData(
               """
               {}

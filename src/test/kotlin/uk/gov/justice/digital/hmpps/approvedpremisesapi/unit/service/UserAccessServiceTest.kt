@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
@@ -32,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TemporaryAccommodationApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -54,6 +56,8 @@ class UserAccessServiceTest {
     communityApiClient,
   )
 
+  private val nomisUserAccessService = NomisUserAccessService()
+
   private val probationRegionId = UUID.randomUUID()
   private val probationRegion = ProbationRegionEntityFactory()
     .withId(probationRegionId)
@@ -73,6 +77,8 @@ class UserAccessServiceTest {
   private val user = UserEntityFactory()
     .withProbationRegion(probationRegion)
     .produce()
+
+  private val nomisUser = NomisUserEntityFactory().produce()
 
   private val anotherUserInRegion = UserEntityFactory()
     .withProbationRegion(probationRegion)
@@ -833,11 +839,12 @@ class UserAccessServiceTest {
       .produce()
 
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(user)
+      .withCreatedByNomisUser(nomisUser)
       .withApplicationSchema(newestJsonSchema)
       .produce()
 
-    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+    assertThat(nomisUserAccessService.userCanViewApplication(nomisUser, application))
+      .isTrue
   }
 
   @Test
@@ -846,12 +853,14 @@ class UserAccessServiceTest {
       .withSchema("{}")
       .produce()
 
+    val otherNomisUser = NomisUserEntityFactory().produce()
+
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
+      .withCreatedByNomisUser(otherNomisUser)
       .withApplicationSchema(newestJsonSchema)
       .produce()
 
-    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+    assertThat(nomisUserAccessService.userCanViewApplication(nomisUser, application)).isFalse
   }
 
   @Test

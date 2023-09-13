@@ -34,6 +34,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -60,7 +64,9 @@ import javax.transaction.Transactional
 @Service
 class ApplicationService(
   private val userRepository: UserRepository,
+  private val nomisUserRepository: NomisUserRepository,
   private val applicationRepository: ApplicationRepository,
+  private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val userService: UserService,
@@ -82,9 +88,22 @@ class ApplicationService(
 
     val applicationSummaries = when (serviceName) {
       ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
-      ServiceName.cas2 -> getAllCas2ApplicationsForUser(userEntity)
+      ServiceName.cas2 -> throw RuntimeException("CAS2 applications now require " +
+        "NomisUser")
       ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
+
+    return applicationSummaries
+      .filter {
+        offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
+      }
+  }
+
+  fun getAllCas2ApplicationsForUsername(userDistinguishedName: String):
+    List<Cas2ApplicationSummary> {
+    val nomisUserEntity = nomisUserRepository.findByNomisUsername(userDistinguishedName)
+      ?: return emptyList()
+    val applicationSummaries = getAllCas2ApplicationsForUser(nomisUserEntity)
 
     return applicationSummaries
       .filter {
@@ -95,8 +114,10 @@ class ApplicationService(
   private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) =
     applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
 
-  private fun getAllCas2ApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
-    return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
+  private fun getAllCas2ApplicationsForUser(user: NomisUserEntity):
+    List<Cas2ApplicationSummary> {
+    return cas2ApplicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user
+      .id)
   }
 
   private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
@@ -248,8 +269,9 @@ class ApplicationService(
   fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) =
     offlineApplicationRepository.save(offlineApplication)
 
-  fun createCas2Application(crn: String, user: UserEntity, jwt: String) = validated<ApplicationEntity> {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+  fun createCas2Application(crn: String, user: NomisUserEntity, jwt: String) =
+    validated<Cas2ApplicationEntity> {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.nomisUsername)
 
     val offenderDetails = when (offenderDetailsResult) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -267,7 +289,7 @@ class ApplicationService(
 
     var riskRatings: PersonRisks? = null
 
-    val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+    val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.nomisUsername)
 
     riskRatings = when (riskRatingsResult) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -275,11 +297,11 @@ class ApplicationService(
       is AuthorisableActionResult.Success -> riskRatingsResult.entity
     }
 
-    val createdApplication = applicationRepository.save(
+    val createdApplication = cas2ApplicationRepository.save(
       Cas2ApplicationEntity(
         id = UUID.randomUUID(),
         crn = crn,
-        createdByUser = user,
+        createdByNomisUser = user,
         data = null,
         document = null,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
@@ -287,7 +309,6 @@ class ApplicationService(
         submittedAt = null,
         schemaUpToDate = true,
         riskRatings = riskRatings,
-        assessments = mutableListOf(),
         nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),
     )

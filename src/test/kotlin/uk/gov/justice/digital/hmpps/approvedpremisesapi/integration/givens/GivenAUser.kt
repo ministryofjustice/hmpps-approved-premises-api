@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -67,42 +69,29 @@ fun IntegrationTestBase.`Given a User`(
 
 fun IntegrationTestBase.`Given a CAS2 User`(
   id: UUID = UUID.randomUUID(),
-  staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
-  roles: List<UserRole> = emptyList(),
-  qualifications: List<UserQualification> = emptyList(),
-  probationRegion: ProbationRegionEntity? = null,
-  block: (userEntity: UserEntity, jwt: String) -> Unit,
+  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
+  block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
 ) {
-  val staffUserDetailsFactory = StaffUserDetailsFactory()
+  val nomisUserDetailsFactory = NomisUserDetailFactory()
 
-  if (staffUserDetailsConfigBlock != null) {
-    staffUserDetailsConfigBlock(staffUserDetailsFactory)
+  if (nomisUserDetailsConfigBlock != null) {
+    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
   }
 
-  val staffUserDetails = staffUserDetailsFactory.produce()
+  val nomisUserDetails = nomisUserDetailsFactory.produce()
 
-  val user = userEntityFactory.produceAndPersist {
+  val user = nomisUserEntityFactory.produceAndPersist {
     withId(id)
-    withDeliusUsername(staffUserDetails.username)
-    withEmail(staffUserDetails.email)
-    withTelephoneNumber(staffUserDetails.telephoneNumber)
-    withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
-    if (probationRegion == null) {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    } else {
-      withProbationRegion(probationRegion)
-    }
+    withNomisUsername(nomisUserDetails.username)
+    withEmail(nomisUserDetails.primaryEmail)
+    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
   }
 
-  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(staffUserDetails.username)
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
 
-  CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-    staffUserDetails,
-  )
+//  CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+//    staffUserDetails,
+//  )
 
   block(user, jwt)
 }

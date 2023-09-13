@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -17,7 +18,7 @@ import java.util.UUID
 class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var createdByUser: Yielded<UserEntity>? = null
+  private var createdByNomisUser: Yielded<NomisUserEntity>? = null
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var applicationSchema: Yielded<JsonSchemaEntity> = {
@@ -38,12 +39,13 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.crn = { crn }
   }
 
-  fun withCreatedByUser(createdByUser: UserEntity) = apply {
-    this.createdByUser = { createdByUser }
+  fun withCreatedByNomisUser(createdByNomisUser: NomisUserEntity) = apply {
+    this.createdByNomisUser = { createdByNomisUser }
   }
 
-  fun withYieldedCreatedByUser(createdByUser: Yielded<UserEntity>) = apply {
-    this.createdByUser = createdByUser
+  fun withYieldedCreatedByNomisUser(createdByNomisUser: Yielded<NomisUserEntity>) =
+    apply {
+    this.createdByNomisUser = createdByNomisUser
   }
 
   fun withData(data: String?) = apply {
@@ -77,14 +79,14 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
-    createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
+    createdByNomisUser = this.createdByNomisUser?.invoke() ?: throw RuntimeException
+      ("Must provide a createdByNomisUser"),
     data = this.data(),
     document = this.document(),
     schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     schemaUpToDate = false,
-    assessments = this.assessments(),
     riskRatings = this.riskRatings(),
     nomsNumber = this.nomsNumber(),
   )

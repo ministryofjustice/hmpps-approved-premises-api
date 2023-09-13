@@ -79,6 +79,13 @@ fun OffenderService.getInfoForPersonOrThrowInternalServerError(crn: String, user
   return personInfo as PersonInfoResult.Success
 }
 
+fun OffenderService.getNaiveInfoForPersonOrThrowInternalServerError(crn: String): PersonInfoResult.Success {
+  val personInfo = this.getNaiveInfoForPerson(crn)
+  if (personInfo is PersonInfoResult.NotFound) throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
+
+  return personInfo as PersonInfoResult.Success
+}
+
 fun OffenderService.getFullInfoForPersonOrThrow(crn: String, user: UserEntity): PersonInfoResult.Success.Full {
   val personInfo = this.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
   if (personInfo is PersonInfoResult.NotFound) throw NotFoundProblem(crn, "Offender")

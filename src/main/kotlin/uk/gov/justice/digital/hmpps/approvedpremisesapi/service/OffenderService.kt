@@ -463,6 +463,40 @@ class OffenderService(
     )
   }
 
+  fun getNaiveInfoForPerson(crn: String):
+    PersonInfoResult {
+    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
+
+    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
+      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
+    }
+
+    val offender = when (offenderResponse) {
+      is ClientResult.Success -> offenderResponse.body
+
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) {
+        return PersonInfoResult.NotFound(crn)
+      } else {
+        return PersonInfoResult.Unknown(crn, offenderResponse.toException())
+      }
+
+      is ClientResult.Failure -> return PersonInfoResult.Unknown(crn, offenderResponse.toException())
+    }
+
+    val inmateDetails = offender.otherIds.nomsNumber?.let { nomsNumber ->
+      when (val inmateDetailsResult = getInmateDetailByNomsNumber(offender.otherIds.crn, nomsNumber)) {
+        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+        else -> null
+      }
+    }
+
+    return PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offender,
+      inmateDetail = inmateDetails,
+    )
+  }
+
   private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
     when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
       is ClientResult.Success -> {
