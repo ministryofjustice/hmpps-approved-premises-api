@@ -81,6 +81,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.isWithdrawn = { isWithdrawn }
   }
 
+  fun withDuration(duration: Int) = apply {
+    this.duration = { duration }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     expectedArrival = this.expectedArrival(),
