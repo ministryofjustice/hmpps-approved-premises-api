@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -21,6 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Results
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -31,9 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.Offen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
@@ -50,6 +52,7 @@ class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val caseNotesClient: CaseNotesClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
+  private val adjudicationsApiClient: AdjudicationsApiClient,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
@@ -75,7 +78,7 @@ class OffenderService(
     )
 
     adjudicationsConfig = PrisonAdjudicationsConfig(
-      prisonApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided"),
+      adjudicationsApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.adjudications-api-page-size configuration provided"),
     )
   }
 
@@ -242,9 +245,7 @@ class OffenderService(
         currentPageIndex += 1
       }
 
-      val offset = currentPageIndex * adjudicationsConfig.prisonApiPageSize
-
-      val adjudicationsPageResponse = prisonsApiClient.getAdjudicationsPage(nomsNumber, offset, adjudicationsConfig.prisonApiPageSize)
+      val adjudicationsPageResponse = adjudicationsApiClient.getAdjudicationsPage(nomsNumber, currentPageIndex, adjudicationsConfig.adjudicationsApiPageSize)
       currentPage = when (adjudicationsPageResponse) {
         is ClientResult.Success -> adjudicationsPageResponse.body
         is ClientResult.Failure.StatusCode -> when (adjudicationsPageResponse.status) {
@@ -255,13 +256,13 @@ class OffenderService(
         is ClientResult.Failure -> adjudicationsPageResponse.throwException()
       }
 
-      allAdjudications.addAll(currentPage.results)
+      allAdjudications.addAll(currentPage.results.content)
       allAgencies.addAll(currentPage.agencies)
-    } while (currentPage != null && currentPage.results.size == adjudicationsConfig.prisonApiPageSize)
+    } while (currentPage != null && currentPage.results.content.size == adjudicationsConfig.adjudicationsApiPageSize)
 
     return AuthorisableActionResult.Success(
       AdjudicationsPage(
-        results = allAdjudications,
+        Results(content = allAdjudications),
         agencies = allAgencies,
       ),
     )
