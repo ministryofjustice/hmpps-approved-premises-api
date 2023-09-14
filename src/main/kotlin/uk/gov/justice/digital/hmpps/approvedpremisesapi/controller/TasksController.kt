@@ -58,15 +58,25 @@ class TasksController(
 ) : TasksApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun tasksReallocatableGet(): ResponseEntity<List<Task>> {
+  override fun tasksReallocatableGet(type: String?): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
-
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
-      val placementRequestTasks = getPlacementRequestTasks(placementRequestService.getAllReallocatable(), user)
-      val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
+      if (type != null) {
+        val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+          type.kebabCaseToPascalCase(),
+        ) ?: throw NotFoundProblem(type, "TaskType")
 
-      return ResponseEntity.ok(assessmentTasks + placementRequestTasks + placementApplicationTasks)
+        when (taskType) {
+          TaskType.assessment -> return assessmentTasksResponse(user)
+          TaskType.placementRequest -> return placementRequestTasks(user)
+          TaskType.placementApplication -> return placementApplicationTasks(user)
+          else -> {
+            throw BadRequestProblem()
+          }
+        }
+      }
+
+      return responseForAllTypes(user)
     } else {
       throw ForbiddenProblem()
     }
@@ -232,5 +242,28 @@ class TasksController(
 
   private fun getPlacementApplicationTasks(placementApplications: List<PlacementApplicationEntity>, user: UserEntity) = placementApplications.map {
     getPlacementApplicationTask(it, user)
+  }
+
+  private fun responseForAllTypes(user: UserEntity): ResponseEntity<List<Task>> {
+    val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
+    val placementRequestTasks = getPlacementRequestTasks(placementRequestService.getAllReallocatable(), user)
+    val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
+
+    return ResponseEntity.ok(assessmentTasks + placementRequestTasks + placementApplicationTasks)
+  }
+
+  private fun assessmentTasksResponse(user: UserEntity): ResponseEntity<List<Task>> {
+    val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
+    return ResponseEntity.ok(assessmentTasks)
+  }
+
+  private fun placementRequestTasks(user: UserEntity): ResponseEntity<List<Task>> {
+    val placementRequestTasks = getPlacementRequestTasks(placementRequestService.getAllReallocatable(), user)
+    return ResponseEntity.ok(placementRequestTasks)
+  }
+
+  private fun placementApplicationTasks(user: UserEntity): ResponseEntity<List<Task>> {
+    val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
+    return ResponseEntity.ok(placementApplicationTasks)
   }
 }
