@@ -1,0 +1,6 @@
+ALTER TABLE temporary_accommodation_applications ADD COLUMN is_registered_sex_offender BOOLEAN;
+ALTER TABLE temporary_accommodation_applications ADD COLUMN needs_accessible_property BOOLEAN;
+ALTER TABLE temporary_accommodation_applications ADD COLUMN has_history_of_arson BOOLEAN;
+ALTER TABLE temporary_accommodation_applications ADD COLUMN is_duty_to_refer_submitted BOOLEAN;
+ALTER TABLE temporary_accommodation_applications ADD COLUMN duty_to_refer_submission_date DATE;
+ALTER TABLE temporary_accommodation_applications ADD COLUMN is_eligible BOOLEAN;
