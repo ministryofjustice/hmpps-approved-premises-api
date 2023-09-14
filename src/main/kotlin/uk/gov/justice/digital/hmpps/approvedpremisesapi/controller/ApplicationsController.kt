@@ -117,7 +117,6 @@ class ApplicationsController(
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
       ServiceName.approvedPremises -> applicationService.createApprovedPremisesApplication(personInfo.offenderDetailSummary, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)
-      ServiceName.cas2 -> applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
       ServiceName.temporaryAccommodation -> {
         when (val actionResult = applicationService.createTemporaryAccommodationApplication(body.crn, user, deliusPrincipal.token.tokenValue, body.convictionId, body.deliusEventNumber, body.offenceId, createWithRisks)) {
           is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
@@ -125,6 +124,11 @@ class ApplicationsController(
           is AuthorisableActionResult.Success -> actionResult.entity
         }
       }
+
+      ServiceName.cas2 -> throw RuntimeException(
+        "CAS2 now has its own " +
+          "Cas2ApplicationsController",
+      )
     }
 
     val application = when (applicationResult) {

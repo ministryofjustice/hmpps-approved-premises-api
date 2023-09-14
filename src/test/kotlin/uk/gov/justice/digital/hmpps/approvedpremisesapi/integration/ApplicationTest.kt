@@ -1425,7 +1425,7 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         val result = webTestClient.post()
-          .uri("/applications")
+          .uri("/cas2/applications")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.cas2.value)
           .bodyValue(
