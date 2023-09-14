@@ -337,12 +337,12 @@ class TemporaryAccommodationApplicationEntity(
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
   var arrivalDate: OffsetDateTime?,
-  var isRegisteredSexOffender: Boolean? = null,
-  var needsAccessibleProperty: Boolean? = null,
-  var hasHistoryOfArson: Boolean? = null,
-  var isDutyToReferSubmitted: Boolean? = null,
-  var dutyToReferSubmissionDate: LocalDate? = null,
-  var isEligible: Boolean? = null,
+  var isRegisteredSexOffender: Boolean?,
+  var needsAccessibleProperty: Boolean?,
+  var hasHistoryOfArson: Boolean?,
+  var isDutyToReferSubmitted: Boolean?,
+  var dutyToReferSubmissionDate: LocalDate?,
+  var isEligible: Boolean?,
 ) : ApplicationEntity(
   id,
   crn,

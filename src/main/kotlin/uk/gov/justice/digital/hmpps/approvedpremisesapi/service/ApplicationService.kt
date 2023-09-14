@@ -352,6 +352,12 @@ class ApplicationService(
             probationRegion = user.probationRegion,
             nomsNumber = offenderDetails.otherIds.nomsNumber,
             arrivalDate = null,
+            isRegisteredSexOffender = null,
+            needsAccessibleProperty = null,
+            hasHistoryOfArson = null,
+            isDutyToReferSubmitted = null,
+            dutyToReferSubmissionDate = null,
+            isEligible = null,
           ),
         )
 
