@@ -80,6 +80,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
           `Given an Approved Premises Bed` { bed ->
             createApplicationWithBooking(OffsetDateTime.parse("2023-01-01T12:00:00Z"), referrer, assessor, bed)
+            createTemporaryAccommodationApplication(OffsetDateTime.parse("2023-04-01T12:00:00Z"))
 
             val (applicationWithBooking, _) = createApplicationWithBooking(OffsetDateTime.parse("2023-04-01T12:00:00Z"), referrer, assessor, bed)
             val (applicationWithDepartedBooking, departedBooking) = createApplicationWithBooking(OffsetDateTime.parse("2023-04-01T12:00:00Z"), referrer, assessor, bed)
@@ -241,5 +242,37 @@ class ApplicationReportsTest : IntegrationTestBase() {
     realPlacementRequestRepository.save(placementRequest)
 
     return Pair(application as ApprovedPremisesApplicationEntity, booking)
+  }
+
+  private fun createTemporaryAccommodationApplication(submittedAt: OffsetDateTime) {
+    `Given a User` { submittingUser, _ ->
+      val (offenderDetails, _) = `Given an Offender`()
+
+      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+        withSchema(
+          """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            """,
+        )
+      }
+
+      temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(submittingUser)
+        withProbationRegion(submittingUser.probationRegion)
+        withSubmittedAt(submittedAt)
+      }
+    }
   }
 }

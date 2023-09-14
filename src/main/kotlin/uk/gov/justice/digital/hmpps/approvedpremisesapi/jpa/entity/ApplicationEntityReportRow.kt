@@ -61,6 +61,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
     where
       date_part('month', application.submitted_at) = :month
       AND date_part('year', application.submitted_at) = :year
+      AND application.service = 'approved-premises'
     """,
     nativeQuery = true,
   )
