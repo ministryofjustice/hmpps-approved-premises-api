@@ -5506,6 +5506,19 @@ components:
             arrivalDate:
               type: string
               format: date
+            isRegisteredSexOffender:
+              type: boolean
+            needsAccessibleProperty:
+              type: boolean
+            hasHistoryOfArson:
+              type: boolean
+            isDutyToReferSubmitted:
+              type: boolean
+            dutyToReferSubmissionDate:
+              type: string
+              format: date
+            isApplicationEligible:
+              type: boolean
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
