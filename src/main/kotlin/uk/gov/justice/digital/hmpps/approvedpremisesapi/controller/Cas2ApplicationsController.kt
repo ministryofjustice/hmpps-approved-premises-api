@@ -12,6 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -21,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Applications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
 import java.net.URI
+import java.util.UUID
 import javax.transaction.Transactional
 
 @Service
@@ -43,6 +47,22 @@ class Cas2ApplicationsController(
     )
 
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+  }
+
+  override fun cas2ApplicationsApplicationIdGet(applicationId: UUID):
+    ResponseEntity<Application> {
+    val user = userService.getUserForRequest()
+
+    val application = when (val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)) {
+      is AuthorisableActionResult.NotFound -> null
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> applicationResult.entity
+    }
+
+    if (application != null) {
+      return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
+    }
+    throw NotFoundProblem(applicationId, "Application")
   }
 
   @Transactional
@@ -71,5 +91,11 @@ class Cas2ApplicationsController(
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn(), user)
 
     return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
+  }
+
+  private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {
+    val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn, user)
+
+    return applicationsTransformer.transformJpaToApi(application, personInfo)
   }
 }
