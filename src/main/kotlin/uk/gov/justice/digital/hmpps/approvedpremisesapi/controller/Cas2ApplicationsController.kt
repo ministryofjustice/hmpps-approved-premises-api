@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -8,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -32,6 +34,7 @@ class Cas2ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
+  private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val userService: UserService,
 ) : Cas2ApiDelegate {
@@ -85,6 +88,34 @@ class Cas2ApplicationsController(
     return ResponseEntity
       .created(URI.create("/applications/${application.id}"))
       .body(applicationsTransformer.transformJpaToApi(application, personInfo))
+  }
+
+  @Transactional
+  override fun cas2ApplicationsApplicationIdPut(
+    applicationId: UUID,
+    body:
+      UpdateApplication,
+  ): ResponseEntity<Application> {
+    val user = userService.getUserForRequest()
+
+    val serializedData = objectMapper.writeValueAsString(body.data)
+
+    val applicationResult = applicationService.updateCas2Application(applicationId = applicationId, data = serializedData, username = user.deliusUsername)
+
+    val validationResult = when (applicationResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> applicationResult.entity
+    }
+
+    val updatedApplication = when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
   private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary, user: UserEntity): ApplicationSummary {
