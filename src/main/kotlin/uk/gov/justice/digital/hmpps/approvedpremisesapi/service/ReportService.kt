@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -28,7 +28,7 @@ class ReportService(
   private val lostBedsRepository: LostBedsRepository,
   private val bookingTransformer: BookingTransformer,
   private val workingDayCountService: WorkingDayCountService,
-  private val applicationRepository: ApplicationRepository,
+  private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
   private val offenderService: OffenderService,
 ) {
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
@@ -70,7 +70,7 @@ class ReportService(
 
   fun createCas1ApplicationPerformanceReport(properties: ApplicationReportProperties, outputStream: OutputStream) {
     ApplicationReportGenerator(offenderService)
-      .createReport(applicationRepository.findAllApprovedPremisesApplicationsByCalendarMonth(properties.month, properties.year), properties)
+      .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReportRowsForCalendarMonth(properties.month, properties.year), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }

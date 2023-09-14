@@ -1377,6 +1377,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/rosh:
+    get:
+      tags:
+        - OASys
+      summary: Returns the Risk of Serious Harm section of an OASys.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskOfSeriousHarm'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /people/{crn}/offences:
     get:
       summary: Returns all active offences for a Person.
@@ -3218,6 +3249,21 @@ paths:
           description: Filters the user details to those relevant to the specified service.
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '#/components/schemas/UserSortField'
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '#/components/schemas/SortDirection'
       responses:
         200:
           description: successfully retrieved users
@@ -3227,6 +3273,23 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+          headers:
+            X-Pagination-CurrentPage:
+              schema:
+                type: integer
+              description: The current page number
+            X-Pagination-TotalPages:
+              schema:
+                type: integer
+              description: The total number of pages
+            X-Pagination-TotalResults:
+              schema:
+                type: integer
+              description: The total number of results
+            X-Pagination-PageSize:
+              schema:
+                type: integer
+              description: The size of each page
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -6327,6 +6390,26 @@ components:
         - assessmentState
         - dateStarted
         - riskToSelf
+    OASysRiskOfSeriousHarm:
+      type: object
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/OASysAssessmentId'
+        assessmentState:
+          $ref: '#/components/schemas/OASysAssessmentState'
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
+        rosh:
+          $ref: '#/components/schemas/ArrayOfOASysRiskOfSeriousHarmSummaryQuestions'
+      required:
+        - assessmentId
+        - assessmentState
+        - dateStarted
+        - rosh
     OASysSection:
       type: object
       properties:
@@ -7188,6 +7271,17 @@ components:
         - expected_arrival
         - created_at
         - application_date
+      x-enum-varnames:
+        - duration
+        - expectedArrival
+        - createdAt
+        - applicationSubmittedAt
+    UserSortField:
+      type: string
+      enum:
+        - name
+      x-enum-varnames:
+        - personName
     SortDirection:
       type: string
       enum:

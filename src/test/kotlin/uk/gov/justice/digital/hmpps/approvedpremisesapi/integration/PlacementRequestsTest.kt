@@ -16,10 +16,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
@@ -330,56 +333,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It returns paginated placement requests when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withSubmittedAt(OffsetDateTime.now())
-            withApplicationSchema(applicationSchema)
-            withReleaseType("licence")
-          }
-
-          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAssessmentSchema(assessmentSchema)
-            withApplication(application)
-            withSubmittedAt(OffsetDateTime.now())
-            withAllocatedToUser(user)
-            withDecision(AssessmentDecision.ACCEPTED)
-          }
-
-          val placementRequirements = placementRequirementsFactory.produceAndPersist {
-            withApplication(application)
-            withAssessment(assessment)
-            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-            withDesirableCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(5),
-            )
-            withEssentialCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(3),
-            )
-          }
-
-          val placementRequest = placementRequestFactory.produceAndPersist {
-            withAllocatedToUser(
-              userEntityFactory.produceAndPersist {
-                withProbationRegion(
-                  probationRegionEntityFactory.produceAndPersist {
-                    withApArea(apAreaEntityFactory.produceAndPersist())
-                  },
-                )
-              },
-            )
-            withApplication(application)
-            withAssessment(assessment)
-            withPlacementRequirements(placementRequirements)
-          }
+          val placementRequest = createPlacementRequest(offenderDetails, user)
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1")
@@ -409,76 +363,32 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @Test
     fun `It searches by name when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
+        `Given an Offender`(offenderDetailsConfigBlock = {
+          withFirstName("JOHN")
+          withLastName("SMITH")
+        },) { offenderDetails, inmateDetails ->
+          `Given an Offender` { otherOffenderDetails, _ ->
+            val placementRequest = createPlacementRequest(offenderDetails, user)
+            createPlacementRequest(otherOffenderDetails, user)
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withSubmittedAt(OffsetDateTime.now())
-            withApplicationSchema(applicationSchema)
-            withReleaseType("licence")
-            withName("JOHN SMITH")
-          }
-
-          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAssessmentSchema(assessmentSchema)
-            withApplication(application)
-            withSubmittedAt(OffsetDateTime.now())
-            withAllocatedToUser(user)
-            withDecision(AssessmentDecision.ACCEPTED)
-          }
-
-          val placementRequirements = placementRequirementsFactory.produceAndPersist {
-            withApplication(application)
-            withAssessment(assessment)
-            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-            withDesirableCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(5),
-            )
-            withEssentialCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(3),
-            )
-          }
-
-          val placementRequest = placementRequestFactory.produceAndPersist {
-            withAllocatedToUser(
-              userEntityFactory.produceAndPersist {
-                withProbationRegion(
-                  probationRegionEntityFactory.produceAndPersist {
-                    withApArea(apAreaEntityFactory.produceAndPersist())
-                  },
-                )
-              },
-            )
-            withApplication(application)
-            withAssessment(assessment)
-            withPlacementRequirements(placementRequirements)
-          }
-
-          webTestClient.get()
-            .uri("/placement-requests/dashboard?crnOrName=john")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  placementRequestTransformer.transformJpaToApi(
-                    placementRequest,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+            webTestClient.get()
+              .uri("/placement-requests/dashboard?crnOrName=john")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      placementRequest,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
                   ),
                 ),
-              ),
-            )
+              )
+          }
         }
       }
     }
@@ -486,76 +396,220 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @Test
     fun `It searches by crnOrName by CRN when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
+        `Given an Offender` { otherOffenderDetails, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            val placementRequest = createPlacementRequest(offenderDetails, user)
+            createPlacementRequest(otherOffenderDetails, user)
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
+            webTestClient.get()
+              .uri("/placement-requests/dashboard?crnOrName=${offenderDetails.otherIds.crn}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      placementRequest,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
+                  ),
+                ),
+              )
           }
+        }
+      }
+    }
 
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withSubmittedAt(OffsetDateTime.now())
-            withApplicationSchema(applicationSchema)
-            withReleaseType("licence")
-          }
-
-          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAssessmentSchema(assessmentSchema)
-            withApplication(application)
-            withSubmittedAt(OffsetDateTime.now())
-            withAllocatedToUser(user)
-            withDecision(AssessmentDecision.ACCEPTED)
-          }
-
-          val placementRequirements = placementRequirementsFactory.produceAndPersist {
-            withApplication(application)
-            withAssessment(assessment)
-            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-            withDesirableCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(5),
-            )
-            withEssentialCriteria(
-              characteristicEntityFactory.produceAndPersistMultiple(3),
-            )
-          }
-
-          val placementRequest = placementRequestFactory.produceAndPersist {
-            withAllocatedToUser(
-              userEntityFactory.produceAndPersist {
-                withProbationRegion(
-                  probationRegionEntityFactory.produceAndPersist {
-                    withApArea(apAreaEntityFactory.produceAndPersist())
-                  },
-                )
-              },
-            )
-            withApplication(application)
-            withAssessment(assessment)
-            withPlacementRequirements(placementRequirements)
-          }
+    @Test
+    fun `It sorts by duration when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val placementRequestWithOneDayDuration = createPlacementRequest(offenderDetails, user, duration = 1)
+          val placementRequestWithFiveDayDuration = createPlacementRequest(offenderDetails, user, duration = 5)
+          val placementRequestWithTwelveDayDuration = createPlacementRequest(offenderDetails, user, duration = 12)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?crnOrName=${offenderDetails.otherIds.crn}")
+            .uri("/placement-requests/dashboard?page=1&sortBy=duration")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
             .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  placementRequestTransformer.transformJpaToApi(
-                    placementRequest,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              ),
-            )
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithOneDayDuration.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithFiveDayDuration.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithTwelveDayDuration.id.toString())
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=duration&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithTwelveDayDuration.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithFiveDayDuration.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithOneDayDuration.id.toString())
         }
+      }
+    }
+
+    @Test
+    fun `It sorts by expectedArrival when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val placementRequestWithExpectedArrivalOfToday = createPlacementRequest(offenderDetails, user)
+          val placementRequestWithExpectedArrivalInTwelveDays = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(12))
+          val placementRequestWithExpectedArrivalInThirtyDays = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(30))
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=expected_arrival")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithExpectedArrivalOfToday.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithExpectedArrivalInTwelveDays.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithExpectedArrivalInThirtyDays.id.toString())
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=expected_arrival&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithExpectedArrivalInThirtyDays.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithExpectedArrivalInTwelveDays.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithExpectedArrivalOfToday.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by createdAt when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val placementRequestCreatedToday = createPlacementRequest(offenderDetails, user)
+          val placementRequestCreatedFiveDaysAgo = createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(5))
+          val placementRequestCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(30))
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=created_at")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestCreatedThirtyDaysAgo.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestCreatedFiveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestCreatedToday.id.toString())
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=created_at&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestCreatedToday.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestCreatedFiveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestCreatedThirtyDaysAgo.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by applicationSubmittedAt when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val placementRequestWithApplicationCreatedToday = createPlacementRequest(offenderDetails, user)
+          val placementRequestWithApplicationCreatedTwelveDaysAgo = createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(12))
+          val placementRequestWithApplicationCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(30))
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=application_date")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithApplicationCreatedThirtyDaysAgo.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithApplicationCreatedTwelveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithApplicationCreatedToday.id.toString())
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=application_date&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithApplicationCreatedToday.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithApplicationCreatedTwelveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithApplicationCreatedThirtyDaysAgo.id.toString())
+        }
+      }
+    }
+
+    private fun createPlacementRequest(offenderDetails: OffenderDetailSummary, user: UserEntity, duration: Int = 12, expectedArrival: LocalDate = LocalDate.now(), createdAt: OffsetDateTime = OffsetDateTime.now(), applicationDate: OffsetDateTime = OffsetDateTime.now()): PlacementRequestEntity {
+      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedByUser(user)
+        withSubmittedAt(OffsetDateTime.now())
+        withApplicationSchema(applicationSchema)
+        withReleaseType("licence")
+        withSubmittedAt(applicationDate)
+        withName("${offenderDetails.firstName} ${offenderDetails.surname}")
+      }
+
+      val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+        withAssessmentSchema(assessmentSchema)
+        withApplication(application)
+        withSubmittedAt(OffsetDateTime.now())
+        withAllocatedToUser(user)
+        withDecision(AssessmentDecision.ACCEPTED)
+      }
+
+      val placementRequirements = placementRequirementsFactory.produceAndPersist {
+        withApplication(application)
+        withAssessment(assessment)
+        withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+        withDesirableCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(5),
+        )
+        withEssentialCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(3),
+        )
+      }
+
+      return placementRequestFactory.produceAndPersist {
+        withAllocatedToUser(
+          userEntityFactory.produceAndPersist {
+            withProbationRegion(
+              probationRegionEntityFactory.produceAndPersist {
+                withApArea(apAreaEntityFactory.produceAndPersist())
+              },
+            )
+          },
+        )
+        withApplication(application)
+        withAssessment(assessment)
+        withPlacementRequirements(placementRequirements)
+        withDuration(duration)
+        withExpectedArrival(expectedArrival)
+        withCreatedAt(createdAt)
       }
     }
   }

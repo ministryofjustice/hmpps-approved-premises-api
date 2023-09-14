@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
@@ -36,6 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -65,27 +65,15 @@ class PlacementRequestService(
   }
 
   fun getAllActive(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: String?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    var pageable: PageRequest?
-    var metadata: PaginationMetadata? = null
-
-    if (page != null) {
-      val sort = if (sortDirection == SortDirection.desc) {
-        Sort.by(sortBy.value).descending()
-      } else {
-        Sort.by(sortBy.value).ascending()
-      }
-      pageable = PageRequest.of(page - 1, 10, sort)
-    } else {
-      pageable = null
+    val sortField = when (sortBy) {
+      PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
+      else -> sortBy.value
     }
 
+    val pageable = getPageable(sortField, sortDirection, page)
     val response = placementRequestRepository.allForDashboard(status, crn, crnOrName, tier, arrivalDateStart, arrivalDateEnd, pageable)
 
-    if (page != null) {
-      metadata = PaginationMetadata(page, response.totalPages, response.totalElements, 10)
-    }
-
-    return Pair(response.content, metadata)
+    return Pair(response.content, getMetadata(response, page))
   }
 
   fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {

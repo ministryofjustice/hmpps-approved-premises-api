@@ -339,7 +339,7 @@ class BookingService(
 
       val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
         .filter { it.submittedAt != null }
-        .maxByOrNull { it.submittedAt!! }
+        .maxByOrNull { it.submittedAt!! } as ApprovedPremisesApplicationEntity?
       var newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
         .maxByOrNull { it.createdAt }
 
@@ -392,6 +392,12 @@ class BookingService(
           placementRequest = null,
         ),
       )
+
+      var newestPlacementRequest = newestSubmittedOnlineApplication?.getLatestPlacementRequest()
+      if (newestPlacementRequest != null && newestPlacementRequest?.isWithdrawn != true && newestPlacementRequest?.booking == null) {
+        newestPlacementRequest.booking = booking
+        placementRequestRepository.save(newestPlacementRequest)
+      }
 
       if (associateWithOnlineApplication && user != null) {
         if (!manualBookingsDomainEventsDisabled) {

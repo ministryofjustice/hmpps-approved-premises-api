@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
@@ -201,6 +202,27 @@ class PeopleController(
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
+      )
+    }
+  }
+
+  override fun peopleCrnOasysRoshGet(crn: String): ResponseEntity<OASysRiskOfSeriousHarm> {
+    getOffenderDetailsIgnoringLaoQualification(crn)
+
+    return runBlocking(context = Dispatchers.IO) {
+      val offenceDetailsResult = async {
+        offenderService.getOASysOffenceDetails(crn)
+      }
+
+      val roshResult = async {
+        offenderService.getOASysRoshSummary(crn)
+      }
+
+      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
+      val rosh = getSuccessEntityOrThrow(crn, roshResult.await())
+
+      ResponseEntity.ok(
+        oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
       )
     }
   }

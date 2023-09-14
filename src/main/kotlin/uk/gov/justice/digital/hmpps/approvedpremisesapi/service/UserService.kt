@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -23,11 +25,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformUserRoles
 import java.util.UUID
@@ -82,8 +87,29 @@ class UserService(
     return userRepository.findByDeliusUsername(username.uppercase())
   }
 
-  fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?) =
-    userRepository.findAll(hasQualificationsAndRoles(qualifications, roles, true), Sort.by(Sort.Direction.ASC, "name"))
+  fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?, sortBy: UserSortField?, sortDirection: SortDirection?, page: Int?): Pair<List<UserEntity>, PaginationMetadata?> {
+    var metadata: PaginationMetadata? = null
+    val users: List<UserEntity>
+
+    val pageable = getPageable(sortBy?.value ?: "name", sortDirection, page)
+
+    if (pageable == null) {
+      users = userRepository.findAll(
+        hasQualificationsAndRoles(qualifications, roles, true),
+        Sort.by(Sort.Direction.ASC, "name"),
+      )
+    } else {
+      val response = userRepository.findAll(
+        hasQualificationsAndRoles(qualifications, roles, true),
+        pageable,
+      )
+
+      users = response.content
+      metadata = getMetadata(response, page)
+    }
+
+    return Pair(users, metadata)
+  }
 
   fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
     val isLao = offenderService.isLao(crn)

@@ -32,6 +32,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrict
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -41,8 +43,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.sql.Date
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class ApplicationReportGeneratorTest {
   private val mockOffenderService = mockk<OffenderService>()
@@ -114,12 +120,46 @@ class ApplicationReportGeneratorTest {
     every { mockOffenderService.getInfoForPerson(crn, "username", true) } returns offender
   }
 
+  private fun applicationToApplicationEntityReportRow(applicationEntity: ApprovedPremisesApplicationEntity): ApplicationEntityReportRow {
+    val assessment = applicationEntity.getLatestAssessment()
+    return object : ApplicationEntityReportRow {
+      override fun getId(): String = applicationEntity.id.toString()
+      override fun getCrn(): String = applicationEntity.crn
+      override fun getApplicationAssessedDate(): Timestamp? = offsetDateTimeToTimeStamp(assessment?.submittedAt)
+      override fun getAssessorCru(): String? = assessment?.allocatedToUser?.probationRegion?.name
+      override fun getAssessmentDecision(): String? = assessment?.decision?.name
+      override fun getAssessmentDecisionRationale(): String? = assessment?.rejectionRationale
+      override fun getMappa(): String? = applicationEntity.riskRatings?.mappa?.value?.level
+      override fun getOffenceId(): String = applicationEntity.offenceId
+      override fun getNoms(): String = applicationEntity.nomsNumber!!
+      override fun getPremisesType(): String? = applicationEntity.getLatestPlacementRequest()?.placementRequirements?.apType?.name
+      override fun getReleaseType(): String? = applicationEntity.releaseType
+      override fun getApplicationSubmissionDate(): Timestamp? = offsetDateTimeToTimeStamp(applicationEntity.submittedAt)
+      override fun getReferrerRegion(): String = applicationEntity.createdByUser.probationRegion.name
+      override fun getTargetLocation(): String? = applicationEntity.getLatestPlacementRequest()?.placementRequirements?.postcodeDistrict?.outcode
+      override fun getApplicationWithdrawalReason(): String? = applicationEntity.withdrawalReason
+      override fun getBookingID(): String? = applicationEntity.getLatestBooking()?.id?.toString()
+      override fun getBookingCancellationReason(): String? = applicationEntity.getLatestBooking()?.cancellation?.reason?.name
+      override fun getBookingCancellationDate(): Date? = localDateToSqlDate(applicationEntity.getLatestBooking()?.cancellation?.date)
+      override fun getExpectedArrivalDate(): Date? = localDateToSqlDate(applicationEntity.getLatestBooking()?.arrivalDate)
+      override fun getExpectedDepartureDate(): Date? = localDateToSqlDate(applicationEntity.getLatestBooking()?.departureDate)
+      override fun getPremisesName(): String? = applicationEntity.getLatestBooking()?.premises?.name
+      override fun getActualArrivalDate(): Date? = localDateToSqlDate(applicationEntity.getLatestBooking()?.arrival?.arrivalDate)
+      override fun getActualDepartureDate(): Timestamp? = offsetDateTimeToTimeStamp(applicationEntity.getLatestBooking()?.departure?.dateTime)
+      override fun getDepartureMoveOnCategory(): String? = applicationEntity.getLatestBooking()?.departure?.moveOnCategory?.name
+      override fun getNonArrivalDate(): Date? = localDateToSqlDate(applicationEntity.getLatestBooking()?.nonArrival?.date)
+
+      private fun offsetDateTimeToTimeStamp(date: OffsetDateTime?): Timestamp? = if (date === null) { null } else { Timestamp.valueOf(date.atZoneSameInstant(ZoneOffset.UTC)?.toLocalDateTime()) }
+      private fun localDateToSqlDate(date: LocalDate?): Date? = if (date === null) { null } else { Date.valueOf(date) }
+    }
+  }
+
   @Test
   fun `it returns report data for an unsubmitted application`() {
     val application = applicationFactory.produce()
 
     val result = applicationReportGenerator
-      .createReport(listOf(application), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
+      .createReport(listOf(applicationToApplicationEntityReportRow(application)), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
 
     assertThat(result.count()).isEqualTo(1)
 
@@ -173,7 +213,7 @@ class ApplicationReportGeneratorTest {
     application.assessments = mutableListOf(assessment)
 
     val result = applicationReportGenerator
-      .createReport(listOf(application), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
+      .createReport(listOf(applicationToApplicationEntityReportRow(application)), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
 
     assertThat(result.count()).isEqualTo(1)
 
@@ -214,7 +254,7 @@ class ApplicationReportGeneratorTest {
     application.placementRequests = mutableListOf(placementRequest)
 
     val result = applicationReportGenerator
-      .createReport(listOf(application), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
+      .createReport(listOf(applicationToApplicationEntityReportRow(application)), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
 
     assertThat(result.count()).isEqualTo(1)
 
@@ -253,7 +293,7 @@ class ApplicationReportGeneratorTest {
     application.placementRequests = mutableListOf(placementRequest)
 
     val result = applicationReportGenerator
-      .createReport(listOf(application), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
+      .createReport(listOf(applicationToApplicationEntityReportRow(application)), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
 
     assertThat(result.count()).isEqualTo(1)
 
@@ -307,7 +347,7 @@ class ApplicationReportGeneratorTest {
     application.placementRequests = mutableListOf(placementRequest)
 
     val result = applicationReportGenerator
-      .createReport(listOf(application), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
+      .createReport(listOf(applicationToApplicationEntityReportRow(application)), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
 
     assertThat(result.count()).isEqualTo(1)
 
@@ -352,7 +392,7 @@ class ApplicationReportGeneratorTest {
     application.placementRequests = mutableListOf(placementRequest)
 
     val result = applicationReportGenerator
-      .createReport(listOf(application), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
+      .createReport(listOf(applicationToApplicationEntityReportRow(application)), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
 
     assertThat(result.count()).isEqualTo(1)
 
@@ -400,7 +440,7 @@ class ApplicationReportGeneratorTest {
     application.placementRequests = mutableListOf(placementRequest)
 
     val result = applicationReportGenerator
-      .createReport(listOf(application), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
+      .createReport(listOf(applicationToApplicationEntityReportRow(application)), ApplicationReportProperties(ServiceName.approvedPremises, 2023, 4, "username"))
 
     assertThat(result.count()).isEqualTo(1)
 

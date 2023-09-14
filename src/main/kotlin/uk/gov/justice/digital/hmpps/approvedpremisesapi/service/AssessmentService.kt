@@ -660,6 +660,7 @@ class AssessmentService(
 
     currentAssessment.allocatedToUser = assigneeUser
     currentAssessment.allocatedAt = OffsetDateTime.now()
+    currentAssessment.decision = null
 
     val savedAssessment = assessmentRepository.save(currentAssessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.IN_REVIEW)

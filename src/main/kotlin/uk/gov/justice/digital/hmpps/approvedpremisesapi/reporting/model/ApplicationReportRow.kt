@@ -12,7 +12,7 @@ data class ApplicationReportRow(
   val ageInYears: Int?,
   val gender: String?,
   val mappa: String,
-  val offenceId: String,
+  val offenceId: String?,
   val noms: String?,
   val premisesType: String?,
   val releaseType: String?,
