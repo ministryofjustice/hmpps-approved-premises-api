@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
@@ -20,13 +21,14 @@ class TaskTransformer(
   private val userTransformer: UserTransformer,
   private val risksTransformer: RisksTransformer,
   private val placementRequestTransformer: PlacementRequestTransformer,
+  private val workingDayCountService: WorkingDayCountService,
 ) {
   fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
     id = assessment.id,
     applicationId = assessment.application.id,
     personName = personName,
     crn = assessment.application.crn,
-    dueDate = assessment.createdAt.plusDays(10).toLocalDate(),
+    dueDate = workingDayCountService.addWorkingDays(assessment.createdAt.toLocalDate(), 10),
     allocatedToStaffMember = userTransformer.transformJpaToApi(assessment.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getAssessmentStatus(assessment),
     taskType = TaskType.assessment,
@@ -37,7 +39,7 @@ class TaskTransformer(
     applicationId = placementRequest.application.id,
     personName = personName,
     crn = placementRequest.application.crn,
-    dueDate = placementRequest.createdAt.plusDays(10).toLocalDate(),
+    dueDate = workingDayCountService.addWorkingDays(placementRequest.createdAt.toLocalDate(), 10),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementRequest.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementRequestStatus(placementRequest),
     taskType = TaskType.placementRequest,
@@ -53,7 +55,7 @@ class TaskTransformer(
     applicationId = placementApplication.application.id,
     personName = personName,
     crn = placementApplication.application.crn,
-    dueDate = placementApplication.createdAt.plusDays(10).toLocalDate(),
+    dueDate = workingDayCountService.addWorkingDays(placementApplication.createdAt.toLocalDate(), 10),
     allocatedToStaffMember = userTransformer.transformJpaToApi(placementApplication.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,

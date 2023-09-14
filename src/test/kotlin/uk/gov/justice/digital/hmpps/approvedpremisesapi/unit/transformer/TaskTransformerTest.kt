@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -52,6 +53,7 @@ class TaskTransformerTest {
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
+  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
   private val mockOffenderDetailSummary = mockk<OffenderDetailSummary>()
@@ -106,11 +108,13 @@ class TaskTransformerTest {
     mockUserTransformer,
     mockRisksTransformer,
     mockPlacementRequestTransformer,
+    mockWorkingDayCountService,
   )
 
   @BeforeEach
   fun setup() {
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } returns LocalDate.now().plusDays(2)
   }
 
   @Nested
@@ -127,7 +131,7 @@ class TaskTransformerTest {
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.taskType).isEqualTo(TaskType.assessment)
       assertThat(result.applicationId).isEqualTo(application.id)
-      assertThat(result.dueDate).isEqualTo(LocalDate.parse("2022-12-17"))
+      assertThat(result.dueDate).isEqualTo(LocalDate.now().plusDays(2))
       assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.crn).isEqualTo(assessment.application.crn)
       assertThat(result.allocatedToStaffMember).isEqualTo(mockUser)
@@ -172,6 +176,7 @@ class TaskTransformerTest {
     fun setup() {
       every { mockRisksTransformer.transformTierDomainToApi(application.riskRatings!!.tier) } returns mockTier
       every { mockPlacementRequestTransformer.getReleaseType(application.releaseType) } returns releaseType
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } returns LocalDate.now().plusDays(2)
     }
 
     @Test
@@ -201,6 +206,7 @@ class TaskTransformerTest {
           ),
         ),
       )
+      assertThat(result.dueDate).isEqualTo(LocalDate.now().plusDays(2))
     }
 
     @ParameterizedTest
@@ -244,6 +250,7 @@ class TaskTransformerTest {
       val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.dueDate).isEqualTo(LocalDate.now().plusDays(2))
     }
   }
 
@@ -261,6 +268,7 @@ class TaskTransformerTest {
       every { mockRisksTransformer.transformTierDomainToApi(application.riskRatings!!.tier) } returns mockTier
       every { mockPlacementRequestTransformer.getReleaseType(application.releaseType) } returns releaseType
       every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } returns LocalDate.now().plusDays(2)
     }
 
     @Test
@@ -276,6 +284,7 @@ class TaskTransformerTest {
       assertThat(result.expectedArrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.duration).isEqualTo(placementRequest.duration)
       assertThat(result.placementRequestStatus).isEqualTo(placementRequestStatus)
+      assertThat(result.dueDate).isEqualTo(LocalDate.now().plusDays(2))
     }
 
     @Test
@@ -296,10 +305,12 @@ class TaskTransformerTest {
         .produce()
 
       every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } returns LocalDate.now().plusDays(2)
 
       val result = taskTransformer.transformPlacementRequestToTask(placementRequest, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.dueDate).isEqualTo(LocalDate.now().plusDays(2))
     }
   }
 }
