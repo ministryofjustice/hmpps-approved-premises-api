@@ -793,6 +793,12 @@ class ApplicationService(
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       arrivalDate = OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
+      isRegisteredSexOffender = submitApplication.isRegisteredSexOffender
+      needsAccessibleProperty = submitApplication.needsAccessibleProperty
+      hasHistoryOfArson = submitApplication.hasHistoryOfArson
+      isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted
+      dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate
+      isEligible = submitApplication.isApplicationEligible
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData ?: {})
