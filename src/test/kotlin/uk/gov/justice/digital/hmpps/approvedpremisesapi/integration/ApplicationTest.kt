@@ -139,7 +139,7 @@ class ApplicationTest : IntegrationTestBase() {
           CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications")
+            .uri("/cas2/applications")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .exchange()

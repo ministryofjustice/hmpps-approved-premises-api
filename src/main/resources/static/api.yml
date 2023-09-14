@@ -5,6 +5,26 @@ info:
 servers:
 - url: /
 paths:
+  /cas2/applications:
+    get:
+      tags:
+        - Operations on CAS2 applications
+      summary: List summaries of all CAS2 applications authorised for the logged in user
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises:
     get:
       tags:
