@@ -142,7 +142,7 @@ jobs:
           paths:
             - build
   test:
-    parallelism: 5
+    parallelism: 6
     environment:
       _JAVA_OPTIONS: "-Xmx1g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
