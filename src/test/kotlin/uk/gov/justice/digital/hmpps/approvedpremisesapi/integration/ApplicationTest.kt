@@ -1958,7 +1958,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           webTestClient.post()
-            .uri("/applications/$applicationId/submission")
+            .uri("/cas2/applications/$applicationId/submission")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
