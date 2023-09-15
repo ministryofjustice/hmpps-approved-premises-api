@@ -265,16 +265,6 @@ class ApplicationService(
       return fieldValidationError
     }
 
-    var riskRatings: PersonRisks? = null
-
-    val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
-
-    riskRatings = when (riskRatingsResult) {
-      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> riskRatingsResult.entity
-    }
-
     val createdApplication = applicationRepository.save(
       Cas2ApplicationEntity(
         id = UUID.randomUUID(),
@@ -286,7 +276,6 @@ class ApplicationService(
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
         schemaUpToDate = true,
-        riskRatings = riskRatings,
         assessments = mutableListOf(),
         nomsNumber = offenderDetails.otherIds.nomsNumber,
       ),

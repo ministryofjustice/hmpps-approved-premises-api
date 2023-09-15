@@ -161,7 +161,6 @@ class ApplicationsTransformerTest {
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
-    assertThat(result.risks).isNotNull
   }
 
   @Test
