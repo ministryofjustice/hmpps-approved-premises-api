@@ -19,14 +19,20 @@ class InmateDetailsCacheRefreshWorker(
   override fun work(checkShouldStop: () -> Boolean) {
     val distinctNomsNumbers = (applicationRepository.getDistinctNomsNumbers() + bookingRepository.getDistinctNomsNumbers()).distinct()
 
+    logConspicuously("${distinctNomsNumbers.count()} cache fields to update")
+
     if (loggingEnabled) { log.info("Got $distinctNomsNumbers to refresh for Inmate Details") }
 
     distinctNomsNumbers.forEach {
+      logConspicuously("Current NOMS number: $it")
+
       if (checkShouldStop()) return
 
       interruptableSleep(50)
 
       val cacheEntryStatus = prisonsApiClient.getInmateDetailsCacheEntryStatus(it)
+
+      logConspicuously("Cache status for $it: $cacheEntryStatus")
 
       if (cacheEntryStatus == PreemptiveCacheEntryStatus.EXISTS) {
         if (loggingEnabled) {
@@ -37,6 +43,9 @@ class InmateDetailsCacheRefreshWorker(
       }
 
       val prisonsApiResult = prisonsApiClient.getInmateDetailsWithCall(it)
+
+      logConspicuously("Upstream API response: $prisonsApiResult")
+
       if (prisonsApiResult is ClientResult.Failure.StatusCode) {
         if (!prisonsApiResult.isPreemptivelyCachedResponse) {
           log.error("Unable to refresh Inmate Details for $it, response status: ${prisonsApiResult.status}")
@@ -55,5 +64,9 @@ class InmateDetailsCacheRefreshWorker(
     }
 
     interruptableSleep(delayMs)
+  }
+
+  private fun logConspicuously(message: String) {
+    log.error("[CONSPICUOUS] $message")
   }
 }
