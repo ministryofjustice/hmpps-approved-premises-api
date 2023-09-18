@@ -127,29 +127,15 @@ class ApplicationReportsTest : IntegrationTestBase() {
 
                 assertThat(actual.size).isEqualTo(4)
 
-                assertThat(
-                  actual.any { reportRow ->
-                    assertApplicationRowHasCorrectData(applicationWithBooking.id, reportRow, userEntity, hasBooking = true)
-                  },
-                )
+                val applicationRowWithBooking = actual.find { reportRow -> reportRow.id == applicationWithBooking.id.toString() }!!
+                val applicationRowWithDepartedBooking = actual.find { reportRow -> reportRow.id == applicationWithDepartedBooking.id.toString() }!!
+                val applicationRowWithCancelledBooking = actual.find { reportRow -> reportRow.id == applicationWithCancelledBooking.id.toString() }!!
+                val applicationRowWithNonArrivedBooking = actual.find { reportRow -> reportRow.id == applicationWithNonArrivedBooking.id.toString() }!!
 
-                assertThat(
-                  actual.any { reportRow ->
-                    assertApplicationRowHasCorrectData(applicationWithDepartedBooking.id, reportRow, userEntity, hasDeparture = true)
-                  },
-                )
-
-                assertThat(
-                  actual.any { reportRow ->
-                    assertApplicationRowHasCorrectData(applicationWithCancelledBooking.id, reportRow, userEntity, hasCancellation = true)
-                  },
-                )
-
-                assertThat(
-                  actual.any { reportRow ->
-                    assertApplicationRowHasCorrectData(applicationWithNonArrivedBooking.id, reportRow, userEntity, hasNonArrival = true)
-                  },
-                )
+                assertApplicationRowHasCorrectData(applicationWithBooking.id, applicationRowWithBooking, userEntity, hasBooking = true)
+                assertApplicationRowHasCorrectData(applicationWithDepartedBooking.id, applicationRowWithDepartedBooking, userEntity, hasBooking = true)
+                assertApplicationRowHasCorrectData(applicationWithCancelledBooking.id, applicationRowWithCancelledBooking, userEntity, hasBooking = true)
+                assertApplicationRowHasCorrectData(applicationWithNonArrivedBooking.id, applicationRowWithNonArrivedBooking, userEntity, hasBooking = true)
               }
           }
         }
@@ -157,61 +143,54 @@ class ApplicationReportsTest : IntegrationTestBase() {
     }
   }
 
-  private fun assertApplicationRowHasCorrectData(applicationId: UUID, reportRow: ApplicationReportRow, userEntity: UserEntity, hasBooking: Boolean = true, hasCancellation: Boolean = false, hasDeparture: Boolean = false, hasNonArrival: Boolean = false): Boolean {
+  private fun assertApplicationRowHasCorrectData(applicationId: UUID, reportRow: ApplicationReportRow, userEntity: UserEntity, hasBooking: Boolean = true, hasCancellation: Boolean = false, hasDeparture: Boolean = false, hasNonArrival: Boolean = false) {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val assessment = application.getLatestAssessment()!!
     val placementRequest = application.getLatestPlacementRequest()!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
 
-    var hasCorrectData = reportRow.id == application.id.toString() &&
-      reportRow.crn == application.crn &&
-      reportRow.applicationAssessedDate == assessment.submittedAt!!.toLocalDate() &&
-      reportRow.assessorCru == assessment.allocatedToUser!!.probationRegion.name &&
-      reportRow.assessmentDecision == assessment.rejectionRationale &&
-      reportRow.assessmentDecisionRationale == assessment.rejectionRationale &&
-      reportRow.ageInYears == Period.between(offenderDetailSummary.dateOfBirth, LocalDate.now()).years &&
-      reportRow.gender == offenderDetailSummary.gender &&
-      reportRow.mappa == application.riskRatings!!.mappa.value!!.level &&
-      reportRow.offenceId == application.offenceId &&
-      reportRow.noms == application.nomsNumber &&
-      reportRow.premisesType == placementRequest.placementRequirements.apType.name &&
-      reportRow.releaseType == application.releaseType &&
-      reportRow.applicationSubmissionDate == application.submittedAt!!.toLocalDate() &&
-      reportRow.referrerRegion == application.createdByUser.probationRegion.name &&
-      reportRow.targetLocation == placementRequest.placementRequirements.postcodeDistrict.outcode &&
-      reportRow.applicationWithdrawalReason == application.withdrawalReason
+    assertThat(reportRow.crn).isEqualTo(application.crn)
+    assertThat(reportRow.applicationAssessedDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
+    assertThat(reportRow.assessorCru).isEqualTo(assessment.allocatedToUser!!.probationRegion.name)
+    assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
+    assertThat(reportRow.assessmentDecisionRationale).isEqualTo(assessment.rejectionRationale)
+    assertThat(reportRow.ageInYears).isEqualTo(Period.between(offenderDetailSummary.dateOfBirth, LocalDate.now()).years)
+    assertThat(reportRow.gender).isEqualTo(offenderDetailSummary.gender)
+    assertThat(reportRow.mappa).isEqualTo(application.riskRatings!!.mappa.value!!.level)
+    assertThat(reportRow.offenceId).isEqualTo(application.offenceId)
+    assertThat(reportRow.noms).isEqualTo(application.nomsNumber)
+    assertThat(reportRow.premisesType).isEqualTo(placementRequest.placementRequirements.apType.name)
+    assertThat(reportRow.releaseType).isEqualTo(application.releaseType)
+    assertThat(reportRow.applicationSubmissionDate).isEqualTo(application.submittedAt!!.toLocalDate())
+    assertThat(reportRow.referrerRegion).isEqualTo(application.createdByUser.probationRegion.name)
+    assertThat(reportRow.targetLocation).isEqualTo(placementRequest.placementRequirements.postcodeDistrict.outcode)
+    assertThat(reportRow.applicationWithdrawalReason).isEqualTo(application.withdrawalReason)
 
     if (hasBooking) {
       val booking = placementRequest.booking!!
-      hasCorrectData = hasCorrectData &&
-        reportRow.bookingID == booking.id.toString() &&
-        reportRow.expectedArrivalDate == booking.arrivalDate &&
-        reportRow.expectedDepartureDate == booking.departureDate &&
-        reportRow.premisesName == booking.premises.name
+      assertThat(reportRow.bookingID).isEqualTo(booking.id.toString())
+      assertThat(reportRow.expectedArrivalDate).isEqualTo(booking.arrivalDate)
+      assertThat(reportRow.expectedDepartureDate).isEqualTo(booking.departureDate)
+      assertThat(reportRow.premisesName).isEqualTo(booking.premises.name)
     }
 
     if (hasCancellation) {
       val cancellation = placementRequest.booking!!.cancellation!!
-      hasCorrectData = hasCorrectData &&
-        reportRow.bookingCancellationDate == cancellation.date
+      assertThat(reportRow.bookingCancellationDate).isEqualTo(cancellation.date)
     }
 
     if (hasDeparture) {
       val arrival = placementRequest.booking!!.arrival!!
       val departure = placementRequest.booking!!.departure!!
-      hasCorrectData = hasCorrectData &&
-        reportRow.actualArrivalDate == arrival.arrivalDate &&
-        reportRow.actualDepartureDate == departure.dateTime.toLocalDate() &&
-        reportRow.departureMoveOnCategory == departure.moveOnCategory.name
+      assertThat(reportRow.actualArrivalDate).isEqualTo(arrival.arrivalDate)
+      assertThat(reportRow.actualDepartureDate).isEqualTo(departure.dateTime.toLocalDate())
+      assertThat(reportRow.departureMoveOnCategory).isEqualTo(departure.moveOnCategory.name)
     }
 
     if (hasNonArrival) {
       val nonArrival = placementRequest.booking!!.nonArrival!!
-      hasCorrectData = hasCorrectData &&
-        reportRow.nonArrivalDate == nonArrival.date
+      assertThat(reportRow.nonArrivalDate).isEqualTo(nonArrival.date)
     }
-
-    return hasCorrectData
   }
 
   private fun getOffenderDetailForApplication(application: ApplicationEntity, deliusUsername: String): OffenderDetailSummary {
