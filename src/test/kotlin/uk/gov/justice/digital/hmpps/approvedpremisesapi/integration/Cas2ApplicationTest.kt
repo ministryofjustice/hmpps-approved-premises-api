@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
@@ -20,6 +21,35 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2ApplicationTest : IntegrationTestBase() {
+  @Nested
+  inner class MissingJwt {
+    @Test
+    fun `Get all applications without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas2/applications")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get single application without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas2/applications/9b785e59-b85c-4be0-b271-d9ac287684b6")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Create new application without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas2/applications")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+  }
 
   @Test
   fun `Get all applications returns 200 with correct body - when the service is CAS2`() {
