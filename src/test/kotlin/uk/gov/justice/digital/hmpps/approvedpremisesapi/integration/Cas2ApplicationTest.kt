@@ -51,58 +51,61 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get all applications returns 200 with correct body - when the service is CAS2`() {
-    `Given a User` { userEntity, jwt ->
-      `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          cas2ApplicationJsonSchemaRepository.deleteAll()
+  @Nested
+  inner class GetToIndex {
+    @Test
+    fun `Get all applications returns 200 with correct body - when the service is CAS2`() {
+      `Given a User` { userEntity, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
 
-          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
+            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
 
-          val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(userEntity)
-            withCrn(offenderDetails.otherIds.crn)
-            withData("{}")
-          }
+            val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+            }
 
-          val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(otherUser)
-            withCrn(offenderDetails.otherIds.crn)
-            withData("{}")
-          }
+            val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+            }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
-          val rawResponseBody = webTestClient.get()
-            .uri("/cas2/applications")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
 
-          val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
-          Assertions.assertThat(responseBody).anyMatch {
-            cas2ApplicationEntity.id == it.id &&
-              cas2ApplicationEntity.crn == it.person.crn &&
-              cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-              cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
-              cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
-          }
+            Assertions.assertThat(responseBody).anyMatch {
+              cas2ApplicationEntity.id == it.id &&
+                cas2ApplicationEntity.crn == it.person.crn &&
+                cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
+                cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+            }
 
-          Assertions.assertThat(responseBody).noneMatch {
-            otherCas2ApplicationEntity.id == it.id
+            Assertions.assertThat(responseBody).noneMatch {
+              otherCas2ApplicationEntity.id == it.id
+            }
           }
         }
       }
