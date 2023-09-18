@@ -294,9 +294,6 @@ class Cas2ApplicationEntity(
   schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
   nomsNumber: String?,
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
-  @Convert(disableConversion = true)
-  val riskRatings: PersonRisks?,
 ) : ApplicationEntity(
   id,
   crn,

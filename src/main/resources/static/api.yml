@@ -5224,11 +5224,6 @@ components:
         - $ref: '#/components/schemas/Application'
         - type: object
           properties:
-            arrivalDate:
-              type: string
-              format: date-time
-            risks:
-              $ref: '#/components/schemas/PersonRisks'
             createdByUserId:
               type: string
               format: uuid

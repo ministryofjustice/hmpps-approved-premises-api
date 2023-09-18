@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -27,7 +26,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
-  private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
@@ -85,7 +83,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     submittedAt = this.submittedAt(),
     schemaUpToDate = false,
     assessments = this.assessments(),
-    riskRatings = this.riskRatings(),
     nomsNumber = this.nomsNumber(),
   )
 }

@@ -96,14 +96,6 @@ class ApplicationsTransformer(
         submittedAt = jpa.submittedAt?.toInstant(),
         data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
         document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-        risks = if (jpa.riskRatings != null) {
-          risksTransformer.transformDomainToApi(
-            jpa.riskRatings!!,
-            jpa.crn,
-          )
-        } else {
-          null
-        },
         status = getStatus(jpa, latestAssessment),
         type = "CAS2",
       )
