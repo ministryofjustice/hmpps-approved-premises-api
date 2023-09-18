@@ -661,7 +661,13 @@ class UsersTest : IntegrationTestBase() {
     fun `Updating a user returns OK with correct body when user has one of roles CAS1_ADMIN, CAS1_WORKFLOW_MANAGER`(role: UserRole) {
       val id = UUID.randomUUID()
       val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
-      val roles = listOf(ApprovedPremisesUserRole.assessor, ApprovedPremisesUserRole.reportViewer)
+      val roles = listOf(
+        ApprovedPremisesUserRole.assessor,
+        ApprovedPremisesUserRole.reportViewer,
+        ApprovedPremisesUserRole.excludedFromAssessAllocation,
+        ApprovedPremisesUserRole.excludedFromMatchAllocation,
+        ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation,
+      )
       val region = probationRegionEntityFactory.produceAndPersist {
         withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
       }
@@ -689,7 +695,11 @@ class UsersTest : IntegrationTestBase() {
           .jsonPath(".qualifications").isArray
           .jsonPath(".qualifications[0]").isEqualTo("emergency")
           .jsonPath(".roles").isArray
-          .jsonPath(".roles[0]").isEqualTo("assessor")
+          .jsonPath(".roles[0]").isEqualTo(ApprovedPremisesUserRole.assessor.value)
+          .jsonPath(".roles[1]").isEqualTo(ApprovedPremisesUserRole.reportViewer.value)
+          .jsonPath(".roles[2]").isEqualTo(ApprovedPremisesUserRole.excludedFromAssessAllocation.value)
+          .jsonPath(".roles[3]").isEqualTo(ApprovedPremisesUserRole.excludedFromMatchAllocation.value)
+          .jsonPath(".roles[4]").isEqualTo(ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation.value)
       }
     }
   }
