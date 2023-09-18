@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import kotlinx.datetime.toLocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
@@ -38,7 +39,7 @@ class ApplicationReportGenerator(
         mappa = this.getMappa() ?: "Not found",
         offenceId = this.getOffenceId(),
         noms = this.getNoms(),
-        premisesType = this.getPremisesType()?.name,
+        premisesType = getPremisesType(this),
         releaseType = this.getReleaseType(),
         sentenceLengthInMonths = null,
         applicationSubmissionDate = this.getApplicationSubmissionDate()?.toLocalDateTime()?.toLocalDate(),
@@ -68,5 +69,10 @@ class ApplicationReportGenerator(
       is PersonInfoResult.Success -> personInfo
       else -> null
     }
+  }
+
+  private fun getPremisesType(applicationEntityReportRow: ApplicationEntityReportRow): String? {
+    val index = applicationEntityReportRow.getPremisesTypeIndex()?.toInt()
+    return if (index != null) (ApType.entries[index].name) else null
   }
 }

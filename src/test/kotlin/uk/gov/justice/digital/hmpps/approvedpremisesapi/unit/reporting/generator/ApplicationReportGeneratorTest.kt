@@ -133,7 +133,6 @@ class ApplicationReportGeneratorTest {
       override fun getOffenceId(): String = applicationEntity.offenceId
       override fun getNoms(): String = applicationEntity.nomsNumber!!
       override fun getPremisesTypeIndex(): String? = applicationEntity.getLatestPlacementRequest()?.placementRequirements?.apType?.ordinal?.toString()
-      override fun getPremisesType(): ApType? = applicationEntity.getLatestPlacementRequest()?.placementRequirements?.apType
       override fun getReleaseType(): String? = applicationEntity.releaseType
       override fun getApplicationSubmissionDate(): Timestamp? = offsetDateTimeToTimeStamp(applicationEntity.submittedAt)
       override fun getReferrerRegion(): String = applicationEntity.createdByUser.probationRegion.name
