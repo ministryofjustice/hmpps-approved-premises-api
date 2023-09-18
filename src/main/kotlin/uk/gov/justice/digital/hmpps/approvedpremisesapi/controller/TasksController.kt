@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -82,29 +84,29 @@ class TasksController(
     }
   }
 
-  override fun tasksGet(): ResponseEntity<List<Task>> {
+  override fun tasksGet(): ResponseEntity<List<Task>> = runBlocking {
     val user = userService.getUserForRequest()
     val tasks = mutableListOf<Task>()
 
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
-      tasks += getPlacementRequestTasks(placementRequestService.getVisiblePlacementRequestsForUser(user), user)
+      async { tasks += getPlacementRequestTasks(placementRequestService.getVisiblePlacementRequestsForUser(user), user) }
 
-      tasks += getPlacementApplicationTasks(placementApplicationService.getVisiblePlacementApplicationsForUser(user), user)
+      async { tasks += getPlacementApplicationTasks(placementApplicationService.getVisiblePlacementApplicationsForUser(user), user) }
     }
 
-    return ResponseEntity.ok(tasks)
+    return@runBlocking ResponseEntity.ok(tasks)
   }
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
-    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
       taskType.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
     val transformedTask: Task
     var transformedAllocatableUsers: List<User>
 
-    when (taskType) {
+    when (type) {
       TaskType.assessment -> {
         val assessment = extractEntityFromAuthorisableActionResult(
           assessmentService.getAssessmentForUser(user, id),
@@ -157,7 +159,7 @@ class TasksController(
   ): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
 
-    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
       taskType.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
@@ -167,7 +169,7 @@ class TasksController(
       else -> body.userId
     }
 
-    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, taskType, userId, id)) {
+    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, type, userId, id)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> authorisationResult.entity
@@ -187,11 +189,11 @@ class TasksController(
   override fun tasksTaskTypeIdAllocationsDelete(id: UUID, taskType: String): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
       taskType.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
-    val validationResult = when (val authorisationResult = taskService.deallocateTask(user, taskType, id)) {
+    val validationResult = when (val authorisationResult = taskService.deallocateTask(user, type, id)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> authorisationResult.entity
@@ -234,36 +236,39 @@ class TasksController(
     )
   }
 
-  private fun getAssessmentTasks(assessments: List<AssessmentEntity>, user: UserEntity) = assessments.map {
+  private suspend fun getAssessmentTasks(assessments: List<AssessmentEntity>, user: UserEntity) = assessments.map {
     getAssessmentTask(it, user)
   }
 
-  private fun getPlacementRequestTasks(placementRequests: List<PlacementRequestEntity>, user: UserEntity) = placementRequests.map { getPlacementRequestTask(it, user) }
+  private suspend fun getPlacementRequestTasks(placementRequests: List<PlacementRequestEntity>, user: UserEntity) = placementRequests.map { getPlacementRequestTask(it, user) }
 
-  private fun getPlacementApplicationTasks(placementApplications: List<PlacementApplicationEntity>, user: UserEntity) = placementApplications.map {
+  private suspend fun getPlacementApplicationTasks(placementApplications: List<PlacementApplicationEntity>, user: UserEntity) = placementApplications.map {
     getPlacementApplicationTask(it, user)
   }
 
-  private fun responseForAllTypes(user: UserEntity): ResponseEntity<List<Task>> {
+  private fun responseForAllTypes(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
     val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
     val placementRequestTasks = getPlacementRequestTasks(placementRequestService.getAllReallocatable(), user)
     val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
-
-    return ResponseEntity.ok(assessmentTasks + placementRequestTasks + placementApplicationTasks)
+    val tasks: MutableList<Task> = ArrayList()
+    async { tasks.addAll(assessmentTasks) }
+    async { tasks.addAll(placementRequestTasks) }
+    async { tasks.addAll(placementApplicationTasks) }
+    return@runBlocking ResponseEntity.ok(tasks)
   }
 
-  private fun assessmentTasksResponse(user: UserEntity): ResponseEntity<List<Task>> {
+  private fun assessmentTasksResponse(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
     val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
-    return ResponseEntity.ok(assessmentTasks)
+    return@runBlocking ResponseEntity.ok(assessmentTasks)
   }
 
-  private fun placementRequestTasks(user: UserEntity): ResponseEntity<List<Task>> {
+  private fun placementRequestTasks(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
     val placementRequestTasks = getPlacementRequestTasks(placementRequestService.getAllReallocatable(), user)
-    return ResponseEntity.ok(placementRequestTasks)
+    return@runBlocking ResponseEntity.ok(placementRequestTasks)
   }
 
-  private fun placementApplicationTasks(user: UserEntity): ResponseEntity<List<Task>> {
+  private fun placementApplicationTasks(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
     val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
-    return ResponseEntity.ok(placementApplicationTasks)
+    return@runBlocking ResponseEntity.ok(placementApplicationTasks)
   }
 }
