@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
@@ -115,6 +116,84 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               otherCas2ApplicationEntity.id == it.id
             }
           }
+        }
+      }
+    }
+
+    @Test
+    fun `Get list of applications returns 500 when a person cannot be found`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+        },
+      ) { userEntity, jwt ->
+        val crn = "X1234"
+
+        produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+        loadPreemptiveCacheForOffenderDetails(crn)
+
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
+
+        webTestClient.get()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+      }
+    }
+
+    @Test
+    fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+        },
+      ) { userEntity, jwt ->
+        val crn = "X1234"
+
+        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+
+        val offenderDetails = OffenderDetailsSummaryFactory()
+          .withCrn(crn)
+          .withNomsNumber("ABC123")
+          .produce()
+
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+
+        CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+        loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
+        PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+        loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+
+        val rawResponseBody = webTestClient.get()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody =
+          objectMapper.readValue(
+            rawResponseBody,
+            object :
+              TypeReference<List<Cas2ApplicationSummary>>() {},
+          )
+
+        Assertions.assertThat(responseBody).matches {
+          val person = it[0].person as FullPerson
+
+          application.id == it[0].id &&
+            application.crn == person.crn &&
+            person.nomsNumber == null &&
+            person.status == FullPerson.Status.unknown &&
+            person.prisonName == null
         }
       }
     }
