@@ -174,7 +174,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
       reportRow.mappa == application.riskRatings!!.mappa.value!!.level &&
       reportRow.offenceId == application.offenceId &&
       reportRow.noms == application.nomsNumber &&
-      reportRow.premisesType == placementRequest.placementRequirements.apType.toString() &&
+      reportRow.premisesType == placementRequest.placementRequirements.apType.name &&
       reportRow.releaseType == application.releaseType &&
       reportRow.applicationSubmissionDate == application.submittedAt!!.toLocalDate() &&
       reportRow.referrerRegion == application.createdByUser.probationRegion.name &&
