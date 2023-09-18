@@ -19,7 +19,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       assessor_region.name as assessorCru,
       assessment.decision as assessmentDecision,
       assessment.rejection_rationale as assessmentDecisionRationale,
-      CAST(ap_application.risk_ratings -> 'mappa' -> 'value' -> 'level' as TEXT) as mappa,
+      CAST(ap_application.risk_ratings -> 'mappa' -> 'value' ->> 'level' as TEXT) as mappa,
       ap_application.offence_id as offenceId,
       application.noms_number as noms,
       requirements.ap_type as premisesTypeIndex,
