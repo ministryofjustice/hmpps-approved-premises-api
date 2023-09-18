@@ -38,7 +38,7 @@ class ApplicationReportGenerator(
         mappa = this.getMappa() ?: "Not found",
         offenceId = this.getOffenceId(),
         noms = this.getNoms(),
-        premisesType = this.getPremisesType(),
+        premisesType = this.getPremisesType()?.name,
         releaseType = this.getReleaseType(),
         sentenceLengthInMonths = null,
         applicationSubmissionDate = this.getApplicationSubmissionDate()?.toLocalDateTime()?.toLocalDate(),

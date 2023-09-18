@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import java.sql.Date
 import java.sql.Timestamp
 import java.util.UUID
@@ -21,7 +22,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       CAST(ap_application.risk_ratings -> 'mappa' -> 'value' -> 'level' as TEXT) as mappa,
       ap_application.offence_id as offenceId,
       application.noms_number as noms,
-      requirements.ap_type as premisesType,
+      requirements.ap_type as premisesTypeIndex,
       ap_application.release_type as releaseType,
       application.submitted_at as applicationSubmissionDate,
       referrer_region.name as referrerRegion,
@@ -78,7 +79,12 @@ interface ApplicationEntityReportRow {
   fun getMappa(): String?
   fun getOffenceId(): String
   fun getNoms(): String
-  fun getPremisesType(): String?
+  fun getPremisesTypeIndex(): String?
+  fun getPremisesType(): ApType? {
+    val index = this.getPremisesTypeIndex()?.toInt()
+    return if (index != null) (ApType.entries[index]) else null
+  }
+
   fun getReleaseType(): String?
   fun getApplicationSubmissionDate(): Timestamp?
   fun getReferrerRegion(): String?
