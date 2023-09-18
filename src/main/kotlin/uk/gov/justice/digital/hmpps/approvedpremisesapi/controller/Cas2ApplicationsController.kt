@@ -88,7 +88,7 @@ class Cas2ApplicationsController(
     }
 
     return ResponseEntity
-      .created(URI.create("/applications/${application.id}"))
+      .created(URI.create("/cas2/applications/${application.id}"))
       .body(applicationsTransformer.transformJpaToApi(application, personInfo))
   }
 

@@ -326,36 +326,40 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
+  @Nested
+  inner class PostToCreate {
+    @Test
+    fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val applicationSchema =
+            cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
 
-        val result = webTestClient.post()
-          .uri("/cas2/applications")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.cas2.value)
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(Cas2Application::class.java)
+          val result = webTestClient.post()
+            .uri("/cas2/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Cas2Application::class.java)
 
-        Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
+          Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/cas2/applications/.+"))
+          }
 
-        Assertions.assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id
+          Assertions.assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn &&
+              it.schemaVersion == applicationSchema.id
+          }
         }
       }
     }
