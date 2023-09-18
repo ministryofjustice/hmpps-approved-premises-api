@@ -363,6 +363,35 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Create new application returns 404 when a person cannot be found`() {
+      `Given a User` { userEntity, jwt ->
+        val crn = "X1234"
+
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+        loadPreemptiveCacheForOffenderDetails(crn)
+
+        cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        webTestClient.post()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = crn,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+      }
+    }
   }
 
   @Test
