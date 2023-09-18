@@ -3,9 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.ninjasquad.springmockk.SpykBean
+import io.mockk.clearMocks
+import io.mockk.every
 import org.assertj.core.api.Assertions
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
@@ -24,12 +29,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2ApplicationTest : IntegrationTestBase() {
+  @SpykBean
+  lateinit var realApplicationRepository: ApplicationRepository
+
+  @AfterEach
+  fun afterEach() {
+    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
+    // Manually clearing after each test seems to fix this.
+    clearMocks(realApplicationRepository)
+  }
+
   @Nested
   inner class MissingJwt {
     @Test
@@ -519,6 +537,90 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
           }
+        }
+      }
+    }
+
+    @Test
+    fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(
+            listOf(
+              StaffUserTeamMembershipFactory().produce(),
+            ),
+          )
+        },
+      ) { submittingUser, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory
+            .produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                """
+            {
+              "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+              "${"\$id"}": "https://example.com/product.schema.json",
+              "title": "Thing",
+              "description": "A thing",
+              "type": "object",
+              "properties": {}
+              },
+              "required": [  ]
+            }
+          """,
+              )
+            }
+
+          cas2ApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
+                {}
+              """,
+            )
+          }
+
+          every { realApplicationRepository.save(any()) } answers {
+            Thread.sleep(1000)
+            it.invocation.args[0] as ApplicationEntity
+          }
+
+          val responseStatuses = mutableListOf<HttpStatus>()
+
+          (1..10).map {
+            val thread = Thread {
+              webTestClient.post()
+                .uri("/cas2/applications/$applicationId/submission")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  SubmitCas2Application(
+                    translatedDocument = {},
+                    type = "CAS2",
+                  ),
+                )
+                .exchange()
+                .returnResult<String>()
+                .consumeWith {
+                  synchronized(responseStatuses) {
+                    responseStatuses += it.status
+                  }
+                }
+            }
+
+            thread.start()
+
+            thread
+          }.forEach(Thread::join)
+
+          Assertions.assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
+          Assertions.assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
         }
       }
     }
