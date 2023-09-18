@@ -1259,6 +1259,22 @@ class ApplicationServiceTest {
       },
     )
 
+    private val submitTemporaryAccommodationApplicationWithMiReportingData = SubmitTemporaryAccommodationApplication(
+      translatedDocument = {},
+      type = "CAS3",
+      arrivalDate = LocalDate.now(),
+      summaryData = {
+        val num = 50
+        val text = "Hello world!"
+      },
+      isRegisteredSexOffender = true,
+      needsAccessibleProperty = true,
+      hasHistoryOfArson = true,
+      isDutyToReferSubmitted = true,
+      dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
+      isApplicationEligible = true,
+    )
+
     private val submitCas2Application = SubmitCas2Application(
       translatedDocument = {},
       type = "CAS2",
@@ -1268,6 +1284,7 @@ class ApplicationServiceTest {
     fun setup() {
       every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
       every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
       every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
     }
 
@@ -1646,6 +1663,54 @@ class ApplicationServiceTest {
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplication.summaryData!!) }
+      verify { mockDomainEventService wasNot called }
+    }
+
+    @Test
+    fun `submitTemporaryAccommodationApplication records MI reporting data when supplied`() {
+      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .withProbationRegion(user.probationRegion)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every {
+        mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!)
+      } returns TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
+        .produce()
+
+      val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplicationWithMiReportingData)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as TemporaryAccommodationApplicationEntity
+      assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(submitTemporaryAccommodationApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC))
+      assertThat(persistedApplication.isRegisteredSexOffender).isEqualTo(true)
+      assertThat(persistedApplication.needsAccessibleProperty).isEqualTo(true)
+      assertThat(persistedApplication.hasHistoryOfArson).isEqualTo(true)
+      assertThat(persistedApplication.isDutyToReferSubmitted).isEqualTo(true)
+      assertThat(persistedApplication.dutyToReferSubmissionDate).isEqualTo(LocalDate.now().minusDays(7))
+      assertThat(persistedApplication.isEligible).isEqualTo(true)
+
+      verify { mockApplicationRepository.save(any()) }
+      verify(exactly = 1) { mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!) }
       verify { mockDomainEventService wasNot called }
     }
 

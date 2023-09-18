@@ -37,6 +37,12 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
+  private var isRegisteredSexOffender: Yielded<Boolean?> = { null }
+  private var needsAccessibleProperty: Yielded<Boolean?> = { null }
+  private var hasHistoryOfArson: Yielded<Boolean?> = { null }
+  private var isDutyToReferSubmitted: Yielded<Boolean?> = { null }
+  private var dutyToReferSubmissionDate: Yielded<LocalDate?> = { null }
+  private var isEligible: Yielded<Boolean?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -110,6 +116,30 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.arrivalDate = { arrivalDate?.let { OffsetDateTime.of(it, LocalTime.MIDNIGHT, ZoneOffset.UTC) } }
   }
 
+  fun withIsRegisteredSexOffender(isRegisteredSexOffender: Boolean?) = apply {
+    this.isRegisteredSexOffender = { isRegisteredSexOffender }
+  }
+
+  fun withNeedsAccessibleProperty(needsAccessibleProperty: Boolean?) = apply {
+    this.needsAccessibleProperty = { needsAccessibleProperty }
+  }
+
+  fun withHasHistoryOfArson(hasHistoryOfArson: Boolean?) = apply {
+    this.hasHistoryOfArson = { hasHistoryOfArson }
+  }
+
+  fun withIsDutyToReferSubmitted(isDutyToReferSubmitted: Boolean?) = apply {
+    this.isDutyToReferSubmitted = { isDutyToReferSubmitted }
+  }
+
+  fun withDutyToReferSubmissionDate(dutyToReferSubmissionDate: LocalDate?) = apply {
+    this.dutyToReferSubmissionDate = { dutyToReferSubmissionDate }
+  }
+
+  fun withIsEligible(isEligible: Boolean?) = apply {
+    this.isEligible = { isEligible }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -128,5 +158,11 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
     nomsNumber = this.nomsNumber(),
     arrivalDate = this.arrivalDate(),
+    isRegisteredSexOffender = this.isRegisteredSexOffender(),
+    needsAccessibleProperty = this.needsAccessibleProperty(),
+    hasHistoryOfArson = this.hasHistoryOfArson(),
+    isDutyToReferSubmitted = this.isDutyToReferSubmitted(),
+    dutyToReferSubmissionDate = this.dutyToReferSubmissionDate(),
+    isEligible = this.isEligible(),
   )
 }

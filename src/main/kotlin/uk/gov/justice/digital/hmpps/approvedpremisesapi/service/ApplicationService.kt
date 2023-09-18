@@ -352,6 +352,12 @@ class ApplicationService(
             probationRegion = user.probationRegion,
             nomsNumber = offenderDetails.otherIds.nomsNumber,
             arrivalDate = null,
+            isRegisteredSexOffender = null,
+            needsAccessibleProperty = null,
+            hasHistoryOfArson = null,
+            isDutyToReferSubmitted = null,
+            dutyToReferSubmissionDate = null,
+            isEligible = null,
           ),
         )
 
@@ -793,6 +799,12 @@ class ApplicationService(
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       arrivalDate = OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
+      isRegisteredSexOffender = submitApplication.isRegisteredSexOffender
+      needsAccessibleProperty = submitApplication.needsAccessibleProperty
+      hasHistoryOfArson = submitApplication.hasHistoryOfArson
+      isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted
+      dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate
+      isEligible = submitApplication.isApplicationEligible
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData ?: {})

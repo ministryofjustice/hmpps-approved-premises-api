@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Convert
@@ -336,6 +337,12 @@ class TemporaryAccommodationApplicationEntity(
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
   var arrivalDate: OffsetDateTime?,
+  var isRegisteredSexOffender: Boolean?,
+  var needsAccessibleProperty: Boolean?,
+  var hasHistoryOfArson: Boolean?,
+  var isDutyToReferSubmitted: Boolean?,
+  var dutyToReferSubmissionDate: LocalDate?,
+  var isEligible: Boolean?,
 ) : ApplicationEntity(
   id,
   crn,
