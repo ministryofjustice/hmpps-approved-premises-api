@@ -5444,11 +5444,14 @@ components:
             arrivalDate:
               type: string
               format: date-time
+            offenceId:
+              type: string
           required:
             - createdByUserId
             - schemaVersion
             - outdatedSchema
             - status
+            - offenceId
     ApplicationSummary:
       type: object
       properties:

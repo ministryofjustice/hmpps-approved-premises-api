@@ -86,6 +86,7 @@ class ApplicationsTransformer(
         },
         status = getStatus(jpa, latestAssessment),
         type = "CAS3",
+        offenceId = jpa.offenceId,
       )
 
       is DomainCas2ApplicationEntity -> Cas2Application(
