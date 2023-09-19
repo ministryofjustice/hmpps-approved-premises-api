@@ -10,13 +10,6 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Creates a CAS2 application
-      parameters:
-        - name: createWithRisks
-          in: query
-          required: false
-          description: Instructs the API to create and return risk information from the OASys API (defaults to true)
-          schema:
-            type: boolean
       requestBody:
         description: Information to create a blank application with
         content:

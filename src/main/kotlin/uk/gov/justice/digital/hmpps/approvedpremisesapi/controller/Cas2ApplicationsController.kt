@@ -46,7 +46,7 @@ class Cas2ApplicationsController(
   }
 
   @Transactional
-  override fun cas2ApplicationsPost(body: NewApplication, createWithRisks: Boolean?):
+  override fun cas2ApplicationsPost(body: NewApplication):
     ResponseEntity<Application> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
