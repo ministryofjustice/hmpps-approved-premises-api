@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -31,8 +31,11 @@ import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
 
-@Service
-class Cas2ApplicationsController(
+@Service(
+  "uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2" +
+    ".ApplicationsController",
+)
+class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
