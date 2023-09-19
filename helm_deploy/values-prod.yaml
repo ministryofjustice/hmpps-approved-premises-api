@@ -59,3 +59,6 @@ generic-service:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
     hmpps-approved-premises-api:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
+
+env_details:
+  production_env: true

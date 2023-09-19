@@ -1,0 +1,131 @@
+{{- if .Values.env_details.production_env -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-refresh-script
+data:
+  entrypoint.sh: |-
+    #!/bin/bash
+    set -e
+
+    echo "${DB_HOST}:5432:${DB_NAME}:${DB_USER}:${DB_PASS}" > ~/.pgpass
+    echo "${DB_HOST_PREPROD}:5432:${DB_NAME_PREPROD}:${DB_USER_PREPROD}:${DB_PASS_PREPROD}" >> ~/.pgpass
+    chmod 0600 ~/.pgpass
+
+    set -x
+    # Dump production data
+    pg_dump --host="$DB_HOST" \
+      --username="$DB_USER" \
+      --format=custom \
+      --no-privileges \
+      --verbose \
+      --file=/tmp/db.dump \
+      "$DB_NAME"
+    
+    # Dump existing preprod users as upserts
+    pg_dump --host="$DB_HOST_PREPROD" \
+      --username="$DB_USER_PREPROD" \
+      --on-conflict-do-nothing \
+      --column-inserts \
+      --data-only \
+      --no-privileges \
+      --verbose \
+      --table public.users \
+      --table public.user_qualification_assignments \
+      --table public.user_role_assignments \
+      --file=/tmp/users.dump \
+      "$DB_NAME_PREPROD"
+    
+    # Restore production data to preprod
+    pg_restore --host="$DB_HOST_PREPROD" \
+      --username="$DB_USER_PREPROD" \
+      --clean \
+      --no-owner \
+      --verbose \
+      --dbname="$DB_NAME_PREPROD" \
+      /tmp/db.dump
+    
+    # Restore existing preprod users
+    psql --host="$DB_HOST_PREPROD" \
+      --username="$DB_USER_PREPROD" \
+      "$DB_NAME_PREPROD" < /tmp/users.dump
+
+    rm -v /tmp/db.dump /tmp/users.dump ~/.pgpass
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-refresh-job
+spec:
+  schedule: "0 8 * * 1"
+  concurrencyPolicy: "Forbid"
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 1200
+      template:
+        spec:
+          {{- if .Values.serviceAccountName }}
+          serviceAccountName: {{ .Values.serviceAccountName }}
+          {{- end }}
+          securityContext:
+            runAsUser: 999
+          containers:
+            - name: dbrefresh
+              image: "postgres:14"
+              command:
+                - /bin/entrypoint.sh
+              volumeMounts:
+                - name: db-refresh-script
+                  mountPath: /bin/entrypoint.sh
+                  readOnly: true
+                  subPath: entrypoint.sh
+              env:
+                - name: DB_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output
+                      key: database_name
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output
+                      key: database_username
+                - name: DB_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output
+                      key: database_password
+                - name: DB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output
+                      key: rds_instance_address
+                - name: DB_NAME_PREPROD
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output-preprod
+                      key: database_name
+                - name: DB_USER_PREPROD
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output-preprod
+                      key: database_username
+                - name: DB_PASS_PREPROD
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output-preprod
+                      key: database_password
+                - name: DB_HOST_PREPROD
+                  valueFrom:
+                    secretKeyRef:
+                      name: rds-postgresql-instance-output-preprod
+                      key: rds_instance_address
+          restartPolicy: "Never"
+          volumes:
+            - name: db-refresh-script
+              configMap:
+                name: db-refresh-script
+                defaultMode: 0755
+{{- end }}
