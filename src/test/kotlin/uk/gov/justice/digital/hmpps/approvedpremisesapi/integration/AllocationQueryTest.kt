@@ -99,6 +99,15 @@ class AllocationQueryTest : IntegrationTestBase() {
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 2,
     )
+    createUserForAssessmentQuery(
+      "Inactive Assessor with both Qualifications and zero pending allocated Assessments",
+      isAssessor = true,
+      hasQualifications = true,
+      numberOfPendingAssessments = 0,
+      numberOfRecentCompletedAssessments = 0,
+      numberOfLessRecentCompletedAssessments = 2,
+      isActive = false,
+    )
     val excludedAllocatedUser = createUserForAssessmentQuery(
       "Excluded User",
       isAssessor = true,
@@ -154,6 +163,15 @@ class AllocationQueryTest : IntegrationTestBase() {
       numberOfPlacementApplications = 1,
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
+    )
+    createUserForPlacementApplicationsQuery(
+      "Inactive Matcher with both Qualifications and zero pending allocated Placement Applications",
+      isMatcher = true,
+      hasQualifications = true,
+      numberOfPlacementApplications = 0,
+      numberOfRecentCompletedPlacementApplications = 0,
+      numberOfLessRecentCompletedPlacementApplications = 2,
+      isActive = false,
     )
     createUserForPlacementApplicationsQuery(
       "Matcher with both Qualifications and zero pending allocated Placement Applications",
@@ -228,6 +246,15 @@ class AllocationQueryTest : IntegrationTestBase() {
       numberOfRecentCompletedPlacementRequests = 0,
       numberOfLessRecentCompletedPlacementRequests = 2,
     )
+    createUserForPlacementRequestsQuery(
+      "Inactive Matcher with both Qualifications and zero pending allocated Placement Requests",
+      isMatcher = true,
+      hasQualifications = true,
+      numberOfPlacementRequests = 0,
+      numberOfRecentCompletedPlacementRequests = 0,
+      numberOfLessRecentCompletedPlacementRequests = 2,
+      isActive = false,
+    )
 
     val excludedAllocatedUser = createUserForPlacementRequestsQuery(
       "Excluded user",
@@ -243,11 +270,12 @@ class AllocationQueryTest : IntegrationTestBase() {
     assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo("Matcher with both Qualifications and zero pending allocated Placement Requests")
   }
 
-  private fun createUserForPlacementRequestsQuery(deliusUsername: String, isMatcher: Boolean, hasQualifications: Boolean, numberOfPlacementRequests: Int, numberOfRecentCompletedPlacementRequests: Int, numberOfLessRecentCompletedPlacementRequests: Int): UserEntity {
+  private fun createUserForPlacementRequestsQuery(deliusUsername: String, isMatcher: Boolean, hasQualifications: Boolean, numberOfPlacementRequests: Int, numberOfRecentCompletedPlacementRequests: Int, numberOfLessRecentCompletedPlacementRequests: Int, isActive: Boolean = true): UserEntity {
     val user = createUser(
       deliusUsername,
       if (isMatcher) listOf(UserRole.CAS1_MATCHER) else emptyList(),
       if (hasQualifications) listOf(UserQualification.PIPE, UserQualification.WOMENS) else emptyList(),
+      isActive,
     )
 
     repeat(numberOfPlacementRequests) {
@@ -265,11 +293,12 @@ class AllocationQueryTest : IntegrationTestBase() {
     return user
   }
 
-  private fun createUserForPlacementApplicationsQuery(deliusUsername: String, isMatcher: Boolean, hasQualifications: Boolean, numberOfPlacementApplications: Int, numberOfRecentCompletedPlacementApplications: Int, numberOfLessRecentCompletedPlacementApplications: Int): UserEntity {
+  private fun createUserForPlacementApplicationsQuery(deliusUsername: String, isMatcher: Boolean, hasQualifications: Boolean, numberOfPlacementApplications: Int, numberOfRecentCompletedPlacementApplications: Int, numberOfLessRecentCompletedPlacementApplications: Int, isActive: Boolean = true): UserEntity {
     val user = createUser(
       deliusUsername,
       if (isMatcher) listOf(UserRole.CAS1_MATCHER) else emptyList(),
       if (hasQualifications) listOf(UserQualification.PIPE, UserQualification.WOMENS) else emptyList(),
+      isActive,
     )
 
     repeat(numberOfPlacementApplications) {
@@ -322,11 +351,12 @@ class AllocationQueryTest : IntegrationTestBase() {
     return user
   }
 
-  private fun createUserForAssessmentQuery(deliusUsername: String, isAssessor: Boolean, hasQualifications: Boolean, numberOfPendingAssessments: Int, numberOfRecentCompletedAssessments: Int, numberOfLessRecentCompletedAssessments: Int): UserEntity {
+  private fun createUserForAssessmentQuery(deliusUsername: String, isAssessor: Boolean, hasQualifications: Boolean, numberOfPendingAssessments: Int, numberOfRecentCompletedAssessments: Int, numberOfLessRecentCompletedAssessments: Int, isActive: Boolean = true): UserEntity {
     val user = createUser(
       deliusUsername,
       if (isAssessor) listOf(UserRole.CAS1_ASSESSOR) else emptyList(),
       if (hasQualifications) listOf(UserQualification.PIPE, UserQualification.WOMENS) else emptyList(),
+      isActive,
     )
 
     repeat(numberOfPendingAssessments) {
@@ -376,7 +406,7 @@ class AllocationQueryTest : IntegrationTestBase() {
     return user
   }
 
-  private fun createUser(deliusUsername: String, roles: List<UserRole>, qualifications: List<UserQualification>): UserEntity {
+  private fun createUser(deliusUsername: String, roles: List<UserRole>, qualifications: List<UserQualification>, isActive: Boolean = true): UserEntity {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(deliusUsername)
       withYieldedProbationRegion {
@@ -384,6 +414,7 @@ class AllocationQueryTest : IntegrationTestBase() {
           withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
         }
       }
+      withIsActive(isActive)
     }
 
     roles.forEach {

@@ -53,6 +53,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_ASSESSOR' AND 
+        u.is_active = true AND
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (:excludedUserIds)
     ORDER BY score ASC
@@ -87,6 +88,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_MATCHER' AND 
+        u.is_active = true AND
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (:excludedUserIds)
     ORDER BY score ASC 
@@ -121,6 +123,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_MATCHER' AND 
+        u.is_active = true AND
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (:excludedUserIds)
     ORDER BY score ASC 
