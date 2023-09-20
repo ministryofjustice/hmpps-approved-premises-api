@@ -5209,6 +5209,9 @@ components:
               $ref: '#/components/schemas/AnyValue'
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            assessmentId:
+              type: string
+              format: uuid
             assessmentDecision:
               $ref: '#/components/schemas/AssessmentDecision'
             submittedAt:
