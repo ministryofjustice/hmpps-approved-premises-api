@@ -5214,6 +5214,9 @@ components:
               format: uuid
             assessmentDecision:
               $ref: '#/components/schemas/AssessmentDecision'
+            assessmentDecisionDate:
+              type: string
+              format: date
             submittedAt:
               type: string
               format: date-time

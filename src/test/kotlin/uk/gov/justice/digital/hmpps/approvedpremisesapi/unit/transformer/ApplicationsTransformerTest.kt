@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
@@ -299,6 +300,7 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
     assertThat(result.assessmentDecision).isNull()
     assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentDecisionDate).isNull()
   }
 
   @Test
@@ -308,6 +310,7 @@ class ApplicationsTransformerTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.REJECTED)
       .withApplication(application)
+      .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
     application.assessments = mutableListOf(assessment)
@@ -317,6 +320,7 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.rejected)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
     assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
   }
 
   @Test
@@ -326,6 +330,7 @@ class ApplicationsTransformerTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
       .withApplication(application)
+      .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
     application.assessments = mutableListOf(assessment)
@@ -335,6 +340,7 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.pending)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
     assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
   }
 
   @Test
@@ -344,6 +350,7 @@ class ApplicationsTransformerTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
       .withApplication(application)
+      .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
     application.assessments = mutableListOf(assessment)
@@ -371,6 +378,7 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.awaitingPlacement)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
     assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
   }
 
   @Test
@@ -380,6 +388,7 @@ class ApplicationsTransformerTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withDecision(AssessmentDecision.ACCEPTED)
       .withApplication(application)
+      .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
     application.assessments = mutableListOf(assessment)
@@ -416,6 +425,7 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.placed)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
     assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
   }
 
   @Test
