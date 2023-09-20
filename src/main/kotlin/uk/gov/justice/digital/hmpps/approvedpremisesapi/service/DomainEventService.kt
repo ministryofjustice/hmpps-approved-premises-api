@@ -40,6 +40,7 @@ class DomainEventService(
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas2-application-submitted-event-detail}") private val cas2ApplicationSubmittedDetailUrlTemplate: String,
   @Value("\${url-templates.api.application-assessed-event-detail}") private val applicationAssessedDetailUrlTemplate: String,
   @Value("\${url-templates.api.booking-made-event-detail}") private val bookingMadeDetailUrlTemplate: String,
   @Value("\${url-templates.api.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
@@ -93,6 +94,8 @@ class DomainEventService(
         objectMapper.readValue(domainEventEntity.data, T::class.java)
       T::class == ApplicationWithdrawnEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
+      T::class == Cas2ApplicationSubmittedEnvelope::class && domainEventEntity.type == DomainEventType.CAS2_APPLICATION_SUBMITTED ->
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
 
@@ -112,6 +115,17 @@ class DomainEventService(
       typeName = "approved-premises.application.submitted",
       typeDescription = "An application has been submitted for an Approved Premises placement",
       detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
+  @Transactional
+  fun saveCas2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationSubmittedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "cas2.application.submitted",
+      typeDescription = "An application has been submitted for a CAS2 placement",
+      detailUrl = cas2ApplicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )

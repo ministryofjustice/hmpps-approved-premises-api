@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmitted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
@@ -1720,7 +1722,7 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
-      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application, username) is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
@@ -1749,7 +1751,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(applicationService.submitCas2Application(applicationId, submitCas2Application, username) is AuthorisableActionResult.Unauthorised).isTrue
     }
 
     @Test
@@ -1767,7 +1769,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application, username)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1796,7 +1798,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application, username)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1830,6 +1832,7 @@ class ApplicationServiceTest {
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withGender("male")
         .withCrn(application.crn)
+        .withNomsNumber(application.nomsNumber)
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
@@ -1838,7 +1841,15 @@ class ApplicationServiceTest {
 
       val schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
 
-      val result = applicationService.submitCas2Application(applicationId, submitCas2Application)
+      every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+      val result = applicationService.submitCas2Application(applicationId, submitCas2Application, username)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1849,7 +1860,21 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.crn).isEqualTo(application.crn)
 
       verify { mockApplicationRepository.save(any()) }
-      verify { mockDomainEventService wasNot called }
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+          match {
+            val data = (it.data as Cas2ApplicationSubmittedEnvelope).eventDetails
+
+            it.applicationId == application.id &&
+              data.personReference.crn == application.crn &&
+              data.personReference.noms == application.nomsNumber &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.gender == Cas2ApplicationSubmitted.Gender.male &&
+              data.submittedBy.staffMember.username == username
+          },
+        )
+      }
     }
   }
 

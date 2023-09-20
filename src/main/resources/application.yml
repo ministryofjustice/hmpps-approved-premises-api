@@ -182,6 +182,7 @@ assign-default-region-to-users-with-unknown-region: false
 url-templates:
   api:
     application-submitted-event-detail: http://localhost:3000/events/application-submitted/#eventId
+    cas2-application-submitted-event-detail: http://localhost:3000/events/cas2/application-submitted/#eventId
     application-assessed-event-detail: http://localhost:3000/events/application-assessed/#eventId
     booking-made-event-detail: http://localhost:3000/events/booking-made/#eventId
     person-arrived-event-detail: http://localhost:3000/events/person-arrived/#eventId

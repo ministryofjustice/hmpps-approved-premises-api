@@ -110,6 +110,7 @@ seed:
 url-templates:
   api:
     application-submitted-event-detail: http://api/events/application-submitted/#eventId
+    cas2-application-submitted-event-detail: http://api/events/cas2/application-submitted/#eventId
     application-assessed-event-detail: http://api/events/application-assessed/#eventId
     booking-made-event-detail: http://api/events/booking-made/#eventId
     person-arrived-event-detail: http://api/events/person-arrived/#eventId

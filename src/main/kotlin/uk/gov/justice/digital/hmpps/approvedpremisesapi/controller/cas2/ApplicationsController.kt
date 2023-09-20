@@ -127,8 +127,10 @@ class ApplicationsController(
     applicationId: UUID,
     submitApplication: SubmitCas2Application,
   ): ResponseEntity<Unit> {
-    httpAuthService.getDeliusPrincipalOrThrow()
-    val submitResult = applicationService.submitCas2Application(applicationId, submitApplication)
+    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val username = deliusPrincipal.name
+
+    val submitResult = applicationService.submitCas2Application(applicationId, submitApplication, username)
 
     val validationResult = when (submitResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")

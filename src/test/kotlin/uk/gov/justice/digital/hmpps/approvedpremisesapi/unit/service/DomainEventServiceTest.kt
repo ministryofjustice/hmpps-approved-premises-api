@@ -60,6 +60,7 @@ class DomainEventServiceTest {
     hmppsQueueService = hmppsQueueServieMock,
     emitDomainEventsEnabled = true,
     applicationSubmittedDetailUrlTemplate = "http://api/events/application-submitted/#eventId",
+    cas2ApplicationSubmittedDetailUrlTemplate = "http://api/events/cas2/application-submitted/#eventId",
     applicationAssessedDetailUrlTemplate = "http://api/events/application-assessed/#eventId",
     bookingMadeDetailUrlTemplate = "http://api/events/booking-made/#eventId",
     personArrivedDetailUrlTemplate = "http://api/events/person-arrived/#eventId",
