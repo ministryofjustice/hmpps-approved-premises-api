@@ -61,6 +61,7 @@ class ApplicationsTransformer(
         status = getStatus(jpa, latestAssessment),
         assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
         assessmentId = latestAssessment?.id,
+        assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
         type = "CAS1",
       )
 
