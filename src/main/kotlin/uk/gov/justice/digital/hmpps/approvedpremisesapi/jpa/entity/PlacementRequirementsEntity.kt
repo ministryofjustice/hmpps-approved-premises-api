@@ -16,7 +16,7 @@ import javax.persistence.Table
 
 @Repository
 interface PlacementRequirementsRepository : JpaRepository<PlacementRequirementsEntity, UUID> {
-  fun findByApplication(application: ApplicationEntity): PlacementRequirementsEntity?
+  fun findTopByApplicationOrderByCreatedAtDesc(application: ApplicationEntity): PlacementRequirementsEntity?
 }
 
 @Entity

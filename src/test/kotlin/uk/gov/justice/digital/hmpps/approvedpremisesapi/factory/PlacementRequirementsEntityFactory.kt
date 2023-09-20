@@ -55,6 +55,10 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
     this.desirableCriteria = { desirableCriteria }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): PlacementRequirementsEntity = PlacementRequirementsEntity(
     id = this.id(),
     gender = this.gender(),

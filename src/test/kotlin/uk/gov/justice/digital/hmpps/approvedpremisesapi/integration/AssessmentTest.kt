@@ -1079,7 +1079,7 @@ class AssessmentTest : IntegrationTestBase() {
 
             assertThat(placementRequestRepository.findByApplication(application)).isNull()
 
-            val persistedPlacementRequirements = placementRequirementsRepository.findByApplication(application)!!
+            val persistedPlacementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)!!
 
             assertThat(persistedPlacementRequirements.apType).isEqualTo(placementRequirements.type)
             assertThat(persistedPlacementRequirements.gender).isEqualTo(placementRequirements.gender)
