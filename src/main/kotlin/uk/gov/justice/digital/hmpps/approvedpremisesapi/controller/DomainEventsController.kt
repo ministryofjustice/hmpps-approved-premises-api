@@ -10,9 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2.Cas2DomainEventsController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import java.util.UUID
@@ -89,5 +91,9 @@ class DomainEventsController(
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)
+  }
+
+  override fun eventsCas2ApplicationSubmittedEventIdGet(eventId: UUID): ResponseEntity<Cas2ApplicationSubmittedEnvelope> {
+    return Cas2DomainEventsController(domainEventService).eventsCas2ApplicationSubmittedEventIdGet(eventId)
   }
 }

@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cas2ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -56,6 +57,7 @@ class DomainEventService(
       ?: throw MissingTopicException("domainevents not found")
   }
 
+  fun getCas2ApplicationSubmittedDomainEvent(id: UUID) = get<Cas2ApplicationSubmittedEnvelope>(id)
   fun getApplicationSubmittedDomainEvent(id: UUID) = get<ApplicationSubmittedEnvelope>(id)
   fun getApplicationAssessedDomainEvent(id: UUID) = get<ApplicationAssessedEnvelope>(id)
   fun getBookingMadeEvent(id: UUID) = get<BookingMadeEnvelope>(id)
@@ -264,6 +266,7 @@ class DomainEventService(
 
   private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {
     ApplicationSubmittedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
+    Cas2ApplicationSubmittedEnvelope::class.java -> DomainEventType.CAS2_APPLICATION_SUBMITTED
     ApplicationAssessedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
     BookingMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_MADE
     PersonArrivedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED

@@ -4,6 +4,33 @@ info:
   title: 'AP Domain events'
   description: Get information about events in the Approved Premises domain
 paths:
+  /events/cas2/application-submitted/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS2 'Apply' events"
+      summary: An application-submitted event
+      responses:
+        '200':
+          description: The application-submitted corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cas2ApplicationSubmittedEnvelope'
+        404:
+          description: No application-submitted event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /events/application-submitted/{eventId}:
     parameters:
       - name: eventId
@@ -449,6 +476,61 @@ components:
         - timestamp
         - eventType
         - eventDetails
+    Cas2ApplicationSubmittedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: cas-2.application.submitted
+        eventDetails:
+          $ref: '#/components/schemas/Cas2ApplicationSubmitted'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    Cas2ApplicationSubmitted:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        age:
+          type: integer
+          example: 43
+        gender:
+          type: string
+          enum:
+            - Male
+            - Female
+        submittedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        submittedBy:
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/StaffMember'
+          required:
+            - staffMember
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - age
+        - gender
+        - submittedAt
+        - submittedBy
     ApplicationSubmitted:
       type: object
       properties:
