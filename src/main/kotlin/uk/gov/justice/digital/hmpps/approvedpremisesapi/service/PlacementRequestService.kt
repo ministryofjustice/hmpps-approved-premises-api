@@ -61,7 +61,7 @@ class PlacementRequestService(
   }
 
   fun getAllReallocatable(): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse()
+    return placementRequestRepository.findAllReallocatable()
   }
 
   fun getAllActive(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: String?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {

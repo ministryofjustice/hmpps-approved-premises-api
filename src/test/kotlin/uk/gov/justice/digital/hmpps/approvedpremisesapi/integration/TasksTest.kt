@@ -116,6 +116,17 @@ class TasksTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             )
 
+            val (placementRequestMarkedAsUnableToMatch) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            bookingNotMadeFactory.produceAndPersist {
+              withPlacementRequest(placementRequestMarkedAsUnableToMatch)
+            }
+
             val allocatablePlacementApplication = `Given a Placement Application`(
               createdByUser = user,
               allocatedToUser = user,

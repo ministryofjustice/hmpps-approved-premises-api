@@ -24,7 +24,22 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
 
-  fun findAllByReallocatedAtNullAndBooking_IdNullAndIsWithdrawnFalse(): List<PlacementRequestEntity>
+  @Query(
+    """
+    SELECT
+      placement_request.*,
+      booking_not_made.id
+    FROM
+      placement_requests placement_request
+      left join booking_not_mades booking_not_made on booking_not_made.placement_request_id = placement_request.id
+    where
+      placement_request.booking_id IS NULL
+      AND placement_request.is_withdrawn is false
+      and booking_not_made.id IS NULL
+    """,
+    nativeQuery = true,
+  )
+  fun findAllReallocatable(): List<PlacementRequestEntity>
 
   fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole: Boolean, pageable: Pageable?): Page<PlacementRequestEntity>
 
