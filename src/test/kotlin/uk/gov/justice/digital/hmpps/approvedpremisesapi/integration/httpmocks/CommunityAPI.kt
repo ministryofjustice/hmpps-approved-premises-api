@@ -27,6 +27,12 @@ fun IntegrationTestBase.CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderD
     responseBody = offenderDetails,
   )
 
+fun IntegrationTestBase.CommunityAPI_mockServerErrorOffenderDetailsCall(crn: String) =
+  mockUnsuccessfulGetCall(
+    url = "/secure/offenders/crn/$crn",
+    responseStatus = 500,
+  )
+
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulDocumentsCall(crn: String, groupedDocuments: GroupedDocuments) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/documents/grouped",
