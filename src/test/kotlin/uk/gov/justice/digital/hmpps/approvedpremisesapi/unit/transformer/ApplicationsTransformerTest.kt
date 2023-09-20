@@ -298,6 +298,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
     assertThat(result.assessmentDecision).isNull()
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
   }
 
   @Test
@@ -315,6 +316,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.status).isEqualTo(ApplicationStatus.rejected)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
   }
 
   @Test
@@ -332,6 +334,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.status).isEqualTo(ApplicationStatus.pending)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
   }
 
   @Test
@@ -367,6 +370,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.status).isEqualTo(ApplicationStatus.awaitingPlacement)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
   }
 
   @Test
@@ -411,6 +415,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.status).isEqualTo(ApplicationStatus.placed)
     assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
   }
 
   @Test
