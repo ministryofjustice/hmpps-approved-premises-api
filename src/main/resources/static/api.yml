@@ -2389,6 +2389,13 @@ paths:
       tags:
         - Task data
       summary: List all reallocatable tasks
+      parameters:
+        - in: query
+          name: type
+          required: false
+          description: Returns tasks that match the given type. If no type given return all.
+          schema:
+            type: string
       responses:
         200:
           description: successfully retrieved tasks

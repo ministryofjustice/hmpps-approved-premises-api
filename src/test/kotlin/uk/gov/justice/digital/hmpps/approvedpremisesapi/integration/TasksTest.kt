@@ -166,6 +166,136 @@ class TasksTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get all reallocatable tasks with taskType that doesn't exist returns 404`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        webTestClient.get()
+          .uri("/tasks/reallocatable?type=RANDOMWORD")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks with taskType of bookingAppeal returns 400`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        webTestClient.get()
+          .uri("/tasks/reallocatable?type=bookingAppeal")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body when type assessment is passed as parameter`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=assessment")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformAssessmentToTask(
+                      allocatableAssessment,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body when type placement request is passed as parameter`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val (allocatablePlacementRequest) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementRequest")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementRequestToTask(
+                      allocatablePlacementRequest,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body when type placement application is passed as parameter`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val allocatablePlacementApplication = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementApplication")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementApplicationToTask(
+                      allocatablePlacementApplication,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
   }
 
   @Nested
