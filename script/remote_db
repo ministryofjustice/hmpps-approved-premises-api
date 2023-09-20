@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ -z "$1" ]; then
+  echo "You must specify an environment"
+  exit 1
+else
+  environment=$1
+fi
+
+namespace="hmpps-community-accommodation-$environment"
+
+pod=$(kubectl -n "$namespace" get pods -l app=hmpps-approved-premises-api -o jsonpath='{.items[0].metadata.name}')
+
+script="""
+cd ~
+curl -L https://github.com/Teradata/jaqy/releases/download/v1.2.0/jaqy-1.2.0.jar --output jaqy-1.2.0.jar
+curl -L https://jdbc.postgresql.org/download/postgresql-42.5.1.jar --output postgresql-42.5.1.jar
+java -jar jaqy-1.2.0.jar -- .classpath postgresql postgresql-42.5.1.jar \; .open -u \${SPRING_DATASOURCE_USERNAME} -p \${SPRING_DATASOURCE_PASSWORD} postgresql://\${DB_HOST}/\${DB_NAME}
+"""
+
+kubectl -n "$namespace" exec -it "$pod" -- sh -c "$script"

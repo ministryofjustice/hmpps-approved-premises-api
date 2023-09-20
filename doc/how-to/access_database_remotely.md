@@ -4,13 +4,39 @@
 done as a last resort. This should ideally only be done in pairs, and
 mutating any live data is STRONGLY discouraged.
 
+Both methods detailed below use [Jaqy](https://teradata.github.io/jaqy/), which
+is a Java-native universal database client. As well as carrying out simple 
+queries, you can also do exports of data (enabling, for example, one off reporting), 
+and other useful bits and pieces. For full details, check the [documentation](https://teradata.github.io/jaqy/).
+
+There are two ways to do this:
+
+## The easy way
+
+For most use cases (i.e. running simple queries etc), this will be the way
+you want to do it. The downside is you won't have access to things like
+data exports from the local shell.
+
+From your local machine run:
+
+```bash
+script/remote_db $ENVIRONMENT
+```
+
+Where $ENVIRONMENT is the environment you want to connect to.
+
+When you're finished, type the `.quit` command to end the session.
+
+## The hard(er) way
+
+This is more suitable if you need access to the bash shell, as well as
+the ability to make SQL queries.
+
 From your local machine run:
 
 ```bash
 script/remote_shell $ENVIRONMENT
 ```
-
-Where $ENVIRONMENT is the environment you want to connect to
 
 Once connected, you'll need to download [jaqy](https://teradata.github.io/jaqy/index.html)
 to connect to the database, together with an appropriate Postgres driver.
