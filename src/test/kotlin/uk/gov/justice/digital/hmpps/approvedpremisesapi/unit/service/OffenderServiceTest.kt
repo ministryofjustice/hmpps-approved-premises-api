@@ -454,9 +454,10 @@ class OffenderServiceTest {
 
     assertThat(result is AuthorisableActionResult.Success)
     result as AuthorisableActionResult.Success
-    assertThat(result.entity.offenderNo).isEqualTo(nomsNumber)
-    assertThat(result.entity.inOutStatus).isEqualTo(InOutStatus.IN)
-    assertThat(result.entity.assignedLivingUnit).isEqualTo(
+    assertThat(result.entity).isNotNull
+    assertThat(result.entity!!.offenderNo).isEqualTo(nomsNumber)
+    assertThat(result.entity!!.inOutStatus).isEqualTo(InOutStatus.IN)
+    assertThat(result.entity!!.assignedLivingUnit).isEqualTo(
       AssignedLivingUnit(
         agencyId = "AGY",
         locationId = 89,

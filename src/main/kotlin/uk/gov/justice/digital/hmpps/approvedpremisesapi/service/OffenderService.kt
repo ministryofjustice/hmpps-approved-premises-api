@@ -158,11 +158,17 @@ class OffenderService(
     }
   }
 
-  fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail> {
+  fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail?> {
     var inmateDetailResponse = prisonsApiClient.getInmateDetailsWithWait(nomsNumber)
 
-    if (inmateDetailResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
+    val hasCacheTimedOut = inmateDetailResponse is ClientResult.Failure.PreemptiveCacheTimeout
+    if (hasCacheTimedOut) {
       inmateDetailResponse = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
+    }
+
+    fun logFailedResponse(inmateDetailResponse: ClientResult.Failure<InmateDetail>) = when (hasCacheTimedOut) {
+      true -> log.warn("Could not get inmate details for $crn after cache timed out", inmateDetailResponse.toException())
+      false -> log.warn("Could not get inmate details for $crn as an unsuccessful response was cached", inmateDetailResponse.toException())
     }
 
     val inmateDetail = when (inmateDetailResponse) {
@@ -170,9 +176,15 @@ class OffenderService(
       is ClientResult.Failure.StatusCode -> when (inmateDetailResponse.status) {
         HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
         HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> inmateDetailResponse.throwException()
+        else -> {
+          logFailedResponse(inmateDetailResponse)
+          null
+        }
       }
-      is ClientResult.Failure -> inmateDetailResponse.throwException()
+      is ClientResult.Failure -> {
+        logFailedResponse(inmateDetailResponse)
+        null
+      }
     }
 
     return AuthorisableActionResult.Success(inmateDetail)

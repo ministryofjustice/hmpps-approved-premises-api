@@ -416,6 +416,54 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all Bookings returns OK with correct body when inmate details for a booking could not be found`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+      `Given an Offender`(mockServerErrorForPrisonApi = true) { offenderDetails, inmateDetails ->
+
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val keyWorker = ContextStaffMemberFactory().produce()
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withStaffKeyWorkerCode(keyWorker.code)
+          withCrn(offenderDetails.otherIds.crn)
+          withServiceName(ServiceName.approvedPremises)
+        }
+
+        val expectedJson = objectMapper.writeValueAsString(
+          listOf(
+            bookingTransformer.transformJpaToApi(
+              booking,
+              PersonInfoResult.Success.Full(
+                crn = offenderDetails.otherIds.crn,
+                offenderDetailSummary = offenderDetails,
+                inmateDetail = null,
+              ),
+              keyWorker,
+            ),
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+  }
+
+  @Test
   fun `Get all Bookings on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
     `Given a User` { _, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->

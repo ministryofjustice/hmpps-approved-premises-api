@@ -16,6 +16,12 @@ fun IntegrationTestBase.PrisonAPI_mockNotFoundInmateDetailsCall(offenderNo: Stri
     responseStatus = 404,
   )
 
+fun IntegrationTestBase.PrisonAPI_mockServerErrorInmateDetailsCall(offenderNo: String) =
+  mockUnsuccessfulGetCall(
+    url = "/api/offenders/$offenderNo",
+    responseStatus = 500,
+  )
+
 fun IntegrationTestBase.PrisonAPI_mockSuccessfulAlertsCall(nomsNumber: String, alerts: List<Alert>) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/api/offenders/$nomsNumber/alerts/v2?alertCodes=HA&sort=dateCreated&direction=DESC",
