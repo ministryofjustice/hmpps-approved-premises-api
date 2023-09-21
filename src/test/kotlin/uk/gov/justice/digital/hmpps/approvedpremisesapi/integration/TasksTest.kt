@@ -103,6 +103,14 @@ class TasksTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             )
 
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              reallocated = true,
+              crn = offenderDetails.otherIds.crn,
+            )
+
             val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
