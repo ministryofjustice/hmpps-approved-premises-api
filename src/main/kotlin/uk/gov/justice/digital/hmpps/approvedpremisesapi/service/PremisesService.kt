@@ -434,6 +434,29 @@ class PremisesService(
     )
   }
 
+  fun renamePremises(
+    premisesId: UUID,
+    name: String,
+  ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
+    val premises = premisesRepository.findByIdOrNull(premisesId) ?: return AuthorisableActionResult.NotFound()
+
+    return AuthorisableActionResult.Success(
+      validated {
+        if (!premisesRepository.nameIsUniqueForType(name, premises::class.java)) {
+          "$.name" hasValidationError "notUnique"
+        }
+
+        if (validationErrors.any()) {
+          return@validated fieldValidationError
+        }
+
+        premises.name = name
+
+        return@validated success(premisesRepository.save(premises))
+      },
+    )
+  }
+
   fun getBeds(premisesId: UUID) = bedRepository.findAllBedsForPremises(premisesId)
 
   @Transactional

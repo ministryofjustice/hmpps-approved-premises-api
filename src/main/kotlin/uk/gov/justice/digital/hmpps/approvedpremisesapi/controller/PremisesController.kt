@@ -149,6 +149,8 @@ class PremisesController(
 
     return ResponseEntity.ok(transformedSummaries)
   }
+
+  @Transactional
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
@@ -173,10 +175,18 @@ class PremisesController(
         body.turnaroundWorkingDayCount,
       )
 
-    val validationResult = when (updatePremisesResult) {
+    var validationResult = when (updatePremisesResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> updatePremisesResult.entity
+    }
+
+    if (body.name != null && premises is TemporaryAccommodationPremisesEntity) {
+      validationResult = when (val renamePremisesResult = premisesService.renamePremises(premisesId, body.name)) {
+        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
+        is AuthorisableActionResult.Success -> renamePremisesResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      }
     }
 
     val updatedPremises = when (validationResult) {
@@ -846,6 +856,7 @@ class PremisesController(
     return ResponseEntity.ok(roomTransformer.transformJpaToApi(room))
   }
 
+  @Transactional
   override fun premisesPremisesIdRoomsRoomIdPut(
     premisesId: UUID,
     roomId: UUID,
@@ -859,10 +870,18 @@ class PremisesController(
 
     val updateRoomResult = roomService.updateRoom(premises, roomId, updateRoom.notes, updateRoom.characteristicIds)
 
-    val validationResult = when (updateRoomResult) {
+    var validationResult = when (updateRoomResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(roomId, "Room")
       is AuthorisableActionResult.Success -> updateRoomResult.entity
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    if (updateRoom.name != null && premises is TemporaryAccommodationPremisesEntity) {
+      validationResult = when (val renameRoomResult = roomService.renameRoom(premises, roomId, updateRoom.name)) {
+        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(roomId, "Room")
+        is AuthorisableActionResult.Success -> renameRoomResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      }
     }
 
     val room = extractResultEntityOrThrow(validationResult)
