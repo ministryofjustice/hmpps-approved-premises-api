@@ -123,7 +123,7 @@ data class PlacementRequestEntity(
 
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
-  val allocatedToUser: UserEntity,
+  val allocatedToUser: UserEntity?,
 
   @OneToMany(mappedBy = "placementRequest")
   var bookingNotMades: MutableList<BookingNotMadeEntity>,

@@ -4141,7 +4141,6 @@ components:
         - applicationId
         - personName
         - dueDate
-        - allocatedToStaffMember
         - status
         - crn
     TaskStatus:

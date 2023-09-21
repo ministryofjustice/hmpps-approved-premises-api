@@ -119,9 +119,10 @@ class UserService(
     }
   }
 
-  fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity {
+  fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity? {
     val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
     val qualifications = application.getRequiredQualifications().toMutableList()
+    var attempts = 1
 
     if (offenderService.isLao(application.crn)) {
       qualifications += UserQualification.LAO
@@ -129,20 +130,25 @@ class UserService(
 
     while (true) {
       val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-        ?: throw RuntimeException("Could not find a suitable assessor for assessment with qualifications (${qualifications.joinToString(",")}): ${application.crn}")
 
-      if ((qualifications.isEmpty() && potentialUser.qualifications.isNotEmpty()) || potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION)) {
-        unsuitableUsers += potentialUser.id
-        continue
+      if (potentialUser != null) {
+        if ((qualifications.isEmpty() && potentialUser.qualifications.isNotEmpty()) || potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION)) {
+          unsuitableUsers += potentialUser.id
+          attempts += 1
+          continue
+        }
+      } else {
+        log.error("Could not find a suitable assessor for assessment with qualifications (${qualifications.joinToString(",")}) after $attempts attempts: ${application.crn}")
       }
 
       return potentialUser
     }
   }
 
-  fun getUserForPlacementRequestAllocation(crn: String): UserEntity {
+  fun getUserForPlacementRequestAllocation(crn: String): UserEntity? {
     val qualifications = mutableListOf<UserQualification>()
     val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
+    var attempts = 1
 
     if (offenderService.isLao(crn)) {
       qualifications += UserQualification.LAO
@@ -150,20 +156,25 @@ class UserService(
 
     while (true) {
       val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-        ?: throw RuntimeException("Could not find a suitable matcher for placement request with qualifications (${qualifications.joinToString(",")}): $crn")
 
-      if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION)) {
-        unsuitableUsers += potentialUser.id
-        continue
+      if (potentialUser != null) {
+        if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION)) {
+          unsuitableUsers += potentialUser.id
+          attempts += 1
+          continue
+        }
+      } else {
+        log.error("Could not find a suitable matcher for placement request with qualifications (${qualifications.joinToString(",")}) after $attempts attempt(s): $crn")
       }
 
       return potentialUser
     }
   }
 
-  fun getUserForPlacementApplicationAllocation(crn: String): UserEntity {
+  fun getUserForPlacementApplicationAllocation(crn: String): UserEntity? {
     val qualifications = mutableListOf<UserQualification>()
     val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
+    var attempts = 1
 
     if (offenderService.isLao(crn)) {
       qualifications += UserQualification.LAO
@@ -171,11 +182,15 @@ class UserService(
 
     while (true) {
       val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-        ?: throw RuntimeException("Could not find a suitable matcher for placement application with qualifications (${qualifications.joinToString(",")}): $crn")
 
-      if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION)) {
-        unsuitableUsers += potentialUser.id
-        continue
+      if (potentialUser != null) {
+        if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION)) {
+          unsuitableUsers += potentialUser.id
+          attempts += 1
+          continue
+        }
+      } else {
+        log.error("Could not find a suitable matcher for placement application with qualifications (${qualifications.joinToString(",")}): $crn after $attempts attempts")
       }
 
       return potentialUser

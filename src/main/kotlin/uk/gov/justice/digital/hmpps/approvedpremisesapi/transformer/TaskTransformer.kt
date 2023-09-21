@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
@@ -27,7 +28,7 @@ class TaskTransformer(
     personName = personName,
     crn = assessment.application.crn,
     dueDate = assessment.createdAt.plusDays(10).toLocalDate(),
-    allocatedToStaffMember = userTransformer.transformJpaToApi(assessment.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
+    allocatedToStaffMember = transformUserOrNull(assessment.allocatedToUser),
     status = getAssessmentStatus(assessment),
     taskType = TaskType.assessment,
   )
@@ -38,7 +39,7 @@ class TaskTransformer(
     personName = personName,
     crn = placementRequest.application.crn,
     dueDate = placementRequest.createdAt.plusDays(10).toLocalDate(),
-    allocatedToStaffMember = userTransformer.transformJpaToApi(placementRequest.allocatedToUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+    allocatedToStaffMember = transformUserOrNull(placementRequest.allocatedToUser),
     status = getPlacementRequestStatus(placementRequest),
     taskType = TaskType.placementRequest,
     tier = risksTransformer.transformTierDomainToApi(placementRequest.application.riskRatings!!.tier),
@@ -54,7 +55,7 @@ class TaskTransformer(
     personName = personName,
     crn = placementApplication.application.crn,
     dueDate = placementApplication.createdAt.plusDays(10).toLocalDate(),
-    allocatedToStaffMember = userTransformer.transformJpaToApi(placementApplication.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
+    allocatedToStaffMember = transformUserOrNull(placementApplication.allocatedToUser),
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
@@ -89,5 +90,13 @@ class TaskTransformer(
   private fun getPlacementRequestStatus(entity: PlacementRequestEntity): TaskStatus = when {
     entity.booking !== null -> TaskStatus.complete
     else -> TaskStatus.notStarted
+  }
+
+  private fun transformUserOrNull(userEntity: UserEntity?): ApprovedPremisesUser? {
+    return if (userEntity == null) {
+      null
+    } else {
+      userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises) as ApprovedPremisesUser
+    }
   }
 }

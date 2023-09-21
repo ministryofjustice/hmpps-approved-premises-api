@@ -683,7 +683,7 @@ class TasksTest : IntegrationTestBase() {
                 )
 
               val placementRequests = placementRequestRepository.findAll()
-              val allocatedPlacementRequest = placementRequests.find { it.allocatedToUser.id == assigneeUser.id }
+              val allocatedPlacementRequest = placementRequests.find { it.allocatedToUser!!.id == assigneeUser.id }
 
               Assertions.assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
               Assertions.assertThat(allocatedPlacementRequest).isNotNull

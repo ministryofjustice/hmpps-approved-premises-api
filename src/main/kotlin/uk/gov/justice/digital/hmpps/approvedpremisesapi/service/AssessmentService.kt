@@ -151,15 +151,17 @@ class AssessmentService(
       ),
     )
 
-    emailNotificationService.sendEmail(
-      user = allocatedUser,
-      templateId = notifyConfig.templates.assessmentAllocated,
-      personalisation = mapOf(
-        "name" to allocatedUser.name,
-        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
-        "crn" to application.crn,
-      ),
-    )
+    if (allocatedUser != null) {
+      emailNotificationService.sendEmail(
+        user = allocatedUser,
+        templateId = notifyConfig.templates.assessmentAllocated,
+        personalisation = mapOf(
+          "name" to allocatedUser.name,
+          "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
+          "crn" to application.crn,
+        ),
+      )
+    }
 
     return assessment
   }

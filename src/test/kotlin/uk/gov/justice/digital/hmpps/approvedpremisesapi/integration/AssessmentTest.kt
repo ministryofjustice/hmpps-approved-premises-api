@@ -987,7 +987,7 @@ class AssessmentTest : IntegrationTestBase() {
 
             val persistedPlacementRequest = placementRequestRepository.findByApplication(application)!!
 
-            assertThat(persistedPlacementRequest.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
+            assertThat(persistedPlacementRequest.allocatedToUser!!.id).isIn(listOf(matcher1.id, matcher2.id))
             assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
             assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
             assertThat(persistedPlacementRequest.duration).isEqualTo(placementDates.duration)
