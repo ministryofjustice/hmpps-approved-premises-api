@@ -871,40 +871,42 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           `Given a User` { user, jwt ->
             `Given an Offender` { offenderDetails, _ ->
               `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
-                `Given placement requirements`(placementApplicationEntity = placementApplicationEntity) { placementRequirements ->
-                  `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
-                    webTestClient.post()
-                      .uri("/placement-applications/${placementApplicationEntity.id}/decision")
-                      .header("Authorization", "Bearer $jwt")
-                      .bodyValue(
-                        PlacementApplicationDecisionEnvelope(
-                          decision = PlacementApplicationDecision.accepted,
-                          summaryOfChanges = "ChangeSummary",
-                          decisionSummary = "DecisionSummary",
-                        ),
-                      )
-                      .exchange()
-                      .expectStatus()
-                      .isOk
+                `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
+                  `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
+                    `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
+                      webTestClient.post()
+                        .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                        .header("Authorization", "Bearer $jwt")
+                        .bodyValue(
+                          PlacementApplicationDecisionEnvelope(
+                            decision = PlacementApplicationDecision.accepted,
+                            summaryOfChanges = "ChangeSummary",
+                            decisionSummary = "DecisionSummary",
+                          ),
+                        )
+                        .exchange()
+                        .expectStatus()
+                        .isOk
 
-                    val updatedPlacementApplication =
-                      placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
+                      val updatedPlacementApplication =
+                        placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-                    assertThat(updatedPlacementApplication.decision).isEqualTo(JpaPlacementApplicationDecision.ACCEPTED)
+                      assertThat(updatedPlacementApplication.decision).isEqualTo(JpaPlacementApplicationDecision.ACCEPTED)
 
-                    val createdPlacementRequests =
-                      placementRequestRepository.findAllByApplication(placementApplicationEntity.application)
+                      val createdPlacementRequests =
+                        placementRequestRepository.findAllByApplication(placementApplicationEntity.application)
 
-                    assertThat(createdPlacementRequests.size).isEqualTo(1)
+                      assertThat(createdPlacementRequests.size).isEqualTo(1)
 
-                    val createdPlacementApplication = createdPlacementRequests[0]
+                      val createdPlacementApplication = createdPlacementRequests[0]
 
-                    assertThat(createdPlacementApplication.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
-                    assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
-                    assertThat(createdPlacementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
-                    assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
-                    assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
-                    assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+                      assertThat(createdPlacementApplication.allocatedToUser.id).isIn(listOf(matcher1.id, matcher2.id))
+                      assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
+                      assertThat(createdPlacementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
+                      assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
+                      assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
+                      assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+                    }
                   }
                 }
               }
@@ -945,6 +947,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     private fun `Given placement requirements`(
       placementApplicationEntity: PlacementApplicationEntity,
+      createdAt: OffsetDateTime = OffsetDateTime.now(),
       block: (placementRequirements: PlacementRequirementsEntity) -> Unit,
     ) {
       val placementRequirements = placementRequirementsFactory.produceAndPersist {
@@ -957,6 +960,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         withEssentialCriteria(
           characteristicEntityFactory.produceAndPersistMultiple(3),
         )
+        withCreatedAt(createdAt)
       }
 
       block(placementRequirements)

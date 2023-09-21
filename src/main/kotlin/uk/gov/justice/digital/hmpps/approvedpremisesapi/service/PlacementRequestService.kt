@@ -129,7 +129,7 @@ class PlacementRequestService(
   }
 
   fun createPlacementRequestsFromPlacementApplication(placementApplicationEntity: PlacementApplicationEntity, notes: String?): AuthorisableActionResult<List<PlacementRequestEntity>> {
-    val placementRequirements = placementRequirementsRepository.findByApplication(
+    val placementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(
       placementApplicationEntity.application,
     ) ?: return AuthorisableActionResult.NotFound("Placement Requirements", placementApplicationEntity.application.id.toString())
 
