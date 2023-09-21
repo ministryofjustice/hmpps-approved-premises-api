@@ -1284,6 +1284,8 @@ class ApplicationTest : IntegrationTestBase() {
           withId(UUID.randomUUID())
         }
 
+        val offenceId = "789"
+
         val result = webTestClient.post()
           .uri("/applications")
           .header("Authorization", "Bearer $jwt")
@@ -1293,7 +1295,7 @@ class ApplicationTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
               convictionId = 123,
               deliusEventNumber = "1",
-              offenceId = "789",
+              offenceId = offenceId,
             ),
           )
           .exchange()
@@ -1307,7 +1309,8 @@ class ApplicationTest : IntegrationTestBase() {
 
         assertThat(result.responseBody.blockFirst()).matches {
           it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id
+            it.schemaVersion == applicationSchema.id &&
+            it.offenceId == offenceId
         }
       }
     }
@@ -1324,6 +1327,8 @@ class ApplicationTest : IntegrationTestBase() {
           withId(UUID.randomUUID())
         }
 
+        val offenceId = "789"
+
         val result = webTestClient.post()
           .uri("/applications")
           .header("Authorization", "Bearer $jwt")
@@ -1333,7 +1338,7 @@ class ApplicationTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
               convictionId = 123,
               deliusEventNumber = "1",
-              offenceId = "789",
+              offenceId = offenceId,
             ),
           )
           .exchange()
@@ -1347,7 +1352,8 @@ class ApplicationTest : IntegrationTestBase() {
 
         assertThat(result.responseBody.blockFirst()).matches {
           it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id
+            it.schemaVersion == applicationSchema.id &&
+            it.offenceId == offenceId
         }
       }
     }

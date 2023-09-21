@@ -196,6 +196,7 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
     assertThat(result.risks).isNotNull
     assertThat(result.arrivalDate).isNull()
+    assertThat(result.offenceId).isEqualTo(application.offenceId)
   }
 
   @Test
@@ -225,6 +226,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
     assertThat(result.arrivalDate).isEqualTo(application.arrivalDate!!.toInstant())
+    assertThat(result.offenceId).isEqualTo(application.offenceId)
   }
 
   @Test
