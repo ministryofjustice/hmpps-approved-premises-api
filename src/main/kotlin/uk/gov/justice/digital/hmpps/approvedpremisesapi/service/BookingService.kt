@@ -137,7 +137,7 @@ class BookingService(
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.allocatedToUser.id != user.id) {
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.allocatedToUser?.id != user.id) {
       return AuthorisableActionResult.Unauthorised()
     }
 

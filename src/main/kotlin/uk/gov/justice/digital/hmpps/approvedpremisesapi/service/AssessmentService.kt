@@ -151,15 +151,17 @@ class AssessmentService(
       ),
     )
 
-    emailNotificationService.sendEmail(
-      user = allocatedUser,
-      templateId = notifyConfig.templates.assessmentAllocated,
-      personalisation = mapOf(
-        "name" to allocatedUser.name,
-        "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
-        "crn" to application.crn,
-      ),
-    )
+    if (allocatedUser != null) {
+      emailNotificationService.sendEmail(
+        user = allocatedUser,
+        templateId = notifyConfig.templates.assessmentAllocated,
+        personalisation = mapOf(
+          "name" to allocatedUser.name,
+          "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
+          "crn" to application.crn,
+        ),
+      )
+    }
 
     return assessment
   }
@@ -630,15 +632,17 @@ class AssessmentService(
         ),
       )
 
-      emailNotificationService.sendEmail(
-        user = currentAssessment.allocatedToUser!!,
-        templateId = notifyConfig.templates.assessmentDeallocated,
-        personalisation = mapOf(
-          "name" to currentAssessment.allocatedToUser!!.name,
-          "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
+      if (currentAssessment.allocatedToUser != null) {
+        emailNotificationService.sendEmail(
+          user = currentAssessment.allocatedToUser!!,
+          templateId = notifyConfig.templates.assessmentDeallocated,
+          personalisation = mapOf(
+            "name" to currentAssessment.allocatedToUser!!.name,
+            "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+            "crn" to application.crn,
+          ),
+        )
+      }
     }
 
     return AuthorisableActionResult.Success(

@@ -80,7 +80,7 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (placementRequest.allocatedToUser.id != user.id && !user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (placementRequest.allocatedToUser?.id != user.id && !user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
