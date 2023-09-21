@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import arrow.core.Ior
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -255,7 +257,7 @@ class PremisesController(
     return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises, availableBedsForToday))
   }
 
-  override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Booking>> {
+  override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Booking>> = runBlocking {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -265,14 +267,19 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(
+    return@runBlocking ResponseEntity.ok(
       premises.bookings.map {
-        val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+        val personInfo = async {
+          offenderService.getInfoForPerson(
+            it.crn,
+            user.deliusUsername,
+            user.hasQualification(UserQualification.LAO),
+          )
+        }.await()
 
         val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
           if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${it.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
-
-          val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
+          val staffMemberResult = async { staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode) }.await()
 
           if (staffMemberResult !is AuthorisableActionResult.Success) {
             throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
