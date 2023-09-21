@@ -824,5 +824,24 @@ class UserServiceTest {
         )
       }
     }
+
+    @Test
+    fun `when user isActive gets reset user now has isActive set to true`() {
+      val id = UUID.randomUUID()
+
+      val user = userFactory
+        .withId(id)
+        .withIsActive(false)
+        .produce()
+
+      every { userService.saveUserAsActive(user) } answers { callOriginal() }
+      every { mockUserRepository.save(any()) } answers { user }
+
+      val result = userService.saveUserAsActive(user)
+
+      assertThat(result).isInstanceOf(UserEntity::class.java)
+
+      verify(exactly = 1) { mockUserRepository.save(any()) }
+    }
   }
 }

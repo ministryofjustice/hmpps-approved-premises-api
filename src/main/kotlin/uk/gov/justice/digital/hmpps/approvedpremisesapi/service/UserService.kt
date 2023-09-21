@@ -207,7 +207,27 @@ class UserService(
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val roles = userRolesAndQualifications.roles
     val qualifications = userRolesAndQualifications.qualifications
-    return updateUserRolesAndQualificationsForUser(user, roles, qualifications)
+    val activeUser = saveUserAsActive(user)
+    return updateUserRolesAndQualificationsForUser(activeUser, roles, qualifications)
+  }
+
+  fun saveUserAsActive(user: UserEntity): UserEntity {
+    return userRepository.save(
+      UserEntity(
+        id = user.id,
+        name = user.name,
+        deliusUsername = user.deliusUsername,
+        deliusStaffIdentifier = user.deliusStaffIdentifier,
+        deliusStaffCode = user.deliusStaffCode,
+        email = user.email,
+        telephoneNumber = user.telephoneNumber,
+        applications = mutableListOf(),
+        roles = mutableListOf(),
+        qualifications = mutableListOf(),
+        probationRegion = user.probationRegion,
+        isActive = true,
+      ),
+    )
   }
 
   fun updateUserRolesAndQualificationsForUser(user: UserEntity, roles: List<ApprovedPremisesUserRole>, qualifications: List<APIUserQualification>): AuthorisableActionResult<UserEntity> {
