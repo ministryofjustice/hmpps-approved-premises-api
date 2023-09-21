@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -18,11 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ApiCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary as ApiTemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as DomainApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity as DomainCas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity as DomainTemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
@@ -89,20 +86,6 @@ class ApplicationsTransformer(
         offenceId = jpa.offenceId,
       )
 
-      is DomainCas2ApplicationEntity -> Cas2Application(
-        id = jpa.id,
-        person = personTransformer.transformModelToPersonApi(personInfo),
-        createdByUserId = jpa.createdByUser.id,
-        schemaVersion = jpa.schemaVersion.id,
-        outdatedSchema = !jpa.schemaUpToDate,
-        createdAt = jpa.createdAt.toInstant(),
-        submittedAt = jpa.submittedAt?.toInstant(),
-        data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-        document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-        status = getStatus(jpa, latestAssessment),
-        type = "CAS2",
-      )
-
       else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
     }
   }
@@ -140,22 +123,6 @@ class ApplicationsTransformer(
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
         status = getStatusFromSummary(domain),
         type = "CAS3",
-      )
-    }
-
-    is DomainCas2ApplicationSummary -> {
-      val riskRatings =
-        if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
-
-      ApiCas2ApplicationSummary(
-        id = domain.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
-        createdByUserId = domain.getCreatedByUserId(),
-        createdAt = domain.getCreatedAt().toInstant(),
-        submittedAt = domain.getSubmittedAt()?.toInstant(),
-        risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
-        status = getStatusFromSummary(domain),
-        type = "CAS2",
       )
     }
 

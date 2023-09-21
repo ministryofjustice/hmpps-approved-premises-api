@@ -9,10 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -20,11 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
 import java.net.URI
@@ -48,11 +47,7 @@ class ApplicationsController(
   override fun applicationsGet(): ResponseEntity<List<ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    val applications = applicationService.getAllApplicationsForUsername(
-      user
-        .deliusUsername,
-      ServiceName.cas2,
-    )
+    val applications = applicationService.getAllApplicationsForUser(user)
 
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
   }
@@ -61,7 +56,10 @@ class ApplicationsController(
     ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
-    val application = when (val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)) {
+    val application = when (
+      val applicationResult = applicationService
+        .getApplicationForUsername(applicationId, user.deliusUsername)
+    ) {
       is AuthorisableActionResult.NotFound -> null
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
@@ -81,7 +79,7 @@ class ApplicationsController(
 
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn, user)
 
-    val applicationResult = applicationService.createCas2Application(body.crn, user, deliusPrincipal.token.tokenValue)
+    val applicationResult = applicationService.createApplication(body.crn, user, deliusPrincipal.token.tokenValue)
 
     val application = when (applicationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
@@ -105,7 +103,7 @@ class ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateCas2Application(applicationId = applicationId, data = serializedData, username = user.deliusUsername)
+    val applicationResult = applicationService.updateApplication(applicationId = applicationId, data = serializedData, username = user.deliusUsername)
 
     val validationResult = when (applicationResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
@@ -128,7 +126,7 @@ class ApplicationsController(
     submitApplication: SubmitCas2Application,
   ): ResponseEntity<Unit> {
     httpAuthService.getDeliusPrincipalOrThrow()
-    val submitResult = applicationService.submitCas2Application(applicationId, submitApplication)
+    val submitResult = applicationService.submitApplication(applicationId, submitApplication)
 
     val validationResult = when (submitResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
@@ -146,13 +144,22 @@ class ApplicationsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary, user: UserEntity): ApplicationSummary {
+  private fun getPersonDetailAndTransformToSummary(
+    application: uk.gov.justice.digital
+    .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary,
+    user: UserEntity,
+  ):
+    ApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn(), user)
 
-    return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
+    return applicationsTransformer.transformJpaSummaryToSummary(application, personInfo)
   }
 
-  private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {
+  private fun getPersonDetailAndTransform(
+    application: Cas2ApplicationEntity,
+    user:
+      UserEntity,
+  ): Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn, user)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)

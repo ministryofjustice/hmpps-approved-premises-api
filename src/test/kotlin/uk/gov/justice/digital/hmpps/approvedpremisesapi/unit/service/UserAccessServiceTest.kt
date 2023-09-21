@@ -17,8 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -822,34 +820,6 @@ class UserAccessServiceTest {
     communityApiStaffUserDetailsReturnsTeamCodes("TEAM1")
 
     every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
-
-    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
-  }
-
-  @Test
-  fun `userCanViewApplication returns true if the user created the application for CAS2`() {
-    val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
-    val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withApplicationSchema(newestJsonSchema)
-      .produce()
-
-    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
-  }
-
-  @Test
-  fun `userCanViewApplication returns false otherwise for CAS2`() {
-    val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
-    val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
-      .produce()
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
   }
