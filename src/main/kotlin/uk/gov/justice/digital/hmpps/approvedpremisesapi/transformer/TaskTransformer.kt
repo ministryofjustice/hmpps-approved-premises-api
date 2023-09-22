@@ -92,11 +92,7 @@ class TaskTransformer(
     else -> TaskStatus.notStarted
   }
 
-  private fun transformUserOrNull(userEntity: UserEntity?): ApprovedPremisesUser? {
-    return if (userEntity == null) {
-      null
-    } else {
-      userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises) as ApprovedPremisesUser
-    }
+  private fun transformUserOrNull(userEntity: UserEntity?) = userEntity?.let {
+    userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) as ApprovedPremisesUser
   }
 }
