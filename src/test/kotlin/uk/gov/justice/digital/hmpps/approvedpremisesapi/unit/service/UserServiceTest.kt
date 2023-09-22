@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addQualificationForUnitTest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
@@ -270,7 +269,6 @@ class UserServiceTest {
       mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
         requiredQualifications = listOf(UserQualification.LAO.toString()),
         totalRequiredQualifications = 1,
-        excludedUserIds = any(),
       )
     } returns userForAllocation
 
@@ -302,43 +300,10 @@ class UserServiceTest {
       mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
         requiredQualifications = emptyList(),
         totalRequiredQualifications = 0,
-        excludedUserIds = any(),
       )
     } returns userWithQualifications andThen userWithoutQualifications
 
     assertThat(userService.getUserForAssessmentAllocation(application)).isEqualTo(userWithoutQualifications)
-  }
-
-  @Test
-  fun `getUserForAssessmentAllocation does not select user with CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION role`() {
-    val createdByUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val userWithExclusionRole = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION)
-
-    val userWithoutExclusionRole = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(createdByUser)
-      .produce()
-
-    every { mockOffenderService.isLao(application.crn) } returns false
-
-    every {
-      mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
-        requiredQualifications = emptyList(),
-        totalRequiredQualifications = 0,
-        excludedUserIds = any(),
-      )
-    } returns userWithExclusionRole andThen userWithoutExclusionRole
-
-    assertThat(userService.getUserForAssessmentAllocation(application)).isEqualTo(userWithoutExclusionRole)
   }
 
   @Test
@@ -356,37 +321,10 @@ class UserServiceTest {
       mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(
         requiredQualifications = listOf(UserQualification.LAO.toString()),
         totalRequiredQualifications = 1,
-        excludedUserIds = any(),
       )
     } returns userForAllocation
 
     assertThat(userService.getUserForPlacementRequestAllocation(crn)).isEqualTo(userForAllocation)
-  }
-
-  @Test
-  fun `getUserForPlacementRequestAllocation does not select user with CAS1_EXCLUDED_FROM_MATCH_ALLOCATION role`() {
-    val userWithExclusionRole = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION)
-
-    val userWithoutExclusionRole = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val crn = "CRN123"
-
-    every { mockOffenderService.isLao(crn) } returns false
-
-    every {
-      mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(
-        requiredQualifications = emptyList(),
-        totalRequiredQualifications = 0,
-        excludedUserIds = any(),
-      )
-    } returns userWithExclusionRole andThen userWithoutExclusionRole
-
-    assertThat(userService.getUserForPlacementRequestAllocation(crn)).isEqualTo(userWithoutExclusionRole)
   }
 
   @Test
@@ -404,37 +342,10 @@ class UserServiceTest {
       mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(
         requiredQualifications = listOf(UserQualification.LAO.toString()),
         totalRequiredQualifications = 1,
-        excludedUserIds = any(),
       )
     } returns userForAllocation
 
     assertThat(userService.getUserForPlacementApplicationAllocation(crn)).isEqualTo(userForAllocation)
-  }
-
-  @Test
-  fun `getUserForPlacementApplicationAllocation does not select user with CAS1_EXCLUDED_FROM_MATCH_ALLOCATION role`() {
-    val userWithExclusionRole = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION)
-
-    val userWithoutExclusionRole = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val crn = "CRN123"
-
-    every { mockOffenderService.isLao(crn) } returns false
-
-    every {
-      mockUserRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(
-        requiredQualifications = emptyList(),
-        totalRequiredQualifications = 0,
-        excludedUserIds = any(),
-      )
-    } returns userWithExclusionRole andThen userWithoutExclusionRole
-
-    assertThat(userService.getUserForPlacementApplicationAllocation(crn)).isEqualTo(userWithoutExclusionRole)
   }
 
   @Test
