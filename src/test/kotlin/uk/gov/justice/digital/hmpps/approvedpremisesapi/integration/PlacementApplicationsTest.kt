@@ -900,6 +900,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
                       val createdPlacementApplication = createdPlacementRequests[0]
 
+                      assertThat(createdPlacementApplication.allocatedToUser).isNotNull
                       assertThat(createdPlacementApplication.allocatedToUser!!.id).isIn(listOf(matcher1.id, matcher2.id))
                       assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
                       assertThat(createdPlacementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
