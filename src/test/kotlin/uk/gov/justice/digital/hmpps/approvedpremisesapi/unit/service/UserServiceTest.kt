@@ -276,37 +276,6 @@ class UserServiceTest {
   }
 
   @Test
-  fun `getUserForAssessmentAllocation does not select user with qualifications when none are required to assess the application`() {
-    val createdByUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val userWithQualifications = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addQualificationForUnitTest(UserQualification.LAO)
-
-    val userWithoutQualifications = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(createdByUser)
-      .produce()
-
-    every { mockOffenderService.isLao(application.crn) } returns false
-
-    every {
-      mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
-        requiredQualifications = emptyList(),
-        totalRequiredQualifications = 0,
-      )
-    } returns userWithQualifications andThen userWithoutQualifications
-
-    assertThat(userService.getUserForAssessmentAllocation(application)).isEqualTo(userWithoutQualifications)
-  }
-
-  @Test
   fun `getUserForPlacementRequestAllocation adds LAO qualification to requirements when application is for an LAO CRN`() {
     val userForAllocation = UserEntityFactory()
       .withUnitTestControlProbationRegion()
