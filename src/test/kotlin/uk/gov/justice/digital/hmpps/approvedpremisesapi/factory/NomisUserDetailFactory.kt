@@ -24,6 +24,22 @@ class NomisUserDetailFactory : Factory<NomisUserDetail> {
   private var admin: Yielded<Boolean> = { false }
   private var staffStatus: Yielded<String?> = { "ACTIVE" }
 
+  fun withUsername(username: String) = apply {
+    this.username = { username }
+  }
+
+  fun withFirstName(firstName: String) = apply {
+    this.firstName = { firstName }
+  }
+
+  fun withLastName(lastName: String) = apply {
+    this.lastName = { lastName }
+  }
+
+  fun withStaffId(staffId: Long) = apply {
+    this.staffId = { staffId }
+  }
+
   override fun produce(): NomisUserDetail = NomisUserDetail(
     username = this.username(),
     staffId = this.staffId(),
