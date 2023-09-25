@@ -229,4 +229,28 @@ class WebClientConfiguration(
       )
       .build()
   }
+
+  @Bean(name = ["nomisUserRolesApiWebClient"])
+  fun nomisUserRolesApiClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.nomis-user-roles.base-url}") nomisUserRolesBaseUrl: String,
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("nomis-user-roles")
+
+    return WebClient.builder()
+      .baseUrl(nomisUserRolesBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+        ),
+      )
+      .filter(oauth2Client)
+      .build()
+  }
 }
