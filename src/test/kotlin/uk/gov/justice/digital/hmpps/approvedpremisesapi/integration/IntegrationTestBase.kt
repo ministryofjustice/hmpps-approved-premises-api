@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedCancellat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
@@ -113,6 +114,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -175,6 +177,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LostBedCancel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LostBedReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LostBedsTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategoryTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NomisUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.OfflineApplicationTestRepository
@@ -379,6 +382,9 @@ abstract class IntegrationTestBase {
   lateinit var userRepository: UserTestRepository
 
   @Autowired
+  lateinit var nomisUserRepository: NomisUserTestRepository
+
+  @Autowired
   lateinit var userRoleAssignmentRepository: UserRoleAssignmentTestRepository
 
   @Autowired
@@ -473,6 +479,7 @@ abstract class IntegrationTestBase {
   lateinit var approvedPremisesAssessmentJsonSchemaEntityFactory: PersistedFactory<ApprovedPremisesAssessmentJsonSchemaEntity, UUID, ApprovedPremisesAssessmentJsonSchemaEntityFactory>
   lateinit var temporaryAccommodationAssessmentJsonSchemaEntityFactory: PersistedFactory<TemporaryAccommodationAssessmentJsonSchemaEntity, UUID, TemporaryAccommodationAssessmentJsonSchemaEntityFactory>
   lateinit var userEntityFactory: PersistedFactory<UserEntity, UUID, UserEntityFactory>
+  lateinit var nomisUserEntityFactory: PersistedFactory<NomisUserEntity, UUID, NomisUserEntityFactory>
   lateinit var userRoleAssignmentEntityFactory: PersistedFactory<UserRoleAssignmentEntity, UUID, UserRoleAssignmentEntityFactory>
   lateinit var userQualificationAssignmentEntityFactory: PersistedFactory<UserQualificationAssignmentEntity, UUID, UserQualificationAssignmentEntityFactory>
   lateinit var approvedPremisesAssessmentEntityFactory: PersistedFactory<ApprovedPremisesAssessmentEntity, UUID, ApprovedPremisesAssessmentEntityFactory>
@@ -553,6 +560,7 @@ abstract class IntegrationTestBase {
     approvedPremisesAssessmentJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesAssessmentJsonSchemaEntityFactory() }, approvedPremisesAssessmentJsonSchemaRepository)
     temporaryAccommodationAssessmentJsonSchemaEntityFactory = PersistedFactory({ TemporaryAccommodationAssessmentJsonSchemaEntityFactory() }, temporaryAccommodationAssessmentJsonSchemaRepository)
     approvedPremisesPlacementApplicationJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory() }, approvedPremisesPlacementApplicationJsonSchemaRepository)
+    nomisUserEntityFactory = PersistedFactory({ NomisUserEntityFactory() }, nomisUserRepository)
     userEntityFactory = PersistedFactory({ UserEntityFactory() }, userRepository)
     userRoleAssignmentEntityFactory = PersistedFactory({ UserRoleAssignmentEntityFactory() }, userRoleAssignmentRepository)
     userQualificationAssignmentEntityFactory = PersistedFactory({ UserQualificationAssignmentEntityFactory() }, userQualificationAssignmentRepository)
