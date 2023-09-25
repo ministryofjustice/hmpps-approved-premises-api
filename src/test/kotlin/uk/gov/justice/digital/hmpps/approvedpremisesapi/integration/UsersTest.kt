@@ -162,6 +162,7 @@ class UsersTest : IntegrationTestBase() {
             roles = emptyList(),
             qualifications = emptyList(),
             service = ServiceName.approvedPremises.value,
+            isActive = true,
           ),
         ),
       )
@@ -226,6 +227,7 @@ class UsersTest : IntegrationTestBase() {
             telephoneNumber = telephoneNumber,
             roles = emptyList(),
             service = ServiceName.temporaryAccommodation.value,
+            isActive = true,
           ),
         ),
       )
@@ -674,6 +676,7 @@ class UsersTest : IntegrationTestBase() {
 
       userEntityFactory.produceAndPersist {
         withId(id)
+        withIsActive(false)
         withYieldedProbationRegion { region }
       }
 
@@ -700,6 +703,7 @@ class UsersTest : IntegrationTestBase() {
           .jsonPath(".roles[2]").isEqualTo(ApprovedPremisesUserRole.excludedFromAssessAllocation.value)
           .jsonPath(".roles[3]").isEqualTo(ApprovedPremisesUserRole.excludedFromMatchAllocation.value)
           .jsonPath(".roles[4]").isEqualTo(ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation.value)
+          .jsonPath(".isActive").isEqualTo(true)
       }
     }
   }
