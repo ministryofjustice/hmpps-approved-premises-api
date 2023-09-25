@@ -269,6 +269,7 @@ class UserServiceTest {
       mockUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(
         requiredQualifications = listOf(UserQualification.LAO.toString()),
         totalRequiredQualifications = 1,
+        0,
       )
     } returns userForAllocation
 

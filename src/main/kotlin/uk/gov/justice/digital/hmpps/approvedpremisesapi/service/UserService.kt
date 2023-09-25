@@ -121,12 +121,13 @@ class UserService(
 
   fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity? {
     val qualifications = application.getRequiredQualifications().toMutableList()
+    val qualifiedUserRequired = (qualifications.size.toLong() > 0).compareTo(false)
 
     if (offenderService.isLao(application.crn)) {
       qualifications += UserQualification.LAO
     }
 
-    val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong())
+    val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), qualifiedUserRequired)
 
     if (potentialUser == null) {
       log.error("Could not find a suitable assessor for assessment with qualifications (${qualifications.joinToString(",")}): ${application.crn}")

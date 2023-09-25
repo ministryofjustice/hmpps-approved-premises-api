@@ -54,6 +54,19 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
     WHERE ura.role = 'CAS1_ASSESSOR' AND 
         u.is_active = true AND
+        (
+            :qualifiedUserRequired = 1
+            OR 
+            (
+                SELECT
+                  COUNT(*)
+                FROM
+                  user_qualification_assignments uqa
+                WHERE
+                  uqa.qualification NOT IN ('WOMENS', 'PIPE', 'ESAP', 'EMERGENCY')
+                  AND uqa.user_id = u.id
+            ) > 0
+        ) AND
         (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
         u.id NOT IN (
             SELECT u.id FROM users u
@@ -65,7 +78,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     """,
     nativeQuery = true,
   )
-  fun findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(requiredQualifications: List<String>, totalRequiredQualifications: Long): UserEntity?
+  fun findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(requiredQualifications: List<String>, totalRequiredQualifications: Long, qualifiedUserRequired: Int): UserEntity?
 
   @Query(
     """

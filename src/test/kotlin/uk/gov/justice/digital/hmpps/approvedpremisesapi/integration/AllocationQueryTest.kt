@@ -62,7 +62,7 @@ class AllocationQueryTest : IntegrationTestBase() {
     createUserForAssessmentQuery(
       "Assessor with no qualifications",
       isAssessor = true,
-      qualifications = listOf(),
+      qualifications = listOf(UserQualification.LAO),
       numberOfPendingAssessments = 0,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 0,
@@ -70,7 +70,7 @@ class AllocationQueryTest : IntegrationTestBase() {
     createUserForAssessmentQuery(
       "Assessor with both Qualifications and two pending allocated Assessments",
       isAssessor = true,
-      qualifications = listOf(),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
       numberOfPendingAssessments = 2,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 0,
@@ -126,9 +126,11 @@ class AllocationQueryTest : IntegrationTestBase() {
       numberOfLessRecentCompletedAssessments = 2,
     )
 
-    val actualAllocatedUserWithQualifications = realUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(listOf("PIPE", "WOMENS"), 2)
+    val actualAllocatedUserWithQualifications = realUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(listOf("PIPE", "WOMENS"), 2, 1)
+    val actualAllocatedUserWithoutQualifications = realUserRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(emptyList(), 0, 0)
 
     assertThat(actualAllocatedUserWithQualifications!!.deliusUsername).isEqualTo("Assessor with both Qualifications and zero pending allocated Assessments")
+    assertThat(actualAllocatedUserWithoutQualifications!!.deliusUsername).isEqualTo("Assessor with no qualifications")
   }
 
   @Test
