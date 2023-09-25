@@ -9,31 +9,30 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
 
 @Service("Cas2ApplicationService")
 class ApplicationService(
-  private val userRepository: UserRepository,
+  private val userRepository: NomisUserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
-  private val userService: UserService,
+  private val userService: NomisUserService,
   private val userAccessService: UserAccessService,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
-  fun getAllApplicationsForUser(user: UserEntity): List<Cas2ApplicationSummary> {
+  fun getAllApplicationsForUser(user: NomisUserEntity): List<Cas2ApplicationSummary> {
     return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
   }
 
@@ -41,7 +40,7 @@ class ApplicationService(
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
+    val userEntity = userRepository.findByNomisUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
 
     val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
@@ -56,9 +55,9 @@ class ApplicationService(
     }
   }
 
-  fun createApplication(crn: String, user: UserEntity, jwt: String) =
+  fun createApplication(crn: String, user: NomisUserEntity, jwt: String) =
     validated<Cas2ApplicationEntity> {
-      val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+      val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
 
       val offenderDetails = when (offenderDetailsResult) {
         is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"

@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -20,12 +20,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -40,7 +40,7 @@ class ApplicationsController(
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
-  private val userService: UserService,
+  private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -58,7 +58,7 @@ class ApplicationsController(
 
     val application = when (
       val applicationResult = applicationService
-        .getApplicationForUsername(applicationId, user.deliusUsername)
+        .getApplicationForUsername(applicationId, user.nomisUsername)
     ) {
       is AuthorisableActionResult.NotFound -> null
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -107,7 +107,12 @@ class ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateApplication(applicationId = applicationId, data = serializedData, username = user.deliusUsername)
+    val applicationResult = applicationService.updateApplication(
+      applicationId =
+      applicationId,
+      data = serializedData,
+      username = user.nomisUsername,
+    )
 
     val validationResult = when (applicationResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
@@ -151,7 +156,7 @@ class ApplicationsController(
   private fun getPersonDetailAndTransformToSummary(
     application: uk.gov.justice.digital
     .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary,
-    user: UserEntity,
+    user: NomisUserEntity,
   ):
     ApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn(), user)
@@ -161,8 +166,7 @@ class ApplicationsController(
 
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-    user:
-      UserEntity,
+    user: NomisUserEntity,
   ): Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn, user)
 

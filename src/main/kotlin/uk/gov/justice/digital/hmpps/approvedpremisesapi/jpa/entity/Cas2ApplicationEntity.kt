@@ -52,7 +52,7 @@ data class Cas2ApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
-  val createdByUser: UserEntity,
+  val createdByUser: NomisUserEntity,
 
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var data: String?,
