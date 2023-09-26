@@ -163,3 +163,40 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /people/search:
+    get:
+      tags:
+        - People operations
+      summary: Searches for a Person by their CRN
+      parameters:
+        - name: crn
+          in: query
+          description: CRN to search for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Person'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
