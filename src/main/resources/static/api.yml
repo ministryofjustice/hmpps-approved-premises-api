@@ -6151,6 +6151,8 @@ components:
           type: string
         telephoneNumber:
           type: string
+        isActive:
+          type: boolean
         region:
           $ref: '#/components/schemas/ProbationRegion'
       discriminator:

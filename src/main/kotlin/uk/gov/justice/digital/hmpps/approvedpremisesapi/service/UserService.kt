@@ -203,10 +203,13 @@ class UserService(
     userRepository.save(user)
   }
 
-  fun updateUserRolesAndQualifications(id: UUID, userRolesAndQualifications: UserRolesAndQualifications): AuthorisableActionResult<UserEntity> {
+  fun updateUser(id: UUID, userRolesAndQualifications: UserRolesAndQualifications): AuthorisableActionResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val roles = userRolesAndQualifications.roles
     val qualifications = userRolesAndQualifications.qualifications
+    user.isActive = true
+    userRepository.save(user)
+
     return updateUserRolesAndQualificationsForUser(user, roles, qualifications)
   }
 

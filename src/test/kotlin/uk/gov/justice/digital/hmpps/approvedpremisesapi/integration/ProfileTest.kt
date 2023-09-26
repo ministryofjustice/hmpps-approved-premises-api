@@ -94,6 +94,7 @@ class ProfileTest : IntegrationTestBase() {
               roles = listOf(ApprovedPremisesUserRole.assessor),
               qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
               service = ServiceName.approvedPremises.value,
+              isActive = true,
             ),
           ),
         )
@@ -154,6 +155,7 @@ class ProfileTest : IntegrationTestBase() {
             telephoneNumber = telephoneNumber,
             roles = listOf(TemporaryAccommodationUserRole.assessor),
             service = ServiceName.temporaryAccommodation.value,
+            isActive = true,
           ),
         ),
       )
