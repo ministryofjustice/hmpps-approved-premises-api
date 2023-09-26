@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UserAllocationsEngine
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
@@ -120,81 +122,28 @@ class UserService(
   }
 
   fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity? {
-    val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
     val qualifications = application.getRequiredQualifications().toMutableList()
-    var attempts = 1
+    val isLao = offenderService.isLao(application.crn)
 
-    if (offenderService.isLao(application.crn)) {
-      qualifications += UserQualification.LAO
-    }
+    val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.Assessment, qualifications, isLao)
 
-    while (true) {
-      val potentialUser = userRepository.findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-
-      if (potentialUser != null) {
-        if ((qualifications.isEmpty() && potentialUser.qualifications.isNotEmpty()) || potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION)) {
-          unsuitableUsers += potentialUser.id
-          attempts += 1
-          continue
-        }
-      } else {
-        log.error("Could not find a suitable assessor for assessment with qualifications (${qualifications.joinToString(",")}) after $attempts attempts: ${application.crn}")
-      }
-
-      return potentialUser
-    }
+    return allocationsEngine.getAllocatedUser()
   }
 
   fun getUserForPlacementRequestAllocation(crn: String): UserEntity? {
-    val qualifications = mutableListOf<UserQualification>()
-    val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
-    var attempts = 1
+    val isLao = offenderService.isLao(crn)
 
-    if (offenderService.isLao(crn)) {
-      qualifications += UserQualification.LAO
-    }
+    val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.PlacementRequest, emptyList(), isLao)
 
-    while (true) {
-      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-
-      if (potentialUser != null) {
-        if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION)) {
-          unsuitableUsers += potentialUser.id
-          attempts += 1
-          continue
-        }
-      } else {
-        log.error("Could not find a suitable matcher for placement request with qualifications (${qualifications.joinToString(",")}) after $attempts attempt(s): $crn")
-      }
-
-      return potentialUser
-    }
+    return allocationsEngine.getAllocatedUser()
   }
 
   fun getUserForPlacementApplicationAllocation(crn: String): UserEntity? {
-    val qualifications = mutableListOf<UserQualification>()
-    val unsuitableUsers = mutableListOf<UUID>(UUID.randomUUID())
-    var attempts = 1
+    val isLao = offenderService.isLao(crn)
 
-    if (offenderService.isLao(crn)) {
-      qualifications += UserQualification.LAO
-    }
+    val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.PlacementApplication, emptyList(), isLao)
 
-    while (true) {
-      val potentialUser = userRepository.findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(qualifications.map(UserQualification::toString), qualifications.size.toLong(), unsuitableUsers)
-
-      if (potentialUser != null) {
-        if (potentialUser.hasRole(UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION)) {
-          unsuitableUsers += potentialUser.id
-          attempts += 1
-          continue
-        }
-      } else {
-        log.error("Could not find a suitable matcher for placement application with qualifications (${qualifications.joinToString(",")}): $crn after $attempts attempts")
-      }
-
-      return potentialUser
-    }
+    return allocationsEngine.getAllocatedUser()
   }
 
   fun deleteUser(id: UUID) {

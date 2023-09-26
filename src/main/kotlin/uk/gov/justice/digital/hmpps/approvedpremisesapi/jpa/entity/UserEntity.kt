@@ -30,7 +30,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   @Query(
     """
-    SELECT u.*, ura.*, uqa2.*,
+    SELECT u.*,
      RANK() OVER (
       ORDER BY
         (
@@ -49,23 +49,18 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
             )
         ) ASC
      ) as score
-    FROM "users"  u
-	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
-	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
-    WHERE ura.role = 'CAS1_ASSESSOR' AND 
-        u.is_active = true AND
-        (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
-        u.id NOT IN (:excludedUserIds)
+    FROM "users" u
+    WHERE u.id IN (:userIds)
     ORDER BY score ASC
     LIMIT 1
     """,
     nativeQuery = true,
   )
-  fun findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
+  fun findUserWithLeastPendingOrCompletedInLastWeekAssessments(userIds: List<UUID>): UserEntity?
 
   @Query(
     """
-    SELECT u.*, ura.*, uqa2.*,
+    SELECT u.*,
     RANK() OVER (
       ORDER BY
         (
@@ -84,23 +79,18 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
             )
         ) ASC
      ) as score
-    FROM "users"  u
-	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
-	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
-    WHERE ura.role = 'CAS1_MATCHER' AND 
-        u.is_active = true AND
-        (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
-        u.id NOT IN (:excludedUserIds)
+    FROM "users" u
+    WHERE u.id IN (:userIds)
     ORDER BY score ASC 
     LIMIT 1
     """,
     nativeQuery = true,
   )
-  fun findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
+  fun findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(userIds: List<UUID>): UserEntity?
 
   @Query(
     """
-    SELECT u.*, ura.*, uqa2.*,
+    SELECT u.*,
     RANK() OVER (
       ORDER BY
         (
@@ -120,18 +110,13 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
         ) ASC
      ) as score
     FROM "users"  u
-	    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id 
-	    LEFT JOIN user_qualification_assignments uqa2 ON uqa2.user_id = u.id 
-    WHERE ura.role = 'CAS1_MATCHER' AND 
-        u.is_active = true AND
-        (SELECT COUNT(1) FROM user_qualification_assignments uqa WHERE uqa.user_id = u.id AND uqa.qualification IN (:requiredQualifications)) = :totalRequiredQualifications AND 
-        u.id NOT IN (:excludedUserIds)
+    WHERE u.id IN (:userIds)
     ORDER BY score ASC 
     LIMIT 1
     """,
     nativeQuery = true,
   )
-  fun findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests(requiredQualifications: List<String>, totalRequiredQualifications: Long, excludedUserIds: List<UUID>): UserEntity?
+  fun findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(userIds: List<UUID>): UserEntity?
 }
 
 @Entity
