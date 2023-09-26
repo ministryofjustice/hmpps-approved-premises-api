@@ -26,7 +26,38 @@ class PersonSearchTest : IntegrationTestBase() {
   fun `Searching for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
+      authSource = "other-auth-source",
+    )
+
+    webTestClient.get()
+      .uri("/people/search?crn=CRN")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Searching for a CRN with a NOMIS JWT returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
       authSource = "nomis",
+    )
+
+    webTestClient.get()
+      .uri("/people/search?crn=CRN")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Searching for a CRN with ROLE_PRISON returns 403`() {
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = "username",
+      authSource = "delius",
+      roles = listOf("ROLE_PRISON"),
     )
 
     webTestClient.get()
@@ -42,6 +73,7 @@ class PersonSearchTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
+      roles = listOf("ROLE_OTHER"),
     )
 
     webTestClient.get()

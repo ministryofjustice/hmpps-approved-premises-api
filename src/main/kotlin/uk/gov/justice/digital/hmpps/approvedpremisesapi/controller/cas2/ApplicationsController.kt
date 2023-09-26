@@ -74,12 +74,16 @@ class ApplicationsController(
   @Transactional
   override fun applicationsPost(body: NewApplication):
     ResponseEntity<Application> {
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
+    val nomisPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn, user)
 
-    val applicationResult = applicationService.createApplication(body.crn, user, deliusPrincipal.token.tokenValue)
+    val applicationResult = applicationService.createApplication(
+      body.crn,
+      user,
+      nomisPrincipal.token.tokenValue,
+    )
 
     val application = when (applicationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
@@ -125,7 +129,7 @@ class ApplicationsController(
     applicationId: UUID,
     submitApplication: SubmitCas2Application,
   ): ResponseEntity<Unit> {
-    httpAuthService.getDeliusPrincipalOrThrow()
+    httpAuthService.getNomisPrincipalOrThrow()
     val submitResult = applicationService.submitApplication(applicationId, submitApplication)
 
     val validationResult = when (submitResult) {

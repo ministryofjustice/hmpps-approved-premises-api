@@ -45,6 +45,23 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
+      roles = listOf("ROLE_OTHER"),
+    )
+
+    webTestClient.get()
+      .uri("/people/CRN/oasys/risk-to-self")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Getting oasys sections for a CRN with ROLE_PRISON returns 403`() {
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = "username",
+      authSource = "delius",
+      roles = listOf("ROLE_PRISON"),
     )
 
     webTestClient.get()

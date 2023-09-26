@@ -29,6 +29,21 @@ class PersonOASysRoshTest : IntegrationTestBase() {
   fun `Getting RoSH  for a CRN with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
+      authSource = "other-auth-source",
+    )
+
+    webTestClient.get()
+      .uri("/people/CRN/oasys/rosh")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Getting RoSH  for a CRN with a nomis JWT returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
       authSource = "nomis",
     )
 
@@ -45,6 +60,23 @@ class PersonOASysRoshTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
+      roles = listOf("ROLE_OTHER"),
+    )
+
+    webTestClient.get()
+      .uri("/people/CRN/oasys/rosh")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Getting RoSH for a CRN with ROLE_PRISON returns 403`() {
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = "username",
+      authSource = "delius",
+      roles = listOf("ROLE_PRISON"),
     )
 
     webTestClient.get()
