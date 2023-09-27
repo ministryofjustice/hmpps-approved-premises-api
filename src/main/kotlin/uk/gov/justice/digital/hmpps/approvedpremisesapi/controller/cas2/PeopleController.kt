@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.PeopleCas2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -61,6 +62,27 @@ class PeopleController(
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
+      )
+    }
+  }
+
+  override fun peopleCrnOasysRoshGet(crn: String): ResponseEntity<OASysRiskOfSeriousHarm> {
+    getOffenderDetails(crn)
+
+    return runBlocking(context = Dispatchers.IO) {
+      val offenceDetailsResult = async {
+        oaSysOffenderService.getOASysOffenceDetails(crn)
+      }
+
+      val roshResult = async {
+        oaSysOffenderService.getOASysRoshSummary(crn)
+      }
+
+      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
+      val rosh = getSuccessEntityOrThrow(crn, roshResult.await())
+
+      ResponseEntity.ok(
+        oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
       )
     }
   }
