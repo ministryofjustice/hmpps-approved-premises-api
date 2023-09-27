@@ -224,6 +224,7 @@ class ApprovedPremisesApplicationEntity(
   var releaseType: String?,
   var arrivalDate: OffsetDateTime?,
   var name: String,
+  var targetLocation: String?,
 ) : ApplicationEntity(
   id,
   crn,

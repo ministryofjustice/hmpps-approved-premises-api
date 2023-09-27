@@ -1530,6 +1530,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           assertThat(persistedApplication.isWomensApplication).isTrue
           assertThat(persistedApplication.isPipeApplication).isTrue
+          assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
 
           val createdAssessment = approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
           assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
