@@ -14,13 +14,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.BaseHMPPSClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.time.Duration
@@ -127,7 +126,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertThat((firstResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
     wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponseOne.otherIds.crn}")))
 
-    val firstMetadata = objectMapper.readValue<BaseHMPPSClient.PreemptiveCacheMetadata>(
+    val firstMetadata = objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(
       redisTemplate.boundValueOps("$preemptiveCacheKeyPrefix-offenderDetailSummary-$crn-metadata").get()!!,
     )
 
@@ -154,7 +153,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertThat((thirdResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
     wiremockServer.verify(exactly(2), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponseOne.otherIds.crn}")))
 
-    val secondMetadata = objectMapper.readValue<BaseHMPPSClient.PreemptiveCacheMetadata>(
+    val secondMetadata = objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(
       redisTemplate.boundValueOps("$preemptiveCacheKeyPrefix-offenderDetailSummary-$crn-metadata").get()!!,
     )
 
@@ -190,7 +189,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
       val qualifiedMetadataKey = "offenderDetailSummary-$crn-metadata"
       val qualifiedDataKey = "offenderDetailSummary-$crn-data"
 
-      val cacheEntry = BaseHMPPSClient.PreemptiveCacheMetadata(
+      val cacheEntry = WebClientCache.PreemptiveCacheMetadata(
         httpStatus = HttpStatus.OK,
         refreshableAfter = Instant.now().plusSeconds(10),
         method = null,
@@ -221,10 +220,9 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 class PreemptivelyCachedClient(
   @Qualifier("communityApiWebClient") private val webClient: WebClient,
   objectMapper: ObjectMapper,
-  redisTemplate: RedisTemplate<String, String>,
-  @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
-) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
-  private val cacheConfig = PreemptiveCacheConfig(
+  webClientCache: WebClientCache,
+) : BaseHMPPSClient(webClient, objectMapper, webClientCache) {
+  private val cacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "offenderDetailSummary",
     successSoftTtlSeconds = 5,
     failureSoftTtlBackoffSeconds = listOf(5, 10, 20),
