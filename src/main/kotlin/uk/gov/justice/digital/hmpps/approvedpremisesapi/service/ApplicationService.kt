@@ -229,6 +229,7 @@ class ApplicationService(
         otherWithdrawalReason = null,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
+        targetLocation = null,
       ),
     )
 
@@ -655,6 +656,7 @@ class ApplicationService(
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
+      targetLocation = submitApplication.targetLocation
       arrivalDate = if (submitApplication.arrivalDate !== null) OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC) else null
     }
 

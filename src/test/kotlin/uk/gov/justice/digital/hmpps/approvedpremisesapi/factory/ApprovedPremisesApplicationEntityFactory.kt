@@ -45,6 +45,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var withdrawalReason: Yielded<String?> = { null }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
   private var name: Yielded<String> = { "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}" }
+  private var targetLocation: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -158,6 +159,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.name = { name }
   }
 
+  fun withTargetLocation(targetLocation: String?) = apply {
+    this.targetLocation = { targetLocation }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -187,5 +192,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     otherWithdrawalReason = null,
     nomsNumber = this.nomsNumber(),
     name = this.name(),
+    targetLocation = this.targetLocation(),
   )
 }

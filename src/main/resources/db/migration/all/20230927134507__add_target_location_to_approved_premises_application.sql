@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises_applications ADD COLUMN target_location TEXT;
