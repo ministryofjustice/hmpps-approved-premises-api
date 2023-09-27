@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -56,6 +57,7 @@ class TaskTransformerTest {
   private val mockUser = mockk<ApprovedPremisesUser>()
   private val mockOffenderDetailSummary = mockk<OffenderDetailSummary>()
   private val mockInmateDetail = mockk<InmateDetail>()
+  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -106,11 +108,13 @@ class TaskTransformerTest {
     mockUserTransformer,
     mockRisksTransformer,
     mockPlacementRequestTransformer,
+    mockWorkingDayCountService,
   )
 
   @BeforeEach
   fun setup() {
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
+    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } returns LocalDate.now().plusDays(2)
   }
 
   @Nested
@@ -127,7 +131,7 @@ class TaskTransformerTest {
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.taskType).isEqualTo(TaskType.assessment)
       assertThat(result.applicationId).isEqualTo(application.id)
-      assertThat(result.dueDate).isEqualTo(LocalDate.parse("2022-12-17"))
+      assertThat(result.dueDate).isEqualTo(LocalDate.now().plusDays(2))
       assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.crn).isEqualTo(assessment.application.crn)
       assertThat(result.allocatedToStaffMember).isEqualTo(mockUser)
