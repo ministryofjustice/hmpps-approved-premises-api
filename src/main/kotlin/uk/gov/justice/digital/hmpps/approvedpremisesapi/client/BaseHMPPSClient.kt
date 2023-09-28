@@ -115,6 +115,10 @@ sealed interface ClientResult<ResponseType> {
       override fun toException(): Throwable = RuntimeException("Timed out after ${timeoutMs}ms waiting for $cacheKey on pre-emptive cache $cacheName")
     }
 
+    class CachedValueUnavailable<ResponseType>(val cacheKey: String) : Failure<ResponseType> {
+      override fun toException(): Throwable = RuntimeException("No Redis entry exists for $cacheKey")
+    }
+
     class Other<ResponseType>(val method: HttpMethod, val path: String, val exception: Exception) : Failure<ResponseType> {
       override fun toException(): Throwable = RuntimeException("Unable to complete $method request to $path", exception)
     }

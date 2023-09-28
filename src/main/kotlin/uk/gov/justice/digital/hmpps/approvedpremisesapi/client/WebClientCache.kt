@@ -163,14 +163,15 @@ class WebClientCache(
     )
   }
 
-  private fun getCacheEntryBody(dataKey: String): String {
+  private fun getCacheEntryBody(dataKey: String): String? {
     return redisTemplate.boundValueOps(dataKey).get()
-      ?: throw RuntimeException("No Redis entry exists for $dataKey")
   }
 
   private fun <ResponseType> resultFromCacheMetadata(cacheEntry: PreemptiveCacheMetadata, cacheKeySet: CacheKeySet, typeReference: TypeReference<ResponseType>): ClientResult<ResponseType> {
     val cachedBody = if (cacheEntry.hasResponseBody) {
-      getCacheEntryBody(cacheKeySet.dataKey)
+      getCacheEntryBody(cacheKeySet.dataKey) ?: return ClientResult.Failure.CachedValueUnavailable(
+        cacheKey = cacheKeySet.dataKey,
+      )
     } else {
       null
     }
@@ -178,7 +179,7 @@ class WebClientCache(
     if (cacheEntry.httpStatus.is2xxSuccessful) {
       return ClientResult.Success(
         status = cacheEntry.httpStatus,
-        body = objectMapper.readValue(cachedBody, typeReference),
+        body = objectMapper.readValue(cachedBody!!, typeReference),
         isPreemptivelyCachedResponse = true,
       )
     }

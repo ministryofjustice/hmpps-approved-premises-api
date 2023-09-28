@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.BaseHMPPSClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -213,6 +214,49 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     val secondResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
     assertThat(secondResult is ClientResult.Success).isTrue
     assertThat((secondResult as ClientResult.Success).body).isEqualTo(offenderDetailsResponse)
+  }
+
+  @Test
+  fun `A cache failure due to missing data is handled correctly`() {
+    val firstCallInstant = Instant.parse("2023-04-25T11:35:00+01:00")
+    val fourSecondsLaterInstant = Instant.parse("2023-04-25T11:35:04+01:00")
+
+    val crn = "ABCD1234"
+
+    val offenderDetailsResponse = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .produce()
+
+    mockSuccessfulGetCallWithJsonResponse(
+      url = "/secure/offenders/crn/$crn",
+      responseBody = offenderDetailsResponse,
+    )
+
+    every { Instant.now() } returns firstCallInstant
+
+    // The first call should make an upstream request
+    val firstResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
+    assertThat(firstResult is ClientResult.Success).isTrue
+    assertThat((firstResult as ClientResult.Success).body).isEqualTo(offenderDetailsResponse)
+    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponse.otherIds.crn}")))
+
+    // Subsequent calls up to successSoftTtlSeconds should return the cached value without making an upstream request
+    every { Instant.now() } returns fourSecondsLaterInstant
+
+    val secondResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
+    assertThat(secondResult is ClientResult.Success).isTrue
+    assertThat((secondResult as ClientResult.Success).body).isEqualTo(offenderDetailsResponse)
+    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponse.otherIds.crn}")))
+
+    // Simulate https://ministryofjustice.sentry.io/issues/4479884804 by deleting the data key from the cache while
+    // preserving the metadata key.
+    val keys = CacheKeySet(preemptiveCacheKeyPrefix, "offenderDetailSummary", crn)
+    redisTemplate.delete(keys.dataKey)
+
+    val thirdResult = preemptivelyCachedClient.getOffenderDetailSummaryWithCall(crn)
+    assertThat(thirdResult is ClientResult.Failure.CachedValueUnavailable).isTrue
+    assertThat((thirdResult as ClientResult.Failure.CachedValueUnavailable).cacheKey).isEqualTo(keys.dataKey)
+    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponse.otherIds.crn}")))
   }
 }
 
