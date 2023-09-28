@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -218,8 +220,7 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    var staffProbationRegion = probationAreaProbationRegionMappingRepository
-      .findByProbationAreaDeliusCode(staffUserDetails.probationArea.code)?.probationRegion
+    var staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea)
 
     if (staffProbationRegion == null) {
       if (assignDefaultRegionToUsersWithUnknownRegion) {
@@ -265,6 +266,11 @@ class UserService(
     }
 
     return userRepository.save(user)
+  }
+
+  private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
+    return probationAreaProbationRegionMappingRepository
+      .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
   }
 
   fun addRoleToUser(user: UserEntity, role: UserRole) {
