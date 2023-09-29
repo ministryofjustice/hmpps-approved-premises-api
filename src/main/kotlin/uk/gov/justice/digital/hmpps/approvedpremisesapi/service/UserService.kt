@@ -194,6 +194,12 @@ class UserService(
       user.telephoneNumber = deliusUser.telephoneNumber
       user.deliusStaffCode = deliusUser.staffCode
 
+      deliusUser.probationArea?.let { probationArea ->
+        findProbationRegionFromArea(probationArea)?.let { probationRegion ->
+          user.probationRegion = probationRegion
+        }
+      }
+
       user = userRepository.save(user)
     }
 

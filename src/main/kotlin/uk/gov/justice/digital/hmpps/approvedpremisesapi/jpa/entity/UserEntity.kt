@@ -138,7 +138,7 @@ data class UserEntity(
   @OneToMany(mappedBy = "user")
   val qualifications: MutableList<UserQualificationAssignmentEntity>,
   @ManyToOne
-  val probationRegion: ProbationRegionEntity,
+  var probationRegion: ProbationRegionEntity,
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)
