@@ -3,7 +3,34 @@ info:
   version: '0.1.0'
   title: 'CAS3 Domain events'
   description: Get information about events in the CAS3 domain
-paths: {}
+paths:
+  /events/cas3/person-arrived/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS3 events"
+      summary: A 'person-arrived' event
+      responses:
+        200:
+          description: The 'person-arrived' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CAS3PersonArrivedEvent'
+        404:
+          description: No 'person-arrived' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
@@ -30,7 +57,48 @@ components:
         - eventType
       discriminator:
         propertyName: eventType
-        mapping: {}
+        mapping:
+          accommodation.cas3.person.arrived: '#/components/schemas/CAS3PersonArrivedEvent'
+    CAS3PersonArrivedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3PersonArrivedEventDetails'
+          required:
+            - eventDetails
+    CAS3PersonArrivedEventDetails:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          type: string
+        applicationId:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        premises:
+          $ref: '#/components/schemas/Premises'
+        arrivedAt:
+          type: string
+          format: date-time
+        expectedDepartureOn:
+          type: string
+          format: date
+        notes:
+          type: string
+      required:
+        - personReference
+        - deliusEventNumber
+        - bookingId
+        - premises
+        - arrivedAt
+        - expectedDepartureOn
+        - notes
 
     # Common domain schemas
     PersonReference:
@@ -71,9 +139,9 @@ components:
       description: The type of an event
       type: string
       enum:
-        - example
+        - accommodation.cas3.person.arrived
       x-enum-varnames:
-        - example
+        - personArrived
     Problem:
       type: object
       properties:
