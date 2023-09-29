@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -524,5 +525,27 @@ class PremisesService(
     }
 
     return probationDeliveryUnit
+  }
+
+  fun getDateCapacities(premises: PremisesEntity): List<DateCapacity> {
+    val lastBookingDate = getLastBookingDate(premises)
+    val lastLostBedsDate = getLastLostBedsDate(premises)
+
+    val capacityForPeriod = getAvailabilityForRange(
+      premises,
+      LocalDate.now(),
+      maxOf(
+        LocalDate.now(),
+        lastBookingDate ?: LocalDate.now(),
+        lastLostBedsDate ?: LocalDate.now(),
+      ),
+    )
+
+    return capacityForPeriod.map {
+      DateCapacity(
+        date = it.key,
+        availableBeds = it.value.getFreeCapacity(premises.totalBeds),
+      )
+    }
   }
 }

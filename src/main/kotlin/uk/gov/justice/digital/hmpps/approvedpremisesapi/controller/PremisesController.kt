@@ -93,7 +93,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDateCapacities
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -777,7 +776,7 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(
-      getDateCapacities(premises, premisesService),
+      premisesService.getDateCapacities(premises),
     )
   }
 
@@ -974,7 +973,7 @@ class PremisesController(
     val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
       .values.first().getFreeCapacity(premises.totalBeds)
 
-    val dateCapacities = getDateCapacities(premises, premisesService)
+    val dateCapacities = premisesService.getDateCapacities(premises)
 
     var apCode: String? = null
     if (premises is ApprovedPremisesEntity) {
