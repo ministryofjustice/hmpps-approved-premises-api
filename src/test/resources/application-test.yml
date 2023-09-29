@@ -50,7 +50,10 @@ hmpps.sqs:
       subscribeTopicId: domainevents
 
 domain-events:
-  emit-enabled: true
+  cas1:
+    emit-enabled: true
+  cas3:
+    emit-enabled: true
 
 hmpps:
   auth:
@@ -111,16 +114,18 @@ seed:
 
 url-templates:
   api:
-    application-submitted-event-detail: http://api/events/application-submitted/#eventId
-    application-assessed-event-detail: http://api/events/application-assessed/#eventId
-    booking-made-event-detail: http://api/events/booking-made/#eventId
-    person-arrived-event-detail: http://api/events/person-arrived/#eventId
-    person-not-arrived-event-detail: http://api/events/person-not-arrived/#eventId
-    person-departed-event-detail: http://api/events/person-departed/#eventId
-    booking-not-made-event-detail: http://api/events/booking-not-made/#eventId
-    booking-cancelled-event-detail: http://api/events/booking-cancelled/#eventId
-    booking-changed-event-detail: http://api/events/booking-changed/#eventId
-    application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
+    cas1:
+      application-submitted-event-detail: http://api/events/application-submitted/#eventId
+      application-assessed-event-detail: http://api/events/application-assessed/#eventId
+      booking-made-event-detail: http://api/events/booking-made/#eventId
+      person-arrived-event-detail: http://api/events/person-arrived/#eventId
+      person-not-arrived-event-detail: http://api/events/person-not-arrived/#eventId
+      person-departed-event-detail: http://api/events/person-departed/#eventId
+      booking-not-made-event-detail: http://api/events/booking-not-made/#eventId
+      booking-cancelled-event-detail: http://api/events/booking-cancelled/#eventId
+      booking-changed-event-detail: http://api/events/booking-changed/#eventId
+      application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
+    cas3:
   frontend:
     application: http://frontend/applications/#id
     assessment: http://frontend/assessments/#id
