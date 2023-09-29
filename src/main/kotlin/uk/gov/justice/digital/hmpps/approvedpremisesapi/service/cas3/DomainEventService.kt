@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -21,6 +23,7 @@ import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import javax.transaction.Transactional
 import kotlin.reflect.KClass
 
 @Service(
@@ -41,6 +44,8 @@ class DomainEventService(
       ?: throw MissingTopicException("domainevents not found")
   }
 
+  fun getPersonArrivedEvent(id: UUID) = get<CAS3PersonArrivedEvent>(id)
+
   private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 
@@ -56,6 +61,20 @@ class DomainEventService(
       crn = domainEventEntity.crn,
       occurredAt = domainEventEntity.occurredAt.toInstant(),
       data = data,
+    )
+  }
+
+  @Transactional
+  fun savePersonArrivedEvent(booking: BookingEntity) {
+    val domainEvent = domainEventBuilder.getPersonArrivedDomainEvent(booking)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "accommodation.cas3.person.arrived",
+      typeDescription = "Someone has arrived at a Transitional Accommodation premises for their booking",
+      detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
   }
 
@@ -119,6 +138,7 @@ class DomainEventService(
   }
 
   private fun <T : CAS3Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
+    CAS3PersonArrivedEvent::class -> DomainEventType.CAS3_PERSON_ARRIVED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 }
