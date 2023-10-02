@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import java.time.LocalDate
 import java.util.UUID
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
@@ -60,6 +61,26 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 
   @Query("SELECT p FROM PremisesEntity p WHERE ap_code = :apCode AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByApCode(apCode: String, type: Class<T>): PremisesEntity?
+
+  @Query(
+    """
+  SELECT
+  cast(booking.id as TEXT) as id,
+  booking.arrival_date as arrivalDate,
+  booking.departure_date as departureDate,
+  booking.crn as crn,
+  cast(bed.id as TEXT) as bedId,
+  bed.name as bedName,
+  bed.code as bedCode
+FROM
+  bookings booking
+  LEFT JOIN beds bed ON booking.bed_id = bed.id
+where
+  booking.premises_id = :premisesId
+  """,
+    nativeQuery = true,
+  )
+  fun getBookingSummariesForPremisesId(premisesId: UUID): List<BookingSummary>
 }
 
 @Entity
@@ -213,3 +234,13 @@ data class TemporaryAccommodationPremisesSummary(
   val status: PropertyStatus,
   val bedCount: Int,
 )
+
+interface BookingSummary {
+  fun getID(): UUID
+  fun getArrivalDate(): LocalDate
+  fun getDepartureDate(): LocalDate
+  fun getCrn(): String
+  fun getBedId(): UUID
+  fun getBedName(): String
+  fun getBedCode(): String
+}

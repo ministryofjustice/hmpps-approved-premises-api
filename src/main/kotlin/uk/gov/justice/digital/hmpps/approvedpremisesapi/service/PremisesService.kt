@@ -3,12 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationRepository
@@ -77,6 +79,8 @@ class PremisesService(
   } ?: listOf()
 
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
+
+  fun getPremisesSummary(premisesId: UUID): List<BookingSummary> = premisesRepository.getBookingSummariesForPremisesId(premisesId)
 
   fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)
   fun getLastLostBedsDate(premises: PremisesEntity) = lostBedsRepository.getHighestBookingDate(premises.id)
@@ -521,5 +525,27 @@ class PremisesService(
     }
 
     return probationDeliveryUnit
+  }
+
+  fun getDateCapacities(premises: PremisesEntity): List<DateCapacity> {
+    val lastBookingDate = getLastBookingDate(premises)
+    val lastLostBedsDate = getLastLostBedsDate(premises)
+
+    val capacityForPeriod = getAvailabilityForRange(
+      premises,
+      LocalDate.now(),
+      maxOf(
+        LocalDate.now(),
+        lastBookingDate ?: LocalDate.now(),
+        lastLostBedsDate ?: LocalDate.now(),
+      ),
+    )
+
+    return capacityForPeriod.map {
+      DateCapacity(
+        date = it.key,
+        availableBeds = it.value.getFreeCapacity(premises.totalBeds),
+      )
+    }
   }
 }

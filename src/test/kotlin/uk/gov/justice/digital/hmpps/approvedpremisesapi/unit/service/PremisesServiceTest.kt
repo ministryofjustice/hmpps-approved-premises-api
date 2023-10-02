@@ -705,4 +705,27 @@ class PremisesServiceTest {
       )
     }
   }
+
+  @Test
+  fun `Get data capacities function returns list`() {
+    val premises = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    every { premisesService.getDateCapacities(premises) } answers { callOriginal() }
+    every { premisesService.getLastBookingDate(premises) } answers { callOriginal() }
+    every { premisesService.getLastLostBedsDate(premises) } answers { callOriginal() }
+    every { bookingRepositoryMock.getHighestBookingDate(premises.id) } returns LocalDate.now()
+
+    val result = premisesService.getDateCapacities(premises)
+    assertThat(result).isInstanceOf(List::class.java)
+
+    verify(exactly = 1) { premisesService.getLastBookingDate(premises) }
+    verify(exactly = 1) { premisesService.getLastLostBedsDate(premises) }
+  }
 }
