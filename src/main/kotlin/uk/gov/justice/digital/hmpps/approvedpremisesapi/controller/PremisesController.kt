@@ -93,6 +93,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDateCapacities
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -775,26 +776,8 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val lastBookingDate = premisesService.getLastBookingDate(premises)
-    val lastLostBedsDate = premisesService.getLastLostBedsDate(premises)
-
-    val capacityForPeriod = premisesService.getAvailabilityForRange(
-      premises,
-      LocalDate.now(),
-      maxOf(
-        LocalDate.now(),
-        lastBookingDate ?: LocalDate.now(),
-        lastLostBedsDate ?: LocalDate.now(),
-      ),
-    )
-
     return ResponseEntity.ok(
-      capacityForPeriod.map {
-        DateCapacity(
-          date = it.key,
-          availableBeds = it.value.getFreeCapacity(premises.totalBeds),
-        )
-      },
+      getDateCapacities(premises, premisesService),
     )
   }
 
@@ -961,7 +944,7 @@ class PremisesController(
     return ResponseEntity(transformedResult, HttpStatus.OK)
   }
 
-  override fun premisesPremisesIdSummaryGet(premisesId: java.util.UUID): ResponseEntity<ExtendedPremisesSummary> = runBlocking {
+  override fun premisesPremisesIdSummaryGet(premisesId: UUID): ResponseEntity<ExtendedPremisesSummary> = runBlocking {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -972,7 +955,6 @@ class PremisesController(
     }
 
     val bookingsSummary = premisesService.getPremisesSummary(premisesId)
-      ?: throw NotFoundProblem(premisesId, "BookingSummary")
 
     val bookingsSummaryMapped = bookingsSummary
       .map {
@@ -992,25 +974,7 @@ class PremisesController(
     val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
       .values.first().getFreeCapacity(premises.totalBeds)
 
-    val lastBookingDate = premisesService.getLastBookingDate(premises)
-    val lastLostBedsDate = premisesService.getLastLostBedsDate(premises)
-
-    val capacityForPeriod = premisesService.getAvailabilityForRange(
-      premises,
-      LocalDate.now(),
-      maxOf(
-        LocalDate.now(),
-        lastBookingDate ?: LocalDate.now(),
-        lastLostBedsDate ?: LocalDate.now(),
-      ),
-    )
-
-    val dateCapacities = capacityForPeriod.map {
-      DateCapacity(
-        date = it.key,
-        availableBeds = it.value.getFreeCapacity(premises.totalBeds),
-      )
-    }
+    val dateCapacities = getDateCapacities(premises, premisesService)
 
     var apCode: String? = null
     if (premises is ApprovedPremisesEntity) {

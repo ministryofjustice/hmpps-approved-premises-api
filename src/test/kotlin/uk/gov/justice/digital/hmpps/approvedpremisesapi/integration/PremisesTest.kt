@@ -1523,6 +1523,102 @@ class PremisesTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
+  @Test
+  fun `Get Premises Summary without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/summary")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER" ])
+  fun `Get Premises Summary by ID that does not exist returns 404`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { _, jwt ->
+      val id = UUID.randomUUID()
+      webTestClient.get()
+        .uri("/premises/$id/summary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER" ])
+  fun `Get Premises Summary by ID returns OK with correct body`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { _, jwt ->
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist() {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+        withTotalBeds(20)
+      }
+
+      val numBookings = 5
+
+      val bookings = bookingEntityFactory.produceAndPersistMultiple(numBookings) {
+        withNomsNumber("26")
+        withPremises(premises)
+        withBed(
+          bedEntityFactory.produceAndPersist() {
+            withRoom(
+              roomEntityFactory.produceAndPersist() {
+                withPremises(premises)
+              },
+            )
+          },
+        )
+      }
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/summary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.id").isEqualTo("${premises.id}")
+        .jsonPath("$.name").isEqualTo("${premises.name}")
+        .jsonPath("$.apCode").isEqualTo("${premises.apCode}")
+        .jsonPath("$.postcode").isEqualTo("${premises.postcode}")
+        .jsonPath("$.bedCount").isEqualTo("${premises.totalBeds}")
+        .jsonPath("$.availableBedsForToday").isEqualTo("${premises.totalBeds - numBookings}")
+        .jsonPath("$.bookings").isArray
+        .jsonPath("$.bookings[0].id").isEqualTo(bookings[0].id.toString())
+        .jsonPath("$.bookings[0].arrivalDate").isEqualTo(bookings[0].arrivalDate.toString())
+        .jsonPath("$.bookings[0].departureDate").isEqualTo(bookings[0].departureDate.toString())
+        .jsonPath("$.bookings[0].person.crn").isEqualTo(bookings[0].crn)
+        .jsonPath("$.bookings[0].bed.id").isEqualTo(bookings[0].bed!!.id.toString())
+        .jsonPath("$.bookings[1].id").isEqualTo(bookings[1].id.toString())
+        .jsonPath("$.bookings[1].arrivalDate").isEqualTo(bookings[1].arrivalDate.toString())
+        .jsonPath("$.bookings[1].departureDate").isEqualTo(bookings[1].departureDate.toString())
+        .jsonPath("$.bookings[1].person.crn").isEqualTo(bookings[1].crn)
+        .jsonPath("$.bookings[1].bed.id").isEqualTo(bookings[1].bed!!.id.toString())
+        .jsonPath("$.bookings[2].id").isEqualTo(bookings[2].id.toString())
+        .jsonPath("$.bookings[2].arrivalDate").isEqualTo(bookings[2].arrivalDate.toString())
+        .jsonPath("$.bookings[2].departureDate").isEqualTo(bookings[2].departureDate.toString())
+        .jsonPath("$.bookings[2].person.crn").isEqualTo(bookings[2].crn)
+        .jsonPath("$.bookings[2].bed.id").isEqualTo(bookings[2].bed!!.id.toString())
+        .jsonPath("$.bookings[3].id").isEqualTo(bookings[3].id.toString())
+        .jsonPath("$.bookings[3].arrivalDate").isEqualTo(bookings[3].arrivalDate.toString())
+        .jsonPath("$.bookings[3].departureDate").isEqualTo(bookings[3].departureDate.toString())
+        .jsonPath("$.bookings[3].person.crn").isEqualTo(bookings[3].crn)
+        .jsonPath("$.bookings[3].bed.id").isEqualTo(bookings[3].bed!!.id.toString())
+        .jsonPath("$.bookings[4].id").isEqualTo(bookings[4].id.toString())
+        .jsonPath("$.bookings[4].arrivalDate").isEqualTo(bookings[4].arrivalDate.toString())
+        .jsonPath("$.bookings[4].departureDate").isEqualTo(bookings[4].departureDate.toString())
+        .jsonPath("$.bookings[4].person.crn").isEqualTo(bookings[4].crn)
+        .jsonPath("$.bookings[4].bed.id").isEqualTo(bookings[4].bed!!.id.toString())
+        .jsonPath("$.dateCapacities").isArray
+        .jsonPath("$.dateCapacities[0]").isNotEmpty
+    }
+  }
+
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(role: UserRole) {
