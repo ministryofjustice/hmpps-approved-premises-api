@@ -16,8 +16,7 @@ fun IntegrationTestBase.`Given a User`(
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
-  block: (userEntity: UserEntity, jwt: String) -> Unit,
-) {
+): Pair<UserEntity, String> {
   val staffUserDetailsFactory = StaffUserDetailsFactory()
 
   if (staffUserDetailsConfigBlock != null) {
@@ -64,5 +63,26 @@ fun IntegrationTestBase.`Given a User`(
     staffUserDetails,
   )
 
-  block(user, jwt)
+  return Pair(user, jwt)
+}
+
+fun IntegrationTestBase.`Given a User`(
+  id: UUID = UUID.randomUUID(),
+  staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
+  roles: List<UserRole> = emptyList(),
+  qualifications: List<UserQualification> = emptyList(),
+  probationRegion: ProbationRegionEntity? = null,
+  isActive: Boolean = true,
+  block: (userEntity: UserEntity, jwt: String) -> Unit,
+) {
+  val (user, jwt) = `Given a User`(
+    id,
+    staffUserDetailsConfigBlock,
+    roles,
+    qualifications,
+    probationRegion,
+    isActive,
+  )
+
+  return block(user, jwt)
 }
