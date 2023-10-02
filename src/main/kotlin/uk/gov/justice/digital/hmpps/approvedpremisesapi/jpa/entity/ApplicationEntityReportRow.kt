@@ -4,64 +4,76 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.sql.Date
-import java.sql.Timestamp
 import java.util.UUID
 
 @Repository
 interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query(
     """
-    SELECT
-      CAST(application.id AS TEXT) as id,
-      application.crn as crn,
-      assessment.submitted_at as applicationAssessedDate,
-      assessor_region.name as assessorCru,
-      assessment.decision as assessmentDecision,
-      assessment.rejection_rationale as assessmentDecisionRationale,
-      CAST(ap_application.risk_ratings -> 'mappa' -> 'value' ->> 'level' as TEXT) as mappa,
-      ap_application.offence_id as offenceId,
-      application.noms_number as noms,
-      requirements.ap_type as premisesTypeIndex,
-      ap_application.release_type as releaseType,
-      application.submitted_at as applicationSubmissionDate,
-      referrer_region.name as referrerRegion,
-      postcode_district.outcode as targetLocation,
-      ap_application.withdrawal_reason as applicationWithdrawalReason,
-      CAST(booking.id AS text) as bookingID,
-      cancellation_reason.name as bookingCancellationReason,
-      cancellation.date as bookingCancellationDate,
-      booking.arrival_date as expectedArrivalDate,
-      booking.departure_date as expectedDepartureDate,
-      premises.name as premisesName,
-      arrival.arrival_date as actualArrivalDate,
-      departure.date_time as actualDepartureDate,
-      move_on_category.name as departureMoveOnCategory,
-      non_arrival.date as nonArrivalDate
+    SELECT DISTINCT
+      cast(application.id as TEXT) as id,
+      submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' as crn,
+      cast(assessment_event.data -> 'eventDetails' ->> 'assessedAt' as date) as applicationAssessedDate,
+      assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' as assessorCru,
+      assessment_event.data -> 'eventDetails' ->> 'decision' as assessmentDecision,
+      assessment_event.data -> 'eventDetails' ->> 'decisionRationale' as assessmentDecisionRationale,
+      submission_event.data -> 'eventDetails' ->> 'age' as ageInYears,
+      submission_event.data -> 'eventDetails' ->> 'gender' as gender,
+      submission_event.data -> 'eventDetails' ->> 'mappa' as mappa,
+      submission_event.data -> 'eventDetails' ->> 'offenceId' as offenceId,
+      submission_event.data -> 'eventDetails' -> 'personReference' ->> 'noms' as noms,
+      (
+        CASE
+          WHEN apa.is_pipe_application THEN 'pipe'
+          WHEN apa.is_esap_application THEN 'esap'
+          ELSE 'normal'
+        END
+      ) as premisesType,
+      submission_event.data -> 'eventDetails' ->> 'releaseType' as releaseType,
+      cast(submission_event.data -> 'eventDetails' ->> 'submittedAt' as date) as applicationSubmissionDate,
+      submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'ldu' ->> 'name' as referralLdu,
+      submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'team' ->> 'name' as referralTeam,
+      submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'region' ->> 'name' as referralRegion,
+      submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'staffMember' ->> 'username' as referrerUsername,
+      submission_event.data -> 'eventDetails' ->> 'targetLocation' as targetLocation,
+      cast(withdrawl_event.data -> 'eventDetails' ->> 'withdrawnAt' as date) as applicationWithdrawalDate,
+      withdrawl_event.data -> 'eventDetails' ->> 'withdrawalReason' as applicationWithdrawalReason,
+      booking_made_event.data -> 'eventDetails' ->> 'bookingId' as bookingID,
+      booking_cancelled_event.data -> 'eventDetails' ->> 'cancellationReason' as bookingCancellationReason,
+      cast(booking_cancelled_event.data -> 'eventDetails' ->> 'cancelledAt' as date) as bookingCancellationDate,
+      cast(booking_made_event.data -> 'eventDetails' ->> 'arrivalOn' as date) as expectedArrivalDate,
+      booking_made_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name' as matcherCru,
+      cast(booking_made_event.data -> 'eventDetails' ->> 'departureOn' as date) as expectedDepartureDate,
+      booking_made_event.data -> 'eventDetails' -> 'premises' ->> 'name' as premisesName,
+      cast(arrival_event.data -> 'eventDetails' ->> 'arrivedAt' as date) as actualArrivalDate,
+      cast(departure_event.data -> 'eventDetails' ->> 'departedAt' as date) as actualDepartureDate,
+      departure_event.data -> 'eventDetails' ->> 'reason' as departureReason,
+      departure_event.data -> 'eventDetails' -> 'destination' -> 'moveOnCategory' ->> 'description' as departureMoveOnCategory,
+      non_arrival_event.data IS NOT NULL as hasNotArrived,
+      non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason
     from
       applications application
-      left join approved_premises_applications ap_application ON application.id = ap_application.id
-      left join assessments assessment ON (
-        application.id = assessment.application_id
-        AND assessment.reallocated_at IS NULL
-      )
-      left join users referrer ON application.created_by_user_id = referrer.id
-      left join users assessor ON assessment.allocated_to_user_id = assessor.id
-      left join probation_regions assessor_region ON assessor.probation_region_id = assessor_region.id
-      left join probation_regions referrer_region ON referrer.probation_region_id = referrer_region.id
-      left join placement_requirements requirements ON application.id = requirements.application_id
-      left join postcode_districts postcode_district ON requirements.postcode_district_id = postcode_district.id
-      left join bookings booking ON booking.application_id = application.id
-      left join cancellations cancellation ON booking.id = cancellation.booking_id
-      left join cancellation_reasons cancellation_reason ON cancellation_reason.id = cancellation.cancellation_reason_id
-      left join premises on booking.premises_id = premises.id
-      left join arrivals arrival on arrival.booking_id = booking.id
-      left join departures departure on departure.booking_id = booking.id
-      left join move_on_categories move_on_category on departure.move_on_category_id = move_on_category.id
-      left join non_arrivals non_arrival on non_arrival.booking_id = booking.id
+      left join approved_premises_applications apa on application.id = apa.id
+      left join domain_events submission_event on submission_event.type = 'APPROVED_PREMISES_APPLICATION_SUBMITTED'
+      and application.id = submission_event.application_id
+      left join domain_events assessment_event on assessment_event.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED'
+      and application.id = assessment_event.application_id
+      left join domain_events withdrawl_event on withdrawl_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
+      and application.id = withdrawl_event.application_id
+      left join domain_events booking_made_event on booking_made_event.type = 'APPROVED_PREMISES_BOOKING_MADE'
+      and application.id = booking_made_event.application_id
+      left join domain_events booking_cancelled_event on booking_cancelled_event.type = 'APPROVED_PREMISES_BOOKING_CANCELLED'
+      and application.id = booking_cancelled_event.application_id
+      left join domain_events arrival_event on arrival_event.type = 'APPROVED_PREMISES_PERSON_ARRIVED'
+      and application.id = arrival_event.application_id
+      left join domain_events departure_event on departure_event.type = 'APPROVED_PREMISES_PERSON_DEPARTED'
+      and application.id = departure_event.application_id
+      left join domain_events non_arrival_event on non_arrival_event.type = 'APPROVED_PREMISES_PERSON_NOT_ARRIVED'
+      and application.id = non_arrival_event.application_id
     where
       date_part('month', application.submitted_at) = :month
       AND date_part('year', application.submitted_at) = :year
-      AND application.service = 'approved-premises'
+      AND application.service = 'approved-premises';
     """,
     nativeQuery = true,
   )
@@ -71,28 +83,37 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
 interface ApplicationEntityReportRow {
   fun getId(): String
   fun getCrn(): String
-  fun getApplicationAssessedDate(): Timestamp?
+  fun getApplicationAssessedDate(): Date?
   fun getAssessorCru(): String?
   fun getAssessmentDecision(): String?
+  fun getAgeInYears(): String?
+  fun getGender(): String?
   fun getAssessmentDecisionRationale(): String?
   fun getMappa(): String?
   fun getOffenceId(): String
   fun getNoms(): String
-  fun getPremisesTypeIndex(): String?
+  fun getPremisesType(): String?
 
   fun getReleaseType(): String?
-  fun getApplicationSubmissionDate(): Timestamp?
-  fun getReferrerRegion(): String?
+  fun getApplicationSubmissionDate(): Date?
+  fun getReferralRegion(): String?
+  fun getReferralTeam(): String?
+  fun getReferralLdu(): String?
+  fun getReferrerUsername(): String?
   fun getTargetLocation(): String?
+  fun getApplicationWithdrawalDate(): Date?
   fun getApplicationWithdrawalReason(): String?
   fun getBookingID(): String?
   fun getBookingCancellationReason(): String?
   fun getBookingCancellationDate(): Date?
   fun getExpectedArrivalDate(): Date?
   fun getExpectedDepartureDate(): Date?
+  fun getMatcherCru(): String?
   fun getPremisesName(): String?
   fun getActualArrivalDate(): Date?
-  fun getActualDepartureDate(): Timestamp?
+  fun getActualDepartureDate(): Date?
   fun getDepartureMoveOnCategory(): String?
-  fun getNonArrivalDate(): Date?
+  fun getDepartureReason(): String?
+  fun getHasNotArrived(): Boolean?
+  fun getNotArrivedReason(): String?
 }

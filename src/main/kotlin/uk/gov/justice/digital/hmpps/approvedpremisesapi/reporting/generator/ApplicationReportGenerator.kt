@@ -1,14 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import kotlinx.datetime.toLocalDate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import java.time.LocalDate
-import java.time.Period
 
 class ApplicationReportGenerator(
   private val offenderService: OffenderService,
@@ -18,61 +13,43 @@ class ApplicationReportGenerator(
   }
 
   override val convert: ApplicationEntityReportRow.(properties: ApplicationReportProperties) -> List<ApplicationReportRow> = { properties ->
-    val personInfoResult = getOffenderDetailForApplication(this, properties.deliusUsername)
-
     listOf(
       ApplicationReportRow(
         id = this.getId(),
         crn = this.getCrn(),
-        applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDateTime()?.toLocalDate(),
+        applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
         assessmentDecision = this.getAssessmentDecision(),
         assessmentDecisionRationale = this.getAssessmentDecisionRationale(),
-        ageInYears = when (personInfoResult) {
-          is PersonInfoResult.Success.Full -> Period.between(personInfoResult.offenderDetailSummary.dateOfBirth, LocalDate.now()).years
-          else -> null
-        },
-        gender = when (personInfoResult) {
-          is PersonInfoResult.Success.Full -> personInfoResult.offenderDetailSummary.gender
-          else -> null
-        },
+        ageInYears = this.getAgeInYears()?.toInt(),
+        gender = this.getGender(),
         mappa = this.getMappa() ?: "Not found",
         offenceId = this.getOffenceId(),
         noms = this.getNoms(),
-        premisesType = getPremisesType(this),
+        premisesType = this.getPremisesType(),
         releaseType = this.getReleaseType(),
-        sentenceLengthInMonths = null,
-        applicationSubmissionDate = this.getApplicationSubmissionDate()?.toLocalDateTime()?.toLocalDate(),
-        referrerLdu = null,
-        referrerRegion = this.getReferrerRegion(),
-        referrerTeam = null,
+        applicationSubmissionDate = this.getApplicationSubmissionDate()?.toLocalDate(),
+        referralLdu = this.getReferralLdu(),
+        referralRegion = this.getReferralRegion(),
+        referralTeam = this.getReferralTeam(),
+        referrerUsername = this.getReferrerUsername(),
         targetLocation = this.getTargetLocation(),
         applicationWithdrawalReason = this.getApplicationWithdrawalReason(),
-        applicationWithdrawalDate = null,
+        applicationWithdrawalDate = this.getApplicationWithdrawalDate()?.toLocalDate(),
         bookingID = this.getBookingID(),
         bookingCancellationReason = this.getBookingCancellationReason(),
         bookingCancellationDate = this.getBookingCancellationDate()?.toLocalDate(),
         expectedArrivalDate = this.getExpectedArrivalDate()?.toLocalDate(),
-        matcherCru = null,
+        matcherCru = this.getMatcherCru(),
         expectedDepartureDate = this.getExpectedDepartureDate()?.toLocalDate(),
         premisesName = this.getPremisesName(),
         actualArrivalDate = this.getActualArrivalDate()?.toLocalDate(),
-        actualDepartureDate = this.getActualDepartureDate()?.toLocalDateTime()?.toLocalDate(),
+        actualDepartureDate = this.getActualDepartureDate()?.toLocalDate(),
         departureMoveOnCategory = this.getDepartureMoveOnCategory(),
-        nonArrivalDate = this.getNonArrivalDate()?.toLocalDate(),
+        departureReason = this.getDepartureReason(),
+        hasNotArrived = this.getHasNotArrived(),
+        notArrivedReason = this.getNotArrivedReason(),
       ),
     )
-  }
-
-  private fun getOffenderDetailForApplication(applicationEntityReportRow: ApplicationEntityReportRow, deliusUsername: String): PersonInfoResult? {
-    return when (val personInfo = offenderService.getInfoForPerson(applicationEntityReportRow.getCrn(), deliusUsername, true)) {
-      is PersonInfoResult.Success -> personInfo
-      else -> null
-    }
-  }
-
-  private fun getPremisesType(applicationEntityReportRow: ApplicationEntityReportRow): String? {
-    val index = applicationEntityReportRow.getPremisesTypeIndex()?.toInt()
-    return if (index != null) (ApType.entries[index].name) else null
   }
 }
