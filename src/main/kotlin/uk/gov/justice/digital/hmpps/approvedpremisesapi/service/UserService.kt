@@ -315,6 +315,6 @@ class UserService(
   }
 
   private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
-    return (deliusUser.email !== user.email) || (deliusUser.telephoneNumber !== user.telephoneNumber) || (deliusUser.staff.fullName != user.name) || (deliusUser.staffCode != user.deliusStaffCode)
+    return (deliusUser.email !== user.email) || (deliusUser.telephoneNumber !== user.telephoneNumber) || (deliusUser.staff.fullName != user.name) || (deliusUser.staffCode != user.deliusStaffCode) || (deliusUser.probationArea.code != user.probationRegion.deliusCode)
   }
 }

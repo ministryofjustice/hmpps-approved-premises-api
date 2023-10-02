@@ -575,7 +575,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `it does not save the object if the email, telephone number and staff code are the same as Delius`() {
+    fun `it does not save the object if the email, telephone number, staff code and probation region are the same as Delius`() {
       val email = "foo@example.com"
       val telephoneNumber = "0123456789"
       val staffCode = "STAFF1"
@@ -585,6 +585,7 @@ class UserServiceTest {
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
         .withDeliusStaffCode(staffCode)
+        .withUnitTestControlProbationRegion()
         .produce()
 
       val deliusUser = staffUserDetailsFactory
@@ -593,6 +594,7 @@ class UserServiceTest {
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
         .withStaffCode(staffCode)
+        .withProbationAreaCode(user.probationRegion.deliusCode)
         .produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user
