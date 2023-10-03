@@ -511,12 +511,18 @@ class UserServiceTest {
     }
 
     @Test
-    fun `it returns the user's details from the Community API and saves the email address, telephone number and staff code`() {
+    fun `it returns the user's details from the Community API and saves the email address, telephone, staff code and probation region`() {
+      val newProbationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
       val user = userFactory.produce()
+
       val deliusUser = staffUserDetailsFactory
         .withEmail("foo@example.com")
         .withTelephoneNumber("0123456789")
         .withStaffCode("STAFF1")
+        .withProbationAreaCode(newProbationRegion.deliusCode)
         .produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user
@@ -524,6 +530,10 @@ class UserServiceTest {
         HttpStatus.OK,
         deliusUser,
       )
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(newProbationRegion.deliusCode) } returns ProbationAreaProbationRegionMappingEntityFactory()
+        .withProbationRegion(newProbationRegion)
+        .withProbationAreaDeliusCode(newProbationRegion.deliusCode)
+        .produce()
 
       val result = userService.updateUserFromCommunityApiById(id)
 
@@ -538,6 +548,7 @@ class UserServiceTest {
       assertThat(entity.email).isEqualTo(deliusUser.email)
       assertThat(entity.telephoneNumber).isEqualTo(deliusUser.telephoneNumber)
       assertThat(entity.deliusStaffCode).isEqualTo(deliusUser.staffCode)
+      assertThat(entity.probationRegion.name).isEqualTo(newProbationRegion.name)
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -545,10 +556,14 @@ class UserServiceTest {
 
     @Test
     fun `it stores a null email address if missing from Community API`() {
-      val user = userFactory.produce()
+      val user = userFactory
+        .withUnitTestControlProbationRegion()
+        .produce()
+
       val deliusUser = staffUserDetailsFactory
         .withTelephoneNumber("0123456789")
         .withoutEmail()
+        .withProbationAreaCode(user.probationRegion.deliusCode)
         .produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user
@@ -556,6 +571,10 @@ class UserServiceTest {
         HttpStatus.OK,
         deliusUser,
       )
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(user.probationRegion.deliusCode) } returns ProbationAreaProbationRegionMappingEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withProbationAreaDeliusCode(user.probationRegion.deliusCode)
+        .produce()
 
       val result = userService.updateUserFromCommunityApiById(id)
 
@@ -564,18 +583,14 @@ class UserServiceTest {
 
       var entity = result.entity
 
-      assertThat(entity.id).isEqualTo(user.id)
-      assertThat(entity.name).isEqualTo("$forename $surname")
-      assertThat(entity.deliusUsername).isEqualTo(user.deliusUsername)
       assertThat(entity.email).isEqualTo("null")
-      assertThat(entity.telephoneNumber).isEqualTo(deliusUser.telephoneNumber)
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
     }
 
     @Test
-    fun `it does not save the object if the email, telephone number and staff code are the same as Delius`() {
+    fun `it does not save the object if the email, telephone number, staff code and probation region are the same as Delius`() {
       val email = "foo@example.com"
       val telephoneNumber = "0123456789"
       val staffCode = "STAFF1"
@@ -585,6 +600,7 @@ class UserServiceTest {
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
         .withDeliusStaffCode(staffCode)
+        .withUnitTestControlProbationRegion()
         .produce()
 
       val deliusUser = staffUserDetailsFactory
@@ -593,6 +609,7 @@ class UserServiceTest {
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
         .withStaffCode(staffCode)
+        .withProbationAreaCode(user.probationRegion.deliusCode)
         .produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user
