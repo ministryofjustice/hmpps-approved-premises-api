@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.readValue
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
@@ -29,10 +28,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -40,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -129,6 +133,63 @@ class AssessmentTest : IntegrationTestBase() {
               ),
             ),
           )
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceName::class, names = ["cas2"], mode = EnumSource.Mode.EXCLUDE)
+  fun `Get all assessments returns successfully when an inmate details cache failure occurs`(serviceName: ServiceName) {
+    val givenAnAssessment = when (serviceName) {
+      ServiceName.approvedPremises -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
+        `Given an Assessment for Approved Premises`(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = crn,
+          block = block,
+        )
+      }
+      ServiceName.temporaryAccommodation -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
+        `Given an Assessment for Temporary Accommodation`(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = crn,
+          block = block,
+        )
+      }
+      else -> throw RuntimeException()
+    }
+
+    `Given a User` { user, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        givenAnAssessment(
+          user,
+          offenderDetails.otherIds.crn,
+        ) { assessment, application ->
+          // Simulate https://ministryofjustice.sentry.io/issues/4479884804 by deleting the data key from the cache while
+          // preserving the metadata key.
+          val cacheKeys = CacheKeySet(preemptiveCacheKeyPrefix, "inmateDetails", inmateDetails.offenderNo)
+          redisTemplate.delete(cacheKeys.dataKey)
+
+          webTestClient.get()
+            .uri("/assessments")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", serviceName.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  assessmentTransformer.transformDomainToApiSummary(
+                    toAssessmentSummaryEntity(assessment),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                  ),
+                ),
+              ),
+            )
+        }
       }
     }
   }

@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
@@ -14,13 +12,17 @@ import java.time.Duration
 class PrisonsApiClient(
   @Qualifier("prisonsApiWebClient") webClient: WebClient,
   objectMapper: ObjectMapper,
-  redisTemplate: RedisTemplate<String, String>,
-  @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
-) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
-  private val inmateDetailsCacheConfig = PreemptiveCacheConfig(
+  webClientCache: WebClientCache,
+) : BaseHMPPSClient(webClient, objectMapper, webClientCache) {
+  private val inmateDetailsCacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "inmateDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
-    failureSoftTtlBackoffSeconds = listOf(30, Duration.ofMinutes(5).toSeconds().toInt(), Duration.ofMinutes(10).toSeconds().toInt(), Duration.ofMinutes(30).toSeconds().toInt()),
+    failureSoftTtlBackoffSeconds = listOf(
+      30,
+      Duration.ofMinutes(5).toSeconds().toInt(),
+      Duration.ofMinutes(10).toSeconds().toInt(),
+      Duration.ofMinutes(30).toSeconds().toInt(),
+    ),
     hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt(),
   )
 

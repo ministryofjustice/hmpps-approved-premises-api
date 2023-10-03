@@ -2,11 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -27,14 +25,18 @@ import java.time.Duration
 class CommunityApiClient(
   @Qualifier("communityApiWebClient") private val webClient: WebClient,
   objectMapper: ObjectMapper,
-  redisTemplate: RedisTemplate<String, String>,
-  @Value("\${preemptive-cache-key-prefix}") preemptiveCacheKeyPrefix: String,
-) : BaseHMPPSClient(webClient, objectMapper, redisTemplate, preemptiveCacheKeyPrefix) {
-  private val offenderDetailCacheConfig = PreemptiveCacheConfig(
+  webClientCache: WebClientCache,
+) : BaseHMPPSClient(webClient, objectMapper, webClientCache) {
+  private val offenderDetailCacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "offenderDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
     failureSoftTtlBackoffSeconds =
-    listOf(30, Duration.ofMinutes(5).toSeconds().toInt(), Duration.ofMinutes(10).toSeconds().toInt(), Duration.ofMinutes(30).toSeconds().toInt()),
+    listOf(
+      30,
+      Duration.ofMinutes(5).toSeconds().toInt(),
+      Duration.ofMinutes(10).toSeconds().toInt(),
+      Duration.ofMinutes(30).toSeconds().toInt(),
+    ),
     hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt(),
   )
 
