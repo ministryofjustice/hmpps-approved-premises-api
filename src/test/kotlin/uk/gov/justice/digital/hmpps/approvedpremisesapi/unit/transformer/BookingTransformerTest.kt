@@ -128,6 +128,7 @@ class BookingTransformerTest {
     latitude = null,
     longitude = null,
     notes = "",
+    emailAddress = "some@email",
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
     status = PropertyStatus.active,

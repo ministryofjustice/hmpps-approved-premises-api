@@ -38,6 +38,7 @@ class TemporaryAccommodationPremisesSeedJob(
     pdu = columns["Probation delivery unit (PDU)"]!!.trim(),
     characteristics = getCharacteristics(columns),
     notes = columns["Optional notes"].trimToEmpty(),
+    emailAddress = columns["Email Address"].trimToEmpty(),
   )
 
   override fun processRow(row: TemporaryAccommodationPremisesSeedCsvRow) {
@@ -98,6 +99,7 @@ class TemporaryAccommodationPremisesSeedJob(
         longitude = null,
         totalBeds = 0,
         notes = row.notes,
+        emailAddress = row.emailAddress,
         probationRegion = probationRegion,
         localAuthorityArea = localAuthorityArea,
         bookings = mutableListOf(),
@@ -194,4 +196,5 @@ data class TemporaryAccommodationPremisesSeedCsvRow(
   val pdu: String,
   val characteristics: List<String>,
   val notes: String,
+  val emailAddress: String?,
 )
