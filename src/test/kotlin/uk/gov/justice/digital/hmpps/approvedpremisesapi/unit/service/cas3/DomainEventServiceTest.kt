@@ -27,5 +27,6 @@ class DomainEventServiceTest {
     domainEventBuilder = domainEventBuilderMock,
     hmppsQueueService = hmppsQueueServiceMock,
     emitDomainEventsEnabled = true,
+    personArrivedDetailUrlTemplate = "http://api/events/cas3/person-arrived/#eventId",
   )
 }

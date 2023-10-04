@@ -32,6 +32,7 @@ class DomainEventService(
   private val domainEventBuilder: DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
+  @Value("\${url-templates.api.cas3.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
