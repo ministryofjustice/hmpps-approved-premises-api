@@ -54,6 +54,7 @@ class DomainEventServiceTest {
     hmppsQueueService = hmppsQueueServiceMock,
     emitDomainEventsEnabled = true,
     personArrivedDetailUrlTemplate = "http://api/events/cas3/person-arrived/#eventId",
+    personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
   )
 
   @Test
