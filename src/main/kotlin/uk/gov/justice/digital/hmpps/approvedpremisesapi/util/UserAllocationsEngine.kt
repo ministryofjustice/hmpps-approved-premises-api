@@ -11,7 +11,6 @@ import java.util.UUID
 import javax.persistence.criteria.CriteriaBuilder
 import javax.persistence.criteria.CriteriaQuery
 import javax.persistence.criteria.JoinType
-import javax.persistence.criteria.Path
 import javax.persistence.criteria.Predicate
 import javax.persistence.criteria.Root
 
@@ -21,7 +20,7 @@ enum class AllocationType {
 
 class UserAllocationsEngine(private val userRepository: UserRepository, private val allocationType: AllocationType, private val requiredQualifications: List<UserQualification>, private val isLao: Boolean) {
   fun getAllocatedUser(): UserEntity? {
-    val userIds = userRepository.findAll(this.getUserPool()).map { it.id }
+    val userIds = this.getUserPool().map { it.id }
 
     return when (this.allocationType) {
       AllocationType.Assessment -> userRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(userIds)
@@ -29,34 +28,43 @@ class UserAllocationsEngine(private val userRepository: UserRepository, private 
       AllocationType.PlacementApplication -> userRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(userIds)
     }
   }
+  fun getUserPool(): MutableList<UserEntity> = userRepository.findAll(this.userPoolSpecification())
 
-  private fun getUserPool(): Specification<UserEntity> {
+  private fun userPoolSpecification(): Specification<UserEntity> {
     return Specification { root: Root<UserEntity>, query: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->
-      val userQualifications = root
-        .join<UserEntity, MutableList<UserQualificationAssignmentEntity>>(UserEntity::qualifications.name, JoinType.LEFT)
-        .get<UserQualificationAssignmentEntity>(UserQualificationAssignmentEntity::qualification.name)
-
-      val userRoles = root
-        .join<UserEntity, MutableList<UserEntity>>(UserEntity::roles.name, JoinType.LEFT)
-        .get<UserRole>(UserRoleAssignmentEntity::role.name)
-
       val predicates = mutableListOf<Predicate>(
         allActiveUsers(criteriaBuilder, root),
-        allUsersWithRequiredRole(userRoles),
+        allUsersWithRequiredRole(criteriaBuilder, root),
       )
 
       // If the offender is an LAO, we only want users with the LAO qualification
       if (isLao) {
         predicates.add(
-          allUsersWithLaoQualification(userQualifications),
+          allUsersWithLaoQualification(criteriaBuilder, root),
         )
       }
 
       // If we're allocating an assessment, we don't want users with any of the specialist qualifications
       if (this.allocationType == AllocationType.Assessment && this.requiredQualifications.isEmpty()) {
-        predicates.add(
-          allUsersWithoutSpecialistQualifications(userQualifications, criteriaBuilder, root),
+        val specialistQualifications = listOf(
+          UserQualification.ESAP,
+          UserQualification.PIPE,
+          UserQualification.EMERGENCY,
         )
+
+        specialistQualifications.forEach {
+          val userQualifications = root
+            .join<UserEntity, MutableList<UserQualificationAssignmentEntity>>(UserEntity::qualifications.name, JoinType.LEFT)
+
+          userQualifications.on(
+            criteriaBuilder.equal(
+              userQualifications.get<UserQualificationAssignmentEntity>(UserQualificationAssignmentEntity::qualification.name),
+              it,
+            ),
+          )
+
+          predicates.add(userQualifications.isNull)
+        }
       } else if (this.requiredQualifications.isNotEmpty()) {
         // If there are required qualifications, then we ask for users that have ALL of the qualifications we want
         predicates.add(
@@ -66,37 +74,48 @@ class UserAllocationsEngine(private val userRepository: UserRepository, private 
 
       // Finally, we want to make sure the user does not have the exclusion role for our allocation type
       predicates.add(
-        allUsersWithoutExclusionRole(userRoles, criteriaBuilder),
+        allUsersWithoutExclusionRole(root, criteriaBuilder),
       )
 
+      query.groupBy(root.get<UUID>("id"))
       criteriaBuilder.and(*predicates.toTypedArray())
     }
   }
 
   private fun allActiveUsers(criteriaBuilder: CriteriaBuilder, root: Root<UserEntity>) = criteriaBuilder.isTrue(root.get("isActive"))
 
-  private fun allUsersWithRequiredRole(userRoles: Path<UserRole>): Predicate {
+  private fun allUsersWithRequiredRole(criteriaBuilder: CriteriaBuilder, root: Root<UserEntity>): Predicate {
     val requiredRole = when (this.allocationType) {
       AllocationType.Assessment -> UserRole.CAS1_ASSESSOR
       AllocationType.PlacementRequest -> UserRole.CAS1_MATCHER
       AllocationType.PlacementApplication -> UserRole.CAS1_MATCHER
     }
 
-    return userRoles.`in`(requiredRole)
+    val requiredRoleJoin = root
+      .join<UserEntity, MutableList<UserEntity>>(UserEntity::roles.name, JoinType.LEFT)
+
+    requiredRoleJoin.on(
+      criteriaBuilder.equal(
+        requiredRoleJoin.get<UserRole>(UserRoleAssignmentEntity::role.name),
+        requiredRole,
+      ),
+    )
+
+    return requiredRoleJoin.isNotNull
   }
 
-  private fun allUsersWithLaoQualification(userQualifications: Path<UserQualificationAssignmentEntity>): Predicate = userQualifications.`in`(UserQualification.LAO)
+  private fun allUsersWithLaoQualification(criteriaBuilder: CriteriaBuilder, root: Root<UserEntity>): Predicate {
+    val userQualifications = root
+      .join<UserEntity, MutableList<UserQualificationAssignmentEntity>>(UserEntity::qualifications.name, JoinType.LEFT)
 
-  private fun allUsersWithoutSpecialistQualifications(userQualifications: Path<UserQualificationAssignmentEntity>, criteriaBuilder: CriteriaBuilder, root: Root<UserEntity>): Predicate {
-    val specialistQualifications = listOf(
-      UserQualification.ESAP,
-      UserQualification.PIPE,
-      UserQualification.EMERGENCY,
+    userQualifications.on(
+      criteriaBuilder.equal(
+        userQualifications.get<UserQualificationAssignmentEntity>(UserQualificationAssignmentEntity::qualification.name),
+        UserQualification.LAO,
+      ),
     )
 
-    return criteriaBuilder.not(
-      userQualifications.`in`(specialistQualifications),
-    )
+    return userQualifications.isNotNull
   }
 
   private fun allUsersWithRequiredQualifications(root: Root<UserEntity>, query: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder): Predicate {
@@ -122,15 +141,23 @@ class UserAllocationsEngine(private val userRepository: UserRepository, private 
     return criteriaBuilder.equal(subQuery.selection, this.requiredQualifications.size.toLong())
   }
 
-  private fun allUsersWithoutExclusionRole(userRoles: Path<UserRole>, criteriaBuilder: CriteriaBuilder): Predicate {
+  private fun allUsersWithoutExclusionRole(root: Root<UserEntity>, criteriaBuilder: CriteriaBuilder): Predicate {
     val exclusionRole = when (this.allocationType) {
       AllocationType.Assessment -> UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION
       AllocationType.PlacementRequest -> UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION
       AllocationType.PlacementApplication -> UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION
     }
 
-    return criteriaBuilder.not(
-      userRoles.`in`(exclusionRole),
+    val exclusionRoleJoin = root
+      .join<UserEntity, MutableList<UserEntity>>(UserEntity::roles.name, JoinType.LEFT)
+
+    exclusionRoleJoin.on(
+      criteriaBuilder.equal(
+        exclusionRoleJoin.get<UserRole>(UserRoleAssignmentEntity::role.name),
+        exclusionRole,
+      ),
     )
+
+    return exclusionRoleJoin.isNull
   }
 }

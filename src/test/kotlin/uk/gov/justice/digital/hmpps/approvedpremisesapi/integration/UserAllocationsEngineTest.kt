@@ -30,6 +30,10 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
   lateinit var placementApplicationSchema: ApprovedPremisesPlacementApplicationJsonSchemaEntity
   lateinit var premises: ApprovedPremisesEntity
   lateinit var postcodeDistrict: PostCodeDistrictEntity
+  lateinit var expectedQualifiedAssessmentUser: UserEntity
+  lateinit var expectedUnqualifiedAssessmentUser: UserEntity
+  lateinit var expectedPlacementApplicationMatcher: UserEntity
+  lateinit var expectedPlacementRequestMatcher: UserEntity
 
   @BeforeEach
   fun setup() {
@@ -49,22 +53,11 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       }
     }
     postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
-  }
 
-  @Test
-  fun `findQualifiedAssessorWithLeastPendingOrCompletedInLastWeekAssessments query works as described`() {
     createUserForAssessmentQuery(
       "Non Assessor",
       isAssessor = false,
       qualifications = listOf(),
-      numberOfPendingAssessments = 0,
-      numberOfRecentCompletedAssessments = 0,
-      numberOfLessRecentCompletedAssessments = 0,
-    )
-    createUserForAssessmentQuery(
-      "Assessor with no qualifications",
-      isAssessor = true,
-      qualifications = listOf(UserQualification.LAO),
       numberOfPendingAssessments = 0,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 0,
@@ -90,14 +83,6 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       isAssessor = true,
       qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
       numberOfPendingAssessments = 1,
-      numberOfRecentCompletedAssessments = 0,
-      numberOfLessRecentCompletedAssessments = 2,
-    )
-    createUserForAssessmentQuery(
-      "Assessor with both Qualifications and zero pending allocated Assessments",
-      isAssessor = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
-      numberOfPendingAssessments = 0,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 2,
     )
@@ -128,18 +113,6 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfLessRecentCompletedAssessments = 2,
     )
 
-    val allocationEngineWithQualifications = UserAllocationsEngine(realUserRepository, AllocationType.Assessment, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
-    val actualAllocatedUserWithQualifications = allocationEngineWithQualifications.getAllocatedUser()
-
-    val allocationEngineWithoutQualifications = UserAllocationsEngine(realUserRepository, AllocationType.Assessment, emptyList(), false)
-    val actualAllocatedUserWithoutQualifications = allocationEngineWithoutQualifications.getAllocatedUser()
-
-    assertThat(actualAllocatedUserWithQualifications!!.deliusUsername).isEqualTo("Assessor with both Qualifications and zero pending allocated Assessments")
-    assertThat(actualAllocatedUserWithoutQualifications!!.deliusUsername).isEqualTo("Assessor with no qualifications")
-  }
-
-  @Test
-  fun `findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementApplications works as expected`() {
     createUserForPlacementApplicationsQuery(
       "Non Matcher",
       isMatcher = false,
@@ -198,14 +171,6 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfLessRecentCompletedPlacementApplications = 2,
     )
     createUserForPlacementApplicationsQuery(
-      "Matcher with both Qualifications and zero pending allocated Placement Applications",
-      isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
-      numberOfPlacementApplications = 0,
-      numberOfRecentCompletedPlacementApplications = 0,
-      numberOfLessRecentCompletedPlacementApplications = 2,
-    )
-    createUserForPlacementApplicationsQuery(
       "Excluded Matcher with both Qualifications and zero pending allocated Placement Applications",
       isMatcher = true,
       isExcluded = true,
@@ -214,15 +179,6 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
     )
-
-    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementApplication, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
-    val actualAllocatedUser = allocationEngine.getAllocatedUser()
-
-    assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo("Matcher with both Qualifications and zero pending allocated Placement Applications")
-  }
-
-  @Test
-  fun `findQualifiedMatcherWithLeastPendingOrCompletedInLastWeekPlacementRequests works as expected`() {
     createUserForPlacementRequestsQuery(
       "Non Matcher",
       isMatcher = false,
@@ -272,14 +228,6 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfLessRecentCompletedPlacementRequests = 2,
     )
     createUserForPlacementRequestsQuery(
-      "Matcher with both Qualifications and zero pending allocated Placement Requests",
-      isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
-      numberOfPlacementRequests = 0,
-      numberOfRecentCompletedPlacementRequests = 0,
-      numberOfLessRecentCompletedPlacementRequests = 2,
-    )
-    createUserForPlacementRequestsQuery(
       "Inactive Matcher with both Qualifications and zero pending allocated Placement Requests",
       isMatcher = true,
       qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
@@ -298,14 +246,116 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfLessRecentCompletedPlacementRequests = 2,
     )
 
-    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementRequest, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
+    expectedQualifiedAssessmentUser = createUserForAssessmentQuery(
+      "Assessor with both Qualifications and zero pending allocated Assessments",
+      isAssessor = true,
+      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      numberOfPendingAssessments = 0,
+      numberOfRecentCompletedAssessments = 0,
+      numberOfLessRecentCompletedAssessments = 2,
+    )
+
+    expectedUnqualifiedAssessmentUser = createUserForAssessmentQuery(
+      "Assessor with no qualifications",
+      isAssessor = true,
+      qualifications = listOf(UserQualification.LAO),
+      numberOfPendingAssessments = 0,
+      numberOfRecentCompletedAssessments = 0,
+      numberOfLessRecentCompletedAssessments = 0,
+    )
+
+    expectedPlacementApplicationMatcher = createUserForPlacementApplicationsQuery(
+      "Matcher with both Qualifications and zero pending allocated Placement Applications",
+      isMatcher = true,
+      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      numberOfPlacementApplications = 0,
+      numberOfRecentCompletedPlacementApplications = 0,
+      numberOfLessRecentCompletedPlacementApplications = 2,
+    )
+
+    expectedPlacementRequestMatcher = createUserForPlacementRequestsQuery(
+      "Matcher with both Qualifications and zero pending allocated Placement Requests",
+      isMatcher = true,
+      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      numberOfPlacementRequests = 0,
+      numberOfRecentCompletedPlacementRequests = 0,
+      numberOfLessRecentCompletedPlacementRequests = 2,
+    )
+  }
+
+  @Test
+  fun `finding a qualified assessor gets an assessor with the smallest workload and the correct qualifications`() {
+    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.Assessment, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
+    val userPool = allocationEngine.getUserPool()
+    val allocatedUser = allocationEngine.getAllocatedUser()
+
+    userPool.forEach { user ->
+      val qualifications = user.qualifications.map { it.qualification }
+
+      assertThat(user.roles.map { it.role }).contains(UserRole.CAS1_ASSESSOR)
+      assertThat(qualifications).contains(UserQualification.PIPE)
+      assertThat(qualifications).contains(UserQualification.WOMENS)
+    }
+    assertThat(allocatedUser).isNotNull()
+    assertThat(allocatedUser!!.deliusUsername).isEqualTo(expectedQualifiedAssessmentUser.deliusUsername)
+  }
+
+  @Test
+  fun `finding an assessor without qualifications gets an assessor with the smallest workload and without any specialist qualifications`() {
+    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.Assessment, emptyList(), false)
+    val userPool = allocationEngine.getUserPool()
+    val allocatedUser = allocationEngine.getAllocatedUser()
+
+    userPool.forEach { user ->
+      val qualifications = user.qualifications.map { it.qualification }
+
+      assertThat(user.roles.map { it.role }).contains(UserRole.CAS1_ASSESSOR)
+      assertThat(qualifications).doesNotContain(UserQualification.ESAP)
+      assertThat(qualifications).doesNotContain(UserQualification.PIPE)
+      assertThat(qualifications).doesNotContain(UserQualification.EMERGENCY)
+    }
+    assertThat(allocatedUser).isNotNull()
+    assertThat(allocatedUser!!.deliusUsername).isEqualTo(expectedUnqualifiedAssessmentUser.deliusUsername)
+  }
+
+  @Test
+  fun `finding a matcher for a placement application gets a matcher with the smallest workload and the correct qualifications`() {
+    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementApplication, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
+    val userPool = allocationEngine.getUserPool()
     val actualAllocatedUser = allocationEngine.getAllocatedUser()
 
-    assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo("Matcher with both Qualifications and zero pending allocated Placement Requests")
+    userPool.forEach { user ->
+      val qualifications = user.qualifications.map { it.qualification }
+
+      assertThat(user.roles.map { it.role }).contains(UserRole.CAS1_MATCHER)
+      assertThat(qualifications).contains(UserQualification.PIPE)
+      assertThat(qualifications).contains(UserQualification.WOMENS)
+    }
+    assertThat(actualAllocatedUser).isNotNull()
+    assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo(expectedPlacementApplicationMatcher.deliusUsername)
+  }
+
+  @Test
+  fun `finding a matcher for a placement request gets a matcher with the smallest workload and the correct qualifications`() {
+    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementRequest, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
+    val userPool = allocationEngine.getUserPool()
+    val actualAllocatedUser = allocationEngine.getAllocatedUser()
+
+    userPool.forEach { user ->
+      val qualifications = user.qualifications.map { it.qualification }
+
+      assertThat(user.roles.map { it.role }).contains(UserRole.CAS1_MATCHER)
+      assertThat(qualifications).contains(UserQualification.PIPE)
+      assertThat(qualifications).contains(UserQualification.WOMENS)
+    }
+    assertThat(actualAllocatedUser).isNotNull()
+    assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo(expectedPlacementRequestMatcher.deliusUsername)
   }
 
   private fun createUserForPlacementRequestsQuery(deliusUsername: String, isMatcher: Boolean, qualifications: List<UserQualification>, numberOfPlacementRequests: Int, numberOfRecentCompletedPlacementRequests: Int, numberOfLessRecentCompletedPlacementRequests: Int, isActive: Boolean = true, isExcluded: Boolean = false): UserEntity {
-    val roles = mutableListOf<UserRole>()
+    val roles = mutableListOf(
+      UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION,
+    )
 
     if (isMatcher) {
       roles += UserRole.CAS1_MATCHER
@@ -316,7 +366,7 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
     }
 
     val user = createUser(
-      deliusUsername,
+      "$deliusUsername for Placement Requests query",
       roles,
       qualifications,
       isActive,
@@ -338,7 +388,9 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
   }
 
   private fun createUserForPlacementApplicationsQuery(deliusUsername: String, isMatcher: Boolean, qualifications: List<UserQualification>, numberOfPlacementApplications: Int, numberOfRecentCompletedPlacementApplications: Int, numberOfLessRecentCompletedPlacementApplications: Int, isActive: Boolean = true, isExcluded: Boolean = false): UserEntity {
-    val roles = mutableListOf<UserRole>()
+    val roles = mutableListOf(
+      UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION,
+    )
 
     if (isMatcher) {
       roles += UserRole.CAS1_MATCHER
@@ -349,7 +401,7 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
     }
 
     val user = createUser(
-      deliusUsername,
+      "$deliusUsername for Placement Applications query",
       roles,
       qualifications,
       isActive,
@@ -417,7 +469,7 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
     }
 
     val user = createUser(
-      deliusUsername,
+      "$deliusUsername for Assessments query",
       roles,
       qualifications,
       isActive,
