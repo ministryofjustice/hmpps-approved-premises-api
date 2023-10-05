@@ -2797,10 +2797,10 @@ class BookingServiceTest {
       )
     }
 
-    verify(exactly = 1) {
+    verify(exactly = 2) {
       mockEmailNotificationService.sendEmail(
         any(),
-        "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+        any(),
         match {
           it["name"] == user.name &&
             (it["apName"] as String) == premises.name &&
@@ -2906,10 +2906,10 @@ class BookingServiceTest {
       )
     }
 
-    verify(exactly = 1) {
+    verify(exactly = 2) {
       mockEmailNotificationService.sendEmail(
         any(),
-        "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+        any(),
         match {
           it["name"] == user.name &&
             (it["apName"] as String) == premises.name &&
@@ -2993,10 +2993,10 @@ class BookingServiceTest {
       mockDomainEventService.saveBookingMadeDomainEvent(any())
     }
 
-    verify(exactly = 1) {
+    verify(exactly = 2) {
       mockEmailNotificationService.sendEmail(
         any(),
-        "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+        any(),
         match {
           it["name"] == user.name &&
             (it["apName"] as String) == premises.name &&
@@ -3064,10 +3064,10 @@ class BookingServiceTest {
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
 
-    verify(exactly = 1) {
+    verify(exactly = 2) {
       mockEmailNotificationService.sendEmail(
         any(),
-        "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+        any(),
         match {
           it["name"] == user.name &&
             (it["apName"] as String) == premises.name &&
@@ -3137,10 +3137,10 @@ class BookingServiceTest {
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
 
-    verify(exactly = 1) {
+    verify(exactly = 2) {
       mockEmailNotificationService.sendEmail(
         any(),
-        "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+        any(),
         match {
           it["name"] == user.name &&
             (it["apName"] as String) == premises.name &&
@@ -4406,10 +4406,10 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 1) {
+      verify(exactly = 2) {
         mockEmailNotificationService.sendEmail(
           any(),
-          "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+          any(),
           match {
             it["name"] == otherUser.name &&
               (it["apName"] as String) == premises.name &&
@@ -4522,10 +4522,10 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 1) {
+      verify(exactly = 2) {
         mockEmailNotificationService.sendEmail(
           any(),
-          "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+          any(),
           match {
             it["name"] == otherUser.name &&
               (it["apName"] as String) == premises.name &&
@@ -4649,10 +4649,10 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 1) {
+      verify(exactly = 2) {
         mockEmailNotificationService.sendEmail(
           any(),
-          "1e3d2ee2-250e-4755-af38-80d24cdc3480",
+          any(),
           match {
             it["name"] == otherUser.name &&
               (it["apName"] as String) == premises.name &&

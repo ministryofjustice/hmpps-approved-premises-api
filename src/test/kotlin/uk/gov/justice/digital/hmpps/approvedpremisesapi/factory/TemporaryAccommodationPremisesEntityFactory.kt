@@ -26,6 +26,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
   private var town: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
+  private var emailAddress: Yielded<String> = { randomStringUpperCase(10) }
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
@@ -133,6 +134,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     addressLine2 = this.addressLine2(),
     town = this.town(),
     notes = this.notes(),
+    emailAddress = this.emailAddress(),
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
     status = this.status(),

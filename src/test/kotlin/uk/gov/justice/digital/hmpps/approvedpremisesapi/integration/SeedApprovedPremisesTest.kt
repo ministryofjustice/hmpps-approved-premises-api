@@ -201,7 +201,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     val expectedErrorMessage = "The headers provided: " +
       "[name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
       "did not include required headers: " +
-      "[addressLine2, postcode, totalBeds, notes, characteristics, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
+      "[addressLine2, postcode, totalBeds, notes, emailAddress, characteristics, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
       "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
@@ -349,6 +349,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "longitude",
         "totalBeds",
         "notes",
+        "emailAddress",
         "probationRegion",
         "localAuthorityArea",
         "characteristics",
@@ -388,6 +389,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.longitude!!)
         .withUnquotedField(it.totalBeds)
         .withQuotedFields(it.notes)
+        .withQuotedField(it.emailAddress)
         .withQuotedField(it.probationRegion)
         .withQuotedField(it.localAuthorityArea)
         .withQuotedField(it.characteristics.joinToString(","))
@@ -430,6 +432,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var longitude: Yielded<Double> = { randomDouble(-1.56, 1.10) }
   private var totalBeds: Yielded<Int> = { randomInt(5, 50) }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+  private var emailAddress: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var probationRegion: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var localAuthorityArea: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var characteristics: Yielded<List<String>> = { listOf() }
@@ -525,6 +528,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     longitude = this.longitude(),
     totalBeds = this.totalBeds(),
     notes = this.notes(),
+    emailAddress = this.emailAddress(),
     probationRegion = this.probationRegion(),
     localAuthorityArea = this.localAuthorityArea(),
     characteristics = this.characteristics(),

@@ -237,22 +237,43 @@ class BookingService(
       val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
       val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
 
-      emailNotificationService.sendEmail(
-        user = applicationSubmittedByUser,
-        templateId = notifyConfig.templates.bookingMade,
-        personalisation = mapOf(
-          "name" to applicationSubmittedByUser.name,
-          "apName" to premises!!.name,
-          "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
-          "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
-            .replace("#bookingId", booking.id.toString()),
-          "crn" to placementRequest.application.crn,
-          "startDate" to arrivalDate.toString(),
-          "endDate" to departureDate.toString(),
-          "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks else lengthOfStayDays,
-          "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
-        ),
-      )
+      if (applicationSubmittedByUser.email != null) {
+        emailNotificationService.sendEmail(
+          email = applicationSubmittedByUser.email!!,
+          templateId = notifyConfig.templates.bookingMade,
+          personalisation = mapOf(
+            "name" to applicationSubmittedByUser.name,
+            "apName" to premises!!.name,
+            "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
+            "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
+              .replace("#bookingId", booking.id.toString()),
+            "crn" to placementRequest.application.crn,
+            "startDate" to arrivalDate.toString(),
+            "endDate" to departureDate.toString(),
+            "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks else lengthOfStayDays,
+            "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
+          ),
+        )
+      }
+
+      if (premises?.emailAddress != null) {
+        emailNotificationService.sendEmail(
+          email = premises!!.emailAddress!!,
+          templateId = notifyConfig.templates.bookingMadePremises,
+          personalisation = mapOf(
+            "name" to applicationSubmittedByUser.name,
+            "apName" to premises!!.name,
+            "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
+            "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
+              .replace("#bookingId", booking.id.toString()),
+            "crn" to placementRequest.application.crn,
+            "startDate" to arrivalDate.toString(),
+            "endDate" to departureDate.toString(),
+            "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks else lengthOfStayDays,
+            "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
+          ),
+        )
+      }
 
       return@validated success(booking)
     }
@@ -413,23 +434,43 @@ class BookingService(
         val lengthOfStayDays = arrivalDate.getDaysUntilInclusive(departureDate).size
         val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
         val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
+        if (applicationSubmittedByUser.email != null) {
+          emailNotificationService.sendEmail(
+            email = applicationSubmittedByUser.email!!,
+            templateId = notifyConfig.templates.bookingMade,
+            personalisation = mapOf(
+              "name" to applicationSubmittedByUser.name,
+              "apName" to bed.room.premises.name,
+              "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
+              "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
+                .replace("#bookingId", booking.id.toString()),
+              "crn" to crn,
+              "startDate" to arrivalDate.toString(),
+              "endDate" to departureDate.toString(),
+              "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
+              "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
+            ),
+          )
+        }
 
-        emailNotificationService.sendEmail(
-          user = applicationSubmittedByUser,
-          templateId = notifyConfig.templates.bookingMade,
-          personalisation = mapOf(
-            "name" to applicationSubmittedByUser.name,
-            "apName" to bed.room.premises.name,
-            "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
-            "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
-              .replace("#bookingId", booking.id.toString()),
-            "crn" to crn,
-            "startDate" to arrivalDate.toString(),
-            "endDate" to departureDate.toString(),
-            "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
-            "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
-          ),
-        )
+        if (booking.premises.emailAddress != null) {
+          emailNotificationService.sendEmail(
+            email = booking.premises.emailAddress!!,
+            templateId = notifyConfig.templates.bookingMadePremises,
+            personalisation = mapOf(
+              "name" to applicationSubmittedByUser.name,
+              "apName" to bed.room.premises.name,
+              "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
+              "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
+                .replace("#bookingId", booking.id.toString()),
+              "crn" to crn,
+              "startDate" to arrivalDate.toString(),
+              "endDate" to departureDate.toString(),
+              "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
+              "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
+            ),
+          )
+        }
       }
 
       success(booking)

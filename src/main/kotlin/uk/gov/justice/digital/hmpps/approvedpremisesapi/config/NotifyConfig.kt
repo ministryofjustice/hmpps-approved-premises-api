@@ -23,6 +23,7 @@ class NotifyTemplates {
   var assessmentAccepted = "ddf87b15-8866-4bad-a87b-47eba69eb6db"
   var assessmentRejected = "b3a98c60-8fe0-4450-8fd0-6430198ee43b"
   var bookingMade = "1e3d2ee2-250e-4755-af38-80d24cdc3480"
+  var bookingMadePremises = "337bb149-6f12-4be2-b5a3-a9a73d73c1e1"
 }
 
 enum class NotifyMode {

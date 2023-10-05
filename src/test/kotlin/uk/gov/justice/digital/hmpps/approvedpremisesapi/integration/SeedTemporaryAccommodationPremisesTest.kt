@@ -219,6 +219,7 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
   private var pdu: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var characteristics: Yielded<List<String>> = { listOf() }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
+  private var emailAddress: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -271,5 +272,6 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
     pdu = this.pdu(),
     characteristics = this.characteristics(),
     notes = this.notes(),
+    emailAddress = this.emailAddress(),
   )
 }

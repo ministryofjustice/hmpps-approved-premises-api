@@ -1776,7 +1776,7 @@ class AssessmentServiceTest {
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
     verify(exactly = 1) {
       emailNotificationServiceMock.sendEmail(
-        match { it.id == assigneeUser.id },
+        match { it == assigneeUser.email },
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         match {
           it["name"] == assigneeUser.name &&
@@ -1786,7 +1786,7 @@ class AssessmentServiceTest {
     }
     verify(exactly = 1) {
       emailNotificationServiceMock.sendEmail(
-        match { it.id == previousAssessment.allocatedToUser!!.id },
+        match { it == previousAssessment.allocatedToUser!!.email },
         "331ce452-ea83-4f0c-aec0-5eafe85094f2",
         match {
           it["name"] == previousAssessment.allocatedToUser!!.name &&
