@@ -1146,10 +1146,31 @@ class BookingService(
     moveOnCategoryId: UUID,
     destinationProviderId: UUID?,
     notes: String?,
+  ) = when (booking.premises) {
+    is ApprovedPremisesEntity ->
+      createCas1Departure(user, booking, dateTime, reasonId, moveOnCategoryId, destinationProviderId, notes)
+    is TemporaryAccommodationPremisesEntity ->
+      createCas3Departure(booking, dateTime, reasonId, moveOnCategoryId, notes)
+    else ->
+      throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
+  }
+
+  private fun createCas1Departure(
+    user: UserEntity?,
+    booking: BookingEntity,
+    dateTime: OffsetDateTime,
+    reasonId: UUID,
+    moveOnCategoryId: UUID,
+    destinationProviderId: UUID?,
+    notes: String?,
   ) = validated<DepartureEntity> {
+    if (booking.premises !is ApprovedPremisesEntity) {
+      throw RuntimeException("Only CAS1 bookings are supported")
+    }
+
     val occurredAt = OffsetDateTime.now()
 
-    if (booking.premises is ApprovedPremisesEntity && booking.departure != null) {
+    if (booking.departure != null) {
       return generalError("This Booking already has a Departure set")
     }
 
@@ -1171,23 +1192,19 @@ class BookingService(
       "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
     }
 
-    val destinationProvider = when (booking.service) {
-      ServiceName.approvedPremises.value -> {
-        when (destinationProviderId) {
-          null -> {
-            "$.destinationProviderId" hasValidationError "empty"
-            null
-          }
-          else -> {
-            val result = destinationProviderRepository.findByIdOrNull(destinationProviderId)
-            if (result == null) {
-              "$.destinationProviderId" hasValidationError "doesNotExist"
-            }
-            result
-          }
-        }
+    val destinationProvider = when (destinationProviderId) {
+      null -> {
+        "$.destinationProviderId" hasValidationError "empty"
+        null
       }
-      else -> null
+
+      else -> {
+        val result = destinationProviderRepository.findByIdOrNull(destinationProviderId)
+        if (result == null) {
+          "$.destinationProviderId" hasValidationError "doesNotExist"
+        }
+        result
+      }
     }
 
     if (validationErrors.any()) {
@@ -1210,7 +1227,7 @@ class BookingService(
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
+    if (booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
@@ -1281,6 +1298,60 @@ class BookingService(
         ),
       )
     }
+
+    return success(departureEntity)
+  }
+
+  private fun createCas3Departure(
+    booking: BookingEntity,
+    dateTime: OffsetDateTime,
+    reasonId: UUID,
+    moveOnCategoryId: UUID,
+    notes: String?,
+  ) = validated<DepartureEntity> {
+    if (booking.premises !is TemporaryAccommodationPremisesEntity) {
+      throw RuntimeException("Only CAS3 bookings are supported")
+    }
+
+    if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
+      "$.dateTime" hasValidationError "beforeBookingArrivalDate"
+    }
+
+    val reason = departureReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      "$.reasonId" hasValidationError "doesNotExist"
+    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+      "$.reasonId" hasValidationError "incorrectDepartureReasonServiceScope"
+    }
+
+    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
+    if (moveOnCategory == null) {
+      "$.moveOnCategoryId" hasValidationError "doesNotExist"
+    } else if (!serviceScopeMatches(moveOnCategory.serviceScope, booking)) {
+      "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val departureEntity = departureRepository.save(
+      DepartureEntity(
+        id = UUID.randomUUID(),
+        dateTime = dateTime,
+        reason = reason!!,
+        moveOnCategory = moveOnCategory!!,
+        destinationProvider = null,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
+    booking.departureDate = dateTime.toLocalDate()
+    updateBooking(booking)
+
+    cas3DomainEventService.savePersonDepartedEvent(booking)
 
     return success(departureEntity)
   }
