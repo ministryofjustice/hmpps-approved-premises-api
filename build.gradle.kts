@@ -56,7 +56,7 @@ dependencies {
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.8")
-  testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
+  testImplementation("io.jsonwebtoken:jjwt-api:0.12.2")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
