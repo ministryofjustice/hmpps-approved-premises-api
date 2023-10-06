@@ -694,17 +694,15 @@ class ApplicationService(
 
     val mappaLevel = risks.mappa.value?.level
 
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(username)
-    val staffDetails = when (staffDetailsResult) {
+    val staffDetails = when (val staffDetailsResult = communityApiClient.getStaffUserDetails(username)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    // TODO: The integrations team have agreed to build us an endpoint to determine which team's caseload an Offender belongs to
-    //       once that is done we should use that here to select the right team when the user is a memnber of more than one
-
-    val team = staffDetails.teams?.firstOrNull()
-      ?: throw RuntimeException("No teams present on Staff Details when creating Application Submitted Domain Event")
+    val caseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(application.crn)) {
+      is ClientResult.Success -> caseDetailResult.body
+      is ClientResult.Failure -> caseDetailResult.throwException()
+    }
 
     domainEventService.saveApplicationSubmittedDomainEvent(
       DomainEvent(
@@ -749,12 +747,12 @@ class ApplicationService(
                 name = staffDetails.probationArea.description,
               ),
               team = Team(
-                code = team.code,
-                name = team.description,
+                code = caseDetail.case.manager.team.code,
+                name = caseDetail.case.manager.team.name,
               ),
               ldu = Ldu(
-                code = team.teamType.code,
-                name = team.teamType.description,
+                code = caseDetail.case.manager.team.ldu.code,
+                name = caseDetail.case.manager.team.ldu.name,
               ),
               region = Region(
                 code = staffDetails.probationArea.code,
