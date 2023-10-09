@@ -130,7 +130,7 @@ tasks.register<Test>("unitTest") {
 
 openApiGenerate {
   generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/api.yml")
+  inputSpec.set("$rootDir/src/main/resources/static/codegen/built-api-spec.yml")
   outputDir.set("$buildDir/generated")
   apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
   modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
@@ -140,6 +140,25 @@ openApiGenerate {
     put("gradleBuildFile", "false")
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
+    put("dateLibrary", "custom")
+  }
+  typeMappings.put("DateTime", "Instant")
+  importMappings.put("Instant", "java.time.Instant")
+}
+
+tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas2Namespace") {
+  generatorName.set("kotlin-spring")
+  inputSpec.set("$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml")
+  outputDir.set("$buildDir/generated")
+  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2")
+  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
+  configOptions.apply {
+    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
+    put("delegatePattern", "true")
+    put("gradleBuildFile", "false")
+    put("exceptionHandler", "false")
+    put("useBeanValidation", "false")
+    put("apiSuffix", "Cas2")
     put("dateLibrary", "custom")
   }
   typeMappings.put("DateTime", "Instant")
@@ -164,7 +183,55 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
   importMappings.put("Instant", "java.time.Instant")
 }
 
-tasks.get("openApiGenerate").dependsOn("openApiGenerateDomainEvents")
+tasks.register("openApiPreCompilation") {
+
+  // Generate OpenAPI spec files suited to Kotlin code generator
+  // -----------------------------------------------------------
+  // The 'built' files produced each contain all the shared 'components'
+  // -- as the Kotlin generator doesn't support $ref links to 'remote' files.
+
+  logger.quiet("Running task: openApiPreCompilation")
+
+  val sharedComponents = FileUtils.readFileToString(
+    File("$rootDir/src/main/resources/static/_shared.yml"),
+    "UTF-8"
+  )
+
+  fun buildSpecWithSharedComponentsAppended(specName: String): File {
+    val spec = FileUtils.readFileToString(
+      File("$rootDir/src/main/resources/static/$specName.yml"),
+      "UTF-8"
+    )
+    val compiledSpecFile = File("$rootDir/src/main/resources/static/codegen/built-$specName-spec.yml")
+    val notice = "# DO NOT EDIT.\n# This is a build artefact for use in code generation.\n"
+
+    FileUtils.writeStringToFile(
+      compiledSpecFile,
+      (notice + spec + sharedComponents),
+      "UTF-8"
+    )
+
+    return compiledSpecFile
+  }
+
+  fun rewriteRefsForLocalComponents(file: File) {
+    val updatedContents = FileUtils
+      .readFileToString(file, "UTF-8")
+      .replace("_shared.yml#/components", "#/components")
+    FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
+  }
+
+  listOf("api", "cas2-api").forEach {
+    buildSpecWithSharedComponentsAppended(it)
+      .run(::rewriteRefsForLocalComponents)
+  }
+}
+
+tasks.get("openApiGenerate").dependsOn(
+  "openApiGenerateDomainEvents",
+  "openApiPreCompilation",
+  "openApiGenerateCas2Namespace"
+)
 
 tasks.get("openApiGenerate").doLast {
   // This is a workaround to allow us to have the `/documents/{crn}/{documentId}` endpoint specified in api.yml but not use

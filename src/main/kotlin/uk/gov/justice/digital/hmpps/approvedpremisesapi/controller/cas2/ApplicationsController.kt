@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.Cas2ApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -42,10 +42,10 @@ class ApplicationsController(
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val userService: UserService,
-) : Cas2ApiDelegate {
+) : ApplicationsCas2Delegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun cas2ApplicationsGet(): ResponseEntity<List<ApplicationSummary>> {
+  override fun applicationsGet(): ResponseEntity<List<ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
     val applications = applicationService.getAllApplicationsForUsername(
@@ -57,7 +57,7 @@ class ApplicationsController(
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
   }
 
-  override fun cas2ApplicationsApplicationIdGet(applicationId: UUID):
+  override fun applicationsApplicationIdGet(applicationId: UUID):
     ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
@@ -74,7 +74,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun cas2ApplicationsPost(body: NewApplication):
+  override fun applicationsPost(body: NewApplication):
     ResponseEntity<Application> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
@@ -96,7 +96,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun cas2ApplicationsApplicationIdPut(
+  override fun applicationsApplicationIdPut(
     applicationId: UUID,
     body:
       UpdateApplication,
@@ -123,7 +123,7 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
-  override fun cas2ApplicationsApplicationIdSubmissionPost(
+  override fun applicationsApplicationIdSubmissionPost(
     applicationId: UUID,
     submitApplication: SubmitCas2Application,
   ): ResponseEntity<Unit> {
