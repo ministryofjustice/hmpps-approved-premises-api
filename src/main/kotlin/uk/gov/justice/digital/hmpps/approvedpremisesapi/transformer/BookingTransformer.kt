@@ -42,7 +42,7 @@ class BookingTransformer(
         name = jpa.getBedName(),
         code = jpa.getBedCode(),
       ),
-
+      status = jpa.getStatus(),
     )
   }
   fun transformJpaToApi(jpa: BookingEntity, personInfo: PersonInfoResult, staffMember: StaffMember?): Booking {

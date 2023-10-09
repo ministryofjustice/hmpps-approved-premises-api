@@ -602,6 +602,8 @@ components:
           $ref: '#/components/schemas/Person'
         bed:
           $ref: '#/components/schemas/Bed'
+        status:
+          $ref: '#/components/schemas/BookingStatus'
     BookingSummary:
       type: object
       properties:
