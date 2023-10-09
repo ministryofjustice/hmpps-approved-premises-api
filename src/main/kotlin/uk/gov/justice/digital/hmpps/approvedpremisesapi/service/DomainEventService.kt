@@ -195,11 +195,13 @@ class DomainEventService(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
+        bookingId = null,
         crn = domainEvent.crn,
         type = enumTypeFromDataType(domainEvent.data!!::class.java),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
+        service = "CAS1",
       ),
     )
 
