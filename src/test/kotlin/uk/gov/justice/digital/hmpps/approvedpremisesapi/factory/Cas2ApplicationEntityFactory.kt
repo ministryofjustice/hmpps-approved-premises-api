@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -24,7 +23,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
-  private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
 
@@ -82,7 +80,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     schemaUpToDate = false,
-    assessments = this.assessments(),
     nomsNumber = this.nomsNumber(),
   )
 }
