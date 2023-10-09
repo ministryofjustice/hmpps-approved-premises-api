@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.PeopleCas2Deleg
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService as OASysOffenderService
 
 @Service("Cas2PeopleController")
@@ -27,6 +29,7 @@ class PeopleController(
   private val oaSysOffenderService: OASysOffenderService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val personTransformer: PersonTransformer,
+  private val risksTransformer: RisksTransformer,
   private val userService: NomisUserService,
 ) : PeopleCas2Delegate {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -85,6 +88,16 @@ class PeopleController(
         oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
       )
     }
+  }
+
+  override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
+    val risks = when (val risksResult = offenderService.getRiskByCrn(crn)) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is AuthorisableActionResult.Success -> risksResult.entity
+    }
+
+    return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks, crn))
   }
 
   private fun getOffenderDetails(crn: String): OffenderDetailSummary {

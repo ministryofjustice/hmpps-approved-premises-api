@@ -12,22 +12,30 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class OffenderServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
+  private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -38,7 +46,105 @@ class OffenderServiceTest {
   private val offenderService = OffenderService(
     mockCommunityApiClient,
     mockPrisonsApiClient,
+    mockApOASysContextApiClient,
   )
+
+  @Nested
+  inner class GetRisksByCrn {
+    // Note that Tier, Mappa and Flags are all hardcoded to NotFound
+    // and these unused 'envelopes' will be removed.
+
+    @Test
+    fun `returns NotFound result when Community API Client returns 404`() {
+      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+
+      assertThat(offenderService.getRiskByCrn("a-crn") is AuthorisableActionResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `throws when Community API Client returns other non-2xx status code`() {
+      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+
+      val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn") }
+      assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
+    }
+
+    @Test
+    fun `returns NotFound envelope for RoSH when client returns 404`() {
+      val crn = "a-crn"
+
+      mockExistingNonLaoOffender()
+      mock404RoSH(crn)
+
+      val result = offenderService.getRiskByCrn(crn)
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.NotFound)
+
+      assertThat(result.entity.tier.status).isEqualTo(RiskStatus.NotFound)
+      assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.NotFound)
+      assertThat(result.entity.flags.status).isEqualTo(RiskStatus.NotFound)
+    }
+
+    @Test
+    fun `returns Error envelope for RoSH when client returns 500`() {
+      val crn = "a-crn"
+
+      mockExistingNonLaoOffender()
+      mock500RoSH(crn)
+
+      val result = offenderService.getRiskByCrn(crn)
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Error)
+
+      assertThat(result.entity.tier.status).isEqualTo(RiskStatus.NotFound)
+      assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.NotFound)
+      assertThat(result.entity.flags.status).isEqualTo(RiskStatus.NotFound)
+    }
+
+    @Test
+    fun `returns Retrieved envelopes with expected contents for RoSH when client returns 200`() {
+      val crn = "a-crn"
+
+      mockExistingNonLaoOffender()
+
+      mock200RoSH(
+        crn,
+        RoshRatingsFactory().apply {
+          withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
+          withAssessmentId(34853487)
+          withRiskChildrenCommunity(RiskLevel.LOW)
+          withRiskPublicCommunity(RiskLevel.MEDIUM)
+          withRiskKnownAdultCommunity(RiskLevel.HIGH)
+          withRiskStaffCommunity(RiskLevel.VERY_HIGH)
+        }.produce(),
+      )
+
+      val result = offenderService.getRiskByCrn(crn)
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
+      result.entity.roshRisks.value!!.let {
+        assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
+        assertThat(it.overallRisk).isEqualTo("Very High")
+        assertThat(it.riskToChildren).isEqualTo("Low")
+        assertThat(it.riskToPublic).isEqualTo("Medium")
+        assertThat(it.riskToKnownAdult).isEqualTo("High")
+        assertThat(it.riskToStaff).isEqualTo("Very High")
+      }
+
+      assertThat(result.entity.tier.status).isEqualTo(RiskStatus.NotFound)
+      assertThat(result.entity.tier.value).isNull()
+
+      assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.NotFound)
+      assertThat(result.entity.mappa.value).isNull()
+
+      assertThat(result.entity.flags.status).isEqualTo(RiskStatus.NotFound)
+      assertThat(result.entity.flags.value).isNull()
+    }
+  }
 
   @Nested
   inner class GetOffenderByCrn {
@@ -195,4 +301,22 @@ class OffenderServiceTest {
       assertThat(result.inmateDetail).isEqualTo(inmateDetail)
     }
   }
+
+  private fun mockExistingNonLaoOffender() {
+    val resultBody = OffenderDetailsSummaryFactory()
+      .withCrn("a-crn")
+      .withFirstName("Bob")
+      .withLastName("Doe")
+      .withCurrentRestriction(false)
+      .withCurrentExclusion(false)
+      .produce()
+
+    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+  }
+
+  private fun mock404RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)
+
+  private fun mock500RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
+
+  private fun mock200RoSH(crn: String, body: RoshRatings) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
 }

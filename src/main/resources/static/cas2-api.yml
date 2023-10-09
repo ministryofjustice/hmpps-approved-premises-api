@@ -262,3 +262,40 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /people/{crn}/risks:
+    get:
+      tags:
+        - People operations
+      summary: Returns the risks for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch risks for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/PersonRisks'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
