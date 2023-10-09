@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
@@ -12,6 +13,12 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMemb
     responseBody = StaffMembersPage(
       content = listOf(staffMember),
     ),
+  )
+
+fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String, response: CaseDetail) =
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/probation-cases/$crn/details",
+    responseBody = response,
   )
 
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffDetailsCall(staffCode: String, staffUserDetails: StaffUserDetails) =

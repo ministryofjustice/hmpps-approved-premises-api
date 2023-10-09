@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
@@ -1191,6 +1192,10 @@ class ApplicationServiceTest {
         body = staffUserDetails,
       )
 
+      val caseDetails = CaseDetailFactory().produce()
+
+      every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(status = HttpStatus.OK, body = caseDetails)
+
       val schema = application.schemaVersion as ApprovedPremisesApplicationJsonSchemaEntity
 
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
@@ -1216,7 +1221,6 @@ class ApplicationServiceTest {
         mockDomainEventService.saveApplicationSubmittedDomainEvent(
           match {
             val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
-            val firstTeam = staffUserDetails.teams!!.first()
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
@@ -1243,12 +1247,12 @@ class ApplicationServiceTest {
                 name = staffUserDetails.probationArea.description,
               ),
               team = Team(
-                code = firstTeam.code,
-                name = firstTeam.description,
+                code = caseDetails.case.manager.team.code,
+                name = caseDetails.case.manager.team.name,
               ),
               ldu = Ldu(
-                code = firstTeam.teamType.code,
-                name = firstTeam.teamType.description,
+                code = caseDetails.case.manager.team.ldu.code,
+                name = caseDetails.case.manager.team.ldu.name,
               ),
               region = Region(
                 code = staffUserDetails.probationArea.code,

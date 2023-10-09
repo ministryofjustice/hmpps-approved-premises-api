@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
@@ -1507,6 +1509,11 @@ class ApplicationTest : IntegrationTestBase() {
             ),
           )
 
+          APDeliusContext_mockSuccessfulCaseDetailCall(
+            offenderDetails.otherIds.crn,
+            CaseDetailFactory().produce(),
+          )
+
           webTestClient.post()
             .uri("/applications/$applicationId/submission")
             .header("Authorization", "Bearer $jwt")
@@ -1645,6 +1652,11 @@ class ApplicationTest : IntegrationTestBase() {
             Thread.sleep(1000)
             it.invocation.args[0] as ApplicationEntity
           }
+
+          APDeliusContext_mockSuccessfulCaseDetailCall(
+            offenderDetails.otherIds.crn,
+            CaseDetailFactory().produce(),
+          )
 
           val responseStatuses = mutableListOf<HttpStatus>()
 

@@ -1,0 +1,53 @@
+{
+  "id": "331bc347-d9c7-42d9-9c47-217860c35749",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/probation-cases/(.*)/details"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "jsonBody": {
+      "case": {
+        "crn": "X371199",
+        "nomsId": "A7779DY",
+        "name": {
+          "forename": "Ben",
+          "surname": "Davies",
+          "middleNames": []
+        },
+        "dateOfBirth": "1993-04-24",
+        "gender": "Male",
+        "profile": {
+          "ethnicity": "White: British/English/Welsh/Scottish/Northern Irish",
+          "genderIdentity": "Male",
+          "nationality": "British",
+          "religion": "Apostolic"
+        },
+        "manager": {
+          "team": {
+            "code": "N07UAT",
+            "name": "Unallocated Team(N07)",
+            "ldu": {
+              "code": "N07UAT",
+              "name": "Unallocated Level 3(N07)"
+            }
+          }
+        },
+        "currentExclusion": false,
+        "currentRestriction": false
+      },
+      "offences": [
+        {
+          "description": "Arson - 05600",
+          "date": "2021-01-06",
+          "main": true,
+          "eventNumber": "2"
+        }
+      ],
+      "registrations": []
+    }
+  }
+}

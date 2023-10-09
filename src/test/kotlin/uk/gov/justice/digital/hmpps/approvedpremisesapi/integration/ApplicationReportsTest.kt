@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -58,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.time.Instant
@@ -78,6 +81,9 @@ class ApplicationReportsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var realOffenderService: OffenderService
+
+  @Autowired
+  lateinit var apDeliusContextApiClient: ApDeliusContextApiClient
 
   lateinit var referrerDetails: Pair<UserEntity, String>
   lateinit var referrerTeam: StaffUserTeamMembership
@@ -203,6 +209,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     val assessment = application.getLatestAssessment()!!
     val placementRequest = application.getLatestPlacementRequest()!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
+    val caseDetail = getCaseDetailForApplication(application)
 
     val (referrerEntity, _) = referrerDetails
 
@@ -223,9 +230,9 @@ class ApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.applicationWithdrawalReason).isEqualTo(application.withdrawalReason)
 
     assertThat(reportRow.referrerUsername).isEqualTo(referrerEntity.deliusUsername)
-    assertThat(reportRow.referralLdu).isEqualTo(referrerTeam.teamType.description)
+    assertThat(reportRow.referralLdu).isEqualTo(caseDetail.case.manager.team.ldu.name)
     assertThat(reportRow.referralRegion).isEqualTo(referrerProbationArea)
-    assertThat(reportRow.referralTeam).isEqualTo(referrerTeam.description)
+    assertThat(reportRow.referralTeam).isEqualTo(caseDetail.case.manager.team.name)
 
     if (hasBooking) {
       val booking = placementRequest.booking!!
@@ -259,6 +266,13 @@ class ApplicationReportsTest : IntegrationTestBase() {
     return when (val personInfo = realOffenderService.getInfoForPerson(application.crn, deliusUsername, true)) {
       is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
       else -> throw Exception("No offender found for CRN ${application.crn}")
+    }
+  }
+
+  private fun getCaseDetailForApplication(application: ApplicationEntity): CaseDetail {
+    return when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(application.crn)) {
+      is ClientResult.Success -> caseDetailResult.body
+      is ClientResult.Failure -> caseDetailResult.throwException()
     }
   }
 

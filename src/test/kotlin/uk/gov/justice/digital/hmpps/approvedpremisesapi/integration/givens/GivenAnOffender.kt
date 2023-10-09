@@ -1,8 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockServerErrorOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockServerErrorInmateDetailsCall
@@ -36,6 +41,38 @@ fun IntegrationTestBase.`Given an Offender`(
     true -> CommunityAPI_mockServerErrorOffenderDetailsCall(offenderDetails.otherIds.crn)
     false -> CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
   }
+
+  val caseDetail = CaseDetailFactory().withCase(
+    CaseSummaryFactory()
+      .withCrn(offenderDetails.otherIds.crn)
+      .withNomsId(offenderDetails.otherIds.nomsNumber)
+      .withGender(offenderDetails.gender)
+      .withName(
+        NameFactory()
+          .withForename(offenderDetails.firstName)
+          .withSurname(offenderDetails.surname)
+          .withMiddleNames(
+            offenderDetails.middleNames?.let {
+              offenderDetails.middleNames
+            } ?: emptyList(),
+          )
+          .produce(),
+      )
+      .withDateOfBirth(offenderDetails.dateOfBirth)
+      .withProfile(
+        ProfileFactory()
+          .withReligion(offenderDetails.offenderProfile.religion)
+          .withEthnicity(offenderDetails.offenderProfile.ethnicity)
+          .withNationality(offenderDetails.offenderProfile.nationality)
+          .withGenderIdentity(offenderDetails.offenderProfile.genderIdentity)
+          .produce(),
+      )
+      .withCurrentExclusion(offenderDetails.currentExclusion)
+      .withCurrentRestriction(offenderDetails.currentRestriction)
+      .produce(),
+  ).produce()
+
+  APDeliusContext_mockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
 
   loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
 

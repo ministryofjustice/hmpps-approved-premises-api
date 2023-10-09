@@ -103,6 +103,12 @@ tasks.register("bootRunLocal") {
 tasks.withType<Test> {
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
 
+  if (System.getProperty("idea.active") !== null) {
+    println("Running in IDE - skipping OpenAPI generation...")
+    project.gradle.startParameter.excludedTaskNames.add("openApiGenerate")
+    project.gradle.startParameter.excludedTaskNames.add("openApiGenerateDomainEvents")
+  }
+
   if (environment["GITHUB_ACTION"] != null) {
     maxParallelForks = Runtime.getRuntime().availableProcessors()
     println("Running on GitHub Actions - setting max test processes to number of processors: $maxParallelForks")
