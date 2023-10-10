@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext
 
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 data class CaseDetail(
   val case: CaseSummary,
@@ -68,5 +68,5 @@ data class MappaDetail(
   val category: Int,
   val categoryDescription: String,
   val startDate: LocalDate,
-  val lastUpdated: LocalDateTime,
+  val lastUpdated: ZonedDateTime,
 )

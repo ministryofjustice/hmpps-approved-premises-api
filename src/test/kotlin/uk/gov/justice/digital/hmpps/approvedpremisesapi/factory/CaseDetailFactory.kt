@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 class CaseDetailFactory : Factory<CaseDetail> {
   var case: Yielded<CaseSummary> = { CaseSummaryFactory().produce() }
@@ -65,7 +65,7 @@ class MappaDetailFactory : Factory<MappaDetail> {
   var category: Yielded<Int> = { 10 }
   var categoryDescription: Yielded<String> = { randomStringUpperCase(3) }
   var startDate: Yielded<LocalDate> = { LocalDate.now() }
-  var lastUpdated: Yielded<LocalDateTime> = { LocalDateTime.now() }
+  var lastUpdated: Yielded<ZonedDateTime> = { ZonedDateTime.now() }
 
   override fun produce(): MappaDetail = MappaDetail(
     level = this.level(),
