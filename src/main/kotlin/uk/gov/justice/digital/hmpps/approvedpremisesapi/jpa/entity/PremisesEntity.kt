@@ -4,6 +4,7 @@ import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import java.time.LocalDate
 import java.util.UUID
@@ -71,7 +72,26 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   booking.crn as crn,
   cast(bed.id as TEXT) as bedId,
   bed.name as bedName,
-  bed.code as bedCode
+  bed.code as bedCode,
+  case
+  	when (SELECT count(id) from non_arrivals where booking_id = booking.id) > 0 then 'notMinusArrived'
+    when (
+    	(SELECT count(id) from arrivals where booking_id = booking.id) > 0 
+      AND
+      (SELECT count(id) from departures where booking_id = booking.id) = 0
+    ) then 'arrived'
+    when (
+    	(SELECT count(id) from departures where booking_id = booking.id) > 0
+    ) then 'departed'
+    when (
+    	(SELECT count(id) from cancellations where booking_id = booking.id) > 0
+    ) then 'cancelled'
+    when (
+    	(SELECT count(id) from arrivals where booking_id = booking.id) = 0 
+      AND
+      (SELECT count(id) from non_arrivals where booking_id = booking.id) = 0
+    ) then 'awaitingMinusArrival'
+  end status
 FROM
   bookings booking
   LEFT JOIN beds bed ON booking.bed_id = bed.id
@@ -248,4 +268,5 @@ interface BookingSummary {
   fun getBedId(): UUID
   fun getBedName(): String
   fun getBedCode(): String
+  fun getStatus(): BookingStatus
 }
