@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -24,7 +25,16 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Repository
-interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID>
+interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
+
+  @Query(
+    "SELECT * FROM domain_events domain_event " +
+      "where date_part('month', domain_event.occurred_at) = :month " +
+      "AND date_part('year', domain_event.occurred_at) = :year ",
+    nativeQuery = true,
+  )
+  fun findAllCreatedInMonth(month: Int, year: Int): List<DomainEventEntity>
+}
 
 @Entity
 @Table(name = "domain_events")
