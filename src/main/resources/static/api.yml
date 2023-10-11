@@ -3743,3 +3743,35 @@ paths:
               schema:
                 type: string
                 format: binary
+  /reports/daily-metrics:
+    get:
+      tags:
+        - Reports
+      summary: Returns a spreadsheet of daily metrics for a given month/year.
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only metrics for this service will be returned
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+        - name: year
+          in: query
+          required: true
+          description: If provided, only bookings for this year will be returned
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          description: If provided, only bookings for this month will be returned - must be provided with year
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
