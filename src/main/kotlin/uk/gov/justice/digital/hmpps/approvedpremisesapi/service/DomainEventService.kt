@@ -70,37 +70,7 @@ class DomainEventService(
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 
-    val data = when {
-      T::class == ApplicationSubmittedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == ApplicationAssessedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingMadeEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == PersonArrivedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == PersonNotArrivedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == PersonDepartedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingNotMadeEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingCancelledEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingChangedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == ApplicationWithdrawnEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
-    }
-
-    return DomainEvent(
-      id = domainEventEntity.id,
-      applicationId = domainEventEntity.applicationId,
-      crn = domainEventEntity.crn,
-      occurredAt = domainEventEntity.occurredAt.toInstant(),
-      data = data,
-    )
+    return domainEventEntity.toDomainEvent(objectMapper)
   }
 
   @Transactional

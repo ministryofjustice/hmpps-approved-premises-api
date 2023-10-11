@@ -1,8 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
@@ -27,7 +39,41 @@ data class DomainEventEntity(
   val createdAt: OffsetDateTime,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   val data: String,
-)
+) {
+  final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
+    val data = when {
+      T::class == ApplicationSubmittedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == ApplicationAssessedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == BookingMadeEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == PersonArrivedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == PersonNotArrivedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == PersonDepartedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == BookingNotMadeEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == BookingCancelledEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == BookingChangedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED ->
+        objectMapper.readValue(this.data, T::class.java)
+      T::class == ApplicationWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
+        objectMapper.readValue(this.data, T::class.java)
+      else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
+    }
+
+    return DomainEvent(
+      id = this.id,
+      applicationId = this.applicationId,
+      crn = this.crn,
+      occurredAt = this.occurredAt.toInstant(),
+      data = data,
+    )
+  }
+}
 
 enum class DomainEventType {
   APPROVED_PREMISES_APPLICATION_SUBMITTED,
