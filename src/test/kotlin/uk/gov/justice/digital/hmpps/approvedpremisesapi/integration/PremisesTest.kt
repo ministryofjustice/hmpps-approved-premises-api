@@ -1560,9 +1560,7 @@ class PremisesTest : IntegrationTestBase() {
         withTotalBeds(20)
       }
 
-      val numBookings = 5
-
-      val bookings = bookingEntityFactory.produceAndPersistMultiple(numBookings) {
+      val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
         withNomsNumber("26")
         withPremises(premises)
         withBed(
@@ -1574,6 +1572,19 @@ class PremisesTest : IntegrationTestBase() {
             )
           },
         )
+      }
+
+      val cancelledBooking = bookingEntityFactory.produceAndPersist() {
+        withNomsNumber("1234")
+        withPremises(premises)
+        withBed(null)
+      }
+
+      cancellationEntityFactory.produceAndPersist {
+        withBooking(cancelledBooking)
+        withYieldedReason {
+          cancellationReasonEntityFactory.produceAndPersist()
+        }
       }
 
       arrivalEntityFactory.produceAndPersist {
@@ -1640,6 +1651,12 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("$.bookings[4].person.crn").isEqualTo(bookings[4].crn)
         .jsonPath("$.bookings[4].bed.id").isEqualTo(bookings[4].bed!!.id.toString())
         .jsonPath("$.bookings[4].status").isEqualTo(BookingStatus.notMinusArrived.value)
+        .jsonPath("$.bookings[5].id").isEqualTo(cancelledBooking.id.toString())
+        .jsonPath("$.bookings[5].arrivalDate").isEqualTo(cancelledBooking.arrivalDate.toString())
+        .jsonPath("$.bookings[5].departureDate").isEqualTo(cancelledBooking.departureDate.toString())
+        .jsonPath("$.bookings[5].person.crn").isEqualTo(cancelledBooking.crn)
+        .jsonPath("$.bookings[5].bed").isEmpty
+        .jsonPath("$.bookings[5].status").isEqualTo(BookingStatus.cancelled.value)
         .jsonPath("$.dateCapacities").isArray
         .jsonPath("$.dateCapacities[0]").isNotEmpty
     }

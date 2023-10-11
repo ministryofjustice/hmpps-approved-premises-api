@@ -37,11 +37,13 @@ class BookingTransformer(
       arrivalDate = jpa.getArrivalDate(),
       departureDate = jpa.getDepartureDate(),
       person = personTransformer.transformModelToPersonApi(personInfo),
-      bed = Bed(
-        id = jpa.getBedId(),
-        name = jpa.getBedName(),
-        code = jpa.getBedCode(),
-      ),
+      bed = jpa.getBedId()?.let {
+        Bed(
+          id = jpa.getBedId()!!,
+          name = jpa.getBedName()!!,
+          code = jpa.getBedCode(),
+        )
+      },
       status = jpa.getStatus(),
     )
   }
