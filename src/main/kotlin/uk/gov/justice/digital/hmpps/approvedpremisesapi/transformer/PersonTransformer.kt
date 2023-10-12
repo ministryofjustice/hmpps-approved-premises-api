@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 
 @Component
@@ -35,6 +36,31 @@ class PersonTransformer {
       crn = personInfoResult.crn,
     )
     is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> UnknownPerson(
+      type = PersonType.unknownPerson,
+      crn = personInfoResult.crn,
+    )
+  }
+
+  fun transformSummaryToPersonApi(personInfoResult: PersonSummaryInfoResult) = when (personInfoResult) {
+    is PersonSummaryInfoResult.Success.Full -> FullPerson(
+      type = PersonType.fullPerson,
+      crn = personInfoResult.crn,
+      name = "${personInfoResult.summary.name.forename} ${personInfoResult.summary.name.surname}",
+      dateOfBirth = personInfoResult.summary.dateOfBirth,
+      sex = personInfoResult.summary.gender ?: "Not Found",
+      status = FullPerson.Status.unknown,
+      nomsNumber = personInfoResult.summary.nomsId,
+      ethnicity = personInfoResult.summary.profile.ethnicity,
+      nationality = personInfoResult.summary.profile.nationality,
+      religionOrBelief = personInfoResult.summary.profile.religion,
+      genderIdentity = personInfoResult.summary.profile.genderIdentity,
+      prisonName = null,
+    )
+    is PersonSummaryInfoResult.Success.Restricted -> RestrictedPerson(
+      type = PersonType.restrictedPerson,
+      crn = personInfoResult.crn,
+    )
+    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> UnknownPerson(
       type = PersonType.unknownPerson,
       crn = personInfoResult.crn,
     )
