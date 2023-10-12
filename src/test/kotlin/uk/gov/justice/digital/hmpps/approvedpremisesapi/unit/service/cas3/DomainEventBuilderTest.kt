@@ -67,6 +67,7 @@ class DomainEventBuilderTest {
       val data = it.data.eventDetails
 
       it.applicationId == application.id &&
+        it.bookingId == booking.id &&
         it.crn == booking.crn &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
@@ -142,6 +143,7 @@ class DomainEventBuilderTest {
       val data = it.data.eventDetails
 
       it.applicationId == application.id &&
+        it.bookingId == booking.id &&
         it.crn == booking.crn &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
