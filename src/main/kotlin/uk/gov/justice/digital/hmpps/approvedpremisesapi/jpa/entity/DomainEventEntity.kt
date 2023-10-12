@@ -41,7 +41,8 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 data class DomainEventEntity(
   @Id
   val id: UUID,
-  val applicationId: UUID,
+  val applicationId: UUID?,
+  val bookingId: UUID?,
   val crn: String,
   @Enumerated(value = EnumType.STRING)
   val type: DomainEventType,
@@ -49,6 +50,7 @@ data class DomainEventEntity(
   val createdAt: OffsetDateTime,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   val data: String,
+  val service: String,
 ) {
   final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
     val data = when {
@@ -77,7 +79,7 @@ data class DomainEventEntity(
 
     return DomainEvent(
       id = this.id,
-      applicationId = this.applicationId,
+      applicationId = this.applicationId!!,
       crn = this.crn,
       occurredAt = this.occurredAt.toInstant(),
       data = data,

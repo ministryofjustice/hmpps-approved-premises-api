@@ -190,16 +190,18 @@ assign-default-region-to-users-with-unknown-region: false
 
 url-templates:
   api:
-    application-submitted-event-detail: http://localhost:3000/events/application-submitted/#eventId
-    application-assessed-event-detail: http://localhost:3000/events/application-assessed/#eventId
-    booking-made-event-detail: http://localhost:3000/events/booking-made/#eventId
-    person-arrived-event-detail: http://localhost:3000/events/person-arrived/#eventId
-    person-not-arrived-event-detail: http://localhost:3000/events/person-not-arrived/#eventId
-    person-departed-event-detail: http://localhost:3000/events/person-departed/#eventId
-    booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
-    booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
-    booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
-    application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
+    cas1:
+      application-submitted-event-detail: http://localhost:3000/events/application-submitted/#eventId
+      application-assessed-event-detail: http://localhost:3000/events/application-assessed/#eventId
+      booking-made-event-detail: http://localhost:3000/events/booking-made/#eventId
+      person-arrived-event-detail: http://localhost:3000/events/person-arrived/#eventId
+      person-not-arrived-event-detail: http://localhost:3000/events/person-not-arrived/#eventId
+      person-departed-event-detail: http://localhost:3000/events/person-departed/#eventId
+      booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
+      booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
+      booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
+      application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
+    cas3:
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id

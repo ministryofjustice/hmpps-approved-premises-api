@@ -1,0 +1,94 @@
+openapi: '3.0.1'
+info:
+  version: '0.1.0'
+  title: 'CAS3 Domain events'
+  description: Get information about events in the CAS3 domain
+paths: {}
+components:
+  responses:
+    500Response:
+      description: unexpected error
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    CAS3Event:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+      required:
+        - id
+        - timestamp
+        - eventType
+      discriminator:
+        propertyName: eventType
+        mapping: {}
+
+    # Common domain schemas
+    PersonReference:
+      type: object
+      properties:
+        crn:
+          type: string
+        noms:
+          type: string
+      required:
+        - crn
+
+    Premises:
+      type: object
+      properties:
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        postcode:
+          type: string
+        town:
+          type: string
+        region:
+          type: string
+      required:
+        - addressLine1
+        - postcode
+        - region
+
+    # Utility schemas
+    EventId:
+      description: The UUID of an event
+      type: string
+      format: uuid
+      example: 364145f9-0af8-488e-9901-b4c46cd9ba37
+    EventType:
+      description: The type of an event
+      type: string
+      enum:
+        - example
+      x-enum-varnames:
+        - example
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          example: https://example.net/validation-error
+        title:
+          type: string
+          example: Invalid request parameters
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: You provided invalid request parameters
+        instance:
+          type: string
+          example: f7493e12-546d-42c3-b838-06c12671ab5b
