@@ -3,7 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -49,6 +52,51 @@ class DomainEventBuilder {
           arrivedAt = arrival.arrivalDateTime,
           expectedDepartureOn = arrival.expectedDepartureDate,
           notes = arrival.notes ?: "",
+        ),
+      ),
+    )
+  }
+
+  fun getPersonDepartedDomainEvent(
+    booking: BookingEntity,
+  ): DomainEvent<CAS3PersonDepartedEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    val departure = booking.departure!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      crn = booking.crn,
+      occurredAt = departure.dateTime.toInstant(),
+      data = CAS3PersonDepartedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.personDeparted,
+        eventDetails = CAS3PersonDepartedEventDetails(
+          personReference = PersonReference(
+            crn = booking.crn,
+            noms = booking.nomsNumber,
+          ),
+          deliusEventNumber = application?.eventNumber ?: "",
+          bookingId = booking.id,
+          premises = Premises(
+            addressLine1 = booking.premises.addressLine1,
+            addressLine2 = booking.premises.addressLine2,
+            postcode = booking.premises.postcode,
+            town = booking.premises.town,
+            region = booking.premises.probationRegion.name,
+          ),
+          departedAt = departure.dateTime.toInstant(),
+          reason = departure.reason.name,
+          notes = departure.notes ?: "",
+          moveOnCategory = MoveOnCategory(
+            description = departure.moveOnCategory.name,
+            label = departure.moveOnCategory.legacyDeliusCategoryCode ?: "",
+          ),
+          applicationId = application?.id,
+          reasonDetail = null,
         ),
       ),
     )
