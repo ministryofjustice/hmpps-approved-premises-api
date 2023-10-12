@@ -14,6 +14,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -27,16 +28,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesCo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
@@ -58,6 +65,8 @@ class OffenderServiceTest {
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockAdjudicationsApiClient = mockk<AdjudicationsApiClient>()
+  private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
+
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
     lookbackDays = 30
     prisonApiPageSize = 2
@@ -89,6 +98,7 @@ class OffenderServiceTest {
     mockCaseNotesClient,
     mockApOASysContextApiClient,
     mockAdjudicationsApiClient,
+    mockApDeliusContextApiClient,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
   )
@@ -872,6 +882,142 @@ class OffenderServiceTest {
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result.offenderDetailSummary).isEqualTo(offenderDetails)
       assertThat(result.inmateDetail).isEqualTo(inmateDetail)
+    }
+  }
+
+  @Nested
+  inner class GetOffenderSummariesByCrns {
+    private val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    private val crns = listOf(
+      "ABC1",
+      "ABC2",
+      "ABC3",
+      "NOTFOUND",
+    )
+
+    private val caseSummaries = listOf(
+      CaseSummaryFactory().withCrn(crns[0]).produce(),
+      CaseSummaryFactory().withCrn(crns[1]).produce(),
+      CaseSummaryFactory().withCrn(crns[2]).produce(),
+    )
+
+    @Test
+    fun `it returns full summaries when the user has the correct access`() {
+      val caseAccess = crns.map {
+        CaseAccessFactory()
+          .withCrn(it)
+          .withUserExcluded(false)
+          .withUserRestricted(false)
+          .produce()
+      }
+
+      every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = CaseSummaries(
+          caseSummaries,
+        ),
+      )
+
+      every { mockApDeliusContextApiClient.getUserAccessForCrns(user.deliusUsername, crns) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = UserAccess(
+          access = caseAccess,
+        ),
+      )
+
+      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, false)
+
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
+    }
+
+    @Test
+    fun `it returns full and restricted summaries when the user has the access for some CRNs, but not others`() {
+      val caseAccess = listOf(
+        CaseAccessFactory()
+          .withCrn(crns[0])
+          .withUserExcluded(true)
+          .withUserRestricted(false)
+          .produce(),
+        CaseAccessFactory()
+          .withCrn(crns[1])
+          .withUserExcluded(false)
+          .withUserRestricted(true)
+          .produce(),
+        CaseAccessFactory()
+          .withCrn(crns[2])
+          .withUserExcluded(false)
+          .withUserRestricted(false)
+          .produce(),
+      )
+
+      every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = CaseSummaries(
+          caseSummaries,
+        ),
+      )
+
+      every { mockApDeliusContextApiClient.getUserAccessForCrns(user.deliusUsername, crns) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = UserAccess(
+          access = caseAccess,
+        ),
+      )
+
+      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, false)
+
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[0], caseSummaries[0].nomsId))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[1], caseSummaries[1].nomsId))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
+    }
+
+    @Test
+    fun `it ignores LAO when ignoreLao is set to true`() {
+      val caseAccess = listOf(
+        CaseAccessFactory()
+          .withCrn(crns[0])
+          .withUserExcluded(true)
+          .withUserRestricted(false)
+          .produce(),
+        CaseAccessFactory()
+          .withCrn(crns[1])
+          .withUserExcluded(false)
+          .withUserRestricted(true)
+          .produce(),
+        CaseAccessFactory()
+          .withCrn(crns[2])
+          .withUserExcluded(false)
+          .withUserRestricted(false)
+          .produce(),
+      )
+
+      every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = CaseSummaries(
+          caseSummaries,
+        ),
+      )
+
+      every { mockApDeliusContextApiClient.getUserAccessForCrns(user.deliusUsername, crns) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = UserAccess(
+          access = caseAccess,
+        ),
+      )
+
+      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, true)
+
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
   }
 
