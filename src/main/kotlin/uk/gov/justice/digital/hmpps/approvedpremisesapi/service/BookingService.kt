@@ -81,6 +81,7 @@ import java.time.OffsetTime
 import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
 @Service
 class BookingService(
@@ -88,6 +89,7 @@ class BookingService(
   private val staffMemberService: StaffMemberService,
   private val offenderService: OffenderService,
   private val domainEventService: DomainEventService,
+  private val cas3DomainEventService: Cas3DomainEventService,
   private val cruService: CruService,
   private val applicationService: ApplicationService,
   private val workingDayCountService: WorkingDayCountService,
@@ -892,6 +894,12 @@ class BookingService(
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
     updateBooking(booking)
+
+    booking.arrival = arrivalEntity
+
+    if (booking.premises is TemporaryAccommodationPremisesEntity) {
+      cas3DomainEventService.savePersonArrivedEvent(booking)
+    }
 
     return success(arrivalEntity)
   }

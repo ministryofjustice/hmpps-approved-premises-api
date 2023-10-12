@@ -126,6 +126,7 @@ url-templates:
       booking-changed-event-detail: http://api/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
     cas3:
+      person-arrived-event-detail: http://api/events/cas3/person-arrived/#eventId
   frontend:
     application: http://frontend/applications/#id
     assessment: http://frontend/assessments/#id
