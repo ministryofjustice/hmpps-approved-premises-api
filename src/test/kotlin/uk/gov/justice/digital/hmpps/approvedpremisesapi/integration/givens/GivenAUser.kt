@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -85,4 +87,29 @@ fun IntegrationTestBase.`Given a User`(
   )
 
   return block(user, jwt)
+}
+
+fun IntegrationTestBase.`Given a CAS2 User`(
+  id: UUID = UUID.randomUUID(),
+  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
+  block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
+) {
+  val nomisUserDetailsFactory = NomisUserDetailFactory()
+
+  if (nomisUserDetailsConfigBlock != null) {
+    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
+  }
+
+  val nomisUserDetails = nomisUserDetailsFactory.produce()
+
+  val user = nomisUserEntityFactory.produceAndPersist {
+    withId(id)
+    withNomisUsername(nomisUserDetails.username)
+    withEmail(nomisUserDetails.primaryEmail)
+    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+  }
+
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
+
+  block(user, jwt)
 }

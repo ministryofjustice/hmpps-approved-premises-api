@@ -25,8 +25,7 @@ SELECT
     a.crn,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    CAST(a.risk_ratings AS TEXT) as riskRatings
+    a.submitted_at as submittedAt
 FROM cas_2_applications a
 WHERE a.created_by_user_id = :userId
 """,
@@ -53,7 +52,7 @@ data class Cas2ApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
-  val createdByUser: UserEntity,
+  val createdByUser: NomisUserEntity,
 
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var data: String?,

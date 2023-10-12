@@ -1,10 +1,11 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskToTheIndividualCall
@@ -12,28 +13,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
-class PersonOASysRiskToSelfTest : IntegrationTestBase() {
+class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
   @Autowired
   lateinit var oaSysSectionsTransformer: OASysSectionsTransformer
 
   @Test
   fun `Getting Risk to Self by CRN without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/people/CRN/oasys/risk-to-self")
+      .uri("/cas2/people/CRN/oasys/risk-to-self")
       .exchange()
       .expectStatus()
       .isUnauthorized
   }
 
   @Test
-  fun `Getting Risk to Self  for a CRN with a non-Delius JWT returns 403`() {
+  fun `Getting Risk to Self for a CRN with an invalid auth-source JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "nomis",
+      authSource = "bananas",
     )
 
     webTestClient.get()
-      .uri("/people/CRN/oasys/risk-to-self")
+      .uri("/cas2/people/CRN/oasys/risk-to-self")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -41,7 +42,8 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting oasys sections for a CRN without ROLE_PROBATION returns 403`() {
+  fun `Getting oasys sections for a CRN without ROLE_PROBATION or ROLE_PRISON returns 403`
+  () {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
@@ -49,23 +51,7 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/people/CRN/oasys/risk-to-self")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `Getting oasys sections for a CRN with ROLE_PRISON returns 403`() {
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PRISON"),
-    )
-
-    webTestClient.get()
-      .uri("/people/CRN/oasys/risk-to-self")
+      .uri("/cas2/people/CRN/oasys/risk-to-self")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -74,14 +60,14 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk To Self for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a CAS2 User` { userEntity, jwt ->
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
-        .uri("/people/$crn/oasys/risk-to-self")
+        .uri("/cas2/people/$crn/oasys/risk-to-self")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -91,7 +77,7 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk to Self for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
         APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
@@ -100,7 +86,7 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
         APOASysContext_mockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
+          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -120,13 +106,13 @@ class PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk to Self when upstream times out returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
         APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
+          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

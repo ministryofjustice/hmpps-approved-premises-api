@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -6,31 +6,32 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import java.time.LocalDate
 
-class PersonSearchTest : IntegrationTestBase() {
+class Cas2PersonSearchTest : IntegrationTestBase() {
   @Test
   fun `Searching by CRN without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/people/search?crn=CRN")
+      .uri("/cas2/people/search?crn=CRN")
       .exchange()
       .expectStatus()
       .isUnauthorized
   }
 
   @Test
-  fun `Searching for a CRN with a non-Delius JWT returns 403`() {
+  fun `Searching for a CRN with a non-Delius or NOMIS JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
-      authSource = "other-auth-source",
+      authSource = "other source",
     )
 
     webTestClient.get()
-      .uri("/people/search?crn=CRN")
+      .uri("/cas2/people/search?crn=CRN")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -38,46 +39,15 @@ class PersonSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for a CRN with a NOMIS JWT returns 403`() {
-    val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username",
+  fun `Searching for a CRN without ROLE_PRISON returns 403`() {
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = "username",
       authSource = "nomis",
-    )
-
-    webTestClient.get()
-      .uri("/people/search?crn=CRN")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `Searching for a CRN with ROLE_PRISON returns 403`() {
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
-      roles = listOf("ROLE_PRISON"),
-    )
-
-    webTestClient.get()
-      .uri("/people/search?crn=CRN")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `Searching for a CRN without ROLE_PROBATION returns 403`() {
-    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-      subject = "username",
-      authSource = "delius",
       roles = listOf("ROLE_OTHER"),
     )
 
     webTestClient.get()
-      .uri("/people/search?crn=CRN")
+      .uri("/cas2/people/search?crn=CRN")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -86,7 +56,9 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    mockClientCredentialsJwtRequest()
+
+    `Given a CAS2 User` { userEntity, jwt ->
       wiremockServer.stubFor(
         get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
           .willReturn(
@@ -97,7 +69,7 @@ class PersonSearchTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/people/search?crn=CRN")
+        .uri("/cas2/people/search?crn=CRN")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -107,7 +79,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = {
           withCrn("CRN")
@@ -136,7 +108,7 @@ class PersonSearchTest : IntegrationTestBase() {
         },
       ) { offenderDetails, inmateDetails ->
         webTestClient.get()
-          .uri("/people/search?crn=CRN")
+          .uri("/cas2/people/search?crn=CRN")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -166,7 +138,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = {
           withCrn("CRN")
@@ -183,7 +155,7 @@ class PersonSearchTest : IntegrationTestBase() {
         },
       ) { offenderDetails, _ ->
         webTestClient.get()
-          .uri("/people/search?crn=CRN")
+          .uri("/cas2/people/search?crn=CRN")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

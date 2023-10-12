@@ -7,6 +7,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 
 @Service
 class HttpAuthService {
+  fun getNomisPrincipalOrThrow(): AuthAwareAuthenticationToken {
+    val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
+
+    if (principal.token.claims["auth_source"] != "nomis") {
+      throw ForbiddenProblem()
+    }
+
+    return principal
+  }
+
   fun getDeliusPrincipalOrThrow(): AuthAwareAuthenticationToken {
     val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
 

@@ -40,7 +40,38 @@ class UsersTest : IntegrationTestBase() {
   fun `Getting a user with a non-Delius JWT returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
+      authSource = "other-auth-source",
+    )
+
+    webTestClient.get()
+      .uri("/users/$id")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Getting a user with a Nomis JWT returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
       authSource = "nomis",
+    )
+
+    webTestClient.get()
+      .uri("/users/$id")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Getting a user with the PRISON role returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      authSource = "nomis",
+      roles = listOf("ROLE_PRISON"),
     )
 
     webTestClient.get()

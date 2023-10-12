@@ -65,6 +65,8 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   prisons-api:
     base-url: http://localhost:#WIREMOCK_PORT
+  nomis-user-roles:
+    base-url: http://localhost:#WIREMOCK_PORT
   case-notes:
     base-url: http://localhost:#WIREMOCK_PORT
   ap-delius-context-api:

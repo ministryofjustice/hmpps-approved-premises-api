@@ -58,6 +58,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.DELETE, "/internal/premises/*", permitAll)
         authorize(HttpMethod.DELETE, "/internal/room/*", permitAll)
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
+        authorize("/cas2/**", hasAuthority("ROLE_PRISON"))
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
       }
 
