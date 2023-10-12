@@ -203,6 +203,7 @@ url-templates:
       application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
     cas3:
       person-arrived-event-detail: http://localhost:3000/events/cas3/person-arrived/#eventId
+      person-departed-event-detail: http://localhost:3000/events/cas3/person-departed/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id

@@ -9,6 +9,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -36,6 +38,7 @@ class DomainEventService(
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.cas3.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.person-departed-event-detail") private val personDepartedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -45,6 +48,8 @@ class DomainEventService(
   }
 
   fun getPersonArrivedEvent(id: UUID) = get<CAS3PersonArrivedEvent>(id)
+
+  fun getPersonDepartedEvent(id: UUID) = get<CAS3PersonDepartedEvent>(id)
 
   private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -73,6 +78,20 @@ class DomainEventService(
       typeName = "accommodation.cas3.person.arrived",
       typeDescription = "Someone has arrived at a Transitional Accommodation premises for their booking",
       detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+  }
+
+  @Transactional
+  fun savePersonDepartedEvent(booking: BookingEntity) {
+    val domainEvent = domainEventBuilder.getPersonDepartedDomainEvent(booking)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = EventType.personDeparted.value,
+      typeDescription = "Someone has left a Transitional Accommodation premises",
+      detailUrl = personDepartedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -139,6 +158,7 @@ class DomainEventService(
 
   private fun <T : CAS3Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
     CAS3PersonArrivedEvent::class -> DomainEventType.CAS3_PERSON_ARRIVED
+    CAS3PersonDepartedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 }

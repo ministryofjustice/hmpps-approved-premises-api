@@ -31,6 +31,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/cas3/person-departed/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS3 events"
+      summary: A 'person-departed' event
+      responses:
+        200:
+          description: The 'person-departed' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CAS3PersonDepartedEvent'
+        404:
+          description: No 'person-departed' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
@@ -59,6 +86,7 @@ components:
         propertyName: eventType
         mapping:
           accommodation.cas3.person.arrived: '#/components/schemas/CAS3PersonArrivedEvent'
+          accommodation.cas3.person.departed: '#/components/schemas/CAS3PersonDepartedEvent'
     CAS3PersonArrivedEvent:
       allOf:
         - $ref: '#/components/schemas/CAS3Event'
@@ -99,6 +127,50 @@ components:
         - arrivedAt
         - expectedDepartureOn
         - notes
+    CAS3PersonDepartedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3PersonDepartedEventDetails'
+          required:
+            - eventDetails
+    CAS3PersonDepartedEventDetails:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          type: string
+        applicationId:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        premises:
+          $ref: '#/components/schemas/Premises'
+        departedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        reasonDetail:
+          type: string
+        notes:
+          type: string
+        moveOnCategory:
+          $ref: '#/components/schemas/MoveOnCategory'
+      required:
+        - personReference
+        - deliusEventNumber
+        - bookingId
+        - premises
+        - departedAt
+        - reason
+        - notes
+        - moveOnCategory
 
     # Common domain schemas
     PersonReference:
@@ -129,6 +201,17 @@ components:
         - postcode
         - region
 
+    MoveOnCategory:
+      type: object
+      properties:
+        description:
+          type: string
+        label:
+          type: string
+      required:
+        - description
+        - label
+
     # Utility schemas
     EventId:
       description: The UUID of an event
@@ -140,8 +223,10 @@ components:
       type: string
       enum:
         - accommodation.cas3.person.arrived
+        - accommodation.cas3.person.departed
       x-enum-varnames:
         - personArrived
+        - personDeparted
     Problem:
       type: object
       properties:
