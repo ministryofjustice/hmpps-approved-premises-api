@@ -238,7 +238,7 @@ class WebClientConfiguration(
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
-    oauth2Client.setDefaultClientRegistrationId("nomis-user-roles")
+    oauth2Client.setDefaultClientRegistrationId("nomis-user-roles-api")
 
     return WebClient.builder()
       .baseUrl(nomisUserRolesBaseUrl)
