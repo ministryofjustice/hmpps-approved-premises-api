@@ -234,11 +234,11 @@ class WebClientConfiguration(
   fun nomisUserRolesApiClient(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
-    @Value("\${services.nomis-user-roles.base-url}") nomisUserRolesBaseUrl: String,
+    @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
-    oauth2Client.setDefaultClientRegistrationId("nomis-user-roles")
+    oauth2Client.setDefaultClientRegistrationId("nomis-user-roles-api")
 
     return WebClient.builder()
       .baseUrl(nomisUserRolesBaseUrl)
