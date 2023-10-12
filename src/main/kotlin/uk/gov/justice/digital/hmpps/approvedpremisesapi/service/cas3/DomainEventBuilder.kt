@@ -27,7 +27,8 @@ class DomainEventBuilder {
 
     return DomainEvent(
       id = domainEventId,
-      applicationId = application?.id ?: UUID(0L, 0L),
+      applicationId = application?.id,
+      bookingId = booking.id,
       crn = booking.crn,
       occurredAt = arrival.arrivalDateTime,
       data = CAS3PersonArrivedEvent(
@@ -68,6 +69,7 @@ class DomainEventBuilder {
     return DomainEvent(
       id = domainEventId,
       applicationId = application?.id,
+      bookingId = booking.id,
       crn = booking.crn,
       occurredAt = departure.dateTime.toInstant(),
       data = CAS3PersonDepartedEvent(
