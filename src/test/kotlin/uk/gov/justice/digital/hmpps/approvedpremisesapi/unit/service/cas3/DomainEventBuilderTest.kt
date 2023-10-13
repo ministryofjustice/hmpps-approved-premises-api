@@ -17,12 +17,64 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class DomainEventBuilderTest {
   private val domainEventBuilder = DomainEventBuilder(
     applicationUrlTemplate = "http://api/applications/#applicationId",
     bookingUrlTemplate = "http://api/premises/#premisesId/bookings/#bookingId",
   )
+
+  @Test
+  fun `getBookingProvisionallyMadeDomainEvent transforms the booking information correctly`() {
+    val expectedArrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      )
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(probationRegion)
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory().produce(),
+      )
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withPremises(premises)
+      .withApplication(application)
+      .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
+      .produce()
+
+    val event = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking)
+
+    assertThat(event).matches {
+      val data = it.data.eventDetails
+
+      it.applicationId == application.id &&
+        it.bookingId == booking.id &&
+        it.crn == booking.crn &&
+        data.personReference.crn == booking.crn &&
+        data.personReference.noms == booking.nomsNumber &&
+        data.bookingId == booking.id &&
+        data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
+        data.expectedArrivedAt == expectedArrivalDateTime &&
+        data.notes == "" &&
+        data.applicationId == application.id &&
+        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+    }
+  }
 
   @Test
   fun `getPersonArrivedDomainEvent transforms the booking and arrival information correctly`() {
