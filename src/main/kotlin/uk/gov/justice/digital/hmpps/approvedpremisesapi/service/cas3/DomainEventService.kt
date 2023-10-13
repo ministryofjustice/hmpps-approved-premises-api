@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
@@ -48,6 +49,8 @@ class DomainEventService(
       ?: throw MissingTopicException("domainevents not found")
   }
 
+  fun getBookingProvisionallyMadeEvent(id: UUID) = get<CAS3BookingProvisionallyMadeEvent>(id)
+
   fun getPersonArrivedEvent(id: UUID) = get<CAS3PersonArrivedEvent>(id)
 
   fun getPersonDepartedEvent(id: UUID) = get<CAS3PersonDepartedEvent>(id)
@@ -67,6 +70,20 @@ class DomainEventService(
       crn = domainEventEntity.crn,
       occurredAt = domainEventEntity.occurredAt.toInstant(),
       data = data,
+    )
+  }
+
+  @Transactional
+  fun saveBookingProvisionallyMadeEvent(booking: BookingEntity) {
+    val domainEvent = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "accommodation.cas3.booking.provisionally-made",
+      typeDescription = "A booking has been provisionally made for a Transitional Accommodation premises",
+      detailUrl = bookingProvisionallyMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
   }
 
@@ -158,6 +175,7 @@ class DomainEventService(
   }
 
   private fun <T : CAS3Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
+    CAS3BookingProvisionallyMadeEvent::class -> DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE
     CAS3PersonArrivedEvent::class -> DomainEventType.CAS3_PERSON_ARRIVED
     CAS3PersonDepartedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
