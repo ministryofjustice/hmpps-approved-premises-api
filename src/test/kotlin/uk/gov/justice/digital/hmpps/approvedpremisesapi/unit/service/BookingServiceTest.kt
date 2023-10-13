@@ -3646,7 +3646,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createTemporaryAccommodationBooking saves Booking`() {
+  fun `createTemporaryAccommodationBooking saves Booking and creates domain event`() {
     val crn = "CRN123"
     val arrivalDate = LocalDate.parse("2023-02-23")
     val departureDate = LocalDate.parse("2023-02-24")
@@ -3688,6 +3688,8 @@ class BookingServiceTest {
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
+    every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+
     val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, application.id, false)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
@@ -3696,6 +3698,18 @@ class BookingServiceTest {
 
     verify(exactly = 1) {
       mockBookingRepository.save(
+        match {
+          it.crn == crn &&
+            it.premises == premises &&
+            it.arrivalDate == arrivalDate &&
+            it.departureDate == departureDate &&
+            it.application == application
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
         match {
           it.crn == crn &&
             it.premises == premises &&
@@ -3739,6 +3753,8 @@ class BookingServiceTest {
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+    every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
 
     val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, null, false)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -3807,6 +3823,8 @@ class BookingServiceTest {
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+    every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
 
     val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, application.id, false)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -3880,6 +3898,8 @@ class BookingServiceTest {
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+    every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
 
     val authorisableResult = bookingService.createTemporaryAccommodationBooking(user, premises, crn, "NOMS123", arrivalDate, departureDate, bed.id, application.id, true)
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
