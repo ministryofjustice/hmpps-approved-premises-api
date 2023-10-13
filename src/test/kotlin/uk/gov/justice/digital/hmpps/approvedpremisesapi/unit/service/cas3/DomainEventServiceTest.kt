@@ -55,6 +55,7 @@ class DomainEventServiceTest {
     domainEventBuilder = domainEventBuilderMock,
     hmppsQueueService = hmppsQueueServiceMock,
     emitDomainEventsEnabled = true,
+    bookingProvisionallyMadeDetailUrlTemplate = "http://api/events/cas3/booking-provisionally-made/#eventId",
     personArrivedDetailUrlTemplate = "http://api/events/cas3/person-arrived/#eventId",
     personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
   )

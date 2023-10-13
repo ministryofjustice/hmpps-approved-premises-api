@@ -37,6 +37,7 @@ class DomainEventService(
   private val domainEventBuilder: DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
+  @Value("\${url-templates.api.cas3.booking-provisionally-made-event-detail") private val bookingProvisionallyMadeDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-departed-event-detail") private val personDepartedDetailUrlTemplate: String,
 ) {
