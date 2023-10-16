@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
@@ -112,8 +112,8 @@ class ReferralsReportTest : IntegrationTestBase() {
         ),
       ).map { it.first as ApprovedPremisesAssessmentEntity }
 
-      val expectedDataFrame = ReferralsMetricsReportGenerator(assessments, realWorkingDayCountService)
-        .createReport(Tier.entries, ReferralsMetricsProperties(year, month))
+      val expectedDataFrame = ReferralsMetricsReportGenerator<TierCategory>(assessments, realWorkingDayCountService)
+        .createReport(TierCategory.entries, ReferralsMetricsProperties(year, month))
 
       webTestClient.get()
         .uri("/reports/referrals-by-tier?year=$year&month=$month")

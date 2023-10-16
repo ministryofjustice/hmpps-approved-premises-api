@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model
 
 data class ReferralsMetricsReportRow(
-  val tier: String,
+  val category: String,
   val numberOfUniqueReferrals: Int,
   val referralsAccepted: Int,
   val assessmentCompletionTimeliness: String,

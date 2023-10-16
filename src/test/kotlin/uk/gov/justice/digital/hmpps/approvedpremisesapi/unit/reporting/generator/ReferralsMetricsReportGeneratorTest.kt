@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.generato
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -17,8 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApTypeCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
@@ -26,6 +28,11 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.Period
 import java.time.ZoneOffset
+
+enum class SomeOtherEnum {
+  Foo,
+  Bar,
+}
 
 class ReferralsMetricsReportGeneratorTest {
   private val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
@@ -58,25 +65,71 @@ class ReferralsMetricsReportGeneratorTest {
 
     every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator(assessments, mockWorkingDayCountService).createReport(
-      listOf(Tier.ALL, Tier.A0, Tier.A1, Tier.D2, Tier.NONE),
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+      listOf(TierCategory.ALL, TierCategory.A0, TierCategory.A1, TierCategory.D2, TierCategory.NONE),
       ReferralsMetricsProperties(2023, 1),
     )
 
-    assertThat(results[0][ReferralsMetricsReportRow::tier]).isEqualTo(Tier.ALL.toString())
+    assertThat(results[0][ReferralsMetricsReportRow::category]).isEqualTo(TierCategory.ALL.toString())
     assertThat(results[0][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(assessments.size)
 
-    assertThat(results[1][ReferralsMetricsReportRow::tier]).isEqualTo(Tier.A0.toString())
+    assertThat(results[1][ReferralsMetricsReportRow::category]).isEqualTo(TierCategory.A0.toString())
     assertThat(results[1][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(tierA0Assessments.size)
 
-    assertThat(results[2][ReferralsMetricsReportRow::tier]).isEqualTo(Tier.A1.toString())
+    assertThat(results[2][ReferralsMetricsReportRow::category]).isEqualTo(TierCategory.A1.toString())
     assertThat(results[2][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(tierA1Assessments.size)
 
-    assertThat(results[3][ReferralsMetricsReportRow::tier]).isEqualTo(Tier.D2.toString())
+    assertThat(results[3][ReferralsMetricsReportRow::category]).isEqualTo(TierCategory.D2.toString())
     assertThat(results[3][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(tierD2Assessments.size)
 
-    assertThat(results[4][ReferralsMetricsReportRow::tier]).isEqualTo(Tier.NONE.toString())
+    assertThat(results[4][ReferralsMetricsReportRow::category]).isEqualTo(TierCategory.NONE.toString())
     assertThat(results[4][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(noTierAssessments.size)
+  }
+
+  @Test
+  fun `It groups referrals by AP Type correctly`() {
+    val normalAssessments = (1..3).toList().map { createAssessment("A0") }
+    val esapAssessments = (1..4).toList().map { createAssessment("A1", isEsap = true) }
+    val pipeAssessments = (1..5).toList().map { createAssessment("D2", isPipe = true) }
+
+    val assessments = listOf(
+      normalAssessments,
+      esapAssessments,
+      pipeAssessments,
+    ).flatten()
+
+    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+
+    val results = ReferralsMetricsReportGenerator<ApTypeCategory>(assessments, mockWorkingDayCountService).createReport(
+      listOf(ApTypeCategory.ALL, ApTypeCategory.ESAP, ApTypeCategory.NORMAL, ApTypeCategory.PIPE),
+      ReferralsMetricsProperties(2023, 1),
+    )
+
+    assertThat(results[0][ReferralsMetricsReportRow::category]).isEqualTo(ApTypeCategory.ALL.toString())
+    assertThat(results[0][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(assessments.size)
+
+    assertThat(results[1][ReferralsMetricsReportRow::category]).isEqualTo(ApTypeCategory.ESAP.toString())
+    assertThat(results[1][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(esapAssessments.size)
+
+    assertThat(results[2][ReferralsMetricsReportRow::category]).isEqualTo(ApTypeCategory.NORMAL.toString())
+    assertThat(results[2][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(normalAssessments.size)
+
+    assertThat(results[3][ReferralsMetricsReportRow::category]).isEqualTo(ApTypeCategory.PIPE.toString())
+    assertThat(results[3][ReferralsMetricsReportRow::numberOfUniqueReferrals]).isEqualTo(pipeAssessments.size)
+  }
+
+  @Test
+  fun `it throws an error if an unrecognised type is given`() {
+    val assessments = listOf(
+      createAssessment("A0"),
+    )
+
+    assertThatThrownBy {
+      ReferralsMetricsReportGenerator<SomeOtherEnum>(assessments, mockWorkingDayCountService).createReport(
+        listOf(SomeOtherEnum.Foo, SomeOtherEnum.Bar),
+        ReferralsMetricsProperties(2023, 1),
+      )
+    }.hasMessageContaining("Unknown Metric type - ${SomeOtherEnum::class.java}")
   }
 
   @Test
@@ -92,8 +145,8 @@ class ReferralsMetricsReportGeneratorTest {
       Period.between(firstArg(), secondArg()).days
     }
 
-    val results = ReferralsMetricsReportGenerator(assessments, mockWorkingDayCountService).createReport(
-      listOf(Tier.A0, Tier.A1),
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+      listOf(TierCategory.A0, TierCategory.A1),
       ReferralsMetricsProperties(2023, 1),
     )
 
@@ -113,8 +166,8 @@ class ReferralsMetricsReportGeneratorTest {
 
     every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator(assessments, mockWorkingDayCountService).createReport(
-      listOf(Tier.A0),
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+      listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )
 
@@ -153,8 +206,8 @@ class ReferralsMetricsReportGeneratorTest {
 
     every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator(assessments, mockWorkingDayCountService).createReport(
-      listOf(Tier.A0),
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+      listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )
 
@@ -188,8 +241,8 @@ class ReferralsMetricsReportGeneratorTest {
 
     every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator(assessments, mockWorkingDayCountService).createReport(
-      listOf(Tier.A0),
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+      listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )
 
@@ -211,8 +264,8 @@ class ReferralsMetricsReportGeneratorTest {
 
     every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator(assessments, mockWorkingDayCountService).createReport(
-      listOf(Tier.A0),
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+      listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )
 
@@ -227,12 +280,16 @@ class ReferralsMetricsReportGeneratorTest {
     releaseType: String = "license",
     applicationSubmittedAt: LocalDate = LocalDate.now(),
     assessmentSubmittedAt: LocalDate = LocalDate.now(),
+    isPipe: Boolean = false,
+    isEsap: Boolean = false,
   ): ApprovedPremisesAssessmentEntity {
     var applicationFactory = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
       .withApplicationSchema(newestJsonSchema)
       .withSubmittedAt(OffsetDateTime.of(applicationSubmittedAt, LocalTime.MIDNIGHT, ZoneOffset.UTC))
       .withReleaseType(releaseType)
+      .withIsPipeApplication(isPipe)
+      .withIsEsapApplication(isEsap)
 
     if (tier !== null) {
       applicationFactory = applicationFactory.withRiskRatings(

@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Book
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
@@ -108,9 +108,9 @@ class ReportService(
 
   fun createReferralsMetricsReport(properties: ReferralsMetricsProperties, outputStream: OutputStream) {
     val referrals = assessmentRepository.findAllCreatedInMonthAndYear(properties.month, properties.year)
-    val tiers = Tier.entries
+    val tiers = TierCategory.entries
 
-    ReferralsMetricsReportGenerator(referrals, workingDayCountService)
+    ReferralsMetricsReportGenerator<TierCategory>(referrals, workingDayCountService)
       .createReport(tiers, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
