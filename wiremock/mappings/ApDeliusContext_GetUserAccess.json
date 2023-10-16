@@ -1,0 +1,16 @@
+{
+  "id": "914913d6-2258-4e19-ae5e-20f95079822e",
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/user/access"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+    "bodyFileName": "userAccess",
+    "transformers": ["response-template"]
+  }
+}

@@ -53,12 +53,13 @@ services:
       - COMMUNITY-API_BASE-URL=http://community-api:8080
 
   wiremock:
-    image: rodolpheche/wiremock
+    image: wiremock/wiremock
     container_name: wiremock
     ports:
       - "9004:8080"
     volumes:
       - ./wiremock:/home/wiremock
+    command: "--global-response-templating"
 
   prison-api:
     image: quay.io/hmpps/prison-api:latest

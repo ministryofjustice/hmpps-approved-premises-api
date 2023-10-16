@@ -70,3 +70,7 @@ data class MappaDetail(
   val startDate: LocalDate,
   val lastUpdated: ZonedDateTime,
 )
+
+data class CaseSummaries(
+  var cases: List<CaseSummary>,
+)

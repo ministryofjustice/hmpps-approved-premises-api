@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -743,6 +744,35 @@ abstract class IntegrationTestBase {
           ),
       )
     }
+
+  fun mockSuccessfulGetCallWithBodyAndJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        WireMock.get(urlEqualTo(url))
+          .withRequestBody(requestBody)
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(responseStatus)
+              .withBody(
+                objectMapper.writeValueAsString(responseBody),
+              ),
+          ),
+      )
+    }
+
+  fun editGetStubWithBodyAndJsonResponse(url: String, uuid: UUID, requestBody: StringValuePattern, responseBody: Any) = wiremockServer.editStub(
+    WireMock.get(WireMock.urlEqualTo(url)).withId(uuid)
+      .withRequestBody(requestBody)
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            objectMapper.writeValueAsString(responseBody),
+          ),
+      ),
+  )
 
   fun mockUnsuccessfulGetCall(url: String, responseStatus: Int) =
     mockOAuth2ClientCredentialsCallIfRequired {

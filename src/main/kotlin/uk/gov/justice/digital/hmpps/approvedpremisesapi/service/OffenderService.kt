@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesCo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -53,6 +55,7 @@ class OffenderService(
   private val caseNotesClient: CaseNotesClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val adjudicationsApiClient: AdjudicationsApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
@@ -80,6 +83,41 @@ class OffenderService(
     adjudicationsConfig = PrisonAdjudicationsConfig(
       adjudicationsApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.adjudications-api-page-size configuration provided"),
     )
+  }
+
+  fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLao: Boolean = false): List<PersonSummaryInfoResult> {
+    val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
+      is ClientResult.Success -> response.body
+      is ClientResult.Failure.StatusCode -> response.throwException()
+      is ClientResult.Failure -> response.throwException()
+    }
+
+    val laoResponse = if (!ignoreLao) {
+      when (val response = apDeliusContextApiClient.getUserAccessForCrns(userDistinguishedName, crns)) {
+        is ClientResult.Success -> response.body
+        is ClientResult.Failure.StatusCode -> response.throwException()
+        is ClientResult.Failure -> response.throwException()
+      }
+    } else {
+      null
+    }
+
+    return crns.map { crn ->
+      val caseSummary = offenders.cases.find { it.crn == crn } ?: return@map PersonSummaryInfoResult.NotFound(crn)
+
+      val isLao = laoResponse?.let {
+        laoResponse.access.find { caseAccess ->
+          caseAccess.crn == crn &&
+            (caseAccess.userExcluded || caseAccess.userRestricted)
+        } != null
+      } ?: false
+
+      if (isLao) {
+        PersonSummaryInfoResult.Success.Restricted(crn, caseSummary.nomsId)
+      } else {
+        PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+      }
+    }
   }
 
   fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLao: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
