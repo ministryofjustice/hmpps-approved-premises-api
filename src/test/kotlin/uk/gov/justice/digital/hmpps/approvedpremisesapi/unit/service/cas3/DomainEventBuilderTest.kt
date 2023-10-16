@@ -19,7 +19,10 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class DomainEventBuilderTest {
-  private val domainEventBuilder = DomainEventBuilder()
+  private val domainEventBuilder = DomainEventBuilder(
+    applicationUrlTemplate = "http://api/applications/#applicationId",
+    bookingUrlTemplate = "http://api/premises/#premisesId/bookings/#bookingId",
+  )
 
   @Test
   fun `getPersonArrivedDomainEvent transforms the booking and arrival information correctly`() {
@@ -73,6 +76,7 @@ class DomainEventBuilderTest {
         data.personReference.noms == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
         data.bookingId == booking.id &&
+        data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
         data.premises.addressLine1 == premises.addressLine1 &&
         data.premises.addressLine2 == premises.addressLine2 &&
         data.premises.postcode == premises.postcode &&
@@ -81,7 +85,8 @@ class DomainEventBuilderTest {
         data.arrivedAt == arrivalDateTime &&
         data.expectedDepartureOn == expectedDepartureDate &&
         data.notes == notes &&
-        data.applicationId == application.id
+        data.applicationId == application.id &&
+        data.applicationUrl.toString() == "http://api/applications/${application.id}"
     }
   }
 
@@ -149,6 +154,7 @@ class DomainEventBuilderTest {
         data.personReference.noms == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
         data.bookingId == booking.id &&
+        data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
         data.premises.addressLine1 == premises.addressLine1 &&
         data.premises.addressLine2 == premises.addressLine2 &&
         data.premises.postcode == premises.postcode &&
@@ -159,7 +165,8 @@ class DomainEventBuilderTest {
         data.notes == notes &&
         data.moveOnCategory.description == moveOnCategoryDescription &&
         data.moveOnCategory.label == moveOnCategoryLabel &&
-        data.applicationId == application.id
+        data.applicationId == application.id &&
+        data.applicationUrl.toString() == "http://api/applications/${application.id}"
     }
   }
 }

@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.net.URI
 import java.time.Instant
 import java.util.UUID
 
@@ -15,6 +16,7 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var bookingId: Yielded<UUID> = { UUID.randomUUID() }
+  private var premisesId: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<Premises> = { PremisesFactory().produce() }
   private var departedAt: Yielded<Instant> = { Instant.now() }
   private var reason: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
@@ -33,6 +35,10 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
 
   fun withBookingId(bookingId: UUID) = apply {
     this.bookingId = { bookingId }
+  }
+
+  fun withPremisesId(premisesId: UUID) = apply {
+    this.premisesId = { premisesId }
   }
 
   fun withPremises(configuration: PremisesFactory.() -> Unit) = apply {
@@ -63,16 +69,23 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
     this.reasonDetail = { reasonDetail }
   }
 
-  override fun produce() = CAS3PersonDepartedEventDetails(
-    personReference = this.personReference(),
-    deliusEventNumber = this.deliusEventNumber(),
-    bookingId = this.bookingId(),
-    premises = this.premises(),
-    departedAt = this.departedAt(),
-    reason = this.reason(),
-    notes = this.notes(),
-    moveOnCategory = this.moveOnCategory(),
-    applicationId = this.applicationId(),
-    reasonDetail = this.reasonDetail(),
-  )
+  override fun produce(): CAS3PersonDepartedEventDetails {
+    val bookingId = this.bookingId()
+    val applicationId = this.applicationId()
+
+    return CAS3PersonDepartedEventDetails(
+      personReference = this.personReference(),
+      deliusEventNumber = this.deliusEventNumber(),
+      bookingId = bookingId,
+      bookingUrl = URI("http://api/premises/${this.premisesId()}/bookings/$bookingId"),
+      premises = this.premises(),
+      departedAt = this.departedAt(),
+      reason = this.reason(),
+      notes = this.notes(),
+      moveOnCategory = this.moveOnCategory(),
+      applicationId = applicationId,
+      reasonDetail = this.reasonDetail(),
+      applicationUrl = applicationId?.let { URI("http://api/applications/$it") },
+    )
+  }
 }

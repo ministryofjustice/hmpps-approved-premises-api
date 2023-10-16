@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
@@ -12,11 +13,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import java.net.URI
 import java.time.Instant
 import java.util.UUID
 
 @Component
-class DomainEventBuilder {
+class DomainEventBuilder(
+  @Value("\${url-templates.api.cas3.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.booking}") private val bookingUrlTemplate: String,
+) {
   fun getPersonArrivedDomainEvent(
     booking: BookingEntity,
   ): DomainEvent<CAS3PersonArrivedEvent> {
@@ -37,7 +42,9 @@ class DomainEventBuilder {
         eventType = EventType.personArrived,
         eventDetails = CAS3PersonArrivedEventDetails(
           applicationId = application?.id,
+          applicationUrl = application.toUrl(),
           bookingId = booking.id,
+          bookingUrl = booking.toUrl(),
           personReference = PersonReference(
             crn = booking.crn,
             noms = booking.nomsNumber,
@@ -83,6 +90,7 @@ class DomainEventBuilder {
           ),
           deliusEventNumber = application?.eventNumber ?: "",
           bookingId = booking.id,
+          bookingUrl = booking.toUrl(),
           premises = Premises(
             addressLine1 = booking.premises.addressLine1,
             addressLine2 = booking.premises.addressLine2,
@@ -98,9 +106,16 @@ class DomainEventBuilder {
             label = departure.moveOnCategory.legacyDeliusCategoryCode ?: "",
           ),
           applicationId = application?.id,
+          applicationUrl = application.toUrl(),
           reasonDetail = null,
         ),
       ),
     )
   }
+
+  private fun TemporaryAccommodationApplicationEntity?.toUrl(): URI? =
+    this?.let { URI(applicationUrlTemplate.replace("#applicationId", it.id.toString())) }
+
+  private fun BookingEntity.toUrl(): URI =
+    URI(bookingUrlTemplate.replace("#premisesId", this.premises.id.toString()).replace("#bookingId", this.id.toString()))
 }

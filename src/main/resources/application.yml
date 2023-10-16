@@ -202,6 +202,8 @@ url-templates:
       booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
     cas3:
+      application: http://localhost:3000/applications/#applicationId
+      booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
       person-arrived-event-detail: http://localhost:3000/events/cas3/person-arrived/#eventId
       person-departed-event-detail: http://localhost:3000/events/cas3/person-departed/#eventId
   frontend:
