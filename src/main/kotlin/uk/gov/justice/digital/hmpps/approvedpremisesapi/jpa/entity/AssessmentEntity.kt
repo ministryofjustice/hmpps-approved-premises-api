@@ -40,6 +40,21 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(type: Class<T>): List<AssessmentEntity>
 
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
+
+  @Query(
+    """
+    SELECT a from AssessmentEntity a 
+        LEFT JOIN ApplicationEntity app ON a.application = app 
+        LEFT JOIN ApprovedPremisesApplicationEntity apa on app.id = apa.id
+        LEFT JOIN AssessmentClarificationNoteEntity note on note.assessment = a
+    WHERE 
+        date_part('month', a.createdAt) = :month
+        AND date_part('year', a.createdAt) = :year 
+        AND a.reallocatedAt is null
+        AND TYPE(a) = ApprovedPremisesAssessmentEntity 
+  """,
+  )
+  fun findAllCreatedInMonthAndYear(month: Int, year: Int): List<ApprovedPremisesAssessmentEntity>
 }
 
 @NamedNativeQuery(

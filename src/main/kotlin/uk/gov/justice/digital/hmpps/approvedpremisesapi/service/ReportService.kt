@@ -6,6 +6,7 @@ import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -16,12 +17,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
 import java.time.LocalDate
@@ -38,6 +42,7 @@ class ReportService(
   private val offenderService: OffenderService,
   private val applicationRepository: ApplicationRepository,
   private val domainEventRepository: DomainEventRepository,
+  private val assessmentRepository: AssessmentRepository,
   private val objectMapper: ObjectMapper,
 ) {
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
@@ -96,6 +101,17 @@ class ReportService(
 
     DailyMetricsReportGenerator(domainEvents, applications, objectMapper)
       .createReport(dates, properties)
+      .writeExcel(outputStream) {
+        WorkbookFactory.create(true)
+      }
+  }
+
+  fun createReferralsMetricsReport(properties: ReferralsMetricsProperties, outputStream: OutputStream) {
+    val referrals = assessmentRepository.findAllCreatedInMonthAndYear(properties.month, properties.year)
+    val tiers = Tier.entries
+
+    ReferralsMetricsReportGenerator(referrals, workingDayCountService)
+      .createReport(tiers, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }
