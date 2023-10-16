@@ -106,9 +106,15 @@ components:
         applicationId:
           type: string
           format: uuid
+        applicationUrl:
+          type: string
+          format: uri
         bookingId:
           type: string
           format: uuid
+        bookingUrl:
+          type: string
+          format: uri
         premises:
           $ref: '#/components/schemas/Premises'
         arrivedAt:
@@ -123,6 +129,7 @@ components:
         - personReference
         - deliusEventNumber
         - bookingId
+        - bookingUrl
         - premises
         - arrivedAt
         - expectedDepartureOn
@@ -146,9 +153,15 @@ components:
         applicationId:
           type: string
           format: uuid
+        applicationUrl:
+          type: string
+          format: uri
         bookingId:
           type: string
           format: uuid
+        bookingUrl:
+          type: string
+          format: uri
         premises:
           $ref: '#/components/schemas/Premises'
         departedAt:
@@ -166,6 +179,7 @@ components:
         - personReference
         - deliusEventNumber
         - bookingId
+        - bookingUrl
         - premises
         - departedAt
         - reason
