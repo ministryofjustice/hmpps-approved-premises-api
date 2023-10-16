@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
@@ -76,6 +77,7 @@ class CAS3DomainEventFactory<T : CAS3Event, D : Any>(
   }
 
   private fun getEventType(): EventType = when (dataClass) {
+    CAS3BookingCancelledEventDetails::class -> EventType.bookingCancelled
     CAS3BookingProvisionallyMadeEventDetails::class -> EventType.bookingProvisionallyMade
     CAS3PersonArrivedEventDetails::class -> EventType.personArrived
     CAS3PersonDepartedEventDetails::class -> EventType.personDeparted
