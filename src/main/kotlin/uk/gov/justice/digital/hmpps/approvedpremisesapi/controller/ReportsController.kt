@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApTypeCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
@@ -123,7 +125,19 @@ class ReportsController(
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
 
-  override fun reportsReferralsByTierGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<Resource> {
+  override fun reportsReferralsByTierGet(
+    xServiceName: ServiceName,
+    year: Int,
+    month: Int,
+  ) = getReferralReport(xServiceName, year, month, TierCategory.entries)
+
+  override fun reportsReferralsByApTypeGet(
+    xServiceName: ServiceName,
+    year: Int,
+    month: Int,
+  ) = getReferralReport(xServiceName, year, month, ApTypeCategory.entries)
+
+  private fun <T : Any> getReferralReport(xServiceName: ServiceName, year: Int, month: Int, categories: List<T>): ResponseEntity<Resource> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
     }
@@ -135,7 +149,7 @@ class ReportsController(
     val properties = ReferralsMetricsProperties(year, month)
     val outputStream = ByteArrayOutputStream()
 
-    reportService.createReferralsMetricsReport(properties, outputStream)
+    reportService.createReferralsMetricsReport(properties, outputStream, categories)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }

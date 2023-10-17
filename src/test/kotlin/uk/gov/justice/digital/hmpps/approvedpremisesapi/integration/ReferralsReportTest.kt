@@ -8,6 +8,7 @@ import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApTypeCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
@@ -57,8 +59,9 @@ class ReferralsReportTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get referrals report returns the correct data`() {
+  @ParameterizedTest
+  @ValueSource(strings = ["referrals-by-tier", "referrals-by-ap-type"])
+  fun `Get referrals report returns the correct data`(reportType: String) {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
       GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
@@ -112,11 +115,16 @@ class ReferralsReportTest : IntegrationTestBase() {
         ),
       ).map { it.first as ApprovedPremisesAssessmentEntity }
 
-      val expectedDataFrame = ReferralsMetricsReportGenerator<TierCategory>(assessments, realWorkingDayCountService)
-        .createReport(TierCategory.entries, ReferralsMetricsProperties(year, month))
+      val expectedDataFrame = if (reportType == "referrals-by-tier") {
+        ReferralsMetricsReportGenerator<TierCategory>(assessments, realWorkingDayCountService)
+          .createReport(TierCategory.entries, ReferralsMetricsProperties(year, month))
+      } else {
+        ReferralsMetricsReportGenerator<ApTypeCategory>(assessments, realWorkingDayCountService)
+          .createReport(ApTypeCategory.entries, ReferralsMetricsProperties(year, month))
+      }
 
       webTestClient.get()
-        .uri("/reports/referrals-by-tier?year=$year&month=$month")
+        .uri("/reports/$reportType?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
