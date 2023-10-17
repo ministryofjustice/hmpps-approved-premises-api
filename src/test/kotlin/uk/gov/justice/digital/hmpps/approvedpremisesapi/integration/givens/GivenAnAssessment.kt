@@ -17,6 +17,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   data: String? = "{ \"some\": \"data\"}",
   decision: AssessmentDecision? = null,
   submittedAt: OffsetDateTime? = null,
+  createdAt: OffsetDateTime? = null,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -42,6 +43,9 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withData(data)
     withDecision(decision)
     withSubmittedAt(submittedAt)
+    if (createdAt != null) {
+      withCreatedAt(createdAt)
+    }
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
@@ -81,6 +85,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
   data: String? = "{ \"some\": \"data\"}",
+  createdAt: OffsetDateTime? = null,
   block: ((assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null,
 ) {
   val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -105,6 +110,9 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
     withData(data)
+    if (createdAt != null) {
+      withCreatedAt(createdAt)
+    }
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
