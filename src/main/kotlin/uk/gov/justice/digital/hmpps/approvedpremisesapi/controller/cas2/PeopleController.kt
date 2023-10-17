@@ -37,7 +37,7 @@ class PeopleController(
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getInfoForPerson(crn, user.nomisUsername)
+    val personInfo = offenderService.getInfoForPerson(crn)
 
     when (personInfo) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
