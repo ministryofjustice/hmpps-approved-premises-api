@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
@@ -12,7 +14,11 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Repository
-interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID>
+interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
+
+  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary(cast(d.id as string), d.type, d.occurredAt)  FROM DomainEventEntity d WHERE d.applicationId = :applicationId")
+  fun findAllTimelineEventsByApplicationId(applicationId: UUID): List<DomainEventSummary>
+}
 
 @Entity
 @Table(name = "domain_events")
@@ -40,4 +46,6 @@ enum class DomainEventType {
   APPROVED_PREMISES_BOOKING_CANCELLED,
   APPROVED_PREMISES_BOOKING_CHANGED,
   APPROVED_PREMISES_APPLICATION_WITHDRAWN,
+  CAS3_PERSON_ARRIVED,
+  CAS3_PERSON_DEPARTED,
 }

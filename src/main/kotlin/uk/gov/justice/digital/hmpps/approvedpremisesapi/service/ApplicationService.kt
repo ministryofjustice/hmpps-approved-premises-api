@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -40,11 +41,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -58,6 +62,7 @@ import javax.transaction.Transactional
 class ApplicationService(
   private val userRepository: UserRepository,
   private val applicationRepository: ApplicationRepository,
+  private val applicationsTransformer: ApplicationsTransformer,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val userService: UserService,
@@ -778,4 +783,32 @@ class ApplicationService(
 
   fun getOfflineApplicationsForCrn(crn: String, serviceName: ServiceName) =
     offlineApplicationRepository.findAllByServiceAndCrn(serviceName.value, crn)
+
+  fun getApplicationTimeline(applicationId: UUID): List<TimelineEvent> {
+    val domainEvents = domainEventService.getAllDomainEventsForApplication(applicationId)
+    val domainEventsAsTimelineEvents = mutableListOf<TimelineEvent>()
+    domainEvents.map {
+      domainEventsAsTimelineEvents.add(
+        applicationsTransformer.transformDomainEventSummaryToTimelineEvent(it),
+      )
+    }
+    val informationRequests = getAllInformationRequestEventsForApplication(applicationId)
+    return domainEventsAsTimelineEvents + informationRequests
+  }
+
+  fun getAllInformationRequestEventsForApplication(applicationId: UUID): List<TimelineEvent> {
+    val assessments = applicationRepository.findAllAssessmentsById(applicationId)
+
+    var allClarifications = mutableListOf<AssessmentClarificationNoteEntity>()
+    assessments.map {
+      allClarifications.addAll(it.clarificationNotes)
+    }
+    return allClarifications.map {
+      TimelineEvent(
+        id = it.id.toString(),
+        type = TimelineEventType.APPROVED_PREMISES_INFORMATION_REQUEST,
+        occurredAt = it.createdAt,
+      )
+    }
+  }
 }

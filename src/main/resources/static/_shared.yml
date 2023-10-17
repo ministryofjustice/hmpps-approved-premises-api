@@ -2844,6 +2844,16 @@ components:
         - createdAt
         - typeCode
         - typeDescription
+    TimelineEvent:
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
     SeedRequest:
       type: object
       properties:

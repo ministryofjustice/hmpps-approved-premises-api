@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
@@ -55,21 +56,27 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -83,6 +90,9 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var userTransformer: UserTransformer
+
+  @Autowired
+  lateinit var applicationsTransformer: ApplicationsTransformer
 
   @SpykBean
   lateinit var realApplicationTeamCodeRepository: ApplicationTeamCodeRepository
@@ -1883,6 +1893,196 @@ class ApplicationTest : IntegrationTestBase() {
       assessment.schemaUpToDate = true
 
       return Pair(application, assessment)
+    }
+  }
+
+  @Nested
+  inner class ApplicationTimeline {
+    val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+    @Test
+    fun `Get application timeline without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/applications/$applicationId/timeline")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get application timeline returns 403 forbidden when not approved premises service`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
+        webTestClient.get()
+          .uri("/applications/$applicationId/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get application timeline returns 200 when user has permission and approved premises service`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
+        webTestClient.get()
+          .uri("/applications/$applicationId/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+      }
+    }
+
+    @Test
+    fun `Get application timeline returns correct ten DomainEvents when no information requests`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
+
+        val month = 2
+        val year = 2023
+
+        val domainEvents = createTenDomainEvents(year, month)
+        val summaries = domainEvents.map {
+          TimelineEvent(it.type.toString(), it.id.toString(), it.occurredAt.toInstant())
+        }
+
+        val expectedJson = objectMapper.writeValueAsString(
+          summaries,
+        )
+
+        webTestClient.get()
+          .uri("/applications/$applicationId/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    @Test
+    fun `Get application timeline returns correct twenty DomainEvents when we have ten information requests`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+
+        val month = 2
+        val year = 2023
+
+        val assessment = createAssessment(user, year, month)
+
+        val domainEvents = createTenDomainEvents(year, month)
+        val summaries = domainEvents.map {
+          TimelineEvent(it.type.toString(), it.id.toString(), it.occurredAt.toInstant())
+        }
+
+        val informationRequests = createTenInformationRequests(assessment, user, year, month)
+        val informationRequestSummaries = informationRequests.map {
+          TimelineEvent(TimelineEventType.APPROVED_PREMISES_INFORMATION_REQUEST.toString(), it.id.toString(), it.createdAt.toInstant())
+        }
+
+        val allSummaries = summaries + informationRequestSummaries
+        val expectedJson = objectMapper.writeValueAsString(
+          allSummaries,
+        )
+
+        webTestClient.get()
+          .uri("/applications/$applicationId/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    private fun createAssessment(user: UserEntity, year: Int, month: Int): ApprovedPremisesAssessmentEntity {
+      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(user)
+        withId(applicationId)
+        withApplicationSchema(applicationSchema)
+
+        withCreatedAt(
+          LocalDate.of(year, month, 1).toLocalDateTime(),
+        )
+      }
+
+      val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      return approvedPremisesAssessmentEntityFactory.produceAndPersist {
+        withApplication(application)
+        withAllocatedToUser(user)
+        withAssessmentSchema(assessmentSchema)
+      }
+    }
+
+    private fun createAssessmentClarificationNote(assessment: ApprovedPremisesAssessmentEntity, user: UserEntity, year: Int, month: Int, dayOfMonth: Int): AssessmentClarificationNoteEntity {
+      return assessmentClarificationNoteEntityFactory.produceAndPersist {
+        withAssessment(assessment)
+        withCreatedAt(
+          LocalDate.of(year, month, dayOfMonth).toLocalDateTime(),
+        )
+        withCreatedBy(user)
+      }
+    }
+
+    private fun createDomainEvent(year: Int, month: Int, dayOfMonth: Int, type: DomainEventType): DomainEventEntity {
+      return domainEventFactory.produceAndPersist {
+        withOccurredAt(
+          LocalDate.of(year, month, dayOfMonth).toLocalDateTime(),
+        )
+        withApplicationId(applicationId)
+        withType(type)
+      }
+    }
+
+    private fun createTenDomainEvents(year: Int, month: Int): List<DomainEventEntity> {
+      val domainEvent1 = createDomainEvent(year, month, 2, DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+      val domainEvent2 = createDomainEvent(year, month, 3, DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+      val domainEvent3 = createDomainEvent(year, month, 4, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
+      val domainEvent4 = createDomainEvent(year, month, 5, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+      val domainEvent5 = createDomainEvent(year, month, 6, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
+      val domainEvent6 = createDomainEvent(year, month, 7, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+      val domainEvent7 = createDomainEvent(year, month, 8, DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
+      val domainEvent8 = createDomainEvent(year, month, 9, DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+      val domainEvent9 = createDomainEvent(year, month, 10, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+      val domainEvent10 = createDomainEvent(year, month, 11, DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
+
+      return listOf(
+        domainEvent1, domainEvent2, domainEvent3,
+        domainEvent4, domainEvent5, domainEvent6,
+        domainEvent7, domainEvent8, domainEvent9,
+        domainEvent10,
+      )
+    }
+
+    private fun createTenInformationRequests(assessment: ApprovedPremisesAssessmentEntity, user: UserEntity, year: Int, month: Int): List<AssessmentClarificationNoteEntity> {
+      val informationRequest1 = createAssessmentClarificationNote(assessment, user, year, month, 11)
+      val informationRequest2 = createAssessmentClarificationNote(assessment, user, year, month, 12)
+      val informationRequest3 = createAssessmentClarificationNote(assessment, user, year, month, 13)
+      val informationRequest4 = createAssessmentClarificationNote(assessment, user, year, month, 14)
+      val informationRequest5 = createAssessmentClarificationNote(assessment, user, year, month, 15)
+      val informationRequest6 = createAssessmentClarificationNote(assessment, user, year, month, 16)
+      val informationRequest7 = createAssessmentClarificationNote(assessment, user, year, month, 17)
+      val informationRequest8 = createAssessmentClarificationNote(assessment, user, year, month, 18)
+      val informationRequest9 = createAssessmentClarificationNote(assessment, user, year, month, 19)
+      val informationRequest10 = createAssessmentClarificationNote(assessment, user, year, month, 20)
+
+      return listOf(
+        informationRequest1, informationRequest2, informationRequest3,
+        informationRequest4, informationRequest5, informationRequest6,
+        informationRequest7, informationRequest8, informationRequest9,
+        informationRequest10,
+      )
     }
   }
 
