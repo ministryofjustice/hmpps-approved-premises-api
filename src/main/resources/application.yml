@@ -59,6 +59,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          nomis-user-roles-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
           case-notes:
             provider: hmpps-auth
             client-id: approved-premises-api
@@ -127,6 +132,8 @@ services:
     base-url: http://localhost:9004
   prisons-api:
     base-url: http://localhost:9570
+  nomis-user-roles-api:
+    base-url: http://localhost:9575
   case-notes:
     base-url: http://localhost:9004
   ap-delius-context-api:
@@ -183,16 +190,22 @@ assign-default-region-to-users-with-unknown-region: false
 
 url-templates:
   api:
-    application-submitted-event-detail: http://localhost:3000/events/application-submitted/#eventId
-    application-assessed-event-detail: http://localhost:3000/events/application-assessed/#eventId
-    booking-made-event-detail: http://localhost:3000/events/booking-made/#eventId
-    person-arrived-event-detail: http://localhost:3000/events/person-arrived/#eventId
-    person-not-arrived-event-detail: http://localhost:3000/events/person-not-arrived/#eventId
-    person-departed-event-detail: http://localhost:3000/events/person-departed/#eventId
-    booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
-    booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
-    booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
-    application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
+    cas1:
+      application-submitted-event-detail: http://localhost:3000/events/application-submitted/#eventId
+      application-assessed-event-detail: http://localhost:3000/events/application-assessed/#eventId
+      booking-made-event-detail: http://localhost:3000/events/booking-made/#eventId
+      person-arrived-event-detail: http://localhost:3000/events/person-arrived/#eventId
+      person-not-arrived-event-detail: http://localhost:3000/events/person-not-arrived/#eventId
+      person-departed-event-detail: http://localhost:3000/events/person-departed/#eventId
+      booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
+      booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
+      booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
+      application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
+    cas3:
+      application: http://localhost:3000/applications/#applicationId
+      booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
+      person-arrived-event-detail: http://localhost:3000/events/cas3/person-arrived/#eventId
+      person-departed-event-detail: http://localhost:3000/events/cas3/person-departed/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id

@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -954,21 +955,13 @@ class PremisesController(
     }
 
     val bookingsSummary = premisesService.getPremisesSummary(premisesId)
+    val crns = bookingsSummary.map { it.getCrn() }
+    val personSummary = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
-    val bookingsSummaryMapped = bookingsSummary
-      .map {
-        val personInfo = async {
-          offenderService.getInfoForPerson(
-            it.getCrn(),
-            user.deliusUsername,
-            user.hasQualification(UserQualification.LAO),
-          )
-        }.await()
-
-        async {
-          bookingTransformer.transformBookingSummary(it, personInfo)
-        }.await()
-      }
+    val bookingsSummaryMapped = bookingsSummary.map {
+      val personInfo = personSummary.find { personSummary -> personSummary.crn == it.getCrn() } ?: PersonSummaryInfoResult.NotFound(it.getCrn())
+      bookingTransformer.transformBookingSummary(it, personInfo)
+    }
 
     val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
       .values.first().getFreeCapacity(premises.totalBeds)

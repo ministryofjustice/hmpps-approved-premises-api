@@ -22,18 +22,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -82,9 +80,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class GetToIndex {
     @Test
-    fun `Get all applications returns 200 with correct body - when the service is CAS2`() {
-      `Given a User` { userEntity, jwt ->
-        `Given a User` { otherUser, _ ->
+    fun `Get all applications returns 200 with correct body`() {
+      `Given a CAS2 User` { userEntity, jwt ->
+        `Given a CAS2 User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -106,8 +104,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
             }
-
-            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/applications")
@@ -141,18 +137,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get list of applications returns 500 when a person cannot be found`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
-      ) { userEntity, jwt ->
+      `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
 
-        produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+        produceAndPersistBasicApplication(crn, userEntity)
         CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
         loadPreemptiveCacheForOffenderDetails(crn)
-
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
 
         webTestClient.get()
           .uri("/cas2/applications")
@@ -167,21 +157,15 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
-      ) { userEntity, jwt ->
+      `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
 
-        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+        val application = produceAndPersistBasicApplication(crn, userEntity)
 
         val offenderDetails = OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .withNomsNumber("ABC123")
           .produce()
-
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
         CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
         loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
@@ -222,7 +206,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class GetToShow {
     @Test
     fun `Get single application returns 200 with correct body`() {
-      `Given a User` { userEntity, jwt ->
+      `Given a CAS2 User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -262,8 +246,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
-
           val rawResponseBody = webTestClient.get()
             .uri("/cas2/applications/${applicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
@@ -294,14 +276,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
-      ) { userEntity, jwt ->
+      `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
 
-        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+        val application = produceAndPersistBasicApplication(crn, userEntity)
 
         val offenderDetails = OffenderDetailsSummaryFactory()
           .withCrn(crn)
@@ -312,8 +290,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
         PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
         loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
 
         val rawResponseBody = webTestClient.get()
           .uri("/cas2/applications/${application.id}")
@@ -349,7 +325,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class PostToCreate {
     @Test
     fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
-      `Given a User` { userEntity, jwt ->
+      `Given a CAS2 User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val applicationSchema =
             cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -385,7 +361,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application returns 404 when a person cannot be found`() {
-      `Given a User` { userEntity, jwt ->
+      `Given a CAS2 User` { userEntity, jwt ->
         val crn = "X1234"
 
         CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
@@ -417,7 +393,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class PutToUpdate {
     @Test
     fun `Update existing CAS2 application returns 200 with correct body`() {
-      `Given a User` { submittingUser, jwt ->
+      `Given a CAS2 User` { submittingUser, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -480,16 +456,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class PostToSubmit {
     @Test
     fun `Submit Cas2 application returns 200`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
-        },
-      ) { submittingUser, jwt ->
-        `Given a User` { userEntity, _ ->
+      `Given a CAS2 User`() { submittingUser, jwt ->
+        `Given a CAS2 User` { userEntity, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -544,15 +512,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
-        },
-      ) { submittingUser, jwt ->
+      `Given a CAS2 User`() { submittingUser, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -636,8 +596,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   private fun produceAndPersistBasicApplication(
     crn: String,
-    userEntity: UserEntity,
-    managingTeamCode: String,
+    userEntity: NomisUserEntity,
   ): Cas2ApplicationEntity {
     val jsonSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))

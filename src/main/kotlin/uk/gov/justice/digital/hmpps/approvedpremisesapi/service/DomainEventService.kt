@@ -37,17 +37,17 @@ class DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
-  @Value("\${domain-events.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
-  @Value("\${url-templates.api.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.application-assessed-event-detail}") private val applicationAssessedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.booking-made-event-detail}") private val bookingMadeDetailUrlTemplate: String,
-  @Value("\${url-templates.api.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.person-not-arrived-event-detail}") private val personNotArrivedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.person-departed-event-detail}") private val personDepartedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.booking-not-made-event-detail}") private val bookingNotMadeDetailUrlTemplate: String,
-  @Value("\${url-templates.api.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
-  @Value("\${url-templates.api.booking-changed-event-detail}") private val bookingChangedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
+  @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
+  @Value("\${url-templates.api.cas1.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.application-assessed-event-detail}") private val applicationAssessedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.booking-made-event-detail}") private val bookingMadeDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.person-not-arrived-event-detail}") private val personNotArrivedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.person-departed-event-detail}") private val personDepartedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.booking-not-made-event-detail}") private val bookingNotMadeDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.booking-changed-event-detail}") private val bookingChangedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -70,37 +70,7 @@ class DomainEventService(
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 
-    val data = when {
-      T::class == ApplicationSubmittedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == ApplicationAssessedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingMadeEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == PersonArrivedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == PersonNotArrivedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == PersonDepartedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingNotMadeEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingCancelledEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == BookingChangedEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      T::class == ApplicationWithdrawnEnvelope::class && domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
-    }
-
-    return DomainEvent(
-      id = domainEventEntity.id,
-      applicationId = domainEventEntity.applicationId,
-      crn = domainEventEntity.crn,
-      occurredAt = domainEventEntity.occurredAt.toInstant(),
-      data = data,
-    )
+    return domainEventEntity.toDomainEvent(objectMapper)
   }
 
   @Transactional
@@ -227,11 +197,13 @@ class DomainEventService(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
+        bookingId = null,
         crn = domainEvent.crn,
         type = enumTypeFromDataType(domainEvent.data!!::class.java),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
+        service = "CAS1",
       ),
     )
 
@@ -260,7 +232,7 @@ class DomainEventService(
 
       log.info("Emitted SNS event (Message Id: ${publishResult.messageId}, Sequence Id: ${publishResult.sequenceNumber}) for Domain Event: ${domainEvent.id} of type: ${snsEvent.eventType}")
     } else {
-      log.info("Not emitting SNS event for domain event because domain-events.emit-enabled is not enabled")
+      log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")
     }
   }
 

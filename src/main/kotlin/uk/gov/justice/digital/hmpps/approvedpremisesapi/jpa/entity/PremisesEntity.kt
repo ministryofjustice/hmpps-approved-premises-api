@@ -265,8 +265,8 @@ interface BookingSummary {
   fun getArrivalDate(): LocalDate
   fun getDepartureDate(): LocalDate
   fun getCrn(): String
-  fun getBedId(): UUID
-  fun getBedName(): String
-  fun getBedCode(): String
+  fun getBedId(): UUID?
+  fun getBedName(): String?
+  fun getBedCode(): String?
   fun getStatus(): BookingStatus
 }

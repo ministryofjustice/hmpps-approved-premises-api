@@ -6,8 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
@@ -296,5 +298,56 @@ class PersonTransformerTest {
     assertThat(result is FullPerson).isTrue
     result as FullPerson
     assertThat(result.genderIdentity).isEqualTo("Other")
+  }
+
+  @Test
+  fun `transformSummaryToPersonApi returns the correct response for a full person info`() {
+    val caseSummary = CaseSummaryFactory().produce()
+
+    val personInfoResult = PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary)
+
+    val result = personTransformer.transformSummaryToPersonApi(personInfoResult)
+
+    assertThat(result.crn).isEqualTo(caseSummary.crn)
+    assertThat(result is FullPerson).isTrue
+
+    assertThat(result).isEqualTo(
+      FullPerson(
+        type = PersonType.fullPerson,
+        crn = caseSummary.crn,
+        name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+        dateOfBirth = caseSummary.dateOfBirth,
+        sex = caseSummary.gender!!,
+        status = FullPerson.Status.unknown,
+        nomsNumber = caseSummary.nomsId,
+        ethnicity = caseSummary.profile.ethnicity,
+        nationality = caseSummary.profile.nationality,
+        religionOrBelief = caseSummary.profile.religion,
+        genderIdentity = caseSummary.profile.genderIdentity,
+        prisonName = null,
+      ),
+    )
+  }
+
+  @Test
+  fun `transformSummaryToPersonApi returns the correct response for a restricted person info`() {
+    val crn = "CRN123"
+    val personInfoResult = PersonSummaryInfoResult.Success.Restricted(crn, null)
+
+    val result = personTransformer.transformSummaryToPersonApi(personInfoResult)
+
+    assertThat(result.crn).isEqualTo(crn)
+    assertThat(result is RestrictedPerson).isTrue
+  }
+
+  @Test
+  fun `transformSummaryToPersonApi returns the correct response for a not found person info`() {
+    val crn = "CRN123"
+    val personInfoResult = PersonSummaryInfoResult.NotFound(crn)
+
+    val result = personTransformer.transformSummaryToPersonApi(personInfoResult)
+
+    assertThat(result.crn).isEqualTo(crn)
+    assertThat(result is UnknownPerson).isTrue
   }
 }

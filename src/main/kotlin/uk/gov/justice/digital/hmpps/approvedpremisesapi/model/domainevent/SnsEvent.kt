@@ -23,5 +23,6 @@ data class SnsEventPersonReference(
 )
 
 data class SnsEventAdditionalInformation(
-  val applicationId: UUID,
+  val applicationId: UUID? = null,
+  val bookingId: UUID? = null,
 )

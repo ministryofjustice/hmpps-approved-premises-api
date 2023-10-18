@@ -1,7 +1,7 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.12.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.12.1"
   kotlin("plugin.spring") version "1.9.10"
   id("org.openapi.generator") version "5.4.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.10"
@@ -13,7 +13,7 @@ configurations {
 }
 
 val springDocVersion = "1.7.0"
-val sentryVersion = "6.30.0"
+val sentryVersion = "6.31.0"
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -189,6 +189,25 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
   importMappings.put("Instant", "java.time.Instant")
 }
 
+tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas3DomainEvents") {
+  generatorName.set("kotlin-spring")
+  inputSpec.set("$rootDir/src/main/resources/static/cas3-domain-events-api.yml")
+  outputDir.set("$buildDir/generated")
+  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
+  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model")
+  configOptions.apply {
+    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
+    put("delegatePattern", "true")
+    put("gradleBuildFile", "false")
+    put("exceptionHandler", "false")
+    put("useBeanValidation", "false")
+    put("dateLibrary", "custom")
+    put("useTags", "true")
+  }
+  typeMappings.put("DateTime", "Instant")
+  importMappings.put("Instant", "java.time.Instant")
+}
+
 tasks.register("openApiPreCompilation") {
 
   // Generate OpenAPI spec files suited to Kotlin code generator
@@ -235,6 +254,7 @@ tasks.register("openApiPreCompilation") {
 
 tasks.get("openApiGenerate").dependsOn(
   "openApiGenerateDomainEvents",
+  "openApiGenerateCas3DomainEvents",
   "openApiPreCompilation",
   "openApiGenerateCas2Namespace"
 )

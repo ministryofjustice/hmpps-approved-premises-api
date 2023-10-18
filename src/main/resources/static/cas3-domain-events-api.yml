@@ -1,0 +1,261 @@
+openapi: '3.0.1'
+info:
+  version: '0.1.0'
+  title: 'CAS3 Domain events'
+  description: Get information about events in the CAS3 domain
+paths:
+  /events/cas3/person-arrived/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS3 events"
+      summary: A 'person-arrived' event
+      responses:
+        200:
+          description: The 'person-arrived' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CAS3PersonArrivedEvent'
+        404:
+          description: No 'person-arrived' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /events/cas3/person-departed/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS3 events"
+      summary: A 'person-departed' event
+      responses:
+        200:
+          description: The 'person-departed' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CAS3PersonDepartedEvent'
+        404:
+          description: No 'person-departed' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+components:
+  responses:
+    500Response:
+      description: unexpected error
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    CAS3Event:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+      required:
+        - id
+        - timestamp
+        - eventType
+      discriminator:
+        propertyName: eventType
+        mapping:
+          accommodation.cas3.person.arrived: '#/components/schemas/CAS3PersonArrivedEvent'
+          accommodation.cas3.person.departed: '#/components/schemas/CAS3PersonDepartedEvent'
+    CAS3PersonArrivedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3PersonArrivedEventDetails'
+          required:
+            - eventDetails
+    CAS3PersonArrivedEventDetails:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          type: string
+        applicationId:
+          type: string
+          format: uuid
+        applicationUrl:
+          type: string
+          format: uri
+        bookingId:
+          type: string
+          format: uuid
+        bookingUrl:
+          type: string
+          format: uri
+        premises:
+          $ref: '#/components/schemas/Premises'
+        arrivedAt:
+          type: string
+          format: date-time
+        expectedDepartureOn:
+          type: string
+          format: date
+        notes:
+          type: string
+      required:
+        - personReference
+        - deliusEventNumber
+        - bookingId
+        - bookingUrl
+        - premises
+        - arrivedAt
+        - expectedDepartureOn
+        - notes
+    CAS3PersonDepartedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3PersonDepartedEventDetails'
+          required:
+            - eventDetails
+    CAS3PersonDepartedEventDetails:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          type: string
+        applicationId:
+          type: string
+          format: uuid
+        applicationUrl:
+          type: string
+          format: uri
+        bookingId:
+          type: string
+          format: uuid
+        bookingUrl:
+          type: string
+          format: uri
+        premises:
+          $ref: '#/components/schemas/Premises'
+        departedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        reasonDetail:
+          type: string
+        notes:
+          type: string
+        moveOnCategory:
+          $ref: '#/components/schemas/MoveOnCategory'
+      required:
+        - personReference
+        - deliusEventNumber
+        - bookingId
+        - bookingUrl
+        - premises
+        - departedAt
+        - reason
+        - notes
+        - moveOnCategory
+
+    # Common domain schemas
+    PersonReference:
+      type: object
+      properties:
+        crn:
+          type: string
+        noms:
+          type: string
+      required:
+        - crn
+
+    Premises:
+      type: object
+      properties:
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        postcode:
+          type: string
+        town:
+          type: string
+        region:
+          type: string
+      required:
+        - addressLine1
+        - postcode
+        - region
+
+    MoveOnCategory:
+      type: object
+      properties:
+        description:
+          type: string
+        label:
+          type: string
+      required:
+        - description
+        - label
+
+    # Utility schemas
+    EventId:
+      description: The UUID of an event
+      type: string
+      format: uuid
+      example: 364145f9-0af8-488e-9901-b4c46cd9ba37
+    EventType:
+      description: The type of an event
+      type: string
+      enum:
+        - accommodation.cas3.person.arrived
+        - accommodation.cas3.person.departed
+      x-enum-varnames:
+        - personArrived
+        - personDeparted
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          example: https://example.net/validation-error
+        title:
+          type: string
+          example: Invalid request parameters
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: You provided invalid request parameters
+        instance:
+          type: string
+          example: f7493e12-546d-42c3-b838-06c12671ab5b

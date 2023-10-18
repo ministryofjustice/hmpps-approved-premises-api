@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
@@ -31,17 +32,19 @@ class BookingTransformer(
   private val workingDayCountService: WorkingDayCountService,
 ) {
 
-  fun transformBookingSummary(jpa: BookingSummary, personInfo: PersonInfoResult): PremisesBooking {
+  fun transformBookingSummary(jpa: BookingSummary, personInfo: PersonSummaryInfoResult): PremisesBooking {
     return PremisesBooking(
       id = jpa.getID(),
       arrivalDate = jpa.getArrivalDate(),
       departureDate = jpa.getDepartureDate(),
-      person = personTransformer.transformModelToPersonApi(personInfo),
-      bed = Bed(
-        id = jpa.getBedId(),
-        name = jpa.getBedName(),
-        code = jpa.getBedCode(),
-      ),
+      person = personTransformer.transformSummaryToPersonApi(personInfo),
+      bed = jpa.getBedId()?.let {
+        Bed(
+          id = jpa.getBedId()!!,
+          name = jpa.getBedName()!!,
+          code = jpa.getBedCode(),
+        )
+      },
       status = jpa.getStatus(),
     )
   }

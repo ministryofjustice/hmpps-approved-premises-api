@@ -14,28 +14,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationServiceTest {
-  private val mockUserRepository = mockk<UserRepository>()
+  private val mockUserRepository = mockk<NomisUserRepository>()
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockUserService = mockk<UserService>()
+  private val mockUserService = mockk<NomisUserService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
@@ -68,24 +68,14 @@ class ApplicationServiceTest {
       val distinguishedName = "SOMEPERSON"
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockUserRepository.findByDeliusUsername(any()) } returns UserEntityFactory()
-        .withDeliusUsername(distinguishedName)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+      every { mockUserRepository.findByNomisUsername(any()) } returns NomisUserEntityFactory()
+        .withNomisUsername(distinguishedName)
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(any()) } returns
         Cas2ApplicationEntityFactory()
           .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
+            NomisUserEntityFactory()
               .produce(),
           )
           .produce()
@@ -105,14 +95,9 @@ class ApplicationServiceTest {
         .withSchema("{}")
         .produce()
 
-      val userEntity = UserEntityFactory()
+      val userEntity = NomisUserEntityFactory()
         .withId(userId)
-        .withDeliusUsername(distinguishedName)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+        .withNomisUsername(distinguishedName)
         .produce()
 
       val applicationEntity = Cas2ApplicationEntityFactory()
@@ -125,7 +110,7 @@ class ApplicationServiceTest {
           .args[0] as Cas2ApplicationEntity
       }
       every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
-      every { mockUserRepository.findByDeliusUsername(any()) } returns userEntity
+      every { mockUserRepository.findByNomisUsername(any()) } returns userEntity
       every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
 
       val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
@@ -144,7 +129,7 @@ class ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
+      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.NotFound()
 
       val user = userWithUsername(username)
 
@@ -160,7 +145,7 @@ class ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
+      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Unauthorised()
 
       val user = userWithUsername(username)
 
@@ -180,7 +165,7 @@ class ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Success(
         OffenderDetailsSummaryFactory().produce(),
       )
 
@@ -228,19 +213,13 @@ class ApplicationServiceTest {
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
-          UserEntityFactory()
-            .withProbationRegion(probationRegion)
+          NomisUserEntityFactory()
             .produce()
         }
         .produce()
 
-      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-        .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+      every { mockUserService.getUserForRequest() } returns NomisUserEntityFactory()
+        .withNomisUsername(username)
         .produce()
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
@@ -261,13 +240,8 @@ class ApplicationServiceTest {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
       val username = "SOMEPERSON"
 
-      val user = UserEntityFactory()
-        .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+      val user = NomisUserEntityFactory()
+        .withNomisUsername(username)
         .produce()
 
       val application = Cas2ApplicationEntityFactory()
@@ -307,13 +281,8 @@ class ApplicationServiceTest {
 
       val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
 
-      val user = UserEntityFactory()
-        .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+      val user = NomisUserEntityFactory()
+        .withNomisUsername(username)
         .produce()
 
       val application = Cas2ApplicationEntityFactory()
@@ -352,13 +321,8 @@ class ApplicationServiceTest {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
       val username = "SOMEPERSON"
 
-      val user = UserEntityFactory()
-        .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+      val user = NomisUserEntityFactory()
+        .withNomisUsername(username)
         .produce()
 
       val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
@@ -416,13 +380,8 @@ class ApplicationServiceTest {
   inner class SubmitApplication {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
-    val user = UserEntityFactory()
-      .withDeliusUsername(this.username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
+    val user = NomisUserEntityFactory()
+      .withNomisUsername(this.username)
       .produce()
 
     private val submitCas2Application = SubmitCas2Application(
@@ -446,12 +405,7 @@ class ApplicationServiceTest {
 
     @Test
     fun `returns Unauthorised when application doesn't belong to request user`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+      val user = NomisUserEntityFactory()
         .produce()
 
       val application = Cas2ApplicationEntityFactory()
@@ -459,13 +413,8 @@ class ApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-        .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+      every { mockUserService.getUserForRequest() } returns NomisUserEntityFactory()
+        .withNomisUsername(username)
         .produce()
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
@@ -564,7 +513,7 @@ class ApplicationServiceTest {
         .withCrn(application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrn(application.crn) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 
@@ -584,12 +533,7 @@ class ApplicationServiceTest {
     }
   }
 
-  private fun userWithUsername(username: String) = UserEntityFactory()
-    .withDeliusUsername(username)
-    .withProbationRegion(
-      ProbationRegionEntityFactory()
-        .withApArea(ApAreaEntityFactory().produce())
-        .produce(),
-    )
+  private fun userWithUsername(username: String) = NomisUserEntityFactory()
+    .withNomisUsername(username)
     .produce()
 }

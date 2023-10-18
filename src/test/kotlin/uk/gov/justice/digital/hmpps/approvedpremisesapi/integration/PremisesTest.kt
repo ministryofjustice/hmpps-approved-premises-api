@@ -19,9 +19,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -1548,9 +1552,9 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
   fun `Get Premises Summary by ID returns OK with correct body`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { _, jwt ->
+    `Given a User`(roles = listOf(role)) { user, jwt ->
 
       val premises = approvedPremisesEntityFactory.produceAndPersist() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1560,9 +1564,7 @@ class PremisesTest : IntegrationTestBase() {
         withTotalBeds(20)
       }
 
-      val numBookings = 5
-
-      val bookings = bookingEntityFactory.produceAndPersistMultiple(numBookings) {
+      val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
         withNomsNumber("26")
         withPremises(premises)
         withBed(
@@ -1574,6 +1576,45 @@ class PremisesTest : IntegrationTestBase() {
             )
           },
         )
+      }
+
+      bookings.forEach {
+        ApDeliusContext_addCaseSummaryToBulkResponse(
+          CaseSummaryFactory()
+            .withCrn(it.crn)
+            .produce(),
+        )
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(it.crn)
+            .produce(),
+          user.deliusUsername,
+        )
+      }
+
+      val cancelledBooking = bookingEntityFactory.produceAndPersist() {
+        withNomsNumber("1234")
+        withPremises(premises)
+        withBed(null)
+      }
+
+      ApDeliusContext_addCaseSummaryToBulkResponse(
+        CaseSummaryFactory()
+          .withCrn(cancelledBooking.crn)
+          .produce(),
+      )
+      ApDeliusContext_addResponseToUserAccessCall(
+        CaseAccessFactory()
+          .withCrn(cancelledBooking.crn)
+          .produce(),
+        user.deliusUsername,
+      )
+
+      cancellationEntityFactory.produceAndPersist {
+        withBooking(cancelledBooking)
+        withYieldedReason {
+          cancellationReasonEntityFactory.produceAndPersist()
+        }
       }
 
       arrivalEntityFactory.produceAndPersist {
@@ -1640,6 +1681,12 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("$.bookings[4].person.crn").isEqualTo(bookings[4].crn)
         .jsonPath("$.bookings[4].bed.id").isEqualTo(bookings[4].bed!!.id.toString())
         .jsonPath("$.bookings[4].status").isEqualTo(BookingStatus.notMinusArrived.value)
+        .jsonPath("$.bookings[5].id").isEqualTo(cancelledBooking.id.toString())
+        .jsonPath("$.bookings[5].arrivalDate").isEqualTo(cancelledBooking.arrivalDate.toString())
+        .jsonPath("$.bookings[5].departureDate").isEqualTo(cancelledBooking.departureDate.toString())
+        .jsonPath("$.bookings[5].person.crn").isEqualTo(cancelledBooking.crn)
+        .jsonPath("$.bookings[5].bed").isEmpty
+        .jsonPath("$.bookings[5].status").isEqualTo(BookingStatus.cancelled.value)
         .jsonPath("$.dateCapacities").isArray
         .jsonPath("$.dateCapacities[0]").isNotEmpty
     }

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
@@ -8,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockServerErrorOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockServerErrorInmateDetailsCall
@@ -73,6 +76,17 @@ fun IntegrationTestBase.`Given an Offender`(
   ).produce()
 
   APDeliusContext_mockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
+
+  ApDeliusContext_addCaseSummaryToBulkResponse(
+    caseDetail.case,
+  )
+  ApDeliusContext_addResponseToUserAccessCall(
+    CaseAccessFactory()
+      .withCrn(offenderDetails.otherIds.crn)
+      .withUserExcluded(offenderDetails.currentExclusion)
+      .withUserRestricted(offenderDetails.currentRestriction)
+      .produce(),
+  )
 
   loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
 

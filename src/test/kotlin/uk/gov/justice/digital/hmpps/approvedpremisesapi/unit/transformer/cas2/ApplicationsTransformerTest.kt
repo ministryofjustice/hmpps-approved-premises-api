@@ -12,10 +12,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -39,13 +37,7 @@ class ApplicationsTransformerTest {
       mockPersonTransformer,
     )
 
-  private val user = UserEntityFactory()
-    .withYieldedProbationRegion {
-      ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-    }
-    .produce()
+  private val user = NomisUserEntityFactory().produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
 

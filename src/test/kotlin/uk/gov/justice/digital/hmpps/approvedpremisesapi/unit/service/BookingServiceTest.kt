@@ -119,12 +119,14 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.OffsetTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
 class BookingServiceTest {
   private val mockPremisesService = mockk<PremisesService>()
   private val mockStaffMemberService = mockk<StaffMemberService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockCruService = mockk<CruService>()
   private val mockApplicationService = mockk<ApplicationService>()
   private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
@@ -157,6 +159,7 @@ class BookingServiceTest {
     staffMemberService = mockStaffMemberService,
     offenderService = mockOffenderService,
     domainEventService = mockDomainEventService,
+    cas3DomainEventService = mockCas3DomainEventService,
     cruService = mockCruService,
     applicationService = mockApplicationService,
     workingDayCountService = mockWorkingDayCountService,
@@ -195,6 +198,7 @@ class BookingServiceTest {
     staffMemberService = mockStaffMemberService,
     offenderService = mockOffenderService,
     domainEventService = mockDomainEventService,
+    cas3DomainEventService = mockCas3DomainEventService,
     cruService = mockCruService,
     applicationService = mockApplicationService,
     workingDayCountService = mockWorkingDayCountService,
@@ -233,6 +237,7 @@ class BookingServiceTest {
     staffMemberService = mockStaffMemberService,
     offenderService = mockOffenderService,
     domainEventService = mockDomainEventService,
+    cas3DomainEventService = mockCas3DomainEventService,
     cruService = mockCruService,
     applicationService = mockApplicationService,
     workingDayCountService = mockWorkingDayCountService,
@@ -728,7 +733,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createDeparture returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application as Event Number is not present`() {
+  fun `createDeparture for an Approved Premises booking returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application as Event Number is not present`() {
     val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
@@ -792,7 +797,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createDeparture returns Success with correct result when validation passed, saves Domain Event when associated with Online Application`() {
+  fun `createDeparture for an Approved Premises booking returns Success with correct result when validation passed, saves Domain Event when associated with Online Application`() {
     val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
@@ -917,7 +922,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createDeparture does not emit domain event when associated with Application but arrivedAndDepartedDomainEventsDisabled is true`() {
+  fun `createDeparture for an Approved Premises booking does not emit domain event when associated with Application but arrivedAndDepartedDomainEventsDisabled is true`() {
     val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
     val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
     val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
@@ -1011,6 +1016,90 @@ class BookingServiceTest {
     }
   }
 
+  @Test
+  fun `createDeparture for a CAS3 booking returns Success with correct result when validation passed and saves a domain event`() {
+    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-22"))
+      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+          .withProbationRegion(probationRegion)
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .produce(),
+      )
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+
+    val reasonEntity = DepartureReasonEntityFactory()
+      .withServiceScope("temporary-accommodation")
+      .produce()
+    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
+      .withServiceScope("temporary-accommodation")
+      .produce()
+
+    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
+    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
+
+    every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+
+    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    every { mockCas3DomainEventService.savePersonDepartedEvent(any()) } just Runs
+
+    val result = bookingService.createDeparture(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+      reasonId = departureReasonId,
+      moveOnCategoryId = moveOnCategoryId,
+      destinationProviderId = null,
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.booking).isEqualTo(bookingEntity)
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+    assertThat(result.entity.destinationProvider).isEqualTo(null)
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 1) {
+      mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity)
+    }
+  }
+
   @Nested
   inner class CreateArrival {
     @Test
@@ -1085,7 +1174,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createArrival returns Success with correct result for Temporary Accommodation when validation passed`() {
+    fun `createArrival returns Success with correct result for CAS3 when validation passed and saves domain event`() {
       val bookingEntity = BookingEntityFactory()
         .withYieldedPremises {
           TemporaryAccommodationPremisesEntityFactory()
@@ -1102,6 +1191,7 @@ class BookingServiceTest {
 
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any()) } just Runs
 
       val result = bookingService.createArrival(
         booking = bookingEntity,
@@ -1122,6 +1212,10 @@ class BookingServiceTest {
       assertThat(result.entity.notes).isEqualTo("notes")
 
       verify(exactly = 0) { mockStaffMemberService.getStaffMemberByCode(any(), any()) }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity)
+      }
     }
   }
 
