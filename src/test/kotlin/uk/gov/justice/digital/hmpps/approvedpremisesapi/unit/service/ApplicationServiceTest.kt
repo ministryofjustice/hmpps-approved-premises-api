@@ -81,6 +81,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
@@ -105,6 +106,7 @@ class ApplicationServiceTest {
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
+  private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
   private val mockObjectMapper = mockk<ObjectMapper>()
 
   private val applicationService = ApplicationService(
@@ -123,6 +125,7 @@ class ApplicationServiceTest {
     mockEmailNotificationService,
     mockUserAccessService,
     NotifyConfig(),
+    mockAssessmentClarificationNoteTransformer,
     mockObjectMapper,
     "http://frontend/applications/#id",
   )
