@@ -42,8 +42,6 @@ interface ApplicationTimelinessEntityRepository : JpaRepository<ApplicationEntit
 }
 
 interface ApplicationTimelinessEntity {
-  var overallTimelinessInWorkingDays: Int?
-
   fun getId(): String
   fun getTier(): String?
   fun getApplicationSubmittedAt(): Timestamp?

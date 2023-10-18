@@ -16,7 +16,6 @@ data class MockApplicationTimelinessEntity(
   val mockBookingMadeAt: Timestamp?,
   val mockOverallTimeliness: Int?,
   val mockPlacementMatchingTimeliness: Int?,
-  override var overallTimelinessInWorkingDays: Int?,
 ) : ApplicationTimelinessEntity {
   override fun getId() = this.mockId
   override fun getTier() = this.mockTier
@@ -53,9 +52,6 @@ class ApplicationTimelinessEntityFactory : Factory<MockApplicationTimelinessEnti
   fun withPlacementMatchingTimeliness(placementMatchingTimeliness: Int?) = apply {
     this.placementMatchingTimeliness = { placementMatchingTimeliness }
   }
-  fun withOverallTimelinessInWorkingDays(overallTimelinessInWorkingDays: Int?) = apply {
-    this.overallTimelinessInWorkingDays = { overallTimelinessInWorkingDays }
-  }
 
   override fun produce() = MockApplicationTimelinessEntity(
     mockId = this.id(),
@@ -64,6 +60,5 @@ class ApplicationTimelinessEntityFactory : Factory<MockApplicationTimelinessEnti
     mockBookingMadeAt = this.bookingMadeAt(),
     mockOverallTimeliness = this.overallTimeliness(),
     mockPlacementMatchingTimeliness = this.placementMatchingTimeliness(),
-    overallTimelinessInWorkingDays = this.overallTimelinessInWorkingDays(),
   )
 }

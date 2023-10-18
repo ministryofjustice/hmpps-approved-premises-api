@@ -1,33 +1,50 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelinessEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationTimelinessDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 
 class PlacementMetricsReportGenerator(
-  private val applicationRows: List<ApplicationTimelinessEntity>,
+  applicationRows: List<ApplicationTimelinessEntity>,
   private val workingDayCountService: WorkingDayCountService,
 ) : ReportGenerator<TierCategory, PlacementMetricsReportRow, PlacementMetricsReportProperties>(PlacementMetricsReportRow::class) {
+  private val timelinessEntries: List<ApplicationTimelinessDto>
+
+  init {
+    timelinessEntries = applicationRows.map {
+      ApplicationTimelinessDto(
+        id = it.getId(),
+        tier = it.getTier(),
+        applicationSubmittedAt = it.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
+        bookingMadeAt = it.getBookingMadeAt()?.toLocalDateTime()?.toLocalDate(),
+        overallTimeliness = it.getOverallTimeliness(),
+        placementMatchingTimeliness = it.getPlacementMatchingTimeliness(),
+        overallTimelinessInWorkingDays = null,
+      )
+    }
+  }
+
   override fun filter(properties: PlacementMetricsReportProperties): (TierCategory) -> Boolean = {
     true
   }
 
   override val convert: TierCategory.(properties: PlacementMetricsReportProperties) -> List<PlacementMetricsReportRow> = {
     val applications = when (this) {
-      TierCategory.ALL -> applicationRows
-      TierCategory.NONE -> applicationRows.filter { row -> row.getTier() == null }
-      else -> applicationRows.filter { row -> row.getTier() == this.toString() }
+      TierCategory.ALL -> timelinessEntries
+      TierCategory.NONE -> timelinessEntries.filter { row -> row.tier == null }
+      else -> timelinessEntries.filter { row -> row.tier == this.toString() }
     }
 
-    val successfulRequests = applications.filter { row -> row.getBookingMadeAt() !== null }
-    val averageTimeliness = successfulRequests.map { row -> row.getOverallTimeliness()!! }.average()
-    val averagePlacementMatchingTimeliness = successfulRequests.map { row -> row.getPlacementMatchingTimeliness()!! }.average()
+    val successfulRequests = applications.filter { row -> row.bookingMadeAt !== null }
+    val averageTimeliness = successfulRequests.map { row -> row.overallTimeliness!! }.average()
+    val averagePlacementMatchingTimeliness = successfulRequests.map { row -> row.placementMatchingTimeliness!! }.average()
 
     successfulRequests.map { row ->
-      val start = row.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate()
-      val end = row.getBookingMadeAt()?.toLocalDateTime()?.toLocalDate()
+      val start = row.applicationSubmittedAt
+      val end = row.bookingMadeAt
 
       if (start != null && end != null) {
         row.overallTimelinessInWorkingDays = workingDayCountService.getWorkingDaysCount(
@@ -50,7 +67,7 @@ class PlacementMetricsReportGenerator(
         },
         averageTimeliness = String.format("%.1f days", averageTimeliness),
         averagePlacementMatchingTimeliness = String.format("%.1f days", averagePlacementMatchingTimeliness),
-        timelinessSameDayAdmission = successfulRequests.count { it.getOverallTimeliness() == 0 },
+        timelinessSameDayAdmission = successfulRequests.count { it.overallTimeliness == 0 },
         timeliness1To2WorkingDays = countDifferenceInWorkingDays(successfulRequests, 1, 2),
         timeliness3To5WorkingDays = countDifferenceInWorkingDays(successfulRequests, 3, 4),
         timeliness8To15CalendarDays = countDifferenceInCalendarDays(successfulRequests, 8, 15),
@@ -62,16 +79,16 @@ class PlacementMetricsReportGenerator(
         timeliness151To180CalendarDays = countDifferenceInCalendarDays(successfulRequests, 151, 180),
         timeliness181To275CalendarDays = countDifferenceInCalendarDays(successfulRequests, 181, 275),
         timeliness276To365CalendarDays = countDifferenceInCalendarDays(successfulRequests, 276, 365),
-        timeliness366PlusCalendarDays = successfulRequests.count { it.getOverallTimeliness() != null && it.getOverallTimeliness()!! >= 366 },
+        timeliness366PlusCalendarDays = successfulRequests.count { it.overallTimeliness != null && it.overallTimeliness >= 366 },
       ),
     )
   }
 
-  private fun countDifferenceInWorkingDays(requests: List<ApplicationTimelinessEntity>, lowerBounds: Int, upperBounds: Int) = requests.count {
+  private fun countDifferenceInWorkingDays(requests: List<ApplicationTimelinessDto>, lowerBounds: Int, upperBounds: Int) = requests.count {
     it.overallTimelinessInWorkingDays in lowerBounds..upperBounds
   }
 
-  private fun countDifferenceInCalendarDays(requests: List<ApplicationTimelinessEntity>, lowerBounds: Int, upperBounds: Int) = requests.count {
-    it.getOverallTimeliness() in lowerBounds..upperBounds
+  private fun countDifferenceInCalendarDays(requests: List<ApplicationTimelinessDto>, lowerBounds: Int, upperBounds: Int) = requests.count {
+    it.overallTimeliness in lowerBounds..upperBounds
   }
 }
