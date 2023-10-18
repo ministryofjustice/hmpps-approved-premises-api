@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
@@ -215,6 +217,33 @@ class DomainEventBuilder(
           applicationId = application?.id,
           applicationUrl = application.toUrl(),
           reasonDetail = null,
+        ),
+      ),
+    )
+  }
+
+  fun getReferralSubmittedDomainEvent(
+    application: TemporaryAccommodationApplicationEntity,
+  ): DomainEvent<CAS3ReferralSubmittedEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application.id,
+      bookingId = null,
+      crn = application.crn,
+      occurredAt = application.createdAt.toInstant(),
+      data = CAS3ReferralSubmittedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.referralSubmitted,
+        eventDetails = CAS3ReferralSubmittedEventDetails(
+          personReference = PersonReference(
+            crn = application.crn,
+            noms = application.nomsNumber,
+          ),
+          applicationId = application.id,
+          applicationUrl = application.toUrl()!!,
         ),
       ),
     )
