@@ -80,6 +80,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
@@ -92,6 +93,7 @@ import java.util.UUID
 class ApplicationServiceTest {
   private val mockUserRepository = mockk<UserRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
+  private val applicationsTransformerMock = mockk<ApplicationsTransformer>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
@@ -108,6 +110,7 @@ class ApplicationServiceTest {
   private val applicationService = ApplicationService(
     mockUserRepository,
     mockApplicationRepository,
+    applicationsTransformerMock,
     mockJsonSchemaService,
     mockOffenderService,
     mockUserService,

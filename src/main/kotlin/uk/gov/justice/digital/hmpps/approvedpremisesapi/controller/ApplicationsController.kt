@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -197,6 +199,15 @@ class ApplicationsController(
     )
 
     return ResponseEntity.ok(Unit)
+  }
+
+  override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName): ResponseEntity<List<TimelineEvent>> {
+    val user = userService.getUserForRequest()
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(UserRole.CAS1_ADMIN, UserRole.CAS1_WORKFLOW_MANAGER)) {
+      throw ForbiddenProblem()
+    }
+    val events = applicationService.getApplicationTimeline(applicationId)
+    return ResponseEntity(applicationsTransformer.transformTimelineToApi(events), HttpStatus.OK)
   }
 
   override fun applicationsApplicationIdSubmissionPost(

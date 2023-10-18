@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
@@ -26,6 +27,9 @@ import javax.persistence.Table
 
 @Repository
 interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
+
+  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary(cast(d.id as string), d.type, d.occurredAt)  FROM DomainEventEntity d WHERE d.applicationId = :applicationId")
+  fun findAllTimelineEventsByApplicationId(applicationId: UUID): List<DomainEventSummary>
 
   @Query(
     "SELECT * FROM domain_events domain_event " +

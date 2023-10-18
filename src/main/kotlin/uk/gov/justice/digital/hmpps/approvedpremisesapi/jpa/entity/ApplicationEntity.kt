@@ -59,6 +59,9 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
 
+  @Query("SELECT a.assessments FROM ApplicationEntity a WHERE a.id = :applicationId")
+  fun findAllAssessmentsById(applicationId: UUID): MutableList<AssessmentEntity>
+
   @Query("SELECT a FROM ApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   fun findByIdOrNullWithWriteLock(id: UUID): ApplicationEntity?

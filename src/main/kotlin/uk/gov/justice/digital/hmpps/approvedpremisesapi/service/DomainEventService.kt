@@ -183,6 +183,8 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
+  fun getAllDomainEventsForApplication(applicationId: UUID) = domainEventRepository.findAllTimelineEventsByApplicationId(applicationId)
+
   private fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     typeName: String,
