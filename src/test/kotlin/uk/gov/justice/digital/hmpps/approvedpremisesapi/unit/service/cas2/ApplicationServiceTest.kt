@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -9,8 +11,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
@@ -36,8 +39,8 @@ class ApplicationServiceTest {
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<NomisUserService>()
-  private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockUserAccessService = mockk<UserAccessService>()
+  private val mockDomainEventService = mockk<DomainEventService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService(
@@ -47,6 +50,7 @@ class ApplicationServiceTest {
     mockOffenderService,
     mockUserService,
     mockUserAccessService,
+    mockDomainEventService,
     mockObjectMapper,
     "http://frontend/applications/#id",
   )
@@ -392,6 +396,7 @@ class ApplicationServiceTest {
     @BeforeEach
     fun setup() {
       every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
+      every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
     }
 
     @Test
@@ -530,6 +535,19 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.crn).isEqualTo(application.crn)
 
       verify { mockApplicationRepository.save(any()) }
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+          match {
+            val data = (it.data as Cas2ApplicationSubmittedEvent).eventDetails
+
+            it.applicationId == application.id &&
+              data.personReference.noms == application.nomsNumber &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.submittedBy.staffMember.username == username
+          },
+        )
+      }
     }
   }
 
