@@ -324,6 +324,7 @@ class ApplicationService(
             isDutyToReferSubmitted = null,
             dutyToReferSubmissionDate = null,
             isEligible = null,
+            eligibilityReason = null,
           ),
         )
 
@@ -670,6 +671,7 @@ class ApplicationService(
       isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted
       dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate
       isEligible = submitApplication.isApplicationEligible
+      eligibilityReason = submitApplication.eligibilityReason
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData ?: {})
