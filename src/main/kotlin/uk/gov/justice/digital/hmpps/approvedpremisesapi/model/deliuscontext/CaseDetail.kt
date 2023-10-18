@@ -16,7 +16,7 @@ data class CaseSummary(
   val name: Name,
   val dateOfBirth: LocalDate,
   val gender: String?,
-  val profile: Profile,
+  val profile: Profile?,
   val manager: Manager,
   val currentExclusion: Boolean?,
   val currentRestriction: Boolean?,
@@ -52,7 +52,7 @@ data class Profile(
 
 data class Offence(
   val description: String,
-  val date: LocalDate,
+  val date: LocalDate?,
   val main: Boolean,
   val eventNumber: String,
 )
@@ -63,10 +63,10 @@ data class Registration(
 )
 
 data class MappaDetail(
-  val level: Int,
-  val levelDescription: String,
-  val category: Int,
-  val categoryDescription: String,
+  val level: Int?,
+  val levelDescription: String?,
+  val category: Int?,
+  val categoryDescription: String?,
   val startDate: LocalDate,
   val lastUpdated: ZonedDateTime,
 )

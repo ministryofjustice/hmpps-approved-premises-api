@@ -50,10 +50,10 @@ class PersonTransformer {
       sex = personInfoResult.summary.gender ?: "Not Found",
       status = FullPerson.Status.unknown,
       nomsNumber = personInfoResult.summary.nomsId,
-      ethnicity = personInfoResult.summary.profile.ethnicity,
-      nationality = personInfoResult.summary.profile.nationality,
-      religionOrBelief = personInfoResult.summary.profile.religion,
-      genderIdentity = personInfoResult.summary.profile.genderIdentity,
+      ethnicity = personInfoResult.summary.profile?.ethnicity,
+      nationality = personInfoResult.summary.profile?.nationality,
+      religionOrBelief = personInfoResult.summary.profile?.religion,
+      genderIdentity = personInfoResult.summary.profile?.genderIdentity,
       prisonName = null,
     )
     is PersonSummaryInfoResult.Success.Restricted -> RestrictedPerson(
