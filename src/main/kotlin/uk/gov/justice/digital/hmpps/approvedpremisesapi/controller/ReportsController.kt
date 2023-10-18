@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -136,6 +137,23 @@ class ReportsController(
     year: Int,
     month: Int,
   ) = getReferralReport(xServiceName, year, month, ApTypeCategory.entries)
+
+  override fun reportsPlacementMetricsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<Resource> {
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
+    }
+
+    if (xServiceName !== ServiceName.approvedPremises) {
+      throw NotAllowedProblem("This endpoint only supports CAS1")
+    }
+
+    val properties = PlacementMetricsReportProperties(year, month)
+    val outputStream = ByteArrayOutputStream()
+
+    reportService.createPlacementMetricsReport(properties, outputStream)
+
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
 
   private fun <T : Any> getReferralReport(xServiceName: ServiceName, year: Int, month: Int, categories: List<T>): ResponseEntity<Resource> {
     if (!userAccessService.currentUserCanViewReport()) {
