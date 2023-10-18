@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
@@ -79,6 +80,67 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class GetToIndex {
+
+    @Test
+    fun `Assessor can view ALL applications`() {
+      `Given a CAS2 Assessor` { _externalUserEntity, jwt ->
+        `Given a CAS2 User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+            }
+
+            val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(otherUser)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+            Assertions.assertThat(responseBody).anyMatch {
+              cas2ApplicationEntity.id == it.id &&
+                cas2ApplicationEntity.crn == it.person.crn &&
+                cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
+                cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+            }
+
+            Assertions.assertThat(responseBody).anyMatch {
+              otherCas2ApplicationEntity.id == it.id &&
+                otherCas2ApplicationEntity.crn == it.person.crn &&
+                otherCas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                otherCas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
+                otherCas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+            }
+          }
+        }
+      }
+    }
+
     @Test
     fun `Get all applications returns 200 with correct body`() {
       `Given a CAS2 User` { userEntity, jwt ->

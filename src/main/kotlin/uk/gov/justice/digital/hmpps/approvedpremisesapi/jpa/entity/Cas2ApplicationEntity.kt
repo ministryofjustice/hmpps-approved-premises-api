@@ -34,6 +34,20 @@ WHERE a.created_by_user_id = :userId
   fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID):
     List<Cas2ApplicationSummary>
 
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt
+FROM cas_2_applications a
+""",
+    nativeQuery = true,
+  )
+  fun findAllCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
+
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
   fun findAllByCreatedByUser_Id(id: UUID): List<Cas2ApplicationEntity>
 

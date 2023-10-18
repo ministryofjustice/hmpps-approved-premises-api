@@ -45,6 +45,10 @@ class ApplicationService(
     return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
   }
 
+  fun getAllApplicationsForAssessor(): List<Cas2ApplicationSummary> {
+    return applicationRepository.findAllCas2ApplicationSummaries()
+  }
+
   fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
