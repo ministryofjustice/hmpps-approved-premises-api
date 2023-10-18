@@ -35,6 +35,7 @@ generic-service:
     SENTRY_ENVIRONMENT: prod
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 300
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
+    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: false
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: false
     PREEMPTIVE-CACHE-LOGGING-ENABLED: true
     NOTIFY_MODE: ENABLED
@@ -54,6 +55,7 @@ generic-service:
     URL-TEMPLATES_API_CAS1_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-cancelled/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-CHANGED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-changed/#eventId
     URL-TEMPLATES_API_CAS1_APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-withdrawn/#eventId
+    URL-TEMPLATES_API_CAS2_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas2/application-submitted/#eventId
     URL-TEMPLATES_API_CAS3_APPLICATION: https://approved-premises-api.hmpps.service.justice.gov.uk/applications/#applicationId
     URL-TEMPLATES_API_CAS3_BOOKING: https://approved-premises-api.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled/#eventId

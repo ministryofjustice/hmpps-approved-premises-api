@@ -52,6 +52,8 @@ hmpps.sqs:
 domain-events:
   cas1:
     emit-enabled: true
+  cas2:
+    emit-enabled: true
   cas3:
     emit-enabled: true
 
@@ -125,6 +127,8 @@ url-templates:
       booking-cancelled-event-detail: http://api/events/booking-cancelled/#eventId
       booking-changed-event-detail: http://api/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
+    cas2:
+      application-submitted-event-detail: http://api/events/cas2/application-submitted/#eventId
     cas3:
       application: http://api/applications/#applicationId
       booking: http://api/premises/#premisesId/bookings/#bookingId
