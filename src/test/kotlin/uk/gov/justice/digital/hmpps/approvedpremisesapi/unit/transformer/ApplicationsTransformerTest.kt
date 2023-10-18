@@ -9,6 +9,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -703,5 +705,13 @@ class ApplicationsTransformerTest {
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
     assertThat(result.risks).isNotNull
+  }
+
+  @Test
+  fun `transformDomainEventTypeToTimelineEventType throws error if given CAS2 domain event type`() {
+    val cas2DomainEventType = DomainEventType.CAS2_APPLICATION_SUBMITTED
+
+    val exception = assertThrows<RuntimeException> { applicationsTransformer.transformDomainEventTypeToTimelineEventType(cas2DomainEventType) }
+    assertThat(exception.message).isEqualTo("Only CAS1 is currently supported")
   }
 }
