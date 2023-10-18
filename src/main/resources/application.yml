@@ -211,6 +211,7 @@ url-templates:
       booking-provisionally-made-event-detail: http://localhost:3000/events/cas3/booking-provisionally-made/#eventId
       person-arrived-event-detail: http://localhost:3000/events/cas3/person-arrived/#eventId
       person-departed-event-detail: http://localhost:3000/events/cas3/person-departed/#eventId
+      referral-submitted-event-detail: http://localhost:3000/events/cas3/referral-submitted/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id

@@ -45,6 +45,7 @@ class DomainEventService(
   @Value("\${url-templates.api.cas3.booking-provisionally-made-event-detail") private val bookingProvisionallyMadeDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-departed-event-detail") private val personDepartedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.referral-submitted-event-detail") private val referralSubmittedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

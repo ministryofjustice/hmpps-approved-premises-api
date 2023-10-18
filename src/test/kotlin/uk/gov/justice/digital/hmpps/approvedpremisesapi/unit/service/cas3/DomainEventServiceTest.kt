@@ -66,6 +66,7 @@ class DomainEventServiceTest {
     bookingProvisionallyMadeDetailUrlTemplate = "http://api/events/cas3/booking-provisionally-made/#eventId",
     personArrivedDetailUrlTemplate = "http://api/events/cas3/person-arrived/#eventId",
     personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
+    referralSubmittedDetailUrlTemplate = "http://api/events/cas3/referral-submitted/#eventId",
   )
 
   @Test
