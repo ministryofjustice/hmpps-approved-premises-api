@@ -49,6 +49,57 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class ControlsOnExternalUsers {
+    @Test
+    fun `creating an application is forbidden to external users based on role`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_CAS2_ASSESSOR"),
+      )
+
+      webTestClient.post()
+        .uri("/cas2/applications")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `updating an application is forbidden to external users based on role`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_CAS2_ASSESSOR"),
+      )
+
+      webTestClient.put()
+        .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `submitting an application is forbidden to external users based on role`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_CAS2_ASSESSOR"),
+      )
+
+      webTestClient.post()
+        .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd/submission")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Nested
   inner class MissingJwt {
     @Test
     fun `Get all applications without JWT returns 401`() {
