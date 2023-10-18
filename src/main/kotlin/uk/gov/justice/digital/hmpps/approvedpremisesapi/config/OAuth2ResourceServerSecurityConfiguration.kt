@@ -106,6 +106,10 @@ class AuthAwareTokenConverter() : Converter<Jwt, AbstractAuthenticationToken> {
     return AuthAwareAuthenticationToken(jwt, principal, authorities)
   }
 
+  private fun extractAuthSource(claims: Map<String, Any?>): String {
+    return claims[CLAIM_AUTH_SOURCE] as String
+  }
+
   private fun findPrincipal(claims: Map<String, Any?>): String {
     return if (claims.containsKey(CLAIM_USERNAME)) {
       claims[CLAIM_USERNAME] as String
@@ -135,6 +139,7 @@ class AuthAwareTokenConverter() : Converter<Jwt, AbstractAuthenticationToken> {
   companion object {
     const val CLAIM_USERNAME = "user_name"
     const val CLAIM_USER_ID = "user_id"
+    const val CLAIM_AUTH_SOURCE = "auth_source"
     const val CLAIM_CLIENT_ID = "client_id"
     const val CLAIM_AUTHORITY = "authorities"
   }
@@ -145,8 +150,15 @@ class AuthAwareAuthenticationToken(
   private val aPrincipal: String,
   authorities: Collection<GrantedAuthority>,
 ) : JwtAuthenticationToken(jwt, authorities) {
+
+  private val jwt = jwt
+
   override fun getPrincipal(): String {
     return aPrincipal
+  }
+
+  fun isExternalUser(): Boolean {
+    return jwt.claims["auth_source"] == "auth"
   }
 }
 
