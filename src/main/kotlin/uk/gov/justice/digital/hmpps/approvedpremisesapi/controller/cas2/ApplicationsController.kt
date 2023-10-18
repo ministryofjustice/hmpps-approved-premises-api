@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -42,7 +41,6 @@ class ApplicationsController(
   private val offenderService: OffenderService,
   private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun applicationsGet(): ResponseEntity<List<ApplicationSummary>> {
     val user = userService.getUserForRequest()
