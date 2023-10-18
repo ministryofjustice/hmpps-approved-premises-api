@@ -129,6 +129,7 @@ url-templates:
       application: http://api/applications/#applicationId
       booking: http://api/premises/#premisesId/bookings/#bookingId
       booking-cancelled-event-detail: http://api/events/cas3/booking-cancelled/#eventId
+      booking-confirmed-event-detail: http://api/events/cas3/booking-confirmed/#eventId
       booking-provisionally-made-event-detail: http://api/events/cas3/booking-provisionally-made/#eventId
       person-arrived-event-detail: http://api/events/cas3/person-arrived/#eventId
       person-departed-event-detail: http://api/events/cas3/person-departed/#eventId
