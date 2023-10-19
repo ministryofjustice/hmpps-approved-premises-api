@@ -2224,6 +2224,50 @@ class BookingServiceTest {
   }
 
   @Test
+  fun `createCancellation returns Success with correct result and emits a domain event for CAS3`() {
+    val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+
+    val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+    every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+    every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+
+    every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+
+    val result = bookingService.createCancellation(
+      booking = bookingEntity,
+      cancelledAt = LocalDate.parse("2022-08-25"),
+      reasonId = reasonId,
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(result.entity.reason).isEqualTo(reasonEntity)
+    assertThat(result.entity.notes).isEqualTo("notes")
+
+    verify(exactly = 1) {
+      mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+    }
+  }
+
+  @Test
   fun `createExtension returns Success with correct result when an Approved Premises booking has a new departure date before the existing departure date`() {
     val premises = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
