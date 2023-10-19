@@ -46,7 +46,6 @@ generic-service:
     URL-TEMPLATES_API_CAS1_APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/application-withdrawn/#eventId
     URL-TEMPLATES_API_CAS3_APPLICATION: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/applications/#applicationId
     URL-TEMPLATES_API_CAS3_BOOKING: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
-    URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled/#eventId
     URL-TEMPLATES_API_CAS3_BOOKING-PROVISIONALLY-MADE-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas3/booking-provisionally-made/#eventId
     URL-TEMPLATES_API_CAS3_PERSON-ARRIVED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas3/person-arrived/#eventId
     URL-TEMPLATES_API_CAS3_PERSON-DEPARTED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas3/person-departed/#eventId

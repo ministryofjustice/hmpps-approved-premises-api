@@ -2,12 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3BookingCancelledEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3BookingProvisionallyMadeEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3PersonArrivedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3PersonDepartedEventDetailsFactory
@@ -17,63 +15,6 @@ import java.time.Instant
 import java.util.UUID
 
 class DomainEventTest : IntegrationTestBase() {
-  @Test
-  fun `Get 'booking cancelled' event without JWT returns 401`() {
-    webTestClient.get()
-      .uri("/events/cas3/booking-cancelled/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `Get 'booking cancelled' event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
-    val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username",
-    )
-
-    webTestClient.get()
-      .uri("/events/cas3/booking-cancelled/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `Get 'booking cancelled' event returns 200 with correct body`() {
-    val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username",
-      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
-    )
-
-    val eventId = UUID.randomUUID()
-
-    val envelopedData = CAS3BookingCancelledEvent(
-      id = eventId,
-      timestamp = Instant.now(),
-      eventType = EventType.bookingCancelled,
-      eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
-    )
-
-    val event = domainEventFactory.produceAndPersist {
-      withId(eventId)
-      withType(DomainEventType.CAS3_BOOKING_CANCELLED)
-      withData(objectMapper.writeValueAsString(envelopedData))
-    }
-
-    val response = webTestClient.get()
-      .uri("/events/cas3/booking-cancelled/${event.id}")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody(CAS3BookingCancelledEvent::class.java)
-      .returnResult()
-
-    assertThat(response.responseBody).isEqualTo(envelopedData)
-  }
-
   @Test
   fun `Get 'booking provisionally made' event without JWT returns 401`() {
     webTestClient.get()
