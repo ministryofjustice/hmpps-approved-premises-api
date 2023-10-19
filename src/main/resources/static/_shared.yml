@@ -683,6 +683,8 @@ components:
                 - Unknown
             prisonName:
               type: string
+            isRestricted:
+              type: boolean
           required:
             - name
             - dateOfBirth

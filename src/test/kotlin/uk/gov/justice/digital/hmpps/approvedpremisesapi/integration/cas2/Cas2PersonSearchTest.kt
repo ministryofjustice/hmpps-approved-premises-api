@@ -129,6 +129,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                 religionOrBelief = "Judaism",
                 genderIdentity = "This is a self described identity",
                 prisonName = "HMP Bristol",
+                isRestricted = false,
               ),
             ),
           )
@@ -176,6 +177,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                 religionOrBelief = "Judaism",
                 genderIdentity = "This is a self described identity",
                 prisonName = null,
+                isRestricted = false,
               ),
             ),
           )

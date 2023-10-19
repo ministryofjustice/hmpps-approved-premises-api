@@ -30,6 +30,7 @@ class PersonTransformer {
       prisonName = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus).takeIf { it == FullPerson.Status.inCustody }?.let {
         personInfoResult.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfoResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
+      isRestricted = (personInfoResult.offenderDetailSummary.currentExclusion || personInfoResult.offenderDetailSummary.currentRestriction),
     )
     is PersonInfoResult.Success.Restricted -> RestrictedPerson(
       type = PersonType.restrictedPerson,
@@ -55,6 +56,7 @@ class PersonTransformer {
       religionOrBelief = personInfoResult.summary.profile?.religion,
       genderIdentity = personInfoResult.summary.profile?.genderIdentity,
       prisonName = null,
+      isRestricted = (personInfoResult.summary.currentRestriction == true || personInfoResult.summary.currentExclusion == true),
     )
     is PersonSummaryInfoResult.Success.Restricted -> RestrictedPerson(
       type = PersonType.restrictedPerson,
