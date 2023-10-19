@@ -1026,6 +1026,7 @@ class ApplicationServiceTest {
       isDutyToReferSubmitted = true,
       dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
       isApplicationEligible = true,
+      eligibilityReason = "homelessFromApprovedPremises",
     )
 
     private val submitCas2Application = SubmitCas2Application(
@@ -1465,6 +1466,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.isDutyToReferSubmitted).isEqualTo(true)
       assertThat(persistedApplication.dutyToReferSubmissionDate).isEqualTo(LocalDate.now().minusDays(7))
       assertThat(persistedApplication.isEligible).isEqualTo(true)
+      assertThat(persistedApplication.eligibilityReason).isEqualTo("homelessFromApprovedPremises")
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!) }

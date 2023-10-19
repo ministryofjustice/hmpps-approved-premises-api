@@ -43,6 +43,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var isDutyToReferSubmitted: Yielded<Boolean?> = { null }
   private var dutyToReferSubmissionDate: Yielded<LocalDate?> = { null }
   private var isEligible: Yielded<Boolean?> = { null }
+  private var eligibilityReason: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -140,6 +141,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.isEligible = { isEligible }
   }
 
+  fun withEligiblilityReason(eligibilityReason: String?) = apply {
+    this.eligibilityReason = { eligibilityReason }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -164,5 +169,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     isDutyToReferSubmitted = this.isDutyToReferSubmitted(),
     dutyToReferSubmissionDate = this.dutyToReferSubmissionDate(),
     isEligible = this.isEligible(),
+    eligibilityReason = this.eligibilityReason(),
   )
 }
