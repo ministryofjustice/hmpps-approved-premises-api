@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
@@ -40,8 +38,6 @@ class DomainEventService(
   private val domainEventBuilder: DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
-  @Value("\${url-templates.api.cas3.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.booking-confirmed-event-detail") private val bookingConfirmedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.booking-provisionally-made-event-detail") private val bookingProvisionallyMadeDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-departed-event-detail") private val personDepartedDetailUrlTemplate: String,
@@ -52,10 +48,6 @@ class DomainEventService(
     hmppsQueueService.findByTopicId("domainevents")
       ?: throw MissingTopicException("domainevents not found")
   }
-
-  fun getBookingCancelledEvent(id: UUID) = get<CAS3BookingCancelledEvent>(id)
-
-  fun getBookingConfirmedEvent(id: UUID) = get<CAS3BookingConfirmedEvent>(id)
 
   fun getBookingProvisionallyMadeEvent(id: UUID) = get<CAS3BookingProvisionallyMadeEvent>(id)
 
@@ -78,34 +70,6 @@ class DomainEventService(
       crn = domainEventEntity.crn,
       occurredAt = domainEventEntity.occurredAt.toInstant(),
       data = data,
-    )
-  }
-
-  @Transactional
-  fun saveBookingCancelledEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingCancelledDomainEvent(booking)
-
-    saveAndEmit(
-      domainEvent = domainEvent,
-      typeName = "accommodation.cas3.booking.cancelled",
-      typeDescription = "A booking for a Transitional Accommodation premises has been cancelled",
-      detailUrl = bookingCancelledDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-    )
-  }
-
-  @Transactional
-  fun saveBookingConfirmedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingConfirmedDomainEvent(booking)
-
-    saveAndEmit(
-      domainEvent = domainEvent,
-      typeName = "accommodation.cas3.booking.confirmed",
-      typeDescription = "A booking has been confirmed for a Transitional Accommodation premises",
-      detailUrl = bookingConfirmedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
   }
 
@@ -211,8 +175,6 @@ class DomainEventService(
   }
 
   private fun <T : CAS3Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
-    CAS3BookingCancelledEvent::class -> DomainEventType.CAS3_BOOKING_CANCELLED
-    CAS3BookingConfirmedEvent::class -> DomainEventType.CAS3_BOOKING_CONFIRMED
     CAS3BookingProvisionallyMadeEvent::class -> DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE
     CAS3PersonArrivedEvent::class -> DomainEventType.CAS3_PERSON_ARRIVED
     CAS3PersonDepartedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTED

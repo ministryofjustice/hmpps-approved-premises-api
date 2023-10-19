@@ -2,10 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEventDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
@@ -29,73 +25,6 @@ class DomainEventBuilder(
   @Value("\${url-templates.api.cas3.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.api.cas3.booking}") private val bookingUrlTemplate: String,
 ) {
-  fun getBookingCancelledDomainEvent(
-    booking: BookingEntity,
-  ): DomainEvent<CAS3BookingCancelledEvent> {
-    val domainEventId = UUID.randomUUID()
-
-    val cancellation = booking.cancellation!!
-    val application = booking.application as? TemporaryAccommodationApplicationEntity
-
-    return DomainEvent(
-      id = domainEventId,
-      applicationId = application?.id,
-      bookingId = booking.id,
-      crn = booking.crn,
-      occurredAt = cancellation.createdAt.toInstant(),
-      data = CAS3BookingCancelledEvent(
-        id = domainEventId,
-        timestamp = Instant.now(),
-        eventType = EventType.bookingCancelled,
-        eventDetails = CAS3BookingCancelledEventDetails(
-          applicationId = application?.id,
-          applicationUrl = application.toUrl(),
-          bookingId = booking.id,
-          bookingUrl = booking.toUrl(),
-          personReference = PersonReference(
-            crn = booking.crn,
-            noms = booking.nomsNumber,
-          ),
-          cancellationReason = cancellation.reason.name,
-          cancellationContext = cancellation.notes,
-        ),
-      ),
-    )
-  }
-
-  fun getBookingConfirmedDomainEvent(
-    booking: BookingEntity,
-  ): DomainEvent<CAS3BookingConfirmedEvent> {
-    val domainEventId = UUID.randomUUID()
-
-    val application = booking.application as? TemporaryAccommodationApplicationEntity
-
-    return DomainEvent(
-      id = domainEventId,
-      applicationId = application?.id,
-      bookingId = booking.id,
-      crn = booking.crn,
-      occurredAt = booking.createdAt.toInstant(),
-      data = CAS3BookingConfirmedEvent(
-        id = domainEventId,
-        timestamp = Instant.now(),
-        eventType = EventType.bookingConfirmed,
-        eventDetails = CAS3BookingConfirmedEventDetails(
-          applicationId = application?.id,
-          applicationUrl = application.toUrl(),
-          bookingId = booking.id,
-          bookingUrl = booking.toUrl(),
-          personReference = PersonReference(
-            crn = booking.crn,
-            noms = booking.nomsNumber,
-          ),
-          expectedArrivedAt = booking.arrivalDate.atStartOfDay().toInstant(ZoneOffset.UTC),
-          notes = "",
-        ),
-      ),
-    )
-  }
-
   fun getBookingProvisionallyMadeDomainEvent(
     booking: BookingEntity,
   ): DomainEvent<CAS3BookingProvisionallyMadeEvent> {
