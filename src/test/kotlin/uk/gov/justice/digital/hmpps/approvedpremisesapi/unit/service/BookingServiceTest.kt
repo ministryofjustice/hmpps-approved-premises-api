@@ -2261,6 +2261,7 @@ class BookingServiceTest {
     assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
     assertThat(result.entity.reason).isEqualTo(reasonEntity)
     assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(bookingEntity.cancellations).contains(result.entity)
 
     verify(exactly = 1) {
       mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
@@ -2685,6 +2686,7 @@ class BookingServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
     assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(bookingEntity.confirmation).isEqualTo(result.entity)
 
     verify(exactly = 1) {
       mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity)

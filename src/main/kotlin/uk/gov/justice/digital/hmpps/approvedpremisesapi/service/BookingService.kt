@@ -1158,6 +1158,8 @@ class BookingService(
       ),
     )
 
+    booking.cancellations += cancellationEntity
+
     cas3DomainEventService.saveBookingCancelledEvent(booking)
 
     return success(cancellationEntity)
@@ -1181,6 +1183,8 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
+
+    booking.confirmation = confirmationEntity
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
       cas3DomainEventService.saveBookingConfirmedEvent(booking)
