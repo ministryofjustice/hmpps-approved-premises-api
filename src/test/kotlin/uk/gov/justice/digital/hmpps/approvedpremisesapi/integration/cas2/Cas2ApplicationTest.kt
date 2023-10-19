@@ -133,9 +133,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class GetToIndex {
 
     @Test
-    fun `Assessor can view ALL applications`() {
+    fun `Assessor can view ALL submitted applications`() {
       `Given a CAS2 Assessor` { _externalUserEntity, jwt ->
-        `Given a CAS2 User` { otherUser, _ ->
+        `Given a CAS2 User` { user, _ ->
           `Given an Offender` { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -144,19 +144,23 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withId(UUID.randomUUID())
             }
 
-            val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(otherUser)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-            }
+            val submittedCas2ApplicationEntity = cas2ApplicationEntityFactory
+              .produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(user)
+                withCrn(offenderDetails.otherIds.crn)
+                withSubmittedAt(OffsetDateTime.parse("2023-01-01T09:00:00+01:00"))
+                withData("{}")
+              }
 
-            val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(otherUser)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-            }
+            val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
+              .produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(user)
+                withCrn(offenderDetails.otherIds.crn)
+                withSubmittedAt(null)
+                withData("{}")
+              }
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/applications")
@@ -173,19 +177,15 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             Assertions.assertThat(responseBody).anyMatch {
-              cas2ApplicationEntity.id == it.id &&
-                cas2ApplicationEntity.crn == it.person.crn &&
-                cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-                cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
-                cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+              submittedCas2ApplicationEntity.id == it.id &&
+                submittedCas2ApplicationEntity.crn == it.person.crn &&
+                submittedCas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                submittedCas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
+                submittedCas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
             }
 
-            Assertions.assertThat(responseBody).anyMatch {
-              otherCas2ApplicationEntity.id == it.id &&
-                otherCas2ApplicationEntity.crn == it.person.crn &&
-                otherCas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-                otherCas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
-                otherCas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+            Assertions.assertThat(responseBody).noneMatch {
+              inProgressCas2ApplicationEntity.id == it.id
             }
           }
         }

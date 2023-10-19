@@ -45,8 +45,8 @@ class ApplicationService(
     return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
   }
 
-  fun getAllApplicationsForAssessor(): List<Cas2ApplicationSummary> {
-    return applicationRepository.findAllCas2ApplicationSummaries()
+  fun getAllSubmittedApplicationsForAssessor(): List<Cas2ApplicationSummary> {
+    return applicationRepository.findAllSubmittedCas2ApplicationSummaries()
   }
 
   fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<Cas2ApplicationEntity> {

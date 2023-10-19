@@ -49,7 +49,7 @@ class ApplicationsController(
 
     return if (authenticatedPrincipal.isExternalUser()) {
       ensureExternalUserPersisted()
-      val applications = applicationService.getAllApplicationsForAssessor()
+      val applications = applicationService.getAllSubmittedApplicationsForAssessor()
       ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it) })
     } else {
       val user = userService.getUserForRequest()

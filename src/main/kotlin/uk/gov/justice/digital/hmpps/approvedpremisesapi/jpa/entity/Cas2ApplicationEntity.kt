@@ -43,10 +43,11 @@ SELECT
     a.created_at as createdAt,
     a.submitted_at as submittedAt
 FROM cas_2_applications a
+WHERE a.submitted_at IS NOT NULL
 """,
     nativeQuery = true,
   )
-  fun findAllCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
+  fun findAllSubmittedCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
 
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
   fun findAllByCreatedByUser_Id(id: UUID): List<Cas2ApplicationEntity>
