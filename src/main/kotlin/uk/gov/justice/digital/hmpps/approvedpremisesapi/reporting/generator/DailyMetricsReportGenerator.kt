@@ -4,16 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.DailyMetricReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import java.time.LocalDate
 
 class DailyMetricsReportGenerator(
   private val domainEvents: List<DomainEventEntity>,
-  private val applications: List<ApprovedPremisesApplicationEntity>,
+  private val applications: List<ApprovedPremisesApplicationMetricsSummaryDto>,
   private val objectMapper: ObjectMapper,
 ) : ReportGenerator<LocalDate, DailyMetricReportRow, DailyMetricReportProperties>(DailyMetricReportRow::class) {
   override fun filter(properties: DailyMetricReportProperties): (LocalDate) -> Boolean = {
@@ -23,7 +23,7 @@ class DailyMetricsReportGenerator(
   override val convert: LocalDate.(properties: DailyMetricReportProperties) -> List<DailyMetricReportRow> = {
     val applicationsCreatedToday = applications.filter {
         application ->
-      application.createdAt.toLocalDate() == this
+      application.createdAt == this
     }
 
     val domainEventsToday = domainEvents.filter {
@@ -50,7 +50,7 @@ class DailyMetricsReportGenerator(
       DailyMetricReportRow(
         date = this,
         applicationsStarted = applicationsCreatedToday.size,
-        uniqueUsersStartingApplications = applicationsCreatedToday.groupBy { application -> application.createdByUser }.size,
+        uniqueUsersStartingApplications = applicationsCreatedToday.groupBy { application -> application.createdByUserId }.size,
         applicationsSubmitted = applicationsSubmittedToday.size,
         uniqueUsersSubmittingApplications = applicationsSubmittedToday.groupBy { domainEvent -> domainEvent.data.eventDetails.submittedBy.staffMember.staffIdentifier }.size,
         assessmentsCompleted = assessmentsCompletedToday.size,

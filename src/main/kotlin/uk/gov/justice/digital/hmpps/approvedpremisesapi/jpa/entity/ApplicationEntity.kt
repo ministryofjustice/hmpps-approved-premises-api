@@ -40,14 +40,14 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
 
   @Query(
-    "SELECT * FROM approved_premises_applications apa " +
+    "SELECT application.created_at as createdAt, CAST(application.created_by_user_id as TEXT) as createdByUserId FROM approved_premises_applications apa " +
       "LEFT JOIN applications application ON application.id = apa.id " +
       "where date_part('month', application.created_at) = :month " +
       "AND date_part('year', application.created_at) = :year " +
       "AND application.service = 'approved-premises'",
     nativeQuery = true,
   )
-  fun findAllApprovedPremisesApplicationsCreatedInMonth(month: Int, year: Int): List<ApprovedPremisesApplicationEntity>
+  fun findAllApprovedPremisesApplicationsCreatedInMonth(month: Int, year: Int): List<ApprovedPremisesApplicationMetricsSummary>
 
   @Query(
     "SELECT a FROM ApplicationEntity a " +
@@ -349,4 +349,9 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
   fun getRiskRatings(): String?
+}
+
+interface ApprovedPremisesApplicationMetricsSummary {
+  fun getCreatedAt(): Timestamp
+  fun getCreatedByUserId(): String
 }

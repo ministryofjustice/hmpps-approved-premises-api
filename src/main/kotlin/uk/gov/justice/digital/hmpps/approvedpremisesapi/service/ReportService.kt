@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Dail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -95,7 +96,12 @@ class ReportService(
   }
 
   fun createDailyMetricsReport(properties: DailyMetricReportProperties, outputStream: OutputStream) {
-    val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year)
+    val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
+      ApprovedPremisesApplicationMetricsSummaryDto(
+        it.getCreatedAt().toLocalDateTime().toLocalDate(),
+        it.getCreatedByUserId(),
+      )
+    }
     val domainEvents = domainEventRepository.findAllCreatedInMonth(properties.month, properties.year)
 
     val startDate = LocalDate.of(properties.year, properties.month, 1)

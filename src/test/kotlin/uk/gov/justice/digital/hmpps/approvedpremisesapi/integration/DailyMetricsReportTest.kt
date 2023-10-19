@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.DailyMetricReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -216,7 +217,14 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         LocalDate.of(year, month, 30),
       )
 
-      val expectedDataFrame = DailyMetricsReportGenerator(domainEvents, applications, objectMapper)
+      val expectedApplications = applications.map {
+        ApprovedPremisesApplicationMetricsSummaryDto(
+          it.createdAt.toLocalDate(),
+          it.createdByUser.id.toString(),
+        )
+      }
+
+      val expectedDataFrame = DailyMetricsReportGenerator(domainEvents, expectedApplications, objectMapper)
         .createReport(
           datesForMonth,
           DailyMetricReportProperties(
