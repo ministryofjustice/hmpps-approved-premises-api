@@ -49,7 +49,7 @@ dependencies {
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
 
-  implementation("org.jetbrains.kotlinx:dataframe:0.11.1")
+  implementation("org.jetbrains.kotlinx:dataframe:0.12.0")
 
   implementation("io.arrow-kt:arrow-core:1.2.1")
   implementation("io.github.s-sathish:redlock-java:1.0.4")
