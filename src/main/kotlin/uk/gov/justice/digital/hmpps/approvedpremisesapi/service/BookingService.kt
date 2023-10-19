@@ -1182,10 +1182,6 @@ class BookingService(
       ),
     )
 
-    if (booking.premises is TemporaryAccommodationPremisesEntity) {
-      cas3DomainEventService.saveBookingConfirmedEvent(booking)
-    }
-
     return success(confirmationEntity)
   }
 

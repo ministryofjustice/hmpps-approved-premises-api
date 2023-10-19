@@ -2656,10 +2656,10 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createConfirmation returns Success with correct result when validation passed and emits domain event`() {
+  fun `createConfirmation returns Success with correct result when validation passed`() {
     val bookingEntity = BookingEntityFactory()
       .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
+        ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion {
             ProbationRegionEntityFactory()
               .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -2673,8 +2673,6 @@ class BookingServiceTest {
 
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
 
-    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any()) } just Runs
-
     val result = bookingService.createConfirmation(
       booking = bookingEntity,
       dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
@@ -2685,10 +2683,6 @@ class BookingServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
     assertThat(result.entity.notes).isEqualTo("notes")
-
-    verify(exactly = 1) {
-      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity)
-    }
   }
 
   @Test
