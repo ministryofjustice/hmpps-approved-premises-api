@@ -208,6 +208,25 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
   importMappings.put("Instant", "java.time.Instant")
 }
 
+tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas2DomainEvents") {
+  generatorName.set("kotlin-spring")
+  inputSpec.set("$rootDir/src/main/resources/static/cas2-domain-events-api.yml")
+  outputDir.set("$buildDir/generated")
+  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
+  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model")
+  configOptions.apply {
+    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
+    put("delegatePattern", "true")
+    put("gradleBuildFile", "false")
+    put("exceptionHandler", "false")
+    put("useBeanValidation", "false")
+    put("dateLibrary", "custom")
+    put("useTags", "true")
+  }
+  typeMappings.put("DateTime", "Instant")
+  importMappings.put("Instant", "java.time.Instant")
+}
+
 tasks.register("openApiPreCompilation") {
 
   // Generate OpenAPI spec files suited to Kotlin code generator
@@ -255,6 +274,7 @@ tasks.register("openApiPreCompilation") {
 tasks.get("openApiGenerate").dependsOn(
   "openApiGenerateDomainEvents",
   "openApiGenerateCas3DomainEvents",
+  "openApiGenerateCas2DomainEvents",
   "openApiPreCompilation",
   "openApiGenerateCas2Namespace"
 )

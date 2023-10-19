@@ -4,6 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -11,11 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -28,6 +36,7 @@ class ApplicationService(
   private val offenderService: OffenderService,
   private val userService: NomisUserService,
   private val userAccessService: UserAccessService,
+  private val domainEventService: DomainEventService,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
@@ -191,8 +200,45 @@ class ApplicationService(
 
     application = applicationRepository.save(application)
 
+    createCas2ApplicationSubmittedEvent(application)
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
+    )
+  }
+
+  private fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = OffsetDateTime.now()
+
+    domainEventService.saveCas2ApplicationSubmittedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt.toInstant(),
+        data = Cas2ApplicationSubmittedEvent(
+          id = domainEventId,
+          timestamp = eventOccurredAt.toInstant(),
+          eventType = EventType.applicationSubmitted,
+          eventDetails = Cas2ApplicationSubmittedEventDetails(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .replace("#id", application.id.toString()),
+            submittedAt = Instant.now(),
+            personReference = PersonReference(
+              noms = application.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
+              staffMember = Cas2StaffMember(
+                staffIdentifier = application.createdByUser.nomisStaffId,
+                name = application.createdByUser.name,
+                username = application.createdByUser.nomisUsername,
+              ),
+            ),
+          ),
+        ),
+      ),
     )
   }
 }

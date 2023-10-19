@@ -51,6 +51,21 @@ class DomainEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get Application Submitted Event with only ROLE_CAS2_EVENTS returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_CAS2_EVENTS"),
+    )
+
+    webTestClient.get()
+      .uri("/events/application-submitted/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
   fun `Get Application Submitted Event returns 200 with correct body`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",

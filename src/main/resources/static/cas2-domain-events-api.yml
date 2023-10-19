@@ -1,0 +1,156 @@
+openapi: '3.0.1'
+info:
+  version: '0.1.0'
+  title: 'CAS2 Domain events'
+  description: Get information about events in the CAS2 domain
+paths:
+  /events/cas2/application-submitted/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS2 'Apply' events"
+      summary: An 'application-submitted' event
+      responses:
+        '200':
+          description: The application-submitted corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cas2ApplicationSubmittedEvent'
+        404:
+          description: No application-submitted event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+components:
+  responses:
+    500Response:
+      description: unexpected error
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Cas2Event:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+      required:
+        - id
+        - timestamp
+        - eventType
+      discriminator:
+        propertyName: eventType
+        mapping:
+          applications.cas2.application.submitted: '#/components/schemas/Cas2ApplicationSubmittedEvent'
+    Cas2ApplicationSubmittedEvent:
+      allOf:
+        - $ref: '#/components/schemas/Cas2Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/Cas2ApplicationSubmittedEventDetails'
+          required:
+            - eventDetails
+    Cas2ApplicationSubmittedEventDetails:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        applicationUrl:
+          type: string
+          example: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        submittedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        submittedBy:
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/Cas2StaffMember'
+          required:
+            - staffMember
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - submittedAt
+        - submittedBy
+    Cas2StaffMember:
+      description: A member of prison or CAS2 staff
+      type: object
+      properties:
+        staffIdentifier:
+          type: integer
+          format: int64
+          example: 1501234567
+        name:
+          type: string
+          example: John Smith
+        username:
+          type: string
+          example: SMITHJ_GEN
+      required:
+        - staffIdentifier
+        - name
+    PersonReference:
+      type: object
+      properties:
+        crn:
+          type: string
+        noms:
+          type: string
+      required:
+        - noms
+
+    # Utility schemas
+    EventId:
+      description: The UUID of an event
+      type: string
+      format: uuid
+      example: 364145f9-0af8-488e-9901-b4c46cd9ba37
+    EventType:
+      description: The type of an event
+      type: string
+      enum:
+        - applications.cas2.application.submitted
+      x-enum-varnames:
+        - applicationSubmitted
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          example: https://example.net/validation-error
+        title:
+          type: string
+          example: Invalid request parameters
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: You provided invalid request parameters
+        instance:
+          type: string
+          example: f7493e12-546d-42c3-b838-06c12671ab5b
