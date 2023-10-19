@@ -49,6 +49,16 @@ class ApplicationService(
     return applicationRepository.findAllSubmittedCas2ApplicationSummaries()
   }
 
+  fun getSubmittedApplicationForAssessor(applicationId: UUID):
+    AuthorisableActionResult<Cas2ApplicationEntity> {
+    val applicationEntity = applicationRepository.findSubmittedApplicationById(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    return AuthorisableActionResult.Success(
+      jsonSchemaService.checkSchemaOutdated(applicationEntity),
+    )
+  }
+
   fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()

@@ -58,13 +58,16 @@ class ApplicationsController(
     }
   }
 
-  override fun applicationsApplicationIdGet(applicationId: UUID):
-    ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
+  override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
+    val authenticatedPrincipal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
 
     val application = when (
-      val applicationResult = applicationService
-        .getApplicationForUsername(applicationId, user.nomisUsername)
+      val applicationResult = if (authenticatedPrincipal.isExternalUser()) {
+        applicationService.getSubmittedApplicationForAssessor(applicationId)
+      } else {
+        val user = userService.getUserForRequest()
+        applicationService.getApplicationForUsername(applicationId, user.nomisUsername)
+      }
     ) {
       is AuthorisableActionResult.NotFound -> null
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()

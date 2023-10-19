@@ -49,6 +49,12 @@ WHERE a.submitted_at IS NOT NULL
   )
   fun findAllSubmittedCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
 
+  @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
+      "a.submittedAt IS NOT NULL",
+  )
+  fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
+
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
   fun findAllByCreatedByUser_Id(id: UUID): List<Cas2ApplicationEntity>
 
