@@ -1014,6 +1014,18 @@ class BookingService(
     cancelledAt: LocalDate,
     reasonId: UUID,
     notes: String?,
+  ) = when (booking.premises) {
+    is ApprovedPremisesEntity -> createCas1Cancellation(user, booking, cancelledAt, reasonId, notes)
+    is TemporaryAccommodationPremisesEntity -> createCas3Cancellation(booking, cancelledAt, reasonId, notes)
+    else -> throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
+  }
+
+  private fun createCas1Cancellation(
+    user: UserEntity?,
+    booking: BookingEntity,
+    cancelledAt: LocalDate,
+    reasonId: UUID,
+    notes: String?,
   ) = validated<CancellationEntity> {
     if (booking.premises is ApprovedPremisesEntity && booking.cancellation != null) {
       return generalError("This Booking already has a Cancellation set")
@@ -1118,6 +1130,41 @@ class BookingService(
     return success(cancellationEntity)
   }
 
+  private fun createCas3Cancellation(
+    booking: BookingEntity,
+    cancelledAt: LocalDate,
+    reasonId: UUID,
+    notes: String?,
+  ) = validated<CancellationEntity> {
+    val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      "$.reason" hasValidationError "doesNotExist"
+    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+      "$.reason" hasValidationError "incorrectCancellationReasonServiceScope"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val cancellationEntity = cancellationRepository.save(
+      CancellationEntity(
+        id = UUID.randomUUID(),
+        date = cancelledAt,
+        reason = reason!!,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
+    booking.cancellations += cancellationEntity
+
+    cas3DomainEventService.saveBookingCancelledEvent(booking)
+
+    return success(cancellationEntity)
+  }
+
   fun createConfirmation(
     booking: BookingEntity,
     dateTime: OffsetDateTime,
@@ -1136,6 +1183,12 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
+
+    booking.confirmation = confirmationEntity
+
+    if (booking.premises is TemporaryAccommodationPremisesEntity) {
+      cas3DomainEventService.saveBookingConfirmedEvent(booking)
+    }
 
     return success(confirmationEntity)
   }
