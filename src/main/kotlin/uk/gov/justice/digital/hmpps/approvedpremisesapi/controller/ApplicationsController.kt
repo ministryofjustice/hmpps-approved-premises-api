@@ -207,7 +207,7 @@ class ApplicationsController(
       throw ForbiddenProblem()
     }
     val events = applicationService.getApplicationTimeline(applicationId)
-    return ResponseEntity(applicationsTransformer.transformTimelineToApi(events), HttpStatus.OK)
+    return ResponseEntity(events, HttpStatus.OK)
   }
 
   override fun applicationsApplicationIdSubmissionPost(

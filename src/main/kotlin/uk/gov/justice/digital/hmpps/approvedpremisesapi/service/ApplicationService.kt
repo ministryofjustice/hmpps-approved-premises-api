@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -31,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -41,14 +41,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -75,6 +74,7 @@ class ApplicationService(
   private val emailNotificationService: EmailNotificationService,
   private val userAccessService: UserAccessService,
   private val notifyConfig: NotifyConfig,
+  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
@@ -786,29 +786,20 @@ class ApplicationService(
 
   fun getApplicationTimeline(applicationId: UUID): List<TimelineEvent> {
     val domainEvents = domainEventService.getAllDomainEventsForApplication(applicationId)
-    val domainEventsAsTimelineEvents = mutableListOf<TimelineEvent>()
-    domainEvents.map {
-      domainEventsAsTimelineEvents.add(
-        applicationsTransformer.transformDomainEventSummaryToTimelineEvent(it),
-      )
-    }
-    val informationRequests = getAllInformationRequestEventsForApplication(applicationId)
-    return domainEventsAsTimelineEvents + informationRequests
+    val timelineEvents = domainEvents.map {
+      applicationsTransformer.transformDomainEventSummaryToTimelineEvent(it)
+    }.toMutableList()
+
+    timelineEvents += getAllInformationRequestEventsForApplication(applicationId)
+
+    return timelineEvents
   }
 
   fun getAllInformationRequestEventsForApplication(applicationId: UUID): List<TimelineEvent> {
     val assessments = applicationRepository.findAllAssessmentsById(applicationId)
-
-    var allClarifications = mutableListOf<AssessmentClarificationNoteEntity>()
-    assessments.map {
-      allClarifications.addAll(it.clarificationNotes)
-    }
+    val allClarifications = assessments.flatMap { it.clarificationNotes }
     return allClarifications.map {
-      TimelineEvent(
-        id = it.id.toString(),
-        type = TimelineEventType.APPROVED_PREMISES_INFORMATION_REQUEST,
-        occurredAt = it.createdAt,
-      )
+      assessmentClarificationNoteTransformer.transformToTimelineEvent(it)
     }
   }
 }

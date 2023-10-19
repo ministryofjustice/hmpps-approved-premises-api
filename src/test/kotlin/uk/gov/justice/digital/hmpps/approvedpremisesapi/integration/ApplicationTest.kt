@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
@@ -66,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
@@ -1944,7 +1944,11 @@ class ApplicationTest : IntegrationTestBase() {
 
         val domainEvents = createTenDomainEvents(year, month)
         val summaries = domainEvents.map {
-          TimelineEvent(it.type.toString(), it.id.toString(), it.occurredAt.toInstant())
+          TimelineEvent(
+            applicationsTransformer.transformDomainEventTypeToTimelineEventType(it.type),
+            it.id.toString(),
+            it.occurredAt.toInstant(),
+          )
         }
 
         val expectedJson = objectMapper.writeValueAsString(
@@ -1974,12 +1978,20 @@ class ApplicationTest : IntegrationTestBase() {
 
         val domainEvents = createTenDomainEvents(year, month)
         val summaries = domainEvents.map {
-          TimelineEvent(it.type.toString(), it.id.toString(), it.occurredAt.toInstant())
+          TimelineEvent(
+            applicationsTransformer.transformDomainEventTypeToTimelineEventType(it.type),
+            it.id.toString(),
+            it.occurredAt.toInstant(),
+          )
         }
 
         val informationRequests = createTenInformationRequests(assessment, user, year, month)
         val informationRequestSummaries = informationRequests.map {
-          TimelineEvent(TimelineEventType.APPROVED_PREMISES_INFORMATION_REQUEST.toString(), it.id.toString(), it.createdAt.toInstant())
+          TimelineEvent(
+            TimelineEventType.approvedPremisesInformationRequest,
+            it.id.toString(),
+            it.createdAt.toInstant(),
+          )
         }
 
         val allSummaries = summaries + informationRequestSummaries

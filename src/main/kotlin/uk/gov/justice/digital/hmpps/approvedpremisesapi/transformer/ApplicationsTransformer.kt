@@ -17,18 +17,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary as ApiTemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent as APITimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType as APITimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as DomainApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity as DomainTemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TimelineEvent as JpaTimelineEvent
 @Component
 class ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
@@ -196,38 +194,28 @@ class ApplicationsTransformer(
     null -> null
   }
 
-  fun transformTimelineToApi(events: List<JpaTimelineEvent>): List<APITimelineEvent> {
-    return events.map {
-      APITimelineEvent(
-        type = it.type.toString(),
-        id = it.id,
-        occurredAt = it.occurredAt.toInstant(),
-      )
-    }
-  }
-
-  fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): TimelineEvent {
-    return TimelineEvent(
-      domainEventSummary.id,
-      transformDomainEventTypeToTimelineEventType(domainEventSummary.type),
-      domainEventSummary.occurredAt,
+  fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): APITimelineEvent {
+    return APITimelineEvent(
+      id = domainEventSummary.id,
+      type = transformDomainEventTypeToTimelineEventType(domainEventSummary.type),
+      occurredAt = domainEventSummary.occurredAt.toInstant(),
     )
   }
 
-  fun transformDomainEventTypeToTimelineEventType(domainEventType: DomainEventType): TimelineEventType {
-    when (domainEventType) {
-      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> return TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
-      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> return TimelineEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
-      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> return TimelineEventType.APPROVED_PREMISES_BOOKING_MADE
-      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> return TimelineEventType.APPROVED_PREMISES_PERSON_ARRIVED
-      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> return TimelineEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED
-      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> return TimelineEventType.APPROVED_PREMISES_PERSON_DEPARTED
-      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> return TimelineEventType.APPROVED_PREMISES_BOOKING_NOT_MADE
-      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> return TimelineEventType.APPROVED_PREMISES_BOOKING_CANCELLED
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> return TimelineEventType.APPROVED_PREMISES_BOOKING_CHANGED
-      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> return TimelineEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN
-      DomainEventType.CAS3_PERSON_ARRIVED -> return TimelineEventType.CAS3_PERSON_ARRIVED
-      DomainEventType.CAS3_PERSON_DEPARTED -> return TimelineEventType.CAS3_PERSON_DEPARTED
+  fun transformDomainEventTypeToTimelineEventType(domainEventType: DomainEventType): APITimelineEventType {
+    return when (domainEventType) {
+      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> APITimelineEventType.approvedPremisesApplicationSubmitted
+      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> APITimelineEventType.approvedPremisesApplicationAssessed
+      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> APITimelineEventType.approvedPremisesBookingMade
+      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> APITimelineEventType.approvedPremisesPersonArrived
+      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> APITimelineEventType.approvedPremisesPersonNotArrived
+      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> APITimelineEventType.approvedPremisesPersonDeparted
+      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> APITimelineEventType.approvedPremisesBookingNotMade
+      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> APITimelineEventType.approvedPremisesBookingCancelled
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> APITimelineEventType.approvedPremisesBookingCancelled
+      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> APITimelineEventType.approvedPremisesApplicationWithdrawn
+      DomainEventType.CAS3_PERSON_ARRIVED -> APITimelineEventType.cas3PersonArrived
+      DomainEventType.CAS3_PERSON_DEPARTED -> APITimelineEventType.cas3PersonDeparted
     }
   }
 }
