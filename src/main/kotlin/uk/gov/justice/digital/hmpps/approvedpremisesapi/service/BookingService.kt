@@ -705,6 +705,8 @@ class BookingService(
 
       booking.turnarounds += turnaround
 
+      cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking)
+
       success(booking)
     }
 

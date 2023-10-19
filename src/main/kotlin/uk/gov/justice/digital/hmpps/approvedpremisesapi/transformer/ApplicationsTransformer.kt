@@ -214,8 +214,7 @@ class ApplicationsTransformer(
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> APITimelineEventType.approvedPremisesBookingCancelled
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> APITimelineEventType.approvedPremisesBookingCancelled
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> APITimelineEventType.approvedPremisesApplicationWithdrawn
-      DomainEventType.CAS3_PERSON_ARRIVED -> APITimelineEventType.cas3PersonArrived
-      DomainEventType.CAS3_PERSON_DEPARTED -> APITimelineEventType.cas3PersonDeparted
+      else -> throw RuntimeException("Only CAS1 is currently supported")
     }
   }
 }

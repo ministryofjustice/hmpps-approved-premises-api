@@ -128,6 +128,7 @@ url-templates:
     cas3:
       application: http://api/applications/#applicationId
       booking: http://api/premises/#premisesId/bookings/#bookingId
+      booking-provisionally-made-event-detail: http://api/events/cas3/booking-provisionally-made/#eventId
       person-arrived-event-detail: http://api/events/cas3/person-arrived/#eventId
       person-departed-event-detail: http://api/events/cas3/person-departed/#eventId
   frontend:
