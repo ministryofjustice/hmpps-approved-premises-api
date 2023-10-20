@@ -131,8 +131,8 @@ jobs:
             - gradle-{{ checksum "build.gradle.kts" }}
             - gradle-
       - run:
-          name: Install dependencies
-          command: ./gradlew build -x test --build-cache
+          name: Build project
+          command: ./gradlew assemble --build-cache && ./gradlew assemble testClasses --build-cache
       - save_cache:
           paths:
             - ~/.gradle
@@ -140,7 +140,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - build
+            - ./*
   test:
     parallelism: 6
     environment:
