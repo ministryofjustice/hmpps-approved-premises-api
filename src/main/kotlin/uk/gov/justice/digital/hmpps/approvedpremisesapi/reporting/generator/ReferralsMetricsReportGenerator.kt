@@ -1,16 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApTypeCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsDataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 
 class ReferralsMetricsReportGenerator<T : Any>(
-  private val assessments: List<ApprovedPremisesAssessmentEntity>,
+  private val referralsData: List<ReferralsDataDto>,
   private val workingDayCountService: WorkingDayCountService,
 ) : ReportGenerator<T, ReferralsMetricsReportRow, ReferralsMetricsProperties>(ReferralsMetricsReportRow::class) {
   override fun filter(properties: ReferralsMetricsProperties): (T) -> Boolean = {
@@ -20,18 +19,18 @@ class ReferralsMetricsReportGenerator<T : Any>(
   override val convert: T.(properties: ReferralsMetricsProperties) -> List<ReferralsMetricsReportRow> = {
     val referrals = if (this is TierCategory) {
       when (this) {
-        TierCategory.ALL -> assessments
-        TierCategory.NONE -> assessments.filter { (it.application as ApprovedPremisesApplicationEntity).riskRatings?.tier?.value?.level == null }
-        else -> assessments.filter { (it.application as ApprovedPremisesApplicationEntity).riskRatings?.tier?.value?.level == this.toString() }
+        TierCategory.ALL -> referralsData
+        TierCategory.NONE -> referralsData.filter { it.tier == null }
+        else -> referralsData.filter { it.tier == this.toString() }
       }
     } else if (this is ApTypeCategory) {
       when (this) {
-        ApTypeCategory.ALL -> assessments
-        ApTypeCategory.ESAP -> assessments.filter { (it.application as ApprovedPremisesApplicationEntity).isEsapApplication == true }
-        ApTypeCategory.PIPE -> assessments.filter { (it.application as ApprovedPremisesApplicationEntity).isPipeApplication == true }
-        ApTypeCategory.NORMAL -> assessments.filter {
-          (it.application as ApprovedPremisesApplicationEntity).isEsapApplication == false &&
-            (it.application as ApprovedPremisesApplicationEntity).isPipeApplication == false
+        ApTypeCategory.ALL -> referralsData
+        ApTypeCategory.ESAP -> referralsData.filter { it.isEsapApplication == true }
+        ApTypeCategory.PIPE -> referralsData.filter { it.isPipeApplication == true }
+        ApTypeCategory.NORMAL -> referralsData.filter {
+          it.isEsapApplication == false &&
+            it.isPipeApplication == false
         }
       }
     } else {
@@ -42,9 +41,9 @@ class ReferralsMetricsReportGenerator<T : Any>(
       ReferralsMetricsReportRow(
         category = this.toString(),
         numberOfUniqueReferrals = referrals.size,
-        referralsAccepted = referrals.filter { it.decision == AssessmentDecision.ACCEPTED }.size,
+        referralsAccepted = referrals.filter { it.decision == AssessmentDecision.ACCEPTED.toString() }.size,
         assessmentCompletionTimeliness = getCompletionTimeliness(referrals),
-        referralsWithInformationRequests = referrals.filter { it.clarificationNotes.size > 0 }.size,
+        referralsWithInformationRequests = referrals.filter { it.clarificationNoteCount > 0 }.size,
         referralsRejectedAccommodationNeedOnly = referralsWithRejectionReason(referrals, "Reject, not suitable for an AP: Accommodation need only"),
         referralsRejectedNeedsCannotBeMet = referralsWithRejectionReason(referrals, "Reject, not suitable for an AP: Health / social care / disability needs cannot be met"),
         referralsRejectedSupervisionPeriodTooShort = referralsWithRejectionReason(referrals, "Reject, not suitable for an AP: Remaining supervision period too short"),
@@ -65,15 +64,15 @@ class ReferralsMetricsReportGenerator<T : Any>(
     )
   }
 
-  private fun referralsWithRejectionReason(referrals: List<ApprovedPremisesAssessmentEntity>, rejectionReason: String) = referrals.filter {
+  private fun referralsWithRejectionReason(referrals: List<ReferralsDataDto>, rejectionReason: String) = referrals.filter {
     it.rejectionRationale == rejectionReason
   }.size
 
-  private fun referralsWithReleaseType(referrals: List<ApprovedPremisesAssessmentEntity>, releaseType: String) = referrals.filter {
-    (it.application as ApprovedPremisesApplicationEntity).releaseType == releaseType
+  private fun referralsWithReleaseType(referrals: List<ReferralsDataDto>, releaseType: String) = referrals.filter {
+    it.releaseType == releaseType
   }.size
 
-  private fun getCompletionTimeliness(referrals: List<ApprovedPremisesAssessmentEntity>): String {
+  private fun getCompletionTimeliness(referrals: List<ReferralsDataDto>): String {
     val totalReferrals = referrals.size
 
     if (totalReferrals == 0) {
@@ -81,8 +80,8 @@ class ReferralsMetricsReportGenerator<T : Any>(
     }
 
     val totalCompletedInTime = referrals.filter {
-      val startDate = it.application.submittedAt?.toLocalDate()
-      val endDate = it.submittedAt?.toLocalDate()
+      val startDate = it.applicationSubmittedAt
+      val endDate = it.assessmentSubmittedAt
 
       (startDate !== null && endDate !== null && workingDayCountService.getWorkingDaysCount(startDate, endDate) <= 10)
     }.size

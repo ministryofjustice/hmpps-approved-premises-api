@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -24,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -76,28 +76,16 @@ class DailyMetricsReportGeneratorTest {
   fun `it groups applications and domain events by date`() {
     val applications = mapOf(
       dates[0] to mapOf(
-        user1 to ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user1)
-          .withCreatedAt(dates[0].toLocalDateTime()).produceMany().take(4).toList(),
-        user2 to ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user2)
-          .withCreatedAt(dates[0].toLocalDateTime()).produceMany().take(1).toList(),
-        user3 to ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user3)
-          .withCreatedAt(dates[0].toLocalDateTime()).produceMany().take(3).toList(),
+        user1 to (1..4).map { ApprovedPremisesApplicationMetricsSummaryDto(dates[0], user1.id.toString()) },
+        user2 to (1..2).map { ApprovedPremisesApplicationMetricsSummaryDto(dates[0], user2.id.toString()) },
+        user3 to (1..3).map { ApprovedPremisesApplicationMetricsSummaryDto(dates[0], user3.id.toString()) },
       ),
       dates[1] to mapOf(
-        user1 to ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user1)
-          .withCreatedAt(dates[1].toLocalDateTime()).produceMany().take(3).toList(),
+        user1 to (1..4).map { ApprovedPremisesApplicationMetricsSummaryDto(dates[1], user2.id.toString()) },
       ),
       dates[2] to mapOf(
-        user2 to ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user2)
-          .withCreatedAt(dates[2].toLocalDateTime()).produceMany().take(3).toList(),
-        user3 to ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user3)
-          .withCreatedAt(dates[2].toLocalDateTime()).produceMany().take(3).toList(),
+        user2 to (1..3).map { ApprovedPremisesApplicationMetricsSummaryDto(dates[2], user2.id.toString()) },
+        user3 to (1..2).map { ApprovedPremisesApplicationMetricsSummaryDto(dates[2], user3.id.toString()) },
       ),
     )
 

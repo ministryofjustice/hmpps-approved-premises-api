@@ -6,28 +6,20 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApTypeCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsDataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetDateTime
 import java.time.Period
-import java.time.ZoneOffset
 
 enum class SomeOtherEnum {
   Foo,
@@ -51,10 +43,10 @@ class ReferralsMetricsReportGeneratorTest {
 
   @Test
   fun `It groups referrals by Tier correctly`() {
-    val tierA0Assessments = (1..3).toList().map { createAssessment("A0") }
-    val tierA1Assessments = (1..4).toList().map { createAssessment("A1") }
-    val tierD2Assessments = (1..5).toList().map { createAssessment("D2") }
-    val noTierAssessments = (1..6).toList().map { createAssessment(null) }
+    val tierA0Assessments = (1..3).toList().map { createDto("A0") }
+    val tierA1Assessments = (1..4).toList().map { createDto("A1") }
+    val tierD2Assessments = (1..5).toList().map { createDto("D2") }
+    val noTierAssessments = (1..6).toList().map { createDto(null) }
 
     val assessments = listOf(
       tierA0Assessments,
@@ -88,9 +80,9 @@ class ReferralsMetricsReportGeneratorTest {
 
   @Test
   fun `It groups referrals by AP Type correctly`() {
-    val normalAssessments = (1..3).toList().map { createAssessment("A0") }
-    val esapAssessments = (1..4).toList().map { createAssessment("A1", isEsap = true) }
-    val pipeAssessments = (1..5).toList().map { createAssessment("D2", isPipe = true) }
+    val normalAssessments = (1..3).toList().map { createDto("A0") }
+    val esapAssessments = (1..4).toList().map { createDto("A1", isEsap = true) }
+    val pipeAssessments = (1..5).toList().map { createDto("D2", isPipe = true) }
 
     val assessments = listOf(
       normalAssessments,
@@ -121,7 +113,7 @@ class ReferralsMetricsReportGeneratorTest {
   @Test
   fun `it throws an error if an unrecognised type is given`() {
     val assessments = listOf(
-      createAssessment("A0"),
+      createDto("A0"),
     )
 
     assertThatThrownBy {
@@ -135,10 +127,10 @@ class ReferralsMetricsReportGeneratorTest {
   @Test
   fun `it returns assessment completion timeliness data correctly`() {
     val assessments = listOf(
-      createAssessment(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 2), assessmentSubmittedAt = LocalDate.of(2023, 1, 5)),
-      createAssessment(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 3), assessmentSubmittedAt = LocalDate.of(2023, 1, 7)),
-      createAssessment(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 4), assessmentSubmittedAt = LocalDate.of(2023, 1, 7)),
-      createAssessment(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 3), assessmentSubmittedAt = LocalDate.of(2023, 1, 15)),
+      createDto(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 2), assessmentSubmittedAt = LocalDate.of(2023, 1, 5)),
+      createDto(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 3), assessmentSubmittedAt = LocalDate.of(2023, 1, 7)),
+      createDto(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 4), assessmentSubmittedAt = LocalDate.of(2023, 1, 7)),
+      createDto(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 3), assessmentSubmittedAt = LocalDate.of(2023, 1, 15)),
     )
 
     every { mockWorkingDayCountService.getWorkingDaysCount(any<LocalDate>(), any<LocalDate>()) } answers {
@@ -156,8 +148,8 @@ class ReferralsMetricsReportGeneratorTest {
 
   @Test
   fun `it returns the correct number of accepted assessments`() {
-    val acceptedAssessments = (1..3).toList().map { createAssessment("A0", decision = AssessmentDecision.ACCEPTED) }
-    val rejectedAssessments = (1..6).toList().map { createAssessment("A0", decision = AssessmentDecision.REJECTED) }
+    val acceptedAssessments = (1..3).toList().map { createDto("A0", decision = AssessmentDecision.ACCEPTED) }
+    val rejectedAssessments = (1..6).toList().map { createDto("A0", decision = AssessmentDecision.REJECTED) }
 
     val assessments = listOf(
       acceptedAssessments,
@@ -176,18 +168,18 @@ class ReferralsMetricsReportGeneratorTest {
 
   @Test
   fun `it counts the number of rejected assessments by type`() {
-    val assessmentsRejectedAccommodationNeedOnly = (1..1).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Accommodation need only") }
-    val assessmentsRejectedNeedsCannotBeMet = (1..2).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Health / social care / disability needs cannot be met") }
-    val assessmentsRejectedSupervisionPeriodTooShort = (1..3).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Remaining supervision period too short") }
-    val assessmentsRejectedRiskTooLow = (1..4).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Risk too low") }
-    val assessmentsRejectedOtherReasons = (1..5).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Not suitable for other reasons") }
-    val assessmentsRejectedRequestedInformationNotProvided = (1..6).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Requested information not provided by probation practitioner") }
-    val assessmentsRejectedInsufficientContingencyPlan = (1..7).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Insufficient contingency plan") }
-    val assessmentsRejectedInsufficientMoveOnPlan = (1..8).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Insufficient move on plan") }
-    val assessmentsRejectedRiskTooHighToCommunity = (1..9).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to community") }
-    val assessmentsRejectedRiskTooHighToOtherPeopleInAP = (1..10).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to other people in AP") }
-    val assessmentsRejectedRiskToHighToStaff = (1..11).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to staff") }
-    val assessmentsWithdrawn = (1..12).map { createAssessment("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Application withdrawn: Application withdrawn by the probation practitioner") }
+    val assessmentsRejectedAccommodationNeedOnly = (1..1).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Accommodation need only") }
+    val assessmentsRejectedNeedsCannotBeMet = (1..2).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Health / social care / disability needs cannot be met") }
+    val assessmentsRejectedSupervisionPeriodTooShort = (1..3).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Remaining supervision period too short") }
+    val assessmentsRejectedRiskTooLow = (1..4).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Risk too low") }
+    val assessmentsRejectedOtherReasons = (1..5).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Not suitable for other reasons") }
+    val assessmentsRejectedRequestedInformationNotProvided = (1..6).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Requested information not provided by probation practitioner") }
+    val assessmentsRejectedInsufficientContingencyPlan = (1..7).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Insufficient contingency plan") }
+    val assessmentsRejectedInsufficientMoveOnPlan = (1..8).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Insufficient move on plan") }
+    val assessmentsRejectedRiskTooHighToCommunity = (1..9).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to community") }
+    val assessmentsRejectedRiskTooHighToOtherPeopleInAP = (1..10).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to other people in AP") }
+    val assessmentsRejectedRiskToHighToStaff = (1..11).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to staff") }
+    val assessmentsWithdrawn = (1..12).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Application withdrawn: Application withdrawn by the probation practitioner") }
 
     val assessments = listOf(
       assessmentsRejectedAccommodationNeedOnly,
@@ -227,10 +219,10 @@ class ReferralsMetricsReportGeneratorTest {
 
   @Test
   fun `it counts the amount of referrals by release type`() {
-    val assessmentsWithLicenceReleaseType = (1..2).map { createAssessment("A0", releaseType = "licence") }
-    val assessmentsWithHdcReleaseType = (1..3).map { createAssessment("A0", releaseType = "hdc") }
-    val assessmentsWithPssReleaseType = (1..4).map { createAssessment("A0", releaseType = "pss") }
-    val assessmentsWithRotlReleaseType = (1..5).map { createAssessment("A0", releaseType = "rotl") }
+    val assessmentsWithLicenceReleaseType = (1..2).map { createDto("A0", releaseType = "licence") }
+    val assessmentsWithHdcReleaseType = (1..3).map { createDto("A0", releaseType = "hdc") }
+    val assessmentsWithPssReleaseType = (1..4).map { createDto("A0", releaseType = "pss") }
+    val assessmentsWithRotlReleaseType = (1..5).map { createDto("A0", releaseType = "rotl") }
 
     val assessments = listOf(
       assessmentsWithLicenceReleaseType,
@@ -254,8 +246,8 @@ class ReferralsMetricsReportGeneratorTest {
 
   @Test
   fun `it counts the number of referrals with information requests`() {
-    val assessmentsWithInformationRequests = (1..7).map { createAssessment("A0", hasInformationRequests = true) }
-    val assessmentsWithoutInformationRequests = (1..10).map { createAssessment("A0", hasInformationRequests = false) }
+    val assessmentsWithInformationRequests = (1..7).map { createDto("A0", hasInformationRequests = true) }
+    val assessmentsWithoutInformationRequests = (1..10).map { createDto("A0", hasInformationRequests = false) }
 
     val assessments = listOf(
       assessmentsWithInformationRequests,
@@ -272,7 +264,7 @@ class ReferralsMetricsReportGeneratorTest {
     assertThat(results[0][ReferralsMetricsReportRow::referralsWithInformationRequests]).isEqualTo(assessmentsWithInformationRequests.size)
   }
 
-  private fun createAssessment(
+  private fun createDto(
     tier: String?,
     hasInformationRequests: Boolean = false,
     decision: AssessmentDecision = AssessmentDecision.ACCEPTED,
@@ -282,53 +274,15 @@ class ReferralsMetricsReportGeneratorTest {
     assessmentSubmittedAt: LocalDate = LocalDate.now(),
     isPipe: Boolean = false,
     isEsap: Boolean = false,
-  ): ApprovedPremisesAssessmentEntity {
-    var applicationFactory = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withApplicationSchema(newestJsonSchema)
-      .withSubmittedAt(OffsetDateTime.of(applicationSubmittedAt, LocalTime.MIDNIGHT, ZoneOffset.UTC))
-      .withReleaseType(releaseType)
-      .withIsPipeApplication(isPipe)
-      .withIsEsapApplication(isEsap)
-
-    if (tier !== null) {
-      applicationFactory = applicationFactory.withRiskRatings(
-        PersonRisksFactory()
-          .withTier(
-            RiskWithStatus(
-              RiskTier(
-                level = tier,
-                lastUpdated = LocalDate.now(),
-              ),
-            ),
-          )
-          .produce(),
-      )
-    }
-
-    val application = applicationFactory.produce()
-
-    var assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
-      .withAllocatedToUser(user)
-      .withApplication(application)
-      .withAssessmentSchema(newestJsonSchema)
-      .withDecision(decision)
-
-    if (decision == AssessmentDecision.REJECTED) {
-      assessmentFactory = assessmentFactory.withRejectionRationale(rejectionReason)
-    }
-
-    assessmentFactory = assessmentFactory.withSubmittedAt(OffsetDateTime.of(assessmentSubmittedAt, LocalTime.MIDNIGHT, ZoneOffset.UTC))
-
-    val assessment = assessmentFactory.produce()
-
-    if (hasInformationRequests) {
-      assessment.clarificationNotes = AssessmentClarificationNoteEntityFactory()
-        .withAssessment(assessment)
-        .withCreatedBy(user)
-        .produceMany().take((1..10).random()).toMutableList()
-    }
-
-    return assessment
-  }
+  ) = ReferralsDataDto(
+    tier = tier,
+    isEsapApplication = isEsap,
+    isPipeApplication = isPipe,
+    decision = decision.toString(),
+    applicationSubmittedAt = applicationSubmittedAt,
+    assessmentSubmittedAt = assessmentSubmittedAt,
+    rejectionRationale = rejectionReason,
+    releaseType = releaseType,
+    clarificationNoteCount = if (hasInformationRequests) { randomInt(1, 10) } else { 0 },
+  )
 }

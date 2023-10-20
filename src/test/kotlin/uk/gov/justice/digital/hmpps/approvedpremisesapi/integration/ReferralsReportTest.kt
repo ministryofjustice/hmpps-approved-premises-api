@@ -15,10 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApTypeCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsDataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
@@ -115,11 +117,26 @@ class ReferralsReportTest : IntegrationTestBase() {
         ),
       ).map { it.first as ApprovedPremisesAssessmentEntity }
 
+      var expectedDTOs = assessments.map {
+        var applicationEntity = it.application as ApprovedPremisesApplicationEntity
+        ReferralsDataDto(
+          tier = applicationEntity.riskRatings?.tier?.value?.level,
+          applicationSubmittedAt = applicationEntity.submittedAt?.toLocalDate(),
+          assessmentSubmittedAt = it.submittedAt?.toLocalDate(),
+          clarificationNoteCount = it.clarificationNotes.size,
+          decision = it.decision.toString(),
+          isEsapApplication = applicationEntity.isEsapApplication,
+          isPipeApplication = applicationEntity.isPipeApplication,
+          rejectionRationale = it.rejectionRationale,
+          releaseType = applicationEntity.releaseType,
+        )
+      }
+
       val expectedDataFrame = if (reportType == "referrals-by-tier") {
-        ReferralsMetricsReportGenerator<TierCategory>(assessments, realWorkingDayCountService)
+        ReferralsMetricsReportGenerator<TierCategory>(expectedDTOs, realWorkingDayCountService)
           .createReport(TierCategory.entries, ReferralsMetricsProperties(year, month))
       } else {
-        ReferralsMetricsReportGenerator<ApTypeCategory>(assessments, realWorkingDayCountService)
+        ReferralsMetricsReportGenerator<ApTypeCategory>(expectedDTOs, realWorkingDayCountService)
           .createReport(ApTypeCategory.entries, ReferralsMetricsProperties(year, month))
       }
 
