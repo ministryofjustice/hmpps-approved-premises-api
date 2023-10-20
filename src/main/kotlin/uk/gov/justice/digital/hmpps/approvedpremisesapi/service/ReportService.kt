@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Lost
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsDataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -117,7 +118,19 @@ class ReportService(
   }
 
   fun <T : Any> createReferralsMetricsReport(properties: ReferralsMetricsProperties, outputStream: OutputStream, categories: List<T>) {
-    val referrals = assessmentRepository.findAllCreatedInMonthAndYear(properties.month, properties.year)
+    val referrals = assessmentRepository.findAllReferralsDataForMonthAndYear(properties.month, properties.year).map {
+      ReferralsDataDto(
+        it.getTier(),
+        it.getIsEsapApplication(),
+        it.getIsPipeApplication(),
+        it.getDecision(),
+        it.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
+        it.getAssessmentSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
+        it.getRejectionRationale(),
+        it.getReleaseType(),
+        it.getClarificationNoteCount(),
+      )
+    }
 
     ReferralsMetricsReportGenerator<T>(referrals, workingDayCountService)
       .createReport(categories, properties)

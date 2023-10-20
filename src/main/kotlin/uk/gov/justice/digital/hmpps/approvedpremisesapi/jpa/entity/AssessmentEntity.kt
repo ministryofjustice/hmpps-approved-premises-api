@@ -4,6 +4,7 @@ import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -43,18 +44,36 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
 
   @Query(
     """
-    SELECT a from AssessmentEntity a 
-        LEFT JOIN ApplicationEntity app ON a.application = app 
-        LEFT JOIN ApprovedPremisesApplicationEntity apa on app.id = apa.id
-        LEFT JOIN AssessmentClarificationNoteEntity note on note.assessment = a
-    WHERE 
-        date_part('month', a.createdAt) = :month
-        AND date_part('year', a.createdAt) = :year 
-        AND a.reallocatedAt is null
-        AND TYPE(a) = ApprovedPremisesAssessmentEntity 
-  """,
+    SELECT
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+      apa.is_esap_application as isEsapApplication,
+      apa.is_pipe_application as isPipeApplication,
+      assessment.decision as decision,
+      application.submitted_at as applicationSubmittedAt,
+      assessment.submitted_at as assessmentSubmittedAt,
+      assessment.rejection_rationale as rejectionRationale,
+      apa.release_type as releaseType,
+      (
+        SELECT
+          count(id)
+        from
+          assessment_clarification_notes
+        where
+          assessment_id = assessment_id
+      ) as clarificationNoteCount
+    FROM
+      assessments assessment
+      left join applications application on application.id = assessment.application_id
+      left join approved_premises_applications apa on apa.id = application.id
+    WHERE
+      date_part('month', assessment.created_at) = :month
+      AND date_part('year', assessment.created_at) = :year
+      AND assessment.reallocated_at is null
+      AND assessment.service = 'approved-premises'
+    """,
+    nativeQuery = true,
   )
-  fun findAllCreatedInMonthAndYear(month: Int, year: Int): List<ApprovedPremisesAssessmentEntity>
+  fun findAllReferralsDataForMonthAndYear(month: Int, year: Int): List<ReferralsDataResult>
 }
 
 @NamedNativeQuery(
@@ -400,4 +419,17 @@ enum class ReferralHistorySystemNoteType {
   READY_TO_PLACE,
   REJECTED,
   COMPLETED,
+}
+
+interface ReferralsDataResult {
+  fun getTier(): String?
+  fun getIsEsapApplication(): Boolean?
+  fun getIsPipeApplication(): Boolean?
+  fun getDecision(): String?
+  fun getApplicationSubmittedAt(): Timestamp?
+  fun getAssessmentSubmittedAt(): Timestamp?
+  fun getRejectionRationale(): String?
+  fun getReleaseType(): String?
+
+  fun getClarificationNoteCount(): Int
 }
