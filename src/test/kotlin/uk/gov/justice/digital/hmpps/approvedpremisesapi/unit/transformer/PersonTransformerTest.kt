@@ -135,6 +135,7 @@ class PersonTransformerTest {
         religionOrBelief = "Sikh",
         genderIdentity = null,
         prisonName = null,
+        isRestricted = false,
       ),
     )
   }
@@ -226,6 +227,7 @@ class PersonTransformerTest {
         religionOrBelief = "Sikh",
         genderIdentity = null,
         prisonName = "HMP Bristol",
+        isRestricted = false,
       ),
     )
   }
@@ -251,6 +253,52 @@ class PersonTransformerTest {
     assertThat(result is FullPerson).isTrue
     result as FullPerson
     assertThat(result.genderIdentity).isEqualTo(null)
+  }
+
+  @Test
+  fun `transformModelToPersonInfoApi transforms correctly with an exclusion`() {
+    val crn = "CRN123"
+
+    val offenderDetailSummary = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withCurrentExclusion(true)
+      .produce()
+
+    val personInfoResult = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = null,
+    )
+
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
+
+    assertThat(result.crn).isEqualTo(crn)
+    assertThat(result is FullPerson).isTrue
+    result as FullPerson
+    assertThat(result.isRestricted).isTrue()
+  }
+
+  @Test
+  fun `transformModelToPersonInfoApi transforms correctly with a restriction`() {
+    val crn = "CRN123"
+
+    val offenderDetailSummary = OffenderDetailsSummaryFactory()
+      .withCrn(crn)
+      .withCurrentRestriction(true)
+      .produce()
+
+    val personInfoResult = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = null,
+    )
+
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
+
+    assertThat(result.crn).isEqualTo(crn)
+    assertThat(result is FullPerson).isTrue
+    result as FullPerson
+    assertThat(result.isRestricted).isTrue()
   }
 
   @Test
@@ -325,6 +373,7 @@ class PersonTransformerTest {
         religionOrBelief = caseSummary.profile!!.religion,
         genderIdentity = caseSummary.profile!!.genderIdentity,
         prisonName = null,
+        isRestricted = false,
       ),
     )
   }

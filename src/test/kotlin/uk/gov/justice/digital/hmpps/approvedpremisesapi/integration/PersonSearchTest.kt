@@ -157,6 +157,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 religionOrBelief = "Judaism",
                 genderIdentity = "This is a self described identity",
                 prisonName = "HMP Bristol",
+                isRestricted = false,
               ),
             ),
           )
@@ -204,6 +205,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 religionOrBelief = "Judaism",
                 genderIdentity = "This is a self described identity",
                 prisonName = null,
+                isRestricted = false,
               ),
             ),
           )
