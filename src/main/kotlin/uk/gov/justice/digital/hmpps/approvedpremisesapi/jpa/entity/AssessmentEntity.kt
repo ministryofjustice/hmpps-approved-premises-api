@@ -223,6 +223,8 @@ abstract class AssessmentEntity(
 
   @Transient
   var schemaUpToDate: Boolean,
+
+  var isWithdrawn: Boolean,
 )
 
 @Entity
@@ -261,6 +263,7 @@ class ApprovedPremisesAssessmentEntity(
   clarificationNotes,
   referralHistoryNotes,
   schemaUpToDate,
+  isWithdrawn = false,
 )
 
 @Entity
@@ -302,6 +305,7 @@ class TemporaryAccommodationAssessmentEntity(
   clarificationNotes,
   referralHistoryNotes,
   schemaUpToDate,
+  isWithdrawn = false,
 )
 
 /**

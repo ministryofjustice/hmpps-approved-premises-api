@@ -412,10 +412,6 @@ class ApplicationService(
           return@validated generalError("onlyCas1Supported")
         }
 
-        if (application.submittedAt != null) {
-          return@validated generalError("applicationAlreadySubmitted")
-        }
-
         if (application.isWithdrawn) {
           return@validated generalError("applicationAlreadyWithdrawn")
         }
@@ -480,6 +476,23 @@ class ApplicationService(
           ),
         )
 
+        if (user.email != null) {
+          emailNotificationService.sendEmail(
+            email = user.email!!,
+            templateId = notifyConfig.templates.applicationWithdrawn,
+            personalisation = mapOf(
+              "name" to user.name,
+              "apName" to application.getLatestBooking()?.premises?.name,
+              "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+              "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+              "crn" to application.crn,
+            ),
+          )
+        }
+
+        application.assessments.map {
+          assessmentService.updateAssessmentWithdrawn(it.id)
+        }
         return@validated success(Unit)
       },
     )
