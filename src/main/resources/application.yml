@@ -6,7 +6,7 @@ spring:
   application:
     name: approved-premises-api
   codec:
-    max-in-memory-size: 10MB
+    max-in-memory-size: 40MB
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
