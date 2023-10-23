@@ -484,7 +484,6 @@ class ApplicationService(
               "name" to user.name,
               "apName" to application.getLatestBooking()?.premises?.name,
               "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-              "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
               "crn" to application.crn,
             ),
           )

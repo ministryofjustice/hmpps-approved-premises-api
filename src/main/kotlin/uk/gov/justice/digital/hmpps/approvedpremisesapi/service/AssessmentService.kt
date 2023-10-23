@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -149,6 +148,7 @@ class AssessmentService(
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
+        isWithdrawn = false,
       ),
     )
 
@@ -191,6 +191,7 @@ class AssessmentService(
         referralHistoryNotes = mutableListOf(),
         completedAt = null,
         summaryData = objectMapper.writeValueAsString(summaryData),
+        isWithdrawn = false,
       ),
     )
 
@@ -201,10 +202,17 @@ class AssessmentService(
 
   fun updateAssessment(user: UserEntity, assessmentId: UUID, data: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val assessmentResult = getAssessmentForUser(user, assessmentId)
+
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    if (assessment.isWithdrawn) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The application has been withdrawn."),
+      )
     }
 
     if (!assessment.schemaUpToDate) {
@@ -623,6 +631,7 @@ class AssessmentService(
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
+        isWithdrawn = false,
       ),
     )
 
@@ -785,8 +794,9 @@ class AssessmentService(
   }
 
   fun updateAssessmentWithdrawn(assessmentId: UUID) {
-      val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-      assessment?.isWithdrawn = true
+    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+    assessment?.isWithdrawn = true
+    assessmentRepository.save(assessment)
   }
 
   private fun AssessmentEntity.addSystemNote(user: UserEntity, type: ReferralHistorySystemNoteType) {

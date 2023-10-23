@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistorySystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
@@ -1424,6 +1425,47 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("$.response").isEqualTo("some text")
           .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
+      }
+    }
+  }
+
+  @Test
+  fun `Update does not let withdrawn assessments be updated`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withIsWithdrawn(true)
+        }
+
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withIsWithdrawn(true)
+        }
+
+        webTestClient.put()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateAssessment(
+              data = mapOf("some text" to 5),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
       }
     }
   }
