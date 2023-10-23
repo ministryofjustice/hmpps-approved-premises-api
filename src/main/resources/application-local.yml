@@ -22,6 +22,8 @@ hmpps.sqs:
 domain-events:
   cas1:
     emit-enabled: true
+  cas2:
+    emit-enabled: true
   cas3:
     emit-enabled: true
 
