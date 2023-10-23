@@ -18,7 +18,7 @@ parameters:
     default: false
 
 executors:
-  test-gradle:
+  integration-test-gradle:
     resource_class: medium+
     docker:
       - image: cimg/openjdk:17.0
@@ -38,6 +38,10 @@ executors:
           - DEFAULT_REGION=eu-west-2
           - ES_PORT_EXTERNAL=4571
           - DATA_DIR=/tmp/localstack/data
+  unit-test-gradle:
+    resource_class: medium+
+    docker:
+      - image: cimg/openjdk:17.0
 
 jobs:
   generate_trivyignore:
@@ -131,8 +135,8 @@ jobs:
             - gradle-{{ checksum "build.gradle.kts" }}
             - gradle-
       - run:
-          name: Install dependencies
-          command: ./gradlew build -x test --build-cache
+          name: Build project
+          command: ./gradlew assemble --build-cache && ./gradlew assemble testClasses --build-cache
       - save_cache:
           paths:
             - ~/.gradle
@@ -140,8 +144,43 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - build
-  test:
+            - ./*
+  unit_test:
+    parallelism: 6
+    environment:
+      _JAVA_OPTIONS: "-Xmx1g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    executor:
+      name: unit-test-gradle
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run unit tests
+          # Use "./gradlew test" instead if tests are not run in parallel
+          command: |
+            cd src/test/kotlin
+            # Get list of classnames of tests that should run on this node
+            CLASSNAMES=$(circleci tests glob "**/*Test.kt" \
+              | sed '/integration/d' \
+              | cut -c 1- | sed 's@/@.@g' \
+              | sed 's/.\{3\}$//' \
+              | circleci tests split --split-by=timings --timings-type=classname)
+            cd ../../..
+            # Format the arguments to "./gradlew test"
+            GRADLE_ARGS=$(echo $CLASSNAMES | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+            echo "Prepared arguments for Gradle: $GRADLE_ARGS"
+            ./gradlew unitTest --build-cache -x openApiGenerateDomainEvents -x openApiGenerate $GRADLE_ARGS
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "build.gradle.kts" }}
+      - store_test_results:
+          path: build/test-results
+      - store_artifacts:
+          path: build/reports/tests
+  integration_test:
     parallelism: 6
     environment:
       _JAVA_OPTIONS: "-Xmx1g"
@@ -149,7 +188,7 @@ jobs:
       POSTGRES_PORT: 5432
       SPRING_REDIS_PORT: 6379
     executor:
-      name: test-gradle
+      name: integration-test-gradle
     steps:
       - checkout
       - attach_workspace:
@@ -160,7 +199,7 @@ jobs:
           command: |
             cd src/test/kotlin
             # Get list of classnames of tests that should run on this node
-            CLASSNAMES=$(circleci tests glob "**/*Test.kt" \
+            CLASSNAMES=$(circleci tests glob "**/integration/**/*Test.kt" \
               | cut -c 1- | sed 's@/@.@g' \
               | sed 's/.\{3\}$//' \
               | circleci tests split --split-by=timings --timings-type=classname)
@@ -168,7 +207,7 @@ jobs:
             # Format the arguments to "./gradlew test"
             GRADLE_ARGS=$(echo $CLASSNAMES | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
             echo "Prepared arguments for Gradle: $GRADLE_ARGS"
-            ./gradlew test --build-cache -x openApiGenerateDomainEvents -x openApiGenerate $GRADLE_ARGS
+            ./gradlew integrationTest --build-cache -x openApiGenerateDomainEvents -x openApiGenerate $GRADLE_ARGS
       - save_cache:
           paths:
             - ~/.gradle
@@ -245,7 +284,13 @@ workflows:
   build-test-and-deploy:
     jobs:
       - build
-      - test:
+      - unit_test:
+          filters:
+            tags:
+              ignore: /.*/
+          requires:
+            - build
+      - integration_test:
           filters:
             tags:
               ignore: /.*/

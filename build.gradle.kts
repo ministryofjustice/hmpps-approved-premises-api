@@ -109,9 +109,9 @@ tasks.withType<Test> {
     project.gradle.startParameter.excludedTaskNames.add("openApiGenerateDomainEvents")
   }
 
-  if (environment["GITHUB_ACTION"] != null) {
+  if (environment["CI"] != null) {
     maxParallelForks = Runtime.getRuntime().availableProcessors()
-    println("Running on GitHub Actions - setting max test processes to number of processors: $maxParallelForks")
+    println("Running in CI - setting max test processes to number of processors: $maxParallelForks")
   } else {
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
     println("Setting max test processes to recommended half of available: $maxParallelForks")
