@@ -463,6 +463,61 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Assessor can NOT view single in-progress application`() {
+      `Given a CAS2 Assessor` { _, jwt ->
+        `Given a CAS2 User` { user, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+              .produceAndPersist {
+                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                withSchema(
+                  """
+          {
+            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+            "${"\$id"}": "https://example.com/product.schema.json",
+            "title": "Thing",
+            "description": "A thing",
+            "type": "object",
+            "properties": {
+              "thingId": {
+                "description": "The unique identifier for a thing",
+                "type": "integer"
+              }
+            },
+            "required": [ "thingId" ]
+          }
+          """,
+                )
+              }
+
+            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withSubmittedAt(null)
+              withData(
+                """
+            {
+               "thingId": 123
+            }
+            """,
+              )
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isNotFound
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
       `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
