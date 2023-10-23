@@ -28,6 +28,7 @@ class ApplicationReportGenerator(
         noms = this.getNoms(),
         premisesType = this.getPremisesType(),
         releaseType = this.getReleaseType(),
+        sentenceType = this.getSentenceType(),
         applicationSubmissionDate = this.getApplicationSubmissionDate()?.toLocalDate(),
         referralLdu = this.getReferralLdu(),
         referralRegion = this.getReferralRegion(),

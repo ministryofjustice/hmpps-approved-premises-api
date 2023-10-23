@@ -307,6 +307,19 @@ class ApplicationReportsTest : IntegrationTestBase() {
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
       withApplicationSchema(applicationSchema)
+      withData(
+        objectMapper.writeValueAsString(
+          mapOf(
+            "basic-information" to
+              mapOf(
+                "sentence-type"
+                  to mapOf(
+                    "sentenceType" to "Some Sentence Type",
+                  ),
+              ),
+          ),
+        ),
+      )
       withRiskRatings(
         PersonRisksFactory()
           .withMappa(
