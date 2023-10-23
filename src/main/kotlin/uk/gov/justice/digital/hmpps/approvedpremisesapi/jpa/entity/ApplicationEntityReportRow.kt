@@ -29,6 +29,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
           ELSE 'normal'
         END
       ) as premisesType,
+      application.data -> 'basic-information' -> 'sentence-type' ->> 'sentenceType' as sentenceType,
       submission_event.data -> 'eventDetails' ->> 'releaseType' as releaseType,
       cast(submission_event.data -> 'eventDetails' ->> 'submittedAt' as date) as applicationSubmissionDate,
       submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'ldu' ->> 'name' as referralLdu,
@@ -93,6 +94,8 @@ interface ApplicationEntityReportRow {
   fun getOffenceId(): String
   fun getNoms(): String
   fun getPremisesType(): String?
+
+  fun getSentenceType(): String?
 
   fun getReleaseType(): String?
   fun getApplicationSubmissionDate(): Date?

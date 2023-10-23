@@ -16,6 +16,7 @@ data class ApplicationReportRow(
   val noms: String?,
   val premisesType: String?,
   val releaseType: String?,
+  val sentenceType: String?,
   val applicationSubmissionDate: LocalDate?,
   val referralLdu: String?,
   val referralRegion: String?,
