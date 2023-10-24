@@ -90,6 +90,7 @@ import java.time.OffsetDateTime
 import java.time.Period
 import java.time.ZoneOffset
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
 class ApplicationServiceTest {
   private val mockUserRepository = mockk<UserRepository>()
@@ -101,6 +102,7 @@ class ApplicationServiceTest {
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
   private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
@@ -119,6 +121,7 @@ class ApplicationServiceTest {
     mockAssessmentService,
     mockOfflineApplicationRepository,
     mockDomainEventService,
+    mockCas3DomainEventService,
     mockCommunityApiClient,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
@@ -1409,6 +1412,8 @@ class ApplicationServiceTest {
         .withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
         .produce()
 
+      every { mockCas3DomainEventService.saveReferralSubmittedEvent(any()) } just Runs
+
       val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplication)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1422,6 +1427,10 @@ class ApplicationServiceTest {
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplication.summaryData!!) }
       verify { mockDomainEventService wasNot called }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveReferralSubmittedEvent(application)
+      }
     }
 
     @Test
@@ -1450,6 +1459,8 @@ class ApplicationServiceTest {
         .withApplication(application)
         .withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
         .produce()
+
+      every { mockCas3DomainEventService.saveReferralSubmittedEvent(any()) } just Runs
 
       val result = applicationService.submitTemporaryAccommodationApplication(applicationId, submitTemporaryAccommodationApplicationWithMiReportingData)
 

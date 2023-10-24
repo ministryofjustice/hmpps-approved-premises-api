@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -83,6 +84,7 @@ class CAS3DomainEventFactory<T : CAS3Event, D : Any>(
     CAS3BookingProvisionallyMadeEventDetails::class -> EventType.bookingProvisionallyMade
     CAS3PersonArrivedEventDetails::class -> EventType.personArrived
     CAS3PersonDepartedEventDetails::class -> EventType.personDeparted
+    CAS3ReferralSubmittedEventDetails::class -> EventType.referralSubmitted
     else -> throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")
   }
 }

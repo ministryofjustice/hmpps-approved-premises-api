@@ -139,6 +139,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/cas3/referral-submitted/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS3 events"
+      summary: A 'referral-submitted' event
+      responses:
+        200:
+          description: The 'referral-submitted' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CAS3ReferralSubmittedEvent'
+        404:
+          description: No 'referral-submitted' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
@@ -171,6 +198,7 @@ components:
           accommodation.cas3.booking.provisionally-made: '#/components/schemas/CAS3BookingProvisionallyMadeEvent'
           accommodation.cas3.person.arrived: '#/components/schemas/CAS3PersonArrivedEvent'
           accommodation.cas3.person.departed: '#/components/schemas/CAS3PersonDepartedEvent'
+          accommodation.cas3.referral.submitted: '#/components/schemas/CAS3ReferralSubmittedEvent'
     CAS3BookingCancelledEvent:
       allOf:
         - $ref: '#/components/schemas/CAS3Event'
@@ -378,6 +406,30 @@ components:
         - reason
         - notes
         - moveOnCategory
+    CAS3ReferralSubmittedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3ReferralSubmittedEventDetails'
+          required:
+            - eventDetails
+    CAS3ReferralSubmittedEventDetails:
+      type: object
+      properties:
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        applicationId:
+          type: string
+          format: uuid
+        applicationUrl:
+          type: string
+          format: uri
+      required:
+        - personReference
+        - applicationId
+        - applicationUrl
 
     # Common domain schemas
     PersonReference:
@@ -434,12 +486,14 @@ components:
         - accommodation.cas3.booking.provisionally-made
         - accommodation.cas3.person.arrived
         - accommodation.cas3.person.departed
+        - accommodation.cas3.referral.submitted
       x-enum-varnames:
         - bookingCancelled
         - bookingConfirmed
         - bookingProvisionallyMade
         - personArrived
         - personDeparted
+        - referralSubmitted
     Problem:
       type: object
       properties:

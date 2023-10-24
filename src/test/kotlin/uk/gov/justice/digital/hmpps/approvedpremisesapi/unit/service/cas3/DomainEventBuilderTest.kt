@@ -335,4 +335,36 @@ class DomainEventBuilderTest {
         data.applicationUrl.toString() == "http://api/applications/${application.id}"
     }
   }
+
+  @Test
+  fun `getReferralSubmittedDomainEvent transforms the application correctly`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      )
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val event = domainEventBuilder.getReferralSubmittedDomainEvent(application)
+
+    assertThat(event).matches {
+      val data = it.data.eventDetails
+
+      it.applicationId == application.id &&
+        it.bookingId == null &&
+        it.crn == application.crn &&
+        data.personReference.crn == application.crn &&
+        data.personReference.noms == application.nomsNumber &&
+        data.applicationId == application.id &&
+        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+    }
+  }
 }

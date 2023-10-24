@@ -56,6 +56,7 @@ import java.time.Period
 import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
 @Service
 class ApplicationService(
@@ -68,6 +69,7 @@ class ApplicationService(
   private val assessmentService: AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val domainEventService: DomainEventService,
+  private val cas3DomainEventService: Cas3DomainEventService,
   private val communityApiClient: CommunityApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
@@ -677,6 +679,8 @@ class ApplicationService(
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData ?: {})
 
     application = applicationRepository.save(application)
+
+    cas3DomainEventService.saveReferralSubmittedEvent(application)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
