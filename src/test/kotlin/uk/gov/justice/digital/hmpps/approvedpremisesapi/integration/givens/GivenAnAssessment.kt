@@ -18,6 +18,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   decision: AssessmentDecision? = null,
   submittedAt: OffsetDateTime? = null,
   createdAt: OffsetDateTime? = null,
+  isWithdrawn: Boolean = false,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -34,6 +35,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withApplicationSchema(applicationSchema)
     withSubmittedAt(OffsetDateTime.now())
     withReleaseType("licence")
+    withIsWithdrawn(isWithdrawn)
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -49,6 +51,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
+    withIsWithdrawn(isWithdrawn)
   }
 
   assessment.schemaUpToDate = true
