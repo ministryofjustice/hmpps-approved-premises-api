@@ -36,7 +36,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
@@ -47,6 +49,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockCaseSummaryBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
@@ -211,7 +215,21 @@ class ApplicationTest : IntegrationTestBase() {
               withData("{}")
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            ApDeliusContext_addResponseToUserAccessCall(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .withUserRestricted(false)
+                .withUserExcluded(false)
+                .produce(),
+              userEntity.deliusUsername,
+            )
+            ApDeliusContext_mockCaseSummaryBulkResponse(
+              listOf(
+                CaseSummaryFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
+            )
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -296,7 +314,14 @@ class ApplicationTest : IntegrationTestBase() {
               }
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(assessorUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            ApDeliusContext_addResponseToUserAccessCall(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .withUserRestricted(false)
+                .withUserExcluded(false)
+                .produce(),
+              assessorUser.deliusUsername,
+            )
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -362,7 +387,14 @@ class ApplicationTest : IntegrationTestBase() {
               withProbationRegion(probationRegion)
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(referrerUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            ApDeliusContext_addResponseToUserAccessCall(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .withUserRestricted(false)
+                .withUserExcluded(false)
+                .produce(),
+              referrerUser.deliusUsername,
+            )
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -396,7 +428,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get list of applications returns 500 when a person cannot be found`() {
+  fun `Get list of applications returns an UnknownPerson when a person cannot be found`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -404,20 +436,37 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       val crn = "X1234"
 
-      produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
+      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
+      ApDeliusContext_addResponseToUserAccessCall(
+        CaseAccessFactory()
+          .withCrn(crn)
+          .withUserRestricted(false)
+          .withUserExcluded(false)
+          .produce(),
+        userEntity.deliusUsername,
+      )
+      ApDeliusContext_mockCaseSummaryBulkResponse(
+        emptyList(),
+      )
 
-      webTestClient.get()
+      val rawResponseBody = webTestClient.get()
         .uri("/applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
-        .is5xxServerError
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Map<String, Any>>>() {})
+
+      assertThat(responseBody[0]["id"]).isEqualTo(application.id.toString())
+
+      val person = responseBody[0]["person"] as Map<*, *>
+      assertThat(person["crn"]).isEqualTo(crn)
+      assertThat(person["type"]).isEqualTo("UnknownPerson")
     }
   }
 
@@ -433,7 +482,14 @@ class ApplicationTest : IntegrationTestBase() {
       ) { offenderDetails, inmateDetails ->
         val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .withUserRestricted(false)
+            .withUserExcluded(false)
+            .produce(),
+          userEntity.deliusUsername,
+        )
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications")
@@ -457,54 +513,6 @@ class ApplicationTest : IntegrationTestBase() {
             person.status == FullPerson.Status.unknown &&
             person.prisonName == null
         }
-      }
-    }
-  }
-
-  @Test
-  fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      },
-    ) { userEntity, jwt ->
-      val crn = "X1234"
-
-      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withNomsNumber("ABC123")
-        .produce()
-
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
-
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-
-      val rawResponseBody = webTestClient.get()
-        .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .returnResult<String>()
-        .responseBody
-        .blockFirst()
-
-      val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
-
-      assertThat(responseBody).matches {
-        val person = it[0].person as FullPerson
-
-        application.id == it[0].id &&
-          application.crn == person.crn &&
-          person.nomsNumber == null &&
-          person.status == FullPerson.Status.unknown &&
-          person.prisonName == null
       }
     }
   }

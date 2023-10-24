@@ -82,7 +82,7 @@ class ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
 
-    val applicationSummaries = when (serviceName) {
+    return when (serviceName) {
       ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
       ServiceName.cas2 -> throw RuntimeException(
         "CAS2 applications now require " +
@@ -90,11 +90,6 @@ class ApplicationService(
       )
       ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
-
-    return applicationSummaries
-      .filter {
-        offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
-      }
   }
 
   private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) =

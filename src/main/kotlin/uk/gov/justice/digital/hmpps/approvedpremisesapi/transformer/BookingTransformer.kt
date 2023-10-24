@@ -37,7 +37,7 @@ class BookingTransformer(
       id = jpa.getID(),
       arrivalDate = jpa.getArrivalDate(),
       departureDate = jpa.getDepartureDate(),
-      person = personTransformer.transformSummaryToPersonApi(personInfo),
+      person = personTransformer.transformModelToPersonApi(personInfo),
       bed = jpa.getBedId()?.let {
         Bed(
           id = jpa.getBedId()!!,

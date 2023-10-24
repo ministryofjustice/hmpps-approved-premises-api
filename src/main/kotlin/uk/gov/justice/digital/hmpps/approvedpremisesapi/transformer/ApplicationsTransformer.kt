@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary as ApiTemporaryAccommodationApplicationSummary
@@ -93,14 +95,20 @@ class ApplicationsTransformer(
     }
   }
 
-  fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonInfoResult.Success): ApiApplicationSummary = when (domain) {
+  fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonSummaryInfoResult): ApiApplicationSummary =
+    transformApplicationToApiSummary(domain, personTransformer.transformModelToPersonApi(personInfo))
+
+  fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonInfoResult): ApiApplicationSummary =
+    transformApplicationToApiSummary(domain, personTransformer.transformModelToPersonApi(personInfo))
+
+  fun transformApplicationToApiSummary(domain: DomainApplicationSummary, person: Person): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
       val riskRatings =
         if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
       ApiApprovedPremisesApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = person,
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),
@@ -119,7 +127,7 @@ class ApplicationsTransformer(
 
       ApiTemporaryAccommodationApplicationSummary(
         id = domain.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = person,
         createdByUserId = domain.getCreatedByUserId(),
         createdAt = domain.getCreatedAt().toInstant(),
         submittedAt = domain.getSubmittedAt()?.toInstant(),

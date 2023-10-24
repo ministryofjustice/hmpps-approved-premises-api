@@ -70,6 +70,18 @@ fun IntegrationTestBase.ApDeliusContext_addResponseToUserAccessCall(caseAccess: 
   }
 }
 
+fun IntegrationTestBase.ApDeliusContext_mockCaseSummaryBulkResponse(caseSummaries: List<CaseSummary>) = mockSuccessfulGetCallWithBodyAndJsonResponse(
+  url = "/probation-cases/summaries",
+  requestBody = WireMock.equalToJson(
+    objectMapper.writeValueAsString(caseSummaries.map { it.crn }),
+    true,
+    true,
+  ),
+  responseBody = CaseSummaries(
+    cases = caseSummaries,
+  ),
+)
+
 fun IntegrationTestBase.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
   val url = "/probation-cases/summaries"
   val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url }

@@ -30,7 +30,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -104,7 +106,8 @@ class ApplicationsTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockPersonTransformer.transformModelToPersonApi(any<PersonInfoResult>()) } returns mockk<Person>()
+    every { mockPersonTransformer.transformModelToPersonApi(any<PersonSummaryInfoResult>()) } returns mockk<Person>()
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
   }
 
@@ -486,7 +489,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -514,7 +517,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -542,7 +545,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -570,7 +573,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = true
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -598,7 +601,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -626,7 +629,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -654,7 +657,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -676,7 +679,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as TemporaryAccommodationApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as TemporaryAccommodationApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -699,7 +702,7 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as TemporaryAccommodationApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk<PersonInfoResult>()) as TemporaryAccommodationApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())

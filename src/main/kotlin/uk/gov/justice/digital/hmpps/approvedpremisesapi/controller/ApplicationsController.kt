@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -54,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPersonDetailsForCrn
 import java.net.URI
@@ -82,8 +82,19 @@ class ApplicationsController(
     val user = userService.getUserForRequest()
 
     val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
+    val crns = applications.map { it.getCrn() }.distinct()
+    val personSummary = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername)
 
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+    val applicationSummaries = applications.mapNotNull {
+      val personInfo = personSummary.find { personSummary -> personSummary.crn == it.getCrn() } ?: PersonSummaryInfoResult.NotFound(it.getCrn())
+      if (personInfo is PersonSummaryInfoResult.Success.Restricted) {
+        null
+      } else {
+        applicationsTransformer.transformDomainToApiSummary(it, personInfo)
+      }
+    }
+
+    return ResponseEntity.ok(applicationSummaries)
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
@@ -322,12 +333,6 @@ class ApplicationsController(
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn, user)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)
-  }
-
-  private fun getPersonDetailAndTransformToSummary(application: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary, user: UserEntity): ApplicationSummary {
-    val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn(), user)
-
-    return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity, user: UserEntity): Application {

@@ -42,7 +42,7 @@ class PersonTransformer {
     )
   }
 
-  fun transformSummaryToPersonApi(personInfoResult: PersonSummaryInfoResult) = when (personInfoResult) {
+  fun transformModelToPersonApi(personInfoResult: PersonSummaryInfoResult) = when (personInfoResult) {
     is PersonSummaryInfoResult.Success.Full -> FullPerson(
       type = PersonType.fullPerson,
       crn = personInfoResult.crn,
