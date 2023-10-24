@@ -223,6 +223,8 @@ abstract class AssessmentEntity(
 
   @Transient
   var schemaUpToDate: Boolean,
+
+  var isWithdrawn: Boolean,
 )
 
 @Entity
@@ -245,6 +247,7 @@ class ApprovedPremisesAssessmentEntity(
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
+  isWithdrawn: Boolean,
 ) : AssessmentEntity(
   id,
   application,
@@ -261,6 +264,7 @@ class ApprovedPremisesAssessmentEntity(
   clarificationNotes,
   referralHistoryNotes,
   schemaUpToDate,
+  isWithdrawn,
 )
 
 @Entity
@@ -286,6 +290,7 @@ class TemporaryAccommodationAssessmentEntity(
   var completedAt: OffsetDateTime?,
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var summaryData: String,
+  isWithdrawn: Boolean,
 ) : AssessmentEntity(
   id,
   application,
@@ -302,6 +307,7 @@ class TemporaryAccommodationAssessmentEntity(
   clarificationNotes,
   referralHistoryNotes,
   schemaUpToDate,
+  isWithdrawn,
 )
 
 /**

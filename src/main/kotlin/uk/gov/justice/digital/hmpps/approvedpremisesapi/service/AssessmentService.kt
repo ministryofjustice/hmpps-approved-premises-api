@@ -148,6 +148,7 @@ class AssessmentService(
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
+        isWithdrawn = false,
       ),
     )
 
@@ -190,6 +191,7 @@ class AssessmentService(
         referralHistoryNotes = mutableListOf(),
         completedAt = null,
         summaryData = objectMapper.writeValueAsString(summaryData),
+        isWithdrawn = false,
       ),
     )
 
@@ -200,10 +202,17 @@ class AssessmentService(
 
   fun updateAssessment(user: UserEntity, assessmentId: UUID, data: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val assessmentResult = getAssessmentForUser(user, assessmentId)
+
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+    }
+
+    if (assessment.isWithdrawn) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The application has been withdrawn."),
+      )
     }
 
     if (!assessment.schemaUpToDate) {
@@ -622,6 +631,7 @@ class AssessmentService(
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
+        isWithdrawn = false,
       ),
     )
 
@@ -781,6 +791,12 @@ class AssessmentService(
     )
 
     return AuthorisableActionResult.Success(referralHistoryNoteEntity)
+  }
+
+  fun updateAssessmentWithdrawn(assessmentId: UUID) {
+    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+    assessment?.isWithdrawn = true
+    assessmentRepository.save(assessment)
   }
 
   private fun AssessmentEntity.addSystemNote(user: UserEntity, type: ReferralHistorySystemNoteType) {

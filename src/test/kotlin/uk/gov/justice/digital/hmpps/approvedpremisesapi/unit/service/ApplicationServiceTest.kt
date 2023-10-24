@@ -1730,32 +1730,6 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `withdrawApprovedPremisesApplication returns GeneralValidationError if Application has been submitted`() {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withSubmittedAt(OffsetDateTime.parse("2023-07-10T14:41:00+01:00"))
-      .produce()
-
-    every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-
-    val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(application.id, user, "alternative_identified_placement_no_longer_required", null)
-
-    assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
-
-    val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
-
-    assertThat(validatableActionResult is ValidatableActionResult.GeneralValidationError).isTrue
-
-    val generalValidationError = (validatableActionResult as ValidatableActionResult.GeneralValidationError).message
-
-    assertThat(generalValidationError).isEqualTo("applicationAlreadySubmitted")
-  }
-
-  @Test
   fun `withdrawApprovedPremisesApplication returns FieldValidationError if the reason is null and the otherReason has not been set`() {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -1794,6 +1768,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+    every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
     val staffUserDetails = StaffUserDetailsFactory()
       .withUsername(user.deliusUsername)
@@ -1854,6 +1829,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+    every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
     val staffUserDetails = StaffUserDetailsFactory()
       .withUsername(user.deliusUsername)
@@ -1916,6 +1892,7 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+    every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
     val staffUserDetails = StaffUserDetailsFactory()
       .withUsername(user.deliusUsername)

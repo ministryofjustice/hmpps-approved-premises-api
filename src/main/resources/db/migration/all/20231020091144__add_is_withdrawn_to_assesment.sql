@@ -1,0 +1,1 @@
+ALTER TABLE "assessments" ADD COLUMN "is_withdrawn" BOOLEAN NOT NULL DEFAULT false;

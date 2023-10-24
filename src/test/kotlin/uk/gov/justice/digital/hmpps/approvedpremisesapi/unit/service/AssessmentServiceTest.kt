@@ -613,6 +613,56 @@ class AssessmentServiceTest {
   }
 
   @Test
+  fun `updateAssessment returns general validation error for Assessment where assessment is withdrawn`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce(),
+          )
+          .withIsWithdrawn(true)
+          .produce(),
+      )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withAllocatedToUser(user)
+      .withIsWithdrawn(true)
+      .produce()
+
+    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.updateAssessment(user, assessment.id, "{}")
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
+    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
+    assertThat(generalValidationError.message).isEqualTo("The application has been withdrawn.")
+  }
+
+  @Test
   fun `updateAssessment returns general validation error for Assessment where decision has already been taken`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {

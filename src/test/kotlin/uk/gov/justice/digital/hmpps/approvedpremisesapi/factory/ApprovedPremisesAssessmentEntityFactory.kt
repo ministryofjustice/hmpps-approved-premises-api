@@ -35,6 +35,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var rejectionRationale: Yielded<String?> = { null }
   private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
   private var referralHistoryNotes: Yielded<MutableList<AssessmentReferralHistoryNoteEntity>> = { mutableListOf() }
+  private var isWithdrawn: Yielded<Boolean> = { false }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -92,6 +93,10 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.rejectionRationale = { rejectionRationale }
   }
 
+  fun withIsWithdrawn(isWithdrawn: Boolean) = apply {
+    this.isWithdrawn = { isWithdrawn }
+  }
+
   override fun produce(): ApprovedPremisesAssessmentEntity = ApprovedPremisesAssessmentEntity(
     id = this.id(),
     data = this.data(),
@@ -108,5 +113,6 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     rejectionRationale = this.rejectionRationale(),
     clarificationNotes = this.clarificationNotes(),
     referralHistoryNotes = this.referralHistoryNotes(),
+    isWithdrawn = this.isWithdrawn(),
   )
 }

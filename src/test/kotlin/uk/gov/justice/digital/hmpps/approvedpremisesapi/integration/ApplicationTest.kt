@@ -2114,6 +2114,16 @@ class ApplicationTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
 
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAllocatedToUser(user)
+          withAssessmentSchema(assessmentSchema)
+        }
+
         webTestClient.post()
           .uri("/applications/${application.id}/withdrawal")
           .header("Authorization", "Bearer $jwt")
@@ -2128,6 +2138,9 @@ class ApplicationTest : IntegrationTestBase() {
 
         val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
         assertThat(updatedApplication.isWithdrawn).isTrue
+
+        val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+        assertThat(updatedAssessment.isWithdrawn).isTrue
       }
     }
   }
