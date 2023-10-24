@@ -116,6 +116,16 @@ class AssessmentTest : IntegrationTestBase() {
 
         reallocatedAssessment.schemaUpToDate = true
 
+        val withdrawnAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(user)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withDecision(assessmentDecision)
+          withIsWithdrawn(true)
+        }
+
+        withdrawnAssessment.schemaUpToDate = true
+
         webTestClient.get()
           .uri("/assessments")
           .header("Authorization", "Bearer $jwt")

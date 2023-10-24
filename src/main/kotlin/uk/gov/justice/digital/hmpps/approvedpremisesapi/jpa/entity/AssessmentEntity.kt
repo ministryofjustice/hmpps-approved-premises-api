@@ -102,6 +102,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            join applications ap on a.application_id = ap.id
            left outer join approved_premises_applications apa on ap.id = apa.id
      where a.reallocated_at is null
+           and a.is_withdrawn is false
            and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
     """,
   resultSetMapping = "DomainAssessmentSummaryMapping",
