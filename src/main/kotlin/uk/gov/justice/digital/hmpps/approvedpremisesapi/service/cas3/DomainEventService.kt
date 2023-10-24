@@ -43,11 +43,11 @@ class DomainEventService(
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.cas3.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.booking-confirmed-event-detail") private val bookingConfirmedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.booking-provisionally-made-event-detail") private val bookingProvisionallyMadeDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.booking-confirmed-event-detail}") private val bookingConfirmedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.booking-provisionally-made-event-detail}") private val bookingProvisionallyMadeDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.person-departed-event-detail") private val personDepartedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.referral-submitted-event-detail") private val referralSubmittedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.person-departed-event-detail}") private val personDepartedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.referral-submitted-event-detail}") private val referralSubmittedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
