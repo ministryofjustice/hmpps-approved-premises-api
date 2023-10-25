@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExtensionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
@@ -110,6 +111,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonEntity
@@ -173,6 +175,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DomainEventTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ExtensionTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ExternalUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LostBedCancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LostBedReasonTestRepository
@@ -386,6 +389,9 @@ abstract class IntegrationTestBase {
   lateinit var nomisUserRepository: NomisUserTestRepository
 
   @Autowired
+  lateinit var externalUserRepository: ExternalUserTestRepository
+
+  @Autowired
   lateinit var userRoleAssignmentRepository: UserRoleAssignmentTestRepository
 
   @Autowired
@@ -481,6 +487,7 @@ abstract class IntegrationTestBase {
   lateinit var temporaryAccommodationAssessmentJsonSchemaEntityFactory: PersistedFactory<TemporaryAccommodationAssessmentJsonSchemaEntity, UUID, TemporaryAccommodationAssessmentJsonSchemaEntityFactory>
   lateinit var userEntityFactory: PersistedFactory<UserEntity, UUID, UserEntityFactory>
   lateinit var nomisUserEntityFactory: PersistedFactory<NomisUserEntity, UUID, NomisUserEntityFactory>
+  lateinit var externalUserEntityFactory: PersistedFactory<ExternalUserEntity, UUID, ExternalUserEntityFactory>
   lateinit var userRoleAssignmentEntityFactory: PersistedFactory<UserRoleAssignmentEntity, UUID, UserRoleAssignmentEntityFactory>
   lateinit var userQualificationAssignmentEntityFactory: PersistedFactory<UserQualificationAssignmentEntity, UUID, UserQualificationAssignmentEntityFactory>
   lateinit var approvedPremisesAssessmentEntityFactory: PersistedFactory<ApprovedPremisesAssessmentEntity, UUID, ApprovedPremisesAssessmentEntityFactory>
@@ -562,6 +569,7 @@ abstract class IntegrationTestBase {
     temporaryAccommodationAssessmentJsonSchemaEntityFactory = PersistedFactory({ TemporaryAccommodationAssessmentJsonSchemaEntityFactory() }, temporaryAccommodationAssessmentJsonSchemaRepository)
     approvedPremisesPlacementApplicationJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory() }, approvedPremisesPlacementApplicationJsonSchemaRepository)
     nomisUserEntityFactory = PersistedFactory({ NomisUserEntityFactory() }, nomisUserRepository)
+    externalUserEntityFactory = PersistedFactory({ ExternalUserEntityFactory() }, externalUserRepository)
     userEntityFactory = PersistedFactory({ UserEntityFactory() }, userRepository)
     userRoleAssignmentEntityFactory = PersistedFactory({ UserRoleAssignmentEntityFactory() }, userRoleAssignmentRepository)
     userQualificationAssignmentEntityFactory = PersistedFactory({ UserQualificationAssignmentEntityFactory() }, userQualificationAssignmentRepository)

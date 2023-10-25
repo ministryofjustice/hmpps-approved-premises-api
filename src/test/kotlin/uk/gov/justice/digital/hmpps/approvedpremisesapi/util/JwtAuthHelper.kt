@@ -70,6 +70,13 @@ class JwtAuthHelper {
       roles = listOf("ROLE_PRISON"),
     )
 
+  internal fun createValidExternalAuthorisationCodeJwt(username: String = "username") =
+    createAuthorizationCodeJwt(
+      subject = username,
+      authSource = "auth",
+      roles = listOf("ROLE_CAS2_ASSESSOR"),
+    )
+
   internal fun createValidAuthorizationCodeJwt(username: String = "username") = createAuthorizationCodeJwt(
     subject = username,
     authSource = "delius",

@@ -25,7 +25,7 @@ class OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getInfoForPerson(crn: String, nomisUsername: String): PersonInfoResult {
+  fun getInfoForPerson(crn: String): PersonInfoResult {
     var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
 
     if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {

@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -110,6 +111,20 @@ fun IntegrationTestBase.`Given a CAS2 User`(
   }
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
+
+  block(user, jwt)
+}
+
+fun IntegrationTestBase.`Given a CAS2 Assessor`(
+  id: UUID = UUID.randomUUID(),
+  block: (externalUserEntity: ExternalUserEntity, jwt: String) -> Unit,
+) {
+  val user = externalUserEntityFactory.produceAndPersist {
+    withId(id)
+    withUsername("CAS2_ASSESSOR_USER")
+  }
+
+  val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("CAS2_ASSESSOR_USER")
 
   block(user, jwt)
 }

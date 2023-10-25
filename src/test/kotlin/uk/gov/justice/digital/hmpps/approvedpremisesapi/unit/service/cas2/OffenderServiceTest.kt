@@ -244,11 +244,10 @@ class OffenderServiceTest {
     @Test
     fun `returns NotFound if Community API responds with a 404`() {
       val crn = "ABC123"
-      val nomisUsername = "USER"
 
       every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.NOT_FOUND, null, true)
 
-      val result = offenderService.getInfoForPerson(crn, nomisUsername)
+      val result = offenderService.getInfoForPerson(crn)
 
       assertThat(result is PersonInfoResult.NotFound).isTrue
     }
@@ -256,11 +255,10 @@ class OffenderServiceTest {
     @Test
     fun `returns Unknown if Community API responds with a 500`() {
       val crn = "ABC123"
-      val nomisUsername = "USER"
 
       every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
 
-      val result = offenderService.getInfoForPerson(crn, nomisUsername)
+      val result = offenderService.getInfoForPerson(crn)
 
       assertThat(result is PersonInfoResult.Unknown).isTrue
       result as PersonInfoResult.Unknown
@@ -271,7 +269,6 @@ class OffenderServiceTest {
     fun `returns Full for CRN with both Community API and Prison API data where Community API links to Prison API`() {
       val crn = "ABC123"
       val nomsNumber = "NOMSABC"
-      val nomisUsername = "USER"
 
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withCrn(crn)
@@ -292,7 +289,7 @@ class OffenderServiceTest {
         body = inmateDetail,
       )
 
-      val result = offenderService.getInfoForPerson(crn, nomisUsername)
+      val result = offenderService.getInfoForPerson(crn)
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
       result as PersonInfoResult.Success.Full
