@@ -60,6 +60,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/events/cas2/application-submitted/*", hasAuthority("ROLE_CAS2_EVENTS"))
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
         authorize(HttpMethod.GET, "/cas2/applications/**", hasAnyRole("CAS2_ASSESSOR", "PRISON"))
+        authorize(HttpMethod.GET, "/cas2/submissions/**", hasRole("CAS2_ASSESSOR"))
         authorize("/cas2/**", hasAuthority("ROLE_PRISON"))
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
       }
