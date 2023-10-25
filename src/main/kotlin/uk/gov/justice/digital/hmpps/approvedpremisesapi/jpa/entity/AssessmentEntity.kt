@@ -37,7 +37,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   @Query(nativeQuery = true)
   fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(probationRegionId: UUID, crn: String): List<DomainAssessmentSummary>
 
-  @Query("SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL AND a.submittedAt IS NULL AND TYPE(a) = :type")
+  @Query("SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type")
   fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(type: Class<T>): List<AssessmentEntity>
 
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
@@ -102,6 +102,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            join applications ap on a.application_id = ap.id
            left outer join approved_premises_applications apa on ap.id = apa.id
      where a.reallocated_at is null
+           and a.is_withdrawn is false
            and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
     """,
   resultSetMapping = "DomainAssessmentSummaryMapping",

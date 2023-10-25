@@ -74,6 +74,14 @@ class TasksTest : IntegrationTestBase() {
               reallocated = true,
             )
 
+            `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              reallocated = true,
+              isWithdrawn = true,
+            )
+
             `Given an Assessment for Temporary Accommodation`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
