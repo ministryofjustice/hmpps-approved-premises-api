@@ -5504,6 +5504,40 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
+    Cas2SubmittedApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        document:
+          $ref: '#/components/schemas/AnyValue'
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        submittedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -5626,6 +5660,31 @@ components:
           required:
             - createdByUserId
             - status
+    Cas2SubmittedApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+      required:
+        - createdByUserId
+        - status
+        - id
+        - person
+        - createdAt
     ApplicationStatus:
       type: string
       enum:

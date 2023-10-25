@@ -165,6 +165,52 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /submissions:
+    get:
+      tags:
+        - Operations on submitted CAS2 applications (Assessors)
+      summary: List summaries of all submitted CAS2 applications
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas2SubmittedApplicationSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /submissions/{applicationId}:
+    get:
+      tags:
+        - Operations on submitted CAS2 applications (Assessors)
+      summary: Gets a single submitted CAS2 application by its ID
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas2SubmittedApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /people/search:
     get:
       tags:
@@ -1892,6 +1938,40 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
+    Cas2SubmittedApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        document:
+          $ref: '#/components/schemas/AnyValue'
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        submittedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -2014,6 +2094,31 @@ components:
           required:
             - createdByUserId
             - status
+    Cas2SubmittedApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+      required:
+        - createdByUserId
+        - status
+        - id
+        - person
+        - createdAt
     ApplicationStatus:
       type: string
       enum:
