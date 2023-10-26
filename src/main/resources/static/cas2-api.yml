@@ -128,13 +128,32 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /applications/{applicationId}/submission:
+  /submissions:
+    get:
+      tags:
+        - Operations on submitted CAS2 applications (Assessors)
+      summary: List summaries of all submitted CAS2 applications
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/Cas2SubmittedApplicationSummary'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
     post:
       tags:
         - Operations on CAS2 applications
-      summary: Submits a CAS2 Application
+      summary: Submits a CAS2 Application (creates a SubmittedApplication)
       parameters:
-        - in: path
+        - in: query
           name: applicationId
           required: true
           description: Id of the application
@@ -157,26 +176,6 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /submissions:
-    get:
-      tags:
-        - Operations on submitted CAS2 applications (Assessors)
-      summary: List summaries of all submitted CAS2 applications
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/Cas2SubmittedApplicationSummary'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

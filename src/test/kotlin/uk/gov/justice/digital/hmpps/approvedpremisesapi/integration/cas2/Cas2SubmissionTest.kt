@@ -5,18 +5,22 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
+import io.mockk.every
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -35,6 +39,22 @@ class Cas2SubmissionTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {
+    @Test
+    fun `submitting an application is forbidden to external users based on role`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_CAS2_ASSESSOR"),
+      )
+
+      webTestClient.post()
+        .uri("/cas2/submissions?applicationId=de6512fc-a225-4109-bdcd-86c6307a5237")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
     @Test
     fun `viewing submitted applications is forbidden to internal users based on role`() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
@@ -284,6 +304,141 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               .expectStatus()
               .isNotFound
           }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class PostToCreate {
+    @Test
+    fun `Submit Cas2 application returns 200`() {
+      `Given a CAS2 User`() { submittingUser, jwt ->
+        `Given a CAS2 User` { userEntity, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema =
+              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+                withSchema(
+                  """
+                {
+                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                  "${"\$id"}": "https://example.com/product.schema.json",
+                  "title": "Thing",
+                  "description": "A thing",
+                  "type": "object",
+                  "properties": {},
+                  "required": []
+                }
+              """,
+                )
+              }
+
+            cas2ApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withData(
+                """
+                {}
+              """,
+              )
+            }
+
+            webTestClient.post()
+              .uri("/cas2/submissions?applicationId=$applicationId")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .bodyValue(
+                SubmitCas2Application(
+                  translatedDocument = {},
+                  type = "CAS2",
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
+      `Given a CAS2 User`() { submittingUser, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory
+            .produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                """
+            {
+              "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+              "${"\$id"}": "https://example.com/product.schema.json",
+              "title": "Thing",
+              "description": "A thing",
+              "type": "object",
+              "properties": {}
+              },
+              "required": [  ]
+            }
+          """,
+              )
+            }
+
+          cas2ApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
+                {}
+              """,
+            )
+          }
+
+          every { realApplicationRepository.save(any()) } answers {
+            Thread.sleep(1000)
+            it.invocation.args[0] as ApplicationEntity
+          }
+
+          val responseStatuses = mutableListOf<HttpStatus>()
+
+          (1..10).map {
+            val thread = Thread {
+              webTestClient.post()
+                .uri("/cas2/submissions?applicationId=$applicationId")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  SubmitCas2Application(
+                    translatedDocument = {},
+                    type = "CAS2",
+                  ),
+                )
+                .exchange()
+                .returnResult<String>()
+                .consumeWith {
+                  synchronized(responseStatuses) {
+                    responseStatuses += it.status
+                  }
+                }
+            }
+
+            thread.start()
+
+            thread
+          }.forEach(Thread::join)
+
+          Assertions.assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
+          Assertions.assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
         }
       }
     }

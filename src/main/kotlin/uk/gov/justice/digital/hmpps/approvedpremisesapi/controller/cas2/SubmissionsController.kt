@@ -1,15 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
@@ -50,6 +55,29 @@ class SubmissionsController(
       return ResponseEntity.ok(getPersonDetailAndTransform(application))
     }
     throw NotFoundProblem(applicationId, "Application")
+  }
+
+  override fun submissionsPost(
+    applicationId: UUID,
+    submitApplication: SubmitCas2Application,
+  ): ResponseEntity<Unit> {
+    httpAuthService.getNomisPrincipalOrThrow()
+    val submitResult = applicationService.submitApplication(applicationId, submitApplication)
+
+    val validationResult = when (submitResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> submitResult.entity
+    }
+
+    when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.Success -> Unit
+    }
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   private fun ensureExternalUserPersisted() {
