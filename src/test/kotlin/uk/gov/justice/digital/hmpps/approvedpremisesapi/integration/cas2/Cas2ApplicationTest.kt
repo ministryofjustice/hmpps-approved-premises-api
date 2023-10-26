@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
-import io.mockk.every
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
@@ -18,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -28,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -75,22 +71,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       webTestClient.put()
         .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    fun `submitting an application is forbidden to external users based on role`() {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "nomis",
-        roles = listOf("ROLE_CAS2_ASSESSOR"),
-      )
-
-      webTestClient.post()
-        .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd/submission")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -531,141 +511,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val result = objectMapper.readValue(resultBody, Application::class.java)
 
           Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class PostToSubmit {
-    @Test
-    fun `Submit Cas2 application returns 200`() {
-      `Given a CAS2 User`() { submittingUser, jwt ->
-        `Given a CAS2 User` { userEntity, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
-            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-                withSchema(
-                  """
-                {
-                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                  "${"\$id"}": "https://example.com/product.schema.json",
-                  "title": "Thing",
-                  "description": "A thing",
-                  "type": "object",
-                  "properties": {},
-                  "required": []
-                }
-              """,
-                )
-              }
-
-            cas2ApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withId(applicationId)
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(submittingUser)
-              withData(
-                """
-                {}
-              """,
-              )
-            }
-
-            webTestClient.post()
-              .uri("/cas2/applications/$applicationId/submission")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
-              .bodyValue(
-                SubmitCas2Application(
-                  translatedDocument = {},
-                  type = "CAS2",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
-      `Given a CAS2 User`() { submittingUser, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
-          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory
-            .produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                """
-            {
-              "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-              "${"\$id"}": "https://example.com/product.schema.json",
-              "title": "Thing",
-              "description": "A thing",
-              "type": "object",
-              "properties": {}
-              },
-              "required": [  ]
-            }
-          """,
-              )
-            }
-
-          cas2ApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-            withData(
-              """
-                {}
-              """,
-            )
-          }
-
-          every { realApplicationRepository.save(any()) } answers {
-            Thread.sleep(1000)
-            it.invocation.args[0] as ApplicationEntity
-          }
-
-          val responseStatuses = mutableListOf<HttpStatus>()
-
-          (1..10).map {
-            val thread = Thread {
-              webTestClient.post()
-                .uri("/cas2/applications/$applicationId/submission")
-                .header("Authorization", "Bearer $jwt")
-                .bodyValue(
-                  SubmitCas2Application(
-                    translatedDocument = {},
-                    type = "CAS2",
-                  ),
-                )
-                .exchange()
-                .returnResult<String>()
-                .consumeWith {
-                  synchronized(responseStatuses) {
-                    responseStatuses += it.status
-                  }
-                }
-            }
-
-            thread.start()
-
-            thread
-          }.forEach(Thread::join)
-
-          Assertions.assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
-          Assertions.assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
         }
       }
     }

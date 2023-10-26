@@ -156,10 +156,9 @@ class ApplicationService(
 
   @Transactional
   fun submitApplication(
-    applicationId: UUID,
     submitApplication: SubmitCas2Application,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
-    var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)
+    var application = applicationRepository.findByIdOrNullWithWriteLock(submitApplication.applicationId)
       ?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 

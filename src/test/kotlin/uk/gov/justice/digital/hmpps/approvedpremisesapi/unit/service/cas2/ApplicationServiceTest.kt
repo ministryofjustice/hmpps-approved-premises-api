@@ -390,7 +390,7 @@ class ApplicationServiceTest {
 
     private val submitCas2Application = SubmitCas2Application(
       translatedDocument = {},
-      type = "CAS2",
+      applicationId = applicationId
     )
 
     @BeforeEach
@@ -405,7 +405,7 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
-      assertThat(applicationService.submitApplication(applicationId, submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
@@ -425,7 +425,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
         application
 
-      assertThat(applicationService.submitApplication(applicationId, submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
     }
 
     @Test
@@ -445,7 +445,7 @@ class ApplicationServiceTest {
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApplication(applicationId, submitCas2Application)
+      val result = applicationService.submitApplication(submitCas2Application)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -476,7 +476,7 @@ class ApplicationServiceTest {
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApplication(applicationId, submitCas2Application)
+      val result = applicationService.submitApplication(submitCas2Application)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -524,7 +524,7 @@ class ApplicationServiceTest {
 
       val _schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
 
-      val result = applicationService.submitApplication(applicationId, submitCas2Application)
+      val result = applicationService.submitApplication(submitCas2Application)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success

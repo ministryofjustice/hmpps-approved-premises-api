@@ -1901,8 +1901,17 @@ components:
             - targetLocation
             - releaseType
     SubmitCas2Application:
-      allOf:
-        - $ref: '#/components/schemas/SubmitApplication'
+      type: object
+      properties:
+        translatedDocument:
+          $ref: '#/components/schemas/AnyValue'
+        applicationId:
+          type: string
+          format: uuid
+          description: Id of the application being submitted
+      required:
+        - translatedDocument
+        - applicationId
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
