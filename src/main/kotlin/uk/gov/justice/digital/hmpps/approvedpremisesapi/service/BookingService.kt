@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import arrow.core.Either
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -233,49 +234,7 @@ class BookingService(
         bookingCreatedAt = bookingCreatedAt,
       )
 
-      val applicationSubmittedByUser = placementRequest.application.createdByUser
-
-      val lengthOfStayDays = arrivalDate.getDaysUntilInclusive(departureDate).size
-      val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
-      val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
-
-      if (applicationSubmittedByUser.email != null) {
-        emailNotificationService.sendEmail(
-          email = applicationSubmittedByUser.email!!,
-          templateId = notifyConfig.templates.bookingMade,
-          personalisation = mapOf(
-            "name" to applicationSubmittedByUser.name,
-            "apName" to premises!!.name,
-            "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
-            "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
-              .replace("#bookingId", booking.id.toString()),
-            "crn" to placementRequest.application.crn,
-            "startDate" to arrivalDate.toString(),
-            "endDate" to departureDate.toString(),
-            "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks else lengthOfStayDays,
-            "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
-          ),
-        )
-      }
-
-      if (premises?.emailAddress != null) {
-        emailNotificationService.sendEmail(
-          email = premises!!.emailAddress!!,
-          templateId = notifyConfig.templates.bookingMadePremises,
-          personalisation = mapOf(
-            "name" to applicationSubmittedByUser.name,
-            "apName" to premises!!.name,
-            "applicationUrl" to applicationUrlTemplate.replace("#id", placementRequest.application.id.toString()),
-            "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
-              .replace("#bookingId", booking.id.toString()),
-            "crn" to placementRequest.application.crn,
-            "startDate" to arrivalDate.toString(),
-            "endDate" to departureDate.toString(),
-            "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks else lengthOfStayDays,
-            "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
-          ),
-        )
-      }
+      sendEmailNotifications(placementRequest.application, booking)
 
       return@validated success(booking)
     }
@@ -335,10 +294,8 @@ class BookingService(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,
-    bookingId: UUID? = null,
+    bookingId: UUID = UUID.randomUUID(),
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    val bookingId = bookingId ?: UUID.randomUUID()
-
     if (user != null && (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER))) {
       return AuthorisableActionResult.Unauthorised()
     }
@@ -360,31 +317,13 @@ class BookingService(
         "$.bedId" hasValidationError "mustBelongToApprovedPremises"
       }
 
-      val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
-        .filter { it.submittedAt != null }
-        .maxByOrNull { it.submittedAt!! } as ApprovedPremisesApplicationEntity?
-      var newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
-        .maxByOrNull { it.createdAt }
-
-      if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
-        newestOfflineApplication = applicationService.createOfflineApplication(
-          OfflineApplicationEntity(
-            id = UUID.randomUUID(),
-            crn = crn,
-            service = ServiceName.approvedPremises.value,
-            createdAt = OffsetDateTime.now(),
-          ),
-        )
-      }
-
       if (validationErrors.any()) {
         return@validated fieldValidationError
       }
 
-      val associateWithOfflineApplication = (newestOfflineApplication != null && newestSubmittedOnlineApplication == null) ||
-        (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt > newestSubmittedOnlineApplication.submittedAt)
-
-      val associateWithOnlineApplication = newestSubmittedOnlineApplication != null && !associateWithOfflineApplication
+      val application = fetchApplication(crn)
+      val onlineApplication = if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
+      val offlineApplication = if (application is Either.Right<OfflineApplicationEntity>) application.value else null
 
       val bookingCreatedAt = OffsetDateTime.now()
 
@@ -407,8 +346,8 @@ class BookingService(
           originalArrivalDate = arrivalDate,
           originalDepartureDate = departureDate,
           createdAt = bookingCreatedAt,
-          application = if (associateWithOnlineApplication) newestSubmittedOnlineApplication else null,
-          offlineApplication = if (associateWithOfflineApplication) newestOfflineApplication else null,
+          application = onlineApplication,
+          offlineApplication = offlineApplication,
           turnarounds = mutableListOf(),
           dateChanges = mutableListOf(),
           nomsNumber = nomsNumber,
@@ -416,13 +355,9 @@ class BookingService(
         ),
       )
 
-      var newestPlacementRequest = newestSubmittedOnlineApplication?.getLatestPlacementRequest()
-      if (newestPlacementRequest != null && newestPlacementRequest?.isWithdrawn != true && newestPlacementRequest?.booking == null) {
-        newestPlacementRequest.booking = booking
-        placementRequestRepository.save(newestPlacementRequest)
-      }
+      associateBookingWithPlacementRequest(onlineApplication, booking)
 
-      if (associateWithOnlineApplication && user != null) {
+      if (onlineApplication != null && user != null) {
         if (!manualBookingsDomainEventsDisabled) {
           saveBookingMadeDomainEvent(
             booking = booking,
@@ -431,54 +366,89 @@ class BookingService(
           )
         }
 
-        val applicationSubmittedByUser = newestSubmittedOnlineApplication!!.createdByUser
-
-        val lengthOfStayDays = arrivalDate.getDaysUntilInclusive(departureDate).size
-        val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
-        val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
-        if (applicationSubmittedByUser.email != null) {
-          emailNotificationService.sendEmail(
-            email = applicationSubmittedByUser.email!!,
-            templateId = notifyConfig.templates.bookingMade,
-            personalisation = mapOf(
-              "name" to applicationSubmittedByUser.name,
-              "apName" to bed.room.premises.name,
-              "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
-              "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
-                .replace("#bookingId", booking.id.toString()),
-              "crn" to crn,
-              "startDate" to arrivalDate.toString(),
-              "endDate" to departureDate.toString(),
-              "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
-              "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
-            ),
-          )
-        }
-
-        if (booking.premises.emailAddress != null) {
-          emailNotificationService.sendEmail(
-            email = booking.premises.emailAddress!!,
-            templateId = notifyConfig.templates.bookingMadePremises,
-            personalisation = mapOf(
-              "name" to applicationSubmittedByUser.name,
-              "apName" to bed.room.premises.name,
-              "applicationUrl" to applicationUrlTemplate.replace("#id", newestSubmittedOnlineApplication.id.toString()),
-              "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
-                .replace("#bookingId", booking.id.toString()),
-              "crn" to crn,
-              "startDate" to arrivalDate.toString(),
-              "endDate" to departureDate.toString(),
-              "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
-              "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
-            ),
-          )
-        }
+        sendEmailNotifications(onlineApplication, booking)
       }
 
       success(booking)
     }
 
     return AuthorisableActionResult.Success(validationResult)
+  }
+
+  private fun sendEmailNotifications(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
+    val applicationSubmittedByUser = application.createdByUser
+
+    val lengthOfStayDays = booking.arrivalDate.getDaysUntilInclusive(booking.departureDate).size
+    val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
+    val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
+
+    val emailPersonalisation = mapOf(
+      "name" to applicationSubmittedByUser.name,
+      "apName" to booking.premises.name,
+      "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+      "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
+        .replace("#bookingId", booking.id.toString()),
+      "crn" to application.crn,
+      "startDate" to booking.arrivalDate.toString(),
+      "endDate" to booking.departureDate.toString(),
+      "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
+      "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
+    )
+
+    if (applicationSubmittedByUser.email != null) {
+      emailNotificationService.sendEmail(
+        email = applicationSubmittedByUser.email!!,
+        templateId = notifyConfig.templates.bookingMade,
+        personalisation = emailPersonalisation,
+      )
+    }
+
+    if (booking.premises.emailAddress != null) {
+      emailNotificationService.sendEmail(
+        email = booking.premises.emailAddress!!,
+        templateId = notifyConfig.templates.bookingMadePremises,
+        personalisation = emailPersonalisation,
+      )
+    }
+  }
+
+  private fun fetchApplication(crn: String): Either<ApprovedPremisesApplicationEntity, OfflineApplicationEntity> {
+    val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
+      .filter { it.submittedAt != null }
+      .maxByOrNull { it.submittedAt!! } as ApprovedPremisesApplicationEntity?
+    var newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+      .maxByOrNull { it.createdAt }
+
+    if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
+      newestOfflineApplication = applicationService.createOfflineApplication(
+        OfflineApplicationEntity(
+          id = UUID.randomUUID(),
+          crn = crn,
+          service = ServiceName.approvedPremises.value,
+          createdAt = OffsetDateTime.now(),
+        ),
+      )
+    }
+
+    return if (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt.isBefore(newestSubmittedOnlineApplication.submittedAt)) {
+      Either.Right(newestOfflineApplication)
+    } else if (newestSubmittedOnlineApplication != null) {
+      Either.Left(newestSubmittedOnlineApplication)
+    } else {
+      Either.Right(newestOfflineApplication!!)
+    }
+  }
+
+  fun associateBookingWithPlacementRequest(application: ApprovedPremisesApplicationEntity?, booking: BookingEntity) {
+    if (application == null) {
+      return
+    }
+
+    val newestPlacementRequest = application.getLatestPlacementRequest()
+    if (newestPlacementRequest != null && !newestPlacementRequest.isWithdrawn && newestPlacementRequest.booking == null) {
+      newestPlacementRequest.booking = booking
+      placementRequestRepository.save(newestPlacementRequest)
+    }
   }
 
   private fun saveBookingMadeDomainEvent(
