@@ -1901,8 +1901,14 @@ components:
             - targetLocation
             - releaseType
     SubmitCas2Application:
-      allOf:
-        - $ref: '#/components/schemas/SubmitApplication'
+      type: object
+      properties:
+        type:
+          type: string
+        translatedDocument:
+          $ref: '#/components/schemas/AnyValue'
+      required:
+        - translatedDocument
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'

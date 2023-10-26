@@ -356,7 +356,6 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               .bodyValue(
                 SubmitCas2Application(
                   translatedDocument = {},
-                  type = "CAS2",
                 ),
               )
               .exchange()
@@ -420,7 +419,6 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                 .bodyValue(
                   SubmitCas2Application(
                     translatedDocument = {},
-                    type = "CAS2",
                   ),
                 )
                 .exchange()
