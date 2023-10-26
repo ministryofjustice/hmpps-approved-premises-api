@@ -19,6 +19,8 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(): List<PlacementApplicationEntity>
 
   fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementApplicationEntity>
+
+  fun findAllByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementApplicationEntity>
 }
 
 @Entity

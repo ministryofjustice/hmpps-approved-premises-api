@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
@@ -31,6 +32,7 @@ import java.util.UUID
 
 class PlacementApplicationServiceTest {
   private val placementApplicationRepository = mockk<PlacementApplicationRepository>()
+  private val applicationRepository = mockk<ApplicationRepository>()
   private val jsonSchemaService = mockk<JsonSchemaService>()
   private val userService = mockk<UserService>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
@@ -38,6 +40,7 @@ class PlacementApplicationServiceTest {
 
   private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
+    applicationRepository,
     jsonSchemaService,
     userService,
     placementDateRepository,

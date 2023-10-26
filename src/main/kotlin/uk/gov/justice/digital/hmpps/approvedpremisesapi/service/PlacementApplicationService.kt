@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 @Service
 class PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
+  private val applicationRepository: ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
@@ -36,6 +38,11 @@ class PlacementApplicationService(
 
   fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+  }
+
+  fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
+    val application = applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    return placementApplicationRepository.findAllByApplication(application)
   }
 
   fun createApplication(
