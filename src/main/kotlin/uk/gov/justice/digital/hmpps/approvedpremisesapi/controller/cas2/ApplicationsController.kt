@@ -11,14 +11,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
@@ -41,33 +40,23 @@ class ApplicationsController(
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val userService: NomisUserService,
-  private val externalUserService: ExternalUserService,
 ) : ApplicationsCas2Delegate {
 
   override fun applicationsGet(): ResponseEntity<List<ApplicationSummary>> {
-    val authenticatedPrincipal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
+    val user = userService.getUserForRequest()
 
-    return if (authenticatedPrincipal.isExternalUser()) {
-      ensureExternalUserPersisted()
-      val applications = applicationService.getAllSubmittedApplicationsForAssessor()
-      ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it) })
-    } else {
-      val user = userService.getUserForRequest()
-      val applications = applicationService.getAllApplicationsForUser(user)
-      ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it) })
-    }
+    val applications = applicationService.getAllApplicationsForUser(user)
+
+    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
   }
 
-  override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
-    val authenticatedPrincipal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
+  override fun applicationsApplicationIdGet(applicationId: UUID):
+    ResponseEntity<Application> {
+    val user = userService.getUserForRequest()
 
     val application = when (
-      val applicationResult = if (authenticatedPrincipal.isExternalUser()) {
-        applicationService.getSubmittedApplicationForAssessor(applicationId)
-      } else {
-        val user = userService.getUserForRequest()
-        applicationService.getApplicationForUsername(applicationId, user.nomisUsername)
-      }
+      val applicationResult = applicationService
+        .getApplicationForUsername(applicationId, user.nomisUsername)
     ) {
       is AuthorisableActionResult.NotFound -> null
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -75,7 +64,7 @@ class ApplicationsController(
     }
 
     if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application))
+      return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
     }
     throw NotFoundProblem(applicationId, "Application")
   }
@@ -136,7 +125,7 @@ class ApplicationsController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
+    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
   override fun applicationsApplicationIdSubmissionPost(
@@ -162,12 +151,10 @@ class ApplicationsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  private fun ensureExternalUserPersisted() {
-    externalUserService.getUserForRequest()
-  }
-
   private fun getPersonDetailAndTransformToSummary(
-    application: Cas2ApplicationSummary,
+    application: uk.gov.justice.digital
+    .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary,
+    user: NomisUserEntity,
   ):
     ApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
@@ -177,6 +164,7 @@ class ApplicationsController(
 
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
+    user: NomisUserEntity,
   ): Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 

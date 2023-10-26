@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
@@ -97,6 +96,38 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .expectStatus()
         .isForbidden
     }
+
+    @Test
+    fun `viewing list of applications is forbidden to external users based on role`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_CAS2_ASSESSOR"),
+      )
+
+      webTestClient.get()
+        .uri("/cas2/applications/")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `viewing an application is forbidden to external users based on role`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_CAS2_ASSESSOR"),
+      )
+
+      webTestClient.get()
+        .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
   }
 
   @Nested
@@ -131,66 +162,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class GetToIndex {
-
-    @Test
-    fun `Assessor can view ALL submitted applications`() {
-      `Given a CAS2 Assessor` { _externalUserEntity, jwt ->
-        `Given a CAS2 User` { user, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
-
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-            }
-
-            val submittedCas2ApplicationEntity = cas2ApplicationEntityFactory
-              .produceAndPersist {
-                withApplicationSchema(applicationSchema)
-                withCreatedByUser(user)
-                withCrn(offenderDetails.otherIds.crn)
-                withSubmittedAt(OffsetDateTime.parse("2023-01-01T09:00:00+01:00"))
-                withData("{}")
-              }
-
-            val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
-              .produceAndPersist {
-                withApplicationSchema(applicationSchema)
-                withCreatedByUser(user)
-                withCrn(offenderDetails.otherIds.crn)
-                withSubmittedAt(null)
-                withData("{}")
-              }
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
-
-            Assertions.assertThat(responseBody).anyMatch {
-              submittedCas2ApplicationEntity.id == it.id &&
-                submittedCas2ApplicationEntity.crn == it.person.crn &&
-                submittedCas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-                submittedCas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
-                submittedCas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
-            }
-
-            Assertions.assertThat(responseBody).noneMatch {
-              inProgressCas2ApplicationEntity.id == it.id
-            }
-          }
-        }
-      }
-    }
 
     @Test
     fun `Get all applications returns 200 with correct body`() {
@@ -382,136 +353,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
               serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
               newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Assessor can view single submitted application`() {
-      `Given a CAS2 Assessor` { _, jwt ->
-        `Given a CAS2 User` { user, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
-
-            val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
-              .produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                withSchema(
-                  """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-          """,
-                )
-              }
-
-            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(user)
-              withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withData(
-                """
-            {
-               "thingId": 123
-            }
-            """,
-              )
-            }
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${applicationEntity.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody = objectMapper.readValue(
-              rawResponseBody,
-              Cas2Application::class.java,
-            )
-
-            Assertions.assertThat(responseBody).matches {
-              applicationEntity.id == it.id &&
-                applicationEntity.crn == it.person.crn &&
-                applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser.id == it.createdByUserId &&
-                applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(
-                  it.data,
-                ) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Assessor can NOT view single in-progress application`() {
-      `Given a CAS2 Assessor` { _, jwt ->
-        `Given a CAS2 User` { user, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
-
-            val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
-              .produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                withSchema(
-                  """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-          """,
-                )
-              }
-
-            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(user)
-              withSubmittedAt(null)
-              withData(
-                """
-            {
-               "thingId": 123
-            }
-            """,
-              )
-            }
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${applicationEntity.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isNotFound
           }
         }
       }
