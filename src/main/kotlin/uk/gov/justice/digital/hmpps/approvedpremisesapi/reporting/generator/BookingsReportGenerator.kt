@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
@@ -10,12 +12,18 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
 
   override val convert: BookingsReportDataAndPersonInfo.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
     val booking = this.bookingsReportData
+    val personInfo = this.personInfoResult
 
     listOf(
       BookingsReportRow(
         bookingId = booking.bookingId,
         referralId = booking.referralId,
         referralDate = booking.referralDate,
+        personName = personInfo.tryGetDetails { "${it.firstName} ${it.surname}".trim() },
+        pncNumber = personInfo.tryGetDetails { it.otherIds.pncNumber },
+        gender = personInfo.tryGetDetails { it.gender },
+        ethnicity = personInfo.tryGetDetails { it.offenderProfile.ethnicity },
+        dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
         riskOfSeriousHarm = booking.riskOfSeriousHarm,
         sexOffender = booking.sexOffender,
         needForAccessibleProperty = booking.needForAccessibleProperty,
@@ -49,5 +57,12 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
 
   override fun filter(properties: BookingsReportProperties): (BookingsReportDataAndPersonInfo) -> Boolean = {
     true
+  }
+
+  private fun<V> PersonInfoResult.tryGetDetails(value: (OffenderDetailSummary) -> V): V? {
+    return when (this) {
+      is PersonInfoResult.Success.Full -> value(this.offenderDetailSummary)
+      else -> null
+    }
   }
 }

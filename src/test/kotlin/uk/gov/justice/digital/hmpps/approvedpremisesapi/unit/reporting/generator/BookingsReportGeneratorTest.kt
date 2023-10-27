@@ -16,10 +16,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
@@ -678,5 +680,72 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
     assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
     assertThat(actual[0][BookingsReportRow::referralEligibilityReason]).isEqualTo("Some reason")
+  }
+
+  @Test
+  fun `The personal details columns are empty if there is no person information available for the booking`() {
+    val booking = BookingEntityFactory()
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+          .produce()
+      }
+      .produce()
+
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::personName]).isNull()
+    assertThat(actual[0][BookingsReportRow::pncNumber]).isNull()
+    assertThat(actual[0][BookingsReportRow::gender]).isNull()
+    assertThat(actual[0][BookingsReportRow::ethnicity]).isNull()
+    assertThat(actual[0][BookingsReportRow::dateOfBirth]).isNull()
+  }
+
+  @Test
+  fun `The personal details columns are returned when there is person information available for the booking`() {
+    val booking = BookingEntityFactory()
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+          .produce()
+      }
+      .produce()
+
+    val offenderDetailSummary = OffenderDetailsSummaryFactory()
+      .withFirstName("Johannes")
+      .withLastName("Kepler")
+      .withPncNumber("SOME-PNC-NUMBER")
+      .withGender("Male")
+      .withEthnicity("Other White")
+      .withDateOfBirth(LocalDate.parse("1571-12-27"))
+      .produce()
+
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo { crn ->
+        PersonInfoResult.Success.Full(crn, offenderDetailSummary, null)
+      },
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::personName]).isEqualTo("Johannes Kepler")
+    assertThat(actual[0][BookingsReportRow::pncNumber]).isEqualTo("SOME-PNC-NUMBER")
+    assertThat(actual[0][BookingsReportRow::gender]).isEqualTo("Male")
+    assertThat(actual[0][BookingsReportRow::ethnicity]).isEqualTo("Other White")
+    assertThat(actual[0][BookingsReportRow::dateOfBirth]).isEqualTo("1571-12-27")
   }
 }
