@@ -1,16 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-class BookingsReportGenerator : ReportGenerator<BookingEntity, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
+class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
 
-  override val convert: BookingEntity.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
-    val application = this.application as? TemporaryAccommodationApplicationEntity
+  override val convert: BookingsReportData.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
+    val booking = this.booking
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
 
     listOf(
       BookingsReportRow(
@@ -24,27 +25,27 @@ class BookingsReportGenerator : ReportGenerator<BookingEntity, BookingsReportRow
         dateDutyToReferMade = application?.dutyToReferSubmissionDate,
         isReferralEligibleForCas3 = application?.isEligible,
         referralEligibilityReason = application?.eligibilityReason,
-        probationRegion = this.premises.probationRegion.name,
-        crn = this.crn,
-        offerAccepted = this.confirmation != null,
-        isCancelled = this.cancellation != null,
-        cancellationReason = this.cancellation?.reason?.name,
-        startDate = this.arrival?.arrivalDate,
-        endDate = this.arrival?.expectedDepartureDate,
-        actualEndDate = this.departure?.dateTime?.toLocalDate(),
-        currentNightsStayed = if (this.departure != null) {
+        probationRegion = booking.premises.probationRegion.name,
+        crn = booking.crn,
+        offerAccepted = booking.confirmation != null,
+        isCancelled = booking.cancellation != null,
+        cancellationReason = booking.cancellation?.reason?.name,
+        startDate = booking.arrival?.arrivalDate,
+        endDate = booking.arrival?.expectedDepartureDate,
+        actualEndDate = booking.departure?.dateTime?.toLocalDate(),
+        currentNightsStayed = if (booking.departure != null) {
           null
         } else {
-          this.arrival?.arrivalDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
+          booking.arrival?.arrivalDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
         },
-        actualNightsStayed = if (this.arrival?.arrivalDate == null) null else this.departure?.dateTime?.let { ChronoUnit.DAYS.between(this.arrival?.arrivalDate, it.toLocalDate()).toInt() },
-        accommodationOutcome = this.departure?.moveOnCategory?.name,
+        actualNightsStayed = if (booking.arrival?.arrivalDate == null) null else booking.departure?.dateTime?.let { ChronoUnit.DAYS.between(booking.arrival?.arrivalDate, it.toLocalDate()).toInt() },
+        accommodationOutcome = booking.departure?.moveOnCategory?.name,
       ),
     )
   }
 
-  override fun filter(properties: BookingsReportProperties): (BookingEntity) -> Boolean = {
-    it.service == properties.serviceName.value &&
-      (properties.probationRegionId == null || it.premises.probationRegion.id == properties.probationRegionId)
+  override fun filter(properties: BookingsReportProperties): (BookingsReportData) -> Boolean = {
+    it.booking.service == properties.serviceName.value &&
+      (properties.probationRegionId == null || it.booking.premises.probationRegion.id == properties.probationRegionId)
   }
 }

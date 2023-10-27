@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportData
 import java.time.LocalDate
 import java.util.UUID
 
@@ -138,7 +140,12 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(
+            bookings.toBookingsReportData { crn ->
+              PersonInfoResult.Success.Full(crn, offenderDetails, inmateDetails)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -363,7 +370,12 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(shouldBeIncludedBookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(
+            shouldBeIncludedBookings.toBookingsReportData { crn ->
+              PersonInfoResult.Success.Full(crn, offenderDetails, inmateDetails)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
