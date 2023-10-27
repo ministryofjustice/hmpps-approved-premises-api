@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
@@ -12,11 +14,17 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsRepo
   override val convert: BookingsReportData.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
     val booking = this.booking
     val application = booking.application as? TemporaryAccommodationApplicationEntity
+    val personInfo = this.personInfoResult
 
     listOf(
       BookingsReportRow(
         referralId = application?.id?.toString(),
         referralDate = application?.submittedAt?.toLocalDate(),
+        personName = personInfo.tryGetDetails { "${it.firstName} ${it.surname}".trim() },
+        pncNumber = personInfo.tryGetDetails { it.otherIds.pncNumber },
+        gender = personInfo.tryGetDetails { it.gender },
+        ethnicity = personInfo.tryGetDetails { it.offenderProfile.ethnicity },
+        dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
         riskOfSeriousHarm = application?.riskRatings?.roshRisks?.value?.overallRisk,
         sexOffender = application?.isRegisteredSexOffender,
         needForAccessibleProperty = application?.needsAccessibleProperty,
@@ -47,5 +55,12 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsRepo
   override fun filter(properties: BookingsReportProperties): (BookingsReportData) -> Boolean = {
     it.booking.service == properties.serviceName.value &&
       (properties.probationRegionId == null || it.booking.premises.probationRegion.id == properties.probationRegionId)
+  }
+
+  private fun<V> PersonInfoResult.tryGetDetails(value: (OffenderDetailSummary) -> V): V? {
+    return when (this) {
+      is PersonInfoResult.Success.Full -> value(this.offenderDetailSummary)
+      else -> null
+    }
   }
 }
