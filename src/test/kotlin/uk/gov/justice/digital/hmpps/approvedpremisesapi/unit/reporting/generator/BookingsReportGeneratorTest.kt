@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -49,7 +49,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::probationRegion]).isEqualTo("East of England")
   }
@@ -71,7 +74,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::crn]).isEqualTo("X123456")
   }
@@ -96,7 +102,10 @@ class BookingsReportGeneratorTest {
       .withBooking(booking)
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::offerAccepted]).isTrue
   }
@@ -117,7 +126,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::offerAccepted]).isFalse
   }
@@ -149,7 +161,10 @@ class BookingsReportGeneratorTest {
         .produce(),
     )
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::isCancelled]).isTrue
     assertThat(actual.count()).isEqualTo(1)
@@ -172,7 +187,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::isCancelled]).isFalse
     assertThat(actual.count()).isEqualTo(1)
@@ -202,7 +220,10 @@ class BookingsReportGeneratorTest {
       .withBooking(booking)
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::startDate]).isEqualTo(today)
     assertThat(actual.count()).isEqualTo(1)
@@ -225,7 +246,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::startDate]).isNull()
     assertThat(actual.count()).isEqualTo(1)
@@ -270,7 +294,10 @@ class BookingsReportGeneratorTest {
         .produce(),
     )
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualEndDate]).isEqualTo(today)
   }
@@ -291,7 +318,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualEndDate]).isNull()
   }
@@ -321,7 +351,10 @@ class BookingsReportGeneratorTest {
       .withBooking(booking)
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::currentNightsStayed]).isEqualTo(37)
   }
@@ -342,7 +375,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::currentNightsStayed]).isNull()
   }
@@ -393,7 +429,10 @@ class BookingsReportGeneratorTest {
         .produce(),
     )
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::currentNightsStayed]).isNull()
   }
@@ -444,7 +483,10 @@ class BookingsReportGeneratorTest {
         .produce(),
     )
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualNightsStayed]).isEqualTo(87L)
   }
@@ -465,7 +507,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualNightsStayed]).isNull()
   }
@@ -505,7 +550,10 @@ class BookingsReportGeneratorTest {
         .produce(),
     )
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::accommodationOutcome]).isEqualTo("Joined the Space Force")
   }
@@ -526,7 +574,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::accommodationOutcome]).isNull()
   }
@@ -547,7 +598,10 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::referralId]).isNull()
     assertThat(actual[0][BookingsReportRow::referralDate]).isNull()
@@ -609,7 +663,10 @@ class BookingsReportGeneratorTest {
       .withApplication(application)
       .produce()
 
-    val actual = reportGenerator.createReport(listOf(booking).toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::referralId]).isEqualTo(application.id.toString())
     assertThat(actual[0][BookingsReportRow::referralDate]).isEqualTo(application.submittedAt!!.toLocalDate())

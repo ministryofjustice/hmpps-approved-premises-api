@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Lost
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsDataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
@@ -46,6 +47,7 @@ class ReportService(
   private val workingDayCountService: WorkingDayCountService,
   private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
   private val offenderService: OffenderService,
+  private val userService: UserService,
   private val applicationRepository: ApplicationRepository,
   private val domainEventRepository: DomainEventRepository,
   private val assessmentRepository: AssessmentRepository,
@@ -64,8 +66,18 @@ class ReportService(
       properties.probationRegionId,
     )
 
+    val reportData = bookingsInScope.map {
+      val personInfo = offenderService.getInfoForPerson(
+        it.crn,
+        userService.getUserForRequest().deliusUsername,
+        false,
+      )
+
+      BookingsReportDataAndPersonInfo(it, personInfo)
+    }
+
     BookingsReportGenerator()
-      .createReport(bookingsInScope, properties)
+      .createReport(reportData, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }
