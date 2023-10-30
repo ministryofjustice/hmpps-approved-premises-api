@@ -153,15 +153,7 @@ paths:
     post:
       tags:
         - Operations on CAS2 applications
-      summary: Submits a CAS2 Application
-      parameters:
-        - in: query
-          name: applicationId
-          required: true
-          description: Id of the application
-          schema:
-            type: string
-            format: uuid
+      summary: Submits a CAS2 Application (creates a SubmittedApplication)
       requestBody:
         description: Information needed to submit an application
         content:
@@ -2249,8 +2241,17 @@ components:
             - targetLocation
             - releaseType
     SubmitCas2Application:
-      allOf:
-        - $ref: '#/components/schemas/SubmitApplication'
+      type: object
+      properties:
+        translatedDocument:
+          $ref: '#/components/schemas/AnyValue'
+        applicationId:
+          type: string
+          format: uuid
+          description: Id of the application being submitted
+      required:
+        - translatedDocument
+        - applicationId
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
