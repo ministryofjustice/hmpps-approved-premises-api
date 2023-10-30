@@ -229,6 +229,8 @@ class BookingService(
       placementRequestRepository.save(placementRequest)
 
       saveBookingMadeDomainEvent(
+        applicationId = placementRequest.application.id,
+        eventNumber = placementRequest.application.eventNumber,
         booking = booking,
         user = user,
         bookingCreatedAt = bookingCreatedAt,
@@ -301,6 +303,8 @@ class BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
+    val isCalledFromSeeder = user == null
+
     val validationResult = validated {
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
@@ -318,8 +322,8 @@ class BookingService(
         "$.bedId" hasValidationError "mustBelongToApprovedPremises"
       }
 
-      if (eventNumber == null) {
-        "$.eventNumber" hasValidationError "mustBeSpecified"
+      if (!isCalledFromSeeder && eventNumber == null) {
+        "$.eventNumber" hasValidationError "empty"
       }
 
       if (validationErrors.any()) {
@@ -362,16 +366,18 @@ class BookingService(
 
       associateBookingWithPlacementRequest(onlineApplication, booking)
 
-      if (onlineApplication != null && user != null) {
-        if (!manualBookingsDomainEventsDisabled) {
-          saveBookingMadeDomainEvent(
-            booking = booking,
-            user = user,
-            bookingCreatedAt = bookingCreatedAt,
-          )
-        }
+      if (!isCalledFromSeeder) {
+        saveBookingMadeDomainEvent(
+          applicationId = (onlineApplication?.id ?: offlineApplication?.id)!!,
+          eventNumber = (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber)!!,
+          booking = booking,
+          user = user!!,
+          bookingCreatedAt = bookingCreatedAt,
+        )
 
-        sendEmailNotifications(onlineApplication, booking)
+        if (onlineApplication != null) {
+          sendEmailNotifications(onlineApplication, booking)
+        }
       }
 
       success(booking)
@@ -458,6 +464,8 @@ class BookingService(
   }
 
   private fun saveBookingMadeDomainEvent(
+    applicationId: UUID,
+    eventNumber: String,
     booking: BookingEntity,
     user: UserEntity,
     bookingCreatedAt: OffsetDateTime,
@@ -475,13 +483,12 @@ class BookingService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    val application = booking.application!! as ApprovedPremisesApplicationEntity
     val approvedPremises = booking.premises as ApprovedPremisesEntity
 
     domainEventService.saveBookingMadeDomainEvent(
       DomainEvent(
         id = domainEventId,
-        applicationId = application.id,
+        applicationId = applicationId,
         crn = booking.crn,
         occurredAt = bookingCreatedAt.toInstant(),
         data = BookingMadeEnvelope(
@@ -489,14 +496,14 @@ class BookingService(
           timestamp = bookingCreatedAt.toInstant(),
           eventType = "approved-premises.booking.made",
           eventDetails = BookingMade(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
             bookingId = booking.id,
             personReference = PersonReference(
-              crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
+              crn = booking.crn,
               noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
             ),
-            deliusEventNumber = application.eventNumber,
+            deliusEventNumber = eventNumber,
             createdAt = bookingCreatedAt.toInstant(),
             bookedBy = BookingMadeBookedBy(
               staffMember = StaffMember(
