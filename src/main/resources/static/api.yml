@@ -3018,6 +3018,38 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /placement-applications/{id}/withdraw:
+    post:
+      tags:
+        - Placement applications
+      summary: Withdraw a placement application
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the placement application to withdraw
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Placement application withdrawn
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/PlacementApplication'
+        400:
+          description: placement application already has a decision made
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /assessments:
     get:
       tags:

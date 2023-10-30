@@ -986,7 +986,7 @@ class ApplicationTest : IntegrationTestBase() {
         val applicationId = placementApplicationEntity.application.id
 
         webTestClient.get()
-          .uri("/applications/${applicationId}/placement-applications")
+          .uri("/applications/$applicationId/placement-applications")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
@@ -1008,7 +1008,7 @@ class ApplicationTest : IntegrationTestBase() {
 
         val applicationId = placementApplicationEntity.application.id
         webTestClient.get()
-          .uri("/applications/${applicationId}/placement-applications")
+          .uri("/applications/$applicationId/placement-applications")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()

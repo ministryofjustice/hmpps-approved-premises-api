@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
@@ -133,6 +134,32 @@ class PlacementApplicationService(
       ValidatableActionResult.Success(
         newPlacementApplication,
       ),
+    )
+  }
+
+  fun withdrawPlacementApplication(id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+
+    when (placementApplicationAuthorisationResult) {
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.Success -> Unit
+    }
+
+    val placementApplicationValidationResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationAuthorisationResult.entity)
+
+    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
+      return AuthorisableActionResult.Success(placementApplicationValidationResult)
+    }
+
+    val placementApplicationEntity = placementApplicationValidationResult.entity
+
+    placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
+
+    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
     )
   }
 

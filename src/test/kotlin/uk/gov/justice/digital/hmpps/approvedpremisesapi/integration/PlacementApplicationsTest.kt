@@ -978,6 +978,117 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class WithdrawPlacementApplicationTest {
+
+    @Test
+    fun `Withdrawing a placement application JWT returns 401`() {
+      webTestClient.post()
+        .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Withdrawing a placement application decision when the placement application does not exist returns 404`() {
+      `Given a User` { _, jwt ->
+        webTestClient.post()
+          .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `withdrawing a placement request application created by a different user returns an error`() {
+      `Given a User` { _, jwt ->
+        `Given a Placement Application`(
+          createdByUser = userEntityFactory.produceAndPersist {
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+              }
+            }
+          },
+          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+          submittedAt = OffsetDateTime.now(),
+        ) { placementApplicationEntity ->
+
+          webTestClient.post()
+            .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @Test
+    fun `withdrawing an in-progress placement request application returns successfully and updates decision field`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { _, _ ->
+        `Given a User` { user, jwt ->
+          `Given a Placement Application`(
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          ) { placementApplicationEntity ->
+            CommunityAPI_mockSuccessfulOffenderDetailsCall(
+              OffenderDetailsSummaryFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
+            )
+
+            val placementDates = listOf(
+              PlacementDates(
+                expectedArrival = LocalDate.now(),
+                duration = 12,
+              ),
+            )
+            val rawResult = webTestClient.post()
+              .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                SubmitPlacementApplication(
+                  translatedDocument = mapOf("thingId" to 123),
+                  placementType = PlacementType.additionalPlacement,
+                  placementDates = placementDates,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+            assertThat(body).matches {
+              placementApplicationEntity.id == it.id &&
+                placementApplicationEntity.application.id == it.applicationId &&
+                placementApplicationEntity.createdByUser.id == it.createdByUserId &&
+                placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
+                placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
+            }
+
+            val updatedPlacementApplication =
+              placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
+
+            assertThat(updatedPlacementApplication.decision).isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP)
+          }
+        }
+      }
+    }
+  }
+
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
     if (serializable is String) return objectMapper.readTree(serializable)
