@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
@@ -28,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 @Service
 class PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
+  private val applicationRepository: ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
@@ -36,6 +39,11 @@ class PlacementApplicationService(
 
   fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+  }
+
+  fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
+    val application = applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    return placementApplicationRepository.findAllByApplication(application)
   }
 
   fun createApplication(
@@ -126,6 +134,32 @@ class PlacementApplicationService(
       ValidatableActionResult.Success(
         newPlacementApplication,
       ),
+    )
+  }
+
+  fun withdrawPlacementApplication(id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+
+    when (placementApplicationAuthorisationResult) {
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
+      is AuthorisableActionResult.Success -> Unit
+    }
+
+    val placementApplicationValidationResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationAuthorisationResult.entity)
+
+    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
+      return AuthorisableActionResult.Success(placementApplicationValidationResult)
+    }
+
+    val placementApplicationEntity = placementApplicationValidationResult.entity
+
+    placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
+
+    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
     )
   }
 

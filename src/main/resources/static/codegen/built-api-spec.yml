@@ -1908,6 +1908,46 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/placement-applications:
+    get:
+      tags:
+        - Application data timeline
+      summary: Returns domain event summary
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: If given, only users for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /applications/{applicationId}/documents:
     get:
       tags:
@@ -2964,6 +3004,38 @@ paths:
       responses:
         200:
           description: successfully made a decision on the placement application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application already has a decision made
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/withdraw:
+    post:
+      tags:
+        - Placement applications
+      summary: Withdraw a placement application
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the placement application to withdraw
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Placement application withdrawn
           content:
             'application/json':
               schema:

@@ -103,4 +103,13 @@ class PlacementApplicationsController(
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
+
+  override fun placementApplicationsIdWithdrawPost(id: UUID): ResponseEntity<PlacementApplication> {
+    val result = placementApplicationService.withdrawPlacementApplication(id)
+
+    val validationResult = extractEntityFromAuthorisableActionResult(result)
+    val placementApplication = extractEntityFromValidatableActionResult(validationResult)
+
+    return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
+  }
 }

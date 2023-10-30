@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -966,6 +968,84 @@ class ApplicationTest : IntegrationTestBase() {
             .expectStatus()
             .isForbidden
         }
+      }
+    }
+  }
+
+  @Test
+  fun `Get placement applications returns 403 Forbidden if incorrect XServiceName`() {
+    `Given a User` { user, jwt ->
+
+      `Given a Placement Application`(
+        createdByUser = user,
+        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+      ) { placementApplicationEntity ->
+
+        val applicationId = placementApplicationEntity.application.id
+
+        webTestClient.get()
+          .uri("/applications/$applicationId/placement-applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  fun `Get placement applications without JWT returns 401`() {
+    `Given a User` { user, jwt ->
+
+      `Given a Placement Application`(
+        createdByUser = user,
+        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+      ) { placementApplicationEntity ->
+
+        val applicationId = placementApplicationEntity.application.id
+        webTestClient.get()
+          .uri("/applications/$applicationId/placement-applications")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
+    }
+  }
+
+  @Test
+  fun `Get placement applications returns the transformed objects`() {
+    `Given a User` { user, jwt ->
+      `Given a Placement Application`(
+        createdByUser = user,
+        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+      ) { placementApplicationEntity ->
+
+        val applicationId = placementApplicationEntity.application.id
+        val rawResult = webTestClient.get()
+          .uri("/applications/$applicationId/placement-applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val body = objectMapper.readValue(rawResult, object : TypeReference<List<PlacementApplication>>() {})
+        assertThat(body[0].id).isEqualTo(placementApplicationEntity.id)
+        assertThat(body[0].applicationId).isEqualTo(placementApplicationEntity.application.id)
+        assertThat(body[0].createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
+        assertThat(body[0].schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
+        assertThat(body[0].createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
+        assertThat(body[0].submittedAt).isNull()
       }
     }
   }

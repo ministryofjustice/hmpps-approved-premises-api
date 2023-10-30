@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -46,10 +47,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
@@ -65,8 +68,10 @@ import javax.transaction.Transactional
 class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
+  private val placementApplicationService: PlacementApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val assessmentTransformer: AssessmentTransformer,
+  private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val documentTransformer: DocumentTransformer,
@@ -276,6 +281,21 @@ class ApplicationsController(
     val personInfo = offenderService.getFullInfoForPersonOrThrow(assessment.application.crn, user)
 
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
+  }
+
+  override fun applicationsApplicationIdPlacementApplicationsGet(
+    applicationId: UUID,
+    xServiceName: ServiceName,
+  ): ResponseEntity<List<PlacementApplication>> {
+    if (xServiceName != ServiceName.approvedPremises) {
+      throw ForbiddenProblem()
+    }
+    val placementApplicationEntities = placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(applicationId)
+    val placementApplications = placementApplicationEntities.map {
+      placementApplicationTransformer.transformJpaToApi(it)
+    }
+
+    return ResponseEntity.ok(placementApplications)
   }
 
   private fun getPersonDetail(crn: String, forceFullLaoCheck: Boolean = false): Pair<OffenderDetailSummary, InmateDetail?> {
