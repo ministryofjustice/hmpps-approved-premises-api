@@ -12,11 +12,13 @@ import io.gatling.javaapi.http.HttpDsl.status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.authorizeUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.withAuthorizedUserHttpProtocol
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import java.time.LocalDate
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -50,7 +52,7 @@ class ApplyJourneyStressSimulation : Simulation() {
         .body(
           toJson(
             UpdateTemporaryAccommodationApplication(
-              type = "CAS3",
+              type = UpdateApplicationType.CAS3,
               data = mapOf(),
             ),
           ),
@@ -65,6 +67,7 @@ class ApplyJourneyStressSimulation : Simulation() {
       .body(
         toJson(
           SubmitTemporaryAccommodationApplication(
+            arrivalDate = LocalDate.now().plusWeeks(3),
             type = "CAS3",
             translatedDocument = "{}",
           ),
