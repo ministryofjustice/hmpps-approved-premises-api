@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -77,9 +78,12 @@ class AssessmentController(
       else -> sortField
     }
 
+    val crns = summaries.map { it.crn }
+    val offenderSummaries = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername)
+
     return ResponseEntity.ok(
       summaries.map {
-        val personInfo = offenderService.getInfoForPersonOrThrow(it.crn, user)
+        val personInfo = offenderSummaries.find { personSummary -> personSummary.crn == it.crn } ?: PersonSummaryInfoResult.NotFound(it.crn)
 
         assessmentTransformer.transformDomainToApiSummary(
           it,

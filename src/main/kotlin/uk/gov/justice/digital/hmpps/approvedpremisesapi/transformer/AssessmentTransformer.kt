@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
@@ -76,7 +78,13 @@ class AssessmentTransformer(
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
 
-  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult.Success): AssessmentSummary =
+  fun transformDomainToApiSummary(domain: DomainAssessmentSummary, personInfo: PersonSummaryInfoResult): AssessmentSummary =
+    transformAssessmentToApiSummary(domain, personTransformer.transformModelToPersonApi(personInfo))
+
+  fun transformDomainToApiSummary(domain: DomainAssessmentSummary, personInfo: PersonInfoResult): AssessmentSummary =
+    transformAssessmentToApiSummary(domain, personTransformer.transformModelToPersonApi(personInfo))
+
+  fun transformAssessmentToApiSummary(ase: DomainAssessmentSummary, person: Person): AssessmentSummary =
     when (ase.type) {
       "approved-premises" -> ApprovedPremisesAssessmentSummary(
         type = "CAS1",
@@ -87,7 +95,7 @@ class AssessmentTransformer(
         status = getStatusForApprovedPremisesAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = person,
       )
       "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
         type = "CAS3",
@@ -98,7 +106,7 @@ class AssessmentTransformer(
         status = getStatusForTemporaryAccommodationAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = person,
       )
       else -> throw RuntimeException("Unsupported type: ${ase.type}")
     }

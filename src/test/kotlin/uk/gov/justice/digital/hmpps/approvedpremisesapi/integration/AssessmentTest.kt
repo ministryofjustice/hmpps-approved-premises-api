@@ -29,11 +29,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -338,6 +340,17 @@ class AssessmentTest : IntegrationTestBase() {
       `Given Some Offenders` { offenderSequence ->
         val offenders = offenderSequence.take(5).toList()
 
+        offenders.forEach {
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(it.first.otherIds.crn)
+              .withUserRestricted(false)
+              .withUserExcluded(false)
+              .produce(),
+            user.deliusUsername,
+          )
+        }
+
         data class AssessmentParams(
           val assessment: TemporaryAccommodationAssessmentEntity,
           val offenderDetails: OffenderDetailSummary,
@@ -426,6 +439,15 @@ class AssessmentTest : IntegrationTestBase() {
           withApplicationSchema(applicationSchema)
           withProbationRegion(user.probationRegion)
         }
+
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offender.first.otherIds.crn)
+            .withUserRestricted(false)
+            .withUserExcluded(false)
+            .produce(),
+          user.deliusUsername,
+        )
 
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(user)

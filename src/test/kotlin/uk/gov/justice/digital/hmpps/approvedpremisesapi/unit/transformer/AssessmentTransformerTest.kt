@@ -365,7 +365,7 @@ class AssessmentTransformerTest {
     )
 
     every { mockPersonTransformer.transformModelToPersonApi(any<PersonInfoResult>()) } returns mockk<Person>()
-    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk<PersonInfoResult>())
 
     assertThat(apiSummary).isInstanceOf(TemporaryAccommodationAssessmentSummary::class.java)
     apiSummary as TemporaryAccommodationAssessmentSummary
@@ -397,7 +397,7 @@ class AssessmentTransformerTest {
     )
 
     every { mockPersonTransformer.transformModelToPersonApi(any<PersonInfoResult>()) } returns mockk<Person>()
-    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
+    val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk<PersonInfoResult>())
 
     assertThat(apiSummary).isInstanceOf(ApprovedPremisesAssessmentSummary::class.java)
     apiSummary as ApprovedPremisesAssessmentSummary
