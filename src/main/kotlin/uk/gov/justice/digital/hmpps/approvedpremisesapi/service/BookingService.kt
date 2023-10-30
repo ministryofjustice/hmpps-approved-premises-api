@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import arrow.core.Either
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -125,6 +126,8 @@ class BookingService(
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
 
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
 
@@ -229,6 +232,8 @@ class BookingService(
       placementRequestRepository.save(placementRequest)
 
       saveBookingMadeDomainEvent(
+        applicationId = placementRequest.application.id,
+        eventNumber = placementRequest.application.eventNumber,
         booking = booking,
         user = user,
         bookingCreatedAt = bookingCreatedAt,
@@ -301,6 +306,8 @@ class BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
+    val isCalledFromSeeder = user == null
+
     val validationResult = validated {
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
@@ -318,8 +325,8 @@ class BookingService(
         "$.bedId" hasValidationError "mustBelongToApprovedPremises"
       }
 
-      if (eventNumber == null) {
-        "$.eventNumber" hasValidationError "mustBeSpecified"
+      if (!isCalledFromSeeder && eventNumber == null) {
+        "$.eventNumber" hasValidationError "empty"
       }
 
       if (validationErrors.any()) {
@@ -329,6 +336,14 @@ class BookingService(
       val application = fetchApplication(crn, eventNumber)
       val onlineApplication = if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
       val offlineApplication = if (application is Either.Right<OfflineApplicationEntity>) application.value else null
+
+      if (onlineApplication != null) {
+        log.info("Found online application: ${onlineApplication.id}")
+      }
+
+      if (offlineApplication != null) {
+        log.info("Found offline application: ${offlineApplication.id}")
+      }
 
       val bookingCreatedAt = OffsetDateTime.now()
 
@@ -362,16 +377,24 @@ class BookingService(
 
       associateBookingWithPlacementRequest(onlineApplication, booking)
 
-      if (onlineApplication != null && user != null) {
-        if (!manualBookingsDomainEventsDisabled) {
-          saveBookingMadeDomainEvent(
-            booking = booking,
-            user = user,
-            bookingCreatedAt = bookingCreatedAt,
-          )
-        }
+      if (!isCalledFromSeeder) {
+        val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
+        val eventNumberForDomainEvent = (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
 
-        sendEmailNotifications(onlineApplication, booking)
+        log.info("Using application ID: $applicationId")
+        log.info("Using Event Number: $eventNumberForDomainEvent")
+
+        saveBookingMadeDomainEvent(
+          applicationId = applicationId!!,
+          eventNumber = eventNumberForDomainEvent!!,
+          booking = booking,
+          user = user!!,
+          bookingCreatedAt = bookingCreatedAt,
+        )
+
+        if (onlineApplication != null) {
+          sendEmailNotifications(onlineApplication, booking)
+        }
       }
 
       success(booking)
@@ -425,6 +448,7 @@ class BookingService(
       .maxByOrNull { it.createdAt }
 
     if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
+      log.info("No online or offline application, so we create a new offline application")
       newestOfflineApplication = applicationService.createOfflineApplication(
         OfflineApplicationEntity(
           id = UUID.randomUUID(),
@@ -437,10 +461,13 @@ class BookingService(
     }
 
     return if (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt.isBefore(newestSubmittedOnlineApplication.submittedAt)) {
+      log.info("Offline application is created before the online application, so returning the offline application")
       Either.Right(newestOfflineApplication)
     } else if (newestSubmittedOnlineApplication != null) {
+      log.info("Returning online application")
       Either.Left(newestSubmittedOnlineApplication)
     } else {
+      log.info("Returning offline application")
       Either.Right(newestOfflineApplication!!)
     }
   }
@@ -458,6 +485,8 @@ class BookingService(
   }
 
   private fun saveBookingMadeDomainEvent(
+    applicationId: UUID,
+    eventNumber: String,
     booking: BookingEntity,
     user: UserEntity,
     bookingCreatedAt: OffsetDateTime,
@@ -475,13 +504,12 @@ class BookingService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    val application = booking.application!! as ApprovedPremisesApplicationEntity
     val approvedPremises = booking.premises as ApprovedPremisesEntity
 
     domainEventService.saveBookingMadeDomainEvent(
       DomainEvent(
         id = domainEventId,
-        applicationId = application.id,
+        applicationId = applicationId,
         crn = booking.crn,
         occurredAt = bookingCreatedAt.toInstant(),
         data = BookingMadeEnvelope(
@@ -489,14 +517,14 @@ class BookingService(
           timestamp = bookingCreatedAt.toInstant(),
           eventType = "approved-premises.booking.made",
           eventDetails = BookingMade(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
             bookingId = booking.id,
             personReference = PersonReference(
-              crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
+              crn = booking.crn,
               noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
             ),
-            deliusEventNumber = application.eventNumber,
+            deliusEventNumber = eventNumber,
             createdAt = bookingCreatedAt.toInstant(),
             bookedBy = BookingMadeBookedBy(
               staffMember = StaffMember(
