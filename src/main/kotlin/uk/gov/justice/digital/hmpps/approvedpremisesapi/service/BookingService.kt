@@ -294,6 +294,7 @@ class BookingService(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     bedId: UUID,
+    eventNumber: String?,
     bookingId: UUID = UUID.randomUUID(),
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     if (user != null && (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER))) {
@@ -317,11 +318,15 @@ class BookingService(
         "$.bedId" hasValidationError "mustBelongToApprovedPremises"
       }
 
+      if (eventNumber == null) {
+        "$.eventNumber" hasValidationError "mustBeSpecified"
+      }
+
       if (validationErrors.any()) {
         return@validated fieldValidationError
       }
 
-      val application = fetchApplication(crn)
+      val application = fetchApplication(crn, eventNumber)
       val onlineApplication = if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
       val offlineApplication = if (application is Either.Right<OfflineApplicationEntity>) application.value else null
 
@@ -412,7 +417,7 @@ class BookingService(
     }
   }
 
-  private fun fetchApplication(crn: String): Either<ApprovedPremisesApplicationEntity, OfflineApplicationEntity> {
+  private fun fetchApplication(crn: String, eventNumber: String?): Either<ApprovedPremisesApplicationEntity, OfflineApplicationEntity> {
     val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
       .filter { it.submittedAt != null }
       .maxByOrNull { it.submittedAt!! } as ApprovedPremisesApplicationEntity?
@@ -426,6 +431,7 @@ class BookingService(
           crn = crn,
           service = ServiceName.approvedPremises.value,
           createdAt = OffsetDateTime.now(),
+          eventNumber = eventNumber,
         ),
       )
     }
