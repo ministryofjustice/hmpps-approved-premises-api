@@ -345,5 +345,6 @@ gatling {
 detekt {
   config = files("./detekt.yml")
   buildUponDefaultConfig = true
-  ignoreFailures = true
+  ignoreFailures = false
+  baseline = file("./detekt-baseline.xml")
 }

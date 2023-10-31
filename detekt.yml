@@ -1,0 +1,5 @@
+# INFO: detekt was added after more than a year of development
+# a detekt-baseline.xml exists that suppresses pre-existing warnings.
+#
+# Configure new rules by adding them to this file
+# https://github.com/koral--/detekt/blob/master/detekt-cli/src/main/resources/default-detekt-config.yml

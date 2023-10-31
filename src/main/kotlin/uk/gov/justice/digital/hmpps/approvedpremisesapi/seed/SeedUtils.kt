@@ -43,6 +43,7 @@ fun getCanonicalRegionName(regionName: String): String {
   }
 }
 
+@Suppress("CyclomaticComplexMethod")
 fun getCanonicalLocalAuthorityName(localAuthorityName: String): String {
   return when (localAuthorityName.canonicalise()) {
     "aberdeen city" -> "Aberdeen City"
