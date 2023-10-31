@@ -145,6 +145,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.eligibilityReason = { eligibilityReason }
   }
 
+  fun withRiskRatings(configuration: PersonRisksFactory.() -> Unit) = apply {
+    this.riskRatings = { PersonRisksFactory().apply(configuration).produce() }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),

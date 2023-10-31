@@ -17,7 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProvi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
@@ -633,5 +637,97 @@ class BookingsReportGeneratorTest {
     val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::accommodationOutcome]).isNull()
+  }
+
+  @Test
+  fun `The referral columns are empty if there is no application for the booking`() {
+    val booking = BookingEntityFactory()
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+          .produce()
+      }
+      .produce()
+
+    val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::referralId]).isNull()
+    assertThat(actual[0][BookingsReportRow::referralDate]).isNull()
+    assertThat(actual[0][BookingsReportRow::riskOfSeriousHarm]).isNull()
+    assertThat(actual[0][BookingsReportRow::sexOffender]).isNull()
+    assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isNull()
+    assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isNull()
+    assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isNull()
+    assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isNull()
+    assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isNull()
+    assertThat(actual[0][BookingsReportRow::referralEligibilityReason]).isNull()
+  }
+
+  @Test
+  fun `The referral columns are returned in the report when there is an application for the booking`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withRiskRatings {
+        withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+      }
+      .withIsRegisteredSexOffender(true)
+      .withNeedsAccessibleProperty(true)
+      .withHasHistoryOfArson(false)
+      .withIsDutyToReferSubmitted(true)
+      .withDutyToReferSubmissionDate(LocalDate.now())
+      .withIsEligible(true)
+      .withEligiblilityReason("Some reason")
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+          .produce()
+      }
+      .withApplication(application)
+      .produce()
+
+    val actual = reportGenerator.createReport(listOf(booking), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::referralId]).isEqualTo(application.id.toString())
+    assertThat(actual[0][BookingsReportRow::referralDate]).isEqualTo(application.submittedAt!!.toLocalDate())
+    assertThat(actual[0][BookingsReportRow::riskOfSeriousHarm]).isEqualTo("High")
+    assertThat(actual[0][BookingsReportRow::sexOffender]).isTrue
+    assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isTrue
+    assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isFalse
+    assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isTrue
+    assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
+    assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
+    assertThat(actual[0][BookingsReportRow::referralEligibilityReason]).isEqualTo("Some reason")
   }
 }
