@@ -9,9 +9,10 @@ cd "$(dirname "$0")/.."
 echo "==> Running ktlint..."
 ./gradlew ktlintCheck
 
+echo "==> Running static code analyser..."
+./gradlew detekt
+
 ./script/test_database
 
 echo "==> Running tests..."
 ./gradlew test
-
-
