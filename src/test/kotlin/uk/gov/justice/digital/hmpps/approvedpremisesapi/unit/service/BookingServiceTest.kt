@@ -2705,7 +2705,7 @@ class BookingServiceTest {
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
 
-    val result = bookingService.createApprovedPremisesAdHocBooking(user, "CRN", "NOMS123", LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-24"), UUID.randomUUID())
+    val result = bookingService.createApprovedPremisesAdHocBooking(user, "CRN", "NOMS123", LocalDate.parse("2023-02-22"), LocalDate.parse("2023-02-24"), UUID.randomUUID(), "eventNumber")
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -2746,7 +2746,7 @@ class BookingServiceTest {
     every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
     every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -2782,7 +2782,7 @@ class BookingServiceTest {
     every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
     every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bedId)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bedId, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
@@ -2790,6 +2790,55 @@ class BookingServiceTest {
 
     assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.bedId", "doesNotExist"),
+    )
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `createApprovedPremisesAdHocBooking returns FieldValidationError if eventNumber is null`(role: UserRole) {
+    val crn = "CRN123"
+    val bedId = UUID.fromString("5c0d77ff-3ec8-45e1-9e1f-a68e73bf45ec")
+    val arrivalDate = LocalDate.parse("2023-02-22")
+    val departureDate = LocalDate.parse("2023-02-23")
+
+    every { mockBedRepository.findByIdOrNull(bedId) } returns null
+    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedId, departureDate, null) } returns listOf()
+    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bedId, arrivalDate, departureDate, null) } returns listOf()
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+      .addRoleForUnitTest(role)
+
+    val existingApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+
+    every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+    every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+    every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bedId, null)
+    assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+    val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+    assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+    assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      entry("$.eventNumber", "mustBeSpecified"),
     )
   }
 
@@ -2838,7 +2887,7 @@ class BookingServiceTest {
     every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/staff-details/${user.deliusUsername}", HttpStatus.NOT_FOUND, null)
 
     val runtimeException = assertThrows<RuntimeException> {
-      bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+      bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     }
 
     assertThat(runtimeException.message).isEqualTo("Unable to complete GET request to /staff-details/${user.deliusUsername}: 404 NOT_FOUND")
@@ -2903,7 +2952,7 @@ class BookingServiceTest {
 
     every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success)
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
@@ -3012,7 +3061,7 @@ class BookingServiceTest {
 
     every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success)
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
@@ -3121,7 +3170,7 @@ class BookingServiceTest {
 
     every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-    val authorisableResult = bookingServiceWithManualBookingsDomainEventsDisabled.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingServiceWithManualBookingsDomainEventsDisabled.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success)
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
@@ -3207,7 +3256,7 @@ class BookingServiceTest {
 
     every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success)
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
@@ -3280,7 +3329,7 @@ class BookingServiceTest {
 
     every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success)
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success)
@@ -3340,7 +3389,7 @@ class BookingServiceTest {
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success).isTrue
@@ -3400,7 +3449,7 @@ class BookingServiceTest {
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
-    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+    val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
     val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
     assertThat(validatableResult is ValidatableActionResult.Success).isTrue
@@ -3418,7 +3467,7 @@ class BookingServiceTest {
 
     verify {
       mockApplicationService.createOfflineApplication(
-        match { it.crn == crn && it.service == ServiceName.approvedPremises.value },
+        match { it.crn == crn && it.service == ServiceName.approvedPremises.value && it.eventNumber == "eventNumber" },
       )
     }
   }
@@ -3506,7 +3555,7 @@ class BookingServiceTest {
 
       application.placementRequests = mutableListOf(placementRequest)
 
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
       assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
       val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
       assertThat(validatableResult is ValidatableActionResult.Success).isTrue
@@ -3542,7 +3591,7 @@ class BookingServiceTest {
 
       application.placementRequests = mutableListOf(placementRequest)
 
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
       assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
       val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
       assertThat(validatableResult is ValidatableActionResult.Success).isTrue
@@ -3574,7 +3623,7 @@ class BookingServiceTest {
 
       application.placementRequests = mutableListOf(placementRequest)
 
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id)
+      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
       assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
       val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
       assertThat(validatableResult is ValidatableActionResult.Success).isTrue

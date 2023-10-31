@@ -578,6 +578,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
               bedId = bed.id,
+              eventNumber = "eventNumber",
             ),
           )
           .exchange()
@@ -655,6 +656,7 @@ class BookingTest : IntegrationTestBase() {
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
               bedId = bed.id,
+              eventNumber = "eventNumber",
             ),
           )
           .exchange()
