@@ -40,7 +40,6 @@ generic-service:
     PREEMPTIVE-CACHE-LOGGING-ENABLED: true
     NOTIFY_MODE: ENABLED
     HMPPS_SQS_USE_WEB_TOKEN: true
-    MANUAL_BOOKINGS_DOMAIN_EVENTS_DISABLED: false
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises.hmpps.service.justice.gov.uk/assessments/#id

@@ -190,46 +190,6 @@ class BookingServiceTest {
     applicationUrlTemplate = "http://frontend/applications/#id",
     bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
     arrivedAndDepartedDomainEventsDisabled = false,
-    manualBookingsDomainEventsDisabled = false,
-  )
-
-  private val bookingServiceWithManualBookingsDomainEventsDisabled = BookingService(
-    premisesService = mockPremisesService,
-    staffMemberService = mockStaffMemberService,
-    offenderService = mockOffenderService,
-    domainEventService = mockDomainEventService,
-    cas3DomainEventService = mockCas3DomainEventService,
-    cruService = mockCruService,
-    applicationService = mockApplicationService,
-    workingDayCountService = mockWorkingDayCountService,
-    emailNotificationService = mockEmailNotificationService,
-    placementRequestService = mockPlacementRequestService,
-    communityApiClient = mockCommunityApiClient,
-    bookingRepository = mockBookingRepository,
-    arrivalRepository = mockArrivalRepository,
-    cancellationRepository = mockCancellationRepository,
-    confirmationRepository = mockConfirmationRepository,
-    extensionRepository = mockExtensionRepository,
-    dateChangeRepository = mockDateChangeRepository,
-    departureRepository = mockDepartureRepository,
-    nonArrivalRepository = mockNonArrivalRepository,
-    departureReasonRepository = mockDepartureReasonRepository,
-    moveOnCategoryRepository = mockMoveOnCategoryRepository,
-    destinationProviderRepository = mockDestinationProviderRepository,
-    nonArrivalReasonRepository = mockNonArrivalReasonRepository,
-    cancellationReasonRepository = mockCancellationReasonRepository,
-    bedRepository = mockBedRepository,
-    placementRequestRepository = mockPlacementRequestRepository,
-    lostBedsRepository = mockLostBedsRepository,
-    turnaroundRepository = mockTurnaroundRepository,
-    bedMoveRepository = mockBedMoveRepository,
-    premisesRepository = mockPremisesRepository,
-    assessmentRepository = mockAssessmentRepository,
-    notifyConfig = NotifyConfig(),
-    applicationUrlTemplate = "http://frontend/applications/#id",
-    bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
-    arrivedAndDepartedDomainEventsDisabled = false,
-    manualBookingsDomainEventsDisabled = true,
   )
 
   private val bookingServiceWithArrivedAndDepartedDomainEventsDisabled = BookingService(
@@ -268,7 +228,6 @@ class BookingServiceTest {
     applicationUrlTemplate = "http://frontend/applications/#id",
     bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
     arrivedAndDepartedDomainEventsDisabled = true,
-    manualBookingsDomainEventsDisabled = false,
   )
 
   private val user = UserEntityFactory()
@@ -2063,11 +2022,11 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createCancellation does not emit domain event when linked to Application but not to a placement request and manualBookingsDomainEventsDisabled is true`() {
+  fun `createCancellation does not emit domain event when linked to an offline application without a eventNumber`() {
     val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
+    val application = OfflineApplicationEntityFactory()
+      .withEventNumber(null)
       .produce()
 
     val premises = ApprovedPremisesEntityFactory()
@@ -2081,7 +2040,7 @@ class BookingServiceTest {
 
     val bookingEntity = BookingEntityFactory()
       .withPremises(premises)
-      .withApplication(application)
+      .withOfflineApplication(application)
       .withCrn(application.crn)
       .produce()
 
@@ -2107,7 +2066,7 @@ class BookingServiceTest {
     val cancelledAt = LocalDate.parse("2022-08-25")
     val notes = "notes"
 
-    val result = bookingServiceWithManualBookingsDomainEventsDisabled.createCancellation(
+    val result = bookingService.createCancellation(
       booking = bookingEntity,
       cancelledAt = cancelledAt,
       reasonId = reasonId,
@@ -2553,7 +2512,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createExtension does not emit domain event when Booking has associated Application but no placement request and manualBookingsDomainEventsDisabled is true`() {
+  fun `createExtension does not emit domain event when Booking has associated Application without an eventNumber`() {
     val premises = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -2571,8 +2530,8 @@ class BookingServiceTest {
       .withRoom(room)
       .produce()
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
+    val application = OfflineApplicationEntityFactory()
+      .withEventNumber(null)
       .produce()
 
     val bookingEntity = BookingEntityFactory()
@@ -2580,7 +2539,7 @@ class BookingServiceTest {
       .withDepartureDate(LocalDate.parse("2022-08-24"))
       .withPremises(premises)
       .withBed(bed)
-      .withApplication(application)
+      .withOfflineApplication(application)
       .withCrn(application.crn)
       .produce()
 
@@ -2608,7 +2567,7 @@ class BookingServiceTest {
 
     val newDepartureDate = LocalDate.parse("2022-08-25")
 
-    val result = bookingServiceWithManualBookingsDomainEventsDisabled.createExtension(
+    val result = bookingService.createExtension(
       booking = bookingEntity,
       newDepartureDate = newDepartureDate,
       notes = "notes",
@@ -5170,9 +5129,9 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `does not emit domain event when booking has associated application but was not created from placement request and manualBookingsDomainEventsDisabled is true`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
+    fun `does not emit domain event when booking has associated offline application without an event number`() {
+      val application = OfflineApplicationEntityFactory()
+        .withEventNumber(null)
         .produce()
 
       val booking = BookingEntityFactory()
@@ -5181,7 +5140,7 @@ class BookingServiceTest {
         .withServiceName(ServiceName.approvedPremises)
         .withArrivalDate(LocalDate.parse("2023-07-14"))
         .withDepartureDate(LocalDate.parse("2023-07-16"))
-        .withApplication(application)
+        .withOfflineApplication(application)
         .withCrn(application.crn)
         .produce()
 
@@ -5207,7 +5166,7 @@ class BookingServiceTest {
       val newArrivalDate = LocalDate.parse("2023-07-18")
       val newDepartureDate = LocalDate.parse("2023-07-22")
 
-      val result = bookingServiceWithManualBookingsDomainEventsDisabled.createDateChange(
+      val result = bookingService.createDateChange(
         booking = booking,
         user = user,
         newArrivalDate = newArrivalDate,

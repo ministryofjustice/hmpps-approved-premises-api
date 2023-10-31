@@ -122,7 +122,6 @@ class BookingService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
   @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
-  @Value("\${manual-bookings-domain-events-disabled}") private val manualBookingsDomainEventsDisabled: Boolean,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
 
@@ -1469,7 +1468,7 @@ class BookingService(
   }
 
   private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?) =
-    booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && (!manualBookingsDomainEventsDisabled || booking.placementRequest != null)
+    booking.service == ServiceName.approvedPremises.value && user != null && (booking.application != null || booking.offlineApplication?.eventNumber != null)
 
   @Transactional
   fun createDateChange(
