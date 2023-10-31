@@ -3032,6 +3032,41 @@ class BookingServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `createApprovedPremisesAdHocBooking saves Booking and creates Domain Event when associated Application is an Offline Application without an eventNumber`(role: UserRole) {
+      user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
+
+      val existingApplication = OfflineApplicationEntityFactory()
+        .withCrn(crn)
+        .withCreatedAt(OffsetDateTime.now())
+        .withEventNumber(null)
+        .produce()
+
+      every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+      every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
+
+      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, bed.id, "eventNumber")
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveBookingMadeDomainEvent(any())
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking saves Booking and creates an Offline Application when neither an Offline Application or normal Application are present`(role: UserRole) {
       user.addRoleForUnitTest(role)
 

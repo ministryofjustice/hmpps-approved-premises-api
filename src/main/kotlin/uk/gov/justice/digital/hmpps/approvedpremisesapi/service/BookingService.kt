@@ -378,10 +378,10 @@ class BookingService(
 
       if (!isCalledFromSeeder) {
         val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
-        val eventNumberForDomainEvent = (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber)
+        val eventNumberForDomainEvent = (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
 
         log.info("Using application ID: $applicationId")
-        log.info("Using Event Number: $eventNumber")
+        log.info("Using Event Number: $eventNumberForDomainEvent")
 
         saveBookingMadeDomainEvent(
           applicationId = applicationId!!,
