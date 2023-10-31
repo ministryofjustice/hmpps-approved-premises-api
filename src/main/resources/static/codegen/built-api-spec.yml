@@ -4453,6 +4453,8 @@ components:
         assessmentId:
           type: string
           format: uuid
+        eventNumber:
+          type: string
       required:
         - crn
         - arrivalDate

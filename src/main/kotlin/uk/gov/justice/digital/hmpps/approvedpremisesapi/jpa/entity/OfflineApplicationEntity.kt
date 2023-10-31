@@ -22,4 +22,5 @@ data class OfflineApplicationEntity(
   val crn: String,
   val service: String,
   val createdAt: OffsetDateTime,
+  val eventNumber: String?,
 )
