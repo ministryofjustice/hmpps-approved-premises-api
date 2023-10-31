@@ -104,18 +104,14 @@ tasks.register("bootRunLocal") {
 tasks.withType<Test> {
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
 
-  if (System.getProperty("idea.active") !== null) {
-    println("Running in IDE - skipping OpenAPI generation...")
-    project.gradle.startParameter.excludedTaskNames.add("openApiGenerate")
-    project.gradle.startParameter.excludedTaskNames.add("openApiGenerateDomainEvents")
-  }
-
-  if (environment["CI"] != null) {
-    maxParallelForks = Runtime.getRuntime().availableProcessors()
-    println("Running in CI - setting max test processes to number of processors: $maxParallelForks")
-  } else {
-    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
-    println("Setting max test processes to recommended half of available: $maxParallelForks")
+  afterEvaluate {
+    if (environment["CI"] != null) {
+      maxParallelForks = Runtime.getRuntime().availableProcessors()
+      println("Running in CI - setting max test processes to number of processors: $maxParallelForks")
+    } else {
+      maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+      println("Setting max test processes to recommended half of available: $maxParallelForks")
+    }
   }
 }
 
@@ -151,6 +147,15 @@ openApiGenerate {
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
+}
+
+// Skip OpenAPI generation for test tasks run inside IntelliJ
+tasks.withType<org.openapitools.generator.gradle.plugin.tasks.GenerateTask> {
+  onlyIf {
+    val currentTask = project.tasks.getByName(project.gradle.startParameter.taskNames.first().replace(":", ""))
+
+    !(currentTask is Test && System.getProperty("idea.active") !== null)
+  }
 }
 
 tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas2Namespace") {
