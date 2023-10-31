@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -28,6 +29,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var notes: Yielded<String?> = { null }
   private var isParole: Yielded<Boolean> = { false }
   private var isWithdrawn: Yielded<Boolean> = { false }
+  private var placementApplication: () -> PlacementApplicationEntity? = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -85,6 +87,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.duration = { duration }
   }
 
+  fun withPlacementApplication(placementApplication: PlacementApplicationEntity) = apply {
+    this.placementApplication = { placementApplication }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     expectedArrival = this.expectedArrival(),
@@ -100,5 +106,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     notes = this.notes(),
     isParole = this.isParole(),
     isWithdrawn = this.isWithdrawn(),
+    placementApplication = this.placementApplication(),
   )
 }

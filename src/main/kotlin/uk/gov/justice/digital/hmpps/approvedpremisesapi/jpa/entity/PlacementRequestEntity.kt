@@ -14,6 +14,7 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
@@ -21,6 +22,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   fun findByApplication(application: ApplicationEntity): PlacementRequestEntity?
 
   fun findAllByApplication(application: ApplicationEntity): List<PlacementRequestEntity>
+
+  fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity?): List<PlacementRequestEntity>
 
   fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
 
@@ -112,6 +115,10 @@ data class PlacementRequestEntity(
   @ManyToOne
   @JoinColumn(name = "assessment_id")
   val assessment: AssessmentEntity,
+
+  @OneToOne
+  @JoinColumn(name = "placement_application_id")
+  val placementApplication: PlacementApplicationEntity?,
 
   val createdAt: OffsetDateTime,
 

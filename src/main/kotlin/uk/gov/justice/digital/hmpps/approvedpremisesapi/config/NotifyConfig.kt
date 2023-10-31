@@ -25,6 +25,7 @@ class NotifyTemplates {
   var assessmentRejected = "b3a98c60-8fe0-4450-8fd0-6430198ee43b"
   var bookingMade = "1e3d2ee2-250e-4755-af38-80d24cdc3480"
   var bookingMadePremises = "337bb149-6f12-4be2-b5a3-a9a73d73c1e1"
+  var placementRequestWithdrawn = "a5f44549-e849-4a26-abb1-802316081533"
 }
 
 enum class NotifyMode {

@@ -211,7 +211,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           offenderDetailsConfigBlock = {
             withCurrentExclusion(true)
           },
-        ) { offenderDetails, inmateDetails ->
+        ) { offenderDetails, _ ->
           `Given a Placement Application`(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
@@ -226,7 +226,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               exclusion = true,
             )
 
-            val rawResult = webTestClient.get()
+            webTestClient.get()
               .uri("/placement-applications/${placementApplicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
@@ -244,7 +244,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           offenderDetailsConfigBlock = {
             withCurrentExclusion(true)
           },
-        ) { offenderDetails, inmateDetails ->
+        ) { offenderDetails, _ ->
           `Given a Placement Application`(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
@@ -289,7 +289,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           offenderDetailsConfigBlock = {
             withCurrentExclusion(true)
           },
-        ) { offenderDetails, inmateDetails ->
+        ) { offenderDetails, _ ->
           `Given a Placement Application`(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
@@ -1003,7 +1003,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing a placement request application created by a different user returns an error`() {
+    fun `withdrawing a placement application created by a different user returns an error`() {
       `Given a User` { _, jwt ->
         `Given a Placement Application`(
           createdByUser = userEntityFactory.produceAndPersist {
@@ -1045,22 +1045,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .produce(),
             )
 
-            val placementDates = listOf(
-              PlacementDates(
-                expectedArrival = LocalDate.now(),
-                duration = 12,
-              ),
-            )
             val rawResult = webTestClient.post()
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                SubmitPlacementApplication(
-                  translatedDocument = mapOf("thingId" to 123),
-                  placementType = PlacementType.additionalPlacement,
-                  placementDates = placementDates,
-                ),
-              )
               .exchange()
               .expectStatus()
               .isOk
@@ -1083,6 +1070,54 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
             assertThat(updatedPlacementApplication.decision).isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `withdrawing an in-progress placement request application returns successfully and updates placement request isWithdrawn`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { _, _ ->
+        `Given a User` { user, jwt ->
+          `Given a Placement Application`(
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          ) { placementApplicationEntity ->
+            CommunityAPI_mockSuccessfulOffenderDetailsCall(
+              OffenderDetailsSummaryFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
+            )
+
+            val rawResult = webTestClient.post()
+              .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+            assertThat(body).matches {
+              placementApplicationEntity.id == it.id &&
+                placementApplicationEntity.application.id == it.applicationId &&
+                placementApplicationEntity.createdByUser.id == it.createdByUserId &&
+                placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
+                placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
+            }
+
+            val updatedPlacementRequests =
+              placementRequestRepository.findAllByPlacementApplication(placementApplicationEntity)
+
+            updatedPlacementRequests.map {
+              assertThat(it.isWithdrawn).isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP)
+            }
           }
         }
       }

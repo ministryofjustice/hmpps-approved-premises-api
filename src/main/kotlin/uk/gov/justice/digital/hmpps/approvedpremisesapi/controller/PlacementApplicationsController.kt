@@ -105,7 +105,8 @@ class PlacementApplicationsController(
   }
 
   override fun placementApplicationsIdWithdrawPost(id: UUID): ResponseEntity<PlacementApplication> {
-    val result = placementApplicationService.withdrawPlacementApplication(id)
+    val user = userService.getUserForRequest()
+    val result = placementApplicationService.withdrawPlacementApplication(id, user)
 
     val validationResult = extractEntityFromAuthorisableActionResult(result)
     val placementApplication = extractEntityFromValidatableActionResult(validationResult)
