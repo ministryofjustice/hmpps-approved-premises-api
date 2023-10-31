@@ -2279,6 +2279,7 @@ components:
               $ref: '#/components/schemas/AnyValue'
           required:
             - arrivalDate
+            - summaryData
     ReleaseTypeOption:
       type: string
       enum:

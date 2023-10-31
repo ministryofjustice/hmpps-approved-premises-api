@@ -91,6 +91,7 @@ class AssessmentStateTest : IntegrationTestBase() {
       .bodyValue(
         SubmitTemporaryAccommodationApplication(
           arrivalDate = LocalDate.now().plusDays(14),
+          summaryData = {},
           type = "CAS3",
           translatedDocument = {},
         ),
