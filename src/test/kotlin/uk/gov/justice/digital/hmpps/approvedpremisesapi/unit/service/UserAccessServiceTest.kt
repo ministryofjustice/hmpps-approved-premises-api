@@ -28,6 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -1310,5 +1312,37 @@ class UserAccessServiceTest {
       .produce()
 
     assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isFalse
+  }
+
+  @Test
+  fun `reporterUserCanViewReport returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_REPORTER role`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+    user.addRoleForUnitTest(CAS3_REPORTER)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isTrue
+  }
+
+  @Test
+  fun `reporterUserCanViewReport returns false otherwise if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS3_REPORTER role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+    user.addRoleForUnitTest(CAS3_REPORTER)
+
+    assertThat(userAccessService.currentUserCanViewReport()).isFalse
+  }
+
+  @Test
+  fun `userHasAllRegionsAccess returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and user role is CAS3_REPORTER`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+    user.addRoleForUnitTest(CAS3_REPORTER)
+
+    assertThat(userAccessService.userHasAllRegionsAccess(user)).isTrue()
+  }
+
+  @Test
+  fun `userHasAllRegionsAccess returns false if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and user role is CAS3_REFERRER`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+    user.addRoleForUnitTest(CAS3_REFERRER)
+
+    assertThat(userAccessService.userHasAllRegionsAccess(user)).isFalse()
   }
 }

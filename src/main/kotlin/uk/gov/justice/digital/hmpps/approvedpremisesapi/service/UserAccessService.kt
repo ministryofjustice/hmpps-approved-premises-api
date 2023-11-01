@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
@@ -37,7 +38,7 @@ class UserAccessService(
   fun userHasAllRegionsAccess(user: UserEntity) =
     when (currentRequest.getHeader("X-Service-Name")) {
       // TODO: Revisit once Temporary Accommodation introduces user roles
-      ServiceName.temporaryAccommodation.value -> false
+      ServiceName.temporaryAccommodation.value -> user.hasRole(CAS3_REPORTER)
       // TODO: Revisit if Approved Premises introduces region-limited access
       else -> true
     }
@@ -101,7 +102,7 @@ class UserAccessService(
 
   fun userCanViewReport(user: UserEntity) =
     when (currentRequest.getHeader("X-Service-Name")) {
-      ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
+      ServiceName.temporaryAccommodation.value -> user.hasAnyRole(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)
       ServiceName.approvedPremises.value -> user.hasAnyRole(UserRole.CAS1_REPORT_VIEWER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ADMIN)
       else -> false
     }

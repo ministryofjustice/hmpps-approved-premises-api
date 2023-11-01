@@ -159,6 +159,144 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get bookings report returns OK for CAS3_REPORTER`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(premises)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+        }
+
+        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[2].let {
+          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[3].let {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[4].let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
+
+        val expectedDataFrame = BookingsReportGenerator()
+          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+
+        webTestClient.get()
+          .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns OK for CAS3_REPORTER for all region`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(premises)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+        }
+
+        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[2].let {
+          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[3].let {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[4].let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
+
+        val expectedDataFrame = BookingsReportGenerator()
+          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+
+        webTestClient.get()
+          .uri("/reports/bookings?year=2023&month=4")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns 403 Forbidden for CAS3_REPORTER with service-name as approved-premises`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+
+      webTestClient.get()
+        .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
   fun `Get bookings report returns OK with only Bookings with at least one day in month when year and month are specified`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
