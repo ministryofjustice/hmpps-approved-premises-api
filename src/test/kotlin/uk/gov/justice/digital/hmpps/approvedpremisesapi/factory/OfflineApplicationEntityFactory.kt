@@ -13,7 +13,6 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var service: Yielded<String> = { "approved-premises" }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
-  private var eventNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -31,15 +30,10 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
     this.createdAt = { createdAt }
   }
 
-  fun withEventNumber(eventNumber: String?) = apply {
-    this.eventNumber = { eventNumber }
-  }
-
   override fun produce() = OfflineApplicationEntity(
     id = this.id(),
     crn = this.crn(),
     service = this.service(),
     createdAt = this.createdAt(),
-    eventNumber = this.eventNumber(),
   )
 }

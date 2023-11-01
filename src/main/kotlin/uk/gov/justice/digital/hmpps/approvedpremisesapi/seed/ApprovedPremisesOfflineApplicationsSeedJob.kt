@@ -32,7 +32,6 @@ class ApprovedPremisesOfflineApplicationsSeedJob(
           crn = row.crn,
           service = ServiceName.approvedPremises.value,
           createdAt = OffsetDateTime.now(),
-          eventNumber = null,
         ),
       )
     }

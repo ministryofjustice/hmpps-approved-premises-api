@@ -1,1 +1,0 @@
-ALTER TABLE "offline_applications" ADD COLUMN "event_number" text;

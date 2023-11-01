@@ -152,7 +152,6 @@ class ApprovedPremisesBookingSeedJob(
         departureDate = row.plannedDepartureDate,
         bedId = bed.id,
         bookingId = row.id,
-        eventNumber = null,
       ),
     )
 
