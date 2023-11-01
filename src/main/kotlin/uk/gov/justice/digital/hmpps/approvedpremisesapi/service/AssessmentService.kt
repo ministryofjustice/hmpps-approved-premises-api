@@ -322,6 +322,7 @@ class AssessmentService(
           placementDates,
           notes,
           false,
+          null,
         )
       }
     }

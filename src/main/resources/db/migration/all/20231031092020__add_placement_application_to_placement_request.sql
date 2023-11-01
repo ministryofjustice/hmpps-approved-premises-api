@@ -1,0 +1,2 @@
+ALTER TABLE placement_requests ADD COLUMN placement_application_id UUID;
+ALTER TABLE placement_requests ADD CONSTRAINT placement_application_id_fk FOREIGN KEY (placement_application_id) REFERENCES placement_applications(id);

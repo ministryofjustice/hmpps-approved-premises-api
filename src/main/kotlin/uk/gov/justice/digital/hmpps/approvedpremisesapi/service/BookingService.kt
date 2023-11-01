@@ -1063,6 +1063,7 @@ class BookingService(
         ),
         notes = placementRequest.notes,
         isParole = false,
+        null,
       )
     }
 

@@ -137,7 +137,7 @@ class PlacementApplicationService(
     )
   }
 
-  fun withdrawPlacementApplication(id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  fun withdrawPlacementApplication(id: UUID, user: UserEntity): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
     when (placementApplicationAuthorisationResult) {
@@ -153,6 +153,10 @@ class PlacementApplicationService(
     }
 
     val placementApplicationEntity = placementApplicationValidationResult.entity
+
+    if (placementApplicationEntity.decision != null) {
+      placementRequestService.withdrawPlacementRequestWhenPlacementApplicationWithdrawn(placementApplicationEntity, user)
+    }
 
     placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
 

@@ -2185,6 +2185,7 @@ class BookingServiceTest {
         ),
         notes = originalPlacementRequest.notes,
         isParole = false,
+        null,
       )
     } answers {
       val placementRequirementsArgument = it.invocation.args[0] as PlacementRequirementsEntity
@@ -2219,6 +2220,7 @@ class BookingServiceTest {
         ),
         notes = originalPlacementRequest.notes,
         isParole = false,
+        null,
       )
     }
   }
