@@ -6,10 +6,19 @@ plugins {
   id("org.openapi.generator") version "5.4.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.20"
   id("io.gatling.gradle") version "3.9.5.6"
+  id("io.gitlab.arturbosch.detekt") version "1.23.1"
 }
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
+}
+
+configurations.matching { it.name == "detekt" }.all {
+  resolutionStrategy.eachDependency {
+    if (requested.group == "org.jetbrains.kotlin") {
+      useVersion("1.9.0")
+    }
+  }
 }
 
 val springDocVersion = "1.7.0"
@@ -87,6 +96,9 @@ tasks {
 
     kotlin.sourceSets["main"].kotlin.srcDir("$buildDir/generated/src/main")
     dependsOn("openApiGenerate")
+    getByName("check") {
+      dependsOn(":ktlintCheck", "detekt")
+    }
   }
 }
 
@@ -328,4 +340,11 @@ gatling {
   // WARNING: options below only work when logback config file isn't provided
   logLevel = "WARN" // logback root level
   logHttp = io.gatling.gradle.LogHttp.NONE // set to 'ALL' for all HTTP traffic in TRACE, 'FAILURES' for failed HTTP traffic in DEBUG
+}
+
+detekt {
+  config = files("./detekt.yml")
+  buildUponDefaultConfig = true
+  ignoreFailures = true
+  baseline = file("./detekt-baseline.xml")
 }
