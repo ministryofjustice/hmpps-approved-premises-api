@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import arrow.core.Either
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -124,8 +123,6 @@ class BookingService(
   @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
-
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
   fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
@@ -336,14 +333,6 @@ class BookingService(
       val onlineApplication = if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
       val offlineApplication = if (application is Either.Right<OfflineApplicationEntity>) application.value else null
 
-      if (onlineApplication != null) {
-        log.info("Found online application: ${onlineApplication.id}")
-      }
-
-      if (offlineApplication != null) {
-        log.info("Found offline application: ${offlineApplication.id}")
-      }
-
       val bookingCreatedAt = OffsetDateTime.now()
 
       val booking = bookingRepository.save(
@@ -377,15 +366,9 @@ class BookingService(
       associateBookingWithPlacementRequest(onlineApplication, booking)
 
       if (!isCalledFromSeeder) {
-        val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
-        val eventNumberForDomainEvent = (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber)
-
-        log.info("Using application ID: $applicationId")
-        log.info("Using Event Number: $eventNumber")
-
         saveBookingMadeDomainEvent(
-          applicationId = applicationId!!,
-          eventNumber = eventNumberForDomainEvent!!,
+          applicationId = (onlineApplication?.id ?: offlineApplication?.id)!!,
+          eventNumber = (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber)!!,
           booking = booking,
           user = user!!,
           bookingCreatedAt = bookingCreatedAt,
@@ -447,7 +430,6 @@ class BookingService(
       .maxByOrNull { it.createdAt }
 
     if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
-      log.info("No online or offline application, so we create a new offline application")
       newestOfflineApplication = applicationService.createOfflineApplication(
         OfflineApplicationEntity(
           id = UUID.randomUUID(),
@@ -460,13 +442,10 @@ class BookingService(
     }
 
     return if (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt.isBefore(newestSubmittedOnlineApplication.submittedAt)) {
-      log.info("Offline application is created before the online application, so returning the offline application")
       Either.Right(newestOfflineApplication)
     } else if (newestSubmittedOnlineApplication != null) {
-      log.info("Returning online application")
       Either.Left(newestSubmittedOnlineApplication)
     } else {
-      log.info("Returning offline application")
       Either.Right(newestOfflineApplication!!)
     }
   }
