@@ -1032,17 +1032,11 @@ class ApplicationServiceTest {
       eligibilityReason = "homelessFromApprovedPremises",
     )
 
-    private val submitCas2Application = SubmitCas2Application(
-      translatedDocument = {},
-      type = "CAS2",
-    )
-
     @BeforeEach
     fun setup() {
       every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
       every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
       every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
-      every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
     }
 
     @Test
