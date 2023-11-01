@@ -447,6 +447,43 @@ class SeedUsersTest : SeedTestBase() {
     }
   }
 
+  @Test
+  fun `Attempting to assign new role CAS3_REPORTER to a currently known user succeeds`() {
+    userEntityFactory.produceAndPersist {
+      withDeliusUsername("KNOWN-USER")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    withCsv(
+      "known-user",
+      userRoleAssignmentSeedCsvRowsToCsv(
+        listOf(
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername("KNOWN-USER")
+            .withTypedRoles(listOf(UserRole.CAS3_REPORTER))
+            .withTypedQualifications(listOf(UserQualification.PIPE))
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.user, "known-user")
+
+    val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
+
+    assertThat(persistedUser).isNotNull
+    assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+      UserRole.CAS3_REPORTER,
+    )
+    assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
+      UserQualification.PIPE,
+    )
+  }
+
   private fun userRoleAssignmentSeedCsvRowsToCsv(rows: List<UsersSeedUntypedEnumsCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
