@@ -6458,6 +6458,7 @@ components:
       enum:
         - assessor
         - referrer
+        - reporter
     UserQualification:
       type: string
       enum:

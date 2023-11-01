@@ -160,4 +160,64 @@ class ProfileTest : IntegrationTestBase() {
         ),
       )
   }
+
+  @Test
+  fun `Getting own Temporary Accommodation profile returns OK for CAS3_REPORTER with correct body`() {
+    val id = UUID.randomUUID()
+    val deliusUsername = "JIMJIMMERSON"
+    val email = "foo@bar.com"
+    val telephoneNumber = "123445677"
+
+    val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+      subject = deliusUsername,
+      authSource = "delius",
+      roles = listOf("ROLE_PROBATION"),
+    )
+
+    val region = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
+    val userEntity = userEntityFactory.produceAndPersist {
+      withId(id)
+      withYieldedProbationRegion { region }
+      withDeliusUsername(deliusUsername)
+      withEmail(email)
+      withTelephoneNumber(telephoneNumber)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userEntity)
+      withRole(UserRole.CAS3_REPORTER)
+    }
+
+    userQualificationAssignmentEntityFactory.produceAndPersist {
+      withUser(userEntity)
+      withQualification(UserQualification.PIPE)
+    }
+
+    webTestClient.get()
+      .uri("/profile")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(
+        objectMapper.writeValueAsString(
+          TemporaryAccommodationUser(
+            id = id,
+            region = ProbationRegion(region.id, region.name),
+            deliusUsername = deliusUsername,
+            email = email,
+            name = userEntity.name,
+            telephoneNumber = telephoneNumber,
+            roles = listOf(TemporaryAccommodationUserRole.reporter),
+            service = ServiceName.temporaryAccommodation.value,
+            isActive = true,
+          ),
+        ),
+      )
+  }
 }
