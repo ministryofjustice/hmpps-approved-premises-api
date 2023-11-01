@@ -361,7 +361,6 @@ class PremisesController(
           arrivalDate = body.arrivalDate,
           departureDate = body.departureDate,
           bedId = body.bedId,
-          eventNumber = body.eventNumber,
         )
       }
 
