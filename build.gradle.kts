@@ -6,7 +6,7 @@ plugins {
   id("org.openapi.generator") version "5.4.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.20"
   id("io.gatling.gradle") version "3.9.5.6"
-  id("io.gitlab.arturbosch.detekt") version "1.23.1"
+  id("io.gitlab.arturbosch.detekt") version "1.23.3"
 }
 
 configurations {
