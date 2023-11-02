@@ -9,3 +9,19 @@ performance:
     active: true
   UnnecessaryPartOfBinaryExpression:
     active: true
+
+style:
+  MaxLineLength:
+    maxLineLength: 200
+  ReturnCount:
+    max: 4
+
+complexity:
+  LongMethod:
+    threshold: 200
+  LargeClass:
+    threshold: 1000
+  LongParameterList:
+    threshold: 12
+  TooManyFunctions:
+    thresholdInClasses: 20
