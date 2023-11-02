@@ -178,6 +178,7 @@ enum class UserRole(val service: ServiceName) {
   CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises),
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation),
   CAS3_REFERRER(ServiceName.temporaryAccommodation),
+  CAS3_REPORTER(ServiceName.temporaryAccommodation),
   ;
 
   companion object {

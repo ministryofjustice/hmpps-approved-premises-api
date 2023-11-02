@@ -1409,6 +1409,30 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Should get 403 forbidden error when create new application for Temporary Accommodation with user CAS3_REPORTER`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { _, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+
+        webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Test
   fun `Create new application for Temporary Accommodation returns successfully when a person has no NOMS number`() {
     `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
       `Given an Offender`(

@@ -57,11 +57,13 @@ class UserTransformer(
     UserRole.CAS1_REPORT_VIEWER -> ApprovedPremisesUserRole.reportViewer
     UserRole.CAS3_ASSESSOR -> null
     UserRole.CAS3_REFERRER -> null
+    UserRole.CAS3_REPORTER -> null
   }
 
   private fun transformTemporaryAccommodationRoleToApi(userRole: UserRoleAssignmentEntity): TemporaryAccommodationUserRole? = when (userRole.role) {
     UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.assessor
     UserRole.CAS3_REFERRER -> TemporaryAccommodationUserRole.referrer
+    UserRole.CAS3_REPORTER -> TemporaryAccommodationUserRole.reporter
     else -> null
   }
 
