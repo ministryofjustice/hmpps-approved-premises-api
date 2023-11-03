@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
@@ -20,10 +20,13 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsRepo
       BookingsReportRow(
         referralId = application?.id?.toString(),
         referralDate = application?.submittedAt?.toLocalDate(),
-        personName = personInfo.tryGetDetails { "${it.firstName} ${it.surname}".trim() },
-        pncNumber = personInfo.tryGetDetails { it.otherIds.pncNumber },
+        personName = personInfo.tryGetDetails {
+          val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
+          nameParts.joinToString(" ")
+        },
+        pncNumber = null,
         gender = personInfo.tryGetDetails { it.gender },
-        ethnicity = personInfo.tryGetDetails { it.offenderProfile.ethnicity },
+        ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
         dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
         riskOfSeriousHarm = application?.riskRatings?.roshRisks?.value?.overallRisk,
         sexOffender = application?.isRegisteredSexOffender,
@@ -46,7 +49,13 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsRepo
         } else {
           booking.arrival?.arrivalDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
         },
-        actualNightsStayed = if (booking.arrival?.arrivalDate == null) null else booking.departure?.dateTime?.let { ChronoUnit.DAYS.between(booking.arrival?.arrivalDate, it.toLocalDate()).toInt() },
+        actualNightsStayed = if (booking.arrival?.arrivalDate == null) {
+          null
+        } else {
+          booking.departure
+            ?.dateTime
+            ?.let { ChronoUnit.DAYS.between(booking.arrival?.arrivalDate, it.toLocalDate()).toInt() }
+        },
         accommodationOutcome = booking.departure?.moveOnCategory?.name,
       ),
     )
@@ -57,9 +66,9 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsRepo
       (properties.probationRegionId == null || it.booking.premises.probationRegion.id == properties.probationRegionId)
   }
 
-  private fun<V> PersonInfoResult.tryGetDetails(value: (OffenderDetailSummary) -> V): V? {
+  private fun<V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
     return when (this) {
-      is PersonInfoResult.Success.Full -> value(this.offenderDetailSummary)
+      is PersonSummaryInfoResult.Success.Full -> value(this.summary)
       else -> null
     }
   }
