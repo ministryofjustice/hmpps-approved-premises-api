@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
@@ -19,10 +19,13 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         bookingId = booking.bookingId,
         referralId = booking.referralId,
         referralDate = booking.referralDate,
-        personName = personInfo.tryGetDetails { "${it.firstName} ${it.surname}".trim() },
-        pncNumber = personInfo.tryGetDetails { it.otherIds.pncNumber },
+        personName = personInfo.tryGetDetails {
+          val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
+          nameParts.joinToString(" ")
+        },
+        pncNumber = null,
         gender = personInfo.tryGetDetails { it.gender },
-        ethnicity = personInfo.tryGetDetails { it.offenderProfile.ethnicity },
+        ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
         dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
         riskOfSeriousHarm = booking.riskOfSeriousHarm,
         sexOffender = booking.sexOffender,
@@ -59,9 +62,9 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
     true
   }
 
-  private fun<V> PersonInfoResult.tryGetDetails(value: (OffenderDetailSummary) -> V): V? {
+  private fun<V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
     return when (this) {
-      is PersonInfoResult.Success.Full -> value(this.offenderDetailSummary)
+      is PersonSummaryInfoResult.Success.Full -> value(this.summary)
       else -> null
     }
   }

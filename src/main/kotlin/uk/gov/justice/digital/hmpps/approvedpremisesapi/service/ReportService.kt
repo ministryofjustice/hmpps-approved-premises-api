@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
@@ -66,13 +67,12 @@ class ReportService(
       properties.probationRegionId,
     )
 
-    val reportData = bookingsInScope.map {
-      val personInfo = offenderService.getInfoForPerson(
-        it.crn,
-        userService.getUserForRequest().deliusUsername,
-        false,
-      )
+    val crns = bookingsInScope.map { it.crn }.distinct().sorted()
+    val personInfos = offenderService.getOffenderSummariesByCrns(crns, userService.getUserForRequest().deliusUsername)
+      .associateBy { it.crn }
 
+    val reportData = bookingsInScope.map {
+      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
       BookingsReportDataAndPersonInfo(it, personInfo)
     }
 
