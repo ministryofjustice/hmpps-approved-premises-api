@@ -197,6 +197,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
         path = null,
         hasResponseBody = true,
         attempt = null,
+        abandoned = false
       )
 
       redisTemplate.boundValueOps(qualifiedMetadataKey).set(

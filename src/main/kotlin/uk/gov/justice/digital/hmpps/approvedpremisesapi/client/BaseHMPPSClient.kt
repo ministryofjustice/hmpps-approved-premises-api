@@ -138,5 +138,5 @@ class CacheKeySet(
 }
 
 enum class PreemptiveCacheEntryStatus {
-  MISS, REQUIRES_REFRESH, EXISTS
+  MISS, REQUIRES_REFRESH, EXISTS, ABANDONED
 }

@@ -29,6 +29,7 @@ class WebClientCache(
 
     return when {
       cacheEntryMetadata == null -> PreemptiveCacheEntryStatus.MISS
+      cacheEntryMetadata.abandoned == true -> PreemptiveCacheEntryStatus.ABANDONED
       cacheEntryMetadata.refreshableAfter < Instant.now() -> PreemptiveCacheEntryStatus.REQUIRES_REFRESH
       else -> PreemptiveCacheEntryStatus.EXISTS
     }
@@ -81,6 +82,7 @@ class WebClientCache(
       path = requestBuilder.path ?: "",
       hasResponseBody = body != null,
       attempt = attempt,
+      abandoned = attempt >= FAILED_ATTEMPT_ABANDON_THRESHOLD
     )
 
     if (attempt >= FAILED_ATTEMPT_WARN_THRESHOLD) {
@@ -104,6 +106,7 @@ class WebClientCache(
       path = null,
       hasResponseBody = result.body != null,
       attempt = null,
+      abandoned = false,
     )
 
     writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
@@ -195,6 +198,7 @@ class WebClientCache(
 
   companion object {
     private const val FAILED_ATTEMPT_WARN_THRESHOLD: Int = 4
+    private const val FAILED_ATTEMPT_ABANDON_THRESHOLD: Int = 25
     private const val POLL_CACHE_WAIT_DURATION_BEFORE_RETRY_MS: Long = 500
   }
 
@@ -213,5 +217,6 @@ class WebClientCache(
     val path: String?,
     val hasResponseBody: Boolean,
     val attempt: Int?,
+    val abandoned: Boolean,
   )
 }

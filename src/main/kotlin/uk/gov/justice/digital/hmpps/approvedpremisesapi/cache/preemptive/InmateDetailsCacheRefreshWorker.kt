@@ -42,6 +42,14 @@ class InmateDetailsCacheRefreshWorker(
         return@forEach
       }
 
+      if (cacheEntryStatus == PreemptiveCacheEntryStatus.ABANDONED) {
+        if (loggingEnabled) {
+          log.info("No upstream call made when refreshing Inmate Details for $it, the request has now failed too many times")
+        }
+
+        return@forEach
+      }
+
       val prisonsApiResult = prisonsApiClient.getInmateDetailsWithCall(it)
 
       logConspicuously("Upstream API response: $prisonsApiResult")
