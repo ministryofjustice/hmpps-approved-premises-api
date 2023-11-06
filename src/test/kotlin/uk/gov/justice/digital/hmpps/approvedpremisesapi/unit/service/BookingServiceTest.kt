@@ -325,737 +325,580 @@ class BookingServiceTest {
       .isEqualTo(GetBookingForPremisesResult.Success(bookingEntity))
   }
 
-  @Test
-  fun `createDeparture returns GeneralValidationError with correct message when Booking already has a Departure`() {
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+  @Nested
+  inner class CreateDeparture {
+    val premises = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
           .produce()
       }
-      .withStaffKeyWorkerCode(keyWorker.code)
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
-
-    val departureEntity = DepartureEntityFactory()
-      .withBooking(bookingEntity)
-      .withYieldedReason { DepartureReasonEntityFactory().produce() }
-      .withYieldedMoveOnCategory { MoveOnCategoryEntityFactory().produce() }
-      .withYieldedDestinationProvider { DestinationProviderEntityFactory().produce() }
-      .produce()
-
-    bookingEntity.departures = mutableListOf(departureEntity)
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
-      reasonId = UUID.randomUUID(),
-      moveOnCategoryId = UUID.randomUUID(),
-      destinationProviderId = UUID.randomUUID(),
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-    assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Departure set")
-  }
-
-  @Test
-  fun `createDeparture returns FieldValidationError with correct param to message map when dateTime in past supplied`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
 
     val keyWorker = ContextStaffMemberFactory().produce()
 
-    val bookingEntity = BookingEntityFactory()
+    private val bookingEntity = BookingEntityFactory()
       .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
+      .withPremises(premises)
       .withStaffKeyWorkerCode(keyWorker.code)
       .produce()
 
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
+    private val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+    private val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    private val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
 
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.dateTime", "beforeBookingArrivalDate"),
-    )
-  }
-
-  @Test
-  fun `createDeparture returns FieldValidationError with correct param to message map when invalid departure reason supplied`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .produce()
-
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns null
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.now().minusMinutes(1),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reasonId", "doesNotExist"),
-    )
-  }
-
-  @Test
-  fun `createDeparture returns FieldValidationError with correct param to message map when the departure reason has the wrong service scope`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .produce()
-
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory()
-      .withServiceScope(ServiceName.temporaryAccommodation.value)
-      .produce()
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory()
-      .withServiceScope("*")
-      .produce()
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.now().minusMinutes(1),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reasonId", "incorrectDepartureReasonServiceScope"),
-    )
-  }
-
-  @Test
-  fun `createDeparture returns FieldValidationError with correct param to message map when invalid move on category supplied`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .produce()
-
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns null
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.now().plusMinutes(1),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.moveOnCategoryId", "doesNotExist"),
-    )
-  }
-
-  @Test
-  fun `createDeparture returns FieldValidationError with correct param to message map when the move-on category has the wrong service scope`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .produce()
-
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory()
-      .withServiceScope("*")
-      .produce()
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory()
-      .withServiceScope(ServiceName.approvedPremises.value)
-      .produce()
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.now().plusMinutes(1),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.moveOnCategoryId", "incorrectMoveOnCategoryServiceScope"),
-    )
-  }
-
-  @Test
-  fun `createDeparture returns FieldValidationError with correct param to message map when invalid destination provider supplied`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .produce()
-
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns null
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.now().plusMinutes(1),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.destinationProviderId", "doesNotExist"),
-    )
-  }
-
-  @Test
-  fun `createDeparture for an Approved Premises booking returns FieldValidationError with correct param to message map when the destination provider is empty`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .produce()
-
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory().produce()
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory().produce()
-    every { mockDestinationProviderRepository.findByIdOrNull(any()) } returns null
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.now().plusMinutes(1),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = null,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.destinationProviderId", "empty"),
-    )
-  }
-
-  @Test
-  fun `createDeparture for an Approved Premises booking returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application as Event Number is not present`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-22"))
-      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .produce()
-
-    val reasonEntity = DepartureReasonEntityFactory()
+    private val reasonEntity = DepartureReasonEntityFactory()
       .withServiceScope("approved-premises")
       .produce()
-    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
+    private val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
       .withServiceScope("approved-premises")
       .produce()
-    val destinationProviderEntity = DestinationProviderEntityFactory().produce()
+    private val destinationProviderEntity = DestinationProviderEntityFactory().produce()
 
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns destinationProviderEntity
+    @BeforeEach
+    fun setup() {
+      every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
+      every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
+      every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns destinationProviderEntity
 
-    every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    }
 
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce(),
-    )
+    @Test
+    fun `createDeparture returns GeneralValidationError with correct message when Booking already has a Departure`() {
+      val departureEntity = DepartureEntityFactory()
+        .withBooking(bookingEntity)
+        .withYieldedReason { DepartureReasonEntityFactory().produce() }
+        .withYieldedMoveOnCategory { MoveOnCategoryEntityFactory().produce() }
+        .withYieldedDestinationProvider { DestinationProviderEntityFactory().produce() }
+        .produce()
 
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.booking).isEqualTo(bookingEntity)
-    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-    assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.notes).isEqualTo("notes")
+      bookingEntity.departures = mutableListOf(departureEntity)
 
-    verify(exactly = 0) { mockDomainEventService.savePersonDepartedEvent(any()) }
-  }
-
-  @Test
-  fun `createDeparture for an Approved Premises booking returns Success with correct result when validation passed, saves Domain Event when associated with Online Application`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
-
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-22"))
-      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withUnitTestControlProbationRegion()
-              .produce(),
-          )
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+        reasonId = UUID.randomUUID(),
+        moveOnCategoryId = UUID.randomUUID(),
+        destinationProviderId = UUID.randomUUID(),
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
           .produce(),
       )
-      .produce()
 
-    val reasonEntity = DepartureReasonEntityFactory()
-      .withServiceScope("approved-premises")
-      .produce()
-    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
-      .withServiceScope("approved-premises")
-      .produce()
-    val destinationProviderEntity = DestinationProviderEntityFactory().produce()
+      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Departure set")
+    }
 
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns destinationProviderEntity
+    @Test
+    fun `createDeparture returns FieldValidationError with correct param to message map when dateTime in past supplied`() {
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
 
-    every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
-
-    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(bookingEntity.crn)
-      .produce()
-
-    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-
-    val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
-
-    every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
-      HttpStatus.OK,
-      keyWorkerStaffUserDetails,
-    )
-
-    every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
-
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = user,
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.booking).isEqualTo(bookingEntity)
-    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-    assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.notes).isEqualTo("notes")
-
-    verify(exactly = 1) {
-      mockDomainEventService.savePersonDepartedEvent(
-        match {
-          val data = (it.data as PersonDepartedEnvelope).eventDetails
-          val application = bookingEntity.application as ApprovedPremisesApplicationEntity
-          val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
-
-          it.applicationId == application.id &&
-            it.crn == bookingEntity.crn &&
-            data.applicationId == application.id &&
-            data.applicationUrl == "http://frontend/applications/${application.id}" &&
-            data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          ) &&
-            data.deliusEventNumber == application.eventNumber &&
-            data.premises == Premises(
-            id = approvedPremises.id,
-            name = approvedPremises.name,
-            apCode = approvedPremises.apCode,
-            legacyApCode = approvedPremises.qCode,
-            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-          ) &&
-            data.departedAt == Instant.parse("2022-08-24T15:00:00+01:00") &&
-            data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
-            data.destination.destinationProvider == DestinationProvider(
-            description = destinationProviderEntity.name,
-            id = destinationProviderEntity.id,
-          ) &&
-            data.reason == reasonEntity.name
-        },
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.dateTime", "beforeBookingArrivalDate"),
       )
     }
-  }
 
-  @Test
-  fun `createDeparture for an Approved Premises booking does not emit domain event when associated with Application but arrivedAndDepartedDomainEventsDisabled is true`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
-    val destinationProviderId = UUID.fromString("a6f5377e-e0c8-4122-b348-b30ba7e9d7a2")
+    @Test
+    fun `createDeparture returns FieldValidationError with correct param to message map when invalid departure reason supplied`() {
+      every { mockDepartureReasonRepository.findByIdOrNull(any()) } returns null
 
-    val keyWorker = ContextStaffMemberFactory().produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-22"))
-      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withUnitTestControlProbationRegion()
-              .produce(),
-          )
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.now().minusMinutes(1),
+        reasonId = UUID.randomUUID(),
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
           .produce(),
       )
-      .produce()
 
-    val reasonEntity = DepartureReasonEntityFactory()
-      .withServiceScope("approved-premises")
-      .produce()
-    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
-      .withServiceScope("approved-premises")
-      .produce()
-    val destinationProviderEntity = DestinationProviderEntityFactory().produce()
-
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
-    every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns destinationProviderEntity
-
-    every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
-
-    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(bookingEntity.crn)
-      .produce()
-
-    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-
-    val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
-
-    every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
-      HttpStatus.OK,
-      keyWorkerStaffUserDetails,
-    )
-
-    every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
-
-    val result = bookingServiceWithArrivedAndDepartedDomainEventsDisabled.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = destinationProviderId,
-      notes = "notes",
-      user = user,
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.booking).isEqualTo(bookingEntity)
-    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-    assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.notes).isEqualTo("notes")
-
-    verify(exactly = 0) {
-      mockDomainEventService.savePersonDepartedEvent(any())
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.reasonId", "doesNotExist"),
+      )
     }
-  }
 
-  @Test
-  fun `createDeparture for a CAS3 booking returns Success with correct result when validation passed and saves a domain event`() {
-    val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
-    val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+    @Test
+    fun `createDeparture returns FieldValidationError with correct param to message map when the departure reason has the wrong service scope`() {
+      every { mockDepartureReasonRepository.findByIdOrNull(any()) } returns DepartureReasonEntityFactory()
+        .withServiceScope(ServiceName.temporaryAccommodation.value)
+        .produce()
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-22"))
-      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withProbationRegion(probationRegion)
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withApplication(
-        TemporaryAccommodationApplicationEntityFactory()
-          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
-          .withProbationRegion(probationRegion)
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withProbationRegion(probationRegion)
-              .produce(),
-          )
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.now().minusMinutes(1),
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
           .produce(),
       )
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .produce()
 
-    val reasonEntity = DepartureReasonEntityFactory()
-      .withServiceScope("temporary-accommodation")
-      .produce()
-    val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
-      .withServiceScope("temporary-accommodation")
-      .produce()
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.reasonId", "incorrectDepartureReasonServiceScope"),
+      )
+    }
 
-    every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
-    every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
+    @Test
+    fun `createDeparture returns FieldValidationError with correct param to message map when invalid move on category supplied`() {
+      every { mockMoveOnCategoryRepository.findByIdOrNull(any()) } returns null
 
-    every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.now().plusMinutes(1),
+        reasonId = departureReasonId,
+        moveOnCategoryId = UUID.randomUUID(),
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
 
-    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.moveOnCategoryId", "doesNotExist"),
+      )
+    }
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    @Test
+    fun `createDeparture returns FieldValidationError with correct param to message map when the move-on category has the wrong service scope`() {
+      every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns DepartureReasonEntityFactory()
+        .withServiceScope("*")
+        .produce()
+      every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory()
+        .withServiceScope(ServiceName.temporaryAccommodation.value)
+        .produce()
+      every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(bookingEntity.crn)
-      .produce()
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.now().plusMinutes(1),
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
 
-    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.moveOnCategoryId", "incorrectMoveOnCategoryServiceScope"),
+      )
+    }
 
-    every { mockCas3DomainEventService.savePersonDepartedEvent(any()) } just Runs
+    @Test
+    fun `createDeparture returns FieldValidationError with correct param to message map when invalid destination provider supplied`() {
+      every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns null
 
-    val result = bookingService.createDeparture(
-      booking = bookingEntity,
-      dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
-      reasonId = departureReasonId,
-      moveOnCategoryId = moveOnCategoryId,
-      destinationProviderId = null,
-      notes = "notes",
-      user = user,
-    )
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.now().plusMinutes(1),
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
 
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.booking).isEqualTo(bookingEntity)
-    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-    assertThat(result.entity.destinationProvider).isEqualTo(null)
-    assertThat(result.entity.reason).isEqualTo(reasonEntity)
-    assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.destinationProviderId", "doesNotExist"),
+      )
+    }
 
-    verify(exactly = 1) {
-      mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity)
+    @Test
+    fun `createDeparture for an Approved Premises booking returns FieldValidationError with correct param to message map when the destination provider is empty`() {
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.now().plusMinutes(1),
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = null,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.destinationProviderId", "empty"),
+      )
+    }
+
+    @Test
+    fun `createDeparture does not save Domain Event when associated with Offline Application without an event number`() {
+      val application = OfflineApplicationEntityFactory()
+        .withEventNumber(null)
+        .produce()
+
+      bookingEntity.offlineApplication = application
+
+      val dateTime = OffsetDateTime.now()
+
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = dateTime,
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.booking).isEqualTo(bookingEntity)
+      assertThat(result.entity.dateTime).isEqualTo(dateTime)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 0) { mockDomainEventService.savePersonDepartedEvent(any()) }
+    }
+
+    @Test
+    fun `createDeparture for an Approved Premises booking returns Success with correct result when validation passed, saves Domain Event when associated with Online Application`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+
+      every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+        HttpStatus.OK,
+        keyWorkerStaffUserDetails,
+      )
+
+      every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
+
+      val dateTime = OffsetDateTime.now()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withUnitTestControlProbationRegion()
+            .produce(),
+        )
+        .produce()
+
+      bookingEntity.application = application
+
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = dateTime,
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.booking).isEqualTo(bookingEntity)
+      assertThat(result.entity.dateTime).isEqualTo(dateTime)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 1) {
+        mockDomainEventService.savePersonDepartedEvent(
+          match {
+            val data = (it.data as PersonDepartedEnvelope).eventDetails
+            val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
+
+            it.applicationId == application.id &&
+              it.crn == bookingEntity.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.premises == Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ) &&
+              data.departedAt == dateTime.toInstant() &&
+              data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
+              data.destination.destinationProvider == DestinationProvider(
+              description = destinationProviderEntity.name,
+              id = destinationProviderEntity.id,
+            ) &&
+              data.reason == reasonEntity.name
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `createDeparture for an Approved Premises booking returns Success with correct result when validation passed, saves Domain Event when associated with Offline Application with event number`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+
+      every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+        HttpStatus.OK,
+        keyWorkerStaffUserDetails,
+      )
+
+      every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
+
+      val dateTime = OffsetDateTime.now()
+
+      val application = OfflineApplicationEntityFactory()
+        .withEventNumber("123")
+        .produce()
+
+      bookingEntity.offlineApplication = application
+
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = dateTime,
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.booking).isEqualTo(bookingEntity)
+      assertThat(result.entity.dateTime).isEqualTo(dateTime)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 1) {
+        mockDomainEventService.savePersonDepartedEvent(
+          match {
+            val data = (it.data as PersonDepartedEnvelope).eventDetails
+            val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
+
+            it.applicationId == application.id &&
+              it.crn == bookingEntity.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.premises == Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ) &&
+              data.departedAt == dateTime.toInstant() &&
+              data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
+              data.destination.destinationProvider == DestinationProvider(
+              description = destinationProviderEntity.name,
+              id = destinationProviderEntity.id,
+            ) &&
+              data.reason == reasonEntity.name
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `createDeparture for an Approved Premises booking does not emit domain event when associated with Application but arrivedAndDepartedDomainEventsDisabled is true`() {
+      val keyWorker = ContextStaffMemberFactory().produce()
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withUnitTestControlProbationRegion()
+            .produce(),
+        )
+        .produce()
+
+      bookingEntity.application = application
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+
+      every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+        HttpStatus.OK,
+        keyWorkerStaffUserDetails,
+      )
+
+      every { mockDomainEventService.savePersonDepartedEvent(any()) } just Runs
+
+      val dateTime = OffsetDateTime.now()
+
+      val result = bookingServiceWithArrivedAndDepartedDomainEventsDisabled.createDeparture(
+        booking = bookingEntity,
+        dateTime = dateTime,
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = destinationProviderId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.booking).isEqualTo(bookingEntity)
+      assertThat(result.entity.dateTime).isEqualTo(dateTime)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 0) {
+        mockDomainEventService.savePersonDepartedEvent(any())
+      }
+    }
+
+    @Test
+    fun `createDeparture for a CAS3 booking returns Success with correct result when validation passed and saves a domain event`() {
+      val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+      val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-22"))
+        .withOfflineApplication(OfflineApplicationEntityFactory().produce())
+        .withYieldedPremises {
+          TemporaryAccommodationPremisesEntityFactory()
+            .withProbationRegion(probationRegion)
+            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+            .produce()
+        }
+        .withApplication(
+          TemporaryAccommodationApplicationEntityFactory()
+            .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+            .withProbationRegion(probationRegion)
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withProbationRegion(probationRegion)
+                .produce(),
+            )
+            .produce(),
+        )
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
+
+      val reasonEntity = DepartureReasonEntityFactory()
+        .withServiceScope("temporary-accommodation")
+        .produce()
+      val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
+        .withServiceScope("temporary-accommodation")
+        .produce()
+
+      every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
+      every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
+
+      every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+
+      every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val user = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      every { mockCas3DomainEventService.savePersonDepartedEvent(any()) } just Runs
+
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = null,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.booking).isEqualTo(bookingEntity)
+      assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.entity.destinationProvider).isEqualTo(null)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity)
+      }
     }
   }
 

@@ -1288,8 +1288,9 @@ class BookingService(
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
 
-    if (booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
+    if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
+      val user = user as UserEntity
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
@@ -1303,13 +1304,13 @@ class BookingService(
         is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
       }
 
-      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
       val approvedPremises = booking.premises as ApprovedPremisesEntity
 
       domainEventService.savePersonDepartedEvent(
         DomainEvent(
           id = domainEventId,
-          applicationId = application.id,
+          applicationId = applicationId,
           crn = booking.crn,
           occurredAt = dateTime.toInstant(),
           data = PersonDepartedEnvelope(
@@ -1317,14 +1318,14 @@ class BookingService(
             timestamp = occurredAt.toInstant(),
             eventType = "approved-premises.person.departed",
             eventDetails = PersonDeparted(
-              applicationId = application.id,
-              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              applicationId = applicationId,
+              applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
                 noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
-              deliusEventNumber = application.eventNumber,
+              deliusEventNumber = eventNumber,
               premises = Premises(
                 id = approvedPremises.id,
                 name = approvedPremises.name,
