@@ -11,10 +11,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
@@ -24,6 +26,7 @@ import java.util.UUID
 
 class ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
+  private val mockNomisUserTransformer = mockk<NomisUserTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -35,6 +38,7 @@ class ApplicationsTransformerTest {
     .approvedpremisesapi.transformer.cas2.ApplicationsTransformer(
       objectMapper,
       mockPersonTransformer,
+      mockNomisUserTransformer,
     )
 
   private val user = NomisUserEntityFactory().produce()
@@ -44,9 +48,12 @@ class ApplicationsTransformerTest {
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
 
+  private val mockNomisUser = mockk<NomisUser>()
+
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
   }
 
   @Nested
@@ -61,6 +68,7 @@ class ApplicationsTransformerTest {
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
+      assertThat(result.createdByUserId).isEqualTo(user.id)
       assertThat(result.createdByUserId).isEqualTo(user.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
     }
@@ -117,6 +125,29 @@ class ApplicationsTransformerTest {
 
       assertThat(result.id).isEqualTo(application.getId())
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    }
+  }
+
+  @Nested
+  inner class TransformJpaToSubmittedApplication {
+    @Test
+    fun `transforms submitted application to API representation with NomisUser and no data`() {
+      val jpaEntity = submittedCas2ApplicationFactory.produce()
+
+      val transformation = applicationsTransformer.transformJpaToSubmittedApplication(jpaEntity, mockk())
+
+      assertThat(transformation.submittedBy).isEqualTo(mockNomisUser)
+      assertThat(transformation).hasOnlyFields(
+        "createdAt",
+        "document",
+        "id",
+        "outdatedSchema",
+        "person",
+        "schemaVersion",
+        "status",
+        "submittedAt",
+        "submittedBy",
+      )
     }
   }
 }
