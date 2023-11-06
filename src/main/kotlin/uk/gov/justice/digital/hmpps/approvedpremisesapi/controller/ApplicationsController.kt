@@ -182,7 +182,6 @@ class ApplicationsController(
         releaseType = body.releaseType?.name,
         arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,
-        username = user.deliusUsername,
       )
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
