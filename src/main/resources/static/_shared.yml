@@ -3147,6 +3147,7 @@ components:
         - temporary_accommodation_premises
         - temporary_accommodation_bedspace
         - user
+        - nomis_users
         - temporary_accommodation_users
         - approved_premises_users
         - characteristics

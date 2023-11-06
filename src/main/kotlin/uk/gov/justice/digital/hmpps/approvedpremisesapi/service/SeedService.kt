@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.io.File
 import java.io.IOException
@@ -121,6 +123,10 @@ class SeedService(
           filename,
           ServiceName.values().toList(),
           applicationContext.getBean(UserService::class.java),
+        )
+        SeedFileType.nomisUsers -> NomisUsersSeedJob(
+          filename,
+          applicationContext.getBean(NomisUserRepository::class.java),
         )
         SeedFileType.approvedPremisesUsers -> UsersSeedJob(
           filename,

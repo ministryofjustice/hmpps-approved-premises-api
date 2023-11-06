@@ -253,6 +253,8 @@
     <ID>MagicNumber:ReferralsMetricsReportGenerator.kt$ReferralsMetricsReportGenerator$100</ID>
     <ID>MagicNumber:ReportsController.kt$ReportsController$12</ID>
     <ID>MagicNumber:TaskTransformer.kt$TaskTransformer$10</ID>
+    <ID>MagicNumber:NomisUsersSeedJob.kt$NomisUsersSeedJob$100000</ID>
+    <ID>MagicNumber:NomisUsersSeedJob.kt$NomisUsersSeedJob$900000</ID>
     <ID>MagicNumber:UpdateAllUsersFromCommunityApiJob.kt$UpdateAllUsersFromCommunityApiJob$500</ID>
     <ID>MaxLineLength:AcceptAssessmentTest.kt$AcceptAssessmentTest$every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.GeneralValidationError("Couldn't create Placement Requirements")</ID>
     <ID>MaxLineLength:ApplicationReportsTest.kt$ApplicationReportsTest$private</ID>
@@ -386,6 +388,7 @@
     <ID>TooGenericExceptionCaught:SeedService.kt$SeedService$exception: RuntimeException</ID>
     <ID>TooGenericExceptionCaught:UpdateAllUsersFromCommunityApiJob.kt$UpdateAllUsersFromCommunityApiJob$exception: Exception</ID>
     <ID>TooGenericExceptionCaught:UsersSeedJob.kt$UsersSeedJob$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:NomisUsersSeedJob.kt$NomisUsersSeedJob$exception: Exception</ID>
     <ID>TooGenericExceptionThrown:AdjudicationTransformer.kt$AdjudicationTransformer$throw RuntimeException("Agency ${result.agencyId} not found")</ID>
     <ID>TooGenericExceptionThrown:ApplicationReportsTest.kt$ApplicationReportsTest$throw Exception("No offender found for CRN ${application.crn}")</ID>
     <ID>TooGenericExceptionThrown:ApplicationService.kt$ApplicationService$throw RuntimeException( "CAS2 applications now require " + "NomisUser", )</ID>
@@ -570,6 +573,7 @@
     <ID>TooGenericExceptionThrown:UsersSeedJob.kt$UsersSeedJob$throw RuntimeException("Could not get user ${row.deliusUsername}", exception)</ID>
     <ID>TooGenericExceptionThrown:UsersSeedJob.kt$UsersSeedJob$throw RuntimeException("Unrecognised User Qualifications(s): $unknownQualifications")</ID>
     <ID>TooGenericExceptionThrown:UsersSeedJob.kt$UsersSeedJob$throw RuntimeException("Unrecognised User Role(s): $unknownRoles")</ID>
+    <ID>TooGenericExceptionThrown:NomisUsersSeedJob.kt$NomisUsersSeedJob$throw RuntimeException("Could not create user ${row.nomisUsername}", exception)</ID>
     <ID>TooGenericExceptionThrown:ValidatableActionResult.kt$ValidatableActionResult$throw RuntimeException("Cannot translate Success")</ID>
     <ID>TooGenericExceptionThrown:WebClientCache.kt$WebClientCache$throw RuntimeException("Must provide a preemptiveCacheKey")</ID>
     <ID>TooManyFunctions:ApplicationEntity.kt$ApplicationRepository : JpaRepository</ID>
