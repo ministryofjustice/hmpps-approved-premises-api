@@ -1180,10 +1180,26 @@ class BookingServiceTest {
 
   @Nested
   inner class CreateCas1Arrival {
+    val premises = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    private val keyWorker = ContextStaffMemberFactory().produce()
+
+    @BeforeEach
+    fun setup() {
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Success(keyWorker)
+      every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    }
+
     @Test
     fun `createCas1Arrival return GeneralValidationError when the premises is not a CAS1 premises`() {
-      val keyWorker = ContextStaffMemberFactory().produce()
-
       val bookingEntity = BookingEntityFactory()
         .withYieldedPremises {
           TemporaryAccommodationPremisesEntityFactory()
@@ -1215,16 +1231,7 @@ class BookingServiceTest {
     @Test
     fun `createCas1Arrival returns GeneralValidationError with correct message when Booking already has an Arrival`() {
       val bookingEntity = BookingEntityFactory()
-        .withYieldedPremises {
-          ApprovedPremisesEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
+        .withPremises(premises)
         .withStaffKeyWorkerCode("123")
         .produce()
 
@@ -1251,19 +1258,8 @@ class BookingServiceTest {
 
     @Test
     fun `createCas1Arrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
-      val keyWorker = ContextStaffMemberFactory().produce()
-
       val bookingEntity = BookingEntityFactory()
-        .withYieldedPremises {
-          ApprovedPremisesEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
+        .withPremises(premises)
         .produce()
 
       val result = bookingService.createCas1Arrival(
@@ -1284,28 +1280,16 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createCas1Arrival returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application as Event Number is not present`() {
-      val keyWorker = ContextStaffMemberFactory().produce()
-      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, "QCODE") } returns AuthorisableActionResult.Success(keyWorker)
-
+    fun `createCas1Arrival returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application without an event number`() {
       val bookingEntity = BookingEntityFactory()
-        .withYieldedPremises {
-          ApprovedPremisesEntityFactory()
-            .withQCode("QCODE")
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
+        .withPremises(premises)
         .withStaffKeyWorkerCode(keyWorker.code)
-        .withOfflineApplication(OfflineApplicationEntityFactory().produce())
+        .withOfflineApplication(
+          OfflineApplicationEntityFactory()
+            .withEventNumber(null)
+            .produce(),
+        )
         .produce()
-
-      every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val result = bookingService.createCas1Arrival(
         booking = bookingEntity,
@@ -1330,21 +1314,8 @@ class BookingServiceTest {
 
     @Test
     fun `createCas1Arrival returns Success with correct result when validation passed, saves Domain Event when associated with Online Application`() {
-      val keyWorker = ContextStaffMemberFactory().produce()
-      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, "QCODE") } returns AuthorisableActionResult.Success(keyWorker)
-
       val bookingEntity = BookingEntityFactory()
-        .withYieldedPremises {
-          ApprovedPremisesEntityFactory()
-            .withQCode("QCODE")
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
+        .withPremises(premises)
         .withStaffKeyWorkerCode(keyWorker.code)
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
@@ -1357,9 +1328,6 @@ class BookingServiceTest {
             .produce(),
         )
         .produce()
-
-      every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -1428,80 +1396,144 @@ class BookingServiceTest {
         )
       }
     }
-  }
 
-  @Test
-  fun `createCas1Arrival does not emit domain event when arrivedAndDepartedDomainEventsDisabled is true`() {
-    val keyWorker = ContextStaffMemberFactory().produce()
-    every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, "QCODE") } returns AuthorisableActionResult.Success(keyWorker)
+    @Test
+    fun `createCas1Arrival returns Success with correct result when validation passed, saves Domain Event when associated with Offline Application with event number`() {
+      val bookingEntity = BookingEntityFactory()
+        .withPremises(premises)
+        .withStaffKeyWorkerCode(keyWorker.code)
+        .withOfflineApplication(
+          OfflineApplicationEntityFactory()
+            .withEventNumber("123")
+            .produce(),
+        )
+        .produce()
 
-    val bookingEntity = BookingEntityFactory()
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withQCode("QCODE")
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withStaffKeyWorkerCode(keyWorker.code)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withUnitTestControlProbationRegion()
-              .produce(),
-          )
-          .produce(),
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+
+      every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+        HttpStatus.OK,
+        keyWorkerStaffUserDetails,
       )
-      .produce()
 
-    every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockDomainEventService.savePersonArrivedEvent(any()) } just Runs
 
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+      val arrivalDateTime = Instant.parse("2022-08-27T00:00:00Z")
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(bookingEntity.crn)
-      .produce()
+      val result = bookingService.createCas1Arrival(
+        booking = bookingEntity,
+        arrivalDateTime = arrivalDateTime,
+        expectedDepartureDate = LocalDate.parse("2022-08-29"),
+        notes = "notes",
+        keyWorkerStaffCode = keyWorker.code,
+        user = user,
+      )
 
-    every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
+      assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDateTime)
+      assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+      assertThat(result.entity.notes).isEqualTo("notes")
 
-    val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+      verify(exactly = 1) {
+        mockDomainEventService.savePersonArrivedEvent(
+          match {
+            val data = (it.data as PersonArrivedEnvelope).eventDetails
+            val application = bookingEntity.offlineApplication as OfflineApplicationEntity
+            val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
-    every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
-      HttpStatus.OK,
-      keyWorkerStaffUserDetails,
-    )
+            it.applicationId == application.id &&
+              it.crn == bookingEntity.crn &&
+              it.occurredAt == arrivalDateTime &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.premises == Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ) &&
+              data.applicationSubmittedOn == application.createdAt.toLocalDate() &&
+              data.arrivedAt == arrivalDateTime
+          },
+        )
+      }
+    }
 
-    every { mockDomainEventService.savePersonArrivedEvent(any()) } just Runs
+    @Test
+    fun `createCas1Arrival does not emit domain event when arrivedAndDepartedDomainEventsDisabled is true`() {
+      val bookingEntity = BookingEntityFactory()
+        .withPremises(premises)
+        .withStaffKeyWorkerCode(keyWorker.code)
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withUnitTestControlProbationRegion()
+                .produce(),
+            )
+            .produce(),
+        )
+        .produce()
 
-    val arrivalDateTime = Instant.parse("2022-08-27T00:00:00Z")
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
 
-    val result = bookingServiceWithArrivedAndDepartedDomainEventsDisabled.createCas1Arrival(
-      booking = bookingEntity,
-      arrivalDateTime = arrivalDateTime,
-      expectedDepartureDate = LocalDate.parse("2022-08-29"),
-      notes = "notes",
-      keyWorkerStaffCode = keyWorker.code,
-      user = user,
-    )
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
 
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
-    assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDateTime)
-    assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
-    assertThat(result.entity.notes).isEqualTo("notes")
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
 
-    verify(exactly = 0) {
-      mockDomainEventService.savePersonArrivedEvent(any())
+      val keyWorkerStaffUserDetails = StaffWithoutUsernameUserDetailsFactory().produce()
+
+      every { mockCommunityApiClient.getStaffUserDetailsForStaffCode(keyWorker.code) } returns ClientResult.Success(
+        HttpStatus.OK,
+        keyWorkerStaffUserDetails,
+      )
+
+      every { mockDomainEventService.savePersonArrivedEvent(any()) } just Runs
+
+      val arrivalDateTime = Instant.parse("2022-08-27T00:00:00Z")
+
+      val result = bookingServiceWithArrivedAndDepartedDomainEventsDisabled.createCas1Arrival(
+        booking = bookingEntity,
+        arrivalDateTime = arrivalDateTime,
+        expectedDepartureDate = LocalDate.parse("2022-08-29"),
+        notes = "notes",
+        keyWorkerStaffCode = keyWorker.code,
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
+      assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDateTime)
+      assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 0) {
+        mockDomainEventService.savePersonArrivedEvent(any())
+      }
     }
   }
 
@@ -1915,6 +1947,7 @@ class BookingServiceTest {
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       val bookingEntity = BookingEntityFactory()
@@ -2398,6 +2431,7 @@ class BookingServiceTest {
     fun `createExtension emits domain event when Booking has associated Application`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       val bookingEntity = BookingEntityFactory()
@@ -5046,6 +5080,7 @@ class BookingServiceTest {
     fun `emits domain event when booking has associated application`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       val booking = BookingEntityFactory()

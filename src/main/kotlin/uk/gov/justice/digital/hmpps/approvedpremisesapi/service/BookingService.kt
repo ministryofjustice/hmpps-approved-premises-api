@@ -558,7 +558,7 @@ class BookingService(
     bookingChangedAt: OffsetDateTime,
   ) {
     val domainEventId = UUID.randomUUID()
-    val (applicationId, eventNumber) = getApplicationIdAndEventNumberForBooking(booking)
+    val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
 
     val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
@@ -804,10 +804,10 @@ class BookingService(
     booking.departureDate = expectedDepartureDate
     updateBooking(booking)
 
-    if (booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
+    if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
+      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user!!.deliusUsername, true)) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         else -> null
       }
@@ -818,13 +818,13 @@ class BookingService(
         is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
       }
 
-      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val (applicationId, eventNumber, submittedAt) = getApplicationDetailsForBooking(booking)
       val approvedPremises = booking.premises as ApprovedPremisesEntity
 
       domainEventService.savePersonArrivedEvent(
         DomainEvent(
           id = domainEventId,
-          applicationId = application.id,
+          applicationId = applicationId,
           crn = booking.crn,
           occurredAt = arrivalDateTime,
           data = PersonArrivedEnvelope(
@@ -832,14 +832,14 @@ class BookingService(
             timestamp = occurredAt.toInstant(),
             eventType = "approved-premises.person.arrived",
             eventDetails = PersonArrived(
-              applicationId = application.id,
-              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              applicationId = applicationId,
+              applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
                 noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
               ),
-              deliusEventNumber = application.eventNumber,
+              deliusEventNumber = eventNumber,
               premises = Premises(
                 id = approvedPremises.id,
                 name = approvedPremises.name,
@@ -847,7 +847,7 @@ class BookingService(
                 legacyApCode = approvedPremises.qCode,
                 localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
               ),
-              applicationSubmittedOn = application.submittedAt!!.toLocalDate(),
+              applicationSubmittedOn = submittedAt.toLocalDate(),
               keyWorker = StaffMember(
                 staffCode = keyWorkerStaffCode,
                 staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
@@ -1087,7 +1087,7 @@ class BookingService(
         is ClientResult.Failure -> staffDetailsResult.throwException()
       }
 
-      val (applicationId, eventNumber) = getApplicationIdAndEventNumberForBooking(booking)
+      val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
 
       val approvedPremises = booking.premises as ApprovedPremisesEntity
 
@@ -1618,14 +1618,15 @@ class BookingService(
   val BookingEntity.lastUnavailableDate: LocalDate
     get() = workingDayCountService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
 
-  fun getApplicationIdAndEventNumberForBooking(booking: BookingEntity): Pair<UUID, String> {
+  fun getApplicationDetailsForBooking(booking: BookingEntity): Triple<UUID, String, OffsetDateTime> {
     val application = (booking.application as ApprovedPremisesApplicationEntity?)
     val offlineApplication = booking.offlineApplication
 
     val applicationId = application?.id ?: offlineApplication?.id as UUID
     val eventNumber = application?.eventNumber ?: offlineApplication?.eventNumber as String
+    val submittedAt = application?.submittedAt ?: offlineApplication?.createdAt as OffsetDateTime
 
-    return Pair(applicationId, eventNumber)
+    return Triple(applicationId, eventNumber, submittedAt)
   }
 }
 
