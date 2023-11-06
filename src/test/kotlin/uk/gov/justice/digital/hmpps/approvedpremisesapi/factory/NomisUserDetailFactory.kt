@@ -40,6 +40,10 @@ class NomisUserDetailFactory : Factory<NomisUserDetail> {
     this.staffId = { staffId }
   }
 
+  fun withPrimaryEmail(primaryEmail: String) = apply {
+    this.primaryEmail = { primaryEmail }
+  }
+
   override fun produce(): NomisUserDetail = NomisUserDetail(
     username = this.username(),
     staffId = this.staffId(),

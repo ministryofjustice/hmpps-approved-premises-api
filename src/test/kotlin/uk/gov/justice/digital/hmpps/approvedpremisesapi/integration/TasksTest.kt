@@ -861,8 +861,8 @@ class TasksTest : IntegrationTestBase() {
 
             val approvedPremisesPlacementApplicationJsonSchema =
               approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            }
+                withPermissiveSchema()
+              }
             val numberOfPlacementApplications = 12
             repeat(numberOfPlacementApplications) {
               `Given a Placement Application`(
