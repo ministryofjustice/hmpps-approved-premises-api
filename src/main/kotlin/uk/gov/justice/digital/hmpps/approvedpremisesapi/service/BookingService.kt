@@ -946,8 +946,9 @@ class BookingService(
       ),
     )
 
-    if (booking.service == ServiceName.approvedPremises.value && booking.application != null && user != null && !arrivedAndDepartedDomainEventsDisabled) {
+    if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
+      val user = user as UserEntity
 
       val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
@@ -961,13 +962,13 @@ class BookingService(
         is ClientResult.Failure -> staffDetailsResult.throwException()
       }
 
-      val application = booking.application!! as ApprovedPremisesApplicationEntity
+      val (applicationId, eventNumber, createdAt) = getApplicationDetailsForBooking(booking)
       val approvedPremises = booking.premises as ApprovedPremisesEntity
 
       domainEventService.savePersonNotArrivedEvent(
         DomainEvent(
           id = domainEventId,
-          applicationId = application.id,
+          applicationId = applicationId,
           crn = booking.crn,
           occurredAt = date.toLocalDateTime().toInstant(),
           data = PersonNotArrivedEnvelope(
@@ -975,14 +976,14 @@ class BookingService(
             timestamp = occurredAt.toInstant(),
             eventType = "approved-premises.person.not-arrived",
             eventDetails = PersonNotArrived(
-              applicationId = application.id,
-              applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+              applicationId = applicationId,
+              applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
               bookingId = booking.id,
               personReference = PersonReference(
                 crn = booking.crn,
                 noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
-              deliusEventNumber = application.eventNumber,
+              deliusEventNumber = eventNumber,
               premises = Premises(
                 id = approvedPremises.id,
                 name = approvedPremises.name,
